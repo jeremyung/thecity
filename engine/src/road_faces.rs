@@ -7,6 +7,7 @@
 //! exhausted work limits fail closed rather than returning partial faces.
 
 use crate::geometry::segments_distance_coords;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 const MAX_NODES: usize = 512;
@@ -18,21 +19,21 @@ const MAX_OUTPUT_FACES: usize = MAX_EDGES;
 const MIN_FACE_AREA: f64 = 1.0e-3;
 const COINCIDENT_EPSILON: f32 = 1.0e-5;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct RoadFaceNode {
     pub id: u32,
     pub x: f32,
     pub z: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct RoadFaceEdge {
     pub id: u32,
     pub from: u32,
     pub to: u32,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct RoadFace {
     /// Canonical identity: the lexicographically smallest cyclic sequence
     /// across both directions. It is independent of input ordering/winding.
@@ -48,7 +49,7 @@ pub(crate) struct RoadFace {
     pub contains_proposed_edge: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum RoadFaceError {
     TooManyNodes,
     TooManyEdges,
@@ -149,7 +150,10 @@ pub(crate) fn trace_faces(
 
     // A strict planar embedding requires every geometric crossing to already
     // be represented by a shared node. Cap pairwise checks explicitly.
-    let pair_count = all_edges.len().saturating_mul(all_edges.len().saturating_sub(1)) / 2;
+    let pair_count = all_edges
+        .len()
+        .saturating_mul(all_edges.len().saturating_sub(1))
+        / 2;
     if pair_count > MAX_PAIR_TESTS {
         return Err(RoadFaceError::WorkLimit);
     }
@@ -301,7 +305,10 @@ pub(crate) fn trace_faces(
         if faces.len() >= MAX_OUTPUT_FACES {
             return Err(RoadFaceError::OutputLimit);
         }
-        let mut vertex_ids = walk_vertices.iter().map(|&i| nodes[i].id).collect::<Vec<_>>();
+        let mut vertex_ids = walk_vertices
+            .iter()
+            .map(|&i| nodes[i].id)
+            .collect::<Vec<_>>();
         let mut polygon = walk_vertices
             .iter()
             .map(|&i| (nodes[i].x, nodes[i].z))
@@ -366,7 +373,7 @@ fn has_repeated_vertex(vertices: &[usize]) -> bool {
     vertices.iter().any(|vertex| !seen.insert(*vertex))
 }
 
-fn graph_bridge_edges(node_count: usize, edges: &[(usize, usize)]) -> BTreeSet<usize> {
+pub(crate) fn graph_bridge_edges(node_count: usize, edges: &[(usize, usize)]) -> BTreeSet<usize> {
     let mut adjacency = vec![Vec::<(usize, usize)>::new(); node_count];
     for (edge_index, &(from, to)) in edges.iter().enumerate() {
         adjacency[from].push((to, edge_index));
@@ -459,8 +466,7 @@ fn point_strictly_inside(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
         {
             return false;
         }
-        if (az > point.1) != (bz > point.1)
-            && point.0 < (bx - ax) * (point.1 - az) / (bz - az) + ax
+        if (az > point.1) != (bz > point.1) && point.0 < (bx - ax) * (point.1 - az) / (bz - az) + ax
         {
             inside = !inside;
         }
@@ -482,8 +488,18 @@ mod tests {
 
     fn rectangle() -> (Vec<RoadFaceNode>, Vec<RoadFaceEdge>) {
         (
-            vec![node(10, 0.0, 0.0), node(20, 8.0, 0.0), node(30, 8.0, 5.0), node(40, 0.0, 5.0)],
-            vec![edge(1, 10, 20), edge(2, 20, 30), edge(3, 30, 40), edge(4, 40, 10)],
+            vec![
+                node(10, 0.0, 0.0),
+                node(20, 8.0, 0.0),
+                node(30, 8.0, 5.0),
+                node(40, 0.0, 5.0),
+            ],
+            vec![
+                edge(1, 10, 20),
+                edge(2, 20, 30),
+                edge(3, 30, 40),
+                edge(4, 40, 10),
+            ],
         )
     }
 
@@ -500,7 +516,10 @@ mod tests {
         let (nodes, mut edges) = rectangle();
         let proposed = edge(5, 10, 20);
         // Duplicate proposals are malformed and fail closed.
-        assert_eq!(trace_faces(&nodes, &edges, Some(proposed)), Err(RoadFaceError::DuplicateEdge));
+        assert_eq!(
+            trace_faces(&nodes, &edges, Some(proposed)),
+            Err(RoadFaceError::DuplicateEdge)
+        );
         edges.pop();
         let faces = trace_faces(&nodes, &edges, Some(edge(5, 40, 10))).unwrap();
         assert_eq!(faces.len(), 1);
@@ -517,11 +536,21 @@ mod tests {
             .enumerate()
             .map(|(i, &(x, z))| node(101 + i as u32 * 7, x * cos - z * sin, x * sin + z * cos))
             .collect::<Vec<_>>();
-        let edges = vec![edge(8, 101, 108), edge(2, 108, 115), edge(9, 115, 122), edge(4, 122, 101)];
+        let edges = vec![
+            edge(8, 101, 108),
+            edge(2, 108, 115),
+            edge(9, 115, 122),
+            edge(4, 122, 101),
+        ];
         let first = trace_faces(&nodes, &edges, None).unwrap();
         let mut shuffled_nodes = nodes.clone();
         shuffled_nodes.reverse();
-        let shuffled_edges = vec![edge(4, 101, 122), edge(9, 122, 115), edge(2, 115, 108), edge(8, 108, 101)];
+        let shuffled_edges = vec![
+            edge(4, 101, 122),
+            edge(9, 122, 115),
+            edge(2, 115, 108),
+            edge(8, 108, 101),
+        ];
         let second = trace_faces(&shuffled_nodes, &shuffled_edges, None).unwrap();
         assert_eq!(first, second);
         assert_eq!(first.len(), 1);
@@ -530,18 +559,50 @@ mod tests {
 
     #[test]
     fn adjacent_rectangles_trace_two_faces_and_proposed_diagonal_is_marked() {
-        let nodes = vec![node(1, 0.0, 0.0), node(2, 5.0, 0.0), node(3, 10.0, 0.0), node(4, 0.0, 4.0), node(5, 5.0, 4.0), node(6, 10.0, 4.0)];
-        let edges = vec![edge(10, 1, 2), edge(11, 2, 3), edge(12, 3, 6), edge(13, 6, 5), edge(14, 5, 4), edge(15, 4, 1), edge(16, 2, 5)];
+        let nodes = vec![
+            node(1, 0.0, 0.0),
+            node(2, 5.0, 0.0),
+            node(3, 10.0, 0.0),
+            node(4, 0.0, 4.0),
+            node(5, 5.0, 4.0),
+            node(6, 10.0, 4.0),
+        ];
+        let edges = vec![
+            edge(10, 1, 2),
+            edge(11, 2, 3),
+            edge(12, 3, 6),
+            edge(13, 6, 5),
+            edge(14, 5, 4),
+            edge(15, 4, 1),
+            edge(16, 2, 5),
+        ];
         let faces = trace_faces(&nodes, &edges, None).unwrap();
         assert_eq!(faces.len(), 2);
         assert!(faces.iter().all(|face| (face.area - 20.0).abs() < 1.0e-6));
-        assert!(faces.iter().all(|face| face.boundary_edge_ids.contains(&16)));
+        assert!(faces
+            .iter()
+            .all(|face| face.boundary_edge_ids.contains(&16)));
     }
 
     #[test]
     fn dangling_street_and_disconnected_components_add_no_false_faces() {
-        let nodes = vec![node(1, 0.0, 0.0), node(2, 4.0, 0.0), node(3, 4.0, 4.0), node(4, 0.0, 4.0), node(5, 2.0, 2.0), node(6, 20.0, 0.0), node(7, 22.0, 0.0)];
-        let edges = vec![edge(1, 1, 2), edge(2, 2, 3), edge(3, 3, 4), edge(4, 4, 1), edge(5, 1, 5), edge(6, 6, 7)];
+        let nodes = vec![
+            node(1, 0.0, 0.0),
+            node(2, 4.0, 0.0),
+            node(3, 4.0, 4.0),
+            node(4, 0.0, 4.0),
+            node(5, 2.0, 2.0),
+            node(6, 20.0, 0.0),
+            node(7, 22.0, 0.0),
+        ];
+        let edges = vec![
+            edge(1, 1, 2),
+            edge(2, 2, 3),
+            edge(3, 3, 4),
+            edge(4, 4, 1),
+            edge(5, 1, 5),
+            edge(6, 6, 7),
+        ];
         let faces = trace_faces(&nodes, &edges, None).unwrap();
         assert_eq!(faces.len(), 1);
         assert_eq!(faces[0].area, 16.0);
@@ -551,7 +612,14 @@ mod tests {
 
     #[test]
     fn interior_dangling_branch_is_removed_without_losing_its_block_face() {
-        let nodes = vec![node(1, 0.0, 0.0), node(2, 8.0, 0.0), node(3, 8.0, 8.0), node(4, 0.0, 8.0), node(5, 4.0, 4.0), node(6, 4.0, 6.0)];
+        let nodes = vec![
+            node(1, 0.0, 0.0),
+            node(2, 8.0, 0.0),
+            node(3, 8.0, 8.0),
+            node(4, 0.0, 8.0),
+            node(5, 4.0, 4.0),
+            node(6, 4.0, 6.0),
+        ];
         let edges = vec![
             edge(6, 6, 5),
             edge(2, 3, 2),
@@ -569,24 +637,52 @@ mod tests {
     #[test]
     fn nested_disconnected_cycles_are_rejected_instead_of_double_counted() {
         let nodes = vec![
-            node(1, 0.0, 0.0), node(2, 10.0, 0.0), node(3, 10.0, 10.0), node(4, 0.0, 10.0),
-            node(5, 3.0, 3.0), node(6, 7.0, 3.0), node(7, 7.0, 7.0), node(8, 3.0, 7.0),
+            node(1, 0.0, 0.0),
+            node(2, 10.0, 0.0),
+            node(3, 10.0, 10.0),
+            node(4, 0.0, 10.0),
+            node(5, 3.0, 3.0),
+            node(6, 7.0, 3.0),
+            node(7, 7.0, 7.0),
+            node(8, 3.0, 7.0),
         ];
         let edges = vec![
-            edge(1, 1, 2), edge(2, 2, 3), edge(3, 3, 4), edge(4, 4, 1),
-            edge(5, 5, 6), edge(6, 6, 7), edge(7, 7, 8), edge(8, 8, 5),
+            edge(1, 1, 2),
+            edge(2, 2, 3),
+            edge(3, 3, 4),
+            edge(4, 4, 1),
+            edge(5, 5, 6),
+            edge(6, 6, 7),
+            edge(7, 7, 8),
+            edge(8, 8, 5),
         ];
-        assert_eq!(trace_faces(&nodes, &edges, None), Err(RoadFaceError::NestedFacesUnsupported));
+        assert_eq!(
+            trace_faces(&nodes, &edges, None),
+            Err(RoadFaceError::NestedFacesUnsupported)
+        );
     }
 
     #[test]
     fn graph_bridge_and_crossing_edges_fail_or_yield_no_bounded_face_safely() {
-        let nodes = vec![node(1, 0.0, 0.0), node(2, 4.0, 0.0), node(3, 2.0, 3.0), node(4, 2.0, -2.0)];
+        let nodes = vec![
+            node(1, 0.0, 0.0),
+            node(2, 4.0, 0.0),
+            node(3, 2.0, 3.0),
+            node(4, 2.0, -2.0),
+        ];
         let bridge = vec![edge(1, 1, 2), edge(2, 2, 3), edge(3, 3, 1), edge(4, 2, 4)];
         assert_eq!(trace_faces(&nodes, &bridge, None).unwrap().len(), 1);
-        let crossing_nodes = vec![node(1, 0.0, 0.0), node(2, 4.0, 0.0), node(3, 4.0, 4.0), node(4, 0.0, 4.0)];
+        let crossing_nodes = vec![
+            node(1, 0.0, 0.0),
+            node(2, 4.0, 0.0),
+            node(3, 4.0, 4.0),
+            node(4, 0.0, 4.0),
+        ];
         let crossing = vec![edge(1, 1, 3), edge(2, 2, 4)];
-        assert_eq!(trace_faces(&crossing_nodes, &crossing, None), Err(RoadFaceError::NonPlanar));
+        assert_eq!(
+            trace_faces(&crossing_nodes, &crossing, None),
+            Err(RoadFaceError::NonPlanar)
+        );
     }
 
     #[test]
@@ -596,21 +692,41 @@ mod tests {
             trace_faces(&nodes, &[edge(1, 10, 20), edge(2, 20, 10)], None),
             Err(RoadFaceError::DuplicateEdge)
         );
-        assert_eq!(trace_faces(&nodes, &[edge(1, 10, 999)], None), Err(RoadFaceError::MissingNode));
-        assert_eq!(trace_faces(&nodes, &[edge(1, 10, 10)], None), Err(RoadFaceError::InvalidEdge));
+        assert_eq!(
+            trace_faces(&nodes, &[edge(1, 10, 999)], None),
+            Err(RoadFaceError::MissingNode)
+        );
+        assert_eq!(
+            trace_faces(&nodes, &[edge(1, 10, 10)], None),
+            Err(RoadFaceError::InvalidEdge)
+        );
         let bad_nodes = vec![node(1, f32::NAN, 0.0)];
-        assert_eq!(trace_faces(&bad_nodes, &[], None), Err(RoadFaceError::InvalidCoordinate));
+        assert_eq!(
+            trace_faces(&bad_nodes, &[], None),
+            Err(RoadFaceError::InvalidCoordinate)
+        );
         let duplicate_nodes = vec![node(1, 0.0, 0.0), node(1, 1.0, 0.0)];
-        assert_eq!(trace_faces(&duplicate_nodes, &[], None), Err(RoadFaceError::DuplicateNode));
+        assert_eq!(
+            trace_faces(&duplicate_nodes, &[], None),
+            Err(RoadFaceError::DuplicateNode)
+        );
         let coincident_nodes = vec![node(1, 0.0, 0.0), node(2, 0.0, 0.0)];
-        assert_eq!(trace_faces(&coincident_nodes, &[], None), Err(RoadFaceError::CoincidentNodes));
+        assert_eq!(
+            trace_faces(&coincident_nodes, &[], None),
+            Err(RoadFaceError::CoincidentNodes)
+        );
         assert!(trace_faces(&nodes, &edges, Some(edge(9, 10, 30))).is_ok());
     }
 
     #[test]
     fn explicit_input_and_work_caps_are_enforced() {
-        let nodes = (0..=MAX_NODES).map(|id| node(id as u32, id as f32 * 2.0, 0.0)).collect::<Vec<_>>();
-        assert_eq!(trace_faces(&nodes, &[], None), Err(RoadFaceError::TooManyNodes));
+        let nodes = (0..=MAX_NODES)
+            .map(|id| node(id as u32, id as f32 * 2.0, 0.0))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            trace_faces(&nodes, &[], None),
+            Err(RoadFaceError::TooManyNodes)
+        );
         let nodes = (0..MAX_NODES)
             .map(|id| {
                 let angle = id as f32 * std::f32::consts::TAU / MAX_NODES as f32;
@@ -618,7 +734,13 @@ mod tests {
             })
             .collect::<Vec<_>>();
         let edges = (0..MAX_EDGES)
-            .map(|id| edge(id as u32, id as u32 % MAX_NODES as u32, (id as u32 + 1) % MAX_NODES as u32))
+            .map(|id| {
+                edge(
+                    id as u32,
+                    id as u32 % MAX_NODES as u32,
+                    (id as u32 + 1) % MAX_NODES as u32,
+                )
+            })
             .collect::<Vec<_>>();
         let traced = trace_faces(&nodes, &edges, None).unwrap();
         assert_eq!(traced.len(), 1);
@@ -669,8 +791,14 @@ mod tests {
         // integration can distinguish a missing junction from a real crossing
         // or coincident corridor. Do not crop edges by endpoint-only windows:
         // that could omit a road crossing the window from outside.
-        assert_eq!(trace_faces(&nodes, &edges, None), Err(RoadFaceError::NonPlanar));
-        let by_id = nodes.iter().map(|node| (node.id, *node)).collect::<BTreeMap<_, _>>();
+        assert_eq!(
+            trace_faces(&nodes, &edges, None),
+            Err(RoadFaceError::NonPlanar)
+        );
+        let by_id = nodes
+            .iter()
+            .map(|node| (node.id, *node))
+            .collect::<BTreeMap<_, _>>();
         let mut found = false;
         'pairs: for first in 0..edges.len() {
             for second in first + 1..edges.len() {
@@ -690,22 +818,37 @@ mod tests {
                 );
                 let distance = segments_distance_coords(a.x, a.z, b.x, b.z, c.x, c.z, d.x, d.z);
                 if distance <= COINCIDENT_EPSILON {
-                    let a_kind = engine.state.roads.iter().find(|road| road.id == a_edge.id).unwrap().kind.as_str();
-                    let b_kind = engine.state.roads.iter().find(|road| road.id == b_edge.id).unwrap().kind.as_str();
+                    let a_kind = engine
+                        .state
+                        .roads
+                        .iter()
+                        .find(|road| road.id == a_edge.id)
+                        .unwrap()
+                        .kind
+                        .as_str();
+                    let b_kind = engine
+                        .state
+                        .roads
+                        .iter()
+                        .find(|road| road.id == b_edge.id)
+                        .unwrap()
+                        .kind
+                        .as_str();
                     let a_len = (b.x - a.x).hypot(b.z - a.z);
                     let b_len = (d.x - c.x).hypot(d.z - c.z);
                     let cross = (b.x - a.x) * (d.z - c.z) - (b.z - a.z) * (d.x - c.x);
-                    let projects_to_interior = |p: RoadFaceNode, start: RoadFaceNode, end: RoadFaceNode| {
-                        let dx = end.x - start.x;
-                        let dz = end.z - start.z;
-                        let t = ((p.x - start.x) * dx + (p.z - start.z) * dz)
-                            / (dx * dx + dz * dz);
-                        t > COINCIDENT_EPSILON
-                            && t < 1.0 - COINCIDENT_EPSILON
-                            && crate::geometry::point_segment_distance(
-                                p.x, p.z, start.x, start.z, end.x, end.z,
-                            ) <= COINCIDENT_EPSILON
-                    };
+                    let projects_to_interior =
+                        |p: RoadFaceNode, start: RoadFaceNode, end: RoadFaceNode| {
+                            let dx = end.x - start.x;
+                            let dz = end.z - start.z;
+                            let t =
+                                ((p.x - start.x) * dx + (p.z - start.z) * dz) / (dx * dx + dz * dz);
+                            t > COINCIDENT_EPSILON
+                                && t < 1.0 - COINCIDENT_EPSILON
+                                && crate::geometry::point_segment_distance(
+                                    p.x, p.z, start.x, start.z, end.x, end.z,
+                                ) <= COINCIDENT_EPSILON
+                        };
                     let has_t_junction = projects_to_interior(a, c, d)
                         || projects_to_interior(b, c, d)
                         || projects_to_interior(c, a, b)
@@ -726,16 +869,34 @@ mod tests {
                 }
             }
         }
-        assert!(found, "nonplanar classification should identify an offending pair");
+        assert!(
+            found,
+            "nonplanar classification should identify an offending pair"
+        );
     }
 
     #[test]
     fn new_founder_network_is_planar_connected_and_keeps_nonincident_parcels_clear() {
         for seed in [0, 1, 5, 87_231, u32::MAX] {
             let engine = crate::Engine::new(seed);
-            let market = engine.state.nodes.iter().find(|node| node.kind == "market").unwrap();
-            let station = engine.state.nodes.iter().find(|node| node.kind == "station").unwrap();
-            let gateway = engine.state.nodes.iter().find(|node| node.kind == "gateway").unwrap();
+            let market = engine
+                .state
+                .nodes
+                .iter()
+                .find(|node| node.kind == "market")
+                .unwrap();
+            let station = engine
+                .state
+                .nodes
+                .iter()
+                .find(|node| node.kind == "station")
+                .unwrap();
+            let gateway = engine
+                .state
+                .nodes
+                .iter()
+                .find(|node| node.kind == "gateway")
+                .unwrap();
             let center = engine
                 .state
                 .nodes
@@ -753,8 +914,7 @@ mod tests {
                 .roads
                 .iter()
                 .filter(|road| {
-                    road.stage == "open"
-                        && matches!(road.kind.as_str(), "local" | "arterial")
+                    road.stage == "open" && matches!(road.kind.as_str(), "local" | "arterial")
                 })
                 .collect::<Vec<_>>();
             let participating_ids = ordinary
@@ -782,14 +942,20 @@ mod tests {
                 .collect::<Vec<_>>();
             let faces = trace_faces(&nodes, &edges, None)
                 .expect("new founder ordinary network must have a planar embedding");
-            assert!(faces.is_empty(), "founder roads form a connected tree at seed {seed}");
+            assert!(
+                faces.is_empty(),
+                "founder roads form a connected tree at seed {seed}"
+            );
             assert!(ordinary.iter().all(|road| road.connected));
 
-            let adjacency = ordinary.iter().fold(BTreeMap::<u32, Vec<u32>>::new(), |mut graph, road| {
-                graph.entry(road.from).or_default().push(road.to);
-                graph.entry(road.to).or_default().push(road.from);
-                graph
-            });
+            let adjacency =
+                ordinary
+                    .iter()
+                    .fold(BTreeMap::<u32, Vec<u32>>::new(), |mut graph, road| {
+                        graph.entry(road.from).or_default().push(road.to);
+                        graph.entry(road.to).or_default().push(road.from);
+                        graph
+                    });
             let reaches = |start: u32, end: u32| {
                 let mut todo = std::collections::VecDeque::from([start]);
                 let mut seen = BTreeSet::from([start]);
@@ -820,13 +986,14 @@ mod tests {
                         || (road.from == station.id && road.to == center.id)
                 })
                 .unwrap();
-            let (a, b) = (engine.node(connector.from).unwrap(), engine.node(connector.to).unwrap());
+            let (a, b) = (
+                engine.node(connector.from).unwrap(),
+                engine.node(connector.to).unwrap(),
+            );
             for parcel in &engine.state.parcels {
-                let fronts_this_connector = engine
-                    .state
-                    .parcel_frontages
-                    .iter()
-                    .any(|frontage| frontage.parcel_id == parcel.id && frontage.road_id == connector.id);
+                let fronts_this_connector = engine.state.parcel_frontages.iter().any(|frontage| {
+                    frontage.parcel_id == parcel.id && frontage.road_id == connector.id
+                });
                 if fronts_this_connector {
                     continue;
                 }
@@ -835,7 +1002,9 @@ mod tests {
                     z: parcel.z,
                     width: parcel.width,
                     depth: parcel.depth,
-                    rotation: parcel.rotation.unwrap_or_else(|| engine.frontage_rotation(parcel.id)),
+                    rotation: parcel
+                        .rotation
+                        .unwrap_or_else(|| engine.frontage_rotation(parcel.id)),
                 };
                 assert!(
                     crate::geometry::rect_segment_distance(&rect, a.x, a.z, b.x, b.z) >= 5.0,
@@ -856,7 +1025,11 @@ mod tests {
             for _ in 0..121 {
                 engine.step(2_000);
             }
-            assert_eq!(engine.tick(), 242_000, "seed {seed} must reach the requested horizon");
+            assert_eq!(
+                engine.tick(),
+                242_000,
+                "seed {seed} must reach the requested horizon"
+            );
             worlds.push((format!("native seed={seed}"), engine));
         }
         let wasm_world = crate::Engine::restore_json(include_str!(
@@ -900,8 +1073,16 @@ mod tests {
 
             // Never interpret a capped/partial graph as planar. These seeds
             // are expected to stay inside the tracer's explicit local-graph cap.
-            assert!(nodes.len() <= MAX_NODES, "{label}: node cap exceeded ({})", nodes.len());
-            assert!(roads.len() <= MAX_EDGES, "{label}: edge cap exceeded ({})", roads.len());
+            assert!(
+                nodes.len() <= MAX_NODES,
+                "{label}: node cap exceeded ({})",
+                nodes.len()
+            );
+            assert!(
+                roads.len() <= MAX_EDGES,
+                "{label}: edge cap exceeded ({})",
+                roads.len()
+            );
             let traced = trace_faces(&nodes, &roads, None);
             match &traced {
                 Ok(faces) => eprintln!(
@@ -980,23 +1161,18 @@ mod tests {
         const REPORT_PATH: &str = "../validation/early-reservation-wasm-87231-report.json";
         const OUTPUT_PATH: &str = "../validation/early-reservation-wasm-87231-topology.json";
 
-        let save = std::fs::read_to_string(
-            Path::new(env!("CARGO_MANIFEST_DIR")).join(SAVE_PATH),
-        )
-        .expect("read exact public WASM save");
+        let save = std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join(SAVE_PATH))
+            .expect("read exact public WASM save");
         let provenance: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(
-                Path::new(env!("CARGO_MANIFEST_DIR")).join(REPORT_PATH),
-            )
-            .expect("read checkpoint provenance"),
+            &std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join(REPORT_PATH))
+                .expect("read checkpoint provenance"),
         )
         .expect("parse checkpoint provenance");
         let save_sha256 = provenance["saveSha256"]
             .as_str()
             .expect("checkpoint report records save SHA-256");
         assert_eq!(
-            save_sha256,
-            "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+            save_sha256, "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
             "checkpoint provenance must refer to the reviewed public WASM save"
         );
 
@@ -1047,10 +1223,16 @@ mod tests {
             })
             .collect::<Vec<_>>();
         assert!(nodes.len() <= MAX_NODES, "do not interpret a capped graph");
-        assert!(selected.len() <= MAX_EDGES, "do not interpret a capped graph");
+        assert!(
+            selected.len() <= MAX_EDGES,
+            "do not interpret a capped graph"
+        );
         let faces = trace_faces(&nodes, &selected, None)
             .expect("ordinary connected road network must have no planarity errors");
-        assert!(!faces.is_empty(), "checkpoint should contain bounded blocks");
+        assert!(
+            !faces.is_empty(),
+            "checkpoint should contain bounded blocks"
+        );
 
         let audit = json!({
             "checkpoint": "validation/early-reservation-wasm-87231-save.json",

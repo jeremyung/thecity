@@ -1,0 +1,48 @@
+{
+  "outputPath": "/Users/jung/Development/thecity/validation/building-outline-comparison.json",
+  "fixture": {
+    "file": "validation/early-reservation-wasm-87231-snapshot.json",
+    "sha256": "0559e20d76403429dffcc8a13d0953b699accf0ce2c73df0e30401c4da40c94f",
+    "bytes": 2013175,
+    "seed": 87231,
+    "tick": 242000,
+    "buildings": 850
+  },
+  "transitiveSourceHashes": {
+    "web/src/render/building-chunks.ts": "877401723e11de281537d8f89924ef6397e69e6d02f252b907d1f31ee587830d",
+    "web/src/render/building-massing.ts": "f3a4d344d05981acdd71cffa6a6f71c3cc3d1c09d0b33a3554d7b25792659ba1",
+    "web/src/render/building-palette.ts": "c3e5d97dd80aa40f700d7af05a8f893e1f8f1b81b04d5f915b66b891dcf2fef8",
+    "web/src/render/incremental-geometry-merge.ts": "8300c4f00a5c8e67865e61e57df07be70da6d75e2adc80ce57d4e32d7647e4fc",
+    "web/src/render/incremental-geometry-transform.ts": "31179b4f2f7719a3e5a5b88be7fd8489cac47997e4a67658f5c0fefebef9b5ed",
+    "web/src/render/kit.ts": "f88cd6461564d40f0a80b585c75d13927e794f2ac6d1168543591f01a7903937",
+    "web/src/render/lowrise-massing.ts": "e5f78aa4a35452911cfbe7eec19c2039bb526b2c8ec49f2fee009a5e49e7033e",
+    "web/src/render/materials.ts": "c9370d606f41cba9e170c656a5d16c406806fc573614231e1bf9fb50235139f2",
+    "web/src/render/painted-surface.ts": "e908d656e4429a7a07fb8b6597d9a0af54873d3c1b073645547da9ba6de00380",
+    "web/src/render/tower-kit.ts": "9ec45da319841044719a60e1cadccaaa40e8f22214281bbac05bf94836a65339"
+  },
+  "output": {
+    "legacyReference": {
+      "floatCount": 961320,
+      "byteCount": 3845280,
+      "orderedFloat32Sha256": "b957aee24fd55fd927ecb04dfd6e44761a6caf81b3a0b4752b1a21e908ecd94b"
+    },
+    "optimized": {
+      "floatCount": 961320,
+      "byteCount": 3845280,
+      "orderedFloat32Sha256": "b957aee24fd55fd927ecb04dfd6e44761a6caf81b3a0b4752b1a21e908ecd94b"
+    },
+    "orderedBytesIdentical": true,
+    "perBuildingMismatches": 0,
+    "mismatchBuildingIds": []
+  },
+  "timing": {
+    "mode": "one Node process, same generated groups; legacy reference first, optimized BuildingChunks.set second for each building",
+    "units": "milliseconds",
+    "nodeWallMs": {
+      "buildingKitGeneration": 1223.0440029999784,
+      "frozenLegacyOutlineReference": 3200.888582999994,
+      "optimizedSetOutlinePath": 2694.979922999997
+    },
+    "note": "The optimized path timing includes BuildingChunks.set bookkeeping as well as outline extraction; timings are single-run CPU wall time and not browser frame pacing or GPU performance."
+  }
+}

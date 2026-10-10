@@ -1,0 +1,91 @@
+{
+  "admission_and_validation_passed": true,
+  "boundary_host_count": 11,
+  "canonical_restore_passed": true,
+  "diagnostic": "exhaustive prepared-page search on a mature road face; diagnostic only",
+  "exact_engine_proposal_count_before_face_filter": 1,
+  "face_area_m2": 22936.236506458576,
+  "face_contained_proposal_count": 1,
+  "face_identity": [
+    1,
+    4,
+    2489,
+    2504,
+    2855,
+    3293,
+    3294,
+    2854,
+    2853,
+    3450,
+    3436
+  ],
+  "incremental_host_preparation": {
+    "bit_exact_reference_parity": true,
+    "quotas": [
+      1,
+      7,
+      48
+    ],
+    "scope": "host interval/split stage only; heading and endpoint search remain synchronous",
+    "serialized_resume_interval_calls": 193,
+    "split_count": 44,
+    "work_units_by_quota": [
+      53608,
+      53608,
+      53608
+    ]
+  },
+  "limitations": "This demonstrates discovery in one mature fixture face, not a general growth policy or density win. Preparation is synchronous/offline; its counted work proxy excludes nested geometry operations.",
+  "normal_construction_replay": {
+    "check_interval_ticks": 200,
+    "connected_road_and_dependent_lots_verified": true,
+    "mid_construction_restore_verified": true,
+    "observed_open_tick": 242400,
+    "started_tick": 242000
+  },
+  "production_runtime_changed": false,
+  "search": {
+    "complete_diagnostic_including_host_parity_elapsed_ms": 356,
+    "descriptor_cap": 26496,
+    "face_vertex_cap": 64,
+    "max_page_work_units": 48,
+    "page_count": 44,
+    "page_evaluation_elapsed_ms": 114,
+    "page_size": 48,
+    "preparation_counted_units": 2113,
+    "preparation_counted_units_definition": "split prefilter bundles plus endpoint descriptor checks; does not count all nested ray/polygon/target/parcel operations",
+    "preparation_elapsed_ms": 26,
+    "prepared_descriptor_count": 2069
+  },
+  "seed": 87231,
+  "selected_candidate": {
+    "endpoint_x": 179.3255615234375,
+    "endpoint_z": 12.322734832763672,
+    "host_road_id": 3317,
+    "host_t": 0.7799999713897705,
+    "selected_lots": [
+      {
+        "along": 0.5000000596046448,
+        "depth": 12.0,
+        "rotation": 0.22155557572841644,
+        "side": 1,
+        "width": 12.533336639404297,
+        "x": 205.29605102539062,
+        "z": -8.903040885925293
+      },
+      {
+        "along": 0.745555579662323,
+        "depth": 12.0,
+        "rotation": 0.22155557572841644,
+        "side": 1,
+        "width": 12.533332824707031,
+        "x": 190.92283630371094,
+        "z": -5.66542911529541
+      }
+    ],
+    "selected_nominal_envelope_m2": 300.8
+  },
+  "source_save": "validation/early-reservation-wasm-87231-save.json",
+  "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+  "tick": 242000
+}

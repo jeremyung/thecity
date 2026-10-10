@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "reference": "validation/face-target-reference.json",
+  "sha256": "d1dd14ca096722a19f03319fbe1312e6dee98a5a43ac42258e7f440a755666d5",
+  "source_save": "validation/early-reservation-wasm-87231-save.json",
+  "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+  "seed": 87231,
+  "tick": 242000,
+  "export_command": "EXPORT_FACE_TARGET_REFERENCE=1 npm run test:engine -- --release exhaustive_prepared_pages_discover_mature_face_access_candidate -- --ignored --nocapture",
+  "faces": 49,
+  "viable_faces": 12,
+  "winning_centers": 34,
+  "selected_targets": 6,
+  "target_cap": 12,
+  "descriptors": 2069,
+  "bytes": 219217,
+  "verification": "Targets and ordered descriptor bits independently compared against previously frozen access-descriptor-reference.json; source save hash verified. Export is opt-in; ordinary diagnostic compares intermediate output without rewriting.",
+  "prior_sha256": "756b53e70f8a1e0dee3d87aa5c18dd5612df4e16c0c3445fe034898b2fbba54a",
+  "migration": "Only embedded ordered_descriptor_bits changed for shared algebraic headings; all face/target inputs retained. See validation/access-vector-math-migration.json."
+}

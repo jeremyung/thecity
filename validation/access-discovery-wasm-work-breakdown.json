@@ -1,0 +1,20 @@
+{
+  "source_save": "validation/early-reservation-wasm-87231-save.json",
+  "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+  "wasm_binary": "public/wasm/city_engine_bg.wasm",
+  "wasm_sha256": "a12c5936278dd088c0d1ff02ac68897a10a6c20868d1ceb7bc599f2dd1ad1c61",
+  "chunk_work": 65536,
+  "stages": {
+    "CopyGraph": 207,
+    "Trace": 144009,
+    "Selection": 3079689,
+    "CopyRankInputs": 1518,
+    "Ranking": 51853,
+    "BuildDescriptors": 4815,
+    "Descriptors": 2951124
+  },
+  "total_work": 6233215,
+  "descriptor_count": 2069,
+  "descriptor_count_reported": 2069,
+  "scope": "WASM top-level stage accounting; binary-searches exact transition boundaries; does not alter discovery behavior"
+}

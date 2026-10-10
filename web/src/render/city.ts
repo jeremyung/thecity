@@ -249,7 +249,7 @@ export class CityRenderer {
       this.pendingCompiles++;
       try{
         await compileStyleSamples(prepared.scene,
-          scene=>this.renderer.compileAsync(scene,this.camera),
+          scene=>this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
           ()=>!this.disposed&&request===this.styleRequest,timing);
       }catch(error){timing.outcome='failed';throw error;}finally{
         prepared.dispose();this.pendingCompiles--;

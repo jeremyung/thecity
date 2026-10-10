@@ -1,0 +1,26 @@
+{
+  "runs": [
+    {
+      "descriptors": 2069,
+      "max_checkpoint_bytes": 559885,
+      "quota": 7,
+      "restores": 381,
+      "work": 6232851
+    },
+    {
+      "descriptors": 2069,
+      "max_checkpoint_bytes": 559885,
+      "quota": 48,
+      "restores": 380,
+      "work": 6232851
+    },
+    {
+      "descriptors": 2069,
+      "max_checkpoint_bytes": 559885,
+      "quota": 4096,
+      "restores": 381,
+      "work": 6232851
+    }
+  ],
+  "scope": "persisted frozen native discovery, not live capture/admission or browser performance"
+}

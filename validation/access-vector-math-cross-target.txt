@@ -1,0 +1,92 @@
+{
+  "reference_path": "../validation/access-descriptor-candidate.json",
+  "reference_sha256": "9261a3b2c48e6d78e9b6b94e1bdc53b39b779e77260eeb4f8c981f7f4ed3dc13",
+  "wasm_sha256": "a12c5936278dd088c0d1ff02ac68897a10a6c20868d1ceb7bc599f2dd1ad1c61",
+  "scope": "Node WASM, not browser rendering or worker performance; advance includes WASM boundary and status JSON; construction includes city restore",
+  "runs": [
+    {
+      "quota": 4096,
+      "checkpointing": false,
+      "native_comparison": {
+        "exact": true,
+        "mismatching_descriptors": 0,
+        "max_coordinate_delta": 0,
+        "examples": []
+      },
+      "wasm_quota_parity": true,
+      "work": 6233215,
+      "restores": 0,
+      "max_checkpoint_bytes": 0,
+      "descriptor_count": 2069,
+      "construct_including_city_restore_ms": 200.519375,
+      "calls": 1522,
+      "advance_median_ms": 0.04495800000000827,
+      "advance_p95_ms": 0.32395800000000463,
+      "advance_max_ms": 1.0790000000000077,
+      "elapsed_including_persistence_ms": 313.23449999999997
+    },
+    {
+      "quota": 48,
+      "checkpointing": true,
+      "native_comparison": {
+        "exact": true,
+        "mismatching_descriptors": 0,
+        "max_coordinate_delta": 0,
+        "examples": []
+      },
+      "wasm_quota_parity": true,
+      "work": 6233215,
+      "restores": 24,
+      "max_checkpoint_bytes": 559886,
+      "descriptor_count": 2069,
+      "construct_including_city_restore_ms": 131.317291,
+      "calls": 129859,
+      "advance_median_ms": 0.0013750000000527507,
+      "advance_p95_ms": 0.005875000000060027,
+      "advance_max_ms": 0.8064170000000104,
+      "elapsed_including_persistence_ms": 440.44412500000004
+    },
+    {
+      "quota": 4096,
+      "checkpointing": true,
+      "native_comparison": {
+        "exact": true,
+        "mismatching_descriptors": 0,
+        "max_coordinate_delta": 0,
+        "examples": []
+      },
+      "wasm_quota_parity": true,
+      "work": 6233215,
+      "restores": 24,
+      "max_checkpoint_bytes": 559886,
+      "descriptor_count": 2069,
+      "construct_including_city_restore_ms": 111.71829100000002,
+      "calls": 1522,
+      "advance_median_ms": 0.04316599999992832,
+      "advance_p95_ms": 0.2562500000001364,
+      "advance_max_ms": 0.5062500000000227,
+      "elapsed_including_persistence_ms": 243.8905000000001
+    },
+    {
+      "quota": 16384,
+      "checkpointing": true,
+      "native_comparison": {
+        "exact": true,
+        "mismatching_descriptors": 0,
+        "max_coordinate_delta": 0,
+        "examples": []
+      },
+      "wasm_quota_parity": true,
+      "work": 6233215,
+      "restores": 24,
+      "max_checkpoint_bytes": 559886,
+      "descriptor_count": 2069,
+      "construct_including_city_restore_ms": 115.952583,
+      "calls": 381,
+      "advance_median_ms": 0.17566699999997581,
+      "advance_p95_ms": 0.8977500000000873,
+      "advance_max_ms": 1.8742079999999532,
+      "elapsed_including_persistence_ms": 262.69887500000004
+    }
+  ]
+}

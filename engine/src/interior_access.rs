@@ -27,7 +27,7 @@ pub(crate) struct InteriorAccessPlan {
     pub selected_lots: Vec<InteriorAccessLot>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CandidateScore {
     pub site_area: u32,
     pub road_length_mm: u32,
@@ -37,7 +37,7 @@ pub(crate) struct CandidateScore {
     pub length_index: u8,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct AccessProposal {
     pub score: CandidateScore,
     pub host_id: u32,
@@ -67,7 +67,7 @@ pub(crate) struct AccessCandidate {
 /// the legacy candidate grid, this records an exact split fraction and branch
 /// endpoint. It is evaluated by the same collision, frontage, reservation,
 /// demand, and capacity gates as ordinary proposals.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct AccessGeometryCandidate {
     pub host_id: u32,
     pub host_t: f32,

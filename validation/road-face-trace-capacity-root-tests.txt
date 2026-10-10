@@ -1,0 +1,39 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release road_face_trace
+
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+error[E0282]: type annotations needed
+   --> src/face_target_ranking.rs:549:21
+    |
+549 |                 let checkpoint = serde_json::from_slice(&bytes).unwrap();
+    |                     ^^^^^^^^^^
+550 |                 search = TargetRanking::restore(checkpoint.clone()).unwrap_or_else(|error| {
+    |                                                 ---------- type must be known at this point
+    |
+help: consider giving `checkpoint` an explicit type
+    |
+549 |                 let checkpoint: /* Type */ = serde_json::from_slice(&bytes).unwrap();
+    |                               ++++++++++++
+
+warning: variable does not need to be mutable
+   --> src/access_search.rs:846:13
+    |
+846 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0282`.
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+error: could not compile `tokyo-city-engine` (lib test) due to 1 previous error; 2 warnings emitted

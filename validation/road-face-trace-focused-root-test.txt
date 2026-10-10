@@ -1,0 +1,146 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release road_face
+
+warning: variable does not need to be mutable
+   --> src/access_search.rs:846:13
+    |
+846 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: multiple fields are never read
+     --> src/lib.rs:11502:9
+      |
+11501 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11502 |         x: f32,
+      |         ^
+11503 |         z: f32,
+      |         ^
+11504 |         width: f32,
+      |         ^^^^^
+11505 |         depth: f32,
+      |         ^^^^^
+11506 |         rotation: f32,
+      |         ^^^^^^^^
+11507 |         side: i8,
+      |         ^^^^
+11508 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:11516:9
+      |
+11512 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11516 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:327:13
+    |
+327 |             run(rectangle_nodes.clone(), rectangle_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+327 |             let _ = run(rectangle_nodes.clone(), rectangle_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:328:13
+    |
+328 |             run(rectangle_nodes.clone(), rectangle_edges[..3].to_vec(), Some(rectangle_edges[3]), quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+328 |             let _ = run(rectangle_nodes.clone(), rectangle_edges[..3].to_vec(), Some(rectangle_edges[3]), quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:329:13
+    |
+329 |             run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+329 |             let _ = run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:332:13
+    |
+332 |             run(Vec::new(), Vec::new(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+332 |             let _ = run(Vec::new(), Vec::new(), None, quotas);
+    |             +++++++
+
+warning: `tokyo-city-engine` (lib test) generated 8 warnings (run `cargo fix --lib -p tokyo-city-engine --tests` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 33 tests
+test road_face_bridges::tests::zero_budget_and_finished_calls_are_noops ... ok
+test road_face_bridges::tests::malformed_inputs_and_checkpoints_fail_closed ... ok
+test road_face_preflight::tests::malformed_inputs_preserve_preflight_errors ... ok
+test road_face_topology::tests::zero_budget_and_done_are_noops_and_caps_are_enforced ... ok
+test road_face_preflight::tests::crossing_and_caps_fail_closed ... ok
+test road_face_preflight::tests::restore_rejects_out_of_range_and_forged_cursors ... ok
+test road_face_topology::tests::initialize_checkpoint_rejects_forged_indexed_endpoints ... ok
+test road_face_topology::tests::malformed_input_and_checkpoint_cursors_reject_safely ... ok
+test road_face_preflight::tests::rectangle_and_shared_endpoint_pairs_pass_preflight ... ok
+test road_face_preflight::tests::every_quota_boundary_json_resume_matches_uninterrupted_work ... ok
+test road_face_trace::tests::invalid_composed_checkpoints_are_rejected_at_each_stage ... ok
+test road_face_walk::tests::initialize_checkpoint_rejects_scratch_that_would_survive_initialization ... ok
+test road_face_walk::tests::malformed_active_cursors_are_rejected_without_indexing ... ok
+test road_face_walk::tests::restore_rejects_empty_active_walks_bad_minimum_indices_and_empty_nested_polygons ... ok
+test road_faces::tests::early_reservation_wasm_checkpoint_has_planar_ordinary_network ... ignored, audits the exact public-WASM early-reservation checkpoint without advancing it
+test road_faces::tests::fresh_mature_world_ordinary_graph_topology_diagnostic ... ignored, bounded fresh-world topology diagnostic for mature growth; run explicitly with --ignored --nocapture
+test road_face_bridges::tests::tarjan_matches_reference_graph_shapes_and_parallel_edges ... ok
+test road_faces::tests::adjacent_rectangles_trace_two_faces_and_proposed_diagonal_is_marked ... ok
+test road_faces::tests::dangling_street_and_disconnected_components_add_no_false_faces ... ok
+test road_faces::tests::explicit_input_and_work_caps_are_enforced ... ok
+test road_faces::tests::graph_bridge_and_crossing_edges_fail_or_yield_no_bounded_face_safely ... ok
+test road_faces::tests::interior_dangling_branch_is_removed_without_losing_its_block_face ... ok
+test road_faces::tests::malformed_and_nonfinite_inputs_fail_closed ... ok
+test road_faces::tests::nested_disconnected_cycles_are_rejected_instead_of_double_counted ... ok
+test road_faces::tests::new_founder_network_is_planar_connected_and_keeps_nonincident_parcels_clear ... ok
+test road_face_topology::tests::topology_matches_reference_order_for_cycles_spurs_and_disconnected_graphs ... ok
+test road_face_walk::tests::nested_disconnected_cycles_match_reference_rejection ... ok
+test road_faces::tests::rotated_irregular_face_is_stable_under_reordered_reversed_inputs ... ok
+test road_faces::tests::rectangle_is_one_ccw_bounded_face_and_marks_proposed_edge ... ok
+test road_face_walk::tests::results_match_reference_for_faces_spurs_and_proposed_marking ... ok
+test road_face_trace::tests::composed_job_matches_reference_across_all_stage_handoffs_and_json_resumes ... ok
+test road_face_bridges::tests::capped_chain_drains_without_recursion_or_quota_overrun ... ok
+test road_faces::tests::mature_connected_ordinary_road_graph_reports_unsupported_crossing ... ok
+
+test result: ok. 31 passed; 0 failed; 2 ignored; 0 measured; 242 filtered out; finished in 0.08s
+

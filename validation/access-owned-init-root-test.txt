@@ -1,0 +1,157 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release owned_initialization_matches_borrowed_output_and_resumes_every_phase
+
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+warning: variable does not need to be mutable
+   --> src/access_search.rs:857:13
+    |
+857 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `into_faces` is never used
+   --> src/road_face_trace.rs:164:19
+    |
+ 74 | impl RoadFaceTrace {
+    | ------------------ method in this implementation
+...
+164 |     pub(crate) fn into_faces(self) -> Option<Result<Vec<RoadFace>, RoadFaceError>> {
+    |                   ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `input` is never used
+  --> src/face_target_viability.rs:72:19
+   |
+55 | impl FrozenViabilityContext {
+   | --------------------------- method in this implementation
+...
+72 |     pub(crate) fn input(&self) -> &FrozenViabilityInput {
+   |                   ^^^^^
+
+warning: variant `InvalidRuntimeState` is never constructed
+  --> src/face_target_selection.rs:31:5
+   |
+26 | pub(crate) enum SelectionError {
+   |                 -------------- variant in this enum
+...
+31 |     InvalidRuntimeState,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `SelectionError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: methods `into_selected` and `error` are never used
+   --> src/face_target_selection.rs:171:19
+    |
+ 89 | impl FaceSelection {
+    | ------------------ methods in this implementation
+...
+171 |     pub(crate) fn into_selected(mut self) -> Result<Option<(RoadFace, Vec<(f32, f32)>)>, SelectionError> {
+    |                   ^^^^^^^^^^^^^
+...
+184 |     pub(crate) fn error(&self) -> Option<SelectionError> {
+    |                   ^^^^^
+
+warning: multiple fields are never read
+     --> src/lib.rs:11508:9
+      |
+11507 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11508 |         x: f32,
+      |         ^
+11509 |         z: f32,
+      |         ^
+11510 |         width: f32,
+      |         ^^^^^
+11511 |         depth: f32,
+      |         ^^^^^
+11512 |         rotation: f32,
+      |         ^^^^^^^^
+11513 |         side: i8,
+      |         ^^^^
+11514 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `end` is never read
+     --> src/lib.rs:11522:9
+      |
+11518 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11522 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:337:13
+    |
+337 |             run(rectangle_nodes.clone(), rectangle_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+337 |             let _ = run(rectangle_nodes.clone(), rectangle_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:338:13
+    |
+338 |             run(rectangle_nodes.clone(), rectangle_edges[..3].to_vec(), Some(rectangle_edges[3]), quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+338 |             let _ = run(rectangle_nodes.clone(), rectangle_edges[..3].to_vec(), Some(rectangle_edges[3]), quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:339:13
+    |
+339 |             run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+339 |             let _ = run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:342:13
+    |
+342 |             run(Vec::new(), Vec::new(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+342 |             let _ = run(Vec::new(), Vec::new(), None, quotas);
+    |             +++++++
+
+warning: `tokyo-city-engine` (lib test) generated 12 warnings (run `cargo fix --lib -p tokyo-city-engine --tests` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 20.18s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 1 test
+test access_descriptor_search::tests::owned_initialization_matches_borrowed_output_and_resumes_every_phase ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 293 filtered out; finished in 7.62s
+

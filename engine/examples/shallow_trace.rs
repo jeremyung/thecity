@@ -20,7 +20,11 @@ fn main() {
     let initial_save = engine.save_json();
     let initial_tick = before["tick"].as_u64().unwrap();
     let initial_ids: BTreeSet<u64> = before["parcels"]
-        .as_array().unwrap().iter().map(|p| p["id"].as_u64().unwrap()).collect();
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p["id"].as_u64().unwrap())
+        .collect();
     let initial_parcels = initial_ids.len();
     println!("{{\"tick\":{initial_tick},\"parcels\":{initial_parcels},\"save_hash\":\"{}\",\"event\":\"start\"}}", hash64(initial_save.as_bytes()));
     for _ in 0..100 {
@@ -32,9 +36,13 @@ fn main() {
             fs::write(format!("/tmp/shallow-native-{tick}.json"), &raw_save).unwrap();
         }
         let parcels = snapshot["parcels"].as_array().unwrap();
-        let new: Vec<_> = parcels.iter().filter(|p| {
-            !initial_ids.contains(&p["id"].as_u64().unwrap()) && p["depth"].as_f64() == Some(8.0)
-        }).collect();
+        let new: Vec<_> = parcels
+            .iter()
+            .filter(|p| {
+                !initial_ids.contains(&p["id"].as_u64().unwrap())
+                    && p["depth"].as_f64() == Some(8.0)
+            })
+            .collect();
         let newest: Vec<_> = new.iter().rev().take(3).map(|p| serde_json::json!({
             "id": p["id"], "x": p["x"], "z": p["z"], "width": p["width"], "depth": p["depth"],
             "road_id": p["road_id"], "access_node": p["access_node"]

@@ -1,17 +1,41 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+mod access_candidates;
+mod access_capture;
+mod access_math;
+mod access_proposal_validation;
+mod access_proposal_capture;
+#[cfg(test)]
+mod access_planning_job;
+#[cfg(target_arch = "wasm32")]
+mod access_discovery_wasm;
+#[cfg(test)]
+mod access_descriptor_integration_tests;
+mod access_descriptor_search;
+mod access_discovery_job;
+#[cfg(test)]
+mod access_discovery_work_diagnostic;
+mod access_rays;
+#[cfg(test)]
+mod access_reference;
+mod access_search;
 mod blocks;
 #[cfg(test)]
-mod access_candidates;
+mod density_gap_diagnosis;
 mod development;
 mod district_controller;
 mod district_density;
 #[cfg(test)]
 mod district_density_integration_tests;
-#[cfg(test)]
-mod density_gap_diagnosis;
 mod district_policy;
+#[cfg(test)]
+mod face_access_exact_tests;
+mod face_target_containment;
+mod face_target_ranking;
+mod face_target_sampling;
+mod face_target_selection;
+mod face_target_viability;
 mod frontage;
 mod frontier;
 mod geometry;
@@ -19,16 +43,21 @@ mod interior_access;
 mod neighborhood_spine;
 mod network_split;
 mod project_scoring;
+mod road_face_bridges;
+mod road_face_preflight;
+mod road_face_topology;
+mod road_face_trace;
+mod road_face_walk;
 mod road_faces;
 mod road_split;
+#[cfg(test)]
+mod road_split_profile;
 mod spine_blocks;
 mod spine_plan;
 #[cfg(test)]
-mod spine_replay_tests;
-#[cfg(test)]
 mod spine_ranking_experiment_tests;
 #[cfg(test)]
-mod face_access_exact_tests;
+mod spine_replay_tests;
 
 const SCHEMA_VERSION: u32 = 1;
 const ACTIVITY_SCHEMA_VERSION: u8 = 1;
@@ -613,6 +642,13 @@ struct WorldState {
     development_rate: u32,
     development_accum: u64,
     revision: u64,
+    /// Monotonic generation for geometry/eligibility inputs used by live
+    /// access proposal validation. Separate from the UI snapshot revision.
+    #[serde(default)]
+    access_geometry_revision: u64,
+    /// Once exhausted, equality can no longer prove freshness; never wrap.
+    #[serde(default)]
+    access_geometry_revision_exhausted: bool,
     next_id: u32,
     next_event_id: u32,
     nodes: Vec<Node>,
@@ -911,6 +947,30 @@ fn corridor_crosses_protected(ax: f32, az: f32, bx: f32, bz: f32) -> bool {
 }
 
 impl Engine {
+    /// Advance the persisted generation only after a committed change to the
+    /// geometry, connectivity, reservation, or pending-road inputs used by
+    /// access proposal validation. Never call from ordinary tick/revision
+    /// updates.
+    fn mark_access_geometry_changed(&mut self) {
+        if self.state.access_geometry_revision_exhausted {
+            return;
+        }
+        match self.state.access_geometry_revision.checked_add(1) {
+            Some(next) => self.state.access_geometry_revision = next,
+            None => {
+                self.state.access_geometry_revision = u64::MAX;
+                self.state.access_geometry_revision_exhausted = true;
+            }
+        }
+    }
+
+    /// `None` is fail-closed: a proposal cannot be admitted against an
+    /// exhausted generation because subsequent mutations cannot be ordered.
+    pub(crate) fn access_geometry_revision_token(&self) -> Option<u64> {
+        (!self.state.access_geometry_revision_exhausted)
+            .then_some(self.state.access_geometry_revision)
+    }
+
     pub fn new(seed: u32) -> Self {
         let seed64 = (seed as u64).wrapping_add(0x9e3779b97f4a7c15).max(1);
         let mut engine = Self {
@@ -926,6 +986,8 @@ impl Engine {
                 development_rate: 4,
                 development_accum: 0,
                 revision: 1,
+                access_geometry_revision: 0,
+                access_geometry_revision_exhausted: false,
                 next_id: 1,
                 next_event_id: 1,
                 nodes: vec![],
@@ -1125,6 +1187,7 @@ impl Engine {
             z: z.clamp(MIN, MAX),
             kind: kind.into(),
         });
+        self.mark_access_geometry_changed();
         id
     }
     fn add_road(&mut self, from: u32, to: u32, kind: &str, stage: &str, progress: f32) -> u32 {
@@ -1144,6 +1207,7 @@ impl Engine {
             length: len.max(1.0),
             lanes: if kind == "arterial" { 2 } else { 1 },
         });
+        self.mark_access_geometry_changed();
         id
     }
 
@@ -1191,6 +1255,7 @@ impl Engine {
             protected,
             reservation: None,
         });
+        self.mark_access_geometry_changed();
         id
     }
     fn remember_nearest_frontage(&mut self, parcel_id: u32, access_node: u32) {
@@ -1248,6 +1313,7 @@ impl Engine {
                 along,
                 side,
             });
+            self.mark_access_geometry_changed();
         }
     }
     fn frontage_rotation(&self, parcel_id: u32) -> f32 {
@@ -2313,6 +2379,7 @@ impl Engine {
         }
         if self.complete_neighborhood_spine_project(id) {
             self.retire_completed_neighborhood_plan();
+            self.mark_access_geometry_changed();
             self.state.revision = self.state.revision.saturating_add(1);
             self.trim_completed_projects();
             return;
@@ -2329,16 +2396,21 @@ impl Engine {
                     } else {
                         "local"
                     };
+                    let mut road_opened = false;
                     let rid = if let Some(road) = self.state.roads.iter_mut().find(|r| {
                         ((r.from == a && r.to == b) || (r.from == b && r.to == a))
                             && r.stage != "open"
                     }) {
                         road.stage = "open".into();
                         road.progress = 1.0;
+                        road_opened = true;
                         road.id
                     } else {
                         self.add_road(a, b, kind, "open", 1.0)
                     };
+                    if road_opened {
+                        self.mark_access_geometry_changed();
+                    }
                     self.recompute_connectivity();
                     self.remember_neighborhood_plan_road(rid, a, b);
                     if let Some(r) = self.state.roads.iter_mut().find(|r| r.id == rid) {
@@ -2359,9 +2431,7 @@ impl Engine {
                             self.state
                                 .pending_interior_access
                                 .as_ref()
-                                .map(|plan| {
-                                    vec![plan.host_road_id, plan.host_second_half_road_id]
-                                })
+                                .map(|plan| vec![plan.host_road_id, plan.host_second_half_road_id])
                                 .unwrap_or_else(|| vec![rid])
                         } else {
                             vec![rid]
@@ -2381,8 +2451,12 @@ impl Engine {
             }
             "building" => {
                 if let Some(pid) = p.parcel_id {
+                    let mut released_parcel_reservation = false;
                     if let Some(parcel) = self.state.parcels.iter_mut().find(|x| x.id == pid) {
-                        parcel.reservation = None;
+                        released_parcel_reservation = parcel.reservation.take().is_some();
+                    }
+                    if released_parcel_reservation {
+                        self.mark_access_geometry_changed();
                     }
                     if let Some(b) = self
                         .state
@@ -2428,14 +2502,19 @@ impl Engine {
                 }
             }
             "rail" => {
+                let mut opened_rail = false;
                 if let Some(road) = self
                     .state
                     .roads
                     .iter_mut()
                     .find(|r| r.kind == "rail" && Some(r.from) == p.from && Some(r.to) == p.to)
                 {
+                    opened_rail = road.stage != "open";
                     road.stage = "open".into();
                     road.progress = 1.0;
+                }
+                if opened_rail {
+                    self.mark_access_geometry_changed();
                 }
                 self.recompute_connectivity();
                 self.record(
@@ -2475,6 +2554,11 @@ impl Engine {
             _ => {}
         }
         self.retire_completed_neighborhood_plan();
+        if p.kind == "road" {
+            // The active-road-project corridor is removed at completion even
+            // when malformed/legacy project references meant no road opened.
+            self.mark_access_geometry_changed();
+        }
         self.state.revision = self.state.revision.saturating_add(1);
         self.trim_completed_projects();
     }
@@ -2598,6 +2682,7 @@ impl Engine {
         }
 
         self.state.pending_interior_access = None;
+        self.mark_access_geometry_changed();
         for lot in &plan.selected_lots {
             let along_meters = lot.along * branch.length;
             let (Some(from), Some(to)) = (self.node(branch.from), self.node(branch.to)) else {
@@ -2620,6 +2705,7 @@ impl Engine {
                 along: lot.along,
                 side: lot.side,
             });
+            self.mark_access_geometry_changed();
         }
         if let Some(project) = self
             .state
@@ -2642,22 +2728,26 @@ impl Engine {
         );
         #[cfg(test)]
         {
-            self.interior_access_completions =
-                self.interior_access_completions.saturating_add(1);
+            self.interior_access_completions = self.interior_access_completions.saturating_add(1);
         }
         self.state.revision = self.state.revision.saturating_add(1);
         self.trim_completed_projects();
     }
 
     fn keep_interior_project_retryable(&mut self, project_id: u32) {
+        let mut restored_pending_road = false;
         if let Some(project) = self
             .state
             .projects
             .iter_mut()
             .find(|project| project.id == project_id)
         {
+            restored_pending_road = project.progress >= 1.0;
             project.progress = 0.999;
             project.stage = "finishing".into();
+        }
+        if restored_pending_road {
+            self.mark_access_geometry_changed();
         }
         if let Some(plan) = &self.state.pending_interior_access {
             if let Some(road) = self
@@ -2689,6 +2779,7 @@ impl Engine {
                     .any(|project| project.progress >= 1.0))
     }
     fn record_project(&mut self, project: Project) {
+        let adds_pending_road = project.kind == "road" && project.progress < 1.0;
         while self.state.projects.len() >= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
             let Some(index) = self
                 .state
@@ -2701,6 +2792,9 @@ impl Engine {
             self.state.projects.remove(index);
         }
         self.state.projects.push(project);
+        if adds_pending_road {
+            self.mark_access_geometry_changed();
+        }
     }
     fn evaluate_growth(&mut self) {
         if self
@@ -2781,8 +2875,7 @@ impl Engine {
         // project gates can spend its interior frontage. Reservation only
         // records the plan; perimeter construction remains on the existing
         // later 80-tick scheduler.
-        let early_block_reserved =
-            self.try_reserve_early_coordinated_block(active_road_projects);
+        let early_block_reserved = self.try_reserve_early_coordinated_block(active_road_projects);
         if self.state.road_infill_due > 0 {
             if usable_infill {
                 if self.state.tick % 80 == 0 {
@@ -2820,7 +2913,12 @@ impl Engine {
             && !self.neighborhood_block_has_unbuilt_frontage()
             && homes + businesses >= 3
             && road_demand_is_sufficient(self.state.demand)
-            && self.state.roads.len().saturating_add(self.state.projects.len()) < MAX_SEGMENTS
+            && self
+                .state
+                .roads
+                .len()
+                .saturating_add(self.state.projects.len())
+                < MAX_SEGMENTS
         {
             let active_buildings: Vec<Building> = self
                 .state
@@ -2836,8 +2934,7 @@ impl Engine {
                 self.early_access_attempted_tick = Some(self.state.tick);
                 self.early_access_attempts = self.early_access_attempts.saturating_add(1);
                 if self.try_plan_interior_access() {
-                    self.early_access_admissions =
-                        self.early_access_admissions.saturating_add(1);
+                    self.early_access_admissions = self.early_access_admissions.saturating_add(1);
                     return;
                 }
             }
@@ -2953,8 +3050,7 @@ impl Engine {
 
     #[cfg(test)]
     fn record_early_block_noop(&mut self) {
-        self.early_block_reservation_noops =
-            self.early_block_reservation_noops.saturating_add(1);
+        self.early_block_reservation_noops = self.early_block_reservation_noops.saturating_add(1);
     }
 
     #[cfg(not(test))]
@@ -3424,6 +3520,7 @@ impl Engine {
                             along: tower_candidate.3,
                             side: tower_candidate.4,
                         });
+                        self.mark_access_geometry_changed();
                         tower_frontage_reserved = true;
                     }
                 }
@@ -3463,9 +3560,9 @@ impl Engine {
             ) {
                 continue;
             }
-            if !self.interior_plan_allows_frontage_candidate(
-                &a, &b, x, z, lot_width, lot_depth, side,
-            ) || !self.parcel_geometry_clear(x, z, lot_width, lot_depth)
+            if !self
+                .interior_plan_allows_frontage_candidate(&a, &b, x, z, lot_width, lot_depth, side)
+                || !self.parcel_geometry_clear(x, z, lot_width, lot_depth)
             {
                 continue;
             }
@@ -3479,6 +3576,7 @@ impl Engine {
                 along,
                 side,
             });
+            self.mark_access_geometry_changed();
         }
     }
     fn frontage_candidate_sites(&self, a: &Node, b: &Node) -> Vec<(f32, f32, u32, f32, i8)> {
@@ -3584,8 +3682,8 @@ impl Engine {
                 .iter()
                 .any(|(a, b)| (*a == from && *b == to) || (*a == to && *b == from))
         });
-        if belongs_to_plan {
-            self.state.neighborhood_road_ids.insert(road_id);
+        if belongs_to_plan && self.state.neighborhood_road_ids.insert(road_id) {
+            self.mark_access_geometry_changed();
         }
     }
 
@@ -3597,7 +3695,11 @@ impl Engine {
             return false;
         }
         if plan.spine.is_some() {
-            return self.advance_neighborhood_spine();
+            let changed = self.advance_neighborhood_spine();
+            if changed {
+                self.mark_access_geometry_changed();
+            }
+            return changed;
         }
         let segments = plan.segments.clone();
         let coordinated_lots = plan.coordinated_lots;
@@ -3637,6 +3739,9 @@ impl Engine {
             }
         }
         self.state.neighborhood_plan = None;
+        // Clearing a coordinated plan releases its reserved interior even if
+        // the plan admitted no new parcels (legacy plans included).
+        self.mark_access_geometry_changed();
         if coordinated_lots {
             self.admit_completed_block_lots(&segments, selected_lots.as_deref());
         }
@@ -3723,6 +3828,7 @@ impl Engine {
                 along,
                 side,
             });
+            self.mark_access_geometry_changed();
         }
     }
 
@@ -4192,15 +4298,13 @@ impl Engine {
     ) -> (Vec<(f32, f32, u32, f32, i8)>, Vec<(f32, f32)>, bool) {
         let mut candidates =
             self.frontage_candidate_sites_with_layout(a, b, grid_width, grid_depth, spacing);
-        let tower_candidate =
-            self.station_tower_candidate_index(road_id, a, b, &candidates);
+        let tower_candidate = self.station_tower_candidate_index(road_id, a, b, &candidates);
         // Preserve the existing frontage ordering and station-tower priority.
         if let Some(index) = tower_candidate {
             candidates.swap(0, index);
         }
         let mut dimensions = vec![(grid_width, grid_depth); candidates.len()];
-        for (site, width) in
-            self.frontage_gap_candidates(a, b, collision_context, tower_envelopes)
+        for (site, width) in self.frontage_gap_candidates(a, b, collision_context, tower_envelopes)
         {
             candidates.push(site);
             dimensions.push((width, FRONTAGE_GAP_DEPTH));
@@ -4214,14 +4318,13 @@ impl Engine {
             FRONTAGE_SHALLOW_OFFSET,
         ) {
             let (x, z, _, _, _) = site;
-            let duplicate_shape = candidates
-                .iter()
-                .zip(dimensions.iter())
-                .any(|(candidate, (old_width, old_depth))| {
+            let duplicate_shape = candidates.iter().zip(dimensions.iter()).any(
+                |(candidate, (old_width, old_depth))| {
                     (candidate.0 - x).hypot(candidate.1 - z) <= 1.0e-4
                         && (*old_width - width).abs() <= 1.0e-4
                         && (*old_depth - FRONTAGE_SHALLOW_DEPTH).abs() <= 1.0e-4
-                });
+                },
+            );
             if !duplicate_shape {
                 candidates.push(site);
                 dimensions.push((width, FRONTAGE_SHALLOW_DEPTH));
@@ -4424,6 +4527,7 @@ impl Engine {
                 along,
                 side,
             });
+            self.mark_access_geometry_changed();
             if let Some(rotation) = parcel_rotation {
                 if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
                     parcel.rotation = Some(rotation);
@@ -4738,8 +4842,8 @@ impl Engine {
                     return false;
                 }
                 match plan.validate() {
-                Ok(layout) => Some(layout),
-                Err(_) => return false,
+                    Ok(layout) => Some(layout),
+                    Err(_) => return false,
                 }
             }
             None => None,
@@ -4747,17 +4851,21 @@ impl Engine {
         let spine_lots: Vec<blocks::BlockLot> = spine_layout
             .as_ref()
             .map(|layout| {
-                layout.lots.iter().map(|lot| blocks::BlockLot {
-                    center: lot.center,
-                    frontage_edge: match lot.frontage {
-                        spine_blocks::SpineFrontage::Perimeter(edge) => edge,
-                        spine_blocks::SpineFrontage::Spine(_) => usize::MAX,
-                    },
-                    frontage_t: lot.frontage_t,
-                    width: lot.width,
-                    depth: lot.depth,
-                    rotation: lot.rotation,
-                }).collect()
+                layout
+                    .lots
+                    .iter()
+                    .map(|lot| blocks::BlockLot {
+                        center: lot.center,
+                        frontage_edge: match lot.frontage {
+                            spine_blocks::SpineFrontage::Perimeter(edge) => edge,
+                            spine_blocks::SpineFrontage::Spine(_) => usize::MAX,
+                        },
+                        frontage_t: lot.frontage_t,
+                        width: lot.width,
+                        depth: lot.depth,
+                        rotation: lot.rotation,
+                    })
+                    .collect()
             })
             .unwrap_or_default();
         let proposed_lots = selected_lots
@@ -4768,9 +4876,16 @@ impl Engine {
         if proposed_lots.len() < 4
             || proposed_lots.len() > 64
             || spine_plan.is_none()
-                && proposed_lots.iter().any(|lot| !canonical_lots.contains(lot))
+                && proposed_lots
+                    .iter()
+                    .any(|lot| !canonical_lots.contains(lot))
             || self.state.parcels.len().saturating_add(proposed_lots.len()) > MAX_PARCELS
-            || self.state.parcel_frontages.len().saturating_add(proposed_lots.len()) > MAX_PARCELS
+            || self
+                .state
+                .parcel_frontages
+                .len()
+                .saturating_add(proposed_lots.len())
+                > MAX_PARCELS
             || proposed_lots.iter().any(|lot| {
                 !self.oriented_parcel_geometry_clear_with_context(
                     &geometry::OrientedRect {
@@ -4793,21 +4908,28 @@ impl Engine {
             let missing_corners = corner_ids.iter().filter(|id| id.is_none()).count();
             let future_perimeter_ids = required_segments.saturating_mul(2);
             let future_spine_ids = 6_usize.saturating_add(layout.lots.len());
-            if self.state.next_id.checked_add(
-                missing_corners
-                    .saturating_add(future_perimeter_ids)
-                    .saturating_add(future_spine_ids) as u32,
-            ).is_none() {
+            if self
+                .state
+                .next_id
+                .checked_add(
+                    missing_corners
+                        .saturating_add(future_perimeter_ids)
+                        .saturating_add(future_spine_ids) as u32,
+                )
+                .is_none()
+            {
                 return false;
             }
             let temporary_plan = NeighborhoodPlan {
                 anchor_node: anchor.id,
-                segments: (0..4).map(|index| {
-                    let from = corner_ids[index].unwrap_or(u32::MAX - index as u32);
-                    let to_index = (index + 1) % 4;
-                    let to = corner_ids[to_index].unwrap_or(u32::MAX - to_index as u32);
-                    (from, to)
-                }).collect(),
+                segments: (0..4)
+                    .map(|index| {
+                        let from = corner_ids[index].unwrap_or(u32::MAX - index as u32);
+                        let to_index = (index + 1) % 4;
+                        let to = corner_ids[to_index].unwrap_or(u32::MAX - to_index as u32);
+                        (from, to)
+                    })
+                    .collect(),
                 next_segment: 0,
                 coordinated_lots: true,
                 selected_lots: None,
@@ -4823,23 +4945,24 @@ impl Engine {
             }
         }
         if spine_plan.is_none() {
-        if let Some((reused_index, _)) = reused_edge {
-            for index in 0..4 {
-                if index == reused_index {
-                    continue;
-                }
-                let edge_length = distance(&corner_nodes[index], &corner_nodes[(index + 1) % 4]);
-                if edge_length >= 70.0
-                    && proposed_lots
-                        .iter()
-                        .filter(|lot| lot.frontage_edge == index)
-                        .count()
-                        < 2
-                {
-                    return false;
+            if let Some((reused_index, _)) = reused_edge {
+                for index in 0..4 {
+                    if index == reused_index {
+                        continue;
+                    }
+                    let edge_length =
+                        distance(&corner_nodes[index], &corner_nodes[(index + 1) % 4]);
+                    if edge_length >= 70.0
+                        && proposed_lots
+                            .iter()
+                            .filter(|lot| lot.frontage_edge == index)
+                            .count()
+                            < 2
+                    {
+                        return false;
+                    }
                 }
             }
-        }
         }
         for index in 0..4 {
             let a = &corner_nodes[index];
@@ -5034,8 +5157,7 @@ impl Engine {
                 usable_sites: score_lots.len().min(u16::MAX as usize) as u16,
                 nominal_area_cm2,
                 new_road_length_cm,
-                new_road_count: (4 - usize::from(reused_edge.is_some())) as u8
-                    + spine_road_count,
+                new_road_count: (4 - usize::from(reused_edge.is_some())) as u8 + spine_road_count,
                 stable_key,
             },
             selected_lots,
@@ -5045,17 +5167,23 @@ impl Engine {
 
     fn spine_candidate_lots(plan: &spine_plan::SpinePlan) -> Option<Vec<blocks::BlockLot>> {
         let layout = plan.validate().ok()?;
-        Some(layout.lots.iter().map(|lot| blocks::BlockLot {
-            center: lot.center,
-            frontage_edge: match lot.frontage {
-                spine_blocks::SpineFrontage::Perimeter(edge) => edge,
-                spine_blocks::SpineFrontage::Spine(_) => usize::MAX,
-            },
-            frontage_t: lot.frontage_t,
-            width: lot.width,
-            depth: lot.depth,
-            rotation: lot.rotation,
-        }).collect())
+        Some(
+            layout
+                .lots
+                .iter()
+                .map(|lot| blocks::BlockLot {
+                    center: lot.center,
+                    frontage_edge: match lot.frontage {
+                        spine_blocks::SpineFrontage::Perimeter(edge) => edge,
+                        spine_blocks::SpineFrontage::Spine(_) => usize::MAX,
+                    },
+                    frontage_t: lot.frontage_t,
+                    width: lot.width,
+                    depth: lot.depth,
+                    rotation: lot.rotation,
+                })
+                .collect(),
+        )
     }
 
     fn try_create_neighborhood_plan(&mut self) -> bool {
@@ -5224,10 +5352,15 @@ impl Engine {
                             // ordinary block on this shared edge using the
                             // same benefit-per-centerline-metre score.
                             if (70.0..=90.0).contains(&edge_length) && budget.claim_spine() {
-                                let spine_offset_x = perpendicular_x * NEIGHBORHOOD_BLOCK_LENGTH * side;
-                                let spine_offset_z = perpendicular_z * NEIGHBORHOOD_BLOCK_LENGTH * side;
+                                let spine_offset_x =
+                                    perpendicular_x * NEIGHBORHOOD_BLOCK_LENGTH * side;
+                                let spine_offset_z =
+                                    perpendicular_z * NEIGHBORHOOD_BLOCK_LENGTH * side;
                                 let spine_corners = [
-                                    WorldPoint { x: start.x, z: start.z },
+                                    WorldPoint {
+                                        x: start.x,
+                                        z: start.z,
+                                    },
                                     WorldPoint { x: end.x, z: end.z },
                                     WorldPoint {
                                         x: end.x + spine_offset_x,
@@ -5264,10 +5397,21 @@ impl Engine {
                                             Some((0, road.id)),
                                             None,
                                             &score_lots,
-                                            [anchor.id, 2, road.id.saturating_mul(2).saturating_add(side_index as u32)],
+                                            [
+                                                anchor.id,
+                                                2,
+                                                road.id
+                                                    .saturating_mul(2)
+                                                    .saturating_add(side_index as u32),
+                                            ],
                                             Some(spine),
                                         );
-                                        if best_candidate.as_ref().map_or(true, |best| neighborhood_candidate_is_better(candidate.score, best.score)) {
+                                        if best_candidate.as_ref().map_or(true, |best| {
+                                            neighborhood_candidate_is_better(
+                                                candidate.score,
+                                                best.score,
+                                            )
+                                        }) {
                                             best_candidate = Some(candidate);
                                         }
                                     }
@@ -5363,13 +5507,32 @@ impl Engine {
 
                 if budget.claim_spine() {
                     let spine_corners = [
-                        WorldPoint { x: anchor.x, z: anchor.z },
-                        WorldPoint { x: anchor.x + ux * NEIGHBORHOOD_BLOCK_LENGTH, z: anchor.z + uz * NEIGHBORHOOD_BLOCK_LENGTH },
-                        WorldPoint { x: anchor.x + ux * NEIGHBORHOOD_BLOCK_LENGTH + vx * NEIGHBORHOOD_BLOCK_LENGTH, z: anchor.z + uz * NEIGHBORHOOD_BLOCK_LENGTH + vz * NEIGHBORHOOD_BLOCK_LENGTH },
-                        WorldPoint { x: anchor.x + vx * NEIGHBORHOOD_BLOCK_LENGTH, z: anchor.z + vz * NEIGHBORHOOD_BLOCK_LENGTH },
+                        WorldPoint {
+                            x: anchor.x,
+                            z: anchor.z,
+                        },
+                        WorldPoint {
+                            x: anchor.x + ux * NEIGHBORHOOD_BLOCK_LENGTH,
+                            z: anchor.z + uz * NEIGHBORHOOD_BLOCK_LENGTH,
+                        },
+                        WorldPoint {
+                            x: anchor.x
+                                + ux * NEIGHBORHOOD_BLOCK_LENGTH
+                                + vx * NEIGHBORHOOD_BLOCK_LENGTH,
+                            z: anchor.z
+                                + uz * NEIGHBORHOOD_BLOCK_LENGTH
+                                + vz * NEIGHBORHOOD_BLOCK_LENGTH,
+                        },
+                        WorldPoint {
+                            x: anchor.x + vx * NEIGHBORHOOD_BLOCK_LENGTH,
+                            z: anchor.z + vz * NEIGHBORHOOD_BLOCK_LENGTH,
+                        },
                     ];
                     let spine = spine_plan::SpinePlan {
-                        corners: spine_corners.map(|point| blocks::BlockPoint { x: point.x, z: point.z }),
+                        corners: spine_corners.map(|point| blocks::BlockPoint {
+                            x: point.x,
+                            z: point.z,
+                        }),
                         recipe_version: spine_plan::RECIPE_VERSION,
                         stage: spine_plan::SpineStage::Reserved,
                     };
@@ -5395,7 +5558,9 @@ impl Engine {
                                 [anchor.id, 3, option as u32],
                                 Some(spine),
                             );
-                            if best_candidate.as_ref().map_or(true, |best| neighborhood_candidate_is_better(candidate.score, best.score)) {
+                            if best_candidate.as_ref().map_or(true, |best| {
+                                neighborhood_candidate_is_better(candidate.score, best.score)
+                            }) {
                                 best_candidate = Some(candidate);
                             }
                         }
@@ -5437,6 +5602,7 @@ impl Engine {
             selected_lots: candidate.selected_lots,
             spine: candidate.spine,
         });
+        self.mark_access_geometry_changed();
         self.state.revision = self.state.revision.saturating_add(1);
         true
     }
@@ -5447,7 +5613,11 @@ impl Engine {
                 return false;
             };
             if plan.next_segment >= plan.segments.len() {
-                return self.advance_neighborhood_spine();
+                let changed = self.advance_neighborhood_spine();
+                if changed {
+                    self.mark_access_geometry_changed();
+                }
+                return changed;
             }
             let (from, to) = plan.segments[plan.next_segment];
             if let Some(road_id) = self
@@ -5931,10 +6101,12 @@ impl Engine {
         }
         let candidate_count = geometry_candidates
             .map(|candidates| candidates.len())
-            .or_else(|| {
-                explicit_candidates.map(|candidates| candidates.len())
-            })
-            .unwrap_or_else(|| hosts.len().saturating_mul(interior_access::PROPOSALS_PER_HOST));
+            .or_else(|| explicit_candidates.map(|candidates| candidates.len()))
+            .unwrap_or_else(|| {
+                hosts
+                    .len()
+                    .saturating_mul(interior_access::PROPOSALS_PER_HOST)
+            });
         if candidate_count == 0 {
             return unchanged();
         }
@@ -5951,13 +6123,14 @@ impl Engine {
                 continue;
             }};
         }
-        let host_indexes = (explicit_candidates.is_some() || geometry_candidates.is_some()).then(|| {
-            hosts
-                .iter()
-                .enumerate()
-                .map(|(index, road)| (road.id, index))
-                .collect::<BTreeMap<_, _>>()
-        });
+        let host_indexes =
+            (explicit_candidates.is_some() || geometry_candidates.is_some()).then(|| {
+                hosts
+                    .iter()
+                    .enumerate()
+                    .map(|(index, road)| (road.id, index))
+                    .collect::<BTreeMap<_, _>>()
+            });
         for offset in 0..inspect_count {
             let proposal_index = (start_cursor + offset) % candidate_count;
             let (host_index, host_t, fraction_index, side, length_index, explicit_end) =
@@ -5979,7 +6152,10 @@ impl Engine {
                         candidate.tie_index as usize,
                         1_i8,
                         0_usize,
-                        Some(WorldPoint { x: candidate.end_x, z: candidate.end_z }),
+                        Some(WorldPoint {
+                            x: candidate.end_x,
+                            z: candidate.end_z,
+                        }),
                     )
                 } else if let Some(explicit_candidates) = explicit_candidates {
                     let candidate = explicit_candidates[proposal_index];
@@ -6171,15 +6347,24 @@ impl Engine {
                 2.2,
                 MAX_FRONTAGE_GAP_LOTS_PER_SIDE,
             );
+            // Grid candidates travel along the host-normal `nx/nz` already.
+            // Explicit geometry candidates can point at any angle, so their
+            // frontage must use the actual branch tangent to place lots
+            // perpendicular to the constructed road.
+            let (lot_tangent_x, lot_tangent_z) = if explicit_end.is_some() {
+                ((end.x - start.x) / length, (end.z - start.z) / length)
+            } else {
+                (nx, nz)
+            };
             let mut lots = Vec::new();
             for lot_side in [-1_i8, 1] {
                 for interval in &intervals {
                     let along_meters = (interval.start + interval.end) * 0.5;
                     let x = start.x + (end.x - start.x) * (along_meters / length)
-                        - nz * lot_side as f32 * 15.0;
+                        - lot_tangent_z * lot_side as f32 * 15.0;
                     let z = start.z
                         + (end.z - start.z) * (along_meters / length)
-                        + nx * lot_side as f32 * 15.0;
+                        + lot_tangent_x * lot_side as f32 * 15.0;
                     let lot = InteriorAccessLot {
                         x,
                         z,
@@ -6311,6 +6496,7 @@ impl Engine {
             project_id,
             selected_lots,
         });
+        self.mark_access_geometry_changed();
         self.state.revision = self.state.revision.saturating_add(1);
         true
     }
@@ -7263,6 +7449,7 @@ impl Engine {
         if let Some(p) = self.state.parcels.iter_mut().find(|p| p.id == parcel.id) {
             p.reservation = Some(building);
         }
+        self.mark_access_geometry_changed();
         let project_id = self.id();
         let duration = 2.0 + random_unit(&mut self.state.rng_growth) * 4.0;
         self.record_project(Project {
@@ -7344,23 +7531,33 @@ impl Engine {
         let mut seen = BTreeSet::new();
         let mut q = VecDeque::from([start]);
         seen.insert(start);
+        // Preserve source-road neighbor order while avoiding a full road
+        // scan for every visited node in a large connected district.
+        let mut adjacency: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
+        for road in self.state.roads.iter().filter(|road| road.stage == "open") {
+            adjacency.entry(road.from).or_default().push(road.to);
+            if road.from != road.to {
+                adjacency.entry(road.to).or_default().push(road.from);
+            }
+        }
         while let Some(n) = q.pop_front() {
-            let links: Vec<u32> = self
-                .state
-                .roads
-                .iter()
-                .filter(|r| r.stage == "open" && (r.from == n || r.to == n))
-                .map(|r| if r.from == n { r.to } else { r.from })
-                .collect();
-            for next in links {
-                if seen.insert(next) {
-                    q.push_back(next);
+            if let Some(links) = adjacency.get(&n) {
+                for &next in links {
+                    if seen.insert(next) {
+                        q.push_back(next);
+                    }
                 }
             }
         }
+        let mut connectivity_changed = false;
         for road in &mut self.state.roads {
-            road.connected =
+            let connected =
                 road.stage == "open" && seen.contains(&road.from) && seen.contains(&road.to);
+            connectivity_changed |= road.connected != connected;
+            road.connected = connected;
+        }
+        if connectivity_changed {
+            self.mark_access_geometry_changed();
         }
     }
     fn renewal(&mut self, day: u32) {
@@ -7399,6 +7596,7 @@ impl Engine {
         if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
             parcel.reservation = Some(id);
         }
+        self.mark_access_geometry_changed();
         let pid = self.id();
         self.record_project(Project {
             id: pid,
@@ -10441,12 +10639,22 @@ impl Engine {
         // saved prefix to reconstruct derived accumulator state.
         state.district_controller.validate(state.tick)?;
         let district_runtime = district_controller::Runtime::restore(&state.district_controller)?;
+        let mut migrated_access_geometry = false;
         if let Some(plan) = &state.neighborhood_plan {
             for (from, to) in &plan.segments {
                 if let Some(road) = state.roads.iter().find(|road| {
                     (road.from == *from && road.to == *to) || (road.from == *to && road.to == *from)
                 }) {
-                    state.neighborhood_road_ids.insert(road.id);
+                    migrated_access_geometry |= state.neighborhood_road_ids.insert(road.id);
+                }
+            }
+        }
+        if migrated_access_geometry && !state.access_geometry_revision_exhausted {
+            match state.access_geometry_revision.checked_add(1) {
+                Some(next) => state.access_geometry_revision = next,
+                None => {
+                    state.access_geometry_revision = u64::MAX;
+                    state.access_geometry_revision_exhausted = true;
                 }
             }
         }
@@ -10514,6 +10722,11 @@ impl Engine {
         Ok(engine)
     }
     pub fn validate(&self) -> Result<(), String> {
+        if self.state.access_geometry_revision_exhausted
+            && self.state.access_geometry_revision != u64::MAX
+        {
+            return Err("exhausted access geometry revision is not saturated".into());
+        }
         self.state.district_controller.validate(self.state.tick)?;
         let building_rotations: BTreeMap<u32, f32> = self
             .state
@@ -10694,8 +10907,7 @@ impl Engine {
             let branch_heading = dz.atan2(dx);
             let junction_heading_clear = |bearing: f32| {
                 let difference = (branch_heading - bearing).rem_euclid(std::f32::consts::TAU);
-                difference.min(std::f32::consts::TAU - difference)
-                    >= std::f32::consts::PI / 6.0
+                difference.min(std::f32::consts::TAU - difference) >= std::f32::consts::PI / 6.0
             };
             for road in self.state.roads.iter().filter(|road| {
                 road.stage == "open"
@@ -10708,9 +10920,9 @@ impl Engine {
                 } else {
                     road.from
                 };
-                let neighbor = self
-                    .node(neighbor_id)
-                    .ok_or_else(|| "interior access junction has a missing road endpoint".to_string())?;
+                let neighbor = self.node(neighbor_id).ok_or_else(|| {
+                    "interior access junction has a missing road endpoint".to_string()
+                })?;
                 let bearing = (neighbor.z - split.z).atan2(neighbor.x - split.x);
                 if !junction_heading_clear(bearing) {
                     return Err("interior access branch violates junction angle clearance".into());
@@ -10728,9 +10940,9 @@ impl Engine {
                 } else {
                     other.from
                 };
-                let neighbor = neighbor_id
-                    .and_then(|id| self.node(id))
-                    .ok_or_else(|| "interior access junction has a missing project endpoint".to_string())?;
+                let neighbor = neighbor_id.and_then(|id| self.node(id)).ok_or_else(|| {
+                    "interior access junction has a missing project endpoint".to_string()
+                })?;
                 let bearing = (neighbor.z - split.z).atan2(neighbor.x - split.x);
                 if !junction_heading_clear(bearing) {
                     return Err("interior access branch violates junction angle clearance".into());
@@ -11434,14 +11646,14 @@ mod wasm {
 }
 
 #[cfg(test)]
-#[path = "mature_void_diagnostic.rs"]
-mod mature_void_diagnostic;
-#[cfg(test)]
 #[path = "early_access_experiment.rs"]
 mod early_access_experiment;
 #[cfg(test)]
 #[path = "early_block_reservation_experiment.rs"]
 mod early_block_reservation_experiment;
+#[cfg(test)]
+#[path = "mature_void_diagnostic.rs"]
+mod mature_void_diagnostic;
 #[cfg(test)]
 #[path = "road_opening_access_experiment.rs"]
 mod road_opening_access_experiment;
@@ -13766,7 +13978,10 @@ mod tests {
             .iter()
             .find(|road| road.id == branch_id)
             .expect("pending branch retains its road record");
-        let (a, b) = (engine.node(branch.from).unwrap(), engine.node(branch.to).unwrap());
+        let (a, b) = (
+            engine.node(branch.from).unwrap(),
+            engine.node(branch.to).unwrap(),
+        );
         let context = engine.collision_context();
         assert!(parcel_envelopes_clear_of_road(&context, a.x, a.z, b.x, b.z));
 
@@ -15123,7 +15338,11 @@ mod tests {
             assert_eq!(actual.0 .4, expected.0 .4);
             assert!((actual.1 - expected.1).abs() < 1e-4);
         }
-        assert_eq!(engine.save_json(), save, "candidate generation is read-only");
+        assert_eq!(
+            engine.save_json(),
+            save,
+            "candidate generation is read-only"
+        );
     }
 
     #[test]
@@ -15140,7 +15359,10 @@ mod tests {
             .iter()
             .find(|road| road.stage == "open" && road.connected && road.kind == "local")
             .unwrap();
-        let (a, b) = (engine.node(road.from).unwrap(), engine.node(road.to).unwrap());
+        let (a, b) = (
+            engine.node(road.from).unwrap(),
+            engine.node(road.to).unwrap(),
+        );
         let (grid_width, grid_depth, grid_spacing) = if engine.is_neighborhood_plan_road(road.id) {
             (
                 NEIGHBORHOOD_PARCEL_SIZE,
@@ -15150,13 +15372,8 @@ mod tests {
         } else {
             (14.0, 12.0, FRONTAGE_SLOT_SPACING)
         };
-        let mut grid = engine.frontage_candidate_sites_with_layout(
-            a,
-            b,
-            grid_width,
-            grid_depth,
-            grid_spacing,
-        );
+        let mut grid =
+            engine.frontage_candidate_sites_with_layout(a, b, grid_width, grid_depth, grid_spacing);
         let tower_candidate = engine.station_tower_candidate_index(road.id, a, b, &grid);
         if let Some(index) = tower_candidate {
             grid.swap(0, index);
@@ -15171,8 +15388,8 @@ mod tests {
             FRONTAGE_SHALLOW_OFFSET,
         );
         assert!(shallow.len() <= 2 * MAX_FRONTAGE_GAP_LOTS_PER_SIDE);
-        let (all, dimensions, has_tower_candidate) =
-            engine.frontage_candidates_with_shallow_fallback(
+        let (all, dimensions, has_tower_candidate) = engine
+            .frontage_candidates_with_shallow_fallback(
                 road.id,
                 a,
                 b,
@@ -15190,7 +15407,11 @@ mod tests {
         let old_prefix_len = standard_start + standard.len();
         assert_eq!(
             &all[standard_start..old_prefix_len],
-            standard.iter().map(|(site, _)| *site).collect::<Vec<_>>().as_slice()
+            standard
+                .iter()
+                .map(|(site, _)| *site)
+                .collect::<Vec<_>>()
+                .as_slice()
         );
         // The standard grid and gap candidates are an unchanged prefix in
         // production; the shallow recipe only appends after them.
@@ -15236,7 +15457,13 @@ mod tests {
             engine.set_development_rate(16);
             let start_tick = engine.state.tick;
             let initial_roads = engine.state.roads.len();
-            let initial_max_parcel_id = engine.state.parcels.iter().map(|parcel| parcel.id).max().unwrap_or(0);
+            let initial_max_parcel_id = engine
+                .state
+                .parcels
+                .iter()
+                .map(|parcel| parcel.id)
+                .max()
+                .unwrap_or(0);
             let mut pending_replay_checked = false;
 
             for _ in 0..(20_000 / 200) {
@@ -15255,7 +15482,9 @@ mod tests {
                     && engine.state.projects.iter().any(|project| {
                         project.kind == "building"
                             && project.progress < 1.0
-                            && project.parcel_id.is_some_and(|id| shallow_ids.contains(&id))
+                            && project
+                                .parcel_id
+                                .is_some_and(|id| shallow_ids.contains(&id))
                     })
                 {
                     let pending_save = engine.save_json();
@@ -15280,7 +15509,8 @@ mod tests {
                         && (parcel.depth - FRONTAGE_SHALLOW_DEPTH).abs() < 1.0e-4
                 })
                 .collect();
-            let shallow_ids: BTreeSet<u32> = shallow_parcels.iter().map(|parcel| parcel.id).collect();
+            let shallow_ids: BTreeSet<u32> =
+                shallow_parcels.iter().map(|parcel| parcel.id).collect();
             let shallow_buildings: Vec<&Building> = engine
                 .state
                 .buildings
@@ -15291,14 +15521,27 @@ mod tests {
                 .iter()
                 .filter(|building| building.stage == "open")
                 .count();
-            assert!(!shallow_parcels.is_empty(), "seed {seed}: no fallback parcel admitted");
-            assert!(open_shallow > 0, "seed {seed}: shallow lots did not construct normally");
-            assert!(pending_replay_checked, "seed {seed}: no pending shallow project was captured");
-            assert!(shallow_parcels.iter().all(|parcel| engine.node_connected(parcel.access_node)));
+            assert!(
+                !shallow_parcels.is_empty(),
+                "seed {seed}: no fallback parcel admitted"
+            );
+            assert!(
+                open_shallow > 0,
+                "seed {seed}: shallow lots did not construct normally"
+            );
+            assert!(
+                pending_replay_checked,
+                "seed {seed}: no pending shallow project was captured"
+            );
+            assert!(shallow_parcels
+                .iter()
+                .all(|parcel| engine.node_connected(parcel.access_node)));
             assert!(shallow_buildings
                 .iter()
                 .all(|building| engine.building_access_segment(building.id).is_some()));
-            engine.validate().expect("shallow continuation remains valid");
+            engine
+                .validate()
+                .expect("shallow continuation remains valid");
 
             let summary = json!({
                 "seed": seed,
@@ -15316,7 +15559,8 @@ mod tests {
                 "canonical_pending_project_replay_checked": pending_replay_checked,
                 "validation_passed": true,
             });
-            let validation_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation");
+            let validation_dir =
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation");
             std::fs::write(
                 validation_dir.join(format!("frontage-shallow-seed-{seed}-summary.json")),
                 serde_json::to_vec_pretty(&summary).unwrap(),
@@ -15388,7 +15632,9 @@ mod tests {
                     for ((x, z, access_node, along, side), width) in proposals {
                         generated += 1;
                         if width < 8.0 || width > 14.0 || !engine.node_connected(access_node) {
-                            *geometry_blocked.entry("invalid_or_disconnected".into()).or_default() += 1;
+                            *geometry_blocked
+                                .entry("invalid_or_disconnected".into())
+                                .or_default() += 1;
                             continue;
                         }
                         if Engine::overlaps_station_tower_envelopes(&towers, x, z, width, depth) {
@@ -15533,7 +15779,10 @@ mod tests {
                 "shallow_8m_depth_12m_offset": evaluate(8.0, 12.0),
             }));
         }
-        println!("{}", serde_json::to_string_pretty(&json!({"worlds": worlds})).unwrap());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&json!({"worlds": worlds})).unwrap()
+        );
     }
 
     #[test]
@@ -16238,9 +16487,17 @@ mod tests {
         assert_eq!(deep_candidate.score.new_road_length_cm, 41_000);
         assert_eq!(deep_candidate.score.new_road_count, 7);
 
-        let shallow_corners = [corners[0], corners[1], WorldPoint { x: 332.0, z: 300.0 }, WorldPoint { x: 250.0, z: 300.0 }];
+        let shallow_corners = [
+            corners[0],
+            corners[1],
+            WorldPoint { x: 332.0, z: 300.0 },
+            WorldPoint { x: 250.0, z: 300.0 },
+        ];
         let shallow = blocks::subdivide_rectangular_block(
-            shallow_corners.map(|point| blocks::BlockPoint { x: point.x, z: point.z }),
+            shallow_corners.map(|point| blocks::BlockPoint {
+                x: point.x,
+                z: point.z,
+            }),
             8.0,
             11.0,
             2.2,
@@ -16286,13 +16543,28 @@ mod tests {
             (0.0, -1.0, -1.0, 0.0),
         ] {
             let candidate_corners = [
-                WorldPoint { x: planner_anchor.x, z: planner_anchor.z },
-                WorldPoint { x: planner_anchor.x + ux * 82.0, z: planner_anchor.z + uz * 82.0 },
-                WorldPoint { x: planner_anchor.x + ux * 82.0 + vx * 82.0, z: planner_anchor.z + uz * 82.0 + vz * 82.0 },
-                WorldPoint { x: planner_anchor.x + vx * 82.0, z: planner_anchor.z + vz * 82.0 },
+                WorldPoint {
+                    x: planner_anchor.x,
+                    z: planner_anchor.z,
+                },
+                WorldPoint {
+                    x: planner_anchor.x + ux * 82.0,
+                    z: planner_anchor.z + uz * 82.0,
+                },
+                WorldPoint {
+                    x: planner_anchor.x + ux * 82.0 + vx * 82.0,
+                    z: planner_anchor.z + uz * 82.0 + vz * 82.0,
+                },
+                WorldPoint {
+                    x: planner_anchor.x + vx * 82.0,
+                    z: planner_anchor.z + vz * 82.0,
+                },
             ];
             let plan = spine_plan::SpinePlan {
-                corners: candidate_corners.map(|point| blocks::BlockPoint { x: point.x, z: point.z }),
+                corners: candidate_corners.map(|point| blocks::BlockPoint {
+                    x: point.x,
+                    z: point.z,
+                }),
                 recipe_version: spine_plan::RECIPE_VERSION,
                 stage: spine_plan::SpineStage::Reserved,
             };
@@ -16310,7 +16582,10 @@ mod tests {
                 feasible_example = Some((candidate_corners, plan));
             }
         }
-        assert!(feasible_spines > 0, "developed catchment has a real feasible deep candidate");
+        assert!(
+            feasible_spines > 0,
+            "developed catchment has a real feasible deep candidate"
+        );
         let (valid_corners, valid_plan) = feasible_example.unwrap();
         let before = engine.save_json();
         let accepts = |engine: &Engine, plan: &spine_plan::SpinePlan| {
@@ -16331,22 +16606,43 @@ mod tests {
         for corner in &mut mismatched.corners {
             corner.x += 1.0;
         }
-        assert!(mismatched.validate().is_ok(), "translation preserves recipe geometry");
+        assert!(
+            mismatched.validate().is_ok(),
+            "translation preserves recipe geometry"
+        );
         assert!(!accepts(&engine, &mismatched));
         let mut wrong_stage = valid_plan.clone();
-        wrong_stage.stage = spine_plan::SpineStage::PerimeterReady { host_road_ids: [10, 11] };
-        assert!(wrong_stage.validate().is_ok(), "stage IDs are structurally valid");
+        wrong_stage.stage = spine_plan::SpineStage::PerimeterReady {
+            host_road_ids: [10, 11],
+        };
+        assert!(
+            wrong_stage.validate().is_ok(),
+            "stage IDs are structurally valid"
+        );
         assert!(!accepts(&engine, &wrong_stage));
-        assert_eq!(engine.save_json(), before, "candidate checks must not mutate the world");
+        assert_eq!(
+            engine.save_json(),
+            before,
+            "candidate checks must not mutate the world"
+        );
         let prior_next_id = engine.state.next_id;
         engine.state.next_id = u32::MAX - 1;
         let exhausted = engine.save_json();
-        assert!(!accepts(&engine, &valid_plan), "reserve all eventual IDs before admission");
+        assert!(
+            !accepts(&engine, &valid_plan),
+            "reserve all eventual IDs before admission"
+        );
         assert_eq!(engine.save_json(), exhausted);
         engine.state.next_id = prior_next_id;
         assert!(accepts(&engine, &valid_plan));
         assert!(engine.try_create_neighborhood_plan());
-        assert!(engine.state.neighborhood_plan.as_ref().unwrap().spine.is_none());
+        assert!(engine
+            .state
+            .neighborhood_plan
+            .as_ref()
+            .unwrap()
+            .spine
+            .is_none());
     }
 
     #[test]
@@ -16677,7 +16973,10 @@ mod tests {
             .neighborhood_plan
             .as_ref()
             .expect("a feasible neighborhood is reserved at the ordinary road cadence");
-        assert_eq!(plan.next_segment, 0, "reservation does not start work immediately");
+        assert_eq!(
+            plan.next_segment, 0,
+            "reservation does not start work immediately"
+        );
         assert!(!engine
             .state
             .projects
@@ -16731,7 +17030,10 @@ mod tests {
             .neighborhood_plan
             .as_ref()
             .expect("the block reservation may coexist with usable infill");
-        assert_eq!(plan.next_segment, 0, "existing infill keeps priority over road work");
+        assert_eq!(
+            plan.next_segment, 0,
+            "existing infill keeps priority over road work"
+        );
         assert!(engine.state.projects.iter().any(|project| {
             project.kind == "building"
                 && project.progress < 1.0
@@ -19418,9 +19720,11 @@ mod tests {
             None,
         ));
         let revision_before = engine.state.revision;
+        let access_revision_before = engine.state.access_geometry_revision;
         let old_road_count = engine.state.roads.len();
 
         let outcome = engine.try_split_open_road(host.id, t).unwrap();
+        assert!(engine.state.access_geometry_revision > access_revision_before);
         assert_eq!(outcome.retained_road_id, host.id);
         assert_eq!(engine.state.roads.len(), old_road_count + 1);
         let retained = engine
@@ -19514,11 +19818,13 @@ mod tests {
             .unwrap()
             .clone();
         let before = engine.save_json();
+        let before_access_revision = engine.state.access_geometry_revision;
         assert_eq!(
             engine.try_split_open_road(host.id, 0.001),
             Err(RoadSplitError::SegmentTooShort)
         );
         assert_eq!(engine.save_json(), before);
+        assert_eq!(engine.state.access_geometry_revision, before_access_revision);
 
         let parcel_id = engine.add_parcel(250.0, 60.0, 14.0, 12.0, host.from, 0.8, false);
         engine.state.parcel_frontages.push(ParcelFrontage {
@@ -20119,6 +20425,7 @@ mod tests {
         ))
         .expect("mature public city fixture restores");
         planner.state.demand = 1.2;
+        let revision_before_admission = planner.state.access_geometry_revision;
         let mut admitted = false;
         for _ in 0..scan_count {
             if planner.try_plan_interior_access() {
@@ -20130,6 +20437,7 @@ mod tests {
             admitted,
             "production planner should admit an enumerated proposal"
         );
+        assert!(planner.state.access_geometry_revision > revision_before_admission);
         assert!(planner.state.pending_interior_access.is_some());
         planner
             .validate()
@@ -20649,4 +20957,137 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn access_geometry_revision_tracks_effective_writers_and_ignores_ticks() {
+        let mut engine = Engine::new(31);
+        let initial = engine.state.access_geometry_revision;
+
+        // Snapshot/weather activity is outside the frozen access geometry.
+        engine.state.tick = engine.state.tick.saturating_add(40);
+        engine.state.weather_intensity = 0.4;
+        engine.state.revision = engine.state.revision.saturating_add(1);
+        engine.recompute_connectivity();
+        assert_eq!(engine.state.access_geometry_revision, initial);
+
+        let node = engine.add_node(260.0, 260.0, "junction");
+        let after_node = engine.state.access_geometry_revision;
+        assert!(after_node > initial);
+        let road = engine.add_road(1, node, "local", "open", 1.0);
+        let after_road = engine.state.access_geometry_revision;
+        assert!(after_road > after_node);
+        engine.recompute_connectivity();
+        assert!(engine.state.access_geometry_revision > after_road);
+
+        let parcel = engine.add_parcel(255.0, 250.0, 8.0, 8.0, node, 0.7, false);
+        let after_parcel = engine.state.access_geometry_revision;
+        assert!(after_parcel > after_road);
+        let before_frontage = engine.state.access_geometry_revision;
+        engine.remember_nearest_frontage(parcel, node);
+        assert!(engine.state.access_geometry_revision > before_frontage);
+        assert!(engine
+            .state
+            .parcel_frontages
+            .iter()
+            .any(|frontage| frontage.parcel_id == parcel));
+
+        // The normal building planner reserves a parcel. That reservation
+        // changes which sites a concurrent access proposal may consume.
+        let before_building_reservation = engine.state.access_geometry_revision;
+        engine.plan_building(1);
+        assert!(engine.state.access_geometry_revision > before_building_reservation);
+
+        let building_project = engine
+            .state
+            .projects
+            .iter()
+            .rev()
+            .find(|project| project.kind == "building" && project.progress < 1.0)
+            .unwrap()
+            .clone();
+        let before_reservation_release = engine.state.access_geometry_revision;
+        engine.complete_project(building_project.id);
+        assert!(engine.state.access_geometry_revision > before_reservation_release);
+    }
+
+    #[test]
+    fn access_geometry_revision_tracks_road_opening_and_plan_reservations() {
+        let mut engine = Engine::new(33);
+        let bridge_project = engine
+            .state
+            .projects
+            .iter()
+            .find(|project| project.kind == "road")
+            .unwrap()
+            .id;
+        let before_open = engine.state.access_geometry_revision;
+        engine.complete_project(bridge_project);
+        assert!(engine.state.access_geometry_revision > before_open);
+
+        let mut planner = engine_with_developed_plan_site_without_reusable_edge();
+        let before_plan = planner.state.access_geometry_revision;
+        assert!(planner.try_create_neighborhood_plan());
+        assert!(planner.state.access_geometry_revision > before_plan);
+        planner.validate().unwrap();
+    }
+
+    #[test]
+    fn access_geometry_revision_is_backward_compatible_and_fails_closed_at_overflow() {
+        let engine = Engine::new(32);
+        let mut old_save: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
+        let state = old_save.as_object_mut().unwrap();
+        state.remove("access_geometry_revision");
+        state.remove("access_geometry_revision_exhausted");
+        let restored = Engine::restore_json(&old_save.to_string()).unwrap();
+        assert_eq!(restored.state.access_geometry_revision, 0);
+        assert!(!restored.state.access_geometry_revision_exhausted);
+        assert_eq!(restored.access_geometry_revision_token(), Some(0));
+
+        let mut exhausted = restored;
+        exhausted.state.access_geometry_revision = u64::MAX;
+        assert_eq!(exhausted.access_geometry_revision_token(), Some(u64::MAX));
+        exhausted.add_node(0.0, 0.0, "junction");
+        assert!(exhausted.state.access_geometry_revision_exhausted);
+        assert_eq!(exhausted.state.access_geometry_revision, u64::MAX);
+        assert_eq!(exhausted.access_geometry_revision_token(), None);
+        exhausted.add_node(1.0, 1.0, "junction");
+        assert_eq!(exhausted.access_geometry_revision_token(), None);
+        assert!(exhausted.validate().is_ok());
+    }
+    #[test]
+    fn indexed_connectivity_matches_source_order_scan() {
+        for seed in [1, 23, 87231] {
+            let mut engine = Engine::new(seed);
+            let gateway = engine.state.nodes.iter().find(|n| n.kind == "gateway").unwrap().id;
+            let a = engine.add_node(120.0, 120.0, "junction");
+            let b = engine.add_node(160.0, 120.0, "junction");
+            let c = engine.add_node(200.0, 120.0, "junction");
+            // Include disconnected components, cycles and parallel edges;
+            // the scan oracle below is the previous connectivity algorithm.
+            engine.add_road(a, b, "local", "open", 1.0);
+            engine.add_road(b, c, "local", "open", 1.0);
+            engine.add_road(c, a, "local", "open", 1.0);
+            engine.add_road(a, b, "local", "open", 1.0);
+            for connected in [false, true] {
+                if connected { engine.add_road(gateway, a, "local", "open", 1.0); }
+                let mut seen = BTreeSet::from([gateway]);
+                let mut queue = VecDeque::from([gateway]);
+                while let Some(node) = queue.pop_front() {
+                    for road in &engine.state.roads {
+                        if road.stage == "open" && (road.from == node || road.to == node) {
+                            let next = if road.from == node { road.to } else { road.from };
+                            if seen.insert(next) { queue.push_back(next); }
+                        }
+                    }
+                }
+                let expected = engine.state.roads.iter().map(|r| r.stage == "open" && seen.contains(&r.from) && seen.contains(&r.to)).collect::<Vec<_>>();
+                engine.recompute_connectivity();
+                assert_eq!(engine.state.roads.iter().map(|r|r.connected).collect::<Vec<_>>(),expected);
+                let revision = engine.access_geometry_revision_token();
+                engine.recompute_connectivity();
+                assert_eq!(engine.access_geometry_revision_token(),revision);
+            }
+        }
+    }
+
 }

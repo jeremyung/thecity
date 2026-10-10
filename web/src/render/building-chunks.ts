@@ -44,6 +44,7 @@ const MAX_INDICES_PER_UPDATE=36_000;
 const MAX_CONTOUR_FLOATS_PER_UPDATE=24_000;
 const MAX_PREPARED_VERTICES_PER_UPDATE=12_000;
 const MAX_PREPARED_MESHES_PER_UPDATE=16;
+const MIN_CONTOUR_EDGE_LENGTH_SQ=12.25;
 
 /** Retains authored detail while rebuilding static neighborhood batches over multiple updates. */
 export class BuildingChunks {
@@ -89,10 +90,10 @@ export class BuildingChunks {
   private outlines(group:THREE.Group){
     if(!this.contourMaterial)return new Float32Array(0);
     const values:number[]=[];group.updateMatrixWorld(true);
-    group.traverse(o=>{if(!(o instanceof THREE.Mesh))return;const edges=new THREE.EdgesGeometry(o.geometry,42);edges.applyMatrix4(o.matrixWorld);const points=edges.getAttribute('position');
+    group.traverse(o=>{if(!(o instanceof THREE.Mesh))return;if(maxWorldBoundsDiagonalBelow(o.geometry,o.matrixWorld,MIN_CONTOUR_EDGE_LENGTH_SQ))return;const edges=new THREE.EdgesGeometry(o.geometry,42);edges.applyMatrix4(o.matrixWorld);const points=edges.getAttribute('position');
       for(let i=0;i<points.count;i+=2){const dx=points.getX(i+1)-points.getX(i),dy=points.getY(i+1)-points.getY(i),dz=points.getZ(i+1)-points.getZ(i);
         // Major roof and facade breaks only: tiny fittings stay unoutlined.
-        if(dx*dx+dy*dy+dz*dz<12.25)continue;
+        if(dx*dx+dy*dy+dz*dz<MIN_CONTOUR_EDGE_LENGTH_SQ)continue;
         for(let j=0;j<2;j++)values.push(points.getX(i+j),points.getY(i+j),points.getZ(i+j));
       }edges.dispose();
     });return new Float32Array(values);
@@ -294,3 +295,23 @@ function disposeGroup(group:THREE.Group){
   if(resources){delete group.userData.buildingOwnedResources;disposeOwnedResources(resources);}
 }
 function disposeOwnedResources(resources:readonly(THREE.Material|THREE.Texture)[]){for(const resource of resources)resource.dispose();}
+
+function maxWorldBoundsDiagonalBelow(geometry:THREE.BufferGeometry,matrix:THREE.Matrix4,thresholdSq:number){
+  if(geometry.morphAttributes.position?.length)return false;
+  let local=geometry.boundingBox;
+  if(!local){geometry.computeBoundingBox();local=geometry.boundingBox;}
+  if(!local||local.isEmpty()||!finitePoint(local.min)||!finitePoint(local.max))return false;
+  // Transform a copy: EdgesGeometry is still evaluated against the untouched
+  // local geometry and its cached bounds remain in local coordinates.
+  const world=local.clone().applyMatrix4(matrix);
+  if(world.isEmpty()||!finitePoint(world.min)||!finitePoint(world.max))return false;
+  // EdgesGeometry writes transformed endpoints to Float32 attributes before
+  // the legacy length test. Account for endpoint rounding at large world
+  // coordinates; an uncertain near-threshold bound must take the exact path.
+  const maxAbs=Math.max(Math.abs(world.min.x),Math.abs(world.min.y),Math.abs(world.min.z),Math.abs(world.max.x),Math.abs(world.max.y),Math.abs(world.max.z));
+  const roundingMargin=maxAbs*2*1.1920928955078125e-7;
+  const dx=world.max.x-world.min.x+roundingMargin,dy=world.max.y-world.min.y+roundingMargin,dz=world.max.z-world.min.z+roundingMargin;
+  return Number.isFinite(dx)&&Number.isFinite(dy)&&Number.isFinite(dz)&&dx*dx+dy*dy+dz*dz<thresholdSq;
+}
+
+function finitePoint(point:THREE.Vector3){return Number.isFinite(point.x)&&Number.isFinite(point.y)&&Number.isFinite(point.z);}

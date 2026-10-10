@@ -5,7 +5,6 @@ import * as THREE from 'three/webgpu';
 export function styleWarmup(scene:THREE.Scene,variant:(material:THREE.Material)=>THREE.Material){
   const prepared=scene.clone(false),keys=new Set<string>(),instances:THREE.InstancedMesh[]=[];
   scene.traverse(object=>{
-    if(object instanceof THREE.Light){prepared.add(object.clone(false));return;}
     if(!(object instanceof THREE.Mesh))return;
     const materials=Array.isArray(object.material)?object.material.map(variant):[variant(object.material)];
     const layout=Object.entries(object.geometry.attributes as Record<string,THREE.BufferAttribute|THREE.InterleavedBufferAttribute>).map(([name,attribute])=>`${name}:${attribute.itemSize}:${attribute.normalized}`).sort().join(',');
@@ -23,7 +22,11 @@ export function styleWarmup(scene:THREE.Scene,variant:(material:THREE.Material)=
     mesh.matrixAutoUpdate=false;mesh.matrix.copy(object.matrixWorld);mesh.castShadow=object.castShadow;mesh.receiveShadow=object.receiveShadow;mesh.frustumCulled=false;
     prepared.add(mesh);
   });
-  return{scene:prepared,dispose(){for(const instance of instances)instance.dispose();prepared.clear();}};
+  // Compile against the live target scene so lighting identity matches actual
+  // rendering. The renderer borrows its lights without reparenting or cloning
+  // them; only representative instance arrays belong to this temporary scene.
+  let disposed=false;
+  return{scene:prepared,targetScene:scene,dispose(){if(disposed)return;disposed=true;for(const instance of instances)instance.dispose();prepared.clear();}};
 }
 
 export interface WarmupTiming { submitMs:number; waitMs:number; maxSubmitMs:number; compiledSamples:number }

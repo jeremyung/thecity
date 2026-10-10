@@ -1,0 +1,601 @@
+
+> thecity@0.1.0 wasm
+> node scripts/build-wasm.mjs
+
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `propose_interior_access_for_host` is never used
+    --> src/lib.rs:5908:8
+     |
+ 933 | impl Engine {
+     | ----------- method in this implementation
+...
+5908 |     fn propose_interior_access_for_host(&self, host_id: u32) -> interior_access::AccessScan {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `CandidateScan` is never constructed
+  --> src/access_candidates.rs:29:19
+   |
+29 | pub(crate) struct CandidateScan {
+   |                   ^^^^^^^^^^^^^
+
+warning: constant `HOST_END_CLEARANCE_M` is never used
+  --> src/access_candidates.rs:40:7
+   |
+40 | const HOST_END_CLEARANCE_M: f32 = 10.0;
+   |       ^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `SPLIT_NODE_CLEARANCE_M` is never used
+  --> src/access_candidates.rs:41:7
+   |
+41 | const SPLIT_NODE_CLEARANCE_M: f32 = 1.0;
+   |       ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_HEADINGS_PER_SPLIT` is never used
+  --> src/access_candidates.rs:47:18
+   |
+47 | pub(crate) const MAX_HEADINGS_PER_SPLIT: usize = 4;
+   |                  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `PARCEL_PROJECTION_MARGIN_M` is never used
+  --> src/access_candidates.rs:49:18
+   |
+49 | pub(crate) const PARCEL_PROJECTION_MARGIN_M: f32 = 2.0;
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `RAY_SAMPLE_M` is never used
+  --> src/access_candidates.rs:50:18
+   |
+50 | pub(crate) const RAY_SAMPLE_M: f32 = 1.0;
+   |                  ^^^^^^^^^^^^
+
+warning: constant `MAX_RAY_LOOKAHEAD_M` is never used
+  --> src/access_candidates.rs:51:18
+   |
+51 | pub(crate) const MAX_RAY_LOOKAHEAD_M: f32 = MAX_BRANCH_M + FACE_EDGE_MARGIN_M;
+   |                  ^^^^^^^^^^^^^^^^^^^
+
+warning: struct `PreparedAccessSearch` is never constructed
+  --> src/access_candidates.rs:66:19
+   |
+66 | pub(crate) struct PreparedAccessSearch {
+   |                   ^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `CandidatePage` is never constructed
+  --> src/access_candidates.rs:74:19
+   |
+74 | pub(crate) struct CandidatePage {
+   |                   ^^^^^^^^^^^^^
+
+warning: associated items `prepare`, `len`, and `page` are never used
+   --> src/access_candidates.rs:90:19
+    |
+ 83 | impl PreparedAccessSearch {
+    | ------------------------- associated items in this implementation
+...
+ 90 |     pub(crate) fn prepare(
+    |                   ^^^^^^^
+...
+140 |     pub(crate) fn len(&self) -> usize {
+    |                   ^^^
+...
+144 |     pub(crate) fn page(&self, cursor: usize) -> CandidatePage {
+    |                   ^^^^
+
+warning: function `candidates_for_face` is never used
+   --> src/access_candidates.rs:171:15
+    |
+171 | pub(crate) fn candidates_for_face(
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `candidates_for_face_with_work` is never used
+   --> src/access_candidates.rs:182:15
+    |
+182 | pub(crate) fn candidates_for_face_with_work(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `candidates_for_face_mode` is never used
+   --> src/access_candidates.rs:199:4
+    |
+199 | fn candidates_for_face_mode(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `subtract_intervals` is never used
+   --> src/access_candidates.rs:604:4
+    |
+604 | fn subtract_intervals(base: (f32, f32), exclusions: &[(f32, f32)]) -> Vec<(f32, f32)> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `host_split_samples` is never used
+   --> src/access_candidates.rs:632:15
+    |
+632 | pub(crate) fn host_split_samples(
+    |               ^^^^^^^^^^^^^^^^^^
+
+warning: function `point_in_polygon` is never used
+   --> src/access_candidates.rs:722:4
+    |
+722 | fn point_in_polygon(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `segment_inside_polygon` is never used
+   --> src/access_candidates.rs:746:4
+    |
+746 | fn segment_inside_polygon(start: (f32, f32), end: (f32, f32), polygon: &[(f32, f32)]) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `ray_exit_distance` is never used
+   --> src/access_candidates.rs:764:4
+    |
+764 | fn ray_exit_distance(start: (f32, f32), heading: (f32, f32), polygon: &[(f32, f32)]) -> f32 {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `max_clear_prefix` is never used
+   --> src/access_candidates.rs:788:4
+    |
+788 | fn max_clear_prefix(
+    |    ^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+   --> src/access_descriptor_search.rs:263:19
+    |
+262 | impl DescriptorSearch {
+    | --------------------- associated function in this implementation
+263 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: associated function `new` is never used
+  --> src/access_rays.rs:99:19
+   |
+98 | impl RayQuery {
+   | ------------- associated function in this implementation
+99 |     pub(crate) fn new(polygon: Vec<(f32, f32)>, kind: RayQueryKind) -> Result<Self, RayError> {
+   |                   ^^^
+
+warning: constant `MAX_HOST_INPUTS` is never used
+  --> src/access_search.rs:13:7
+   |
+13 | const MAX_HOST_INPUTS: usize = 512;
+   |       ^^^^^^^^^^^^^^^
+
+warning: variants `InvalidFace` and `DuplicateId` are never constructed
+  --> src/access_search.rs:47:5
+   |
+46 | pub(crate) enum SearchError {
+   |                 ----------- variants in this enum
+47 |     InvalidFace,
+   |     ^^^^^^^^^^^
+...
+50 |     DuplicateId,
+   |     ^^^^^^^^^^^
+   |
+   = note: `SearchError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+   --> src/access_search.rs:116:19
+    |
+115 | impl AccessHostPreparation {
+    | -------------------------- associated function in this implementation
+116 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: function `polygon_signed_area` is never used
+   --> src/access_search.rs:638:4
+    |
+638 | fn polygon_signed_area(polygon: &[(f32, f32)]) -> f32 {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: method `spine_limit_reached` is never used
+  --> src/development.rs:67:12
+   |
+34 | impl NeighborhoodCandidateBudget {
+   | -------------------------------- method in this implementation
+...
+67 |     pub fn spine_limit_reached(&self) -> bool {
+   |            ^^^^^^^^^^^^^^^^^^^
+
+warning: function `neighborhood_sites_per_road_is_better` is never used
+   --> src/development.rs:109:15
+    |
+109 | pub(crate) fn neighborhood_sites_per_road_is_better(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `frontage_metrics_available` is never used
+   --> src/district_controller.rs:111:19
+    |
+101 | impl Runtime {
+    | ------------ method in this implementation
+...
+111 |     pub(crate) fn frontage_metrics_available(&self) -> bool {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `built_envelope_coverage_proxy`, `floor_area_ratio_proxy`, `housing_vacancy_ratio`, and `commercial_vacancy_ratio` are never used
+   --> src/district_density.rs:98:19
+    |
+ 97 | impl CellMetrics {
+    | ---------------- methods in this implementation
+ 98 |     pub(crate) fn built_envelope_coverage_proxy(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+102 |     pub(crate) fn floor_area_ratio_proxy(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+...
+106 |     pub(crate) fn housing_vacancy_ratio(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^
+...
+110 |     pub(crate) fn commercial_vacancy_ratio(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `cell` is never used
+   --> src/district_density.rs:126:19
+    |
+125 | impl DistrictMetrics {
+    | -------------------- method in this implementation
+126 |     pub(crate) fn cell(&self, id: usize) -> Option<&CellMetrics> {
+    |                   ^^^^
+
+warning: method `metrics` is never used
+   --> src/district_density.rs:292:19
+    |
+172 | impl MeasurementAccumulator {
+    | --------------------------- method in this implementation
+...
+292 |     pub(crate) fn metrics(&self) -> Option<&DistrictMetrics> {
+    |                   ^^^^^^^
+
+warning: function `measure` is never used
+   --> src/district_density.rs:504:15
+    |
+504 | pub(crate) fn measure(
+    |               ^^^^^^^
+
+warning: variant `Infill` is never constructed
+   --> src/district_density.rs:518:5
+    |
+517 | pub(crate) enum CandidateKind {
+    |                 ------------- variant in this enum
+518 |     Infill,
+    |     ^^^^^^
+    |
+    = note: `CandidateKind` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: struct `ProjectCandidate` is never constructed
+   --> src/district_density.rs:524:19
+    |
+524 | pub(crate) struct ProjectCandidate {
+    |                   ^^^^^^^^^^^^^^^^
+
+warning: struct `RankedCandidate` is never constructed
+   --> src/district_density.rs:570:19
+    |
+570 | pub(crate) struct RankedCandidate {
+    |                   ^^^^^^^^^^^^^^^
+
+warning: enum `ScoreError` is never used
+   --> src/district_density.rs:577:17
+    |
+577 | pub(crate) enum ScoreError {
+    |                 ^^^^^^^^^^
+
+warning: function `rank_candidates` is never used
+   --> src/district_density.rs:590:15
+    |
+590 | pub(crate) fn rank_candidates(
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `rank_candidates_by_district` is never used
+   --> src/district_density.rs:609:15
+    |
+609 | pub(crate) fn rank_candidates_by_district(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `CandidateTargets` is never used
+   --> src/district_density.rs:624:6
+    |
+624 | enum CandidateTargets<'a> {
+    |      ^^^^^^^^^^^^^^^^
+
+warning: methods `copy_for_cell`, `validate_count`, and `all` are never used
+   --> src/district_density.rs:630:8
+    |
+629 | impl<'a> CandidateTargets<'a> {
+    | ----------------------------- methods in this implementation
+630 |     fn copy_for_cell(self, cell_id: usize) -> Option<DistrictTargets> {
+    |        ^^^^^^^^^^^^^
+...
+637 |     fn validate_count(self, cell_count: usize) -> Result<(), ScoreError> {
+    |        ^^^^^^^^^^^^^^
+...
+646 |     fn all(self) -> impl Iterator<Item = DistrictTargets> + 'a {
+    |        ^^^
+
+warning: function `rank_candidates_with_targets` is never used
+   --> src/district_density.rs:659:4
+    |
+659 | fn rank_candidates_with_targets(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `valid_targets` is never used
+   --> src/district_density.rs:760:4
+    |
+760 | fn valid_targets(targets: DistrictTargets) -> bool {
+    |    ^^^^^^^^^^^^^
+
+warning: function `valid_weights` is never used
+   --> src/district_density.rs:777:4
+    |
+777 | fn valid_weights(weights: ScoreWeights) -> bool {
+    |    ^^^^^^^^^^^^^
+
+warning: function `ratio` is never used
+   --> src/district_density.rs:790:4
+    |
+790 | fn ratio(numerator: f64, denominator: f64) -> f64 {
+    |    ^^^^^
+
+warning: constant `MAX_FORECAST_RECTS` is never used
+  --> src/district_policy.rs:17:18
+   |
+17 | pub(crate) const MAX_FORECAST_RECTS: usize =
+   |                  ^^^^^^^^^^^^^^^^^^
+
+warning: associated items `restore`, `checkpoint`, and `result` are never used
+   --> src/face_target_containment.rs:123:19
+    |
+104 | impl PointContainment {
+    | --------------------- associated items in this implementation
+...
+123 |     pub(crate) fn restore(state: PointContainmentCheckpoint) -> Result<Self, ContainmentError> {
+    |                   ^^^^^^^
+...
+134 |     pub(crate) fn checkpoint(&self) -> PointContainmentCheckpoint {
+    |                   ^^^^^^^^^^
+...
+181 |     pub(crate) fn result(&self) -> Option<bool> {
+    |                   ^^^^^^
+
+warning: function `validate_polygon` is never used
+   --> src/face_target_containment.rs:233:4
+    |
+233 | fn validate_polygon(points: &[(f32, f32)]) -> Result<(), ContainmentError> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `polygon_fingerprint` is never used
+   --> src/face_target_containment.rs:243:4
+    |
+243 | fn polygon_fingerprint(points: &[(f32, f32)]) -> u64 {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `validate_checkpoint` is never used
+   --> src/face_target_containment.rs:274:4
+    |
+274 | fn validate_checkpoint(state: &PointContainmentCheckpoint) -> Result<(), ContainmentError> {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_FACE_COORDINATE` is never used
+  --> src/face_target_sampling.rs:22:7
+   |
+22 | const MAX_FACE_COORDINATE: f32 = 100_000.0;
+   |       ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new` and `centers` are never used
+   --> src/face_target_sampling.rs:104:19
+    |
+103 | impl FaceSampler {
+    | ---------------- associated items in this implementation
+104 |     pub(crate) fn new(
+    |                   ^^^
+...
+202 |     pub(crate) fn centers(&self) -> Option<&[(f32, f32)]> {
+    |                   ^^^^^^^
+
+warning: fields `face_index` and `centers` are never read
+  --> src/face_target_selection.rs:77:9
+   |
+76 | pub(crate) struct SelectionView<'a> {
+   |                   ------------- fields in this struct
+77 |     pub face_index: usize,
+   |         ^^^^^^^^^^
+78 |     pub centers: &'a [(f32, f32)],
+   |         ^^^^^^^
+   |
+   = note: `SelectionView` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: method `result` is never used
+   --> src/face_target_viability.rs:165:19
+    |
+131 | impl ViabilityQuery {
+    | ------------------- method in this implementation
+...
+165 |     pub(crate) fn result(&self) -> Option<bool> {
+    |                   ^^^^^^
+
+warning: variants `TooManyNodes`, `TooManyEdges`, and `InvalidEndpoint` are never constructed
+  --> src/road_face_bridges.rs:16:5
+   |
+15 | pub(crate) enum BridgeError {
+   |                 ----------- variants in this enum
+16 |     TooManyNodes,
+   |     ^^^^^^^^^^^^
+17 |     TooManyEdges,
+   |     ^^^^^^^^^^^^
+18 |     InvalidEndpoint,
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `BridgeError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+  --> src/road_face_bridges.rs:76:19
+   |
+75 | impl BridgeSearch {
+   | ----------------- associated function in this implementation
+76 |     pub(crate) fn new(node_count: usize, edges: Vec<(usize, usize)>) -> Result<Self, BridgeError> {
+   |                   ^^^
+
+warning: variants `TooManyNodes`, `TooManyEdges`, and `InvalidInput` are never constructed
+  --> src/road_face_topology.rs:18:5
+   |
+17 | pub(crate) enum TopologyError {
+   |                 ------------- variants in this enum
+18 |     TooManyNodes,
+   |     ^^^^^^^^^^^^
+19 |     TooManyEdges,
+   |     ^^^^^^^^^^^^
+20 |     InvalidInput,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `TopologyError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+  --> src/road_face_topology.rs:97:19
+   |
+96 | impl TopologySearch {
+   | ------------------- associated function in this implementation
+97 |     pub(crate) fn new(
+   |                   ^^^
+
+warning: associated function `new` is never used
+   --> src/road_face_walk.rs:138:19
+    |
+137 | impl FaceWalkSearch {
+    | ------------------- associated function in this implementation
+138 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: function `validate_inputs` is never used
+   --> src/road_face_walk.rs:791:4
+    |
+791 | fn validate_inputs(
+    |    ^^^^^^^^^^^^^^^
+
+warning: constant `MAX_NODES` is never used
+  --> src/road_faces.rs:13:7
+   |
+13 | const MAX_NODES: usize = 512;
+   |       ^^^^^^^^^
+
+warning: constant `MAX_EDGES` is never used
+  --> src/road_faces.rs:14:7
+   |
+14 | const MAX_EDGES: usize = 512;
+   |       ^^^^^^^^^
+
+warning: constant `MAX_HALF_EDGE_STEPS` is never used
+  --> src/road_faces.rs:15:7
+   |
+15 | const MAX_HALF_EDGE_STEPS: usize = MAX_EDGES * 2;
+   |       ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_PAIR_TESTS` is never used
+  --> src/road_faces.rs:16:7
+   |
+16 | const MAX_PAIR_TESTS: usize = 131_072;
+   |       ^^^^^^^^^^^^^^
+
+warning: constant `MAX_ADJACENCY_SEARCH_STEPS` is never used
+  --> src/road_faces.rs:17:7
+   |
+17 | const MAX_ADJACENCY_SEARCH_STEPS: usize = MAX_HALF_EDGE_STEPS * MAX_NODES;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_OUTPUT_FACES` is never used
+  --> src/road_faces.rs:18:7
+   |
+18 | const MAX_OUTPUT_FACES: usize = MAX_EDGES;
+   |       ^^^^^^^^^^^^^^^^
+
+warning: constant `MIN_FACE_AREA` is never used
+  --> src/road_faces.rs:19:7
+   |
+19 | const MIN_FACE_AREA: f64 = 1.0e-3;
+   |       ^^^^^^^^^^^^^
+
+warning: constant `COINCIDENT_EPSILON` is never used
+  --> src/road_faces.rs:20:7
+   |
+20 | const COINCIDENT_EPSILON: f32 = 1.0e-5;
+   |       ^^^^^^^^^^^^^^^^^^
+
+warning: struct `HalfEdge` is never constructed
+  --> src/road_faces.rs:70:8
+   |
+70 | struct HalfEdge {
+   |        ^^^^^^^^
+
+warning: function `trace_faces` is never used
+  --> src/road_faces.rs:83:15
+   |
+83 | pub(crate) fn trace_faces(
+   |               ^^^^^^^^^^^
+
+warning: function `half_edge_index` is never used
+   --> src/road_faces.rs:355:4
+    |
+355 | fn half_edge_index(
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `has_repeated_vertex` is never used
+   --> src/road_faces.rs:371:4
+    |
+371 | fn has_repeated_vertex(vertices: &[usize]) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `graph_bridge_edges` is never used
+   --> src/road_faces.rs:376:15
+    |
+376 | pub(crate) fn graph_bridge_edges(node_count: usize, edges: &[(usize, usize)]) -> BTreeSet<usize> {
+    |               ^^^^^^^^^^^^^^^^^^
+
+warning: function `signed_area` is never used
+   --> src/road_faces.rs:432:4
+    |
+432 | fn signed_area(vertices: &[usize], nodes: &[RoadFaceNode]) -> f64 {
+    |    ^^^^^^^^^^^
+
+warning: function `canonical_cycle` is never used
+   --> src/road_faces.rs:442:4
+    |
+442 | fn canonical_cycle(ids: &[u32]) -> Vec<u32> {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `point_strictly_inside` is never used
+   --> src/road_faces.rs:459:4
+    |
+459 | fn point_strictly_inside(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `SPINE_ROAD_WIDTH` is never used
+  --> src/spine_plan.rs:19:7
+   |
+19 | const SPINE_ROAD_WIDTH: f32 = 9.0;
+   |       ^^^^^^^^^^^^^^^^
+
+warning: methods `parcel_conflicts` and `road_conflicts` are never used
+   --> src/spine_plan.rs:82:19
+    |
+ 52 | impl SpinePlan {
+    | -------------- methods in this implementation
+...
+ 82 |     pub(crate) fn parcel_conflicts(
+    |                   ^^^^^^^^^^^^^^^^
+...
+116 |     pub(crate) fn road_conflicts(
+    |                   ^^^^^^^^^^^^^^
+
+warning: function `lot_rect` is never used
+   --> src/spine_plan.rs:213:4
+    |
+213 | fn lot_rect(lot: &crate::spine_blocks::SpineLot) -> OrientedRect {
+    |    ^^^^^^^^
+
+warning: `tokyo-city-engine` (lib) generated 80 warnings (run `cargo fix --lib -p tokyo-city-engine` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 13.50s

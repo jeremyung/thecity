@@ -42,3 +42,17 @@ it('stops superseded warmup before the next layout and restores samples after er
  expect(scene.children).toEqual(samples);
  geometry.dispose();material.dispose();
 });
+
+it('borrows the live lighting target without cloning, reparenting, or disposing its shadows',()=>{
+ const scene=new THREE.Scene(),parent=new THREE.Group(),sun=new THREE.DirectionalLight();sun.castShadow=true;parent.add(sun);scene.add(parent);
+ const target=new THREE.RenderTarget(16,16);sun.shadow.map=target;
+ const clone=vi.spyOn(sun,'clone'),liveDispose=vi.spyOn(sun,'dispose'),liveShadowDispose=vi.spyOn(sun.shadow,'dispose'),targetDispose=vi.spyOn(target,'dispose');
+ const warm=styleWarmup(scene,m=>m);
+ expect(warm.targetScene).toBe(scene);
+ const sampleLights:THREE.Light[]=[];warm.scene.traverse(object=>{if(object instanceof THREE.Light)sampleLights.push(object);});
+ expect(sampleLights).toHaveLength(0);expect(clone).not.toHaveBeenCalled();
+ warm.dispose();warm.dispose();
+ expect(liveDispose).not.toHaveBeenCalled();expect(liveShadowDispose).not.toHaveBeenCalled();expect(targetDispose).not.toHaveBeenCalled();
+ expect(sun.parent).toBe(parent);expect(parent.parent).toBe(scene);expect(warm.scene.children).toHaveLength(0);
+ sun.dispose();
+});
