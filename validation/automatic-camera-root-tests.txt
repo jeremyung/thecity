@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run --run tests/camera.test.ts tests/camera-clearance.test.ts tests/automatic-path.test.ts tests/lens.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  4 passed (4)
+      Tests  55 passed (55)
+   Start at  11:10:26
+   Duration  385ms (transform 307ms, setup 0ms, import 382ms, tests 153ms, environment 0ms)
+

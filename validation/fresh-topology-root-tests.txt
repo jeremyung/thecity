@@ -1,0 +1,50 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release fresh_mature_world_ordinary_graph_topology_diagnostic -- --ignored --nocapture
+
+warning: multiple fields are never read
+     --> src/lib.rs:11127:9
+      |
+11126 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11127 |         x: f32,
+      |         ^
+11128 |         z: f32,
+      |         ^
+11129 |         width: f32,
+      |         ^^^^^
+11130 |         depth: f32,
+      |         ^^^^^
+11131 |         rotation: f32,
+      |         ^^^^^^^^
+11132 |         side: i8,
+      |         ^^^^
+11133 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:11141:9
+      |
+11137 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11141 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.08s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 1 test
+fresh topology native seed=0 tick=242000 nodes=156 ordinary_open_connected_roads=200 result=planar bounded_faces=46
+fresh topology native seed=87231 tick=242000 nodes=137 ordinary_open_connected_roads=190 result=planar bounded_faces=56
+fresh topology public WASM seed=87231 checkpoint tick=242000 nodes=151 ordinary_open_connected_roads=202 result=planar bounded_faces=53
+test road_faces::tests::fresh_mature_world_ordinary_graph_topology_diagnostic ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 25.47s
+

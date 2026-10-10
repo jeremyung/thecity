@@ -1,0 +1,146 @@
+# Rendering and Artistic Styles
+
+Render one shared three-dimensional world with selectable material and shader treatments. Last Train, First Light is the initial implementation. Little Tokyo follows using the same geometry and state.
+
+## Foundation
+
+Style-switch checkpoint (2026-10-10): warmup submits one material/layout representative at a time and yields a browser task between samples. Superseded requests stop before the next sample; the live material swap occurs after successful preparation. Founder WebGL observations reduce the largest uninterrupted submission from a multi-second all-layout call to under 100 ms per sample, but total warmup remains about ten seconds and mature/WebGPU/performance acceptance is open. See the audit for measurements and caveats.
+
+Street-lighting checkpoint (2026-10-10): ordinary open connected streets share a deterministic instanced lamp kit across styles, with at most 1,000 placements. Warm lamp emission and soft additive pavement pools follow the common night uniform. These pools are an approximation, not dynamic lights on pedestrians or vehicles. Bridge lighting and full night-scene visual acceptance remain open; see the latest validation audit.
+
+Geometry streaming coalesces spatial batch rebuilds while arrivals are pending. Existing batches stay visible; busy chunks become eligible after12 render updates, with at most one chunk committed per update. Keep authored triangles, materials, and picking spans intact. This limits redundant rebuilds, not the time required for one merge. Renderer diagnostics expose remaining building and batch queues for visual verification.
+
+Implementation checkpoint (2026-10-10): the outer scenic terrain is a finite seeded heightfield with a river valley, shared by both styles. It leaves the authoritative basin flat and does not affect growth, collision, or saves. Browser verification and remaining artistic gaps are recorded in [the audit](../validation/spec-audit.md#scenic-terrain-verification--2026-10-10).
+
+Atmosphere checkpoint (2026-10-10): clear-air exponential fog uses density 0.00022 for Miniature and 0.00030 for Anime, plus 0.00025 times rain intensity. The lower aerial haze improves mature overview contrast; it is not a density fix. See the latest audit for captures and outstanding dusk/night/backend checks.
+
+Water checkpoint (2026-10-10): broad normal variation now uses continuous two-axis drifting noise instead of river-spanning axial sine bands. Fine-wave screen-footprint filtering and the simulated rain grid remain. Dusk WebGPU review is recorded in the audit; broad reflected glare and the remaining style/backend/motion checks are still open.
+
+### Dense-city reference update
+
+The user explicitly rejected the sparse procedural appearance. Use
+`concepts/05-dense-last-train-first-light.png` and
+`concepts/06-dense-little-tokyo.png` alongside the original growth boards and
+the photographs under `concepts/photo-references/`. These are artistic targets,
+not evidence that the browser implementation has reached them.
+
+Mature scenes require near-continuous mixed-height urban fabric, compact plots,
+recognizable tower clusters, narrow service spaces, and rail/street corridors
+that organize the composition. Preserve small historic shops within that fabric.
+Taller isolated boxes on lawns do not satisfy the requirement. Detail must work
+at skyline, neighborhood, and street scale with depth of field disabled.
+
+Use a hybrid production approach: author a convincing benchmark district and
+reusable architectural/streetscape modules, then assemble those modules with
+the simulation's constrained parcel and growth rules. Improve actual geometry,
+surface textures, lighting and composition before adding stylistic filters.
+Separate style treatments must operate on the same spatially convincing world.
+Generated concept paintings are references, not substitutes for live scenery.
+
+Lowrise surface checkpoint (2026-10-10): non-anchor home windows now use layered dark reveals, separated sash frames and sills, preserving footprint and shared material batching. Anime matte surfaces use world-anchored pigment with derivative-based attenuation of fine strokes; horizontal paving receives a restrained wash. Root passes 26 focused geometry/material tests and inspects both styles in forced WebGL. The controlled views still have plain facades and weak style distinction; this is not art acceptance or motion-stability proof.
+
+### Compact architectural families — next implementation
+
+The 799-building overview exposes a massing problem beyond density: most non-tower buildings share a rectangular shell, many typology differences are applied only to facades, and apartment setbacks usually affect just one top floor. Color variation alone cannot resolve this repetition.
+
+Introduce a deterministic family selector using existing building kind, floor count, parcel proportions, and appearance seed. Narrow low-rise homes and shops should support rowhouse/machiya forms with quieter party-wall sides, rear service volumes, and varied gable/parapet profiles. Midrise apartments and offices should have distinct massing: walk-up circulation cores, recessed balconies or loggias, and multi-floor setbacks where appropriate. Retain authored storefront detail and the established anchor identity. Keep geometry within the existing parcel envelope, preserve authoritative floors and access, and apply the same family in both styles and construction stages. Put family/layout decisions in a separate pure module rather than expanding the existing shell branch indefinitely.
+
+Validate silhouettes in neighborhood and overhead views with depth of field off, plus street-scale entry/access readability. Both low-rise and midrise families are implemented in the shared kit, but neither has passed the complete city-context artistic gate.
+
+Finishing-stage checkpoint (2026-10-10): supported low-rise buildings use their finished seeded facade and roof from 86% construction progress, retaining worksite barriers and suppressing business/window emission until opening. The partial shell is replaced, not layered underneath. Root verifies 11 focused tests and 99% Anime/Miniature browser views; this remains a discrete finishing phase, not continuous component-by-component assembly.
+
+Low-rise checkpoint (2026-10-10): `lowrise-massing.ts` defines seeded frontage and rear service masses for supported non-anchor one-to-three-floor homes, shops and cafes. The kit uses parcel-aware roofs, centered street entries and separated facade depth layers in both styles, with construction and renovation support. Root passes 10 focused tests covering layout, actual transformed parcel containment, entry/depth relationships and unsupported detached roof trim, plus the production build. Front Anime/Miniature captures show the repaired facade layers without earlier striping; the rear Miniature capture confirms removal of a floating gable trim strip. See `validation/captures/lowrise-miniature-rear-repaired.png`. Materials still look plain and style distinction is weak in this controlled scene. Neighborhood/overhead integration, construction visual review and artistic acceptance remain open; geometry checks do not establish beauty or density.
+
+Implementation in progress (2026-10-10): `building-massing.ts` now defines pure seeded layouts for non-anchor 4–11-floor apartments and offices. Apartments combine a full-height circulation core with a two-floor setback; offices combine a podium, offset shaft, and inset crown. Root verification covers 1,024 combinations of kind, floor count, seed, and envelope for supported tiers, envelope containment, and unchanged maximum floor count. The shared building kit now consumes these layouts for open, construction, and renovation stages. Root verified 11 focused geometry/layout/tower tests and the production build. Construction tiers no longer acquire floating scaffold before their supporting floors; renovation scaffold is restricted to ground-level masses. Browser specimen review confirms distinct silhouettes in Anime and Miniature, but narrow-parcel equipment and entry/window conflicts have since been corrected and verified across 162 narrow builds. Balcony depth adapts to available clearance. The full 145-test suite passes; mature-neighborhood review and artistic acceptance remain open. The architecture review office is now eight floors so it exercises this family, while the separate 28-floor tower remains. Matched pre-integration capture: `validation/captures/midrise-eight-floor-before.png`.
+
+### Offline asset workshop
+
+Apply the reference-conditioned, global-to-local workflow discussed with the
+user as an offline art-production process. Start with a station-front street
+composition, extract reusable architectural families, and inspect their actual
+3D geometry from front, rear, elevated, and street-level views before expanding
+the library. The development architecture review scene is a diagnostic tool;
+it does not replace a district produced by the authoritative simulation.
+
+Every imported or authored family must declare physical scale, ground pivot,
+parcel envelope, actual occupied footprint, entrance anchors, material roles,
+construction representation, and detail levels. Preserve window emission and
+glass as separate material roles so lighting and style switching remain live.
+Avoid baked sunsets, shadows, or reflections in base-color textures. Generated
+meshes require inspection for distorted rear elevations, fused objects, floating
+parts, inconsistent scale, and excessive geometry before runtime use.
+
+Review one coherent set of a narrow shop, walk-up apartment, office, and station
+tower together under both styles. Match their facade rhythm, scale, surface
+detail and palette without making them identical. Then validate their placement,
+entrances, construction and replacement in a real seeded neighborhood. Retain
+provenance in the asset manifest. A concept image or offline beauty render does
+not prove runtime material, performance, or artistic acceptance.
+
+### Small generated texture library
+
+Use image generation during development to accelerate reusable surface art. OpenRouter is an optional production-service adapter, not a runtime dependency; no provider credentials or generation requests belong in the browser. The application ships reviewed static assets. The user approved the Tencent Hy Image 3.5 Preview pilot: at most four 1K candidates and $2 total. The offline script `scripts/generate-texture-pilot.mjs` reads the ignored local key, pins the Tencent provider, checks published endpoint pricing, persists a request ledger before each call, and does not retry automatically. An unknown outcome or unexpected cost stops the batch. Generated candidates stay in `art-workshop/tencent-pilot/` until visual acceptance; approval of this pilot does not authorize further batches.
+
+Pilot one convincing station-front street with at most six reusable material tiles (plaster, concrete, painted metal, roof, timber and paving) plus one storefront-decoration atlas. Prefer 512–1024 px tiles; allow a 2048 px atlas only where its screen coverage warrants it. This is a starting library, not a requirement to generate all assets before reviewing the first one. Reuse the existing ivory-plaster candidate before making redundant variants. Its current review-only status does not authorize promotion without live-city visual and resource checks.
+
+Keep geometry, window emission, reflections and readable Japanese text procedural or authored. Generate flat unlit base colour with a declared physical tile size; check seams, perspective, repeated motifs and baked shadows. An attractive scene painting is unsuitable as a wall texture. Normal and roughness maps require separate inspection; do not assume generated maps are physically valid. Apply coherent variants to common geometry/UVs across styles, with deterministic tint variation instead of a unique image per building.
+
+The pilot's incremental texture allocation target is 32 MiB decoded including complete mip chains and both resident style variants, separate from the application's total GPU budget. Count base colour, normal and roughness textures separately; compressed download bytes are not decoded allocation. An RGBA8 1024-square texture with full mips is about 5.33 MiB, so six such tiles plus an atlas would exceed this target. Start smaller or share maps; choose GPU compression only after both backends and fallback behavior are tested. Preserve batching through shared atlases/material classes, bounded loading and disposal. A file audit is an estimate, not measured browser GPU usage.
+
+Accept each candidate only after comparison in a real street at dawn, noon, dusk and night in both styles, including camera motion and distant sampling. Record dimensions, bytes, provenance and acceptance in the asset manifest. Scale the library only after it visibly improves the scene within the browser budget.
+
+Use Three.js WebGPURenderer and TSL node materials. The renderer supports WebGPU and a WebGL2 fallback, but effects must be validated separately on both backends. Feature-detect capabilities and maintain explicit quality profiles.
+
+Create geometry in physical world units. Use modular roofs, facades, windows, shopfronts, road furniture, vegetation, and construction stages. Seed cosmetic variation from appearance IDs. Author enough geometric depth for miniature rendering; stylized materials may simplify it.
+
+Reuse glTF assets, mesh instances, shared materials, texture atlases, and distance-based detail. Group repeated geometry by mesh, material, and spatial chunk. Visibility culling must operate at useful chunk granularity rather than treating the entire city as one giant instance batch.
+
+## Style contract
+
+A style receives surface category, base colors, normals, depth, world coordinates, lighting, wetness, and shared water state. It owns surface response, edge treatment, atmosphere, color grading, focus defaults, and required render passes.
+
+| Treatment | Last Train, First Light | Little Tokyo |
+| --- | --- | --- |
+| Surface | Painted texture, restrained light bands | Rough tactile materials, fine physical detail |
+| Edges | Selective thin contours | Geometry and lighting |
+| Sky | Illustrated clouds and atmospheric gradients | Photographic sky and haze |
+| Night | Warm emissive windows and luminous signs | Small realistic light sources and subtle bloom |
+| Focus | Gentle optional cinematic focus | Stronger adjustable miniature tilt-shift |
+| Water | Simplified colored reflections | More physical surface response |
+
+Painterly and ink styles are future implementations of this contract. Brush marks attach to surfaces, outlines vary predictably with distance, and hatching follows stable orientation. Avoid frame-random noise that boils during camera movement.
+
+## Style switching
+
+Prepare the new pipeline without discarding the current one, precompile likely material variants, then switch at a frame boundary. Preserve camera, clock, selection, geometry, and world IDs. Reset temporal history when the pipeline changes. Dispose unused resources after the switch. Transition effects must respect reduced motion and memory ceilings; a short fade is sufficient.
+
+## Water
+
+Use finite river geometry and a flow field following its course. Layer flowing normals and gentle displacement with a bounded low-resolution ripple grid near observation areas. Rain and wakes inject impulses. When no fine grid is active, analytic waves preserve continuity. Local ripple detail is visual and does not affect city economics.
+
+Combine shoreline coloration, foam where appropriate, sky reflection, and a reduced-resolution planar reflection for a principal water surface. Update reflections at a lower cadence or when the camera changes sufficiently. Avoid recursively rendering water in reflection passes. More complex water bodies may use a cheaper reflection approximation.
+
+Flooding, erosion, hydraulic infrastructure, and full-domain fluid dynamics are outside initial scope. The water remains animated and locally simulated in every artistic style.
+
+## Lighting and weather
+
+One shared sun and moon trajectory follows authoritative city time. Use a bounded shadow region around the observed area with distant lighting approximations. Window and sign emission depend on building use and activity. Avoid thousands of shadow-casting point lights; combine emissive surfaces with a small pool of nearby lights.
+
+Rain changes wetness, ripples, pedestrian accessories, visibility, and sound. Wetness rises and dries gradually. Clouds, trees, and particles follow presentation time derived from the simulation. Lighting preview changes only lighting and labels that fact in the UI.
+
+## Anti-aliasing
+
+FSAA is required across styles. Start with four-sample MSAA where supported, including the actual offscreen scene target when post-processing is used. Canvas antialias settings alone do not validate the complete pipeline.
+
+Test wires, rails, silhouettes, foliage, water highlights, and moving outlines. If temporal reconstruction is added, supply correct motion vectors and reset history on cuts, style changes, and resolution changes. Inspect ghosting around trains and pedestrians. Choose one primary AA approach per quality profile rather than blindly stacking every technique. Post-process edges may require a final edge treatment; decide by image comparisons.
+
+## Performance policy
+
+Cap device pixel ratio and adjust internal resolution with hysteresis. Reduce reflection resolution, shadow coverage, particles, and depth-of-field cost before sacrificing the core scene. Maintain smooth transitions between mesh detail levels.
+
+Track draw calls, triangles, buffer sizes, texture memory, pipeline compilation, and pass timing where available. Reuse GPU resources through construction and redevelopment; the first building's removal must not leak its materials forever.
+
+## References
+
+- [Renderer backends and MSAA options](https://threejs.org/docs/pages/WebGPURenderer.html)
+- [TSL post-processing and temporal inputs](https://threejs.org/manual/pages/webgpu-postprocessing.html)

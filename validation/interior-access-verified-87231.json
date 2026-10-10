@@ -1,0 +1,62 @@
+{
+  "input": "validation/mature-world.ranked-blocks.json",
+  "wasmSha256": "c96ee12e16c7f71b0dbce2f4f16961e126827ec8ae3b9f8465691af514a8a486",
+  "sourceSha256": "d43afb7d813145fb516d00fd5ac69dadc8e49729d60c3e43fd7be3d43a3cacea",
+  "sampleEveryTicks": 8,
+  "finalCheckpoint": "validation/interior-access-verified-87231.json.final.json",
+  "finalSaveSha256": "d3f13e6ed93d55c3e90ff386971bb5e74403b89f6478ec6b6810e4463e61d5c8",
+  "startTick": 242000,
+  "endTick": 274000,
+  "before": {
+    "buildings": 767,
+    "roads": 203,
+    "parcels": 767
+  },
+  "after": {
+    "buildings": 774,
+    "roads": 207,
+    "parcels": 774
+  },
+  "observedPlans": 1,
+  "completedPlans": 1,
+  "observations": [
+    {
+      "plan": {
+        "host_road_id": 2517,
+        "host_second_half_road_id": 3733,
+        "host_t": 0.5,
+        "split_node_id": 3732,
+        "branch_endpoint_id": 3734,
+        "branch_road_id": 3735,
+        "project_id": 3736,
+        "selected_lots": [
+          {
+            "x": 19.525309,
+            "z": 82.97924,
+            "width": 12.533333,
+            "depth": 12,
+            "rotation": 0.05351013,
+            "along": 0.5,
+            "side": -1
+          },
+          {
+            "x": 34.237556,
+            "z": 82.19123,
+            "width": 12.533333,
+            "depth": 12,
+            "rotation": 0.05351013,
+            "along": 0.7455556,
+            "side": -1
+          }
+        ]
+      },
+      "firstObservedTick": 246800,
+      "pendingCheckpoint": "validation/interior-access-verified-87231.json.project-3736.pending.json",
+      "pendingReplayTicks": 2000,
+      "openedTick": 247104,
+      "completedReplayTicks": 2000,
+      "completedCheckpoint": "validation/interior-access-verified-87231.json.project-3736.open.json"
+    }
+  ],
+  "limitation": "Node executes the public WASM binary. This is not a browser rendering or performance measurement; eight-tick sampling can miss shorter-lived plans."
+}

@@ -1,0 +1,49 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release diagnose_mid_edge_access_feasibility_on_mature_saves -- --ignored --nocapture
+
+warning: multiple fields are never read
+    --> src/lib.rs:8882:9
+     |
+8881 |     struct MidEdgeLotProbe {
+     |            --------------- fields in this struct
+8882 |         x: f32,
+     |         ^
+8883 |         z: f32,
+     |         ^
+8884 |         width: f32,
+     |         ^^^^^
+8885 |         depth: f32,
+     |         ^^^^^
+8886 |         rotation: f32,
+     |         ^^^^^^^^
+8887 |         side: i8,
+     |         ^^^^
+8888 |         along: f32,
+     |         ^^^^^
+     |
+     = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+    --> src/lib.rs:8896:9
+     |
+8892 |     struct MidEdgeAccessProbe {
+     |            ------------------ field in this struct
+...
+8896 |         end: WorldPoint,
+     |         ^^^
+     |
+     = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.08s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 1 test
+seed87231: hosts=201 attempted=4824 rejected={"bounds": 507, "fewer_than_two_safe_lots": 39, "other_road_intersection": 34, "parcel_corridor": 4023, "protected": 47, "river": 173} safe_lots_in_top8=2 feasible_top8=[MidEdgeAccessProbe { host_road_id: 2517, host_t: 0.5, start: WorldPoint { x: -9.629484, z: 99.56231 }, end: WorldPoint { x: 50.284637, z: 96.35323 }, length: 60.0, lots: [MidEdgeLotProbe { x: 19.525309, z: 82.97924, width: 12.533333, depth: 12.0, rotation: 0.05351013, side: -1, along: 30.0 }, MidEdgeLotProbe { x: 34.237556, z: 82.19123, width: 12.533333, depth: 12.0, rotation: 0.05351013, side: -1, along: 44.733334 }] }]
+seed0: hosts=202 attempted=4848 rejected={"bounds": 540, "fewer_than_two_safe_lots": 57, "other_road_intersection": 37, "parcel_corridor": 3972, "protected": 55, "river": 184} safe_lots_in_top8=7 feasible_top8=[MidEdgeAccessProbe { host_road_id: 1739, host_t: 0.75, start: WorldPoint { x: 36.025948, z: 115.827415 }, end: WorldPoint { x: 49.802032, z: 69.84677 }, length: 48.0, lots: [MidEdgeLotProbe { x: 26.234676, z: 96.24341, width: 13.9, depth: 12.0, rotation: 1.2797009, side: -1, along: 15.95 }, MidEdgeLotProbe { x: 30.855404, z: 80.82073, width: 13.9, depth: 12.0, rotation: 1.2797009, side: -1, along: 32.05 }, MidEdgeLotProbe { x: 59.593304, z: 89.43078, width: 13.9, depth: 12.0, rotation: -1.8618917, side: 1, along: 32.05 }] }, MidEdgeAccessProbe { host_road_id: 1729, host_t: 0.75, start: WorldPoint { x: 95.31682, z: 132.42831 }, end: WorldPoint { x: 105.36838, z: 85.49255 }, length: 48.0, lots: [MidEdgeLotProbe { x: 83.98944, z: 113.69084, width: 13.9, depth: 12.0, rotation: 1.3598273, side: -1, along: 15.95 }, MidEdgeLotProbe { x: 87.3609, z: 97.9478, width: 13.9, depth: 12.0, rotation: 1.3598273, side: -1, along: 32.05 }] }, MidEdgeAccessProbe { host_road_id: 2970, host_t: 0.75, start: WorldPoint { x: 119.29756, z: -16.409756 }, end: WorldPoint { x: 64.17943, z: 7.2966137 }, length: 60.0, lots: [MidEdgeLotProbe { x: 111.199646, z: 3.4017305, width: 12.533333, depth: 12.0, rotation: -2.7354093, side: -1, along: 15.266666 }, MidEdgeLotProbe { x: 72.27734, z: -12.514873, width: 12.533333, depth: 12.0, rotation: 0.40618336, side: 1, along: 44.733334 }] }]
+test tests::diagnose_mid_edge_access_feasibility_on_mature_saves ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.15s
+

@@ -1,0 +1,36 @@
+{
+  "source": "public CityEngine WASM API",
+  "seed": 87231,
+  "tick": 242000,
+  "developmentRate": 16,
+  "engineVersion": "0.1.0",
+  "wasmSha256": "aea1b661a1c080b54b7905df58d96f6e45e46b992440b16bc3049f8fa93f45df",
+  "saveSha256": "dc9221c777ad34652337c5310d6a5b292e29a479c94a7f0202e6745ec2eb647d",
+  "canonicalRestore": true,
+  "continuationTicksVerified": 2000,
+  "stage": "Maturity",
+  "buildings": 429,
+  "roads": 142,
+  "housing": 270,
+  "commercial": 159,
+  "towers": [
+    {
+      "id": 93,
+      "kind": "office",
+      "floors": 40,
+      "x": 172.45831,
+      "z": 132.42445
+    },
+    {
+      "id": 116,
+      "kind": "office",
+      "floors": 40,
+      "x": 98.65239,
+      "z": 115.979324
+    }
+  ],
+  "neighborhoodPlan": null,
+  "historicNeighborhoodRoads": 36,
+  "historicNeighborhoodFrontages": 110,
+  "acceptance": "Candidate only: requires density, connectivity, and browser visual review."
+}

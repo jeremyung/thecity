@@ -1,0 +1,66 @@
+{
+  "title": "Staged production BuildingChunks update timing",
+  "measuredAt": "2026-10-10T18:40:13.420Z",
+  "input": {
+    "file": "validation/early-reservation-wasm-87231-snapshot.json",
+    "sha256": "0559e20d76403429dffcc8a13d0953b699accf0ce2c73df0e30401c4da40c94f",
+    "bytes": 2013175,
+    "seed": 87231,
+    "tick": 242000,
+    "buildings": 850
+  },
+  "code": {
+    "web/src/render/kit.ts": "f88cd6461564d40f0a80b585c75d13927e794f2ac6d1168543591f01a7903937",
+    "web/src/render/building-chunks.ts": "a39605a8cbfcc57ea5ba9a634da0e1620aac3b5ec314ee4774390e827bf9a78c",
+    "web/src/render/incremental-geometry-merge.ts": "8300c4f00a5c8e67865e61e57df07be70da6d75e2adc80ce57d4e32d7647e4fc",
+    "web/src/render/materials.ts": "c9370d606f41cba9e170c656a5d16c406806fc573614231e1bf9fb50235139f2"
+  },
+  "machine": {
+    "platform": "darwin 25.6.0",
+    "architecture": "arm64",
+    "cpuModel": "Apple M2 Max",
+    "logicalCpus": 12,
+    "totalRamBytes": 34359738368,
+    "freeRamBeforeRunBytes": 171769856,
+    "node": "v26.7.0",
+    "note": "Node CPU-only wall-clock measurements; other host activity was not isolated. No browser/GPU timing or renderer frame pacing."
+  },
+  "workload": {
+    "chunkSizeMeters": 200,
+    "uniqueChunks": 16,
+    "sourceBuildings": 850,
+    "sourceMeshes": 14422,
+    "sourceVertices": 4314662,
+    "sourceIndices": 6406914,
+    "batchMeshes": 417,
+    "batchVertices": 4314662,
+    "batchIndices": 6406914,
+    "inputQueue": "All 850 buildingKit groups were generated and passed to BuildingChunks.set() before the first update()."
+  },
+  "timingMs": {
+    "buildingKitGeneration": 1831.419137,
+    "sourceQueueIncludingOutlines": 5032.5106630000055,
+    "chunkUpdateDrainWallTime": 599.5257080000001,
+    "endToEnd": 7464.545917,
+    "perUpdate": {
+      "calls": 1286,
+      "mean": 0.4656133989113612,
+      "p50": 0.22862499999973807,
+      "p95": 0.9484160000001793,
+      "max": 55.95762500000001
+    }
+  },
+  "preparationLimit": {
+    "preparedMeshCapPerUpdate": 16,
+    "preparedVertexQuotaPerUpdate": 12000,
+    "oneOversizedMeshMayBeSynchronous": true,
+    "maxSingleAuthoredMeshVertices": 54000,
+    "authoredMeshesExceedingVertexQuota": 12
+  },
+  "interpretation": [
+    "buildingKitGeneration is measured separately from sourceQueueIncludingOutlines; the latter includes group traversal and exact outline extraction performed synchronously by BuildingChunks.set().",
+    "chunkUpdateDrainWallTime and the perUpdate distribution measure only calls to staged BuildingChunks.update() after the full fixture has been queued. These do not include renderer-side GPU upload.",
+    "Per-update work is bounded by mesh/vertex preparation caps, merger vertex/index quotas and a contour-copy quota. A single authored mesh exceeding the preparation quota remains a synchronous transform/color clone and is reported above.",
+    "Per-update p95/max are samples from one complete fixture drain, not repeated independent runs or a frame-rate estimate. This audit does not measure memory or rendering quality."
+  ]
+}

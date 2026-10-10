@@ -1,0 +1,573 @@
+{
+  "benchmark": "mature-city-wasm-single-tick",
+  "runtime": {
+    "node": "v26.7.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M2 Max",
+    "logicalCpuCount": 12,
+    "totalMemoryBytes": 34359738368
+  },
+  "configuration": {
+    "seed": 87231,
+    "developmentRate": 16,
+    "matureStage": "Maturity",
+    "warmupTicks": 240000,
+    "warmupBatch": 2000,
+    "warmupMs": 2563.582541,
+    "measuredTicks": 10000,
+    "targetTickRateHz": 20,
+    "targetTickBudgetMs": 50,
+    "earlyGrowthEvery1000Ticks": [
+      {
+        "tick": 1000,
+        "stage": "Settlement",
+        "buildings": 6,
+        "roads": 7,
+        "parcels": 7,
+        "residents": 30,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 26,
+          "home": 4
+        },
+        "population": 38,
+        "activeProjects": 1
+      },
+      {
+        "tick": 2000,
+        "stage": "Settlement",
+        "buildings": 9,
+        "roads": 8,
+        "parcels": 9,
+        "residents": 64,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 59,
+          "home": 4,
+          "working_external": 1
+        },
+        "population": 72,
+        "activeProjects": 1
+      },
+      {
+        "tick": 3000,
+        "stage": "Settlement",
+        "buildings": 12,
+        "roads": 10,
+        "parcels": 13,
+        "residents": 102,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 93,
+          "home": 6,
+          "working_external": 1,
+          "walking_to_station": 2
+        },
+        "population": 110,
+        "activeProjects": 1
+      },
+      {
+        "tick": 4000,
+        "stage": "Neighborhoods",
+        "buildings": 15,
+        "roads": 11,
+        "parcels": 15,
+        "residents": 194,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 182,
+          "walking_to_station": 6,
+          "working_external": 1,
+          "home": 5
+        },
+        "population": 202,
+        "activeProjects": 1
+      },
+      {
+        "tick": 5000,
+        "stage": "Neighborhoods",
+        "buildings": 19,
+        "roads": 13,
+        "parcels": 19,
+        "residents": 263,
+        "trains": 1,
+        "onboardResidents": 3,
+        "trainPassengers": 3,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 245,
+          "riding_outbound": 3,
+          "working_external": 1,
+          "walking_to_station": 3,
+          "home": 11
+        },
+        "population": 271,
+        "activeProjects": 0
+      },
+      {
+        "tick": 6000,
+        "stage": "Neighborhoods",
+        "buildings": 23,
+        "roads": 15,
+        "parcels": 23,
+        "residents": 306,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 287,
+          "working_external": 7,
+          "home": 12
+        },
+        "population": 314,
+        "activeProjects": 2
+      },
+      {
+        "tick": 7000,
+        "stage": "Neighborhoods",
+        "buildings": 25,
+        "roads": 17,
+        "parcels": 27,
+        "residents": 342,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 318,
+          "working_external": 7,
+          "home": 17
+        },
+        "population": 350,
+        "activeProjects": 0
+      },
+      {
+        "tick": 8000,
+        "stage": "Neighborhoods",
+        "buildings": 29,
+        "roads": 18,
+        "parcels": 29,
+        "residents": 362,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 333,
+          "working_external": 7,
+          "home": 22
+        },
+        "population": 370,
+        "activeProjects": 1
+      },
+      {
+        "tick": 9000,
+        "stage": "Neighborhoods",
+        "buildings": 32,
+        "roads": 20,
+        "parcels": 32,
+        "residents": 438,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 401,
+          "working_external": 7,
+          "home": 30
+        },
+        "population": 446,
+        "activeProjects": 1
+      },
+      {
+        "tick": 10000,
+        "stage": "Neighborhoods",
+        "buildings": 35,
+        "roads": 21,
+        "parcels": 35,
+        "residents": 471,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 432,
+          "working_external": 7,
+          "home": 32
+        },
+        "population": 479,
+        "activeProjects": 1
+      },
+      {
+        "tick": 11000,
+        "stage": "Neighborhoods",
+        "buildings": 38,
+        "roads": 23,
+        "parcels": 38,
+        "residents": 486,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 445,
+          "working_external": 7,
+          "home": 34
+        },
+        "population": 494,
+        "activeProjects": 1
+      },
+      {
+        "tick": 12000,
+        "stage": "Neighborhoods",
+        "buildings": 42,
+        "roads": 25,
+        "parcels": 42,
+        "residents": 562,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 1,
+        "transfers": {
+          "": 509,
+          "working_external": 6,
+          "waiting_gateway": 1,
+          "home": 46
+        },
+        "population": 570,
+        "activeProjects": 1
+      },
+      {
+        "tick": 13000,
+        "stage": "Neighborhoods",
+        "buildings": 45,
+        "roads": 26,
+        "parcels": 45,
+        "residents": 674,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 615,
+          "working_external": 6,
+          "home": 53
+        },
+        "population": 682,
+        "activeProjects": 1
+      },
+      {
+        "tick": 14000,
+        "stage": "Neighborhoods",
+        "buildings": 49,
+        "roads": 28,
+        "parcels": 49,
+        "residents": 702,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 2,
+        "transfers": {
+          "": 643,
+          "walking_home": 4,
+          "home": 53,
+          "waiting_gateway": 2
+        },
+        "population": 710,
+        "activeProjects": 2
+      },
+      {
+        "tick": 15000,
+        "stage": "Neighborhoods",
+        "buildings": 51,
+        "roads": 29,
+        "parcels": 51,
+        "residents": 798,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 739,
+          "home": 54,
+          "walking_home": 5
+        },
+        "population": 806,
+        "activeProjects": 1
+      },
+      {
+        "tick": 16000,
+        "stage": "Neighborhoods",
+        "buildings": 55,
+        "roads": 31,
+        "parcels": 55,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 56,
+          "walking_home": 3
+        },
+        "population": 858,
+        "activeProjects": 1
+      },
+      {
+        "tick": 17000,
+        "stage": "Neighborhoods",
+        "buildings": 57,
+        "roads": 33,
+        "parcels": 59,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 890,
+        "activeProjects": 0
+      },
+      {
+        "tick": 18000,
+        "stage": "Neighborhoods",
+        "buildings": 61,
+        "roads": 34,
+        "parcels": 61,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 940,
+        "activeProjects": 1
+      },
+      {
+        "tick": 19000,
+        "stage": "Neighborhoods",
+        "buildings": 64,
+        "roads": 36,
+        "parcels": 65,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 962,
+        "activeProjects": 1
+      },
+      {
+        "tick": 20000,
+        "stage": "Neighborhoods",
+        "buildings": 67,
+        "roads": 37,
+        "parcels": 67,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 1058,
+        "activeProjects": 1
+      },
+      {
+        "tick": 21000,
+        "stage": "Neighborhoods",
+        "buildings": 71,
+        "roads": 39,
+        "parcels": 71,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 1070,
+        "activeProjects": 2
+      },
+      {
+        "tick": 22000,
+        "stage": "Neighborhoods",
+        "buildings": 75,
+        "roads": 41,
+        "parcels": 75,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 1118,
+        "activeProjects": 2
+      },
+      {
+        "tick": 23000,
+        "stage": "Neighborhoods",
+        "buildings": 77,
+        "roads": 42,
+        "parcels": 77,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 1154,
+        "activeProjects": 1
+      },
+      {
+        "tick": 24000,
+        "stage": "Neighborhoods",
+        "buildings": 81,
+        "roads": 44,
+        "parcels": 81,
+        "residents": 800,
+        "trains": 1,
+        "onboardResidents": 0,
+        "trainPassengers": 0,
+        "trainCapacity": 48,
+        "stationWaiting": 0,
+        "gatewayWaiting": 0,
+        "transfers": {
+          "": 741,
+          "home": 59
+        },
+        "population": 1166,
+        "activeProjects": 1
+      }
+    ]
+  },
+  "run": {
+    "runtimeMs": 163.712,
+    "durationMs": {
+      "p50Ms": 0.001958999999715161,
+      "p95Ms": 0.028083000000151515,
+      "p99Ms": 0.6927500000001601,
+      "maxMs": 2.016541999999845,
+      "meanMs": 0.01621583019999889,
+      "ticksPerSecond": 61668.1346355038,
+      "budget50ms": {
+        "p50": 0.000039179999994303216,
+        "p95": 0.0005616600000030303,
+        "p99": 0.013855000000003202,
+        "max": 0.0403308399999969
+      }
+    },
+    "memoryPeak": {
+      "wasmStartBytes": 9371648,
+      "wasmPeakBytes": 9371648,
+      "processRssSampledPeakBytes": 100335616,
+      "rssSamplingIntervalTicks": 100
+    },
+    "counts": {
+      "buildings": 360,
+      "roads": 160,
+      "parcels": 360,
+      "residents": 800,
+      "trains": 1,
+      "onboardResidents": 0,
+      "trainPassengers": 0,
+      "trainCapacity": 48,
+      "stationWaiting": 0,
+      "gatewayWaiting": 1,
+      "transferStates": {
+        "": 741,
+        "working_external": 58,
+        "waiting_gateway": 1
+      },
+      "travelers": 2,
+      "projects": 76,
+      "pendingProjects": 0,
+      "events": 10000,
+      "population": 4718,
+      "tick": 250000,
+      "stage": "Maturity"
+    }
+  },
+  "note": "Single calls are measured without pacing or rendering. Percentiles describe this runtime and hardware; no absolute performance threshold is asserted."
+}

@@ -1,0 +1,88 @@
+{
+  "best_candidates": [
+    {
+      "end_x": 181.0,
+      "end_z": 15.0,
+      "host_road_id": 3317,
+      "host_t": 0.72,
+      "length_m": 59.905948638916016,
+      "lot_rectangles": [
+        {
+          "depth": 12.0,
+          "rotation": 0.32031136751174927,
+          "width": 12.501983642578125,
+          "x": 204.70655822753906,
+          "z": -8.66811752319336
+        },
+        {
+          "depth": 12.0,
+          "rotation": 0.32031136751174927,
+          "width": 12.50197982788086,
+          "x": 190.75234985351562,
+          "z": -4.039020538330078
+        }
+      ],
+      "site_area_m2": 300.04754638671875,
+      "start_x": 237.85897827148438,
+      "start_z": -3.8621139526367188
+    },
+    {
+      "end_x": 183.0,
+      "end_z": 15.0,
+      "host_road_id": 3317,
+      "host_t": 0.72,
+      "length_m": 58.01109313964844,
+      "lot_rectangles": [
+        {
+          "depth": 12.0,
+          "rotation": 0.3311668336391449,
+          "width": 11.870365142822266,
+          "x": 205.5522918701172,
+          "z": -8.616009712219238
+        },
+        {
+          "depth": 12.0,
+          "rotation": 0.3311668336391449,
+          "width": 11.870361328125,
+          "x": 192.2464599609375,
+          "z": -4.041077613830566
+        }
+      ],
+      "site_area_m2": 284.88873291015625,
+      "start_x": 237.85897827148438,
+      "start_z": -3.8621139526367188
+    }
+  ],
+  "endpoint_candidates_inside_face_length_26_to_60m": 855,
+  "exact_straight_candidates_with_two_accessible_lots": 2,
+  "existing_lifecycle_probe_for_first_geometry_candidate": {
+    "admission_call_passed": true,
+    "saved_world_validation_passed": true,
+    "validation_error": null
+  },
+  "face_area_m2": 22936.236506458576,
+  "face_vertex_ids": [
+    1,
+    4,
+    2489,
+    2504,
+    2855,
+    3293,
+    3294,
+    2854,
+    2853,
+    3450,
+    3436
+  ],
+  "host_road_id": 3317,
+  "host_t": 0.72,
+  "note": "Endpoint grid and face containment are diagnostic sampling; all emitted lots and branch constraints use current engine predicates. No world state was committed.",
+  "rejections": {
+    "fewer_than_two_exact_lots": 62,
+    "junction_angle": 93,
+    "junction_spacing": 66,
+    "parcel_corridor": 632
+  },
+  "source_save_unchanged": true,
+  "split_preflight": "passed"
+}

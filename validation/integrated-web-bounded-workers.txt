@@ -1,0 +1,43 @@
+
+> thecity@0.1.0 test
+> vitest run --maxWorkers=2
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+ ❯ tests/building-chunks.test.ts (0 test)
+ ❯ tests/city-building-signature.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/building-chunks.test.ts [ tests/building-chunks.test.ts ]
+Error: Cannot find module '../web/src/render/building-chunks' imported from /Users/jung/Development/thecity/tests/building-chunks.test.ts
+ ❯ tests/building-chunks.test.ts:3:1
+      1| import { afterEach, describe, expect, it, vi } from "vitest";
+      2| import * as THREE from "three/webgpu";
+      3| import { BuildingChunks, buildingChunkKey } from "../web/src/render/bu…
+       | ^
+      4| import { ArtMaterials } from "../web/src/render/materials";
+      5|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/city-building-signature.test.ts [ tests/city-building-signature.test.ts ]
+Error: Cannot find module './building-chunks' imported from /Users/jung/Development/thecity/web/src/render/city.ts
+ ❯ web/src/render/city.ts:11:1
+      9| import { Kit, buildingKit, disposeGroup } from './kit';
+     10| import { RiverWater } from './water';
+     11| import { BuildingChunks, buildingChunkKey } from './building-chunks';
+       | ^
+     12| import { Umbrellas } from './umbrellas';
+     13| import { CityBuses } from './buses';
+ ❯ tests/city-building-signature.test.ts:2:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 45 passed (47)
+      Tests  230 passed (230)
+   Start at  11:31:11
+   Duration  83.80s (transform 765ms, setup 0ms, import 1.80s, tests 153.05s, environment 3ms)
+

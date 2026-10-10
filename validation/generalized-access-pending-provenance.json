@@ -1,0 +1,47 @@
+{
+  "candidate": {
+    "endpoint_x": 181.0,
+    "endpoint_z": 15.0,
+    "host_road_id": 3317,
+    "host_t": 0.72
+  },
+  "pending_plan": {
+    "branch_endpoint_id": 3998,
+    "branch_road_id": 3999,
+    "host_road_id": 3317,
+    "host_second_half_road_id": 3997,
+    "host_t": 0.7200000286102295,
+    "project_id": 4000,
+    "selected_lots": [
+      {
+        "along": 0.5000000596046448,
+        "depth": 12.0,
+        "rotation": 0.32031136751174927,
+        "side": 1,
+        "width": 12.501983642578125,
+        "x": 204.70655822753906,
+        "z": -8.66811752319336
+      },
+      {
+        "along": 0.7454177737236023,
+        "depth": 12.0,
+        "rotation": 0.32031136751174927,
+        "side": 1,
+        "width": 12.50197982788086,
+        "x": 190.75234985351562,
+        "z": -4.039020538330078
+      }
+    ],
+    "split_node_id": 3996
+  },
+  "purpose": "Native-generated pending save for WASM save/restore and continuation validation",
+  "save_file": "generalized-access-pending-save.json",
+  "save_sha256": "37e00c1ed96f26a631ef576b87acf902053da01a705f81c697cc7d84dc2f802e",
+  "seed": 87231,
+  "snapshot_file": "generalized-access-pending-snapshot.json",
+  "snapshot_sha256": "aad17b327bf83629a7c92fe872d95345a6f2bd8edef098fae64552426964c9fb",
+  "source_byte_length": 2703924,
+  "source_save": "early-reservation-wasm-87231-save.json",
+  "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+  "tick": 242000
+}

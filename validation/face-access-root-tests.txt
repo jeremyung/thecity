@@ -1,0 +1,59 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release road_opening_access_experiment:: -- --nocapture
+
+warning: multiple fields are never read
+     --> src/lib.rs:11209:9
+      |
+11208 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11209 |         x: f32,
+      |         ^
+11210 |         z: f32,
+      |         ^
+11211 |         width: f32,
+      |         ^^^^^
+11212 |         depth: f32,
+      |         ^^^^^
+11213 |         rotation: f32,
+      |         ^^^^^^^^
+11214 |         side: i8,
+      |         ^^^^
+11215 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:11223:9
+      |
+11219 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11223 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 13 tests
+test road_opening_access_experiment::face_conditioned_road_opening_access_matched_seeds ... ignored, matched face-conditioned road-opening access experiment; run explicitly for calibration
+test road_opening_access_experiment::face_containment_rejects_segment_and_lot_crossing_concave_notch ... ok
+test road_opening_access_experiment::blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host ... ok
+test road_opening_access_experiment::road_opening_access_matched_seeds ... ignored, matched-seed road-opening access experiment; run explicitly for calibration
+test road_opening_access_experiment::face_filter_keeps_only_contained_lots_and_requires_two_sites ... ok
+test road_opening_access_experiment::face_filter_accepts_inside_plan_and_rejects_external_branch_or_lot ... ok
+test road_opening_access_experiment::face_candidate_window_round_robins_over_boundary_with_global_budget ... ok
+test road_opening_access_experiment::point_to_oriented_rect_distance_matches_local_axes_at_zero_right_and_oblique_angles ... ok
+test road_opening_access_experiment::shallow_or_fully_served_faces_do_not_qualify_for_access ... ok
+test road_opening_access_experiment::opening_host_frontage_uses_rendered_rotation_against_reserved_lots ... ok
+test road_opening_access_experiment::road_opening_access_noop_keeps_global_planner_state_unchanged ... ok
+test road_opening_access_experiment::explicit_host_window_matches_legacy_wrapper_geometry_and_order ... ok
+test road_opening_access_experiment::road_opening_access_reserves_before_frontage_and_completes_after_restore ... ok
+
+test result: ok. 11 passed; 0 failed; 2 ignored; 0 measured; 194 filtered out; finished in 1.02s
+

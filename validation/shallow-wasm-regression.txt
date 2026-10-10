@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/shallow-infill-wasm.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  07:42:13
+   Duration  2.18s (transform 19ms, setup 0ms, import 26ms, tests 2.07s, environment 0ms)
+

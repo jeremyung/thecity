@@ -1,0 +1,41 @@
+{
+  "active_spine_plan_at_capture": false,
+  "commercial": {
+    "active_businesses": 315,
+    "active_capacity": 4030,
+    "capacity": 4030,
+    "occupancy_sum": 0,
+    "open_buildings": 315
+  },
+  "connected_open_bridge_length_m": 166.0,
+  "connected_open_ordinary_length_m": 14219.46926498413,
+  "connected_open_rail_length_m": 157.66419982910156,
+  "connected_open_road_length_m": 14543.133464813232,
+  "development_rate": 16,
+  "elapsed_seconds": 10.30009825,
+  "housing": {
+    "capacity": 8039,
+    "occupied": 8039,
+    "open_buildings": 530
+  },
+  "nominal_building_envelope_area_m2": 161415.06007385254,
+  "nominal_building_floor_area_m2": 469599.3084869385,
+  "open_buildings": 845,
+  "ranking": "nominal_envelope_area_per_new_road_m",
+  "replay_fnv1a64": "c458815ef07cb02a",
+  "save_fnv1a64": "59bc8ab64be059d2",
+  "save_resume_equivalent": true,
+  "save_sha256": "e75dc8abd65f94cd0e4f472a4e275081607f54a590fa46ae240e4f40dafb9938",
+  "seed": 0,
+  "snapshot_sha256": "8406b53a37f5b1c5fa5efb66304789db51f22a5d562d743f39c6793805d7d490",
+  "source_sha256": {
+    "engine/src/development.rs": "09709c9fe56dc4f92b77a9922d476492c89c052d83bdf31dce8c1b4c55dd7be5",
+    "engine/src/lib.rs": "89ec1af3aed7fdc82655e1a6a6d57ec5d940883ee14c3550929d33250f59c4b5",
+    "engine/src/spine_ranking_experiment_tests.rs": "c2b51f7eb9c632750a42bbc5b4e57d7d7e57c3c7f229b9d4014ce4843cf5575b"
+  },
+  "spine_plans_selected_observed_lower_bound": 0,
+  "spine_roads_observed_under_construction_lower_bound": 0,
+  "spine_roads_verified_open_connected_lower_bound": 0,
+  "spine_sampling_interval_ticks": 20,
+  "tick": 242000
+}

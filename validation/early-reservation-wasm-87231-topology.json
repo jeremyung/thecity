@@ -1,0 +1,81 @@
+{
+  "all_road_records": 208,
+  "bounded_faces": 49,
+  "checkpoint": "validation/early-reservation-wasm-87231-save.json",
+  "checkpoint_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+  "classification": "road-face audit only; rail and bridge roads are excluded because they use separate or elevated layers",
+  "excluded_layers": {
+    "bridge": 1,
+    "rail": 1
+  },
+  "face_identity_sample": [
+    [
+      1,
+      4,
+      2489,
+      2504,
+      2855,
+      3293,
+      3294,
+      2854,
+      2853,
+      3450,
+      3436
+    ],
+    [
+      2,
+      4,
+      122,
+      1570,
+      1700,
+      2384
+    ],
+    [
+      63,
+      144,
+      162,
+      269
+    ],
+    [
+      63,
+      269,
+      270,
+      271
+    ],
+    [
+      100,
+      442,
+      443,
+      444,
+      3507
+    ],
+    [
+      122,
+      1568,
+      1569,
+      1570
+    ],
+    [
+      144,
+      162,
+      163,
+      164
+    ],
+    [
+      270,
+      271,
+      585,
+      586
+    ]
+  ],
+  "limits": {
+    "max_edges": 512,
+    "max_nodes": 512
+  },
+  "ordinary_open_connected_edges": 206,
+  "participating_nodes": 159,
+  "planarity_error": null,
+  "seed": 87231,
+  "source": "public WASM at seed 87231, rate 16, tick 242000; restored natively for read-only graph audit",
+  "tick": 242000
+}

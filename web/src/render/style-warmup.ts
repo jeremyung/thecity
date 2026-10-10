@@ -1,0 +1,63 @@
+import * as THREE from 'three/webgpu';
+
+/** One representative per material/geometry shader layout, with one instance.
+ * Geometry is borrowed; neither the live instance arrays nor the world tree are cloned. */
+export function styleWarmup(scene:THREE.Scene,variant:(material:THREE.Material)=>THREE.Material){
+  const prepared=scene.clone(false),keys=new Set<string>(),instances:THREE.InstancedMesh[]=[];
+  scene.traverse(object=>{
+    if(object instanceof THREE.Light){prepared.add(object.clone(false));return;}
+    if(!(object instanceof THREE.Mesh))return;
+    const materials=Array.isArray(object.material)?object.material.map(variant):[variant(object.material)];
+    const layout=Object.entries(object.geometry.attributes as Record<string,THREE.BufferAttribute|THREE.InterleavedBufferAttribute>).map(([name,attribute])=>`${name}:${attribute.itemSize}:${attribute.normalized}`).sort().join(',');
+    const instanced=object instanceof THREE.InstancedMesh;
+    const key=`${materials.map(m=>m.uuid).join('/')}:${layout}:${instanced}:${instanced&&!!object.instanceColor}:${object.receiveShadow}`;
+    if(keys.has(key))return;keys.add(key);
+    const material=Array.isArray(object.material)?materials:materials[0];
+    let mesh:THREE.Mesh;
+    if(instanced){
+      const representative=new THREE.InstancedMesh(object.geometry,material,1);
+      const matrix=new THREE.Matrix4();object.getMatrixAt(0,matrix);representative.setMatrixAt(0,matrix);
+      if(object.instanceColor){const color=new THREE.Color();object.getColorAt(0,color);representative.setColorAt(0,color);}
+      instances.push(representative);mesh=representative;
+    }else mesh=new THREE.Mesh(object.geometry,material);
+    mesh.matrixAutoUpdate=false;mesh.matrix.copy(object.matrixWorld);mesh.castShadow=object.castShadow;mesh.receiveShadow=object.receiveShadow;mesh.frustumCulled=false;
+    prepared.add(mesh);
+  });
+  return{scene:prepared,dispose(){for(const instance of instances)instance.dispose();prepared.clear();}};
+}
+
+export interface WarmupTiming { submitMs:number; waitMs:number; maxSubmitMs:number; compiledSamples:number }
+
+/** Submit one layout at a time: compileAsync performs synchronous shader work
+ * before returning its promise. Yield a browser task between layouts. */
+export async function compileStyleSamples(
+  scene:THREE.Scene,
+  compile:(scene:THREE.Scene)=>Promise<unknown>,
+  isCurrent:()=>boolean,
+  timing:WarmupTiming,
+  yieldTask:()=>Promise<void>=()=>new Promise(resolve=>setTimeout(resolve,0)),
+):Promise<void>{
+  const samples=scene.children.filter(object=>object instanceof THREE.Mesh);
+  for(const sample of samples)scene.remove(sample);
+  try{
+    for(const sample of samples){
+      if(!isCurrent())return;
+      scene.add(sample);
+      try{
+        const start=performance.now();
+        const pending=compile(scene);
+        const submitted=performance.now()-start;
+        timing.submitMs+=submitted;
+        timing.maxSubmitMs=Math.max(timing.maxSubmitMs,submitted);
+        const waiting=performance.now();
+        try{await pending;}finally{timing.waitMs+=performance.now()-waiting;}
+        timing.compiledSamples++;
+      }finally{scene.remove(sample);}
+      // An already-resolved compiler promise alone only yields a microtask.
+      await yieldTask();
+    }
+  }finally{
+    // Restore ownership for the caller's single disposal path, including cancel/error.
+    for(const sample of samples)scene.add(sample);
+  }
+}

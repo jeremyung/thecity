@@ -1,0 +1,9 @@
+{
+  "wasmSha256": "436ef7625a0135096a808f12f509f3da604b35dbee11883b5ae003d24e253732",
+  "source": "mature-world.cache-candidate.json",
+  "continuedTicks": 64000,
+  "tick": 306000,
+  "buildings": 629,
+  "roads": 168,
+  "parcels": 629
+}

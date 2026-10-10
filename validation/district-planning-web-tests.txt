@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  34 passed (34)
+      Tests  168 passed (168)
+   Start at  05:06:35
+   Duration  63.73s (transform 1.29s, setup 0ms, import 2.55s, tests 125.41s, environment 3ms)
+

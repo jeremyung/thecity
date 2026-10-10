@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/painted-materials.test.ts tests/building-chunks.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  09:03:26
+   Duration  208ms (transform 75ms, setup 0ms, import 179ms, tests 35ms, environment 0ms)
+

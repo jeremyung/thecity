@@ -1,0 +1,397 @@
+{
+  "input": "validation/interior-access-verified-seed0.json.final.json",
+  "caveat": "Approximate grid-center classification, not the Rust parcel admission oracle or a buildable-land estimate. Grid tests one 14x12m footprint facing the nearest ordinary road; frontage is counted only when the candidate center is 12.5–17.5m from that centerline and projects away from its endpoints. Clearance and access are mirrored for diagnosis only. Each sample represents a 25m² center bin, not land area.",
+  "simulation": {
+    "seed": 0,
+    "tick": 274000,
+    "demand": 4,
+    "buildings": 779,
+    "parcels": 779,
+    "openRoads": 210,
+    "ordinaryRoads": 208,
+    "connectedOrdinaryRoads": 208,
+    "openUnbuiltParcels": 0
+  },
+  "sample": {
+    "stepM": 5,
+    "candidateFootprintM": [
+      14,
+      12
+    ],
+    "counts": {
+      "samples": 25600,
+      "boundary": 1401,
+      "protected": 372,
+      "river_bank": 3027,
+      "existing_oriented_envelope": 18129,
+      "existing_legacy_envelope": 9906,
+      "legacy_parcel_only": 305,
+      "oriented_parcel_only": 8528,
+      "exact_road_footprint_clearance": 11333,
+      "legacy_road_center_radius": 11274,
+      "legacy_center_only": 0,
+      "footprint_only": 59,
+      "open_road_clearance": 11333,
+      "no_near_frontage": 21895,
+      "near_connected_frontage": 3705,
+      "near_open_unconnected_frontage": 0,
+      "exclusive_terrain": 4696,
+      "exclusive_parcel": 17582,
+      "exclusive_road": 2125,
+      "exclusive_access": 1075,
+      "clear_connected_frontage_center": 122,
+      "clear_unconnected_frontage_center": 0
+    },
+    "cellSpareNearFrontage": [
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 5
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 9
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 7
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 5
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 4
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 4
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 6
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 4
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 0
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 5
+        }
+      ],
+      [
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 3
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 4
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 1
+        },
+        {
+          "samples": 400,
+          "spare_near_frontage": 2
+        }
+      ]
+    ]
+  },
+  "fabric": {
+    "floors": {
+      "median": 2,
+      "p90": 5,
+      "max": 32
+    },
+    "parcelDimensions": {
+      "24.00x18.00": 1,
+      "19.00x16.00": 1,
+      "21.00x18.00": 1,
+      "25.00x20.00": 1,
+      "14.00x12.00": 298,
+      "16.00x16.00": 143,
+      "11.44x15.90": 211,
+      "9.38x12.00": 1,
+      "11.61x12.00": 1,
+      "8.49x12.00": 1,
+      "9.00x12.00": 2,
+      "11.87x12.00": 1,
+      "9.09x12.00": 1,
+      "9.77x12.00": 1,
+      "8.78x12.00": 6,
+      "9.20x12.00": 3,
+      "24.00x20.00": 3,
+      "8.98x12.00": 1,
+      "9.40x12.00": 1,
+      "8.69x12.00": 1,
+      "11.44x18.74": 6,
+      "12.36x12.00": 1,
+      "13.11x15.90": 6,
+      "9.15x12.00": 3,
+      "8.95x12.00": 1,
+      "8.00x12.00": 1,
+      "10.40x12.00": 1,
+      "9.52x12.00": 1,
+      "8.02x12.00": 1,
+      "12.38x15.90": 7,
+      "8.88x12.00": 2,
+      "11.14x12.00": 2,
+      "11.21x12.00": 1,
+      "11.19x12.00": 1,
+      "12.90x12.00": 1,
+      "9.08x12.00": 1,
+      "8.86x12.00": 1,
+      "8.91x12.00": 1,
+      "12.94x12.00": 1,
+      "9.50x12.00": 4,
+      "11.34x12.00": 1,
+      "11.41x12.00": 1,
+      "11.12x15.90": 7,
+      "10.08x12.00": 1,
+      "9.30x12.00": 3,
+      "9.39x12.00": 2,
+      "10.19x12.00": 3,
+      "11.48x12.00": 1,
+      "10.00x12.00": 2,
+      "13.87x12.00": 1,
+      "10.20x12.00": 1,
+      "8.51x12.00": 1,
+      "8.13x12.00": 1,
+      "11.31x15.90": 7,
+      "9.32x12.00": 1,
+      "8.46x12.00": 2,
+      "8.25x12.00": 1,
+      "8.45x12.00": 1,
+      "8.28x12.00": 1,
+      "13.23x15.90": 4,
+      "8.04x12.00": 2,
+      "13.99x12.00": 1,
+      "8.26x12.00": 2,
+      "8.72x12.00": 1,
+      "8.24x12.00": 1,
+      "8.56x12.00": 1,
+      "13.90x12.00": 5,
+      "12.53x12.00": 2
+    }
+  }
+}

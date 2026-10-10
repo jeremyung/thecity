@@ -1,0 +1,91 @@
+{
+  "check": "architectural geometry bounds and deterministic variation",
+  "source": "web/src/render/kit.ts",
+  "checkedAt": "2026-10-10T01:04:26.007Z",
+  "policy": "Open architectural geometry must have finite vertices and remain inside its parcel footprint; repeated appearance seeds must reproduce identical geometry.",
+  "cases": [
+    {
+      "kind": "home",
+      "seed": 13,
+      "floors": 2,
+      "width": 14,
+      "depth": 12,
+      "vertices": 2712,
+      "mergedMeshes": 12,
+      "finiteGeometry": true,
+      "withinParcel": true,
+      "bounds": {
+        "minX": -6.212,
+        "maxX": 6.205,
+        "minZ": -5.365,
+        "maxZ": 5.79
+      },
+      "geometrySha256": "7345644d7c2392f2401a7b6c77cfd694a31a82830b33d153d1f9dde1df0b1f9a",
+      "deterministicRepeat": true
+    },
+    {
+      "kind": "home",
+      "seed": 29,
+      "floors": 2,
+      "width": 14,
+      "depth": 12,
+      "vertices": 2712,
+      "mergedMeshes": 12,
+      "finiteGeometry": true,
+      "withinParcel": true,
+      "bounds": {
+        "minX": -6.205,
+        "maxX": 6.212,
+        "minZ": -5.365,
+        "maxZ": 5.79
+      },
+      "geometrySha256": "4197fc220a6e277f022fcf2f27dab389f5379e5bcc508a9afdcfdcd2bd3d2cc2",
+      "deterministicRepeat": true
+    },
+    {
+      "kind": "apartment",
+      "seed": 55,
+      "floors": 6,
+      "width": 22,
+      "depth": 18,
+      "vertices": 13784,
+      "mergedMeshes": 10,
+      "finiteGeometry": true,
+      "withinParcel": true,
+      "bounds": {
+        "minX": -9.565,
+        "maxX": 10.17,
+        "minZ": -8.65,
+        "maxZ": 8.65
+      },
+      "geometrySha256": "4357e71db45424134900c2b23a308f4b2990d4681e36a72016fcb445c3a0e3d1",
+      "deterministicRepeat": true
+    },
+    {
+      "kind": "office",
+      "seed": 72,
+      "floors": 8,
+      "width": 22,
+      "depth": 18,
+      "vertices": 10784,
+      "mergedMeshes": 10,
+      "finiteGeometry": true,
+      "withinParcel": true,
+      "bounds": {
+        "minX": -9.565,
+        "maxX": 9.565,
+        "minZ": -8.208,
+        "maxZ": 7.885
+      },
+      "geometrySha256": "0a13d906784d5eec769d76ec944331c6e5cbd73bc89bf122cf8e90139f0f56c5",
+      "deterministicRepeat": true
+    }
+  ],
+  "summary": {
+    "caseCount": 4,
+    "passed": true,
+    "totalMergedMeshes": 44,
+    "totalVertices": 29992,
+    "seededHomePlansDiffer": true
+  }
+}

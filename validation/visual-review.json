@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-09",
+  "classification": "progress",
+  "goal_complete": false,
+  "visual_gate": "open",
+  "fixture": {
+    "seed": 87231,
+    "tick": 242000,
+    "buildings": 382,
+    "roads": 135,
+    "stage": "Maturity",
+    "rain_intensity": 0.450278
+  },
+  "validation": {
+    "full_js_wasm_tests_before_masthead_additions": 73,
+    "final_ui_tests": 11,
+    "native_debug_tests": 23,
+    "native_debug_seconds": 112.3,
+    "js_wasm_tests": 99,
+    "root_protocol_support_tests": 25,
+    "browser_checks": [
+      "WebGPU normal startup, pause and mature checkpoint restore",
+      "WebGL mature rain scene renders with no recorded console errors or warnings",
+      "Real bus meshes, friendly inspector and resident identity follow in WebGPU",
+      "Same paused bus scene switches to Miniature without changing clock or selected bus",
+      "Final compiled bus checkpoint renders in WebGL without recorded console errors or warnings"
+    ],
+    "js_wasm_tests_before_startup_feedback": 90,
+    "native_bus_tests_after_final_fixes": 10,
+    "native_seed_corpus_passed": true,
+    "native_full_suite_before_final_bus_fixes": 31,
+    "graphics_startup_tests": 3,
+    "production_build": "passed; existing large-chunk warning",
+    "latest_focused_building_tests": 5,
+    "latest_build": "passed",
+    "camera_tests": 17,
+    "style_warmup_resource_test": 1,
+    "building_access_tests": 3
+  },
+  "captures": [
+    "captures/mixed-neighborhood-anime-night.jpg",
+    "captures/mixed-neighborhood-miniature-night.jpg",
+    "captures/corrected-rain-night.jpg",
+    "captures/corrected-rain-webgl.jpg",
+    "captures/filtered-water-webgl-overview.jpg",
+    "captures/bus-service-review.jpg",
+    "captures/bus-service-miniature-review.jpg",
+    "captures/bus-service-webgl-final-review.jpg",
+    "captures/inhabited-elevations-miniature.jpg",
+    "captures/founding-shop-composition-miniature.jpg",
+    "captures/founding-access-anime.jpg"
+  ],
+  "review": {
+    "improved": [
+      "station height concentration and retained low-rise neighborhoods",
+      "geometry-preserving material batching with exact linear vertex colors",
+      "moonlit rooflines and readable night masthead",
+      "river-coordinate ripple sampling",
+      "camera-independent directional light orientation",
+      "paired rain endpoints wrap together without 90 m streaks",
+      "versioned worker protocol and cumulative control acknowledgments",
+      "bounded bus service with real resident transfers and renderer/audio integration",
+      "directional bus curb and reverse traffic-signal corrections",
+      "filtered unresolved fine water normals",
+      "shared bridge ramps and vehicle axle elevation",
+      "side elevations and missing upper-storey home windows",
+      "saved rendering style applied before first render without startup scene clone",
+      "founding shop framed immediately on first valid world, with manual-priority protection",
+      "compact representative shader warmup instead of whole-scene clones",
+      "serialized style compilation and skipped obsolete requests",
+      "authoritative pedestrian frontage paving and level street landings shared by both styles"
+    ],
+    "remaining": [
+      "concept fidelity below acceptance",
+      "excessive empty lawn between lots",
+      "repeated facade modules",
+      "flat distant terrain",
+      "insufficient distinction between styles",
+      "controlled GPU/device and multi-hour memory validation",
+      "audio listening validation",
+      "reliable structural delta work",
+      "animated water and close bridge crossing acceptance",
+      "initial style compilation latency",
+      "intermittent graphics startup requires root-cause investigation",
+      "pending GPU compilation lifecycle and cold-switch stalls"
+    ]
+  },
+  "performance_note": "Browser observations are uncontrolled and camera views differ. Draw submission reduction is supported by batching tests, but no frame-rate gain or device acceptance is claimed."
+}

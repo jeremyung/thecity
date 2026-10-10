@@ -1,0 +1,59 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release road_faces -- --nocapture
+
+    Blocking waiting for file lock on build directory
+warning: multiple fields are never read
+     --> src/lib.rs:11127:9
+      |
+11126 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11127 |         x: f32,
+      |         ^
+11128 |         z: f32,
+      |         ^
+11129 |         width: f32,
+      |         ^^^^^
+11130 |         depth: f32,
+      |         ^^^^^
+11131 |         rotation: f32,
+      |         ^^^^^^^^
+11132 |         side: i8,
+      |         ^^^^
+11133 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:11141:9
+      |
+11137 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11141 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 13.67s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 11 tests
+test road_faces::tests::dangling_street_and_disconnected_components_add_no_false_faces ... ok
+test road_faces::tests::rectangle_is_one_ccw_bounded_face_and_marks_proposed_edge ... ok
+test road_faces::tests::graph_bridge_and_crossing_edges_fail_or_yield_no_bounded_face_safely ... ok
+test road_faces::tests::adjacent_rectangles_trace_two_faces_and_proposed_diagonal_is_marked ... ok
+test road_faces::tests::interior_dangling_branch_is_removed_without_losing_its_block_face ... ok
+test road_faces::tests::malformed_and_nonfinite_inputs_fail_closed ... ok
+test road_faces::tests::nested_disconnected_cycles_are_rejected_instead_of_double_counted ... ok
+test road_faces::tests::rotated_irregular_face_is_stable_under_reordered_reversed_inputs ... ok
+test road_faces::tests::new_founder_network_is_planar_connected_and_keeps_nonincident_parcels_clear ... ok
+test road_faces::tests::explicit_input_and_work_caps_are_enforced ... ok
+mature road-face nonplanarity: proper at-grade crossing; road 8 (72.0, 42.0)->(-18.0, 42.0) (local) intersects road 10 (-65.066666, 28.0)->(153.0, 58.0) (local); distance=0.00000000
+test road_faces::tests::mature_connected_ordinary_road_graph_reports_unsupported_crossing ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 186 filtered out; finished in 0.08s
+

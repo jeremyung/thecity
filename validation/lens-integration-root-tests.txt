@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/camera.test.ts tests/ui.test.ts tests/support.test.ts tests/lens.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  4 passed (4)
+      Tests  70 passed (70)
+   Start at  08:10:24
+   Duration  357ms (transform 404ms, setup 0ms, import 567ms, tests 220ms, environment 0ms)
+

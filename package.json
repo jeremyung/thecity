@@ -1,0 +1,32 @@
+{
+  "name": "thecity",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "wasm": "node scripts/build-wasm.mjs",
+    "audit:textures": "node scripts/audit-texture-budget.mjs --out validation/texture-budget.json",
+    "check:textures": "node scripts/audit-texture-budget.mjs --check",
+    "test": "vitest run",
+    "test:engine": "node scripts/test-engine.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "0.577.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "three": "0.183.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@types/three": "0.183.1",
+    "esbuild": "^0.28.1",
+    "typescript": "5.9.3",
+    "vite": "^7.3.7",
+    "vitest": "^4.1.11"
+  }
+}

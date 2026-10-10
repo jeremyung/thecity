@@ -1,0 +1,51 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release district_measurement
+
+warning: multiple fields are never read
+     --> src/lib.rs:10167:9
+      |
+10166 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+10167 |         x: f32,
+      |         ^
+10168 |         z: f32,
+      |         ^
+10169 |         width: f32,
+      |         ^^^^^
+10170 |         depth: f32,
+      |         ^^^^^
+10171 |         rotation: f32,
+      |         ^^^^^^^^
+10172 |         side: i8,
+      |         ^^^^
+10173 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:10181:9
+      |
+10177 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+10181 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 5 tests
+test tests::district_measurement_advances_at_most_sixteen_samples_per_fixed_tick ... ok
+test tests::district_measurement_completes_and_reconstructs_cached_metrics ... ok
+test tests::district_measurement_is_frozen_bounded_and_save_resumable ... ok
+test tests::district_measurement_rejects_malformed_checkpoints_and_accepts_legacy_saves ... ok
+test district_density_integration_tests::mature_district_measurements_conserve_capacity_without_mutating_worlds ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 0.13s
+

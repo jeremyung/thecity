@@ -1,0 +1,12 @@
+{
+  "wasmSha256": "2a873ab71ea817aed85ce5efa3de64ff6b87605f725b314d94f02e505d9fdca8",
+  "saveSha256": "5d179a66c3b25ed71ecfef49545bc4ab4a0670c77e4d234c6fa46c9b6a081cbc",
+  "source": "mature-world.cache-candidate.json",
+  "continuedTicks": 64000,
+  "tick": 306000,
+  "buildings": 638,
+  "roads": 168,
+  "parcels": 638,
+  "canonicalRestore": true,
+  "continuationTicksVerified": 2000
+}

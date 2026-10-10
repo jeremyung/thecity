@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "status": "completed-development-review",
+  "proposedModel": "tencent/hy-image-v3.5-preview",
+  "proposedMaximumSpendUSD": 2,
+  "maximumRequests": 4,
+  "automaticRetries": false,
+  "generationResolution": "1K",
+  "runtimeTargetSidePixels": 512,
+  "estimatedRuntimeRGBA8MipBytesForFourTiles": 5592400,
+  "runtimeIntegration": "Review one street before promotion; no per-building textures or browser generation calls.",
+  "commonPrompt": "Create one square architectural base-colour material tile for a Tokyo living diorama. Flat orthographic material scan, uniform diffuse unlit colour, edge-to-edge single continuous surface. No perspective, objects, text, borders, vignette, directional shadows, highlights, ambient occlusion or baked reflections. Seamless opposing edges. Restrained contrast, credible fine surface detail, quiet broad colour variation. Compatible with both an anime background painting treatment and a tactile miniature material. Do not depict a building or scene.",
+  "candidates": [
+    {
+      "id": "warm-plaster",
+      "physicalTileMeters": 2,
+      "prompt": "Warm ivory Japanese exterior mineral plaster, delicate trowel marks, fine aggregate, slight age, muted gray-beige irregularity. Avoid large stains, dramatic cracks and yellow cast.",
+      "reviewTarget": "Compare with existing ivory-plaster-v1; keep only the stronger candidate."
+    },
+    {
+      "id": "cast-concrete",
+      "physicalTileMeters": 2,
+      "prompt": "Cool warm-gray poured concrete facade, tiny pores and subdued fine mineral grain, faint irregular tonal wash. No panel boundaries, bolt holes, deep cracks or directional streak shadows.",
+      "reviewTarget": "Apartment circulation core and low-rise service wall."
+    },
+    {
+      "id": "painted-steel",
+      "physicalTileMeters": 1,
+      "prompt": "Muted blue-gray painted steel, subtle uneven enamel pigmentation, very fine wear with small restrained edge-independent chips. Flat rough surface without specular highlights. No corrugation, bolts, seams or rust patches.",
+      "reviewTarget": "Shop shutter and rooftop utility enclosure; geometry supplies seams."
+    },
+    {
+      "id": "aged-timber",
+      "physicalTileMeters": 1,
+      "prompt": "Quiet medium umber weathered timber surface with fine straight vertical grain, restrained desaturated brown variations, gentle age. No plank borders, knots larger than a small coin, deep grooves or baked shadows.",
+      "reviewTarget": "Founding shop trim and narrow domestic facade components."
+    }
+  ],
+  "acceptance": [
+    "Inspect 3x3 repeats for seams and recognizable repetition before use.",
+    "Inspect the runtime-sized derivative; generated source dimensions are not the shipping size.",
+    "Use the same geometry and camera for both styles at dawn, noon, dusk and night.",
+    "Retain separate live glass, emission and lighting roles.",
+    "Count resident copies and mipmaps; file inventory alone is not GPU measurement.",
+    "Reject candidates that add noise without improving the actual street."
+  ],
+  "authorization": "User: do the pilot; Tencent Hy Image 3.5 Preview, maximum four requests and USD 2 total.",
+  "reportedTotalCostUSD": 0.096,
+  "results": "art-workshop/tencent-pilot/REVIEW.md"
+}

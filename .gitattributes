@@ -1,0 +1,7 @@
+# Normalize source text; preserve test transcripts verbatim.
+* text=auto
+validation/*.txt whitespace=-blank-at-eof
+*.png binary
+*.jpg binary
+*.webp binary
+*.wasm binary

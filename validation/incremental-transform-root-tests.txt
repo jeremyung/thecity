@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/incremental-geometry-transform.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  11:45:53
+   Duration  177ms (transform 27ms, setup 0ms, import 70ms, tests 17ms, environment 0ms)
+

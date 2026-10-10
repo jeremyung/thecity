@@ -1,0 +1,54 @@
+[
+  {
+    "id": "warm-plaster",
+    "sourceSize": [
+      1024,
+      1024
+    ],
+    "candidateSize": [
+      512,
+      512
+    ],
+    "candidateFileBytes": 432431,
+    "rgba8FullMipBytes": 1398100
+  },
+  {
+    "id": "cast-concrete",
+    "sourceSize": [
+      1024,
+      1024
+    ],
+    "candidateSize": [
+      512,
+      512
+    ],
+    "candidateFileBytes": 434367,
+    "rgba8FullMipBytes": 1398100
+  },
+  {
+    "id": "painted-steel",
+    "sourceSize": [
+      1024,
+      1024
+    ],
+    "candidateSize": [
+      512,
+      512
+    ],
+    "candidateFileBytes": 320684,
+    "rgba8FullMipBytes": 1398100
+  },
+  {
+    "id": "aged-timber",
+    "sourceSize": [
+      1024,
+      1024
+    ],
+    "candidateSize": [
+      512,
+      512
+    ],
+    "candidateFileBytes": 377029,
+    "rgba8FullMipBytes": 1398100
+  }
+]

@@ -1,0 +1,157 @@
+{
+  "input": "validation/mature-world.bounded-selection.json",
+  "simulation": {
+    "seed": 87231,
+    "tick": 242000,
+    "developmentRate": 16,
+    "population": 6422,
+    "buildings": 646,
+    "openBuildings": 646,
+    "parcels": 646,
+    "unbuiltParcels": 0
+  },
+  "footprint": {
+    "parcelEnvelopeAreaM2": 113987.08,
+    "grossDomainAreaM2": 640000,
+    "grossParcelEnvelopeCoveragePercent": 17.81,
+    "buildingCenterBoundsM": {
+      "minX": -390,
+      "maxX": 390,
+      "minZ": -389.6872,
+      "maxZ": 390
+    },
+    "buildingCenterBoundsAreaM2": 608156.02,
+    "parcelEnvelopeCoverageWithinCenterBoundsPercent": 18.74,
+    "developableLandGeometryAvailable": false
+  },
+  "nearestParcelEnvelopeEdgeGapM": {
+    "count": 646,
+    "min": 1.0801048253153211,
+    "p10": 1.9999999999999658,
+    "median": 2.199979162536488,
+    "p90": 12.774532876005246,
+    "max": 26.00320999655734,
+    "over10m": 103,
+    "over25m": 1,
+    "over50m": 0
+  },
+  "roads": {
+    "allOpenCount": 168,
+    "ordinaryCount": 166,
+    "ordinaryKinds": {
+      "arterial": 1,
+      "local": 165
+    },
+    "bridgeCount": 1,
+    "railCount": 1,
+    "allOpenCenterlineLengthM": 11877.82,
+    "ordinaryCenterlineLengthM": 11554.15,
+    "ordinaryMeanSegmentLengthM": 69.6,
+    "openRoadEndpointBoundsM": {
+      "minX": -375,
+      "maxX": 375,
+      "minZ": -374.6872,
+      "maxZ": 375
+    },
+    "ordinaryFrontageRecords": 644,
+    "ordinaryFrontagesPerRoad": 3.88,
+    "ordinaryFrontageDistribution": {
+      "zeroOrOne": 32,
+      "atMostTwo": 67,
+      "threeOrMore": 99
+    }
+  },
+  "domain100mTiles": {
+    "total": 64,
+    "withNoBuildingCenters": 3,
+    "minimumBuildingsInOccupiedTile": 1,
+    "maximumBuildingsInTile": 22,
+    "rowsSouthToNorth": [
+      [
+        0,
+        13,
+        6,
+        0,
+        1,
+        6,
+        7,
+        2
+      ],
+      [
+        2,
+        8,
+        10,
+        4,
+        10,
+        16,
+        13,
+        5
+      ],
+      [
+        13,
+        16,
+        5,
+        2,
+        11,
+        22,
+        12,
+        15
+      ],
+      [
+        12,
+        11,
+        3,
+        14,
+        5,
+        11,
+        17,
+        11
+      ],
+      [
+        6,
+        16,
+        6,
+        8,
+        11,
+        10,
+        15,
+        14
+      ],
+      [
+        11,
+        10,
+        5,
+        6,
+        17,
+        13,
+        8,
+        14
+      ],
+      [
+        10,
+        16,
+        6,
+        8,
+        17,
+        15,
+        14,
+        16
+      ],
+      [
+        15,
+        15,
+        0,
+        7,
+        15,
+        15,
+        13,
+        11
+      ]
+    ]
+  },
+  "neighborhoodPlan": null,
+  "method": {
+    "nearestGap": "For each open building, construct its width×depth oriented parcel rectangle from center and rotation, compute distance between all polygon edge pairs (zero for intersecting/touching polygons), then retain the minimum distance to another envelope.",
+    "caveat": "Parcel envelopes approximate land allocation, not visible building-wall area. The save does not contain developable-land geometry or rejected parcel-candidate history."
+  }
+}

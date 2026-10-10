@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run --run tests/opening-audio.test.ts tests/bus-audio.test.ts tests/support.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  3 passed (3)
+      Tests  29 passed (29)
+   Start at  10:48:28
+   Duration  210ms (transform 169ms, setup 0ms, import 203ms, tests 48ms, environment 0ms)
+

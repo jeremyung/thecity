@@ -1,0 +1,126 @@
+{
+  "admissible_saved_lifecycle_candidates": 0,
+  "best_candidates": [],
+  "candidate_budget": 128,
+  "checkpoint_tick": 242000,
+  "host_3317_candidate_details": [
+    {
+      "host_t": 0.5,
+      "length_m": 24.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 36.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 48.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 60.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 24.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 36.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 48.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.5,
+      "length_m": 60.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 24.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 36.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 48.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 60.0,
+      "rejection": "outside_target_face",
+      "side": -1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 24.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 36.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 48.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    },
+    {
+      "host_t": 0.75,
+      "length_m": 60.0,
+      "rejection": "parcel_corridor",
+      "side": 1
+    }
+  ],
+  "note": "Candidates use supported split fractions and branch lengths, exact road-split preflight, current terrain/corridor/junction/parcel rules, and door-facing parcel envelopes. No production state was changed.",
+  "rejections": {
+    "bounds": 16,
+    "host_split_preflight": 136,
+    "junction_spacing": 4,
+    "outside_target_face": 58,
+    "parcel_corridor": 50
+  },
+  "target_face_area_m2": 22936.236506458576,
+  "target_face_vertex_ids": [
+    1,
+    4,
+    2489,
+    2504,
+    2855,
+    3293,
+    3294,
+    2854,
+    2853,
+    3450,
+    3436
+  ]
+}

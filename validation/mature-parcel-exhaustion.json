@@ -1,0 +1,66 @@
+{
+  "caps": {
+    "MAX_BUILDINGS": 2000,
+    "MAX_PARCELS": 4000,
+    "MAX_SEGMENTS": 5000
+  },
+  "worlds": [
+    {
+      "seed": 0,
+      "by_sites": false,
+      "tick": 242000,
+      "source": "validation/spine-ranking-seed-0-by-sites-false.json",
+      "sha256": "e75dc8abd65f94cd0e4f472a4e275081607f54a590fa46ae240e4f40dafb9938",
+      "demand": 4.0,
+      "buildings": 845,
+      "parcels": 845,
+      "roads": 214,
+      "unbuilt_parcels": 0,
+      "pending_projects": 0,
+      "active_neighborhood_plan": false
+    },
+    {
+      "seed": 0,
+      "by_sites": true,
+      "tick": 242000,
+      "source": "validation/spine-ranking-seed-0-by-sites-true.json",
+      "sha256": "312473b625f78d1fe714adae21bba8b9855038a74308413694acf4c58920178a",
+      "demand": 4.0,
+      "buildings": 842,
+      "parcels": 842,
+      "roads": 208,
+      "unbuilt_parcels": 0,
+      "pending_projects": 0,
+      "active_neighborhood_plan": false
+    },
+    {
+      "seed": 87231,
+      "by_sites": false,
+      "tick": 242000,
+      "source": "validation/spine-ranking-seed-87231-by-sites-false.json",
+      "sha256": "4d03ed81247fb835129bd5090c815937f3da14d9b29dfb3788221eb9c3233239",
+      "demand": 4.0,
+      "buildings": 753,
+      "parcels": 753,
+      "roads": 192,
+      "unbuilt_parcels": 0,
+      "pending_projects": 0,
+      "active_neighborhood_plan": false
+    },
+    {
+      "seed": 87231,
+      "by_sites": true,
+      "tick": 242000,
+      "source": "validation/spine-ranking-seed-87231-by-sites-true.json",
+      "sha256": "e2a8d72ff27ff666b02d5c257168e213f95a34c3ddb41aa15d19239447e1c6ee",
+      "demand": 4.0,
+      "buildings": 836,
+      "parcels": 836,
+      "roads": 217,
+      "unbuilt_parcels": 0,
+      "pending_projects": 0,
+      "active_neighborhood_plan": false
+    }
+  ],
+  "interpretation": "Captured worlds exhaust admitted parcels while demand remains positive and all collection caps have substantial headroom. This identifies admission feasibility as the next investigation, not proof that every empty area is buildable."
+}

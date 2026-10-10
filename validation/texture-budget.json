@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "audit": "texture file dimensions and estimated RGBA8 mip-chain storage; this is a lower-bound source-file inventory, not measured GPU memory",
+  "scannedDirectory": "public/art",
+  "decodedEstimate": "RGBA8, complete mip chain through 1x1, each mip dimension floored and clamped to 1",
+  "limitations": [
+    "Each source image is counted once; per-style clones, simultaneous copies, canvas-generated textures, render targets, driver alignment and device-specific formats are not measured or inferred.",
+    "RGBA8 mip estimates are a consistent planning proxy and may differ from actual GPU allocation or mip-generation policy."
+  ],
+  "proposedBudget": {
+    "tileMaxSide": 1024,
+    "atlasMaxSide": 2048,
+    "totalDecodedMipBytes": 33554432,
+    "totalDecodedMipMiB": 32
+  },
+  "summary": {
+    "assetCount": 1,
+    "runtimeListedCount": 0,
+    "developmentCandidateCount": 1,
+    "unsupportedOrInvalidCount": 0,
+    "sideBudgetViolationCount": 1,
+    "knownEstimatedDecodedMipBytes": 8384072,
+    "knownEstimatedDecodedMipMiB": 7.9957,
+    "totalBudgetExceeded": false,
+    "complete": true,
+    "passesProposedBudget": false
+  },
+  "assets": [
+    {
+      "file": "public/art/textures/ivory-plaster-v1.png",
+      "format": "PNG",
+      "fileBytes": 3622485,
+      "runtimeListed": false,
+      "developmentCandidate": {
+        "id": "ivory-plaster-v1",
+        "usage": "Architecture review wall and shop facade only; not integrated into living-city materials"
+      },
+      "metadataRole": "base-color",
+      "budgetClass": "tile",
+      "budgetMaxSide": 1024,
+      "width": 1254,
+      "height": 1254,
+      "maxSide": 1254,
+      "estimatedDecodedRgba8MipBytes": 8384072,
+      "status": "side-budget-exceeded"
+    }
+  ]
+}

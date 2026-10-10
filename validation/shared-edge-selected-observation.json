@@ -1,0 +1,110 @@
+{
+  "wasmSha256": "b92ab33e2ec32393f28a4988804fbc32a4aceba19bd9245197cbeb71853897bb",
+  "found": true,
+  "evidence": {
+    "seed": 87231,
+    "tick": 7520,
+    "previousTick": 7440,
+    "plan": {
+      "anchor_node": 187,
+      "segments": [
+        [
+          187,
+          188
+        ],
+        [
+          188,
+          389
+        ],
+        [
+          389,
+          390
+        ],
+        [
+          390,
+          187
+        ]
+      ],
+      "next_segment": 2,
+      "coordinated_lots": true,
+      "selected_lots": [
+        {
+          "center": {
+            "x": -279.77573,
+            "z": -156.46872
+          },
+          "frontage_edge": 1,
+          "frontage_t": 0.50000006,
+          "width": 11.439999,
+          "depth": 15.9,
+          "rotation": -1.5707964
+        },
+        {
+          "center": {
+            "x": -279.77573,
+            "z": -170.10872
+          },
+          "frontage_edge": 1,
+          "frontage_t": 0.6663414,
+          "width": 11.439999,
+          "depth": 15.9,
+          "rotation": -1.5707964
+        },
+        {
+          "center": {
+            "x": -279.77573,
+            "z": -183.74872
+          },
+          "frontage_edge": 1,
+          "frontage_t": 0.8326829,
+          "width": 11.439999,
+          "depth": 15.9,
+          "rotation": -1.5707964
+        },
+        {
+          "center": {
+            "x": -261.67575,
+            "z": -183.74872
+          },
+          "frontage_edge": 3,
+          "frontage_t": 0.16731708,
+          "width": 11.439999,
+          "depth": 15.9,
+          "rotation": 1.5707964
+        },
+        {
+          "center": {
+            "x": -261.67575,
+            "z": -170.10872
+          },
+          "frontage_edge": 3,
+          "frontage_t": 0.33365855,
+          "width": 11.439999,
+          "depth": 15.9,
+          "rotation": 1.5707964
+        },
+        {
+          "center": {
+            "x": -261.67575,
+            "z": -156.46872
+          },
+          "frontage_edge": 3,
+          "frontage_t": 0.50000006,
+          "width": 11.439999,
+          "depth": 15.9,
+          "rotation": 1.5707964
+        }
+      ]
+    },
+    "reusedRoads": [
+      {
+        "id": 227,
+        "from": 187,
+        "to": 188,
+        "length": 50
+      }
+    ],
+    "method": "New plan observed at 80-tick intervals; reused roads were already open and connected in the preceding sample."
+  },
+  "scannedThroughTick": 7520
+}

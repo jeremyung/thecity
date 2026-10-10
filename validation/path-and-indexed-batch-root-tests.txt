@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run --run tests/automatic-path.test.ts tests/camera-clearance.test.ts tests/building-chunks.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  3 passed (3)
+      Tests  24 passed (24)
+   Start at  11:05:37
+   Duration  351ms (transform 238ms, setup 0ms, import 348ms, tests 42ms, environment 0ms)
+

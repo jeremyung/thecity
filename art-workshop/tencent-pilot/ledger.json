@@ -1,0 +1,118 @@
+{
+  "model": "tencent/hy-image-v3.5-preview",
+  "capUSD": 2,
+  "requests": [
+    {
+      "id": "warm-plaster",
+      "status": "complete",
+      "submittedAt": "2026-10-10T16:48:22.727Z",
+      "prompt": "Create one square architectural base-colour material tile for a Tokyo living diorama. Flat orthographic material scan, uniform diffuse unlit colour, edge-to-edge single continuous surface. No perspective, objects, text, borders, vignette, directional shadows, highlights, ambient occlusion or baked reflections. Seamless opposing edges. Restrained contrast, credible fine surface detail, quiet broad colour variation. Compatible with both an anime background painting treatment and a tactile miniature material. Do not depict a building or scene. Warm ivory Japanese exterior mineral plaster, delicate trowel marks, fine aggregate, slight age, muted gray-beige irregularity. Avoid large stains, dramatic cracks and yellow cast.",
+      "expectedCostUSD": 0.024,
+      "file": "warm-plaster.png",
+      "usage": {
+        "prompt_tokens": 182,
+        "completion_tokens": 15000,
+        "total_tokens": 15182,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "cast-concrete",
+      "status": "complete",
+      "submittedAt": "2026-10-10T16:48:38.862Z",
+      "prompt": "Create one square architectural base-colour material tile for a Tokyo living diorama. Flat orthographic material scan, uniform diffuse unlit colour, edge-to-edge single continuous surface. No perspective, objects, text, borders, vignette, directional shadows, highlights, ambient occlusion or baked reflections. Seamless opposing edges. Restrained contrast, credible fine surface detail, quiet broad colour variation. Compatible with both an anime background painting treatment and a tactile miniature material. Do not depict a building or scene. Cool warm-gray poured concrete facade, tiny pores and subdued fine mineral grain, faint irregular tonal wash. No panel boundaries, bolt holes, deep cracks or directional streak shadows.",
+      "expectedCostUSD": 0.024,
+      "file": "cast-concrete.png",
+      "usage": {
+        "prompt_tokens": 183,
+        "completion_tokens": 15000,
+        "total_tokens": 15183,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "painted-steel",
+      "status": "complete",
+      "submittedAt": "2026-10-10T16:48:52.424Z",
+      "prompt": "Create one square architectural base-colour material tile for a Tokyo living diorama. Flat orthographic material scan, uniform diffuse unlit colour, edge-to-edge single continuous surface. No perspective, objects, text, borders, vignette, directional shadows, highlights, ambient occlusion or baked reflections. Seamless opposing edges. Restrained contrast, credible fine surface detail, quiet broad colour variation. Compatible with both an anime background painting treatment and a tactile miniature material. Do not depict a building or scene. Muted blue-gray painted steel, subtle uneven enamel pigmentation, very fine wear with small restrained edge-independent chips. Flat rough surface without specular highlights. No corrugation, bolts, seams or rust patches.",
+      "expectedCostUSD": 0.024,
+      "file": "painted-steel.png",
+      "usage": {
+        "prompt_tokens": 192,
+        "completion_tokens": 15000,
+        "total_tokens": 15192,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "aged-timber",
+      "status": "complete",
+      "submittedAt": "2026-10-10T16:49:03.657Z",
+      "prompt": "Create one square architectural base-colour material tile for a Tokyo living diorama. Flat orthographic material scan, uniform diffuse unlit colour, edge-to-edge single continuous surface. No perspective, objects, text, borders, vignette, directional shadows, highlights, ambient occlusion or baked reflections. Seamless opposing edges. Restrained contrast, credible fine surface detail, quiet broad colour variation. Compatible with both an anime background painting treatment and a tactile miniature material. Do not depict a building or scene. Quiet medium umber weathered timber surface with fine straight vertical grain, restrained desaturated brown variations, gentle age. No plank borders, knots larger than a small coin, deep grooves or baked shadows.",
+      "expectedCostUSD": 0.024,
+      "file": "aged-timber.png",
+      "usage": {
+        "prompt_tokens": 190,
+        "completion_tokens": 15000,
+        "total_tokens": 15190,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    }
+  ]
+}

@@ -1,0 +1,511 @@
+{
+  "adaptive_fraction_sweep": {
+    "fractions": "0.025 through 0.975 in 0.025 increments, subject to 10m endpoint margins",
+    "only_candidates_whose_branch_intersects_mask_are_evaluated": true,
+    "regions": [
+      {
+        "exact_gate_rejections": {
+          "EndpointSpacing": 5,
+          "ExistingRoadOrProject": 1,
+          "ParcelCorridor": 2292,
+          "TooFewLots": 22
+        },
+        "feasible_candidates": 0,
+        "nearest_rejected_candidates": [
+          {
+            "centerline_distance_to_void_sample_m": 0.4499969482421875,
+            "end": [
+              175.4499969482422,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.4749999940395355,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              175.4499969482422,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 1.600006103515625,
+            "end": [
+              173.39999389648438,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.45000001788139343,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              173.39999389648438,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 2.5,
+            "end": [
+              177.5,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.5,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              177.5,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 3.649993896484375,
+            "end": [
+              171.35000610351562,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.42500001192092896,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              171.35000610351562,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 4.5500030517578125,
+            "end": [
+              179.5500030517578,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.5250000357627869,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              179.5500030517578,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 5.6999969482421875,
+            "end": [
+              169.3000030517578,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.4000000059604645,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              169.3000030517578,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 6.600006103515625,
+            "end": [
+              181.60000610351562,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.550000011920929,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              181.60000610351562,
+              -182.0
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 7.75,
+            "end": [
+              167.25,
+              -242.0
+            ],
+            "host_id": 2009,
+            "host_t": 0.375,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              167.25,
+              -182.0
+            ]
+          }
+        ],
+        "region": "east-south",
+        "representative_feasible": [],
+        "targeted_finer_candidates": 2320
+      },
+      {
+        "exact_gate_rejections": {
+          "BoundsOrRiver": 62,
+          "EndpointSpacing": 19,
+          "ExistingRoadOrProject": 5,
+          "ParcelCorridor": 1174,
+          "TooFewLots": 14
+        },
+        "feasible_candidates": 0,
+        "nearest_rejected_candidates": [
+          {
+            "centerline_distance_to_void_sample_m": 0.225128173828125,
+            "end": [
+              -314.6248779296875,
+              185.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.8500000238418579,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -314.6248779296875,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 1.824859619140625,
+            "end": [
+              -316.67486572265625,
+              185.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.875,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -316.67486572265625,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 2.275146484375,
+            "end": [
+              -312.5748596191406,
+              185.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.824999988079071,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -312.5748596191406,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 4.32513427734375,
+            "end": [
+              -310.5248718261719,
+              185.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.800000011920929,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -310.5248718261719,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 6.3751220703125,
+            "end": [
+              -308.4748840332031,
+              185.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.7750000357627869,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -308.4748840332031,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 8.425140380859375,
+            "end": [
+              -306.42486572265625,
+              185.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.75,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -306.42486572265625,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 0.225128173828125,
+            "end": [
+              -314.6248779296875,
+              173.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.8500000238418579,
+            "length_m": 36.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -314.6248779296875,
+              209.8429718017578
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 1.824859619140625,
+            "end": [
+              -316.67486572265625,
+              173.8429718017578
+            ],
+            "host_id": 1461,
+            "host_t": 0.875,
+            "length_m": 36.0,
+            "reason": "ParcelCorridor",
+            "side": 1,
+            "start": [
+              -316.67486572265625,
+              209.8429718017578
+            ]
+          }
+        ],
+        "region": "west-north",
+        "representative_feasible": [],
+        "targeted_finer_candidates": 1274
+      },
+      {
+        "exact_gate_rejections": {
+          "ParcelCorridor": 1061,
+          "TooFewLots": 13
+        },
+        "feasible_candidates": 0,
+        "nearest_rejected_candidates": [
+          {
+            "centerline_distance_to_void_sample_m": 2.6457366943359375,
+            "end": [
+              -255.97573852539062,
+              26.531272888183594
+            ],
+            "host_id": 200,
+            "host_t": 0.125,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -255.97573852539062,
+              -33.468727111816406
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 0.26918134093284607,
+            "end": [
+              -274.1854248046875,
+              6.983134746551514
+            ],
+            "host_id": 159,
+            "host_t": 0.699999988079071,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -250.38616943359375,
+              3.8853721618652344
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 1.2419441938400269,
+            "end": [
+              -273.9903869628906,
+              8.481620788574219
+            ],
+            "host_id": 159,
+            "host_t": 0.675000011920929,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -250.19113159179688,
+              5.383857727050781
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 1.7803089618682861,
+            "end": [
+              -274.3804626464844,
+              5.484649181365967
+            ],
+            "host_id": 159,
+            "host_t": 0.7250000238418579,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -250.5812225341797,
+              2.3868865966796875
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 4.6957244873046875,
+            "end": [
+              -258.0257263183594,
+              26.531272888183594
+            ],
+            "host_id": 200,
+            "host_t": 0.15000000596046448,
+            "length_m": 60.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -258.0257263183594,
+              -33.468727111816406
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 2.7530667781829834,
+            "end": [
+              -273.7953186035156,
+              9.9801025390625
+            ],
+            "host_id": 159,
+            "host_t": 0.6500000357627869,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -249.99607849121094,
+              6.8823394775390625
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 3.2914352416992188,
+            "end": [
+              -274.5755310058594,
+              3.98616361618042
+            ],
+            "host_id": 159,
+            "host_t": 0.75,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -250.77627563476562,
+              0.8884010314941406
+            ]
+          },
+          {
+            "centerline_distance_to_void_sample_m": 4.264196872711182,
+            "end": [
+              -273.60028076171875,
+              11.478591918945312
+            ],
+            "host_id": 159,
+            "host_t": 0.625,
+            "length_m": 24.0,
+            "reason": "ParcelCorridor",
+            "side": -1,
+            "start": [
+              -249.80104064941406,
+              8.380828857421875
+            ]
+          }
+        ],
+        "region": "west-center",
+        "representative_feasible": [],
+        "targeted_finer_candidates": 1074
+      }
+    ]
+  },
+  "candidate_positions_in_full_cycle": 5160,
+  "feasible_proposals_returned": 0,
+  "fixed_candidate_exact_gate_counts": {
+    "BoundsOrRiver": 629,
+    "EndpointSpacing": 20,
+    "ExistingRoadOrProject": 13,
+    "HostMargin": 64,
+    "ParcelCorridor": 4368,
+    "Protected": 32,
+    "TooFewLots": 34
+  },
+  "fixed_candidate_exact_successes": 0,
+  "highest_area_per_road_score": null,
+  "initial_cursor": 1008,
+  "initial_next_id": 3953,
+  "input": "validation/spine-experiment-browser-review-save.json",
+  "open_connected_ordinary_hosts": 215,
+  "proposal_count_is_bounded_by_scan_windows": true,
+  "proposal_windows_scanned": 110,
+  "regions": [
+    {
+      "bbox": [
+        91.0,
+        297.0,
+        -351.0,
+        -103.0
+      ],
+      "feasible_branch_corridors_within20m_sample": 0,
+      "feasible_proposals_with_lot_center_in_bbox": 0,
+      "feasible_proposals_with_lot_center_in_void_mask": 0,
+      "nearest_feasible_lot_options": [],
+      "region": "east-south",
+      "sample": [
+        175.0,
+        -223.0
+      ],
+      "void_mask_cells": 3144
+    },
+    {
+      "bbox": [
+        -369.0,
+        -249.0,
+        133.0,
+        305.0
+      ],
+      "feasible_branch_corridors_within20m_sample": 0,
+      "feasible_proposals_with_lot_center_in_bbox": 0,
+      "feasible_proposals_with_lot_center_in_void_mask": 0,
+      "nearest_feasible_lot_options": [],
+      "region": "west-north",
+      "sample": [
+        -314.8500061035156,
+        201.27000427246094
+      ],
+      "void_mask_cells": 1482
+    },
+    {
+      "bbox": [
+        -323.0,
+        -187.0,
+        -35.0,
+        43.0
+      ],
+      "feasible_branch_corridors_within20m_sample": 0,
+      "feasible_proposals_with_lot_center_in_bbox": 0,
+      "feasible_proposals_with_lot_center_in_void_mask": 0,
+      "nearest_feasible_lot_options": [],
+      "region": "west-center",
+      "sample": [
+        -253.3300018310547,
+        4.539999961853027
+      ],
+      "void_mask_cells": 1461
+    }
+  ],
+  "save_unchanged_after_restoring_cursor": true,
+  "tick": 242839,
+  "window_budget": 48
+}

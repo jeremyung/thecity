@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "runtime_media": [
+    {
+      "id": "city-geometry",
+      "source": "Original procedural geometry in web/src/render/kit.ts, city.ts, foliage.ts, buses.ts and umbrellas.ts",
+      "rights": "Original project work; project distribution license has not been declared",
+      "attribution": null,
+      "duration_seconds": null,
+      "loop_points": null,
+      "normalization": "Physical scene units; bounded modular geometry and shared materials"
+    },
+    {
+      "id": "surface-and-water",
+      "source": "Original TSL materials, procedural pigment and leaf coverage mask, finite river mesh and ripple solver",
+      "rights": "Original project work; project distribution license has not been declared",
+      "attribution": null,
+      "duration_seconds": null,
+      "loop_points": null,
+      "normalization": "Shared day/night lighting; four-sample offscreen scene MSAA"
+    },
+    {
+      "id": "lofi-score",
+      "source": "Original Web Audio composition and synthesis in web/src/audio/director.ts",
+      "rights": "Original project work; no sampled recording or third-party melody",
+      "attribution": null,
+      "duration_seconds": null,
+      "loop_points": "Synthesized musical scheduling; no source audio loop",
+      "normalization": "82 BPM, compatible D-major/B-minor palette; separate music bus and master compressor (threshold -8 dB, ratio 12:1). Listening evaluation remains pending."
+    },
+    {
+      "id": "city-ambience",
+      "source": "Original Web Audio noise and oscillator synthesis, including bus engine/road wash and quiet stop chimes",
+      "rights": "Original project work; no sampled recording",
+      "attribution": null,
+      "duration_seconds": null,
+      "loop_points": "Shared looping generated noise buffer plus continuous synthesized voices",
+      "normalization": "Separate city bus; 32 spatial slots; combined spatial gain capped at 0.42 before master compression. Listening evaluation remains pending."
+    },
+    {
+      "id": "signage",
+      "source": "Authored Japanese labels and Latin station name rendered to canvas using installed system fonts",
+      "rights": "Original labels; fonts are not redistributed",
+      "attribution": null,
+      "duration_seconds": null,
+      "loop_points": null,
+      "normalization": "Native Japanese language editorial review remains pending"
+    }
+  ],
+  "concept_references": {
+    "source": "Generated concept boards under concepts/, including dense-city boards 05/06, plus unchanged user photographs in concepts/photo-references",
+    "usage": "Design references; not shipped as runtime scenery textures"
+  },
+  "external_runtime_media": [],
+  "development_material_candidates": [
+    {
+      "id": "ivory-plaster-v1",
+      "file": "public/art/textures/ivory-plaster-v1.png",
+      "provenance": "public/art/textures/ivory-plaster-v1.json",
+      "source": "Original built-in imagegen output",
+      "usage": "Architecture review wall and shop facade only; not integrated into living-city materials",
+      "acceptance": "Browser loading, repeat sampling and style switching inspected. Artistic and runtime-city acceptance remain open."
+    },
+    {
+      "id": "tencent-texture-pilot",
+      "file": "art-workshop/tencent-pilot/",
+      "provenance": "art-workshop/tencent-pilot/ledger.json",
+      "source": "Tencent Hy Image 3.5 Preview through OpenRouter; four text-only 1K generations",
+      "usage": "Offline development candidates only; no browser integration",
+      "acceptance": "Concrete promising; plaster and timber borders and steel repeat seams fail shipping acceptance. See REVIEW.md."
+    },
+    {
+      "id": "cast-concrete-pilot-512",
+      "file": "public/art/textures/cast-concrete-pilot-512.png",
+      "provenance": "public/art/textures/cast-concrete-pilot-512.json",
+      "usage": "Development architecture review only; no living-city integration",
+      "acceptance": "Compared on fixed facade in both styles/day and Miniature night. Subtle grain; insufficient benefit for promotion."
+    }
+  ],
+  "code_dependencies": "See package-lock.json and engine/Cargo.lock; dependency code licenses are separate from media rights."
+}

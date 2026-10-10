@@ -1,0 +1,19 @@
+# Dependencies, compiler outputs, and local toolchains
+node_modules/
+dist/
+.tools/
+engine/target/
+public/wasm/
+
+# Test runner output (curated validation evidence stays versioned)
+test-results/
+playwright-report/
+coverage/
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store

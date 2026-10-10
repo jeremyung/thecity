@@ -1,0 +1,2182 @@
+{
+  "source": {
+    "save": null,
+    "seed": 87231,
+    "tick": 242000,
+    "engineVersion": "0.1.0",
+    "note": "Original 440-building snapshot is unavailable; baseline numerical envelope metrics are preserved and were not regenerated."
+  },
+  "metrics": {
+    "area": "nominalParcelEnvelopeM2",
+    "floorArea": "nominalFloorAreaProxyM2",
+    "coverage": "nominalParcelEnvelopeCoverage",
+    "grossFar": "grossFloorAreaRatioProxy"
+  },
+  "method": {
+    "buildingDimensions": "Building.width × depth are parcel-envelope dimensions. The renderer sets structures back and uses kind/profile-specific massing.",
+    "interpretation": "Coverage and FAR are nominal parcel-envelope proxies, not actual rendered building footprint or usable floor area.",
+    "rotation": "Axis-aligned rectangles; Building.rotation is ignored."
+  },
+  "denominator": "gross area of world.bounds, including water and protected land",
+  "domain": {
+    "min_x": -400,
+    "max_x": 400,
+    "min_z": -400,
+    "max_z": 400,
+    "areaM2": 640000
+  },
+  "buildings": {
+    "valid": 440,
+    "invalid": 0,
+    "invalidIds": [],
+    "total": {
+      "count": 440,
+      "nominalParcelEnvelopeM2": 75486,
+      "nominalFloorAreaProxyM2": 253380,
+      "nominalParcelEnvelopeCoverage": 0.117946875,
+      "grossFloorAreaRatioProxy": 0.39590625
+    },
+    "byKind": {
+      "apartment": {
+        "count": 83,
+        "nominalParcelEnvelopeM2": 14568,
+        "nominalFloorAreaProxyM2": 102816,
+        "nominalParcelEnvelopeCoverage": 0.0227625,
+        "grossFloorAreaRatioProxy": 0.16065
+      },
+      "cafe": {
+        "count": 65,
+        "nominalParcelEnvelopeM2": 10920,
+        "nominalFloorAreaProxyM2": 15960,
+        "nominalParcelEnvelopeCoverage": 0.0170625,
+        "grossFloorAreaRatioProxy": 0.0249375
+      },
+      "home": {
+        "count": 186,
+        "nominalParcelEnvelopeM2": 31594,
+        "nominalFloorAreaProxyM2": 73268,
+        "nominalParcelEnvelopeCoverage": 0.049365625,
+        "grossFloorAreaRatioProxy": 0.11448125
+      },
+      "office": {
+        "count": 49,
+        "nominalParcelEnvelopeM2": 8232,
+        "nominalFloorAreaProxyM2": 46704,
+        "nominalParcelEnvelopeCoverage": 0.0128625,
+        "grossFloorAreaRatioProxy": 0.072975
+      },
+      "shop": {
+        "count": 57,
+        "nominalParcelEnvelopeM2": 10172,
+        "nominalFloorAreaProxyM2": 14632,
+        "nominalParcelEnvelopeCoverage": 0.01589375,
+        "grossFloorAreaRatioProxy": 0.0228625
+      }
+    },
+    "statusBreakdown": {
+      "available": false,
+      "reason": "The raw baseline building records are unavailable. The prior empty/vacant category could include commercial buildings whose occupancy is not modeled."
+    }
+  },
+  "cells": {
+    "sizeM": 100,
+    "origin": {
+      "x": 0,
+      "z": 0
+    },
+    "populated": [
+      {
+        "ix": -1,
+        "iz": -4,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": -400,
+          "max_z": -300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 9,
+          "nominalParcelEnvelopeM2": 1004.8920620000004,
+          "nominalFloorAreaProxyM2": 1601.4180140000012,
+          "nominalParcelEnvelopeCoverage": 0.10048920620000004,
+          "grossFloorAreaRatioProxy": 0.16014180140000012
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 0.4674480000000045,
+            "nominalFloorAreaProxyM2": 1.869792000000018,
+            "nominalParcelEnvelopeCoverage": 0.000046744800000000454,
+            "grossFloorAreaRatioProxy": 0.00018697920000000182
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          },
+          "home": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 532.3081280000004,
+            "nominalFloorAreaProxyM2": 959.4317360000009,
+            "nominalParcelEnvelopeCoverage": 0.053230812800000034,
+            "grossFloorAreaRatioProxy": 0.0959431736000001
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0336
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 136.116486,
+            "nominalFloorAreaProxyM2": 136.116486,
+            "nominalParcelEnvelopeCoverage": 0.013611648600000002,
+            "grossFloorAreaRatioProxy": 0.013611648600000002
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": -3,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": -300,
+          "max_z": -200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 12,
+          "nominalParcelEnvelopeM2": 1582.3233071999998,
+          "nominalFloorAreaProxyM2": 3645.312534399999,
+          "nominalParcelEnvelopeCoverage": 0.15823233071999998,
+          "grossFloorAreaRatioProxy": 0.3645312534399999
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 1512,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.1512
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          },
+          "home": {
+            "count": 8,
+            "nominalParcelEnvelopeM2": 910.3233071999996,
+            "nominalFloorAreaProxyM2": 1797.3125343999989,
+            "nominalParcelEnvelopeCoverage": 0.09103233071999996,
+            "grossFloorAreaRatioProxy": 0.17973125343999988
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": -2,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": -200,
+          "max_z": -100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 12,
+          "nominalParcelEnvelopeM2": 1762.925465464347,
+          "nominalFloorAreaProxyM2": 3990.369530928694,
+          "nominalParcelEnvelopeCoverage": 0.1762925465464347,
+          "grossFloorAreaRatioProxy": 0.3990369530928694
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 1176,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.1176
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 290.49987360000006,
+            "nominalFloorAreaProxyM2": 412.99974720000006,
+            "nominalParcelEnvelopeCoverage": 0.029049987360000005,
+            "grossFloorAreaRatioProxy": 0.04129997472000001
+          },
+          "home": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 867.8835756000002,
+            "nominalFloorAreaProxyM2": 2032.2857512000007,
+            "nominalParcelEnvelopeCoverage": 0.08678835756000002,
+            "grossFloorAreaRatioProxy": 0.20322857512000006
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 100.54201626434698,
+            "nominalFloorAreaProxyM2": 201.08403252869397,
+            "nominalParcelEnvelopeCoverage": 0.010054201626434698,
+            "grossFloorAreaRatioProxy": 0.020108403252869396
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168.00000000000006,
+            "nominalFloorAreaProxyM2": 168.00000000000006,
+            "nominalParcelEnvelopeCoverage": 0.016800000000000006,
+            "grossFloorAreaRatioProxy": 0.016800000000000006
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": -1,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": -100,
+          "max_z": 0
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 14,
+          "nominalParcelEnvelopeM2": 1858.887605135653,
+          "nominalFloorAreaProxyM2": 4026.8171772713063,
+          "nominalParcelEnvelopeCoverage": 0.18588876051356532,
+          "grossFloorAreaRatioProxy": 0.40268171772713063
+        },
+        "byKind": {
+          "apartment": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 599.4083934,
+            "nominalFloorAreaProxyM2": 2347.8587538,
+            "nominalParcelEnvelopeCoverage": 0.05994083934,
+            "grossFloorAreaRatioProxy": 0.23478587538
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 291.2823432,
+            "nominalFloorAreaProxyM2": 414.5646864,
+            "nominalParcelEnvelopeCoverage": 0.02912823432,
+            "grossFloorAreaRatioProxy": 0.04145646864
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 371.1345399999999,
+            "nominalFloorAreaProxyM2": 574.2690799999998,
+            "nominalParcelEnvelopeCoverage": 0.03711345399999999,
+            "grossFloorAreaRatioProxy": 0.05742690799999998
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 21.062328535653023,
+            "nominalFloorAreaProxyM2": 42.124657071306046,
+            "nominalParcelEnvelopeCoverage": 0.002106232853565302,
+            "grossFloorAreaRatioProxy": 0.004212465707130604
+          },
+          "shop": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 576,
+            "nominalFloorAreaProxyM2": 648,
+            "nominalParcelEnvelopeCoverage": 0.0576,
+            "grossFloorAreaRatioProxy": 0.0648
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": 0,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": 0,
+          "max_z": 100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 8,
+          "nominalParcelEnvelopeM2": 1463.5273272,
+          "nominalFloorAreaProxyM2": 2626.5819816,
+          "nominalParcelEnvelopeCoverage": 0.14635273272,
+          "grossFloorAreaRatioProxy": 0.26265819815999997
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 161.21867999999995,
+            "nominalFloorAreaProxyM2": 483.65603999999985,
+            "nominalParcelEnvelopeCoverage": 0.016121867999999994,
+            "grossFloorAreaRatioProxy": 0.048365603999999986
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 312,
+            "nominalFloorAreaProxyM2": 312,
+            "nominalParcelEnvelopeCoverage": 0.0312,
+            "grossFloorAreaRatioProxy": 0.0312
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 462.3086472,
+            "nominalFloorAreaProxyM2": 774.9259416,
+            "nominalParcelEnvelopeCoverage": 0.04623086472,
+            "grossFloorAreaRatioProxy": 0.07749259416
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 528,
+            "nominalFloorAreaProxyM2": 1056,
+            "nominalParcelEnvelopeCoverage": 0.0528,
+            "grossFloorAreaRatioProxy": 0.1056
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": 1,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": 100,
+          "max_z": 200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 9,
+          "nominalParcelEnvelopeM2": 1142.4722556000002,
+          "nominalFloorAreaProxyM2": 2665.4058036,
+          "nominalParcelEnvelopeCoverage": 0.11424722556000001,
+          "grossFloorAreaRatioProxy": 0.26654058036
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 174.78132000000005,
+            "nominalFloorAreaProxyM2": 356.3439600000001,
+            "nominalParcelEnvelopeCoverage": 0.017478132000000004,
+            "grossFloorAreaRatioProxy": 0.03563439600000001
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 38.1498876,
+            "nominalFloorAreaProxyM2": 38.1498876,
+            "nominalParcelEnvelopeCoverage": 0.00381498876,
+            "grossFloorAreaRatioProxy": 0.00381498876
+          },
+          "home": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 761.541048,
+            "nominalFloorAreaProxyM2": 1934.911956,
+            "nominalParcelEnvelopeCoverage": 0.07615410480000001,
+            "grossFloorAreaRatioProxy": 0.1934911956
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0336
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": 2,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": 200,
+          "max_z": 300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 9,
+          "nominalParcelEnvelopeM2": 1343.50608,
+          "nominalFloorAreaProxyM2": 2894.0654400000003,
+          "nominalParcelEnvelopeCoverage": 0.134350608,
+          "grossFloorAreaRatioProxy": 0.28940654400000004
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168.00000000000006,
+            "nominalFloorAreaProxyM2": 672.0000000000002,
+            "nominalParcelEnvelopeCoverage": 0.016800000000000006,
+            "grossFloorAreaRatioProxy": 0.06720000000000002
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "home": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 632.4528000000003,
+            "nominalFloorAreaProxyM2": 1432.9056000000005,
+            "nominalParcelEnvelopeCoverage": 0.06324528000000003,
+            "grossFloorAreaRatioProxy": 0.14329056000000004
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 39.053279999999745,
+            "nominalFloorAreaProxyM2": 117.15983999999924,
+            "nominalParcelEnvelopeCoverage": 0.0039053279999999744,
+            "grossFloorAreaRatioProxy": 0.011715983999999924
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          }
+        }
+      },
+      {
+        "ix": -1,
+        "iz": 3,
+        "bounds": {
+          "min_x": -100,
+          "max_x": 0,
+          "min_z": 300,
+          "max_z": 400
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 8,
+          "nominalParcelEnvelopeM2": 915.2240592,
+          "nominalFloorAreaProxyM2": 1759.4004744000003,
+          "nominalParcelEnvelopeCoverage": 0.09152240592000001,
+          "grossFloorAreaRatioProxy": 0.17594004744000002
+        },
+        "byKind": {
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 74.73013920000001,
+            "nominalFloorAreaProxyM2": 117.46591440000002,
+            "nominalParcelEnvelopeCoverage": 0.007473013920000001,
+            "grossFloorAreaRatioProxy": 0.011746591440000002
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 375.54719999999975,
+            "nominalFloorAreaProxyM2": 751.0943999999995,
+            "nominalParcelEnvelopeCoverage": 0.03755471999999997,
+            "grossFloorAreaRatioProxy": 0.07510943999999994
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 128.94672000000025,
+            "nominalFloorAreaProxyM2": 386.84016000000076,
+            "nominalParcelEnvelopeCoverage": 0.012894672000000025,
+            "grossFloorAreaRatioProxy": 0.03868401600000008
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0504
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": -4,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": -400,
+          "max_z": -300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 11,
+          "nominalParcelEnvelopeM2": 1457.4443380000002,
+          "nominalFloorAreaProxyM2": 3188.190746000001,
+          "nominalParcelEnvelopeCoverage": 0.14574443380000002,
+          "grossFloorAreaRatioProxy": 0.3188190746000001
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 167.532552,
+            "nominalFloorAreaProxyM2": 670.130208,
+            "nominalParcelEnvelopeCoverage": 0.0167532552,
+            "grossFloorAreaRatioProxy": 0.0670130208
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          },
+          "home": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 869.412072,
+            "nominalFloorAreaProxyM2": 1708.944624,
+            "nominalParcelEnvelopeCoverage": 0.0869412072,
+            "grossFloorAreaRatioProxy": 0.1708944624
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 84.49971400000027,
+            "nominalFloorAreaProxyM2": 137.11591400000054,
+            "nominalParcelEnvelopeCoverage": 0.008449971400000027,
+            "grossFloorAreaRatioProxy": 0.013711591400000054
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": -3,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": -300,
+          "max_z": -200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 16,
+          "nominalParcelEnvelopeM2": 2205.6991128,
+          "nominalFloorAreaProxyM2": 4490.333585599999,
+          "nominalParcelEnvelopeCoverage": 0.22056991128,
+          "grossFloorAreaRatioProxy": 0.44903335855999993
+        },
+        "byKind": {
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336.0000000000001,
+            "nominalFloorAreaProxyM2": 504.00000000000017,
+            "nominalParcelEnvelopeCoverage": 0.03360000000000001,
+            "grossFloorAreaRatioProxy": 0.050400000000000014
+          },
+          "home": {
+            "count": 10,
+            "nominalParcelEnvelopeM2": 1329.2506728,
+            "nominalFloorAreaProxyM2": 2826.5013455999997,
+            "nominalParcelEnvelopeCoverage": 0.13292506728,
+            "grossFloorAreaRatioProxy": 0.28265013456
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 840,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.084
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 204.44843999999978,
+            "nominalFloorAreaProxyM2": 319.8322399999995,
+            "nominalParcelEnvelopeCoverage": 0.02044484399999998,
+            "grossFloorAreaRatioProxy": 0.03198322399999995
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": -2,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": -200,
+          "max_z": -100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 20,
+          "nominalParcelEnvelopeM2": 2128.1296845356533,
+          "nominalFloorAreaProxyM2": 5566.707449071308,
+          "nominalParcelEnvelopeCoverage": 0.21281296845356532,
+          "grossFloorAreaRatioProxy": 0.5566707449071308
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 146.28374,
+            "nominalFloorAreaProxyM2": 568.67168,
+            "nominalParcelEnvelopeCoverage": 0.014628374,
+            "grossFloorAreaRatioProxy": 0.056867168
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 213.5001264,
+            "nominalFloorAreaProxyM2": 259.0002528,
+            "nominalParcelEnvelopeCoverage": 0.02135001264,
+            "grossFloorAreaRatioProxy": 0.02590002528
+          },
+          "home": {
+            "count": 10,
+            "nominalParcelEnvelopeM2": 1307.1769944000002,
+            "nominalFloorAreaProxyM2": 2656.7949288000004,
+            "nominalParcelEnvelopeCoverage": 0.13071769944000003,
+            "grossFloorAreaRatioProxy": 0.26567949288000003
+          },
+          "office": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 214.23346373565312,
+            "nominalFloorAreaProxyM2": 1835.305227471307,
+            "nominalParcelEnvelopeCoverage": 0.021423346373565313,
+            "grossFloorAreaRatioProxy": 0.1835305227471307
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 246.93535999999995,
+            "nominalFloorAreaProxyM2": 246.93535999999995,
+            "nominalParcelEnvelopeCoverage": 0.024693535999999995,
+            "grossFloorAreaRatioProxy": 0.024693535999999995
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": -1,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": -100,
+          "max_z": 0
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 16,
+          "nominalParcelEnvelopeM2": 1973.0371048643467,
+          "nominalFloorAreaProxyM2": 7897.024282728692,
+          "nominalParcelEnvelopeCoverage": 0.19730371048643466,
+          "grossFloorAreaRatioProxy": 0.7897024282728692
+        },
+        "byKind": {
+          "apartment": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 278.7711465999999,
+            "nominalFloorAreaProxyM2": 1164.8594061999997,
+            "nominalParcelEnvelopeCoverage": 0.02787711465999999,
+            "grossFloorAreaRatioProxy": 0.11648594061999998
+          },
+          "cafe": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 548.7176568,
+            "nominalFloorAreaProxyM2": 929.4353136,
+            "nominalParcelEnvelopeCoverage": 0.05487176568,
+            "grossFloorAreaRatioProxy": 0.09294353136
+          },
+          "home": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 565.31643,
+            "nominalFloorAreaProxyM2": 2093.26572,
+            "nominalParcelEnvelopeCoverage": 0.056531643,
+            "grossFloorAreaRatioProxy": 0.209326572
+          },
+          "office": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 412.2318714643469,
+            "nominalFloorAreaProxyM2": 3373.463842928693,
+            "nominalParcelEnvelopeCoverage": 0.04122318714643469,
+            "grossFloorAreaRatioProxy": 0.3373463842928693
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0336
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": 0,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": 0,
+          "max_z": 100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 18,
+          "nominalParcelEnvelopeM2": 2353.6014328,
+          "nominalFloorAreaProxyM2": 8907.2828584,
+          "nominalParcelEnvelopeCoverage": 0.23536014328000002,
+          "grossFloorAreaRatioProxy": 0.89072828584
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 2016,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.2016
+          },
+          "cafe": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 391.37274,
+            "nominalFloorAreaProxyM2": 1063.37274,
+            "nominalParcelEnvelopeCoverage": 0.039137274,
+            "grossFloorAreaRatioProxy": 0.106337274
+          },
+          "home": {
+            "count": 7,
+            "nominalParcelEnvelopeM2": 1009.6913528,
+            "nominalFloorAreaProxyM2": 2337.0740584,
+            "nominalParcelEnvelopeCoverage": 0.10096913528,
+            "grossFloorAreaRatioProxy": 0.23370740584
+          },
+          "office": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 610.53734,
+            "nominalFloorAreaProxyM2": 3478.8360599999996,
+            "nominalParcelEnvelopeCoverage": 0.061053734,
+            "grossFloorAreaRatioProxy": 0.34788360599999996
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 6,
+            "nominalFloorAreaProxyM2": 12,
+            "nominalParcelEnvelopeCoverage": 0.0006,
+            "grossFloorAreaRatioProxy": 0.0012
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": 1,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": 100,
+          "max_z": 200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 17,
+          "nominalParcelEnvelopeM2": 2175.9444718172,
+          "nominalFloorAreaProxyM2": 9844.664706651602,
+          "nominalParcelEnvelopeCoverage": 0.21759444718172,
+          "grossFloorAreaRatioProxy": 0.9844664706651601
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 3024,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.3024
+          },
+          "cafe": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 713.3894844000001,
+            "nominalFloorAreaProxyM2": 1328.3015964,
+            "nominalParcelEnvelopeCoverage": 0.07133894844000001,
+            "grossFloorAreaRatioProxy": 0.13283015964
+          },
+          "home": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 248.65012741720003,
+            "nominalFloorAreaProxyM2": 927.6615702516001,
+            "nominalParcelEnvelopeCoverage": 0.024865012741720004,
+            "grossFloorAreaRatioProxy": 0.09276615702516001
+          },
+          "office": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 373.90485999999987,
+            "nominalFloorAreaProxyM2": 3388.701539999999,
+            "nominalParcelEnvelopeCoverage": 0.03739048599999999,
+            "grossFloorAreaRatioProxy": 0.3388701539999999
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 504,
+            "nominalFloorAreaProxyM2": 1176,
+            "nominalParcelEnvelopeCoverage": 0.0504,
+            "grossFloorAreaRatioProxy": 0.1176
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": 2,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": 200,
+          "max_z": 300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 15,
+          "nominalParcelEnvelopeM2": 2051.6870645828003,
+          "nominalFloorAreaProxyM2": 6960.645913748402,
+          "nominalParcelEnvelopeCoverage": 0.20516870645828003,
+          "grossFloorAreaRatioProxy": 0.6960645913748401
+        },
+        "byKind": {
+          "apartment": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 452.2448400000001,
+            "nominalFloorAreaProxyM2": 3914.938080000001,
+            "nominalParcelEnvelopeCoverage": 0.04522448400000001,
+            "grossFloorAreaRatioProxy": 0.39149380800000005
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          },
+          "home": {
+            "count": 7,
+            "nominalParcelEnvelopeM2": 903.8844245828002,
+            "nominalFloorAreaProxyM2": 1681.2454337484,
+            "nominalParcelEnvelopeCoverage": 0.09038844245828002,
+            "grossFloorAreaRatioProxy": 0.16812454337484
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 191.55780000000016,
+            "nominalFloorAreaProxyM2": 692.4624000000013,
+            "nominalParcelEnvelopeCoverage": 0.019155780000000015,
+            "grossFloorAreaRatioProxy": 0.06924624000000013
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0504
+          }
+        }
+      },
+      {
+        "ix": 0,
+        "iz": 3,
+        "bounds": {
+          "min_x": 0,
+          "max_x": 100,
+          "min_z": 300,
+          "max_z": 400
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 14,
+          "nominalParcelEnvelopeM2": 2128.4330928000004,
+          "nominalFloorAreaProxyM2": 4415.2894776,
+          "nominalParcelEnvelopeCoverage": 0.21284330928000003,
+          "grossFloorAreaRatioProxy": 0.44152894776
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 840,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.084
+          },
+          "cafe": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 398.9486928,
+            "nominalFloorAreaProxyM2": 524.2129176000001,
+            "nominalParcelEnvelopeCoverage": 0.03989486928,
+            "grossFloorAreaRatioProxy": 0.05242129176000001
+          },
+          "home": {
+            "count": 9,
+            "nominalParcelEnvelopeM2": 1393.4844000000005,
+            "nominalFloorAreaProxyM2": 2883.076560000001,
+            "nominalParcelEnvelopeCoverage": 0.13934844000000005,
+            "grossFloorAreaRatioProxy": 0.2883076560000001
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": -4,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": -400,
+          "max_z": -300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 10,
+          "nominalParcelEnvelopeM2": 1359.5400200000004,
+          "nominalFloorAreaProxyM2": 2759.0759199999998,
+          "nominalParcelEnvelopeCoverage": 0.13595400200000005,
+          "grossFloorAreaRatioProxy": 0.275907592
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 198.68351999999987,
+            "nominalFloorAreaProxyM2": 825.4175999999995,
+            "nominalParcelEnvelopeCoverage": 0.01986835199999999,
+            "grossFloorAreaRatioProxy": 0.08254175999999995
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 249.93420000000032,
+            "nominalFloorAreaProxyM2": 249.93420000000032,
+            "nominalParcelEnvelopeCoverage": 0.02499342000000003,
+            "grossFloorAreaRatioProxy": 0.02499342000000003
+          },
+          "home": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 742.9223000000001,
+            "nominalFloorAreaProxyM2": 1515.72412,
+            "nominalParcelEnvelopeCoverage": 0.07429223,
+            "grossFloorAreaRatioProxy": 0.15157241200000002
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": -3,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": -300,
+          "max_z": -200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 10,
+          "nominalParcelEnvelopeM2": 1516.23518,
+          "nominalFloorAreaProxyM2": 3858.9813999999997,
+          "nominalParcelEnvelopeCoverage": 0.15162351799999998,
+          "grossFloorAreaRatioProxy": 0.38589813999999995
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 1176,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.1176
+          },
+          "home": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 857.7241399999998,
+            "nominalFloorAreaProxyM2": 1715.4482799999994,
+            "nominalParcelEnvelopeCoverage": 0.08577241399999998,
+            "grossFloorAreaRatioProxy": 0.17154482799999993
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 322.5110400000001,
+            "nominalFloorAreaProxyM2": 967.5331200000003,
+            "nominalParcelEnvelopeCoverage": 0.03225110400000001,
+            "grossFloorAreaRatioProxy": 0.09675331200000002
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": -2,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": -200,
+          "max_z": -100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 22,
+          "nominalParcelEnvelopeM2": 3111.00252,
+          "nominalFloorAreaProxyM2": 11665.826519999997,
+          "nominalParcelEnvelopeCoverage": 0.311100252,
+          "grossFloorAreaRatioProxy": 1.1665826519999998
+        },
+        "byKind": {
+          "apartment": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 850.6562399999999,
+            "nominalFloorAreaProxyM2": 4118.207759999999,
+            "nominalParcelEnvelopeCoverage": 0.08506562399999999,
+            "grossFloorAreaRatioProxy": 0.41182077599999994
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336.00000000000017,
+            "nominalFloorAreaProxyM2": 336.00000000000017,
+            "nominalParcelEnvelopeCoverage": 0.03360000000000002,
+            "grossFloorAreaRatioProxy": 0.03360000000000002
+          },
+          "home": {
+            "count": 9,
+            "nominalParcelEnvelopeM2": 1390.54784,
+            "nominalFloorAreaProxyM2": 4128.021879999999,
+            "nominalParcelEnvelopeCoverage": 0.139054784,
+            "grossFloorAreaRatioProxy": 0.41280218799999996
+          },
+          "office": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 502.4101199999997,
+            "nominalFloorAreaProxyM2": 3020.820239999998,
+            "nominalParcelEnvelopeCoverage": 0.050241011999999974,
+            "grossFloorAreaRatioProxy": 0.30208202399999984
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 31.388319999999936,
+            "nominalFloorAreaProxyM2": 62.77663999999987,
+            "nominalParcelEnvelopeCoverage": 0.0031388319999999937,
+            "grossFloorAreaRatioProxy": 0.0062776639999999875
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": -1,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": -100,
+          "max_z": 0
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 13,
+          "nominalParcelEnvelopeM2": 2382.20032,
+          "nominalFloorAreaProxyM2": 27453.637440000002,
+          "nominalParcelEnvelopeCoverage": 0.238220032,
+          "grossFloorAreaRatioProxy": 2.745363744
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 624.1952,
+            "nominalFloorAreaProxyM2": 17477.4656,
+            "nominalParcelEnvelopeCoverage": 0.06241952,
+            "grossFloorAreaRatioProxy": 1.74774656
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336.00000000000017,
+            "nominalFloorAreaProxyM2": 672.0000000000003,
+            "nominalParcelEnvelopeCoverage": 0.03360000000000002,
+            "grossFloorAreaRatioProxy": 0.06720000000000004
+          },
+          "home": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 1176,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.1176
+          },
+          "office": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 933.5202,
+            "nominalFloorAreaProxyM2": 7823.202,
+            "nominalParcelEnvelopeCoverage": 0.09335202000000001,
+            "grossFloorAreaRatioProxy": 0.7823202
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 152.48491999999996,
+            "nominalFloorAreaProxyM2": 304.9698399999999,
+            "nominalParcelEnvelopeCoverage": 0.015248491999999995,
+            "grossFloorAreaRatioProxy": 0.03049698399999999
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": 0,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": 0,
+          "max_z": 100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 11,
+          "nominalParcelEnvelopeM2": 1896,
+          "nominalFloorAreaProxyM2": 7632,
+          "nominalParcelEnvelopeCoverage": 0.1896,
+          "grossFloorAreaRatioProxy": 0.7632
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 222,
+            "nominalFloorAreaProxyM2": 2160,
+            "nominalParcelEnvelopeCoverage": 0.0222,
+            "grossFloorAreaRatioProxy": 0.216
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 440,
+            "nominalFloorAreaProxyM2": 988,
+            "nominalParcelEnvelopeCoverage": 0.044,
+            "grossFloorAreaRatioProxy": 0.0988
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 2520,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.252
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 730,
+            "nominalFloorAreaProxyM2": 1460,
+            "nominalParcelEnvelopeCoverage": 0.073,
+            "grossFloorAreaRatioProxy": 0.146
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": 1,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": 100,
+          "max_z": 200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 11,
+          "nominalParcelEnvelopeM2": 1507.3266725827998,
+          "nominalFloorAreaProxyM2": 9572.8921297484,
+          "nominalParcelEnvelopeCoverage": 0.15073266725827997,
+          "grossFloorAreaRatioProxy": 0.9572892129748399
+        },
+        "byKind": {
+          "apartment": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 672,
+            "nominalFloorAreaProxyM2": 5712,
+            "nominalParcelEnvelopeCoverage": 0.0672,
+            "grossFloorAreaRatioProxy": 0.5712
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 225.08788799999996,
+            "nominalFloorAreaProxyM2": 618.1757759999999,
+            "nominalParcelEnvelopeCoverage": 0.022508788799999995,
+            "grossFloorAreaRatioProxy": 0.06181757759999999
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 342.2387845827999,
+            "nominalFloorAreaProxyM2": 1530.7163537483998,
+            "nominalParcelEnvelopeCoverage": 0.03422387845827999,
+            "grossFloorAreaRatioProxy": 0.15307163537483998
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 1512,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.1512
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 100,
+            "nominalFloorAreaProxyM2": 200,
+            "nominalParcelEnvelopeCoverage": 0.01,
+            "grossFloorAreaRatioProxy": 0.02
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": 2,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": 200,
+          "max_z": 300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 12,
+          "nominalParcelEnvelopeM2": 1721.0867754172,
+          "nominalFloorAreaProxyM2": 7780.9408062516,
+          "nominalParcelEnvelopeCoverage": 0.17210867754172,
+          "grossFloorAreaRatioProxy": 0.7780940806251601
+        },
+        "byKind": {
+          "apartment": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 522.9442799999999,
+            "nominalFloorAreaProxyM2": 3610.9965599999996,
+            "nominalParcelEnvelopeCoverage": 0.052294428,
+            "grossFloorAreaRatioProxy": 0.36109965599999994
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0336
+          },
+          "home": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 862.1424954172003,
+            "nominalFloorAreaProxyM2": 2825.9442462516004,
+            "nominalParcelEnvelopeCoverage": 0.08621424954172002,
+            "grossFloorAreaRatioProxy": 0.28259442462516005
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 1008,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.1008
+          }
+        }
+      },
+      {
+        "ix": 1,
+        "iz": 3,
+        "bounds": {
+          "min_x": 100,
+          "max_x": 200,
+          "min_z": 300,
+          "max_z": 400
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 19,
+          "nominalParcelEnvelopeM2": 2505.7266879999997,
+          "nominalFloorAreaProxyM2": 4474.111848,
+          "nominalParcelEnvelopeCoverage": 0.25057266879999995,
+          "grossFloorAreaRatioProxy": 0.4474111848
+        },
+        "byKind": {
+          "apartment": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 504,
+            "nominalFloorAreaProxyM2": 1680,
+            "nominalParcelEnvelopeCoverage": 0.0504,
+            "grossFloorAreaRatioProxy": 0.168
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 198.321168,
+            "nominalFloorAreaProxyM2": 198.321168,
+            "nominalParcelEnvelopeCoverage": 0.0198321168,
+            "grossFloorAreaRatioProxy": 0.0198321168
+          },
+          "home": {
+            "count": 10,
+            "nominalParcelEnvelopeM2": 1235.6969199999999,
+            "nominalFloorAreaProxyM2": 2028.0820799999992,
+            "nominalParcelEnvelopeCoverage": 0.12356969199999998,
+            "grossFloorAreaRatioProxy": 0.20280820799999993
+          },
+          "shop": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 567.7086000000002,
+            "nominalFloorAreaProxyM2": 567.7086000000002,
+            "nominalParcelEnvelopeCoverage": 0.05677086000000001,
+            "grossFloorAreaRatioProxy": 0.05677086000000001
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": -4,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": -400,
+          "max_z": -300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 13,
+          "nominalParcelEnvelopeM2": 1862.3572325759997,
+          "nominalFloorAreaProxyM2": 3838.8340325759996,
+          "nominalParcelEnvelopeCoverage": 0.18623572325759996,
+          "grossFloorAreaRatioProxy": 0.38388340325759995
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 243.65292,
+            "nominalFloorAreaProxyM2": 1111.92816,
+            "nominalParcelEnvelopeCoverage": 0.024365292,
+            "grossFloorAreaRatioProxy": 0.111192816
+          },
+          "cafe": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 385.3435925759999,
+            "nominalFloorAreaProxyM2": 385.3435925759999,
+            "nominalParcelEnvelopeCoverage": 0.03853435925759999,
+            "grossFloorAreaRatioProxy": 0.03853435925759999
+          },
+          "home": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 561.3607199999999,
+            "nominalFloorAreaProxyM2": 1165.5622799999996,
+            "nominalParcelEnvelopeCoverage": 0.05613607199999999,
+            "grossFloorAreaRatioProxy": 0.11655622799999997
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 840,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.084
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0336
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": -3,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": -300,
+          "max_z": -200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 15,
+          "nominalParcelEnvelopeM2": 2109.9911274239994,
+          "nominalFloorAreaProxyM2": 4337.959727424,
+          "nominalParcelEnvelopeCoverage": 0.21099911274239994,
+          "grossFloorAreaRatioProxy": 0.43379597274240006
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 229.66355999999996,
+            "nominalFloorAreaProxyM2": 918.6542399999998,
+            "nominalParcelEnvelopeCoverage": 0.022966355999999997,
+            "grossFloorAreaRatioProxy": 0.09186542399999999
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 186.83860742400006,
+            "nominalFloorAreaProxyM2": 186.83860742400006,
+            "nominalParcelEnvelopeCoverage": 0.018683860742400006,
+            "grossFloorAreaRatioProxy": 0.018683860742400006
+          },
+          "home": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 1008,
+            "nominalFloorAreaProxyM2": 2016,
+            "nominalParcelEnvelopeCoverage": 0.1008,
+            "grossFloorAreaRatioProxy": 0.2016
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 181.4889599999999,
+            "nominalFloorAreaProxyM2": 376.4668799999997,
+            "nominalParcelEnvelopeCoverage": 0.01814889599999999,
+            "grossFloorAreaRatioProxy": 0.03764668799999997
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 504,
+            "nominalFloorAreaProxyM2": 840,
+            "nominalParcelEnvelopeCoverage": 0.0504,
+            "grossFloorAreaRatioProxy": 0.084
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": -2,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": -200,
+          "max_z": -100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 17,
+          "nominalParcelEnvelopeM2": 2327.2729000000004,
+          "nominalFloorAreaProxyM2": 7145.077179999999,
+          "nominalParcelEnvelopeCoverage": 0.23272729000000003,
+          "grossFloorAreaRatioProxy": 0.7145077179999999
+        },
+        "byKind": {
+          "apartment": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 688.3629599999998,
+            "nominalFloorAreaProxyM2": 4113.814799999999,
+            "nominalParcelEnvelopeCoverage": 0.06883629599999998,
+            "grossFloorAreaRatioProxy": 0.4113814799999999
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 237.14316000000008,
+            "nominalFloorAreaProxyM2": 405.1431600000001,
+            "nominalParcelEnvelopeCoverage": 0.02371431600000001,
+            "grossFloorAreaRatioProxy": 0.04051431600000001
+          },
+          "home": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 904.2256800000002,
+            "nominalFloorAreaProxyM2": 1640.4513600000005,
+            "nominalParcelEnvelopeCoverage": 0.09042256800000002,
+            "grossFloorAreaRatioProxy": 0.16404513600000004
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 329.54110000000003,
+            "nominalFloorAreaProxyM2": 481.66786000000013,
+            "nominalParcelEnvelopeCoverage": 0.03295411,
+            "grossFloorAreaRatioProxy": 0.04816678600000001
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": -1,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": -100,
+          "max_z": 0
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 17,
+          "nominalParcelEnvelopeM2": 2294.700377933481,
+          "nominalFloorAreaProxyM2": 20001.13602033437,
+          "nominalParcelEnvelopeCoverage": 0.2294700377933481,
+          "grossFloorAreaRatioProxy": 2.0001136020334367
+        },
+        "byKind": {
+          "apartment": {
+            "count": 6,
+            "nominalParcelEnvelopeM2": 992.0728779334805,
+            "nominalFloorAreaProxyM2": 13957.795000334367,
+            "nominalParcelEnvelopeCoverage": 0.09920728779334806,
+            "grossFloorAreaRatioProxy": 1.3957795000334368
+          },
+          "cafe": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 308.6644799999999,
+            "nominalFloorAreaProxyM2": 561.8824799999998,
+            "nominalParcelEnvelopeCoverage": 0.03086644799999999,
+            "grossFloorAreaRatioProxy": 0.056188247999999975
+          },
+          "home": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 579.7991999999999,
+            "nominalFloorAreaProxyM2": 2562.9959999999996,
+            "nominalParcelEnvelopeCoverage": 0.05797991999999999,
+            "grossFloorAreaRatioProxy": 0.25629959999999996
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 237.75696000000016,
+            "nominalFloorAreaProxyM2": 2574.0556800000013,
+            "nominalParcelEnvelopeCoverage": 0.023775696000000016,
+            "grossFloorAreaRatioProxy": 0.25740556800000014
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 176.4068599999999,
+            "nominalFloorAreaProxyM2": 344.40685999999994,
+            "nominalParcelEnvelopeCoverage": 0.017640685999999992,
+            "grossFloorAreaRatioProxy": 0.03444068599999999
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": 0,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": 0,
+          "max_z": 100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 16,
+          "nominalParcelEnvelopeM2": 2194.11232206652,
+          "nominalFloorAreaProxyM2": 13363.40219966564,
+          "nominalParcelEnvelopeCoverage": 0.21941123220665198,
+          "grossFloorAreaRatioProxy": 1.336340219966564
+        },
+        "byKind": {
+          "apartment": {
+            "count": 9,
+            "nominalParcelEnvelopeM2": 1204.11232206652,
+            "nominalFloorAreaProxyM2": 9541.40219966564,
+            "nominalParcelEnvelopeCoverage": 0.120411232206652,
+            "grossFloorAreaRatioProxy": 0.954140219966564
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 270,
+            "nominalFloorAreaProxyM2": 270,
+            "nominalParcelEnvelopeCoverage": 0.027,
+            "grossFloorAreaRatioProxy": 0.027
+          },
+          "home": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 216,
+            "nominalFloorAreaProxyM2": 864,
+            "nominalParcelEnvelopeCoverage": 0.0216,
+            "grossFloorAreaRatioProxy": 0.0864
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 2520,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.252
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": 1,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": 100,
+          "max_z": 200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 11,
+          "nominalParcelEnvelopeM2": 1762.3263599999993,
+          "nominalFloorAreaProxyM2": 9562.610879999997,
+          "nominalParcelEnvelopeCoverage": 0.17623263599999994,
+          "grossFloorAreaRatioProxy": 0.9562610879999996
+        },
+        "byKind": {
+          "apartment": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 586.3263599999998,
+            "nominalFloorAreaProxyM2": 5026.610879999998,
+            "nominalParcelEnvelopeCoverage": 0.05863263599999998,
+            "grossFloorAreaRatioProxy": 0.5026610879999999
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 672,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0672
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 503.99999999999966,
+            "nominalFloorAreaProxyM2": 2183.9999999999986,
+            "nominalParcelEnvelopeCoverage": 0.050399999999999966,
+            "grossFloorAreaRatioProxy": 0.21839999999999987
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 1680,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.168
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": 2,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": 200,
+          "max_z": 300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 16,
+          "nominalParcelEnvelopeM2": 2022.0001200000002,
+          "nominalFloorAreaProxyM2": 4785.85232,
+          "nominalParcelEnvelopeCoverage": 0.202200012,
+          "grossFloorAreaRatioProxy": 0.47858523199999997
+        },
+        "byKind": {
+          "apartment": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 200.81088,
+            "nominalFloorAreaProxyM2": 874.0653599999998,
+            "nominalParcelEnvelopeCoverage": 0.020081088,
+            "grossFloorAreaRatioProxy": 0.08740653599999998
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "home": {
+            "count": 8,
+            "nominalParcelEnvelopeM2": 981.1892400000002,
+            "nominalFloorAreaProxyM2": 2567.7869600000004,
+            "nominalParcelEnvelopeCoverage": 0.09811892400000001,
+            "grossFloorAreaRatioProxy": 0.25677869600000003
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0336
+          }
+        }
+      },
+      {
+        "ix": 2,
+        "iz": 3,
+        "bounds": {
+          "min_x": 200,
+          "max_x": 300,
+          "min_z": 300,
+          "max_z": 400
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 15,
+          "nominalParcelEnvelopeM2": 2104.6789200000003,
+          "nominalFloorAreaProxyM2": 4544.512000000001,
+          "nominalParcelEnvelopeCoverage": 0.21046789200000002,
+          "grossFloorAreaRatioProxy": 0.45445120000000006
+        },
+        "byKind": {
+          "apartment": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 504,
+            "nominalFloorAreaProxyM2": 1848,
+            "nominalParcelEnvelopeCoverage": 0.0504,
+            "grossFloorAreaRatioProxy": 0.1848
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "home": {
+            "count": 7,
+            "nominalParcelEnvelopeM2": 935.2681200000002,
+            "nominalFloorAreaProxyM2": 1695.1012000000003,
+            "nominalParcelEnvelopeCoverage": 0.09352681200000001,
+            "grossFloorAreaRatioProxy": 0.16951012000000004
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 329.4107999999999,
+            "nominalFloorAreaProxyM2": 497.4107999999999,
+            "nominalParcelEnvelopeCoverage": 0.03294107999999999,
+            "grossFloorAreaRatioProxy": 0.049741079999999986
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": -4,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": -400,
+          "max_z": -300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 10,
+          "nominalParcelEnvelopeM2": 1226.6013274239997,
+          "nominalFloorAreaProxyM2": 2394.7224874239996,
+          "nominalParcelEnvelopeCoverage": 0.12266013274239997,
+          "grossFloorAreaRatioProxy": 0.23947224874239997
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 672,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0672
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 15.639327423999896,
+            "nominalFloorAreaProxyM2": 15.639327423999896,
+            "nominalParcelEnvelopeCoverage": 0.0015639327423999897,
+            "grossFloorAreaRatioProxy": 0.0015639327423999897
+          },
+          "home": {
+            "count": 7,
+            "nominalParcelEnvelopeM2": 874.9619999999998,
+            "nominalFloorAreaProxyM2": 1371.0831599999997,
+            "nominalParcelEnvelopeCoverage": 0.08749619999999998,
+            "grossFloorAreaRatioProxy": 0.13710831599999998
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0336
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": -3,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": -300,
+          "max_z": -200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 12,
+          "nominalParcelEnvelopeM2": 1704.371832576,
+          "nominalFloorAreaProxyM2": 3070.4993925760004,
+          "nominalParcelEnvelopeCoverage": 0.17043718325760002,
+          "grossFloorAreaRatioProxy": 0.30704993925760005
+        },
+        "byKind": {
+          "apartment": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 1008,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.1008
+          },
+          "cafe": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 338.244272576,
+            "nominalFloorAreaProxyM2": 338.244272576,
+            "nominalParcelEnvelopeCoverage": 0.0338244272576,
+            "grossFloorAreaRatioProxy": 0.0338244272576
+          },
+          "home": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 358.1275600000002,
+            "nominalFloorAreaProxyM2": 548.2551200000004,
+            "nominalParcelEnvelopeCoverage": 0.03581275600000002,
+            "grossFloorAreaRatioProxy": 0.054825512000000035
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 504,
+            "nominalFloorAreaProxyM2": 672,
+            "nominalParcelEnvelopeCoverage": 0.0504,
+            "grossFloorAreaRatioProxy": 0.0672
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": -2,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": -200,
+          "max_z": -100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 16,
+          "nominalParcelEnvelopeM2": 2230.667264,
+          "nominalFloorAreaProxyM2": 5366.643152000001,
+          "nominalParcelEnvelopeCoverage": 0.22306672640000003,
+          "grossFloorAreaRatioProxy": 0.5366643152
+        },
+        "byKind": {
+          "apartment": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 460.5175199999999,
+            "nominalFloorAreaProxyM2": 1966.5875999999998,
+            "nominalParcelEnvelopeCoverage": 0.04605175199999999,
+            "grossFloorAreaRatioProxy": 0.19665876
+          },
+          "cafe": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 390.35601999999994,
+            "nominalFloorAreaProxyM2": 390.35601999999994,
+            "nominalParcelEnvelopeCoverage": 0.039035601999999996,
+            "grossFloorAreaRatioProxy": 0.039035601999999996
+          },
+          "home": {
+            "count": 9,
+            "nominalParcelEnvelopeM2": 1229.6149240000002,
+            "nominalFloorAreaProxyM2": 2859.520732,
+            "nominalParcelEnvelopeCoverage": 0.12296149240000002,
+            "grossFloorAreaRatioProxy": 0.2859520732
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 150.17880000000014,
+            "nominalFloorAreaProxyM2": 150.17880000000014,
+            "nominalParcelEnvelopeCoverage": 0.015017880000000013,
+            "grossFloorAreaRatioProxy": 0.015017880000000013
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": -1,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": -100,
+          "max_z": 0
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 22,
+          "nominalParcelEnvelopeM2": 2843.3063174665203,
+          "nominalFloorAreaProxyM2": 7434.28927106564,
+          "nominalParcelEnvelopeCoverage": 0.284330631746652,
+          "grossFloorAreaRatioProxy": 0.7434289271065639
+        },
+        "byKind": {
+          "apartment": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 578.95143626652,
+            "nominalFloorAreaProxyM2": 2372.66005386564,
+            "nominalParcelEnvelopeCoverage": 0.057895143626652,
+            "grossFloorAreaRatioProxy": 0.23726600538656398
+          },
+          "cafe": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 351.63230120000003,
+            "nominalFloorAreaProxyM2": 434.4143012000002,
+            "nominalParcelEnvelopeCoverage": 0.03516323012,
+            "grossFloorAreaRatioProxy": 0.04344143012000002
+          },
+          "home": {
+            "count": 10,
+            "nominalParcelEnvelopeM2": 1310.4795399999998,
+            "nominalFloorAreaProxyM2": 3169.2705960000003,
+            "nominalParcelEnvelopeCoverage": 0.131047954,
+            "grossFloorAreaRatioProxy": 0.3169270596
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 98.24303999999984,
+            "nominalFloorAreaProxyM2": 785.9443199999987,
+            "nominalParcelEnvelopeCoverage": 0.009824303999999983,
+            "grossFloorAreaRatioProxy": 0.07859443199999987
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 504,
+            "nominalFloorAreaProxyM2": 672,
+            "nominalParcelEnvelopeCoverage": 0.0504,
+            "grossFloorAreaRatioProxy": 0.0672
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": 0,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": 0,
+          "max_z": 100
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 20,
+          "nominalParcelEnvelopeM2": 2690.97791853348,
+          "nominalFloorAreaProxyM2": 7993.9256969343605,
+          "nominalParcelEnvelopeCoverage": 0.26909779185334803,
+          "grossFloorAreaRatioProxy": 0.7993925696934361
+        },
+        "byKind": {
+          "apartment": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 530.6681637334799,
+            "nominalFloorAreaProxyM2": 2538.67714613436,
+            "nominalParcelEnvelopeCoverage": 0.05306681637334799,
+            "grossFloorAreaRatioProxy": 0.253867714613436
+          },
+          "cafe": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 553.7124588,
+            "nominalFloorAreaProxyM2": 649.2208788,
+            "nominalParcelEnvelopeCoverage": 0.05537124588,
+            "grossFloorAreaRatioProxy": 0.06492208788
+          },
+          "home": {
+            "count": 7,
+            "nominalParcelEnvelopeM2": 967.430376,
+            "nominalFloorAreaProxyM2": 2234.860752,
+            "nominalParcelEnvelopeCoverage": 0.0967430376,
+            "grossFloorAreaRatioProxy": 0.2234860752
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 308,
+            "nominalFloorAreaProxyM2": 2240,
+            "nominalParcelEnvelopeCoverage": 0.0308,
+            "grossFloorAreaRatioProxy": 0.224
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 331.16692,
+            "nominalFloorAreaProxyM2": 331.16692,
+            "nominalParcelEnvelopeCoverage": 0.033116692,
+            "grossFloorAreaRatioProxy": 0.033116692
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": 1,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": 100,
+          "max_z": 200
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 11,
+          "nominalParcelEnvelopeM2": 1355.9100200000003,
+          "nominalFloorAreaProxyM2": 3109.0288000000014,
+          "nominalParcelEnvelopeCoverage": 0.13559100200000002,
+          "grossFloorAreaRatioProxy": 0.31090288000000016
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 85.6736400000002,
+            "nominalFloorAreaProxyM2": 685.3891200000016,
+            "nominalParcelEnvelopeCoverage": 0.00856736400000002,
+            "grossFloorAreaRatioProxy": 0.06853891200000016
+          },
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 72.49158000000003,
+            "nominalFloorAreaProxyM2": 144.98316000000005,
+            "nominalParcelEnvelopeCoverage": 0.007249158000000003,
+            "grossFloorAreaRatioProxy": 0.014498316000000006
+          },
+          "home": {
+            "count": 4,
+            "nominalParcelEnvelopeM2": 660.9117199999998,
+            "nominalFloorAreaProxyM2": 1153.8234399999997,
+            "nominalParcelEnvelopeCoverage": 0.06609117199999999,
+            "grossFloorAreaRatioProxy": 0.11538234399999997
+          },
+          "office": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 196,
+            "nominalFloorAreaProxyM2": 784,
+            "nominalParcelEnvelopeCoverage": 0.0196,
+            "grossFloorAreaRatioProxy": 0.0784
+          },
+          "shop": {
+            "count": 3,
+            "nominalParcelEnvelopeM2": 340.83308,
+            "nominalFloorAreaProxyM2": 340.83308,
+            "nominalParcelEnvelopeCoverage": 0.034083308,
+            "grossFloorAreaRatioProxy": 0.034083308
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": 2,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": 200,
+          "max_z": 300
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 14,
+          "nominalParcelEnvelopeM2": 1914.8969600000005,
+          "nominalFloorAreaProxyM2": 4275.45868,
+          "nominalParcelEnvelopeCoverage": 0.19148969600000004,
+          "grossFloorAreaRatioProxy": 0.427545868
+        },
+        "byKind": {
+          "apartment": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 672,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0672
+          },
+          "cafe": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 336,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0336,
+            "grossFloorAreaRatioProxy": 0.0336
+          },
+          "home": {
+            "count": 9,
+            "nominalParcelEnvelopeM2": 1074.8969600000005,
+            "nominalFloorAreaProxyM2": 2427.4586800000006,
+            "nominalParcelEnvelopeCoverage": 0.10748969600000005,
+            "grossFloorAreaRatioProxy": 0.24274586800000006
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "shop": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 336,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0336
+          }
+        }
+      },
+      {
+        "ix": 3,
+        "iz": 3,
+        "bounds": {
+          "min_x": 300,
+          "max_x": 400,
+          "min_z": 300,
+          "max_z": 400
+        },
+        "areaM2": 10000,
+        "total": {
+          "count": 9,
+          "nominalParcelEnvelopeM2": 1294.9763599999997,
+          "nominalFloorAreaProxyM2": 2479.0721199999994,
+          "nominalParcelEnvelopeCoverage": 0.12949763599999997,
+          "grossFloorAreaRatioProxy": 0.24790721199999993
+        },
+        "byKind": {
+          "cafe": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 168,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0168
+          },
+          "home": {
+            "count": 5,
+            "nominalParcelEnvelopeM2": 680.0957599999997,
+            "nominalFloorAreaProxyM2": 1528.1915199999994,
+            "nominalParcelEnvelopeCoverage": 0.06800957599999997,
+            "grossFloorAreaRatioProxy": 0.15281915199999993
+          },
+          "office": {
+            "count": 1,
+            "nominalParcelEnvelopeM2": 168,
+            "nominalFloorAreaProxyM2": 504,
+            "nominalParcelEnvelopeCoverage": 0.0168,
+            "grossFloorAreaRatioProxy": 0.0504
+          },
+          "shop": {
+            "count": 2,
+            "nominalParcelEnvelopeM2": 278.88059999999996,
+            "nominalFloorAreaProxyM2": 278.88059999999996,
+            "nominalParcelEnvelopeCoverage": 0.027888059999999996,
+            "grossFloorAreaRatioProxy": 0.027888059999999996
+          }
+        }
+      }
+    ]
+  },
+  "statusNotes": {
+    "occupancy": "Resident occupancy is modeled only for homes and apartments. Open shops, cafes, and offices are commercial regardless of the occupancy field.",
+    "engineVacancyBehavior": "The engine currently treats every open occupancy-zero building as vacant in demand and renewal logic, including commercial buildings; this report does not apply that heuristic."
+  }
+}

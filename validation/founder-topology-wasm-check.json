@@ -1,0 +1,80 @@
+{
+  "wasmSha256": "b0e3de3f2f3a00314e61641c71d976781aae503b0b1439a00fb770010db895b6",
+  "rows": [
+    {
+      "seed": 0,
+      "road": {
+        "id": 10,
+        "from": 4,
+        "to": 6,
+        "kind": "local",
+        "stage": "open",
+        "progress": 1,
+        "connected": true,
+        "length": 82.565125,
+        "lanes": 1
+      },
+      "canonicalRestore": true
+    },
+    {
+      "seed": 1,
+      "road": {
+        "id": 10,
+        "from": 4,
+        "to": 6,
+        "kind": "local",
+        "stage": "open",
+        "progress": 1,
+        "connected": true,
+        "length": 82.565125,
+        "lanes": 1
+      },
+      "canonicalRestore": true
+    },
+    {
+      "seed": 5,
+      "road": {
+        "id": 10,
+        "from": 4,
+        "to": 6,
+        "kind": "local",
+        "stage": "open",
+        "progress": 1,
+        "connected": true,
+        "length": 82.565125,
+        "lanes": 1
+      },
+      "canonicalRestore": true
+    },
+    {
+      "seed": 87231,
+      "road": {
+        "id": 10,
+        "from": 4,
+        "to": 6,
+        "kind": "local",
+        "stage": "open",
+        "progress": 1,
+        "connected": true,
+        "length": 82.565125,
+        "lanes": 1
+      },
+      "canonicalRestore": true
+    },
+    {
+      "seed": 4294967295,
+      "road": {
+        "id": 10,
+        "from": 4,
+        "to": 6,
+        "kind": "local",
+        "stage": "open",
+        "progress": 1,
+        "connected": true,
+        "length": 82.565125,
+        "lanes": 1
+      },
+      "canonicalRestore": true
+    }
+  ]
+}

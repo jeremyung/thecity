@@ -1,0 +1,16 @@
+{
+  "canonical_pending_project_replay_checked": true,
+  "development_rate": 16,
+  "end_tick": 262000,
+  "final_roads": 214,
+  "initial_roads": 214,
+  "road_delta": 0,
+  "seed": 0,
+  "shallow_buildings": 33,
+  "shallow_construction_projects_pending": 0,
+  "shallow_nominal_envelope_area_m2": 2901.174606323242,
+  "shallow_open_buildings": 33,
+  "shallow_parcels_added": 33,
+  "start_tick": 242000,
+  "validation_passed": true
+}

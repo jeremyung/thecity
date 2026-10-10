@@ -1,0 +1,21 @@
+{
+  "id": "ivory-plaster-v1",
+  "source": "Built-in imagegen, original generation",
+  "status": "development candidate only; inspected in architecture review, not accepted for live-city use",
+  "role": "base-color",
+  "colorSpace": "sRGB",
+  "physicalTileMeters": 2,
+  "file": "ivory-plaster-v1.png",
+  "prompt": "Use case: stylized-concept. Asset type: production 3D architectural base-color texture candidate, square tile. Generate a single edge-to-edge orthographic flat scan of warm ivory aged Japanese lime plaster for a Tokyo neighborhood building facade, fine mineral aggregate, delicate trowel strokes and restrained irregular warm gray pigmentation, slight handmade painterly character suitable for an anime background and tactile miniature. Entire image is one continuous material, no scene, no panels, no objects, no text, no borders. Uniform diffuse unlit color information only: absolutely no directional lighting, shadows, ambient occlusion, highlights, vignette, perspective, cracks or large recognizable stains. Low contrast and consistent brightness all across the square, seamless repeating edges. Physical scale is a 2 meter square wall patch. Fine credible surface detail with quiet broad variation, not white noise.",
+  "sourceDimensions": {
+    "width": 1254,
+    "height": 1254
+  },
+  "resourceReview": {
+    "sourceFileBytes": 3622485,
+    "estimatedRGBA8FullMipBytes": 8384072,
+    "scope": "One decoded source image; excludes duplicate texture uploads, render targets and driver overhead",
+    "pilotTileSideLimit": 1024,
+    "pilotDimensionStatus": "exceeds limit; prepare a smaller reviewed runtime derivative before promotion"
+  }
+}

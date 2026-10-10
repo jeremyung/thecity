@@ -1,0 +1,92 @@
+{
+  "capturedAt": "2026-10-10T07:09:53.002Z",
+  "runtime": "v26.7.0",
+  "cpu": "Apple M2 Max",
+  "logicalCpus": 12,
+  "wasmSha256": "0957c057b6f542fd7f35d6aa15d98dbfcd2e9420904517a68283b47833e897a2",
+  "finalSaveSha256": "b9c996e26af125bd85fba9d810c0e7c27dd2accbf9ab3438015fa3f3525d0b1a",
+  "seed": 87231,
+  "developmentRate": 16,
+  "measuredTicks": 72000,
+  "windows": [
+    {
+      "startTick": 0,
+      "endTick": 12000,
+      "p50Ms": 0.0016250000000042064,
+      "p95Ms": 0.005874999999988972,
+      "p99Ms": 0.03812499999999375,
+      "maxMs": 3.1963749999999997,
+      "maxTick": 1,
+      "totalStepMs": 56.00234800000031,
+      "buildings": 41,
+      "roads": 25,
+      "coordinatedParcels": 0
+    },
+    {
+      "startTick": 12000,
+      "endTick": 24000,
+      "p50Ms": 0.0010410000000007358,
+      "p95Ms": 0.0035840000000035843,
+      "p99Ms": 0.015958000000011907,
+      "maxMs": 1.4325830000000082,
+      "maxTick": 14400,
+      "totalStepMs": 50.66930999999977,
+      "buildings": 94,
+      "roads": 42,
+      "coordinatedParcels": 20
+    },
+    {
+      "startTick": 24000,
+      "endTick": 36000,
+      "p50Ms": 0.005207999999981894,
+      "p95Ms": 0.036708000000004404,
+      "p99Ms": 0.053582999999946423,
+      "maxMs": 6.871083999999996,
+      "maxTick": 35200,
+      "totalStepMs": 384.50952500000216,
+      "buildings": 150,
+      "roads": 54,
+      "coordinatedParcels": 30
+    },
+    {
+      "startTick": 36000,
+      "endTick": 48000,
+      "p50Ms": 0.004667000000040389,
+      "p95Ms": 0.03379200000006222,
+      "p99Ms": 0.07179200000007313,
+      "maxMs": 14.916667000000075,
+      "maxTick": 42800,
+      "totalStepMs": 407.33068000000287,
+      "buildings": 212,
+      "roads": 68,
+      "coordinatedParcels": 50
+    },
+    {
+      "startTick": 48000,
+      "endTick": 60000,
+      "p50Ms": 0.005375000000185537,
+      "p95Ms": 0.038749999999936335,
+      "p99Ms": 0.09170799999992596,
+      "maxMs": 19.262249999999995,
+      "maxTick": 50800,
+      "totalStepMs": 654.6621210000051,
+      "buildings": 258,
+      "roads": 81,
+      "coordinatedParcels": 50
+    },
+    {
+      "startTick": 60000,
+      "endTick": 72000,
+      "p50Ms": 0.004124999999930878,
+      "p95Ms": 0.032999999999901775,
+      "p99Ms": 0.07216700000003584,
+      "maxMs": 10.579040999999961,
+      "maxTick": 60800,
+      "totalStepMs": 439.5807370000048,
+      "buildings": 314,
+      "roads": 91,
+      "coordinatedParcels": 70
+    }
+  ],
+  "note": "Node-hosted public WASM, sequential single-tick calls, no rendering or pacing. Includes startup/JIT effects. One run is not a browser/device acceptance benchmark; compare repeated runs and state hashes."
+}

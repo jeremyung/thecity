@@ -1,0 +1,1 @@
+User-supplied Tokyo photographs, retained unchanged as visual references. They are not runtime assets. Existing photographer/stock watermarks remain intact. Use for density, scale, transport, camera composition, and miniature optics.

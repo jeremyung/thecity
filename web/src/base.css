@@ -1,0 +1,6 @@
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body { background: #bccbd0; }
+.city-app { position: relative; width: 100%; height: 100dvh; overflow: hidden; }
+.city-canvas { position: absolute; inset: 0; touch-action: none; }
+.city-canvas canvas { display: block; width: 100%; height: 100%; outline: none; }
+.city-canvas canvas:focus-visible { outline: 1px solid #ddb995; outline-offset: -2px; }

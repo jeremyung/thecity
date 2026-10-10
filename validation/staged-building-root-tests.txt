@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/building-chunks.test.ts tests/incremental-geometry-merge.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  11:36:31
+   Duration  201ms (transform 88ms, setup 0ms, import 182ms, tests 34ms, environment 0ms)
+

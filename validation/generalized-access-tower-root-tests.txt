@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/interior-access-wasm.test.ts tests/tower-kit.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  11:23:41
+   Duration  12.37s (transform 103ms, setup 0ms, import 167ms, tests 15.56s, environment 0ms)
+

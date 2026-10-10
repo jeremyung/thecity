@@ -1,0 +1,42 @@
+[
+  {
+    "seed": 0,
+    "baselineM2": 117660.5,
+    "reservationM2": 127095.25,
+    "gainM2": 9434.75,
+    "gainPercent": 8.018621372508195,
+    "kitBundleSha256": "678e1e4d2de4dc393a979e8ae43da8f1361ce143bdb7247a40fd9c4f7acd0d57"
+  },
+  {
+    "seed": 87231,
+    "baselineM2": 112359.75,
+    "reservationM2": 120034.75,
+    "gainM2": 7675.0,
+    "gainPercent": 6.830737875440263,
+    "kitBundleSha256": "678e1e4d2de4dc393a979e8ae43da8f1361ce143bdb7247a40fd9c4f7acd0d57"
+  },
+  {
+    "seed": 7,
+    "baselineM2": 111665.5,
+    "reservationM2": 119680,
+    "gainM2": 8014.5,
+    "gainPercent": 7.177239165185312,
+    "kitBundleSha256": "678e1e4d2de4dc393a979e8ae43da8f1361ce143bdb7247a40fd9c4f7acd0d57"
+  },
+  {
+    "seed": 41,
+    "baselineM2": 117289.25,
+    "reservationM2": 123464.5,
+    "gainM2": 6175.25,
+    "gainPercent": 5.264975264143978,
+    "kitBundleSha256": "678e1e4d2de4dc393a979e8ae43da8f1361ce143bdb7247a40fd9c4f7acd0d57"
+  },
+  {
+    "seed": 2026,
+    "baselineM2": 116851,
+    "reservationM2": 119022,
+    "gainM2": 2171,
+    "gainPercent": 1.857921626686987,
+    "kitBundleSha256": "678e1e4d2de4dc393a979e8ae43da8f1361ce143bdb7247a40fd9c4f7acd0d57"
+  }
+]

@@ -1,0 +1,88 @@
+{
+  "source": "public compiled WASM CityEngine",
+  "seed": 87231,
+  "tick": 242000,
+  "development_rate": 16,
+  "stage": "Maturity",
+  "buildings": 449,
+  "parcels": 449,
+  "roads": 138,
+  "population": 4861,
+  "floors": {
+    "1": 102,
+    "2": 141,
+    "3": 79,
+    "4": 40,
+    "5": 19,
+    "6": 14,
+    "7": 17,
+    "8": 14,
+    "9": 4,
+    "10": 10,
+    "12": 7,
+    "20": 1,
+    "32": 1
+  },
+  "kinds": {
+    "apartment": 87,
+    "cafe": 54,
+    "home": 206,
+    "office": 46,
+    "shop": 56
+  },
+  "station": {
+    "id": 6,
+    "x": 153,
+    "z": 58
+  },
+  "open_towers": 2,
+  "station_core_buildings": 42,
+  "station_fringe_5_to_12_floor_buildings": 69,
+  "nominal_parcel_envelope_area_m2": 76998,
+  "site_area_m2": 640000,
+  "nominal_gross_envelope_coverage_percent": 12,
+  "tower_buildings": [
+    {
+      "id": 1656,
+      "name": "Station Tower Residences",
+      "kind": "apartment",
+      "floors": 32,
+      "x": 145.54147,
+      "z": -27.39486,
+      "station_distance_m": 86,
+      "parcel_id": 1654,
+      "frontage_road_id": 1653,
+      "parcel_envelope_width_m": 24,
+      "parcel_envelope_depth_m": 20,
+      "nominal_parcel_envelope_area_m2": 480,
+      "stage": "open"
+    },
+    {
+      "id": 2148,
+      "name": "Station Tower Offices",
+      "kind": "office",
+      "floors": 20,
+      "x": 218.5,
+      "z": 62,
+      "station_distance_m": 66,
+      "parcel_id": 2147,
+      "frontage_road_id": 7,
+      "parcel_envelope_width_m": 24,
+      "parcel_envelope_depth_m": 20,
+      "nominal_parcel_envelope_area_m2": 480,
+      "stage": "open"
+    }
+  ],
+  "station_tower_frontage_reservations": 2,
+  "bounds": {
+    "min_x": -400,
+    "max_x": 400,
+    "min_z": -400,
+    "max_z": 400
+  },
+  "limits": {
+    "buildings": 2000,
+    "parcels": 4000
+  },
+  "saved_state_bytes": 2263008
+}

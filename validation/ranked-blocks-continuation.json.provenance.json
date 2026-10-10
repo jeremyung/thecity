@@ -1,0 +1,24 @@
+{
+  "input": "validation/mature-world.ranked-blocks.json",
+  "output": "validation/ranked-blocks-continuation.json",
+  "ticks": 64000,
+  "wasmSha256": "ec1b90e86c8cfd00668688667309a9f477ddbc9c5bf8c6e781c87cce690b07f6",
+  "sourceSha256": "d43afb7d813145fb516d00fd5ac69dadc8e49729d60c3e43fd7be3d43a3cacea",
+  "saveSha256": "c453ff85b88ac71f5e9d1f1898236986781e4a7e6a1ec2ed1bf46d7654fccb20",
+  "before": {
+    "tick": 242000,
+    "buildings": 767,
+    "roads": 203,
+    "occupiedHomes": 488,
+    "activeCommerce": 279
+  },
+  "after": {
+    "tick": 306000,
+    "buildings": 767,
+    "roads": 203,
+    "occupiedHomes": 488,
+    "activeCommerce": 279
+  },
+  "canonicalRestore": true,
+  "continuationTicksVerified": 2000
+}

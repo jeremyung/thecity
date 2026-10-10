@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run --run tests/tower-kit.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  10:36:16
+   Duration  7.98s (transform 73ms, setup 0ms, import 125ms, tests 7.77s, environment 0ms)
+

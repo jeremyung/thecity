@@ -1,0 +1,187 @@
+{
+  "generatedAt": "2026-10-10T05:23:21.776Z",
+  "parameters": {
+    "seed": 87231,
+    "developmentRate": 16,
+    "targetTick": 242000,
+    "checkpointInterval": 1000,
+    "floatTolerance": 0.0001
+  },
+  "artifactHashes": {
+    "engineLibSha256": "0f10b24756a13b9b2b6ba9be81a969345a1426b83a4901189e5fa91258c0f376",
+    "publicWasmSha256": "57ba1aececa32a15972befad10917c2d5340f1b14ec0105333b237a8719cb57b"
+  },
+  "nativeProfile": {
+    "platform": "darwin-arm64",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1",
+    "build": "cargo run --locked --release --example replay-trace"
+  },
+  "nativeCheckpoints": 243,
+  "wasmCheckpoints": 243,
+  "structuralEqualWithinFloatToleranceThrough": 18000,
+  "firstDivergence": {
+    "index": 19,
+    "tick": 19000,
+    "structuralDiffs": [
+      {
+        "path": "$.buildings[67].capacity",
+        "native": 22,
+        "wasm": 12,
+        "delta": 10
+      },
+      {
+        "path": "$.buildings[67].floors",
+        "native": 8,
+        "wasm": 3,
+        "delta": 5
+      },
+      {
+        "path": "$.buildings[67].occupancy",
+        "native": 22,
+        "wasm": 12,
+        "delta": 10
+      },
+      {
+        "path": "$.buildings[67].x",
+        "native": 131.17294,
+        "wasm": 153.98431,
+        "delta": -22.811369999999982
+      },
+      {
+        "path": "$.buildings[67].z",
+        "native": 200.65175,
+        "wasm": 282.93912,
+        "delta": -82.28737000000001
+      },
+      {
+        "path": "$.parcels[67].access_node",
+        "native": 753,
+        "wasm": 838,
+        "delta": -85
+      },
+      {
+        "path": "$.parcels[67].x",
+        "native": 131.17294,
+        "wasm": 153.98431,
+        "delta": -22.811369999999982
+      },
+      {
+        "path": "$.parcels[67].z",
+        "native": 200.65175,
+        "wasm": 282.93912,
+        "delta": -82.28737000000001
+      },
+      {
+        "path": "$.population",
+        "native": 926,
+        "wasm": 916,
+        "delta": 10
+      },
+      {
+        "path": "$.projects[74].reason",
+        "native": "Riverside House is built to meet nearby demand",
+        "wasm": "Lane House is built to meet nearby demand"
+      }
+    ],
+    "internalDiffs": [],
+    "entityDetails": {
+      "collection": "buildings",
+      "index": 67,
+      "native": {
+        "anchor": false,
+        "built_day": 0,
+        "capacity": 22,
+        "depth": 12,
+        "floors": 8,
+        "id": 1109,
+        "kind": "home",
+        "occupancy": 22,
+        "parcel_id": 1108,
+        "progress": 1,
+        "stage": "open",
+        "width": 14,
+        "x": 131.17294,
+        "z": 200.65175
+      },
+      "wasm": {
+        "id": 1109,
+        "parcel_id": 1108,
+        "x": 153.98431,
+        "z": 282.93912,
+        "width": 14,
+        "depth": 12,
+        "floors": 3,
+        "kind": "home",
+        "stage": "open",
+        "progress": 1,
+        "capacity": 12,
+        "occupancy": 12,
+        "built_day": 0,
+        "anchor": false
+      },
+      "accessNodeGeometry": []
+    },
+    "previousCheckpoint": {
+      "tick": 18000,
+      "structuralDiffs": [],
+      "internalDiffs": []
+    }
+  },
+  "finalCounts": {
+    "native": {
+      "buildings": 454,
+      "roads": 137,
+      "projects": 76,
+      "population": 4881
+    },
+    "wasm": {
+      "buildings": 405,
+      "roads": 125,
+      "projects": 76,
+      "population": 4330
+    }
+  },
+  "finalInternalDiffs": [
+    {
+      "path": "$.frontage_road_cursor",
+      "native": 37,
+      "wasm": 111,
+      "delta": -74
+    },
+    {
+      "path": "$.frontage_slot_cursor",
+      "native": 2,
+      "wasm": 3,
+      "delta": -1
+    },
+    {
+      "path": "$.growth_cursor",
+      "native": 508,
+      "wasm": 456,
+      "delta": 52
+    },
+    {
+      "path": "$.rng_growth",
+      "native": "12827937351610536980",
+      "wasm": "13883422098660086321"
+    },
+    {
+      "path": "$.road_origin_cursor",
+      "native": 0,
+      "wasm": 52,
+      "delta": -52
+    }
+  ],
+  "existingCandidate": {
+    "tick": 242000,
+    "buildingCount": 405,
+    "roadCount": 125,
+    "sameSeed": true,
+    "sameTick": true,
+    "freshWasmCounts": {
+      "buildings": 405,
+      "roads": 125
+    }
+  },
+  "interpretation": "Numeric geometry/progress fields are treated as equal within 1e-4; IDs, categories, and array order are compared exactly. The first reported mismatch is bounded by the checkpoint interval and does not prove where a latent branch began. When RNG and cursors still match, inspect candidate eligibility and ordering before attributing a later site difference to a stale build or to floating-point ties."
+}

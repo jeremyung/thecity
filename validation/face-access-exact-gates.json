@@ -1,0 +1,97 @@
+{
+  "checkpoint_tick": 242000,
+  "direct_chord": {
+    "all_other_road_separations_passed": true,
+    "gates": {
+      "branch_end_x": 207.0,
+      "branch_end_z": 1.0,
+      "branch_endpoint_bounds": true,
+      "branch_length_m": 31.239665985107422,
+      "endpoint_degree": 2,
+      "endpoint_node_spacing_m": 31.239665985107422,
+      "endpoint_spacing_passed": true,
+      "existing_parcel_corridor_passed": false,
+      "junction_heading_passed": true,
+      "protected_land_passed": true,
+      "river_clearance_passed": true,
+      "split_x": 237.85897827148438,
+      "split_z": -3.8621139526367188
+    },
+    "lot_candidates": [
+      {
+        "depth": 12.0,
+        "frontage_access_node": 3996,
+        "frontage_along": 0.5,
+        "minimum_width_passed": true,
+        "nearest_existing_parcel_corridor_distance_m": 4.052916526794434,
+        "oriented_overlap_and_terrain_passed": false,
+        "rotation": -2.985318183898926,
+        "street_center_clearance_passed": true,
+        "terrain_and_full_parcel_admission_passed": false,
+        "width": 13.239665985107422,
+        "x": 224.76406860351562,
+        "z": 13.386152267456055
+      },
+      {
+        "depth": 12.0,
+        "frontage_access_node": 3996,
+        "frontage_along": 0.5,
+        "minimum_width_passed": true,
+        "nearest_existing_parcel_corridor_distance_m": 4.052916526794434,
+        "oriented_overlap_and_terrain_passed": false,
+        "rotation": 0.15627442300319672,
+        "street_center_clearance_passed": true,
+        "terrain_and_full_parcel_admission_passed": false,
+        "width": 13.239665985107422,
+        "x": 220.09490966796875,
+        "z": -16.248266220092773
+      }
+    ],
+    "minimum_two_lots_passed": false,
+    "two_segment_raster_route_candidate": {
+      "current_single_branch_lifecycle_supports_two_legs": false,
+      "legs": [
+        {
+          "length_m": 10.105525970458984,
+          "nearest_existing_node_m": 10.105525970458984,
+          "parcel_corridor": true,
+          "protected": true,
+          "river": true
+        },
+        {
+          "length_m": 22.0,
+          "nearest_existing_node_m": 31.239665985107422,
+          "parcel_corridor": true,
+          "protected": true,
+          "river": true
+        }
+      ],
+      "lot_checks": [
+        {
+          "depth": 8.0,
+          "engine_parcel_and_frontage_clear": true,
+          "width": 8.0,
+          "x": 224.0,
+          "z": 13.0
+        },
+        {
+          "depth": 8.0,
+          "engine_parcel_and_frontage_clear": true,
+          "width": 8.0,
+          "x": 214.0,
+          "z": 13.0
+        }
+      ]
+    },
+    "viable_lot_count": 0,
+    "would_be_admissible_geometry": false
+  },
+  "existing_exact_planner_host_scan": {
+    "next_cursor": 0,
+    "proposal_count": 0,
+    "proposals": []
+  },
+  "host_road_id": 3317,
+  "host_t": 0.72,
+  "split_preflight_passed": true
+}

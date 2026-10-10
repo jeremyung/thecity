@@ -1,0 +1,174 @@
+{
+  "source": "infill-oriented-continued.json",
+  "wasmSha256": "9d58f86892b4f2c0572154d2991da719d3989ed0d0400b4bcbb6b4ecddebbc8d",
+  "saveSha256": "1a6ae854a95d928a4b3b0b74e55ae448d35c6ae1b6fd1df715629f560436c3b1",
+  "continuedTicks": 64000,
+  "tick": 370000,
+  "buildings": 658,
+  "roads": 168,
+  "added": [
+    {
+      "id": 3263,
+      "width": 14,
+      "depth": 12,
+      "kind": "apartment",
+      "stage": "open",
+      "occupancy": 35
+    },
+    {
+      "id": 3266,
+      "width": 14,
+      "depth": 12,
+      "kind": "apartment",
+      "stage": "open",
+      "occupancy": 60
+    },
+    {
+      "id": 3269,
+      "width": 14,
+      "depth": 12,
+      "kind": "apartment",
+      "stage": "open",
+      "occupancy": 20
+    },
+    {
+      "id": 3272,
+      "width": 9.45879,
+      "depth": 12,
+      "kind": "cafe",
+      "stage": "open",
+      "occupancy": 0
+    },
+    {
+      "id": 3275,
+      "width": 8.559265,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 12
+    },
+    {
+      "id": 3278,
+      "width": 14,
+      "depth": 12,
+      "kind": "cafe",
+      "stage": "open",
+      "occupancy": 0
+    },
+    {
+      "id": 3281,
+      "width": 9.817993,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 10
+    },
+    {
+      "id": 3285,
+      "width": 9.49202,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 12
+    },
+    {
+      "id": 3288,
+      "width": 10.244528,
+      "depth": 12,
+      "kind": "cafe",
+      "stage": "open",
+      "occupancy": 0
+    },
+    {
+      "id": 3291,
+      "width": 11.87035,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 8
+    },
+    {
+      "id": 3294,
+      "width": 8.981972,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 10
+    },
+    {
+      "id": 3297,
+      "width": 14,
+      "depth": 12,
+      "kind": "shop",
+      "stage": "open",
+      "occupancy": 0
+    },
+    {
+      "id": 3300,
+      "width": 9.976185,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 16
+    },
+    {
+      "id": 3303,
+      "width": 9.136803,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 10
+    },
+    {
+      "id": 3307,
+      "width": 14,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 8
+    },
+    {
+      "id": 3310,
+      "width": 14,
+      "depth": 12,
+      "kind": "office",
+      "stage": "open",
+      "occupancy": 0
+    },
+    {
+      "id": 3313,
+      "width": 9,
+      "depth": 12,
+      "kind": "office",
+      "stage": "open",
+      "occupancy": 0
+    },
+    {
+      "id": 3316,
+      "width": 13.999994,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 8
+    },
+    {
+      "id": 3320,
+      "width": 9.692017,
+      "depth": 12,
+      "kind": "home",
+      "stage": "open",
+      "occupancy": 8
+    },
+    {
+      "id": 3323,
+      "width": 9.976177,
+      "depth": 12,
+      "kind": "office",
+      "stage": "open",
+      "occupancy": 0
+    }
+  ],
+  "elapsedMs": 7326.219542,
+  "canonicalRestore": true,
+  "continuationTicksVerified": 2000
+}

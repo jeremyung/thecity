@@ -1,0 +1,74 @@
+{
+  "benchmark": "BuildingChunks synthetic CPU batching workload",
+  "measuredAt": "2026-10-10T08:33:32.645Z",
+  "runtime": {
+    "node": "v26.7.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "scope": "Synthetic CPU-only comparison. This does not measure WebGPU/WebGL upload, shader compilation, browser frame pacing, or real authored buildings.",
+  "workload": {
+    "buildings": 128,
+    "meshesPerBuilding": 12,
+    "totalSourceMeshes": 1536,
+    "sourceVerticesPerBuilding": 432,
+    "chunkSizeMeters": 200,
+    "allBuildingsShareOneChunk": true,
+    "sourceGroupsSharedBetweenScenarios": true,
+    "scenarioCadence": "Progressive adds two buildings then calls update() without a pending key; one-final sets all groups before one update(); coalesced adds two groups per call and passes its chunk key as pending until the last group arrives. The production 12-update deferral cap remains active."
+  },
+  "progressive": {
+    "setMs": 0.6138340000000682,
+    "updateMs": 616.9627909999996,
+    "maxSingleUpdateMs": 26.219875000000002,
+    "rebuildMs": 616.9627909999996,
+    "maxRebuildMs": 26.219875000000002,
+    "totalMs": 617.8271669999999,
+    "updateCalls": 64,
+    "rebuilds": 64,
+    "geometryCloneCount": 49920,
+    "nonIndexedVerticesPresentedToMerge": 1797120,
+    "derivedSourceTraversalVisits": 54080,
+    "finalBatchMeshes": 1,
+    "finalMergedVertices": 55296
+  },
+  "oneFinalUpdate": {
+    "setMs": 0.06775000000004638,
+    "updateMs": 17.480542000000014,
+    "maxSingleUpdateMs": 17.480542000000014,
+    "rebuildMs": 17.480542000000014,
+    "maxRebuildMs": 17.480542000000014,
+    "totalMs": 17.554292000000032,
+    "updateCalls": 1,
+    "rebuilds": 1,
+    "geometryCloneCount": 1536,
+    "nonIndexedVerticesPresentedToMerge": 55296,
+    "derivedSourceTraversalVisits": 1664,
+    "finalBatchMeshes": 1,
+    "finalMergedVertices": 55296
+  },
+  "coalesced": {
+    "setMs": 0.1488329999999678,
+    "updateMs": 61.003457999999455,
+    "maxSingleUpdateMs": 16.67629199999999,
+    "rebuildMs": 60.979541999999924,
+    "maxRebuildMs": 16.67629199999999,
+    "totalMs": 61.20875000000001,
+    "updateCalls": 64,
+    "rebuilds": 6,
+    "geometryCloneCount": 5856,
+    "nonIndexedVerticesPresentedToMerge": 210816,
+    "derivedSourceTraversalVisits": 6344,
+    "finalBatchMeshes": 1,
+    "finalMergedVertices": 55296
+  },
+  "ratios": {
+    "cloneWorkProgressiveOverSingle": 32.5,
+    "mergeInputVerticesProgressiveOverSingle": 32.5,
+    "updateCpuProgressiveOverSingle": 35.29425981185246,
+    "totalCpuProgressiveOverSingle": 35.19521989266208,
+    "cloneWorkCoalescedOverProgressive": 0.11730769230769231,
+    "mergeInputVerticesCoalescedOverProgressive": 0.11730769230769231,
+    "updateCpuCoalescedOverProgressive": 0.09887704556886234
+  }
+}

@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run tests/frontage-gap-wasm.test.ts tests/city-building-signature.test.ts tests/lowrise-kit.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  3 passed (3)
+      Tests  12 passed (12)
+   Start at  05:58:00
+   Duration  12.53s (transform 199ms, setup 0ms, import 332ms, tests 21.15s, environment 0ms)
+

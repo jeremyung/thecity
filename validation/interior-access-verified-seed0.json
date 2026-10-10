@@ -1,0 +1,145 @@
+{
+  "input": "validation/ranked-blocks-seed0.json",
+  "wasmSha256": "c96ee12e16c7f71b0dbce2f4f16961e126827ec8ae3b9f8465691af514a8a486",
+  "sourceSha256": "2704d2bc0f701a2af0a14080dd272e1701493a27be1d592b5d78c54681e6bfc9",
+  "sampleEveryTicks": 8,
+  "finalCheckpoint": "validation/interior-access-verified-seed0.json.final.json",
+  "finalSaveSha256": "dec7eb14922245e650f5ea269834fb3aa4279adfe3dd0d3955d26618aeda6a1f",
+  "startTick": 242000,
+  "endTick": 274000,
+  "before": {
+    "buildings": 771,
+    "roads": 204,
+    "parcels": 771
+  },
+  "after": {
+    "buildings": 779,
+    "roads": 210,
+    "parcels": 779
+  },
+  "observedPlans": 3,
+  "completedPlans": 3,
+  "observations": [
+    {
+      "plan": {
+        "host_road_id": 1739,
+        "host_second_half_road_id": 3758,
+        "host_t": 0.75,
+        "split_node_id": 3757,
+        "branch_endpoint_id": 3759,
+        "branch_road_id": 3760,
+        "project_id": 3761,
+        "selected_lots": [
+          {
+            "x": 26.234674,
+            "z": 96.24341,
+            "width": 13.9,
+            "depth": 12,
+            "rotation": 1.2797009,
+            "along": 0.33229166,
+            "side": -1
+          },
+          {
+            "x": 30.855402,
+            "z": 80.82073,
+            "width": 13.9,
+            "depth": 12,
+            "rotation": 1.2797009,
+            "along": 0.66770834,
+            "side": -1
+          },
+          {
+            "x": 59.593307,
+            "z": 89.43078,
+            "width": 13.9,
+            "depth": 12,
+            "rotation": -1.8618917,
+            "along": 0.66770834,
+            "side": 1
+          }
+        ]
+      },
+      "firstObservedTick": 244640,
+      "pendingCheckpoint": "validation/interior-access-verified-seed0.json.project-3761.pending.json",
+      "pendingReplayTicks": 2000,
+      "openedTick": 244856,
+      "completedReplayTicks": 2000,
+      "completedCheckpoint": "validation/interior-access-verified-seed0.json.project-3761.open.json"
+    },
+    {
+      "plan": {
+        "host_road_id": 2970,
+        "host_second_half_road_id": 3773,
+        "host_t": 0.75,
+        "split_node_id": 3772,
+        "branch_endpoint_id": 3774,
+        "branch_road_id": 3775,
+        "project_id": 3776,
+        "selected_lots": [
+          {
+            "x": 111.199646,
+            "z": 3.4017305,
+            "width": 12.533333,
+            "depth": 12,
+            "rotation": -2.7354093,
+            "along": 0.25444445,
+            "side": -1
+          },
+          {
+            "x": 72.27734,
+            "z": -12.514873,
+            "width": 12.533333,
+            "depth": 12,
+            "rotation": 0.40618336,
+            "along": 0.7455556,
+            "side": 1
+          }
+        ]
+      },
+      "firstObservedTick": 248320,
+      "pendingCheckpoint": "validation/interior-access-verified-seed0.json.project-3776.pending.json",
+      "pendingReplayTicks": 2000,
+      "openedTick": 248552,
+      "completedReplayTicks": 2000,
+      "completedCheckpoint": "validation/interior-access-verified-seed0.json.project-3776.open.json"
+    },
+    {
+      "plan": {
+        "host_road_id": 1729,
+        "host_second_half_road_id": 3788,
+        "host_t": 0.75,
+        "split_node_id": 3787,
+        "branch_endpoint_id": 3789,
+        "branch_road_id": 3790,
+        "project_id": 3791,
+        "selected_lots": [
+          {
+            "x": 83.98944,
+            "z": 113.69084,
+            "width": 13.9,
+            "depth": 12,
+            "rotation": 1.3598273,
+            "along": 0.33229166,
+            "side": -1
+          },
+          {
+            "x": 87.3609,
+            "z": 97.9478,
+            "width": 13.9,
+            "depth": 12,
+            "rotation": 1.3598273,
+            "along": 0.66770834,
+            "side": -1
+          }
+        ]
+      },
+      "firstObservedTick": 254320,
+      "pendingCheckpoint": "validation/interior-access-verified-seed0.json.project-3791.pending.json",
+      "pendingReplayTicks": 2000,
+      "openedTick": 254552,
+      "completedReplayTicks": 2000,
+      "completedCheckpoint": "validation/interior-access-verified-seed0.json.project-3791.open.json"
+    }
+  ],
+  "limitation": "Node executes the public WASM binary. This is not a browser rendering or performance measurement; eight-tick sampling can miss shorter-lived plans."
+}

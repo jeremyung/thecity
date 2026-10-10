@@ -1,0 +1,182 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release
+
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+warning: multiple fields are never read
+     --> src/lib.rs:10087:9
+      |
+10086 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+10087 |         x: f32,
+      |         ^
+10088 |         z: f32,
+      |         ^
+10089 |         width: f32,
+      |         ^^^^^
+10090 |         depth: f32,
+      |         ^^^^^
+10091 |         rotation: f32,
+      |         ^^^^^^^^
+10092 |         side: i8,
+      |         ^^^^
+10093 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:10101:9
+      |
+10097 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+10101 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 5.96s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 129 tests
+test blocks::tests::invalid_rectangles_and_parameters_are_rejected ... ok
+test blocks::tests::eighty_two_by_fifty_block_produces_two_gapped_rows_inside_inset ... ok
+test blocks::tests::oversized_blocks_are_bounded_to_sixty_four_lots ... ok
+test blocks::tests::arbitrary_rotation_and_reversed_winding_preserve_lot_geometry_and_facing ... ok
+test blocks::tests::rotations_use_three_y_convention_and_opposite_rows_face_outward ... ok
+test blocks::tests::frontage_metadata_is_finite_and_stably_indexed ... ok
+test development::tests::established_infill_beats_a_closer_or_isolated_candidate ... ok
+test development::tests::founding_fallback_uses_stable_parcel_id_when_no_open_buildings_exist ... ok
+test development::tests::neighborhood_candidate_budgets_allow_both_types_and_stop_at_their_caps ... ok
+test development::tests::neighborhood_ranking_compares_site_benefit_per_new_road_cost ... ok
+test development::tests::neighborhood_score_ties_use_sites_cost_and_stable_key ... ok
+test development::tests::scoring_window_is_bounded_and_cursor_wraps ... ok
+test district_density::tests::building_floor_area_and_housing_commercial_vacancy_are_separate ... ok
+test district_density::tests::candidate_ranking_is_stable_and_rejects_infeasible_projects ... ok
+test district_density::tests::candidate_ranking_uses_the_targets_and_metrics_of_its_district_cell ... ok
+test district_density::tests::district_clipping_keeps_gross_denominator_and_clips_world_edges ... ok
+test district_density::tests::district_target_count_and_candidate_cell_indices_are_exact ... ok
+test district_density::tests::duplicate_candidate_ids_are_rejected ... ok
+test district_density::tests::grid_line_frontage_is_attributed_once_and_clipped_to_domain ... ok
+test district_density::tests::invalid_and_overlarge_grids_fail_closed ... ok
+test district_density::tests::invalid_incremental_samples_fail_terminally_and_hide_partial_metrics ... ok
+test district_density::tests::invalid_target_ranges_and_candidate_overflow_fail_closed ... ok
+test district_density::tests::measurement_advance_clamps_work_and_zero_budget_is_a_noop ... ok
+test district_density::tests::rotated_envelopes_are_clipped_to_fixed_district_cells ... ok
+test district_density::tests::uniform_wrapper_matches_repeated_per_cell_targets ... ok
+test district_density::tests::vacant_capacity_suppresses_expansion_but_keeps_infill_ranked ... ok
+test district_density::tests::zero_vacancy_limit_does_not_suppress_expansion_when_cell_has_no_capacity ... ok
+test district_density::tests::incremental_measurement_resumes_every_sample_boundary_from_frozen_inputs ... ok
+test frontage::tests::endpoint_margins_and_exact_touches_are_respected ... ok
+test frontage::tests::invalid_dimensions_and_nonfinite_exclusions_fail_closed ... ok
+test frontage::tests::exclusions_are_clipped_unioned_and_input_order_independent ... ok
+test frontage::tests::lot_cap_never_stretches_lots_or_continues_into_later_spans ... ok
+test frontage::tests::short_spans_obey_minimum_and_long_spans_tile_with_balanced_widths ... ok
+test geometry::tests::collinear_overlap_touching_crossing_and_parallel_cases_are_distinguished ... ok
+test geometry::tests::degenerate_segments_are_points_and_only_intersect_when_on_the_other_segment ... ok
+test geometry::tests::disjoint_collinear_segments_have_their_endpoint_gap ... ok
+test geometry::tests::malformed_rectangles_conservatively_block_overlap_and_clearance ... ok
+test geometry::tests::oriented_rectangle_uses_three_y_rotation_and_reports_world_bounds ... ok
+test geometry::tests::rectangle_overlap_handles_containment_and_exact_requested_gap ... ok
+test geometry::tests::rectangle_segment_distance_handles_crossing_inside_and_parallel_segments ... ok
+test geometry::tests::rotated_clearance_inflates_local_corners_before_sat_projection ... ok
+test geometry::tests::rotated_nonsquare_rectangles_use_oriented_separating_axes ... ok
+test geometry::tests::segment_distance_is_symmetric_under_endpoint_reversal ... ok
+test interior_access::tests::candidate_enumeration_budget_is_finite_and_stable ... ok
+test interior_access::tests::candidate_ranking_compares_area_per_meter_then_stable_geometry ... ok
+test network_split::tests::expands_forward_reverse_and_repeated_edges_with_stable_indices ... ok
+test network_split::tests::leaves_routes_without_host_edge_unchanged ... ok
+test district_density::tests::work_caps_match_world_entity_bounds ... ok
+test tests::bus_stop_selection_keeps_fractional_forward_and_reverse_stops_pending ... ok
+test tests::available_connected_infill_precedes_neighborhood_block_planning ... ok
+test tests::active_commerce_is_not_vacant_when_residential_occupancy_is_zero ... ok
+test tests::bus_movement_uses_kind_three_and_left_hand_lane ... ok
+test tests::cars_keep_a_following_gap_behind_a_stopped_bus ... ok
+test tests::building_picker_prefers_connected_infill_and_excludes_invalid_sites ... ok
+test tests::cached_neighborhood_collisions_match_reference_after_world_edits ... ok
+test tests::building_picker_bounds_window_wraps_cursor_and_replays ... ok
+test tests::diagnose_mature_neighborhood_and_road_proposal_rejections ... ignored, bounded diagnostic over mature public-WASM save fixtures
+test tests::diagnose_mid_edge_access_feasibility_on_mature_saves ... ignored, bounded offline geometry probe for mid-edge street access on mature saves
+test tests::coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed ... ok
+test tests::dwelling_bus_uses_the_departure_curb_on_curved_stops_in_both_directions ... ok
+test tests::coordinated_block_road_clearance_protects_interior_and_allows_perimeter ... ok
+test tests::accelerated_growth_changes_measured_stage_without_a_calendar_unlock ... ok
+test tests::following_bus_holds_its_position_without_being_forced_backward ... ok
+test tests::frontage_access_selection_is_projection_based_and_orientation_stable ... ok
+test tests::frontage_grid_keeps_midpoint_spacing_clear_and_endpoint_bounded ... ok
+test tests::frontage_cursor_accepts_exact_candidate_cap_and_rejects_overflow ... ok
+test tests::coordinated_block_reuses_open_edge_and_waits_for_three_new_streets ... ok
+test tests::bus_capacity_keeps_overflow_queue_visible_and_bounded ... ok
+test tests::coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore ... ok
+test tests::interior_access_capacity_preflight_does_not_split_or_allocate ... ok
+test tests::bounded_frontier_cursor_reaches_later_viable_origins ... ok
+test tests::legacy_business_activity_migration_preserves_housing_and_pending_work ... ok
+test tests::coordinated_block_reserves_all_parcel_slots_until_retirement ... ok
+test tests::legacy_save_without_bus_keys_restores_with_empty_service ... ok
+test tests::legacy_city_save_can_unlock_progressive_frontage ... ok
+test tests::legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap ... ok
+test tests::local_chord_construction_opens_connected_frontage_and_adds_accessible_density ... ok
+test tests::early_growth_fills_connected_blocks_before_expanding_the_map ... ok
+test tests::frontage_scan_skips_unfinished_road_without_opening_it_and_replays ... ok
+test tests::mature_fixture_road_splits_preserve_routes_access_and_replay ... ignored, bounded integration probe for mid-edge splits on mature public saves
+test district_density_integration_tests::mature_district_measurements_conserve_capacity_without_mutating_worlds ... ok
+test tests::movement_buffer_places_traffic_in_left_lane_and_on_sidewalks ... ok
+test tests::named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save ... ok
+test tests::bounded_world_keeps_open_buildings_connected ... ok
+test tests::neighborhood_block_gets_road_cadence_opportunity_after_infill ... ok
+test tests::exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots ... ok
+test tests::neighborhood_plan_is_bounded_and_legacy_saves_restore_without_one ... ok
+test tests::neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers ... ok
+test tests::neighborhood_plan_reserves_connected_corridors_and_replays_pending_work ... ok
+test tests::oriented_admission_respects_legacy_saved_and_rendered_envelopes ... ok
+test tests::open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment ... ok
+test tests::pedestrian_building_connectors_are_continuous_saved_and_face_frontage ... ok
+test tests::project_history_admission_trims_completed_and_respects_active_cap ... ok
+test tests::quiet_hours_do_not_start_new_bus_rides_but_current_riders_finish ... ok
+test tests::rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn ... ok
+test tests::rail_transfer_boards_to_capacity_and_keeps_platform_queue_visible_and_bounded ... ok
+test tests::reverse_bus_obeys_signal_for_its_actual_outgoing_route_leg ... ok
+test tests::river_crossing_and_founder_are_present ... ok
+test tests::road_frontage_benefit_accepts_two_sites_on_one_side ... ok
+test tests::named_resident_walks_rides_alights_and_returns_by_bus_with_replay ... ok
+test tests::road_split_preserves_frontage_travelers_bus_train_and_replay ... ok
+test tests::road_split_rejections_leave_state_and_ids_unchanged ... ok
+test tests::rotated_parcel_corner_blocks_a_corridor_that_passes_center_clearance ... ok
+test tests::rotated_progressive_frontage_uses_road_facing_footprint ... ok
+test tests::progressive_gap_infill_admits_compact_frontage_with_access_and_replay ... ok
+test tests::interior_access_plan_is_visible_reserved_atomic_and_replayable ... ok
+test tests::save_restore_replays_pending_projects ... ok
+test tests::save_restore_preserves_residents_and_active_trips ... ok
+test tests::mature_city_grows_a_beneficial_road_beyond_old_open_road_stop ... ok
+test tests::seed_87231_natural_growth_uses_a_saved_partial_shared_edge_layout ... ok
+test tests::same_seed_and_ticks_have_identical_state ... ok
+test tests::seeded_business_turnover_defers_jobs_and_deliveries_then_reopens ... ok
+test tests::seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves ... ok
+test tests::station_queue_positions_are_rail_aligned_reserved_and_continuous ... ok
+test tests::station_tower_frontages_are_reserved_before_rail_and_small_lots ... ok
+test tests::time_and_rate_are_integer_deterministic ... ok
+test tests::train_shuttle_dwells_and_reverses_inside_rail_end_clearances ... ok
+test tests::interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged ... ok
+test tests::active_commerce_does_not_age_into_false_vacancy ... ok
+test tests::frontier_proposal_scan_is_read_only_and_plan_road_replays ... ok
+test tests::generated_seed_five_bus_shuttle_runs_both_directions_after_bridge_growth ... ok
+test tests::seeded_neighborhood_bus_carries_residents_on_connected_roads ... ok
+test tests::mature_connected_bridgehead_grows_occupied_far_bank_neighborhood ... ok
+test tests::mature_neighborhoods_keep_low_rise_core_and_tall_station_cluster ... ok
+test tests::seed_87231_builds_bounded_station_towers_on_connected_large_lots ... ok
+test tests::seed_87231_growth_remains_valid_and_canonical_after_corridor_checks ... ok
+test tests::road_planner_keeps_frontier_candidates_connected_and_bounded ... ok
+test tests::twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city ... ok
+test tests::long_run_keeps_state_collections_bounded_after_expansion ... ok
+
+test result: ok. 126 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 30.47s
+
+   Doc-tests tokyo_city_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

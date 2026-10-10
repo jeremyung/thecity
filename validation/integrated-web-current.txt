@@ -1,0 +1,46 @@
+
+> thecity@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+ ❯ tests/lowrise-kit.test.ts (11 tests | 1 failed) 26022ms
+     × keeps real transformed geometry inside narrow rotated parcels across styles and roof profiles 21031ms
+ ❯ tests/wasm.test.ts (5 tests | 1 failed) 91446ms
+     × opens a useful station, place history, and visible construction through the WASM API 5101ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/lowrise-kit.test.ts > integrated low-rise families > keeps real transformed geometry inside narrow rotated parcels across styles and roof profiles
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/lowrise-kit.test.ts:76:3
+     74| }
+     75|
+     76| describe('integrated low-rise families',()=>{
+       |   ^
+     77|   it('keeps real transformed geometry inside narrow rotated parcels ac…
+     78|     const art=new ArtMaterials();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/wasm.test.ts > compiled city engine > opens a useful station, place history, and visible construction through the WASM API
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/wasm.test.ts:95:3
+     93|   });
+     94|
+     95|   it('opens a useful station, place history, and visible construction …
+       |   ^
+     96|     const engine = makeEngine(5);
+     97|     engine.set_development_rate(60);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 45 passed (47)
+      Tests  2 failed | 241 passed (243)
+   Start at  11:27:12
+   Duration  91.65s (transform 2.97s, setup 0ms, import 5.50s, tests 229.45s, environment 5ms)
+

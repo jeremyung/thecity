@@ -1,0 +1,92 @@
+{
+  "wasmSha256": "3e8ddfaed476601a762c48331f545f21c9a80e423d20aae98078c3135c667bf6",
+  "note": "Experimental worlds restore; production continuation uses nominal-area ranking. Snapshot derived geometry may differ across native/WASM.",
+  "results": [
+    {
+      "seed": 0,
+      "bySites": false,
+      "tick": 242000,
+      "buildings": 845,
+      "saveRoundtripEqual": true,
+      "snapshotDifferences": [],
+      "coverageInputHashVerified": true
+    },
+    {
+      "seed": 0,
+      "bySites": true,
+      "tick": 242000,
+      "buildings": 842,
+      "saveRoundtripEqual": true,
+      "snapshotDifferences": [],
+      "coverageInputHashVerified": true
+    },
+    {
+      "seed": 87231,
+      "bySites": false,
+      "tick": 242000,
+      "buildings": 753,
+      "saveRoundtripEqual": true,
+      "snapshotDifferences": [
+        {
+          "path": ".bus_lines.0.stop_positions.2.z",
+          "native": 34.16791,
+          "wasm": 34.167908,
+          "delta": 0.0000020000000020559128
+        },
+        {
+          "path": ".bus_lines.0.stop_positions.3.heading",
+          "native": 0.13671443,
+          "wasm": 0.13671441,
+          "delta": 1.9999999989472883e-8
+        },
+        {
+          "path": ".bus_lines.0.stop_positions.4.heading",
+          "native": 3.1415925,
+          "wasm": 3.1415927,
+          "delta": 2.0000000011677344e-7
+        },
+        {
+          "path": ".bus_lines.0.stop_positions.5.z",
+          "native": 35.83209,
+          "wasm": 35.832092,
+          "delta": 0.0000020000000020559128
+        }
+      ],
+      "coverageInputHashVerified": true
+    },
+    {
+      "seed": 87231,
+      "bySites": true,
+      "tick": 242000,
+      "buildings": 836,
+      "saveRoundtripEqual": true,
+      "snapshotDifferences": [
+        {
+          "path": ".bus_lines.0.stop_positions.2.z",
+          "native": 34.16791,
+          "wasm": 34.167908,
+          "delta": 0.0000020000000020559128
+        },
+        {
+          "path": ".bus_lines.0.stop_positions.3.heading",
+          "native": 0.13671443,
+          "wasm": 0.13671441,
+          "delta": 1.9999999989472883e-8
+        },
+        {
+          "path": ".bus_lines.0.stop_positions.4.heading",
+          "native": 3.1415925,
+          "wasm": 3.1415927,
+          "delta": 2.0000000011677344e-7
+        },
+        {
+          "path": ".bus_lines.0.stop_positions.5.z",
+          "native": 35.83209,
+          "wasm": 35.832092,
+          "delta": 0.0000020000000020559128
+        }
+      ],
+      "coverageInputHashVerified": true
+    }
+  ]
+}

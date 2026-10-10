@@ -1,0 +1,13 @@
+
+> thecity@0.1.0 test
+> vitest run --run tests/physical-coc.test.ts tests/lens.test.ts tests/foliage-materials.test.ts
+
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  3 passed (3)
+      Tests  13 passed (13)
+   Start at  10:02:34
+   Duration  164ms (transform 94ms, setup 0ms, import 155ms, tests 11ms, environment 0ms)
+

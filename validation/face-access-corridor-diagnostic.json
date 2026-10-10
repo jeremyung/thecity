@@ -1,0 +1,599 @@
+{
+  "source": {
+    "save": "/Users/jung/Development/thecity/validation/early-reservation-wasm-87231-save.json",
+    "sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+    "seed": 87231,
+    "tick": 242000,
+    "face_selection": "largest connected free component from faces traced directly from this same save; no older raster mask reused",
+    "traced_face_area_m2": 22936.236649858474,
+    "free_component_area_m2": 12400,
+    "free_component_centroid_xz": [
+      223.53677419354838,
+      -6.73741935483871
+    ],
+    "free_component_bbox_xz": [
+      77,
+      -89,
+      369,
+      35
+    ],
+    "face_cells_2m": 3100,
+    "face_vertex_ids": [
+      1,
+      4,
+      2489,
+      2504,
+      2855,
+      3293,
+      3294,
+      2854,
+      2853,
+      3450,
+      3436
+    ],
+    "traced_face_count": 49,
+    "aggregate_free_area_all_traced_faces_m2": 95484,
+    "largest_free_components": [
+      {
+        "area_m2": 12400,
+        "centroid_xz": [
+          223.53677419354838,
+          -6.73741935483871
+        ],
+        "bbox_xz": [
+          77,
+          -89,
+          369,
+          35
+        ],
+        "face_area_m2": 22936.236649858474,
+        "face_vertex_ids": [
+          1,
+          4,
+          2489,
+          2504,
+          2855,
+          3293,
+          3294,
+          2854,
+          2853,
+          3450,
+          3436
+        ]
+      },
+      {
+        "area_m2": 7456,
+        "centroid_xz": [
+          60.24892703862661,
+          -223.71137339055795
+        ],
+        "bbox_xz": [
+          -3,
+          -299,
+          119,
+          -145
+        ],
+        "face_area_m2": 13447.999918,
+        "face_vertex_ids": [
+          2656,
+          2895,
+          3011,
+          3010,
+          3131,
+          2773,
+          2772,
+          2657
+        ]
+      },
+      {
+        "area_m2": 4976,
+        "centroid_xz": [
+          17.318327974276528,
+          104.57234726688102
+        ],
+        "bbox_xz": [
+          -25,
+          47,
+          65,
+          161
+        ],
+        "face_area_m2": 10012.69846408476,
+        "face_vertex_ids": [
+          2,
+          4,
+          122,
+          1570,
+          1700,
+          2384
+        ]
+      },
+      {
+        "area_m2": 4236,
+        "centroid_xz": [
+          -1.874409820585458,
+          -81.46647780925402
+        ],
+        "bbox_xz": [
+          -53,
+          -135,
+          69,
+          -45
+        ],
+        "face_area_m2": 8248.053421265035,
+        "face_vertex_ids": [
+          2489,
+          3414,
+          3248,
+          2897,
+          2656,
+          2655,
+          2506
+        ]
+      },
+      {
+        "area_m2": 4196,
+        "centroid_xz": [
+          149.35653002859866,
+          284.6873212583413
+        ],
+        "bbox_xz": [
+          89,
+          221,
+          211,
+          343
+        ],
+        "face_area_m2": 9223.999999999998,
+        "face_vertex_ids": [
+          1641,
+          1798,
+          2135,
+          2134,
+          2002,
+          1845,
+          1844,
+          1642
+        ]
+      },
+      {
+        "area_m2": 3516,
+        "centroid_xz": [
+          257.50967007963595,
+          309.3731513083049
+        ],
+        "bbox_xz": [
+          221,
+          271,
+          293,
+          343
+        ],
+        "face_area_m2": 6724.000000000007,
+        "face_vertex_ids": [
+          1797,
+          2078,
+          2133,
+          1798
+        ]
+      },
+      {
+        "area_m2": 2136,
+        "centroid_xz": [
+          -291.01498127340824,
+          17.51310861423221
+        ],
+        "bbox_xz": [
+          -327,
+          -7,
+          -251,
+          41
+        ],
+        "face_area_m2": 4782.84720072588,
+        "face_vertex_ids": [
+          63,
+          269,
+          162,
+          144
+        ]
+      },
+      {
+        "area_m2": 1908,
+        "centroid_xz": [
+          195.62054507337527,
+          -65.12159329140461
+        ],
+        "bbox_xz": [
+          161,
+          -85,
+          233,
+          -45
+        ],
+        "face_area_m2": 4100,
+        "face_vertex_ids": [
+          2504,
+          2505,
+          2595,
+          2855
+        ]
+      },
+      {
+        "area_m2": 1828,
+        "centroid_xz": [
+          278.29978118161927,
+          -115.70021881838075
+        ],
+        "bbox_xz": [
+          243,
+          -135,
+          315,
+          -95
+        ],
+        "face_area_m2": 4100.000492000003,
+        "face_vertex_ids": [
+          2595,
+          2596,
+          2700,
+          2853
+        ]
+      },
+      {
+        "area_m2": 1764,
+        "centroid_xz": [
+          274.2108843537415,
+          -315.1451247165533
+        ],
+        "bbox_xz": [
+          243,
+          -335,
+          315,
+          -295
+        ],
+        "face_area_m2": 4100,
+        "face_vertex_ids": [
+          3081,
+          3184,
+          3334,
+          3333
+        ]
+      },
+      {
+        "area_m2": 1604,
+        "centroid_xz": [
+          8.650872817955113,
+          -329.354114713217
+        ],
+        "bbox_xz": [
+          -29,
+          -349,
+          37,
+          -309
+        ],
+        "face_area_m2": 3217.705051167891,
+        "face_vertex_ids": [
+          3009,
+          3527,
+          3133,
+          3010
+        ]
+      },
+      {
+        "area_m2": 1488,
+        "centroid_xz": [
+          -286,
+          172.03225806451613
+        ],
+        "bbox_xz": [
+          -321,
+          151,
+          -251,
+          191
+        ],
+        "face_area_m2": 4099.999500000005,
+        "face_vertex_ids": [
+          585,
+          741,
+          860,
+          586
+        ]
+      }
+    ]
+  },
+  "geometry_assumptions": {
+    "grid_step_m": 2,
+    "parcel_centerline_clearance_m": 5,
+    "existing_road_separation_m": 8,
+    "lot_gap_m": 2,
+    "candidate_lot_m": [
+      8,
+      8
+    ],
+    "frontage_center_offset_m": 12,
+    "road_kind": "local",
+    "road_width_from_renderer_m": 2.1,
+    "face_mask": "recomputed on this matching save: 2m face polygon raster, subtracting both parcel footprint envelopes and 4.5m local/7m arterial road centerline corridors plus protected and river buffers",
+    "parcel_footprints": "Both saved rendered orientation and legacy axis-aligned envelope are obstacles when parcel.rotation is absent."
+  },
+  "search": {
+    "boundary_roads": [
+      {
+        "id": 7,
+        "kind": "arterial",
+        "length_m": 293
+      },
+      {
+        "id": 2494,
+        "kind": "local",
+        "length_m": 81.88322
+      },
+      {
+        "id": 2512,
+        "kind": "local",
+        "length_m": 82.00001
+      },
+      {
+        "id": 2865,
+        "kind": "local",
+        "length_m": 50
+      },
+      {
+        "id": 3317,
+        "kind": "local",
+        "length_m": 50
+      },
+      {
+        "id": 3322,
+        "kind": "local",
+        "length_m": 82
+      },
+      {
+        "id": 3324,
+        "kind": "local",
+        "length_m": 50
+      },
+      {
+        "id": 3407,
+        "kind": "local",
+        "length_m": 82
+      },
+      {
+        "id": 3438,
+        "kind": "local",
+        "length_m": 76.22187
+      },
+      {
+        "id": 3452,
+        "kind": "local",
+        "length_m": 55.496094
+      },
+      {
+        "id": 3556,
+        "kind": "local",
+        "length_m": 62.283905
+      }
+    ],
+    "raw_portal_candidates": 145,
+    "distinct_portals": 35,
+    "portal_rejections": {
+      "too_far": 268,
+      "parcel_clearance": 653,
+      "other_road": 269,
+      "outside_face": 14
+    },
+    "portal_examples": [
+      {
+        "road_id": 3438,
+        "attachment": {
+          "x": 366.5384481578947,
+          "z": 24.013125789473683,
+          "t": 0.23684210526315788
+        },
+        "first_cell": [
+          357,
+          21
+        ],
+        "connector_length_m": 10.003045550432958
+      },
+      {
+        "road_id": 2494,
+        "attachment": {
+          "x": 73.25480475,
+          "z": -13.25692695,
+          "t": 0.675
+        },
+        "first_cell": [
+          83,
+          -11
+        ],
+        "connector_length_m": 10.003126997007422
+      },
+      {
+        "road_id": 3322,
+        "attachment": {
+          "x": 258.35898,
+          "z": 10.137886,
+          "t": 0.25
+        },
+        "first_cell": [
+          263,
+          19
+        ],
+        "connector_length_m": 10.003805835250715
+      },
+      {
+        "road_id": 2494,
+        "attachment": {
+          "x": 73.5801245,
+          "z": -27.58279689999999,
+          "t": 0.85
+        },
+        "first_cell": [
+          83,
+          -31
+        ],
+        "connector_length_m": 10.020545467296179
+      },
+      {
+        "road_id": 3452,
+        "attachment": {
+          "x": 325.98575999999997,
+          "z": -90.55852577777779,
+          "t": 0.1111111111111111
+        },
+        "first_cell": [
+          329,
+          -81
+        ],
+        "connector_length_m": 10.022527516651808
+      },
+      {
+        "road_id": 3317,
+        "attachment": {
+          "x": 237.85898,
+          "z": -33.862114,
+          "t": 0.12
+        },
+        "first_cell": [
+          229,
+          -29
+        ],
+        "connector_length_m": 10.105527160390794
+      },
+      {
+        "road_id": 3317,
+        "attachment": {
+          "x": 237.85898,
+          "z": -3.8621139999999983,
+          "t": 0.72
+        },
+        "first_cell": [
+          229,
+          1
+        ],
+        "connector_length_m": 10.105527160390794
+      },
+      {
+        "road_id": 3407,
+        "attachment": {
+          "x": 213.85898,
+          "z": -39.862114,
+          "t": 0.7073170731707317
+        },
+        "first_cell": [
+          209,
+          -31
+        ],
+        "connector_length_m": 10.106767593518514
+      },
+      {
+        "road_id": 3407,
+        "attachment": {
+          "x": 223.85898,
+          "z": -39.862114,
+          "t": 0.8292682926829268
+        },
+        "first_cell": [
+          219,
+          -31
+        ],
+        "connector_length_m": 10.106767593518514
+      },
+      {
+        "road_id": 3556,
+        "attachment": {
+          "x": 371.83479870967744,
+          "z": -39.9625064516129,
+          "t": 0.0967741935483871
+        },
+        "first_cell": [
+          363,
+          -35
+        ],
+        "connector_length_m": 10.1331208678678
+      },
+      {
+        "road_id": 3452,
+        "attachment": {
+          "x": 336.19705999999996,
+          "z": -91.71921207407408,
+          "t": 0.2962962962962963
+        },
+        "first_cell": [
+          331,
+          -83
+        ],
+        "connector_length_m": 10.15057101035596
+      },
+      {
+        "road_id": 7,
+        "attachment": {
+          "x": 152.27397260273972,
+          "z": 42,
+          "t": 0.726027397260274
+        },
+        "first_cell": [
+          157,
+          33
+        ],
+        "connector_length_m": 10.165398908043638
+      }
+    ],
+    "stats": {
+      "portal_count": 35,
+      "visited_cells": 1213,
+      "accepted_edges": 1180,
+      "rejected_edges": 8524,
+      "rejected_by_mask": 0,
+      "rejected_by_parcel_clearance": 0,
+      "rejected_by_road_clearance": 272,
+      "rejected_by_point_clearance": 1044,
+      "goal_pairs": 1209
+    },
+    "approximate_safe_cell_count": 1213
+  },
+  "best_corridor": {
+    "host_road_id": 3317,
+    "host_attachment": {
+      "x": 237.85898,
+      "z": -3.8621139999999983,
+      "t": 0.72
+    },
+    "connector_points_xz": [
+      [
+        237.85898,
+        -3.8621139999999983
+      ],
+      [
+        229,
+        1
+      ]
+    ],
+    "alley_end_xz": [
+      207,
+      1
+    ],
+    "alley_length_m": 22,
+    "total_path_length_m": 32.10552716039079,
+    "lots": [
+      {
+        "x": 224,
+        "z": 13,
+        "width": 8,
+        "depth": 8,
+        "rotation": -3.141592653589793
+      },
+      {
+        "x": 214,
+        "z": 13.000000000000002,
+        "width": 8,
+        "depth": 8,
+        "rotation": -3.141592653589793
+      }
+    ],
+    "status": "Approximate corridor candidate passes raster path, oriented + legacy parcel-clearance, existing-road separation, and lot envelope/gap tests. It is not yet passed through authoritative Engine road-split/project admission."
+  },
+  "limitations": [
+    "Void mask and face topology are approximate 2m raster geometry.",
+    "Candidate centerlines use 5m parcel clearance and 8m separation from non-host existing roads, but the path is not submitted to Engine admission.",
+    "Host attachment is an interior projection and requires a road split/junction; route endpoints/corners are sampled at 2m.",
+    "Candidate lot checks use 8x8m geometry, 2m gap and 5m clearance to existing roads; lot access/path and complete frontage lifecycle remain to be validated.",
+    "No terrain/river exclusion was restrictive here: the audited face has zero protected overlap and is over 300m from the river."
+  ]
+}

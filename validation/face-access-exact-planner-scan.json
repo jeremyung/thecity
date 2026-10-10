@@ -1,0 +1,25 @@
+{
+  "best_candidates": [],
+  "branches_inside_target_face": 0,
+  "branches_with_at_least_two_lots_inside_face": 0,
+  "candidate_budget": 4944,
+  "checkpoint_tick": 242000,
+  "exact_engine_proposals": 0,
+  "exactly_admissible_candidates": 0,
+  "faces": 49,
+  "source_save_unchanged": true,
+  "target_face_area_m2": 22936.236506458576,
+  "target_face_vertex_ids": [
+    1,
+    4,
+    2489,
+    2504,
+    2855,
+    3293,
+    3294,
+    2854,
+    2853,
+    3450,
+    3436
+  ]
+}

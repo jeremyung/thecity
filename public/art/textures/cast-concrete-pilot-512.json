@@ -1,0 +1,15 @@
+{
+  "id": "cast-concrete-pilot-512",
+  "source": "Tencent Hy Image 3.5 Preview via OpenRouter approved pilot",
+  "provenance": "art-workshop/tencent-pilot/ledger.json",
+  "status": "development review only; not live-city accepted",
+  "role": "base-color",
+  "colorSpace": "sRGB",
+  "physicalTileMeters": 2,
+  "width": 512,
+  "height": 512,
+  "runtimeIntegration": false,
+  "estimatedSingleRGBA8MipBytes": 1398100,
+  "reviewResidentCopies": 2,
+  "note": "Review wall and facade clone can allocate two copies; shared style materials reference the facade texture."
+}

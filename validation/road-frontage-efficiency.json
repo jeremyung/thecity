@@ -1,0 +1,47 @@
+{
+  "method": "Explicit developed parcel frontage per ordinary road length; excludes rail/bridges. Coordinated classification uses persisted neighborhood_road_ids. Does not measure network connection benefits, traffic, occupancy, or causal attribution.",
+  "reports": [
+    {
+      "path": "validation/mature-world.bounded-selection.json",
+      "seed": 87231,
+      "tick": 242000,
+      "groups": {
+        "coordinated": {
+          "roads": 52,
+          "lengthM": 3432.0000579999996,
+          "frontageBuildings": 225,
+          "frontageBuildingsPer100m": 6.555943945150132,
+          "roadsWithAtMostTwoFrontages": 26
+        },
+        "ordinary_other": {
+          "roads": 114,
+          "lengthM": 8122.151908000003,
+          "frontageBuildings": 419,
+          "frontageBuildingsPer100m": 5.158731389735538,
+          "roadsWithAtMostTwoFrontages": 41
+        }
+      }
+    },
+    {
+      "path": "validation/mature-world.road-benefit.json",
+      "seed": 87231,
+      "tick": 242000,
+      "groups": {
+        "coordinated": {
+          "roads": 44,
+          "lengthM": 2904.0000599999994,
+          "frontageBuildings": 180,
+          "frontageBuildingsPer100m": 6.198346979372998,
+          "roadsWithAtMostTwoFrontages": 22
+        },
+        "ordinary_other": {
+          "roads": 161,
+          "lengthM": 11259.796396999995,
+          "frontageBuildings": 528,
+          "frontageBuildingsPer100m": 4.689249977385717,
+          "roadsWithAtMostTwoFrontages": 72
+        }
+      }
+    }
+  ]
+}

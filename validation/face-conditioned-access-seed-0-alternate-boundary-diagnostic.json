@@ -1,0 +1,46 @@
+{
+  "development_rate": 16,
+  "experiment": "when an ordinary road opens, propose bounded access only inside a newly bounded face with sampled unserved interior and wholly contained branch/lots",
+  "horizon_ticks": 242000,
+  "minimum_unserved_sample_cells": 4,
+  "parcel_clearance_m": 2.200000047683716,
+  "road_edge_clearance_m": 12.0,
+  "rows": [
+    {
+      "active_commercial_buildings": 320,
+      "active_commercial_capacity": 4502,
+      "admissions": 2,
+      "attempts": 60,
+      "completions": 4,
+      "connected_open_roads": 205,
+      "demand": 4.0,
+      "development_rate": 16,
+      "district_policy_enabled": false,
+      "early_access_scheduler_enabled": false,
+      "elapsed_seconds": 11.151278333,
+      "face_conditioned_access_enabled": true,
+      "floor_area_proxy_m2": 451770.2491989136,
+      "housing_capacity": 7255,
+      "housing_occupancy": 7255,
+      "nominal_envelope_area_m2": 153877.25957489014,
+      "open_buildings": 822,
+      "open_commercial_buildings": 320,
+      "open_housing_buildings": 502,
+      "ordinary_open_roads": 203,
+      "ordinary_road_length_m": 13409.360328674316,
+      "parcels": 822,
+      "pending_branch_id": null,
+      "pending_selected_lots": 0,
+      "population": 7263,
+      "seed": 0,
+      "tick": 242000
+    }
+  ],
+  "sample_grid_side": 16,
+  "save_resume_replay_ticks": 2000,
+  "seeds": [
+    0,
+    87231
+  ],
+  "thresholds_are_calibration_constants_not_city_targets": true
+}

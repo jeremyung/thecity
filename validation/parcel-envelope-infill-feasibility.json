@@ -1,0 +1,1208 @@
+{
+  "source": {
+    "save": "/Users/jung/Development/thecity/validation/early-reservation-wasm-87231-save.json",
+    "save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+    "snapshot": "/Users/jung/Development/thecity/validation/early-reservation-wasm-87231-snapshot.json",
+    "seed": 87231,
+    "tick": 242000,
+    "kit_module": "web/src/render/kit.ts"
+  },
+  "methodology": "Selected existing parcels that blocked production-generated candidates in the three prior face diagnostics. Rendered kit union above 1m is rasterized inside the stored parent envelope using the same production buildingKit bundle. Parent envelopes are legal collision reservations, not remaining empty buildable land. Kit projection includes detail/eaves/site objects and is not a legal footprint.",
+  "rows": [
+    {
+      "parcel_id": 68,
+      "source_group": "west-central named blocker",
+      "parcel": {
+        "x": -215.40671,
+        "z": 28.95123,
+        "width": 14,
+        "depth": 12,
+        "stored_rotation": null,
+        "legal_envelope_area_m2": 168
+      },
+      "building": {
+        "id": 69,
+        "kind": "shop",
+        "floors": 2,
+        "stage": "open",
+        "rotation": 0.062993445,
+        "width": 14,
+        "depth": 12,
+        "capacity": 10,
+        "occupancy": 0,
+        "business_active": true
+      },
+      "actual_render_snapshot_building": {
+        "id": 69,
+        "kind": "shop",
+        "floors": 2,
+        "width": 14,
+        "depth": 12,
+        "rotation": 0.062993445
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          -222.168,
+          23.757,
+          -208.287,
+          34.863
+        ],
+        "projected_kit_bbox_area_m2": 154.16,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 128.06,
+        "parent_parcel_area_m2": 168,
+        "uncovered_parent_area_m2_cell_estimate": 39.94,
+        "projected_vs_parent_area_percent": 76.2,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 66,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 3,
+            "x": -184,
+            "z": 42
+          },
+          {
+            "id": 63,
+            "x": -244.92488,
+            "z": 45.842953
+          }
+        ],
+        "frontage_along": 0.5,
+        "frontage_side": 1,
+        "parcel_access_node": 3,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          11,
+          66,
+          85,
+          2365
+        ]
+      }
+    },
+    {
+      "parcel_id": 707,
+      "source_group": "west-north named blocker",
+      "parcel": {
+        "x": -285.92487,
+        "z": 160.84296,
+        "width": 16,
+        "depth": 16,
+        "stored_rotation": null,
+        "legal_envelope_area_m2": 256
+      },
+      "building": {
+        "id": 710,
+        "kind": "apartment",
+        "floors": 3,
+        "stage": "open",
+        "rotation": -3.1415927,
+        "width": 16,
+        "depth": 16,
+        "capacity": 15,
+        "occupancy": 15,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 710,
+        "kind": "apartment",
+        "floors": 3,
+        "width": 16,
+        "depth": 16,
+        "rotation": -3.1415927
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          -293.48,
+          153.053,
+          -278.52,
+          168.633
+        ],
+        "projected_kit_bbox_area_m2": 233.08,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 222.38,
+        "parent_parcel_area_m2": 256,
+        "uncovered_parent_area_m2_cell_estimate": 33.63,
+        "projected_vs_parent_area_percent": 86.9,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 706,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 585,
+            "x": -244.92488,
+            "z": 145.84296
+          },
+          {
+            "id": 586,
+            "x": -326.92487,
+            "z": 145.84296
+          }
+        ],
+        "frontage_along": 0.5,
+        "frontage_side": -1,
+        "parcel_access_node": 585,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          692,
+          706,
+          807,
+          849
+        ]
+      }
+    },
+    {
+      "parcel_id": 2608,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 252.85898,
+        "z": -114.86212,
+        "width": 16,
+        "depth": 16,
+        "stored_rotation": null,
+        "legal_envelope_area_m2": 256
+      },
+      "building": {
+        "id": 2609,
+        "kind": "office",
+        "floors": 7,
+        "stage": "open",
+        "rotation": -1.5707964,
+        "width": 16,
+        "depth": 16,
+        "capacity": 35,
+        "occupancy": 0,
+        "business_active": true
+      },
+      "actual_render_snapshot_building": {
+        "id": 2609,
+        "kind": "office",
+        "floors": 7,
+        "width": 16,
+        "depth": 16,
+        "rotation": -1.5707964
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          245.189,
+          -121.762,
+          259.839,
+          -107.962
+        ],
+        "projected_kit_bbox_area_m2": 202.17,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 191.75,
+        "parent_parcel_area_m2": 256,
+        "uncovered_parent_area_m2_cell_estimate": 64.25,
+        "projected_vs_parent_area_percent": 74.9,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2607,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2595,
+            "x": 237.85898,
+            "z": -89.862114
+          },
+          {
+            "id": 2596,
+            "x": 237.85898,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.5,
+        "frontage_side": 1,
+        "parcel_access_node": 2595,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2599,
+          2607,
+          2857,
+          2884
+        ]
+      }
+    },
+    {
+      "parcel_id": 2614,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 214.85898,
+        "z": -154.86212,
+        "width": 16,
+        "depth": 16,
+        "stored_rotation": null,
+        "legal_envelope_area_m2": 256
+      },
+      "building": {
+        "id": 2616,
+        "kind": "home",
+        "floors": 2,
+        "stage": "open",
+        "rotation": 0,
+        "width": 16,
+        "depth": 16,
+        "capacity": 10,
+        "occupancy": 10,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2616,
+        "kind": "home",
+        "floors": 2,
+        "width": 16,
+        "depth": 16,
+        "rotation": 0
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          207.246,
+          -161.51,
+          222.657,
+          -147.932
+        ],
+        "projected_kit_bbox_area_m2": 209.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 194.13,
+        "parent_parcel_area_m2": 256,
+        "uncovered_parent_area_m2_cell_estimate": 61.88,
+        "projected_vs_parent_area_percent": 75.8,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2612,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2596,
+            "x": 237.85898,
+            "z": -139.86212
+          },
+          {
+            "id": 2597,
+            "x": 155.85898,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.2804878,
+        "frontage_side": 1,
+        "parcel_access_node": 2596,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2607,
+          2612,
+          2729,
+          2761
+        ]
+      }
+    },
+    {
+      "parcel_id": 2627,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 210.49898,
+        "z": -105.81212,
+        "width": 11.440001,
+        "depth": 15.900003,
+        "stored_rotation": 0,
+        "legal_envelope_area_m2": 181.89605022000302
+      },
+      "building": {
+        "id": 2643,
+        "kind": "shop",
+        "floors": 2,
+        "stage": "open",
+        "rotation": 0,
+        "width": 11.440001,
+        "depth": 15.900003,
+        "capacity": 10,
+        "occupancy": 0,
+        "business_active": true
+      },
+      "actual_render_snapshot_building": {
+        "id": 2643,
+        "kind": "shop",
+        "floors": 2,
+        "width": 11.440001,
+        "depth": 15.900003,
+        "rotation": 0
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          204.917,
+          -112.418,
+          216.196,
+          -98.632
+        ],
+        "projected_kit_bbox_area_m2": 155.48,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 136.38,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 45.52,
+        "projected_vs_parent_area_percent": 75,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2599,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2505,
+            "x": 155.85898,
+            "z": -89.862114
+          },
+          {
+            "id": 2595,
+            "x": 237.85898,
+            "z": -89.862114
+          }
+        ],
+        "frontage_along": 0.6663415,
+        "frontage_side": -1,
+        "parcel_access_node": 2595,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2599,
+          2607,
+          2857,
+          2884
+        ]
+      }
+    },
+    {
+      "parcel_id": 2730,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 278.85898,
+        "z": -124.86212,
+        "width": 16,
+        "depth": 16,
+        "stored_rotation": null,
+        "legal_envelope_area_m2": 256
+      },
+      "building": {
+        "id": 2734,
+        "kind": "home",
+        "floors": 3,
+        "stage": "open",
+        "rotation": 3.1415927,
+        "width": 16,
+        "depth": 16,
+        "capacity": 12,
+        "occupancy": 12,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2734,
+        "kind": "home",
+        "floors": 3,
+        "width": 16,
+        "depth": 16,
+        "rotation": 3.1415927
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          271.061,
+          -131.792,
+          286.472,
+          -118.215
+        ],
+        "projected_kit_bbox_area_m2": 209.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 194.13,
+        "parent_parcel_area_m2": 256,
+        "uncovered_parent_area_m2_cell_estimate": 61.88,
+        "projected_vs_parent_area_percent": 75.8,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2729,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2596,
+            "x": 237.85898,
+            "z": -139.86212
+          },
+          {
+            "id": 2700,
+            "x": 319.85898,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.5,
+        "frontage_side": 1,
+        "parcel_access_node": 2596,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2607,
+          2612,
+          2729,
+          2761
+        ]
+      }
+    },
+    {
+      "parcel_id": 2762,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 251.57898,
+        "z": -155.81212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": 0,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2792,
+        "kind": "home",
+        "floors": 2,
+        "stage": "open",
+        "rotation": 0,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 10,
+        "occupancy": 10,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2792,
+        "kind": "home",
+        "floors": 2,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": 0
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          245.882,
+          -162.418,
+          257.091,
+          -148.924
+        ],
+        "projected_kit_bbox_area_m2": 151.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 138.44,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 43.46,
+        "projected_vs_parent_area_percent": 76.1,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2729,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2596,
+            "x": 237.85898,
+            "z": -139.86212
+          },
+          {
+            "id": 2700,
+            "x": 319.85898,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.16731708,
+        "frontage_side": -1,
+        "parcel_access_node": 2596,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2607,
+          2612,
+          2729,
+          2761
+        ]
+      }
+    },
+    {
+      "parcel_id": 2763,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 265.21896,
+        "z": -155.81212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": 0,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2786,
+        "kind": "home",
+        "floors": 3,
+        "stage": "open",
+        "rotation": 0,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 12,
+        "occupancy": 12,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2786,
+        "kind": "home",
+        "floors": 3,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": 0
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          259.707,
+          -162.418,
+          270.916,
+          -148.924
+        ],
+        "projected_kit_bbox_area_m2": 151.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 138.38,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 43.52,
+        "projected_vs_parent_area_percent": 76.1,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2729,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2596,
+            "x": 237.85898,
+            "z": -139.86212
+          },
+          {
+            "id": 2700,
+            "x": 319.85898,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.33365837,
+        "frontage_side": -1,
+        "parcel_access_node": 2596,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2607,
+          2612,
+          2729,
+          2761
+        ]
+      }
+    },
+    {
+      "parcel_id": 2765,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 292.49896,
+        "z": -155.81212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": 0,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2783,
+        "kind": "home",
+        "floors": 2,
+        "stage": "open",
+        "rotation": 0,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 10,
+        "occupancy": 10,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2783,
+        "kind": "home",
+        "floors": 2,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": 0
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          286.987,
+          -162.418,
+          298.196,
+          -148.924
+        ],
+        "projected_kit_bbox_area_m2": 151.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 138.38,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 43.52,
+        "projected_vs_parent_area_percent": 76.1,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2729,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2596,
+            "x": 237.85898,
+            "z": -139.86212
+          },
+          {
+            "id": 2700,
+            "x": 319.85898,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.66634125,
+        "frontage_side": -1,
+        "parcel_access_node": 2700,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2729,
+          2743,
+          3446
+        ]
+      }
+    },
+    {
+      "parcel_id": 2767,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 306.13898,
+        "z": -173.91212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": -3.1415927,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2777,
+        "kind": "shop",
+        "floors": 1,
+        "stage": "open",
+        "rotation": -3.1415927,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 8,
+        "occupancy": 0,
+        "business_active": true
+      },
+      "actual_render_snapshot_building": {
+        "id": 2777,
+        "kind": "shop",
+        "floors": 1,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": -3.1415927
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          300.442,
+          -181.713,
+          311.721,
+          -167.307
+        ],
+        "projected_kit_bbox_area_m2": 162.47,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 138.5,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 43.4,
+        "projected_vs_parent_area_percent": 76.1,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2750,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2701,
+            "x": 319.85898,
+            "z": -189.86212
+          },
+          {
+            "id": 2702,
+            "x": 237.85898,
+            "z": -189.86212
+          }
+        ],
+        "frontage_along": 0.16731708,
+        "frontage_side": -1,
+        "parcel_access_node": 2701,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2743,
+          2750,
+          3258,
+          3282
+        ]
+      }
+    },
+    {
+      "parcel_id": 2768,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 292.499,
+        "z": -173.91212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": -3.1415927,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2781,
+        "kind": "cafe",
+        "floors": 1,
+        "stage": "open",
+        "rotation": -3.1415927,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 8,
+        "occupancy": 0,
+        "business_active": true
+      },
+      "actual_render_snapshot_building": {
+        "id": 2781,
+        "kind": "cafe",
+        "floors": 1,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": -3.1415927
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          287.227,
+          -181.092,
+          298.196,
+          -167.307
+        ],
+        "projected_kit_bbox_area_m2": 151.2,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 131.56,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 50.33,
+        "projected_vs_parent_area_percent": 72.3,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2750,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2701,
+            "x": 319.85898,
+            "z": -189.86212
+          },
+          {
+            "id": 2702,
+            "x": 237.85898,
+            "z": -189.86212
+          }
+        ],
+        "frontage_along": 0.33365837,
+        "frontage_side": -1,
+        "parcel_access_node": 2701,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2743,
+          2750,
+          3258,
+          3282
+        ]
+      }
+    },
+    {
+      "parcel_id": 2770,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 265.219,
+        "z": -173.91212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": -3.1415927,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2790,
+        "kind": "home",
+        "floors": 3,
+        "stage": "open",
+        "rotation": -3.1415927,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 12,
+        "occupancy": 12,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2790,
+        "kind": "home",
+        "floors": 3,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": -3.1415927
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          259.707,
+          -180.8,
+          270.916,
+          -167.307
+        ],
+        "projected_kit_bbox_area_m2": 151.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 140.94,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 40.96,
+        "projected_vs_parent_area_percent": 77.5,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2750,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2701,
+            "x": 319.85898,
+            "z": -189.86212
+          },
+          {
+            "id": 2702,
+            "x": 237.85898,
+            "z": -189.86212
+          }
+        ],
+        "frontage_along": 0.66634125,
+        "frontage_side": -1,
+        "parcel_access_node": 2702,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2750,
+          2761,
+          2976,
+          2998
+        ]
+      }
+    },
+    {
+      "parcel_id": 2812,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 138.85898,
+        "z": -198.86212,
+        "width": 16,
+        "depth": 16,
+        "stored_rotation": null,
+        "legal_envelope_area_m2": 256
+      },
+      "building": {
+        "id": 2818,
+        "kind": "home",
+        "floors": 2,
+        "stage": "open",
+        "rotation": -1.5707964,
+        "width": 16,
+        "depth": 16,
+        "capacity": 10,
+        "occupancy": 10,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2818,
+        "kind": "home",
+        "floors": 2,
+        "width": 16,
+        "depth": 16,
+        "rotation": -1.5707964
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          131.929,
+          -206.475,
+          145.506,
+          -191.064
+        ],
+        "projected_kit_bbox_area_m2": 209.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 194.13,
+        "parent_parcel_area_m2": 256,
+        "uncovered_parent_area_m2_cell_estimate": 61.88,
+        "projected_vs_parent_area_percent": 75.8,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2810,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2773,
+            "x": 123.85897,
+            "z": -221.86212
+          },
+          {
+            "id": 2774,
+            "x": 123.85897,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.2804878,
+        "frontage_side": -1,
+        "parcel_access_node": 2773,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2805,
+          2810,
+          3456
+        ]
+      }
+    },
+    {
+      "parcel_id": 2825,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 89.80897,
+        "z": -194.50212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": -1.5707964,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2840,
+        "kind": "office",
+        "floors": 2,
+        "stage": "open",
+        "rotation": -1.5707964,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 10,
+        "occupancy": 0,
+        "business_active": true
+      },
+      "actual_render_snapshot_building": {
+        "id": 2840,
+        "kind": "office",
+        "floors": 2,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": -1.5707964
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          82.866,
+          -199.557,
+          97.134,
+          -189.387
+        ],
+        "projected_kit_bbox_area_m2": 145.1,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 140.31,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 41.58,
+        "projected_vs_parent_area_percent": 77.1,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2797,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2657,
+            "x": 73.85897,
+            "z": -139.86212
+          },
+          {
+            "id": 2772,
+            "x": 73.85897,
+            "z": -221.86212
+          }
+        ],
+        "frontage_along": 0.6663415,
+        "frontage_side": 1,
+        "parcel_access_node": 2772,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2797,
+          2805
+        ]
+      }
+    },
+    {
+      "parcel_id": 2827,
+      "source_group": "east-north face candidate blocker",
+      "parcel": {
+        "x": 107.90897,
+        "z": -208.14212,
+        "width": 11.440001,
+        "depth": 15.9,
+        "stored_rotation": 1.5707964,
+        "legal_envelope_area_m2": 181.8960159
+      },
+      "building": {
+        "id": 2836,
+        "kind": "home",
+        "floors": 2,
+        "stage": "open",
+        "rotation": 1.5707964,
+        "width": 11.440001,
+        "depth": 15.9,
+        "capacity": 10,
+        "occupancy": 10,
+        "business_active": false
+      },
+      "actual_render_snapshot_building": {
+        "id": 2836,
+        "kind": "home",
+        "floors": 2,
+        "width": 11.440001,
+        "depth": 15.9,
+        "rotation": 1.5707964
+      },
+      "rendered_kit_measurement": {
+        "projected_kit_bbox_above_1m": [
+          101.303,
+          -213.654,
+          114.797,
+          -202.446
+        ],
+        "projected_kit_bbox_area_m2": 151.24,
+        "projected_kit_area_inside_parent_parcel_m2_cell_estimate": 138,
+        "parent_parcel_area_m2": 181.9,
+        "uncovered_parent_area_m2_cell_estimate": 43.9,
+        "projected_vs_parent_area_percent": 75.9,
+        "subdivision_probe": {
+          "minimum_8x12_rectangles_after_2_2m_buffer": [],
+          "search": "axis-aligned raster placements inside original envelope; no road/frontage path check"
+        },
+        "y_threshold_m": 1,
+        "raster_cell_m": 0.25,
+        "caveat": "Production buildingKit meshes projected above 1m, rasterized at 0.25m. Includes eaves, facade details and small site objects; it is not a legal building footprint or proof that the uncovered cells form a usable lot."
+      },
+      "access": {
+        "frontage_road_id": 2810,
+        "road_kind": "local",
+        "road_stage": "open",
+        "road_connected": true,
+        "road_endpoints": [
+          {
+            "id": 2773,
+            "x": 123.85897,
+            "z": -221.86212
+          },
+          {
+            "id": 2774,
+            "x": 123.85897,
+            "z": -139.86212
+          }
+        ],
+        "frontage_along": 0.16731708,
+        "frontage_side": 1,
+        "parcel_access_node": 2773,
+        "access_node_connected": true,
+        "connected_open_roads_at_access_node": [
+          2805,
+          2810,
+          3456
+        ]
+      }
+    }
+  ]
+}

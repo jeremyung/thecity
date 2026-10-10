@@ -1,0 +1,89 @@
+{
+  "method": "Explicit developed parcel frontage per ordinary road length; excludes rail/bridges. Coordinated classification uses persisted neighborhood_road_ids. Does not measure network connection benefits, traffic, occupancy, or causal attribution.",
+  "reports": [
+    {
+      "path": "validation/mature-world.shared-edge-selected.json",
+      "seed": 87231,
+      "tick": 242000,
+      "groups": {
+        "coordinated": {
+          "roads": 155,
+          "lengthM": 10089.904798,
+          "frontageBuildings": 593,
+          "frontageBuildingsPer100m": 5.87716149826848,
+          "roadsWithAtMostTwoFrontages": 82
+        },
+        "ordinary_other": {
+          "roads": 60,
+          "lengthM": 4269.818633999999,
+          "frontageBuildings": 208,
+          "frontageBuildingsPer100m": 4.8714012895939796,
+          "roadsWithAtMostTwoFrontages": 28
+        }
+      }
+    },
+    {
+      "path": "validation/mature-world.ranked-blocks.json",
+      "seed": 87231,
+      "tick": 242000,
+      "groups": {
+        "coordinated": {
+          "roads": 127,
+          "lengthM": 8348.628470000001,
+          "frontageBuildings": 508,
+          "frontageBuildingsPer100m": 6.084831799923179,
+          "roadsWithAtMostTwoFrontages": 64
+        },
+        "ordinary_other": {
+          "roads": 74,
+          "lengthM": 5320.7574060000015,
+          "frontageBuildings": 257,
+          "frontageBuildingsPer100m": 4.83013940290139,
+          "roadsWithAtMostTwoFrontages": 24
+        }
+      }
+    },
+    {
+      "path": "validation/shared-edge-selected-seed0.json",
+      "seed": 0,
+      "tick": 242000,
+      "groups": {
+        "coordinated": {
+          "roads": 155,
+          "lengthM": 10053.99997,
+          "frontageBuildings": 594,
+          "frontageBuildingsPer100m": 5.908096297716619,
+          "roadsWithAtMostTwoFrontages": 83
+        },
+        "ordinary_other": {
+          "roads": 49,
+          "lengthM": 3698.7889450000002,
+          "frontageBuildings": 170,
+          "frontageBuildingsPer100m": 4.596098953680635,
+          "roadsWithAtMostTwoFrontages": 23
+        }
+      }
+    },
+    {
+      "path": "validation/ranked-blocks-seed0.json",
+      "seed": 0,
+      "tick": 242000,
+      "groups": {
+        "coordinated": {
+          "roads": 110,
+          "lengthM": 7249.445938000001,
+          "frontageBuildings": 451,
+          "frontageBuildingsPer100m": 6.221165091196242,
+          "roadsWithAtMostTwoFrontages": 55
+        },
+        "ordinary_other": {
+          "roads": 92,
+          "lengthM": 6454.081500999999,
+          "frontageBuildings": 318,
+          "frontageBuildingsPer100m": 4.92711472501128,
+          "roadsWithAtMostTwoFrontages": 41
+        }
+      }
+    }
+  ]
+}
