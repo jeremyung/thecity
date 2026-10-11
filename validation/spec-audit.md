@@ -1464,3 +1464,13 @@ Prefix probes distinguish clear start points from collisions deeper along rays;
 for the exact counts, replay command and limitations. This is diagnostic evidence,
 not new growth or visual acceptance. The water-material experiment was reverted;
 its unmatched-camera captures are retained as rejected exploration only.
+
+## 2026-10-11 — Bounded two-segment access search
+
+See bent-access-witness.md and three JSON comparisons. Each checks the same
+29,280 routes on one exhausted face. Standard, closer and small-lot templates
+all yield no witness after root review corrected the new-bend node clearance
+from 1 m to 18 m. The provisional positive was invalidated and its diagram
+removed. Tests now explicitly reject that clearance error. No production engine
+behavior changed; no density gain or visual acceptance is claimed. This excludes
+one finite route family, not all possible connectors or redevelopment solutions.

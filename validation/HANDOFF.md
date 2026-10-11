@@ -54,6 +54,18 @@ mixed or negative coverage results are recorded in early-reservation-gap-diagnos
 The attempted water-material adjustment was reverted after visual review failed
 to establish an improvement; screenshots/water-review records the rejected trial.
 
+## Bounded bent-connector search — 2026-10-11
+
+[Offline geometry search](bent-access-witness.md) checks 29,280 two-segment
+routes on the exhausted face. No route qualifies with standard frontage,
+closer frontage, or small 8 m-deep lots. Twelve routes pass the earlier geometry
+stages; eight then fail node/split clearance and four fail lot viability.
+An apparent small-lot witness was rejected during root review because its bend
+used a 1 m split-point test instead of the 18 m new-node rule. The diagnostic
+now preserves that rule and has a regression for it. No runtime planner change
+is justified by this finite search; it does not prove that all bent routes are
+impossible. See the report for the exact family and remaining scope.
+
 ## Verified work
 
 - Persisted, quota-stepped face discovery, target selection, descriptor generation and proposal validation.
