@@ -49,9 +49,9 @@ The plan is generated deterministically from the seed and the engine version bef
 2. **Transport skeleton:**
    - A rail line crosses the basin with a dedicated corridor (about 18 m wide) and is elevated over arterials and the river.
    - Stations sit on the line, at least 400 m apart in the production domain; the prototype has one active station.
-   - An elevated expressway follows the river and/or one arterial row. It is a separate grade-separated layer (Tokyo's Shuto pattern) with no at-grade junctions and is never flattened into the street graph.
+   - An elevated expressway runs above one arterial row and one arterial column (Tokyo's Shuto pattern). It crosses the river only on a crossing row and never runs along the water. It is a separate grade-separated layer with its own nodes, has no at-grade junctions, and is never flattened into the street graph.
    - Gateways connect the arterial and rail layers to the region.
-3. **Arterial lattice:** a quad lattice of arterial rows and columns. Columns follow the river course as offset polylines, so bank arterials frame the river. Rows include every river bend and the rail corridor's frontage streets. Interior junctions are perturbed by up to about 18 m, so superblocks are irregular convex quadrilaterals rather than rectangles. Lattice edges are straight segments between shared junction nodes. Every lattice cell is a superblock or a reserved corridor band.
+3. **Arterial lattice:** a quad lattice of major lines. Tokyo arterials are far apart, so only the two river-bank roads, the gateway row south of the rail corridor, the expressway row north of it and the expressway column are arterials. The other lattice lines are local collector streets, and every crossing row gets a bridge. Columns follow the river course as offset polylines, so bank arterials frame the river. Rows include every river bend and the rail corridor's frontage streets. Interior junctions are perturbed by up to about 18 m, so superblocks are irregular convex quadrilaterals rather than rectangles. Lattice edges are straight segments between shared junction nodes. Every lattice cell is a superblock or a reserved corridor band.
 4. **Local streets:** each superblock is subdivided by recursive street cuts (hierarchical domain splitting). A polygon whose short side exceeds twice the district's minimum block depth is cut along its long axis; otherwise one longer than the district's maximum block length is cut across it. Each cut is tilted and offset by seeded jitter, and it ends where it meets an existing street, creating a T-junction. A cut is rejected if it would land within 14 m of an existing junction or leave a block below its minimum size. District patterns, from station distance and a seeded draw:
    - station core: nearly straight cuts and deep blocks, for larger mid-rise lots;
    - compact: strongly jittered cuts and blocks at least 36 m deep;
@@ -101,10 +101,10 @@ When a road opens, every plan lot whose frontage road is now open becomes a parc
 
 Use and height come from district character, as an initial calibration:
 
-- **Station core:** offices and apartments, 4–12 floors, with assembled sites of 2–4 lots allowed.
+- **Station core:** offices and apartments, 4–12 floors. At most eight towers of 16–32 floors per city go on large served station-core lots (at least 280 m²), forming a recognizable cluster.
 - **Station fringe:** mixed 2–6 floors.
 - **Arterial frontage:** mid-rise 3–8 floors.
-- **Compact interior:** homes and shops, 2–3 floors.
+- **Compact interior:** homes and shop-houses of 2–3 floors (almost no single-storey buildings), with scattered 5–6 storey apartment and office blocks.
 - **Waterfront:** larger, lower-coverage lots and parks.
 
 ### Densification and renewal
@@ -129,7 +129,7 @@ Road project lifecycle:
 
 At-grade ordinary streets meet at explicit junctions. Elevated rail, the expressway, and bridges are separate layers and must not be flattened into street-face topology. Only completed, connected sections carry normal traffic. Work crews may use explicit construction access. A disconnected completed segment waits for its connection; travelers never teleport onto it.
 
-Road kinds: `arterial` (14 m rendered, with sidewalks), `local` (6.5 m shared surface with painted edge lines), `lane` (4 m, walking and deliveries, no through traffic), `bridge`, `rail`, and `expressway` (elevated, grade-separated, no frontage). A buildable lot needs road access suitable for its use.
+Road hierarchy, by rendered carriageway: `expressway` (20 m, elevated about 11 m above an arterial), `arterial` (16 m, four lanes, 2.5 m sidewalks; arterial bridges match), `local` (6.5 m shared surface with painted edge lines), `lane` (alley, 4 m, walking and deliveries, no through traffic). Also: `bridge`, `rail`, and `expressway` (elevated, grade-separated, no frontage). A buildable lot needs road access suitable for its use.
 
 ## Rail and transit
 

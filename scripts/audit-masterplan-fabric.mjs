@@ -17,7 +17,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CROP = 250;
 // Matches web/src/render/road-elevation.ts roadWidth(); only arterials and
 // bridges carry sidewalks.
-const ROAD_RIGHT_OF_WAY = { arterial: 14 + 2.8, local: 6.5, bridge: 9 + 2.8, lane: 4 };
+const ROAD_RIGHT_OF_WAY = { arterial: 16 + 5, local: 6.5, bridge: 16 + 2.8, lane: 4 };
 
 // Mirrors partyWallBodyWidth/partyWallBodyDepth in web/src/render/kit.ts.
 function bodyFootprint(b) {

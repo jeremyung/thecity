@@ -1007,7 +1007,8 @@ fn push_history(history: &mut Vec<String>, entry: String) {
 /// only arterials carry raised sidewalks.
 fn road_width(kind: &str) -> f32 {
     match kind {
-        "arterial" => 14.0,
+        "arterial" => 16.0,
+        "bridge" => 16.0,
         "local" => 6.5,
         "lane" => 4.0,
         _ => 9.0,
@@ -18587,7 +18588,7 @@ mod tests {
         let pedestrian = &movement[6..10];
         assert!((car[0] - center_x - nx * 1.65).abs() < 0.001);
         assert!((car[1] - center_z - nz * 1.65).abs() < 0.001);
-        let road_width = if arterial { 14.0 } else { road_width("local") };
+        let road_width = road_width(if arterial { "arterial" } else { "local" });
         let sidewalk_offset = road_width * 0.5 + 0.72;
         let sign = if 700_002 % 2 == 0 { 1.0 } else { -1.0 };
         assert!((pedestrian[0] - center_x - nx * sidewalk_offset * sign).abs() < 0.001);

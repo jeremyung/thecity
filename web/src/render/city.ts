@@ -18,7 +18,7 @@ import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
-import { bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
+import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
 import { CameraDirector } from '../camera/director';
@@ -464,7 +464,7 @@ export class CityRenderer {
     }
     for(const road of world.roads){const a=nodes.get(road.from),b=nodes.get(road.to);if(a&&b)this.roadKit(kit,a,b,road);}
     const junctions=new Map<number,{count:number,radius:number}>();
-    for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'&&r.kind!=='expressway'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,road.kind==='arterial'?7.3:road.kind==='lane'?2.2:road.kind==='local'?3.5:4.8);junctions.set(id,entry);}
+    for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'&&r.kind!=='expressway'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,roadWidth(road.kind)/2+.3);junctions.set(id,entry);}
     for(const [id,junction]of junctions){const node=nodes.get(id);if(node&&junction.count>1)kit.cylinder(node.x,.33,node.z,junction.radius,.07,this.art.get('#747f7b'),24);}
     for(const project of world.projects.filter(p=>p.kind==='road'&&p.progress<1)){
       const a=nodes.get(project.from!),b=nodes.get(project.to!);if(!a||!b)continue;
@@ -542,11 +542,13 @@ export class CityRenderer {
           for(let i=0;i<cuts.length-1;i++){const start=cuts[i],end=cuts[i+1],fromY=bridgeDeckHeight(start,len),toY=bridgeDeckHeight(end,len),along=(start+end)/2;
             const mark=new THREE.BoxGeometry(.18,.035,Math.hypot(end-start,toY-fromY));mark.rotateX(-Math.atan2(toY-fromY,end-start));mark.rotateY(angle);mark.translate(a.x+dx*along/len,(fromY+toY)/2+.035,a.z+dz*along/len);kit.add(mark,this.art.get('#dedaca'));
           }
-        }else{const t=distance/len;kit.box(a.x+dx*t,y+.19,a.z+dz*t,.18,.035,4,this.art.get('#dedaca'),angle);}
+        }else{const t=distance/len;kit.box(a.x+dx*t,y+.19,a.z+dz*t,.18,.035,4,this.art.get('#dedaca'),angle);
+          // Four-lane arterials: dashed lane dividers between the two lanes each way.
+          if(r.kind==='arterial')for(const side of [-1,1])kit.box(a.x+dx*t+Math.cos(angle)*side*width/4,y+.19,a.z+dz*t-Math.sin(angle)*side*width/4,.14,.03,2.4,this.art.get('#dedaca'),angle);}
       }
       // Arterials keep raised sidewalks; local streets are shared surfaces with
       // painted edge lines, as on Tokyo residential streets.
-      if(!bridge&&r.kind==='arterial')for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+.7),y+.15,mid.z-Math.sin(angle)*side*(width/2+.7),1.4,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
+      if(!bridge&&r.kind==='arterial')for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),y+.15,mid.z-Math.sin(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),ARTERIAL_SIDEWALK,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
       else if(!bridge&&open)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2-.45),y+.16,mid.z-Math.sin(angle)*side*(width/2-.45),.14,.03,Math.max(1,len-width),this.art.get('#dedaca'),angle);
       }else{
         for(let distance=0;distance<len;distance+=12){const t=distance/len,x=a.x+dx*t,z=a.z+dz*t;kit.cylinder(x+width/2,y+.55,z,.25,.8,this.art.get('#c17d4f'),5);}

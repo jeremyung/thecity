@@ -41,7 +41,7 @@ describe('procedural street lighting',()=>{
       expect(length-along.at(-1)!).toBeGreaterThanOrEqual(10-1e-6);
       for(let i=1;i<along.length;i++)expect(along[i]-along[i-1]).toBeGreaterThanOrEqual(28-1e-6);
       for(let i=1;i<along.length;i++)expect(along[i]-along[i-1]).toBeLessThanOrEqual(34+1e-6);
-      const expectedOffset=(road.kind==='arterial'?14:6.5)/2+.65;
+      const expectedOffset=(road.kind==='arterial'?16:6.5)/2+.65;
       expect(side.every((offset,index)=>Math.abs(Math.abs(offset)-expectedOffset)<1e-5&&Math.sign(offset)!==Math.sign(side[index-1]??-offset))).toBe(true);
       expect(lights.every(light=>light.y===.3&&Number.isFinite(light.heading))).toBe(true);
     }

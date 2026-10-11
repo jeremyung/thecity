@@ -50,6 +50,8 @@ impl PlanRuntime {
 }
 
 const MAX_ACTIVE_ROAD_PROJECTS: usize = 3;
+/// Station-core towers (16-32 floors) per city.
+const MAX_STATION_TOWERS: usize = 8;
 const MAX_ACTIVE_BUILDING_PROJECTS: usize = 9;
 const BUILDINGS_PER_EVALUATION: usize = 3;
 /// Keep a modest stock of released parcels ahead of construction.
@@ -695,6 +697,36 @@ impl Engine {
         };
         let roll = random_unit(&mut self.state.rng_growth);
         let station_core = lot.district == District::StationCore && self.state.station_online;
+        // A small tower cluster on the largest served station-core lots.
+        let towers = self.state.buildings.iter().filter(|b| b.floors >= 14).count();
+        if station_core && !lot.flag && lot.width * lot.depth >= 280.0 && towers < MAX_STATION_TOWERS && roll < 0.2 {
+            let floors = 16 + (roll * 90.0) as u8 % 17;
+            let kind = if roll < 0.11 { "office" } else { "apartment" };
+            return (kind, floors as u16 * 5, floors);
+        }
+        // Compact Tokyo fabric has almost no single-storey buildings: shops
+        // are two- and three-storey shop-houses and homes are mostly 2-3.
+        if !matches!(lot.district, District::StationCore) {
+            // Interior "mansion" blocks: small 5-6 storey apartments and
+            // offices scattered through the low-rise fabric give Tokyo's p90.
+            let floors = match (kind, floors) {
+                (_, 1) => 2 + u8::from(roll < 0.35),
+                ("home", 2) if roll < 0.55 => 3,
+                ("shop" | "cafe", 2) if roll < 0.35 => 3,
+                ("apartment" | "office", _) if roll < 0.45 => 5 + u8::from(roll < 0.2),
+                _ => floors,
+            };
+            if floors != 0 && !lot.arterial_frontage {
+                let capacity = match kind {
+                    "home" => 6 + floors as u16 * 2,
+                    "apartment" => floors as u16 * 5,
+                    _ => capacity,
+                };
+                if kind != "home" || floors <= 3 {
+                    return (kind, capacity, floors);
+                }
+            }
+        }
         if lot.arterial_frontage || station_core {
             // Arterials and served station cores carry a mid-rise street wall.
             if kind == "home" && roll < 0.65 {

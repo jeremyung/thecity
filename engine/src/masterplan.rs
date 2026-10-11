@@ -96,7 +96,8 @@ impl RoadKind {
     /// carriageway plus its sidewalk.
     fn lot_setback(self) -> f32 {
         match self {
-            RoadKind::Arterial => 8.6,
+            // 16 m carriageway plus 2.5 m sidewalks.
+            RoadKind::Arterial => 10.8,
             RoadKind::Local => 3.6,
             RoadKind::Bridge => 6.0,
             RoadKind::Lane => 2.3,
@@ -214,6 +215,9 @@ impl Rng {
 enum LineKind {
     Ring,
     Arterial,
+    /// Lattice line built as a local street: Tokyo arterials are far apart,
+    /// so most superblock edges are ordinary streets.
+    Collector,
     RailFrontage,
 }
 
@@ -221,7 +225,7 @@ impl LineKind {
     fn road(self) -> RoadKind {
         match self {
             LineKind::Arterial => RoadKind::Arterial,
-            LineKind::Ring | LineKind::RailFrontage => RoadKind::Local,
+            LineKind::Ring | LineKind::Collector | LineKind::RailFrontage => RoadKind::Local,
         }
     }
 }
@@ -874,7 +878,7 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     // straight between rows), and the rail corridor's two frontage streets.
     let mut rows: Vec<(f32, LatticeLine)> = vec![(-l, LatticeLine { kind: LineKind::Ring })];
     for p in &river[1..4] {
-        rows.push((p.z, LatticeLine { kind: LineKind::Arterial }));
+        rows.push((p.z, LatticeLine { kind: LineKind::Collector }));
     }
     rows.push((l, LatticeLine { kind: LineKind::Ring }));
     rows.sort_by(|a, b| a.0.total_cmp(&b.0));
@@ -888,6 +892,21 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     rows.push((rail_z - RAIL_BAND_HALF, LatticeLine { kind: LineKind::RailFrontage }));
     rows.push((rail_z + RAIL_BAND_HALF, LatticeLine { kind: LineKind::RailFrontage }));
     rows.sort_by(|a, b| a.0.total_cmp(&b.0));
+    // Two arterial rows: the gateway row south of the rail corridor and the
+    // row north of it that carries the expressway.
+    let promote = |rows: &mut Vec<(f32, LatticeLine)>, pick: &dyn Fn(f32) -> f32| {
+        if let Some(index) = rows
+            .iter()
+            .enumerate()
+            .filter(|(_, (_, line))| line.kind == LineKind::Collector)
+            .min_by(|x, y| pick(x.1 .0).total_cmp(&pick(y.1 .0)))
+            .map(|(index, _)| index)
+        {
+            rows[index].1.kind = LineKind::Arterial;
+        }
+    };
+    promote(&mut rows, &|z| (z - rail_z + 60.0).abs());
+    promote(&mut rows, &|z| if z > rail_z { z - rail_z } else { f32::INFINITY });
 
     let west_mid = 0.5 + rng.range(-0.08, 0.08);
     let east_a = 1.0 / 3.0 + rng.range(-0.05, 0.05);
@@ -896,11 +915,11 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     let bank_e = |z: f32| river_x(river, z) + BANK_OFFSET;
     let columns: Vec<(Box<dyn Fn(f32) -> f32>, LineKind)> = vec![
         (Box::new(move |_| -l), LineKind::Ring),
-        (Box::new(move |z| -l + (bank_w(z) + l) * west_mid), LineKind::Arterial),
+        (Box::new(move |z| -l + (bank_w(z) + l) * west_mid), LineKind::Collector),
         (Box::new(bank_w), LineKind::Arterial),
         (Box::new(bank_e), LineKind::Arterial),
         (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_a), LineKind::Arterial),
-        (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_b), LineKind::Arterial),
+        (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_b), LineKind::Collector),
         (Box::new(move |_| l), LineKind::Ring),
     ];
     const RIVER_COL: usize = 2;
@@ -931,7 +950,7 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
                     let ring_row = line.kind == LineKind::Ring;
                     let rail_row = line.kind == LineKind::RailFrontage;
                     let bank = c == RIVER_COL || c == RIVER_COL + 1;
-                    if *col_kind == LineKind::Arterial && !bank {
+                    if matches!(*col_kind, LineKind::Arterial | LineKind::Collector) && !bank {
                         p.x += rng.range(-18.0, 18.0);
                     }
                     if !ring_row && !rail_row && !bank {
@@ -948,7 +967,7 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     for (r, (_, line)) in rows.iter().enumerate() {
         for c in 0..columns.len() - 1 {
             if c == RIVER_COL {
-                if line.kind == LineKind::Arterial {
+                if matches!(line.kind, LineKind::Arterial | LineKind::Collector) {
                     row_lines[r][c] = Some(b.line(grid[r][c], grid[r][c + 1], RoadKind::Bridge));
                 }
                 continue;
@@ -1128,25 +1147,48 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     let rail_service = b.road(station, rail_gateway, RoadKind::Rail);
     let rail_extension = b.road(station, rail_terminus, RoadKind::Rail);
 
+    // Elevated expressway on land, Shuto-style: it rides above one arterial
+    // row and one arterial column and crosses the river only on the row's
+    // bridge, never running along the water. Elevated nodes are separate from
+    // street junctions, so the expressway is grade-separated from the grid.
     let mut expressway = Vec::new();
-    let mut previous = b.node(P::new(river_x(river, -EDGE), -EDGE), NodeKind::Elevated);
-    for p in &river[1..4] {
-        let next = b.node(P::new(p.x, p.z), NodeKind::Elevated);
-        expressway.push(b.road(previous, next, RoadKind::Expressway));
-        previous = next;
-    }
-    let north_end = b.node(P::new(river_x(river, EDGE), EDGE), NodeKind::Elevated);
-    expressway.push(b.road(previous, north_end, RoadKind::Expressway));
-    if let Some(spur_row) = rows
+    let mut elevated: BTreeMap<usize, usize> = BTreeMap::new();
+    let mut lift = |b: &mut Builder, street_node: usize| -> usize {
+        *elevated.entry(street_node).or_insert_with(|| {
+            b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated });
+            b.nodes.len() - 1
+        })
+    };
+    let mut edge_node = |b: &mut Builder, p: P| -> usize {
+        b.nodes.push(PlanNode { p, kind: NodeKind::Elevated });
+        b.nodes.len() - 1
+    };
+    let expressway_row = rows
         .iter()
         .position(|(z, line)| line.kind == LineKind::Arterial && *z > rail_z)
-    {
-        let z = rows[spur_row].0;
-        if let Some(i) = river.iter().position(|p| (p.z - z).abs() < 0.01) {
-            let start = b.node(river[i], NodeKind::Elevated);
-            let end = b.node(P::new(EDGE, z), NodeKind::Elevated);
-            expressway.push(b.road(start, end, RoadKind::Expressway));
-        }
+        .or_else(|| rows.iter().position(|(_, line)| line.kind == LineKind::Arterial))
+        .unwrap();
+    let east_z = b.nodes[grid[expressway_row][columns.len() - 1]].p.z;
+    let mut route: Vec<usize> = vec![edge_node(&mut b, P::new(EDGE, east_z))];
+    for c in (0..columns.len()).rev() {
+        route.push(lift(&mut b, grid[expressway_row][c]));
+    }
+    let west_z = b.nodes[grid[expressway_row][0]].p.z;
+    route.push(edge_node(&mut b, P::new(-EDGE, west_z)));
+    for pair in route.windows(2) {
+        expressway.push(b.road(pair[0], pair[1], RoadKind::Expressway));
+    }
+    // North-south spur above the first eastern interior arterial column.
+    let column = RIVER_COL + 2;
+    let bottom_x = b.nodes[grid[0][column]].p.x;
+    let mut spur: Vec<usize> = vec![edge_node(&mut b, P::new(bottom_x, -EDGE))];
+    for r in 0..rows.len() {
+        spur.push(lift(&mut b, grid[r][column]));
+    }
+    let top_x = b.nodes[grid[rows.len() - 1][column]].p.x;
+    spur.push(edge_node(&mut b, P::new(top_x, EDGE)));
+    for pair in spur.windows(2) {
+        expressway.push(b.road(pair[0], pair[1], RoadKind::Expressway));
     }
 
     let Builder { nodes, roads, lines, .. } = b;
@@ -1354,6 +1396,31 @@ mod tests {
                     other.kind
                 );
             }
+        }
+    }
+
+    #[test]
+    fn expressway_crosses_the_river_but_never_runs_along_it() {
+        for seed in [0, 7, 87231] {
+            let geo = geography(seed);
+            let plan = generate(&geo);
+            let mut wet = 0.0;
+            for &index in &plan.expressway {
+                let road = plan.roads[index];
+                let (a, b) = (plan.nodes[road.a].p, plan.nodes[road.b].p);
+                let steps = (a.sub(b).len() / 2.0).ceil() as usize;
+                for i in 0..steps {
+                    let p = a.lerp(b, (i as f32 + 0.5) / steps as f32);
+                    if river_distance(&geo.river, p) < geo.river_clearance {
+                        wet += a.sub(b).len() / steps as f32;
+                    }
+                }
+                // Grade separation: no elevated node is a street junction.
+                assert_eq!(plan.nodes[road.a].kind, NodeKind::Elevated);
+                assert_eq!(plan.nodes[road.b].kind, NodeKind::Elevated);
+            }
+            // One perpendicular crossing of a ~76 m river corridor.
+            assert!(wet < 110.0, "seed {seed}: expressway runs {wet} m over the river");
         }
     }
 

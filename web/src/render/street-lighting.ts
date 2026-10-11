@@ -30,7 +30,7 @@ export function streetLightPlacements(world:Pick<World,'nodes'|'roads'>):StreetL
     if(!a||!b||![a.x,a.z,b.x,b.z].every(Number.isFinite))continue;
     const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
     if(!Number.isFinite(length)||length<2*EDGE_MARGIN)continue;
-    const laneWidth=road.kind==='arterial'?14:6.5;
+    const laneWidth=road.kind==='arterial'?16:6.5;
     const angle=Math.atan2(dx,dz),normalX=Math.cos(angle),normalZ=-Math.sin(angle);
     const available=length-2*EDGE_MARGIN;
     let intervals=0,spacing=0,span=0;

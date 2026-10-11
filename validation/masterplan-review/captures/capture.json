@@ -7,8 +7,8 @@
   "depthOfField": false,
   "world": {
     "tick": 160000,
-    "buildings": 1784,
-    "steps": 3293,
+    "buildings": 1925,
+    "steps": 3663,
     "station": {
       "id": 40,
       "x": 163.8628,
