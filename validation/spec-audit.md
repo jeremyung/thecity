@@ -1504,3 +1504,13 @@ candidate attempts displaced baseline search work; actual kit coverage declined
 verified the geometry/lifecycle test, and independently measured coverage. The
 rejected runtime hooks were removed; no production behavior changed. Candidate
 budget fairness remains a requirement for future adaptive block experiments.
+
+## Independent alternative budget — 2026-10-11
+
+The shallow-block fair-budget control preserves both mature city saves and
+snapshots exactly. Independent eight-attempt sampling found zero feasible
+alternatives in 13,737/16,021 checks, so ranking cannot recover those proposals.
+Evidence and reproduction patch: `shallow-block-experiment/fair-budget/README.md`.
+Root verified all output bytes against the preceding independently rerun controls
+and reran the geometry/manual lifecycle test. Experimental hooks were removed;
+production and visual acceptance are unchanged.

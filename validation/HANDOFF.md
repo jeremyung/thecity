@@ -2,6 +2,16 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Fair-budget control — 2026-10-11
+
+The [independent-budget follow-up](shallow-block-experiment/fair-budget/README.md)
+confirms that preserving baseline scan slots avoids the prior regression:
+both treatment saves and snapshots exactly equal their controls. At most eight
+extra candidates per evaluation produced zero feasible 42 m alternatives in
+13,737/16,021 attempts. This rules out score tuning for those sampled candidates.
+The test-only hooks were removed; the archive contains reproduction code and
+hashes. No runtime density or visual improvement is claimed.
+
 ## Shallower block fallback rejected — 2026-10-11
 
 A 42 m shared-edge fallback for rejected 50 m blocks produced zero winning
