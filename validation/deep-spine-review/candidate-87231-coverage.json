@@ -1,0 +1,419 @@
+{
+  "methodology": {
+    "label": "projected kit geometry above 1m",
+    "cellSizeM": 0.5,
+    "comparison": "rotated nominal parcel envelopes from saved building width/depth; envelope area is a union too",
+    "domainDenominator": "full world bounds, including river, protected land, and undevelopable areas",
+    "yCriterion": "clip production kit triangles at building-local y=1m before projection",
+    "limitations": "Visual plan-view union of authored kit surfaces; includes roof/eaves/props above 1m. It is not a legal footprint, parcel coverage, floor area, or net developable-land ratio. Raster coverage is cell-center sampled and may miss features narrower than the cell size."
+  },
+  "source": {
+    "seed": 87231,
+    "tick": 242000,
+    "engineVersion": "0.1.0",
+    "snapshot": ".tools/deep-spine-review/candidate-87231-snapshot.json",
+    "sha256": "9fd3222ddd5bddfcf0d0468e01ec08ddb03c89afa56955f1caa6bcec60ed825a",
+    "kitModule": "web/src/render/kit.ts",
+    "kitBundleSha256": "cfd0f0530b6ae403be949bf49bb9db5beec916be04ce325711e194b78156a1b9",
+    "compactMidriseReview": false
+  },
+  "cropBounds": null,
+  "grid": {
+    "columns": 1600,
+    "rows": 1600,
+    "maxCells": 4000000,
+    "blockSizeM": 100
+  },
+  "buildings": {
+    "snapshotCount": 850,
+    "renderedCount": 850
+  },
+  "domain": {
+    "areaM2": 640000,
+    "projectedKitGeometryAreaM2": 124799,
+    "projectedKitGeometryPercent": 19.49984375,
+    "nominalParcelEnvelopeUnionM2": 163035.75,
+    "nominalParcelEnvelopeUnionPercent": 25.474335937499998,
+    "projectedVsEnvelopePercent": 76.54701499517745
+  },
+  "cells": [
+    {
+      "x": -300,
+      "z": -400,
+      "projectedKitGeometryM2": 1046.5,
+      "nominalParcelEnvelopeM2": 1393
+    },
+    {
+      "x": -200,
+      "z": -400,
+      "projectedKitGeometryM2": 651.25,
+      "nominalParcelEnvelopeM2": 857
+    },
+    {
+      "x": -100,
+      "z": -400,
+      "projectedKitGeometryM2": 1774,
+      "nominalParcelEnvelopeM2": 2312
+    },
+    {
+      "x": 0,
+      "z": -400,
+      "projectedKitGeometryM2": 2532.25,
+      "nominalParcelEnvelopeM2": 3340.75
+    },
+    {
+      "x": 100,
+      "z": -400,
+      "projectedKitGeometryM2": 1716.5,
+      "nominalParcelEnvelopeM2": 2248
+    },
+    {
+      "x": 200,
+      "z": -400,
+      "projectedKitGeometryM2": 2286.5,
+      "nominalParcelEnvelopeM2": 2998.5
+    },
+    {
+      "x": 300,
+      "z": -400,
+      "projectedKitGeometryM2": 1212.5,
+      "nominalParcelEnvelopeM2": 1618.25
+    },
+    {
+      "x": -400,
+      "z": -300,
+      "projectedKitGeometryM2": 545.25,
+      "nominalParcelEnvelopeM2": 696
+    },
+    {
+      "x": -300,
+      "z": -300,
+      "projectedKitGeometryM2": 2581.75,
+      "nominalParcelEnvelopeM2": 3359.5
+    },
+    {
+      "x": -200,
+      "z": -300,
+      "projectedKitGeometryM2": 1024.75,
+      "nominalParcelEnvelopeM2": 1340.5
+    },
+    {
+      "x": -100,
+      "z": -300,
+      "projectedKitGeometryM2": 2039.25,
+      "nominalParcelEnvelopeM2": 2680
+    },
+    {
+      "x": 0,
+      "z": -300,
+      "projectedKitGeometryM2": 2123.75,
+      "nominalParcelEnvelopeM2": 2770.75
+    },
+    {
+      "x": 100,
+      "z": -300,
+      "projectedKitGeometryM2": 2603.5,
+      "nominalParcelEnvelopeM2": 3424
+    },
+    {
+      "x": 200,
+      "z": -300,
+      "projectedKitGeometryM2": 2161.75,
+      "nominalParcelEnvelopeM2": 2856
+    },
+    {
+      "x": 300,
+      "z": -300,
+      "projectedKitGeometryM2": 2576.25,
+      "nominalParcelEnvelopeM2": 3400
+    },
+    {
+      "x": -400,
+      "z": -200,
+      "projectedKitGeometryM2": 1292.5,
+      "nominalParcelEnvelopeM2": 1666.25
+    },
+    {
+      "x": -300,
+      "z": -200,
+      "projectedKitGeometryM2": 2994.75,
+      "nominalParcelEnvelopeM2": 3844.75
+    },
+    {
+      "x": -200,
+      "z": -200,
+      "projectedKitGeometryM2": 1018.25,
+      "nominalParcelEnvelopeM2": 1314.5
+    },
+    {
+      "x": -100,
+      "z": -200,
+      "projectedKitGeometryM2": 1496,
+      "nominalParcelEnvelopeM2": 1958
+    },
+    {
+      "x": 0,
+      "z": -200,
+      "projectedKitGeometryM2": 3528,
+      "nominalParcelEnvelopeM2": 4648
+    },
+    {
+      "x": 100,
+      "z": -200,
+      "projectedKitGeometryM2": 2424.75,
+      "nominalParcelEnvelopeM2": 3207
+    },
+    {
+      "x": 200,
+      "z": -200,
+      "projectedKitGeometryM2": 2956.5,
+      "nominalParcelEnvelopeM2": 3816
+    },
+    {
+      "x": 300,
+      "z": -200,
+      "projectedKitGeometryM2": 2144,
+      "nominalParcelEnvelopeM2": 2831.25
+    },
+    {
+      "x": -400,
+      "z": -100,
+      "projectedKitGeometryM2": 2003.5,
+      "nominalParcelEnvelopeM2": 2673
+    },
+    {
+      "x": -300,
+      "z": -100,
+      "projectedKitGeometryM2": 2285.75,
+      "nominalParcelEnvelopeM2": 2978
+    },
+    {
+      "x": -200,
+      "z": -100,
+      "projectedKitGeometryM2": 567,
+      "nominalParcelEnvelopeM2": 764.5
+    },
+    {
+      "x": -100,
+      "z": -100,
+      "projectedKitGeometryM2": 2036.25,
+      "nominalParcelEnvelopeM2": 2682.5
+    },
+    {
+      "x": 0,
+      "z": -100,
+      "projectedKitGeometryM2": 2869.75,
+      "nominalParcelEnvelopeM2": 3821.75
+    },
+    {
+      "x": 100,
+      "z": -100,
+      "projectedKitGeometryM2": 2567.25,
+      "nominalParcelEnvelopeM2": 3292.25
+    },
+    {
+      "x": 200,
+      "z": -100,
+      "projectedKitGeometryM2": 2777,
+      "nominalParcelEnvelopeM2": 3644
+    },
+    {
+      "x": 300,
+      "z": -100,
+      "projectedKitGeometryM2": 2577,
+      "nominalParcelEnvelopeM2": 3392
+    },
+    {
+      "x": -400,
+      "z": 0,
+      "projectedKitGeometryM2": 1859.5,
+      "nominalParcelEnvelopeM2": 2461.5
+    },
+    {
+      "x": -300,
+      "z": 0,
+      "projectedKitGeometryM2": 2758.5,
+      "nominalParcelEnvelopeM2": 3591.75
+    },
+    {
+      "x": -200,
+      "z": 0,
+      "projectedKitGeometryM2": 725,
+      "nominalParcelEnvelopeM2": 907.25
+    },
+    {
+      "x": -100,
+      "z": 0,
+      "projectedKitGeometryM2": 1168.25,
+      "nominalParcelEnvelopeM2": 1536
+    },
+    {
+      "x": 0,
+      "z": 0,
+      "projectedKitGeometryM2": 1998,
+      "nominalParcelEnvelopeM2": 2537.75
+    },
+    {
+      "x": 100,
+      "z": 0,
+      "projectedKitGeometryM2": 1777.75,
+      "nominalParcelEnvelopeM2": 2282.25
+    },
+    {
+      "x": 200,
+      "z": 0,
+      "projectedKitGeometryM2": 1667,
+      "nominalParcelEnvelopeM2": 2147.25
+    },
+    {
+      "x": 300,
+      "z": 0,
+      "projectedKitGeometryM2": 1843.25,
+      "nominalParcelEnvelopeM2": 2333.5
+    },
+    {
+      "x": -400,
+      "z": 100,
+      "projectedKitGeometryM2": 2151,
+      "nominalParcelEnvelopeM2": 2833.75
+    },
+    {
+      "x": -300,
+      "z": 100,
+      "projectedKitGeometryM2": 3093.75,
+      "nominalParcelEnvelopeM2": 4084.75
+    },
+    {
+      "x": -200,
+      "z": 100,
+      "projectedKitGeometryM2": 725,
+      "nominalParcelEnvelopeM2": 933.75
+    },
+    {
+      "x": -100,
+      "z": 100,
+      "projectedKitGeometryM2": 1320.25,
+      "nominalParcelEnvelopeM2": 1734.5
+    },
+    {
+      "x": 0,
+      "z": 100,
+      "projectedKitGeometryM2": 2736.25,
+      "nominalParcelEnvelopeM2": 3591.75
+    },
+    {
+      "x": 100,
+      "z": 100,
+      "projectedKitGeometryM2": 2854.75,
+      "nominalParcelEnvelopeM2": 3728
+    },
+    {
+      "x": 200,
+      "z": 100,
+      "projectedKitGeometryM2": 1997.75,
+      "nominalParcelEnvelopeM2": 2614.5
+    },
+    {
+      "x": 300,
+      "z": 100,
+      "projectedKitGeometryM2": 1973.5,
+      "nominalParcelEnvelopeM2": 2561.25
+    },
+    {
+      "x": -400,
+      "z": 200,
+      "projectedKitGeometryM2": 2022.5,
+      "nominalParcelEnvelopeM2": 2599.5
+    },
+    {
+      "x": -300,
+      "z": 200,
+      "projectedKitGeometryM2": 3362.5,
+      "nominalParcelEnvelopeM2": 4347.5
+    },
+    {
+      "x": -200,
+      "z": 200,
+      "projectedKitGeometryM2": 1188.25,
+      "nominalParcelEnvelopeM2": 1575.5
+    },
+    {
+      "x": -100,
+      "z": 200,
+      "projectedKitGeometryM2": 1775.5,
+      "nominalParcelEnvelopeM2": 2261.25
+    },
+    {
+      "x": 0,
+      "z": 200,
+      "projectedKitGeometryM2": 3247.75,
+      "nominalParcelEnvelopeM2": 4201.25
+    },
+    {
+      "x": 100,
+      "z": 200,
+      "projectedKitGeometryM2": 3036.25,
+      "nominalParcelEnvelopeM2": 4067
+    },
+    {
+      "x": 200,
+      "z": 200,
+      "projectedKitGeometryM2": 2507.25,
+      "nominalParcelEnvelopeM2": 3245.5
+    },
+    {
+      "x": 300,
+      "z": 200,
+      "projectedKitGeometryM2": 1640.5,
+      "nominalParcelEnvelopeM2": 2192.5
+    },
+    {
+      "x": -400,
+      "z": 300,
+      "projectedKitGeometryM2": 1208,
+      "nominalParcelEnvelopeM2": 1588.75
+    },
+    {
+      "x": -300,
+      "z": 300,
+      "projectedKitGeometryM2": 2262,
+      "nominalParcelEnvelopeM2": 2901.75
+    },
+    {
+      "x": -200,
+      "z": 300,
+      "projectedKitGeometryM2": 819.75,
+      "nominalParcelEnvelopeM2": 1107.5
+    },
+    {
+      "x": -100,
+      "z": 300,
+      "projectedKitGeometryM2": 951,
+      "nominalParcelEnvelopeM2": 1235.75
+    },
+    {
+      "x": 0,
+      "z": 300,
+      "projectedKitGeometryM2": 2636,
+      "nominalParcelEnvelopeM2": 3421.75
+    },
+    {
+      "x": 100,
+      "z": 300,
+      "projectedKitGeometryM2": 2300.75,
+      "nominalParcelEnvelopeM2": 2967.5
+    },
+    {
+      "x": 200,
+      "z": 300,
+      "projectedKitGeometryM2": 1382,
+      "nominalParcelEnvelopeM2": 1792.25
+    },
+    {
+      "x": 300,
+      "z": 300,
+      "projectedKitGeometryM2": 1395.5,
+      "nominalParcelEnvelopeM2": 1823
+    }
+  ]
+}

@@ -1671,3 +1671,15 @@ acceptance: broad green block interiors and detached development strips remain
 the dominant morphology problem. A four-floor office crown audit finds only two
 instances, so that geometry change was not promoted as a density intervention.
 Next prioritize connected interior development and matched-view comparison.
+
+## Deeper center-street trial rejected — 2026-10-11
+
+[Matched WASM evidence](deep-spine-review/README.md) tests adding an 82×110 m
+center-street candidate before the existing square, retaining the fixed scan
+budget and all clearances. Pure layouts and 10,000-tick candidate save/resume
+pass, but actual projected coverage changes +2.46% in seed0 and −3.37% in seed87231
+at tick242000. Candidate native tests also exposed three planning/scheduling
+expectation failures. Production planner and WASM were restored; only rectangle
+geometry/replay regressions and evidence are retained. Restored native371pass,
+0fail,45ignored. Next isolate displaced projects/reservation timing before
+promoting another local ranking or size preference; no art acceptance claimed.

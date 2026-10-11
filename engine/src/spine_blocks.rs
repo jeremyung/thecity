@@ -242,6 +242,7 @@ mod tests {
     use super::{subdivide_spine_block, SpineFrontage};
     use crate::blocks::BlockPoint;
     use crate::geometry::{rects_overlap, OrientedRect};
+    use crate::spine_plan::{SpinePlan, SpineStage, RECIPE_VERSION};
     use std::f32::consts::FRAC_PI_4;
 
     fn point(x: f32, z: f32) -> BlockPoint {
@@ -330,6 +331,127 @@ mod tests {
     }
 
     #[test]
+    fn deeper_spine_recipes_keep_twenty_contained_clear_lots_and_canonical_plans() {
+        let expected_depths = [(82.0, 11.4), (100.0, 15.9), (110.0, 18.4), (114.0, 19.4)];
+        for (block_depth, expected_lot_depth) in expected_depths {
+            for clockwise in [false, true] {
+                for rotation in [0.0, FRAC_PI_4] {
+                    // Reversing the winding also reverses which physical
+                    // dimension lies on edge 0; keep the 82 m spine axis on
+                    // edge 0 so this remains the same recipe under reversal.
+                    let corners = if clockwise {
+                        rectangle(block_depth, 82.0, rotation, true)
+                    } else {
+                        rectangle(82.0, block_depth, rotation, false)
+                    };
+                    let layout = subdivide_spine_block(corners, 8.0, 11.0, 2.2, 8.0).unwrap();
+                    assert_eq!(layout.lots.len(), 20, "depth {block_depth}");
+                    assert!(layout
+                        .lots
+                        .iter()
+                        .all(|lot| (lot.width - 11.44).abs() < 1.0e-4));
+                    assert!(layout
+                        .lots
+                        .iter()
+                        .all(|lot| (lot.depth - expected_lot_depth).abs() < 1.0e-4));
+
+                    let block_center = point(
+                        corners.iter().map(|p| p.x).sum::<f32>() * 0.25,
+                        corners.iter().map(|p| p.z).sum::<f32>() * 0.25,
+                    );
+                    let edge_x = point(corners[1].x - corners[0].x, corners[1].z - corners[0].z);
+                    let edge_z = point(corners[3].x - corners[0].x, corners[3].z - corners[0].z);
+                    let edge_x_length = edge_x.x.hypot(edge_x.z);
+                    let edge_z_length = edge_z.x.hypot(edge_z.z);
+                    let axis_x = point(edge_x.x / edge_x_length, edge_x.z / edge_x_length);
+                    let axis_z = point(edge_z.x / edge_z_length, edge_z.z / edge_z_length);
+                    let mut nominal_area = 0.0;
+                    for (index, lot) in layout.lots.iter().enumerate() {
+                        nominal_area += lot.width * lot.depth;
+                        let rect = OrientedRect {
+                            x: lot.center.x,
+                            z: lot.center.z,
+                            width: lot.width,
+                            depth: lot.depth,
+                            rotation: lot.rotation,
+                        };
+                        let relative =
+                            point(lot.center.x - block_center.x, lot.center.z - block_center.z);
+                        let center_x = relative.x * axis_x.x + relative.z * axis_x.z;
+                        let center_z = relative.x * axis_z.x + relative.z * axis_z.z;
+                        for local_x in [-lot.width * 0.5, lot.width * 0.5] {
+                            for local_z in [-lot.depth * 0.5, lot.depth * 0.5] {
+                                let world = point(
+                                    lot.center.x
+                                        + lot.rotation.cos() * local_x
+                                        + lot.rotation.sin() * local_z,
+                                    lot.center.z - lot.rotation.sin() * local_x
+                                        + lot.rotation.cos() * local_z,
+                                );
+                                let from_center =
+                                    point(world.x - block_center.x, world.z - block_center.z);
+                                let x = from_center.x * axis_x.x + from_center.z * axis_x.z;
+                                let z = from_center.x * axis_z.x + from_center.z * axis_z.z;
+                                assert!(
+                                    x.abs() <= edge_x_length * 0.5 + 1.0e-3,
+                                    "lot escaped frontage bounds"
+                                );
+                                assert!(
+                                    z.abs() <= edge_z_length * 0.5 + 1.0e-3,
+                                    "lot escaped cross-depth bounds"
+                                );
+                            }
+                        }
+                        assert!(
+                            center_x.abs() <= edge_x_length * 0.5
+                                && center_z.abs() <= edge_z_length * 0.5
+                        );
+                        for other in layout.lots.iter().skip(index + 1) {
+                            let other_rect = OrientedRect {
+                                x: other.center.x,
+                                z: other.center.z,
+                                width: other.width,
+                                depth: other.depth,
+                                rotation: other.rotation,
+                            };
+                            assert!(!rects_overlap(&rect, &other_rect, 0.0));
+                        }
+
+                        let (frontage_start, frontage_end) = match lot.frontage {
+                            SpineFrontage::Spine(_) => (layout.spine[0], layout.spine[1]),
+                            SpineFrontage::Perimeter(edge) => {
+                                assert!(edge == 0 || edge == 2);
+                                (corners[edge], corners[(edge + 1) % 4])
+                            }
+                        };
+                        let edge = point(
+                            frontage_end.x - frontage_start.x,
+                            frontage_end.z - frontage_start.z,
+                        );
+                        let from_start = point(
+                            lot.center.x - frontage_start.x,
+                            lot.center.z - frontage_start.z,
+                        );
+                        let projected_t = (from_start.x * edge.x + from_start.z * edge.z)
+                            / (edge.x * edge.x + edge.z * edge.z);
+                        approx(projected_t, lot.frontage_t);
+                        assert!((0.0..=1.0).contains(&lot.frontage_t));
+                    }
+                    let expected_area = 20.0 * 11.44 * expected_lot_depth;
+                    assert!((nominal_area - expected_area).abs() <= 0.01);
+
+                    let plan = SpinePlan {
+                        corners,
+                        recipe_version: RECIPE_VERSION,
+                        stage: SpineStage::Reserved,
+                    };
+                    assert_eq!(plan.validate().unwrap(), layout);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn rotated_and_reversed_winding_keep_valid_spine_sides_and_parameters() {
         for clockwise in [false, true] {
             let corners = rectangle(82.0, 82.0, FRAC_PI_4, clockwise);
@@ -391,6 +513,21 @@ mod tests {
         assert!(subdivide_spine_block(invalid, 8.0, 11.0, 2.2, 8.0).is_none());
         assert!(
             subdivide_spine_block(rectangle(400.0, 400.0, 0.0, false), 1.0, 1.0, 0.0, 1.0)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn spine_minimum_cross_depth_preserves_eight_metre_rows() {
+        let minimum = subdivide_spine_block(rectangle(82.0, 68.4, 0.0, false), 8.0, 11.0, 2.2, 8.0)
+            .expect("68.4 m supports four 8 m minimum-depth rows");
+        assert_eq!(minimum.lots.len(), 20);
+        assert!(minimum
+            .lots
+            .iter()
+            .all(|lot| (lot.depth - 8.0).abs() < 1.0e-4));
+        assert!(
+            subdivide_spine_block(rectangle(82.0, 68.3, 0.0, false), 8.0, 11.0, 2.2, 8.0,)
                 .is_none()
         );
     }
