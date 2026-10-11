@@ -204,12 +204,14 @@ export function auditRenderedCoverage(snapshot, kit, { cellSize = DEFAULT_CELL_S
   }
   const bounds = cropBounds ?? worldBounds;
   const grid = createChannels(bounds, cellSize, maxGridCells);
+  const originalFootprints = new Map((Array.isArray(snapshot.building_original_footprints)
+    ? snapshot.building_original_footprints : []).map(footprint => [footprint.building_id, footprint]));
   let renderedBuildingCount = 0;
   for (const building of snapshot.buildings) {
     if (![building.x, building.z, building.width, building.depth, building.rotation ?? 0].every(Number.isFinite)
         || building.width <= 0 || building.depth <= 0) continue;
     markNominalEnvelope(grid, building);
-    const group = kit.create(building);
+    const group = kit.create(building, originalFootprints.get(building.id));
     try {
       group.position?.set?.(building.x, 0, building.z);
       group.rotation && (group.rotation.y = building.rotation ?? 0);
@@ -314,10 +316,10 @@ async function auditFile(inputPath, outputPath, inputKind = 'save', compactMidri
     const art = new runtime.module.ArtMaterials();
     try {
       const report = auditRenderedCoverage(snapshot, {
-        create: (building) => runtime.module.buildingKit(building, art, {compactMidrise}),
+        create: (building, original) => runtime.module.buildExtendedBuilding(building, original, art, {compactMidrise}),
         dispose: (group) => runtime.module.disposeGroup(group),
       }, { cropBounds });
-      report.source = { ...report.source, [inputKind]: relative(root, inputPath), sha256: inputSha256, kitModule: 'web/src/render/kit.ts', kitBundleSha256: runtime.bundleSha256, compactMidriseReview: compactMidrise };
+      report.source = { ...report.source, [inputKind]: relative(root, inputPath), sha256: inputSha256, kitModule: 'web/src/render/extended-building.ts', kitBundleSha256: runtime.bundleSha256, compactMidriseReview: compactMidrise };
       const output = `${JSON.stringify(report, null, 2)}\n`;
       if (outputPath) await writeFile(outputPath, output);
       else process.stdout.write(output);

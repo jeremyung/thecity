@@ -33,6 +33,8 @@ mod mature_planner_trace_tests;
 #[cfg(test)]
 mod rear_extension_diagnostic;
 #[cfg(test)]
+mod initial_depth_diagnostic;
+#[cfg(test)]
 mod access_density_diagnostic;
 #[cfg(test)]
 mod access_bend_diagnostic;
@@ -7211,6 +7213,11 @@ impl Engine {
             .filter(|b| b.kind == "shop" || b.kind == "cafe")
             .count();
         let (kind, capacity, floors, name) = self.choose_building_profile(&parcel, homes, shops);
+        // Test-only matched experiment: before reserving a normal building
+        // project, try a deeper initial parcel while retaining the original
+        // parcel for use/floor selection and every production admission gate.
+        #[cfg(test)]
+        let parcel = initial_depth_diagnostic::maybe_expand_selected_parcel(self, parcel);
         let history = vec![format!(
             "Reserved after sustained neighborhood demand on day {}",
             day

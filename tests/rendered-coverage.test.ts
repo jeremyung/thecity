@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import * as THREE from 'three/webgpu';
 import {
   auditRenderedCoverage,
   createCoverageGrid,
   markLocalTriangle,
 } from '../scripts/audit-rendered-coverage.mjs';
+import { ArtMaterials } from '../web/src/render/materials';
+import { buildingKit, disposeGroup } from '../web/src/render/kit';
+import { buildExtendedBuilding } from '../web/src/render/extended-building';
 
 function area(grid: ReturnType<typeof createCoverageGrid>) {
   return grid.mask.reduce((sum, covered) => sum + covered, 0) * grid.cellSize ** 2;
@@ -71,6 +75,40 @@ describe('projected kit coverage raster', () => {
     expect(report.buildings.renderedCount).toBe(1);
     expect(report.domain.projectedKitGeometryAreaM2).toBeGreaterThan(0);
     expect(report.methodology.label).toBe('projected kit geometry above 1m');
+  });
+
+  it('measures the retained mass and additive annex, while legacy snapshots keep identical kit coverage', () => {
+    const art = new ArtMaterials();
+    const original = { building_id: 1, x: 0, z: 10, width: 20, depth: 20, rotation: 0 };
+    const expanded = {
+      id: 1, parcel_id: 1, x: 0, z: 0, rotation: 0, width: 20, depth: 40,
+      floors: 2, kind: 'apartment', stage: 'open', progress: 1, capacity: 10,
+      occupancy: 8, built_day: 1, name: 'Test', appearance_seed: 31,
+      history: [], anchor: false, vacant_days: 0,
+    };
+    const baseSnapshot = {
+      bounds: { min_x: -30, max_x: 30, min_z: -30, max_z: 30 },
+      buildings: [expanded],
+    };
+    const measure = (snapshot: typeof baseSnapshot, create: (building: typeof expanded, footprint?: { building_id: number; x: number; z: number; width: number; depth: number; rotation: number }) => THREE.Group) =>
+      auditRenderedCoverage(snapshot, { create, dispose: disposeGroup }, { cellSize: 0.25 });
+    try {
+      const legacy = measure(baseSnapshot, (building) => buildingKit(building, art));
+      const legacyAdapter = measure(baseSnapshot, (building, footprint) => buildExtendedBuilding(building, footprint, art));
+      expect(legacyAdapter.domain.projectedKitGeometryAreaM2).toBe(legacy.domain.projectedKitGeometryAreaM2);
+      expect(legacyAdapter.cells).toEqual(legacy.cells);
+
+      const extendedSnapshot = { ...baseSnapshot, building_original_footprints: [original] };
+      const extended = measure(extendedSnapshot, (building, footprint) => buildExtendedBuilding(building, footprint, art));
+      const retainedOnly = measure({ ...baseSnapshot, buildings: [{ ...expanded, ...original, id: 1 }] }, (building) => buildingKit(building, art));
+      expect(extended.buildings.renderedCount).toBe(1);
+      expect(extended.domain.projectedKitGeometryAreaM2).toBeGreaterThan(retainedOnly.domain.projectedKitGeometryAreaM2);
+      // Ignoring persisted form data and stretching the old kit is a different
+      // geometry, even though both would cover more than the retained-only kit.
+      expect(extended.cells).not.toEqual(legacy.cells);
+    } finally {
+      art.dispose();
+    }
   });
 
   it('clips crossing building unions and denominators to a validated crop', () => {

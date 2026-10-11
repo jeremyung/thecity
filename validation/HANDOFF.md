@@ -87,6 +87,23 @@ states. The continuation script verifies canonical restore and another paired
 2,000 ticks; its hashes are included. These sums are not rendered area union,
 district density, or visual acceptance, and 40 is the number of extended hosts,
 not necessarily the total number of completed projects.
+
+The coverage audit now uses the production `buildExtendedBuilding` adapter and
+persisted original footprints, rather than stretching the original kit over the
+expanded parcel. Five focused raster tests pass, including identical legacy
+coverage without history and a retained-form case that differs from a stretched
+kit. The matched [before](rear-extension-rendered-before.json) and
+[after](rear-extension-rendered-after.json) reports use the same compiled kit
+hash and 0.5 m cell-center raster. Over the above continuation, projected kit
+surface union above 1 m rises from 124,413.25 to 127,631.50 m² (+3,218.25 m²,
+about 2.59%). Full-domain coverage rises from 19.440% to 19.942%, a gain of
+0.503 percentage points. The denominator includes water and protected land;
+surfaces include roofs, eaves and props. This is a before/after continuation,
+not a disabled-extension control, and does not establish district density or
+artistic acceptance. It confirms visible growth is measurable but still modest.
+Other kit benchmark scripts retain their existing `buildingKit` export and do
+not automatically measure persisted annexes.
+
 The engine also retains a failed completion at .999 for retry; reservation tests
 cover conflicts, but a terminal recovery policy still needs review.
 
@@ -100,6 +117,52 @@ npm run wasm
 node scripts/verify-rear-extension.mjs .tools/rear-extension-review/scheduler-save.json validation/rear-extension-lifecycle.json .tools/rear-extension-review/completed-snapshot.json
 # With the local Vite server running on 127.0.0.1:5173:
 node scripts/capture-rear-extension-study.mjs
+```
+
+## Initial station-core depth experiment — not promoted, 2026-10-11
+
+`initial_depth_diagnostic.rs` tests a single 12→18 m depth increase at the
+ordinary building reservation boundary, after use/floor selection. It retains
+the road-facing edge, original capacity formula, collision checks and tower
+reservations. Eligibility requires an explicitly oriented ordinary frontage,
+an online station with an ordinary-network route, StationCore profile and at
+least 40 connected ordinary roads. The module and admission hook are test-only;
+normal native/WASM simulation behavior is unchanged.
+
+The paired fresh-seed experiment runs baseline/treatment through tick 242000
+at development rate 16. Root measured all four saved cities with the same
+production retained-form kit bundle and 0.5 m raster:
+
+| Seed | Baseline projected union | Depth-18 projected union | Change |
+| --- | ---: | ---: | ---: |
+| 0 | 126,103.25 m² | 127,145.50 m² | +1,042.25 m² (+0.827%) |
+| 87231 | 128,443.00 m² | 127,524.25 m² | −918.75 m² (−0.715%) |
+
+See `initial-depth-seed-{0,87231}-{baseline,depth18}-coverage.json` and
+[the experiment report](initial-depth-experiment.json). The intervention
+accepts 20 and 21 deeper parcels respectively, but changes subsequent growth
+and does not reliably increase total coverage. Keep it experimental. This is
+evidence against promoting this particular local rule, not against deeper
+buildings as part of coherent block subdivision. The next urban-form work
+should address interior access and block occupation together rather than
+enlarging scattered selected lots. Capacity still depends on use/floors, so
+nominal floor area is not an independently calibrated population measure.
+
+Validation: three focused native tests and five rendered-coverage tests pass;
+TypeScript passes. The corrected paired diagnostic validates all four target
+states, canonical restores and exact 2,000-tick same-target replay with the
+treatment guard active on both replay engines. Root checked target counts and
+SHA-256s against the actual saves and coverage inputs. An earlier diagnostic
+dropped the guard before replay and sampled counts after replay; both defects
+were fixed and the paired experiment rerun. No full-suite, cross-target or
+browser visual acceptance is claimed for this test-only experiment.
+
+Reproduce with:
+
+```sh
+node scripts/test-engine.mjs --release paired_station_core_initial_depth_experiment -- --ignored --nocapture
+node scripts/audit-rendered-coverage.mjs --input .tools/initial-depth-review/seed-0-baseline-tick242000-save.json --output validation/initial-depth-seed-0-baseline-coverage.json
+# Repeat the audit for depth18 and seed 87231 using their matching filenames.
 ```
 
 ## Mixed-row subdivision follow-up — 2026-10-11
