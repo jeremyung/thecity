@@ -18,6 +18,7 @@ import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
 import { bridgeDeckHeight, bridgeLift, bridgeVehiclePose, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
+import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
 import { CameraDirector } from '../camera/director';
 import { dampFocusDepth, focusDepthFromViewZ } from '../camera/focus';
 import type { LensPresetId } from '../camera/lens';
@@ -49,6 +50,7 @@ export class CityRenderer {
   worldState:World|null=null;
   onPick:((id:number,kind:'building'|'traveler')=>void)|null=null;
   onMetrics:((m:RenderMetrics)=>void)|null=null;
+  onError:((error:Error)=>void)|null=null;
   style:Style='anime';
   private styleRequest=0;
   private styleWarmupTail:Promise<void>=Promise.resolve();
@@ -56,6 +58,7 @@ export class CityRenderer {
   private styleSwitchMetrics:StyleSwitchMetrics|undefined;
   private retiredResources:Array<()=>void>=[];
   private pipeline:THREE.RenderPipeline|null=null;
+  private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
   private focus=uniform(300);
   private readonly focusTargetView=new THREE.Vector3();
@@ -218,8 +221,14 @@ export class CityRenderer {
     // restart an animation loop or allocate a pipeline for a retired scene.
     if(this.disposed){this.renderer.dispose();return;}
     this.setSize();this.buildPipeline();
-    this.renderer.setAnimationLoop(()=>this.animate());
+    const startup=this.renderStartup=createRenderStartupLifecycle({
+      stopLoop:()=>this.renderer.setAnimationLoop(null),
+      setPhase:phase=>{this.renderer.domElement.dataset.graphicsPhase=phase;},
+      onError:error=>this.onError?.(error),
+    });
+    this.renderer.setAnimationLoop(()=>startup.runFrame(()=>this.animate()));
     this.renderer.domElement.dataset.graphicsPhase='loop-started';
+    await startup.promise;
   }
   private buildPipeline(){
     this.disposePipeline();
@@ -618,7 +627,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);if(!hits.length)return;const hit=hits[0],building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

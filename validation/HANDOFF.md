@@ -308,3 +308,14 @@ focused geometry tests and production build/typecheck; style geometry matches.
 record a modest gain, not density acceptance. Headless WebGPU loaded 871 buildings
 but screenshot capture timed out without frame metrics. Usable captures remain
 the 850-building views; live visual and browser-performance review are still open.
+
+## First-frame readiness and recovery — 2026-10-11
+
+Graphics startup now waits for a successful JS frame submission before clearing
+its watchdog. Synchronous frame exceptions stop the loop and reach startup or
+runtime recovery feedback; disposal safely settles pending startup. Root passes
+11 focused lifecycle/recovery tests, production build/typecheck, and a local
+browser fault-injection check with saving still available. A software WebGL
+founder capture succeeds, but the mature WebGPU capture remains unresolved; no
+GPU presentation/performance or artistic acceptance follows from this fix.
+[Evidence and limitations](screenshots/render-startup/README.md).
