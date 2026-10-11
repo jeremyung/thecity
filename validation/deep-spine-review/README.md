@@ -10,8 +10,9 @@ street setbacks, parcel gaps, minimum depth, floor counts or capacity semantics.
 
 `candidate.patch` adds an 82×110 m option before the old square at both shared-edge
 and new-perimeter sites. Both consume the existing 24-spine-candidate budget; the
-budget is not doubled. Consequently, this also changes which anchors fit in each
-scan. Candidate ranking and exact feasibility/admission checks remain unchanged.
+budget is not doubled. Consequently, this changes which spine variants fit in each scan.
+It does not shorten the ordinary-block scan: `any_limit_reached()` only checks
+the shared/full ordinary budgets. Candidate ranking and exact feasibility/admission checks remain unchanged.
 The patch includes the changed selection expectation in one regression; it is
 archived, **not applied** to production. Existing saved corner-based recipes do not
 need a version change to represent the rectangle.
@@ -63,3 +64,27 @@ Restored production verification: full native release suite passes 371 tests,
 0 failures, 45 ignored. The browser WASM rebuild succeeds. These results include
 the retained geometric regressions and 82/110 m normal-tick replay tests; they
 do not validate the rejected candidate as a production policy.
+
+## Spatial follow-up
+
+`layout-87231.svg` compares nominal building envelopes from the two saved worlds
+on the same 800 m domain. It is a map, not a rendered screenshot. Reproduce with:
+
+```
+python3 scripts/compare-growth-layouts.py --baseline .tools/deep-spine-review/baseline-87231-snapshot.json --candidate .tools/deep-spine-review/candidate-87231-snapshot.json --output validation/deep-spine-review/layout-87231.svg
+```
+
+Seed87231 loses 9,722 m² across 31 fixed 100 m cells and gains 5,363.5 m² across
+33 cells. The x=−400 column accounts for −3,256.75 m²; the z=−400 row for
+−3,075 m² (these overlap, so must not be added). The candidate has 80 buildings
+with the distinctive 11.44×18.40 m recipe envelope. Their cells include both
+gains and losses. Ordinary road length drops from 13,885.159 to 12,930.743 m.
+Candidate extant-building completions end on day7; baseline has 57 completions
+on days8–10. Completion day is a per-building field, not a causal plan trace.
+
+These data show earlier saturation and altered spatial development. They do
+**not** identify a specific rejected ordinary project or prove reservation
+displacement. Stable IDs cannot match causal identity after divergent growth.
+The initial hypothesis needs a trace at planning/admission boundaries, including
+winning layout, rejected alternatives and reservation geometry, before being
+used to justify a production policy change.

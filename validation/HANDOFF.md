@@ -342,3 +342,14 @@ expectation failures. Production planner and WASM were restored; only rectangle
 geometry/replay regressions and evidence are retained. Restored native371pass,
 0fail,45ignored. Next isolate displaced projects/reservation timing before
 promoting another local ranking or size preference; no art acceptance claimed.
+
+## Spatial trial follow-up — 2026-10-11
+
+[Matched layout map](deep-spine-review/layout-87231.png) locates the rejected
+deep-spine trial's gains and losses. Seed87231 has fewer ordinary road metres
+and stops new-building completions earlier, but final saves cannot prove which
+reservation displaced an alternative project. Corrected the earlier scan-budget
+explanation: spine exhaustion does not stop ordinary candidate scanning. Keep
+production unchanged; trace planning/admission decisions before another policy
+change. The SVG generator uses exact saved nominal envelopes, not rendered
+coverage; root rendered and inspected the final PNG.
