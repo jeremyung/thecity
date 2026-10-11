@@ -2,6 +2,19 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Within-block subdivision study — 2026-10-11
+
+[Test-only comparison over 73 live block footprints](block-subdivision-study/README.md)
+holds roads, inset/gaps, outside parcels and exact clearance checks fixed.
+Target frontage 14 m adds 4.80–5.49% feasible nominal area but loses about 19%
+of individual lots; 18 m adds 8.13–8.67% area but loses about 40% of lots.
+No runtime change is promoted. Capacity currently depends on use/floors rather
+than footprint, so wider lots alone could reduce activity. Next candidate is a
+mixed subdivision coupled to physically justified building capacity, assessed
+through complete growth and rendered coverage. Both diagnostic tests pass and
+root's repeated two-seed report is byte-identical. This is opportunity geometry,
+not final city density or visual acceptance.
+
 ## Oversized-route safety — 2026-10-11
 
 [Route reconstruction now rejects a capped suffix missing its origin](route-cap-safety.md).

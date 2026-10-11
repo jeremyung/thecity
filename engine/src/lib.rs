@@ -23,6 +23,8 @@ mod access_reference;
 mod access_search;
 mod blocks;
 #[cfg(test)]
+mod block_subdivision_diagnostic;
+#[cfg(test)]
 mod density_gap_diagnosis;
 #[cfg(test)]
 mod access_density_diagnostic;

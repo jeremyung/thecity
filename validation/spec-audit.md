@@ -678,6 +678,14 @@ previously, a single-run observation rather than a browser performance claim.
 See [measurement and limitations](routing-adjacency/README.md). This does not
 complete routing modularization, maximum-cap scaling, or visual acceptance.
 
+2026-10-11 density study: [within-block subdivision evidence](block-subdivision-study/README.md)
+compares 11/14/18 m frontage targets in the same 73 observed block footprints,
+retaining every outside parcel and protecting all future perimeter roads.
+Wider targets consistently increase feasible nominal area but reduce lot count.
+The current floor/use-only capacity policy prevents treating that area gain as
+more population or activity. No production subdivision change was promoted;
+mixed building programs need end-to-end simulation and visual evidence first.
+
 Follow-up: oversized route reconstruction now fails closed instead of returning
 a suffix missing the requested origin. Boundary and delivery dispatch regression
 tests pass; 361 native tests pass and the 300,000-tick WASM baseline save remains
