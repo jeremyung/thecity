@@ -9,14 +9,18 @@ p = argparse.ArgumentParser()
 p.add_argument('--baseline', required=True)
 p.add_argument('--candidate', required=True)
 p.add_argument('--output', required=True)
+p.add_argument('--title', default='Growth layouts · same seed and elapsed simulation time')
+p.add_argument('--subtitle', default='Nominal building envelopes, not a rendered scene. IDs are not matched across divergent worlds.')
+p.add_argument('--candidate-label', default='Deeper spine candidate — rejected')
+p.add_argument('--footer', default='Spatial differences do not prove which planning decision caused them; no demolition or displacement is inferred.')
 a = p.parse_args()
 worlds = [json.loads(Path(path).read_text()) for path in [a.baseline, a.candidate]]
 assert worlds[0]['seed'] == worlds[1]['seed'] and worlds[0]['tick'] == worlds[1]['tick']
 assert all(w['bounds'] == {'min_x': -400, 'max_x': 400, 'min_z': -400, 'max_z': 400} for w in worlds), 'This comparison uses the 800 m fixture domain'
 out = Path(a.output)
 out.parent.mkdir(parents=True, exist_ok=True)
-parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="760" viewBox="0 0 1260 760">', '<rect width="1260" height="760" fill="#f1efe6"/>', '<style>text{font-family:Arial,sans-serif;fill:#23383c}.muted{fill:#56676b}</style>', '<text x="30" y="35" font-size="22">Growth layouts · same seed and elapsed simulation time</text>', '<text x="30" y="60" font-size="13" class="muted">Nominal building envelopes, not a rendered scene. IDs are not matched across divergent worlds.</text>']
-for index, (label, w) in enumerate(zip(['Baseline', 'Deeper spine candidate — rejected'], worlds)):
+parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="760" viewBox="0 0 1260 760">', '<rect width="1260" height="760" fill="#f1efe6"/>', '<style>text{font-family:Arial,sans-serif;fill:#23383c}.muted{fill:#56676b}</style>', f'<text x="30" y="35" font-size="22">{html.escape(a.title)}</text>', f'<text x="30" y="60" font-size="13" class="muted">{html.escape(a.subtitle)}</text>']
+for index, (label, w) in enumerate(zip(['Baseline', a.candidate_label], worlds)):
     x0, y0, scale = 30 + index * 620, 115, .725
     def pt(x, z):
         return x0 + (x + 400) * scale, y0 + (z + 400) * scale
@@ -39,6 +43,6 @@ for index, (label, w) in enumerate(zip(['Baseline', 'Deeper spine candidate — 
         parts.append(f'<polygon points="{points}" fill="{color}"/>')
     parts.append('</g>')
     parts.append(f'<text x="{x0}" y="717" font-size="12" class="muted">800 × 800 m · seed {w["seed"]} · tick {w["tick"]} · darker footprints: taller buildings</text>')
-parts.append('<text x="30" y="746" font-size="12" class="muted">Spatial differences do not prove which planning decision caused them; no demolition or displacement is inferred.</text></svg>')
+parts.append(f'<text x="30" y="746" font-size="12" class="muted">{html.escape(a.footer)}</text></svg>')
 out.write_text('\n'.join(parts))
 print(out)

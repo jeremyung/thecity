@@ -429,3 +429,15 @@ exact match, including all cursor samples and city counts. Full native suite:
 pass separately. WASM rebuild passes and three focused WASM suites pass 5/5.
 The independently executed ignored mature trace passes 1/1. No new screenshot
 or visual improvement is claimed by this behavior-preserving refactor.
+
+## Rear extension opportunity — 2026-10-11
+
+[Geometry experiment and map](rear-extension-diagnostic/README.md) finds 145
+compatible rear parcel extensions in the mature871 checkpoint, adding 13,422.74
+m² of nominal envelopes while preserving frontage and existing clearances. All
+562 eligible unchanged footprints pass the baseline control; two focused tests
+pass independently. The hypothetical map still has large gaps. No production
+growth, construction, capacity, occupancy or rendering rule changed. Next build
+a bounded phased extension lifecycle with reservations, preserved entrances,
+completion-only capacity, save/replay and both-style visual checks. This is a
+candidate for testing, not acceptance of city density or the art target.
