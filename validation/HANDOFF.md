@@ -2,6 +2,16 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Endurance timing baseline — 2026-10-11
+
+[Current production WASM measurements](endurance-profile/README.md) reproduce
+the 300,000-tick endurance workload in 56.05 s unprofiled / 56.61 s sampled,
+with identical final-save hashes, collection caps and exact restore passing.
+This is close to the 60 s test limit; previous Vitest timeouts remain unresolved.
+Routing and collision geometry dominate samples, not final serialization.
+Next candidate: eliminate per-route-node full road scans while preserving
+source-order routing semantics. No runtime optimization or timeout change yet.
+
 ## Fair-budget control — 2026-10-11
 
 The [independent-budget follow-up](shallow-block-experiment/fair-budget/README.md)
