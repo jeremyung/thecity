@@ -38,10 +38,16 @@ export function markLocalTriangle(
 export function auditRenderedCoverage(
   snapshot: CoverageSnapshot,
   kit: { create(building: CoverageSnapshot['buildings'][number]): unknown; dispose(group: unknown): void },
-  options?: { cellSize?: number; blockSize?: number; maxGridCells?: number },
+  options?: {
+    cellSize?: number;
+    blockSize?: number;
+    maxGridCells?: number;
+    cropBounds?: CoverageGrid['bounds'] | null;
+  },
 ): {
   methodology: Record<string, string | number>;
   source: { seed?: number; tick?: number; engineVersion?: string };
+  cropBounds: CoverageGrid['bounds'] | null;
   grid: { columns: number; rows: number; maxCells: number; blockSizeM: number };
   buildings: { snapshotCount: number; renderedCount: number };
   domain: {

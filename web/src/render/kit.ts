@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ArtMaterials, signTexture } from './materials';
-import { midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
+import { compactMidriseEnvelope, midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing, type LowriseMass, type LowriseMassing } from './lowrise-massing';
 import { buildingPalette } from './building-palette';
 import { renderTower } from './tower-kit';
@@ -68,11 +68,15 @@ export function isModernHomeVariant(b:Pick<Building,'kind'|'floors'|'appearance_
   return !b.anchor&&b.kind==='home'&&(b.floors===2||b.floors===3)&&(((b.appearance_seed>>>2)&1)===0);
 }
 
-export function buildingKit(b: Building, art: ArtMaterials) {
+export interface BuildingKitReviewOptions { compactMidrise?: boolean }
+
+export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
   const seed = b.appearance_seed >>> 0;
   const initialWidth = Math.max(6, b.width * (b.anchor ? .66 : .84));
-  const d = Math.max(6, b.depth * .84), floor = 3.25;
-  const w = lowriseBuildingWidth(b, initialWidth, d);
+  const initialDepth = Math.max(6, b.depth * .84), floor = 3.25;
+  const envelope = review.compactMidrise ? compactMidriseEnvelope(b, initialWidth, initialDepth) : {width:initialWidth,depth:initialDepth};
+  const d = envelope.depth;
+  const w = lowriseBuildingWidth(b, envelope.width, d);
   const floors = Math.max(1, b.floors);
   const lowrise = lowriseMassing(b, w, d);
   const kit = new Kit();
@@ -141,7 +145,7 @@ export function buildingKit(b: Building, art: ArtMaterials) {
     if (midrise) {
       const progress = THREE.MathUtils.clamp(b.progress, 0, 1);
       const builtFloors = Math.ceil(floors * THREE.MathUtils.clamp((progress - .12) / .57, 0, 1));
-      renderMidriseConstruction(kit, midrise, { w, d, base, floor, floors, builtFloors, progress, wall, concrete, iron, glass, dark, wood, scaffold, caution, paleConcrete });
+      renderMidriseConstruction(kit, midrise, { w, d, parcelW: b.width, base, floor, floors, builtFloors, progress, wall, concrete, iron, glass, dark, wood, scaffold, caution, paleConcrete });
       return finishBuilding(kit, b, w, d, height, art, false);
     }
     if (lowrise) {
@@ -257,11 +261,19 @@ export function buildingKit(b: Building, art: ArtMaterials) {
     } else if (isHome && floors <= 2) {
       renderHouseFacade(kit, b, art, { w, d, base, top, floor, wood, dark, glass, lightGlass, trim, glow, iron, green, ivory, concrete });
     } else {
-      renderUrbanFacade(kit, b, art, { w, d, base, top, floor, floors, wood, dark, glass, lightGlass, trim, glow, iron, concrete, paleConcrete, isApartment });
+      const compactUrbanEntry = floors >= 2 && floors <= 3 && (isApartment || b.kind === 'office');
+      renderUrbanFacade(kit, b, art, {
+        w, d, base, top, floor, floors, entryX: compactUrbanEntry ? 0 : undefined,
+        parcelD: compactUrbanEntry ? b.depth : undefined,
+        parcelW: compactUrbanEntry ? b.width : undefined,
+        massOffsetZ: 0, massOffsetX: 0,
+        wood, dark, glass, lightGlass, trim, glow, iron, concrete, paleConcrete, isApartment,
+      });
+      if (compactUrbanEntry) renderMidriseEntry(kit, 0, d, base, dark, glass, trim, concrete);
     }
 
     if (floors <= 3 && (isHome || isShop || (isApartment && pick(seed, 3) !== 0))) {
-      renderGabledRoof(kit, w, d, top, roof, roofTile, trim, iron, dark, seed);
+      renderGabledRoof(kit, w, d, top, roof, roofTile, trim, iron, dark, seed, b.width);
     } else {
       renderFlatRoof(kit, { w, d, top, roof, trim, concrete, iron, paleConcrete, seed, art });
     }
@@ -346,10 +358,7 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
         if(mass.baseFloor===0){
           const doorX=-mass.x;
           if(Math.abs(doorX)<mass.width*.32){
-            kit.box(doorX,massBase+1.13,mass.depth/2+.075,.98,2.18,.16,dark);
-            kit.box(doorX,massBase+1.13,mass.depth/2+.17,.76,1.92,.045,glass);
-            kit.box(doorX+.29,massBase+1.12,mass.depth/2+.205,.045,.1,.025,trim);
-            kit.box(doorX,massBase+2.31,mass.depth/2+.22,1.24,.13,.46,concrete);
+            renderMidriseEntry(kit,doorX,mass.depth,massBase,dark,glass,trim,concrete);
           }
         }
       }
@@ -406,7 +415,14 @@ function renderMidriseCoreFacade(kit:Kit,m:{width:number;depth:number;base:numbe
   }
 }
 
-function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
+function renderMidriseEntry(kit:Kit,doorX:number,depth:number,base:number,dark:THREE.Material,glass:THREE.Material,trim:THREE.Material,concrete:THREE.Material){
+  kit.box(doorX,base+1.13,depth/2+.075,.98,2.18,.16,dark);
+  kit.box(doorX,base+1.13,depth/2+.17,.76,1.92,.045,glass);
+  kit.box(doorX+.29,base+1.12,depth/2+.205,.045,.1,.025,trim);
+  kit.box(doorX,base+2.31,depth/2+.22,1.24,.13,.46,concrete);
+}
+
+function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:number;parcelW:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
   const {base,floor,builtFloors,progress,wall,concrete,iron,glass,dark,wood,scaffold,caution,paleConcrete}=m;
   const installBudget=Math.ceil(THREE.MathUtils.clamp((progress-.69)/.23,0,1)*m.floors);
   for(const mass of layout.masses){
@@ -466,7 +482,7 @@ function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:n
   const craneZ=-Math.min(m.d*.22,Math.max(.45,m.d/2-.35));
   const craneHeight=Math.min(m.floors*floor+4,Math.max(4.4,base+Math.max(erectedMax(layout,builtFloors),0)*floor+2.8));
   kit.box(craneX,craneHeight/2,craneZ,.16,craneHeight,.16,caution);
-  const jibW=Math.max(1.4,m.w*.58);
+  const jibW=Math.min(Math.max(1.4,m.w*.58),2*(m.parcelW/2-craneX-.02));
   kit.box(craneX,craneHeight-.18,craneZ,jibW,.14,.15,caution);
   kit.box(craneX-jibW*.24,craneHeight-.65,craneZ,.1,1,.1,iron);
 }
@@ -1110,13 +1126,13 @@ function renderUrbanFacade(
 }
 
 function renderGabledRoof(
-  kit: Kit, w: number, d: number, top: number, roof: THREE.Material, tiles: THREE.Material, trim: THREE.Material, iron: THREE.Material, dark: THREE.Material, seed: number,
+  kit: Kit, w: number, d: number, top: number, roof: THREE.Material, tiles: THREE.Material, trim: THREE.Material, iron: THREE.Material, dark: THREE.Material, seed: number, parcelWidth: number,
 ) {
   const half = d / 2 + .58;
   const rise = THREE.MathUtils.clamp(half * .48, .82, 2.1);
   const angle = Math.atan2(rise, half);
   const slopeLength = Math.hypot(half, rise);
-  const roofW = w + 1.15;
+  const roofW = Math.min(w + 1.15, parcelWidth);
   // Two correctly mirrored planes meet at a straight ridge with their eaves at the walls.
   for (const side of [-1, 1]) {
     const panel = new THREE.BoxGeometry(roofW, .25, slopeLength);
@@ -1142,12 +1158,12 @@ function renderGabledRoof(
       kit.add(geo, i % 2 ? tiles : trim);
     }
     // Eaves and their short exposed rafter tails.
-    kit.box(0, top - .02, side * half, roofW + .22, .18, .2, trim);
+    kit.box(0, top - .02, side * half, Math.min(roofW + .22, parcelWidth), .18, .2, trim);
     for (let x = -w / 2; x <= w / 2; x += 1.65) {
       kit.box(x, top - .1, side * (d / 2 + .32), .1, .24, .46, iron);
     }
   }
-  kit.box(0, top + rise + .12, 0, roofW + .12, .26, .3, roof);
+  kit.box(0, top + rise + .12, 0, Math.min(roofW + .12, parcelWidth), .26, .3, roof);
   // Gable-end fascia frames a small attic vent and painted end boards.
   for (const side of [-1, 1]) {
     kit.box(0, top + rise * .5, side * (d / 2 + .32), w * .88, .13, .12, trim);

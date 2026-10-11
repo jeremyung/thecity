@@ -13,5 +13,6 @@ function run(command, args) {
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
-run('cargo', ['build', '--manifest-path', 'engine/Cargo.toml', '--target', 'wasm32-unknown-unknown', '--release', '--locked']);
-run('wasm-bindgen', ['engine/target/wasm32-unknown-unknown/release/tokyo_city_engine.wasm', '--target', 'web', '--out-dir', 'public/wasm', '--out-name', 'city_engine']);
+const profiling = process.argv.includes('--profiling');
+run('cargo', ['build', '--manifest-path', 'engine/Cargo.toml', '--target', 'wasm32-unknown-unknown', '--release', '--locked', ...(profiling ? ['--features', 'profiling'] : [])]);
+run('wasm-bindgen', ['engine/target/wasm32-unknown-unknown/release/tokyo_city_engine.wasm', '--target', 'web', '--out-dir', profiling ? '.tools/wasm-profiling' : 'public/wasm', '--out-name', 'city_engine']);

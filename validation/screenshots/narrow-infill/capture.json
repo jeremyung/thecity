@@ -1,0 +1,35 @@
+{
+  "sourceCommit": "9dcd4e4",
+  "snapshotSha256": "d209c22c71aec8cc3267e827d7520fa5d89ee684a816e99d9e5e898047074002",
+  "seed": 87231,
+  "tick": 272000,
+  "buildings": 871,
+  "backend": "WebGLBackend",
+  "adapter": "ANGLE SwiftShader",
+  "viewport": [
+    1200,
+    800
+  ],
+  "cameraPosition": [
+    300,
+    280,
+    360
+  ],
+  "cameraTarget": [
+    40,
+    0,
+    -40
+  ],
+  "previewHour": 12,
+  "depthOfField": false,
+  "preparationSteps": 1832,
+  "pendingBuildings": 0,
+  "pendingChunks": 0,
+  "captureKind": "static review; intermediate GPU submissions skipped during geometry preparation",
+  "limitations": [
+    "Not WebGPU evidence",
+    "Not normal loading or frame-rate evidence",
+    "UI live clock and pause indicator were not synchronized to developer-only preview/pause controls",
+    "Not a matched comparison with prior screenshots"
+  ]
+}

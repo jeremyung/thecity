@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildingKit, disposeGroup } from '../web/src/render/kit';
+import { compactMidriseEnvelope } from '../web/src/render/building-massing';
 import type { Building } from '../web/src/types';
 
 function midrise(kind:'apartment'|'office',stage:'open'|'construction'|'renovation',progress=1,floors=8,width=24,depth=19,appearance_seed=9812):Building{
@@ -20,6 +21,15 @@ function positions(group:THREE.Object3D,filter?:(mesh:THREE.Mesh)=>boolean){
 
 function expectFinite(group:THREE.Object3D){
   for(const point of positions(group))expect([point.x,point.y,point.z].every(Number.isFinite)).toBe(true);
+}
+
+function expectParcelContained(group:THREE.Object3D,b:Building){
+  const bounds=new THREE.Box3().setFromObject(group);
+  expect([bounds.min.x,bounds.max.x,bounds.min.y,bounds.max.y,bounds.min.z,bounds.max.z].every(Number.isFinite)).toBe(true);
+  expect(bounds.min.x).toBeGreaterThanOrEqual(-b.width/2-1e-6);
+  expect(bounds.max.x).toBeLessThanOrEqual(b.width/2+1e-6);
+  expect(bounds.min.z).toBeGreaterThanOrEqual(-b.depth/2-1e-6);
+  expect(bounds.max.z).toBeLessThanOrEqual(b.depth/2+1e-6);
 }
 
 function boundsAt(points:THREE.Vector3[],minY:number,maxY:number){
@@ -70,11 +80,42 @@ describe('midrise family geometry integration',()=>{
     art.dispose();
   }, 20_000);
 
+  it('contains compact-midrise geometry across stages and parcel sizes',()=>{
+    const art=new ArtMaterials();
+    const parcels=[[8,8],[14,12],[24,19],[40,32]] as const;
+    const stages=[['open',1],['construction',0],['construction',.8],['construction',1],['renovation',.5]] as const;
+    for(const kind of ['apartment','office'] as const){
+      for(const [width,depth] of parcels)for(const floors of [4,8,11])for(const seed of [3,27,104]){
+        for(const [stage,progress] of stages){
+          const b=midrise(kind,stage,progress,floors,width,depth,seed);
+          const group=buildingKit(b,art,{compactMidrise:true});
+          expectParcelContained(group,b);
+          disposeGroup(group);
+        }
+      }
+    }
+    art.dispose();
+  },60_000);
+
+  it('keeps compact-midrise geometry identical across both surface styles',()=>{
+    const art=new ArtMaterials();
+    const b=midrise('apartment','open',1,8,24,19,27);
+    const positionsFor=(style:'anime'|'miniature')=>{
+      art.setStyle(style);
+      const group=buildingKit(b,art,{compactMidrise:true});
+      const vertices=positions(group).map(point=>point.toArray());
+      disposeGroup(group);
+      return vertices;
+    };
+    expect(positionsFor('anime')).toEqual(positionsFor('miniature'));
+    art.dispose();
+  });
+
   it('leaves the authored ground entrance clear of front window panels while retaining rear glazing',()=>{
     const art=new ArtMaterials();
-    for(const kind of ['apartment','office'] as const){
-      const b=midrise(kind,'open',1,8,12,14,17),group=buildingKit(b,art);
-      const frontZ=b.depth*.84/2;
+    for(const compactMidrise of [false,true])for(const kind of ['apartment','office'] as const){
+      const b=midrise(kind,'open',1,8,12,14,17),group=buildingKit(b,art,{compactMidrise});
+      const frontZ=(compactMidrise?compactMidriseEnvelope(b,b.width*.84,b.depth*.84).depth:b.depth*.84)/2;
       const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
       let doorwayGlassVertices=0,rearGlassVertices=0;
       group.traverse(object=>{
@@ -92,6 +133,38 @@ describe('midrise family geometry integration',()=>{
       expect(rearGlassVertices).toBeGreaterThan(8);
       disposeGroup(group);
     }
+    art.dispose();
+  });
+
+  it('keeps centered entrances clear on 8x12 two- and three-floor apartment and office variants',()=>{
+    const art=new ArtMaterials();
+    const styleVertices:Record<'anime'|'miniature',number[][][]>={anime:[],miniature:[]};
+    const cases=[
+      ['apartment',2,2714839168],['apartment',3,1441647569],
+      ['office',2,2128358164],['office',2,878632987],['office',3,2471553678],
+    ] as const;
+    for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      for(const [kind,floors,appearance_seed] of cases){
+        const b=midrise(kind,'open',1,floors,8,12,appearance_seed);
+        const group=buildingKit(b,art),context=`${style} ${kind} ${floors} floors seed ${appearance_seed}`;
+        let doorwayGlassVertices=0;
+        const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
+        group.traverse(object=>{
+          if(!(object instanceof THREE.Mesh)||!paneMaterials.some(material=>material===object.material))return;
+          const position=object.geometry.getAttribute('position');
+          for(let i=0;i<position.count;i++){
+            const x=position.getX(i),y=position.getY(i),z=position.getZ(i);
+            if(Math.abs(x)<.4&&y>=.74&&y<=2.68&&z>12*.84/2+.12)doorwayGlassVertices++;
+          }
+        });
+        expect(doorwayGlassVertices,`${context} has only the centered door glazing`).toBe(24);
+        expectParcelContained(group,b);
+        styleVertices[style].push(positions(group).map(point=>point.toArray()));
+        disposeGroup(group);
+      }
+    }
+    expect(styleVertices.miniature).toEqual(styleVertices.anime);
     art.dispose();
   });
 

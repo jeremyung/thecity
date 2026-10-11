@@ -34,6 +34,20 @@ pub(crate) enum CaptureError {
 /// source order. Eligible hosts alone are sorted by road id, matching the
 /// live proposal evaluator. The engine remains unchanged on success or error.
 pub(crate) fn capture(engine: &Engine) -> Result<ProposalValidationInput, CaptureError> {
+    capture_inner(engine, None)
+}
+
+pub(crate) fn capture_with_viability(
+    captured: crate::access_capture::CapturedViability<'_>,
+) -> Result<ProposalValidationInput, CaptureError> {
+    let (engine, viability) = captured.into_parts();
+    capture_inner(engine, Some(viability))
+}
+
+fn capture_inner(
+    engine: &Engine,
+    shared_viability: Option<FrozenViabilityInput>,
+) -> Result<ProposalValidationInput, CaptureError> {
     let state = &engine.state;
     if state.nodes.len() > MAX_NODES {
         return Err(CaptureError::TooManyNodes);
@@ -151,49 +165,6 @@ pub(crate) fn capture(engine: &Engine) -> Result<ProposalValidationInput, Captur
         })
         .collect::<Vec<_>>();
 
-    // Reuse the same projection as live collision/admission. It preserves
-    // both legacy axis-aligned and rendered parcel envelopes where required.
-    let collision = engine.collision_context();
-    let reserved_lots = state
-        .pending_interior_access
-        .as_ref()
-        .map(|plan| {
-            plan.selected_lots
-                .iter()
-                .map(|lot| crate::geometry::OrientedRect {
-                    x: lot.x,
-                    z: lot.z,
-                    width: lot.width,
-                    depth: lot.depth,
-                    rotation: lot.rotation,
-                })
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
-
-    let neighborhood_segments = state
-        .neighborhood_plan
-        .as_ref()
-        .map(|plan| {
-            plan.segments
-                .iter()
-                .skip(plan.next_segment)
-                .filter_map(|&(from, to)| {
-                    let (ax, az) = *node_positions.get(&from)?;
-                    let (bx, bz) = *node_positions.get(&to)?;
-                    Some(Segment { ax, az, bx, bz })
-                })
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
-    let neighborhood_interior = state.neighborhood_plan.as_ref().and_then(|plan| {
-        if plan.coordinated_lots && plan.segments.len() == 4 {
-            engine.coordinated_block_interior(&plan.segments)
-        } else {
-            None
-        }
-    });
-
     let pending_access_branch = state.pending_interior_access.as_ref().and_then(|plan| {
         let road = state
             .roads
@@ -204,42 +175,8 @@ pub(crate) fn capture(engine: &Engine) -> Result<ProposalValidationInput, Captur
         Some(Segment { ax, az, bx, bz })
     });
 
-    let river = engine.river_control_points();
-    let viability = FrozenViabilityInput {
-        parcel_footprints: collision.parcel_footprints,
-        reserved_lots,
-        open_roads: collision
-            .open_roads
-            .into_iter()
-            .map(|road| Segment {
-                ax: road.ax,
-                az: road.az,
-                bx: road.bx,
-                bz: road.bz,
-            })
-            .collect(),
-        pending_roads: collision
-            .pending_roads
-            .into_iter()
-            .map(|road| Segment {
-                ax: road.ax,
-                az: road.az,
-                bx: road.bx,
-                bz: road.bz,
-            })
-            .collect(),
-        river_segments: river
-            .windows(2)
-            .map(|pair| Segment {
-                ax: pair[0].x,
-                az: pair[0].z,
-                bx: pair[1].x,
-                bz: pair[1].z,
-            })
-            .collect(),
-        neighborhood_segments,
-        neighborhood_interior,
-    };
+    let viability =
+        shared_viability.unwrap_or_else(|| crate::access_capture::capture_viability(engine));
 
     Ok(ProposalValidationInput {
         hosts,

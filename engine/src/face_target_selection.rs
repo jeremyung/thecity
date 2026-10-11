@@ -15,16 +15,20 @@ use crate::road_faces::RoadFace;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-const CHECKPOINT_SCHEMA: u8 = 1;
+const CHECKPOINT_SCHEMA: u8 = 2;
 const MAX_FACES: usize = 512;
 const MAX_FACE_VERTICES: usize = 1024;
 const MAX_TOTAL_FACE_ITEMS: usize = 2048;
 const MAX_CENTERS: usize = 24 * 24;
 const MAX_COORDINATE: f32 = 100_000.0;
+const MAX_EXCLUDED_IDENTITIES: usize = 512;
+const MAX_EXCLUDED_IDENTITY_ITEMS: usize = 32_768;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum SelectionError {
     TooManyFaces,
+    TooManyExclusions,
+    InvalidExclusion,
     InvalidFace,
     InvalidCheckpoint,
     Sampler(SamplingError),
@@ -40,6 +44,9 @@ impl From<SamplingError> for SelectionError {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum Phase {
+    CheckExclusions,
+    NextExclusion,
+    SkipExcludedFace,
     CopyPolygon,
     StartSampler,
     Sampling,
@@ -58,6 +65,8 @@ struct State {
     sampler_active: bool,
     candidate_centers: Vec<(f32, f32)>,
     identity_cursor: usize,
+    excluded_index: usize,
+    excluded_identity_cursor: usize,
     best_index: Option<usize>,
     best_centers: Vec<(f32, f32)>,
     failed: bool,
@@ -68,6 +77,7 @@ pub(crate) struct FaceSelectionCheckpoint {
     schema: u8,
     context_fingerprint: u64,
     faces: Vec<RoadFace>,
+    excluded_identities: Vec<Vec<u32>>,
     state: State,
     active_sampler: Option<FaceSamplerCheckpoint>,
 }
@@ -81,6 +91,7 @@ pub(crate) struct SelectionView<'a> {
 #[derive(Clone, Debug)]
 pub(crate) struct FaceSelection {
     faces: Vec<RoadFace>,
+    excluded_identities: Vec<Vec<u32>>,
     context: Arc<FrozenViabilityContext>,
     state: State,
     active_sampler: Option<FaceSampler>,
@@ -91,17 +102,33 @@ impl FaceSelection {
         faces: Vec<RoadFace>,
         context: Arc<FrozenViabilityContext>,
     ) -> Result<Self, SelectionError> {
+        Self::new_excluding(faces, context, Vec::new())
+    }
+
+    /// Select the best viable face after excluding canonical identities.
+    /// Exclusion comparisons are persisted and charged to `advance`, one
+    /// identity item or page transition per work unit.
+    pub(crate) fn new_excluding(
+        faces: Vec<RoadFace>,
+        context: Arc<FrozenViabilityContext>,
+        excluded_identities: Vec<Vec<u32>>,
+    ) -> Result<Self, SelectionError> {
         if faces.len() > MAX_FACES {
             return Err(SelectionError::TooManyFaces);
         }
         validate_faces(&faces)?;
+        validate_exclusions(&excluded_identities)?;
         let done = faces.is_empty();
+        let has_exclusions = !excluded_identities.is_empty();
         Ok(Self {
             faces,
+            excluded_identities,
             context,
             state: State {
                 phase: if done {
                     Phase::Done
+                } else if has_exclusions {
+                    Phase::CheckExclusions
                 } else {
                     Phase::CopyPolygon
                 },
@@ -113,6 +140,8 @@ impl FaceSelection {
                 identity_cursor: 0,
                 best_index: None,
                 best_centers: Vec::new(),
+                excluded_index: 0,
+                excluded_identity_cursor: 0,
                 failed: false,
             },
             active_sampler: None,
@@ -130,7 +159,13 @@ impl FaceSelection {
             return Err(SelectionError::InvalidCheckpoint);
         }
         validate_faces(&checkpoint.faces).map_err(|_| SelectionError::InvalidCheckpoint)?;
-        validate_state(&checkpoint.state, &checkpoint.faces)?;
+        validate_exclusions(&checkpoint.excluded_identities)
+            .map_err(|_| SelectionError::InvalidCheckpoint)?;
+        validate_state(
+            &checkpoint.state,
+            &checkpoint.faces,
+            &checkpoint.excluded_identities,
+        )?;
         let active_sampler = if let Some(sampler) = checkpoint.active_sampler {
             Some(FaceSampler::restore(sampler, context.clone())?)
         } else {
@@ -138,6 +173,7 @@ impl FaceSelection {
         };
         Ok(Self {
             faces: checkpoint.faces,
+            excluded_identities: checkpoint.excluded_identities,
             context,
             state: checkpoint.state,
             active_sampler,
@@ -151,6 +187,7 @@ impl FaceSelection {
             schema: CHECKPOINT_SCHEMA,
             context_fingerprint: self.context.fingerprint(),
             faces: self.faces.clone(),
+            excluded_identities: self.excluded_identities.clone(),
             state: self.state.clone(),
             active_sampler: self.active_sampler.as_ref().map(FaceSampler::checkpoint),
         }
@@ -200,6 +237,48 @@ impl FaceSelection {
         let mut work_used = 0;
         while work_used < budget && self.state.phase != Phase::Done {
             match self.state.phase {
+                Phase::CheckExclusions => {
+                    if self.state.excluded_index >= self.excluded_identities.len() {
+                        self.state.excluded_index = 0;
+                        self.state.excluded_identity_cursor = 0;
+                        self.state.phase = Phase::CopyPolygon;
+                        work_used += 1;
+                        continue;
+                    }
+                    let candidate = &self.faces[self.state.face_index].identity;
+                    let excluded = &self.excluded_identities[self.state.excluded_index];
+                    let common = candidate.len().min(excluded.len());
+                    if self.state.excluded_identity_cursor < common {
+                        let index = self.state.excluded_identity_cursor;
+                        self.state.excluded_identity_cursor += 1;
+                        work_used += 1;
+                        if candidate[index] != excluded[index] {
+                            self.state.phase = Phase::NextExclusion;
+                        }
+                    } else {
+                        work_used += 1;
+                        self.state.phase = if candidate.len() == excluded.len() {
+                            Phase::SkipExcludedFace
+                        } else {
+                            Phase::NextExclusion
+                        };
+                    }
+                }
+                Phase::NextExclusion => {
+                    self.state.excluded_index += 1;
+                    self.state.excluded_identity_cursor = 0;
+                    self.state.phase = if self.state.excluded_index >= self.excluded_identities.len() {
+                        self.state.excluded_index = 0;
+                        Phase::CopyPolygon
+                    } else {
+                        Phase::CheckExclusions
+                    };
+                    work_used += 1;
+                }
+                Phase::SkipExcludedFace => {
+                    work_used += 1;
+                    self.finish_face();
+                }
                 Phase::CopyPolygon => {
                     let face = &self.faces[self.state.face_index];
                     if self.state.polygon_copy.is_empty()
@@ -353,11 +432,15 @@ impl FaceSelection {
         self.state.polygon_copy.clear();
         self.state.polygon_fingerprint = 0;
         self.state.identity_cursor = 0;
+        self.state.excluded_index = 0;
+        self.state.excluded_identity_cursor = 0;
         self.state.face_index += 1;
         self.state.phase = if self.state.face_index >= self.faces.len() {
             Phase::Done
-        } else {
+        } else if self.excluded_identities.is_empty() {
             Phase::CopyPolygon
+        } else {
+            Phase::CheckExclusions
         };
     }
 
@@ -408,7 +491,28 @@ fn validate_faces(faces: &[RoadFace]) -> Result<(), SelectionError> {
     Ok(())
 }
 
-fn validate_state(state: &State, faces: &[RoadFace]) -> Result<(), SelectionError> {
+fn validate_exclusions(excluded: &[Vec<u32>]) -> Result<(), SelectionError> {
+    if excluded.len() > MAX_EXCLUDED_IDENTITIES {
+        return Err(SelectionError::TooManyExclusions);
+    }
+    let mut total_items = 0usize;
+    for identity in excluded {
+        if identity.len() < 3 || identity.len() > MAX_FACE_VERTICES {
+            return Err(SelectionError::InvalidExclusion);
+        }
+        total_items = total_items.saturating_add(identity.len());
+        if total_items > MAX_EXCLUDED_IDENTITY_ITEMS {
+            return Err(SelectionError::TooManyExclusions);
+        }
+    }
+    Ok(())
+}
+
+fn validate_state(
+    state: &State,
+    faces: &[RoadFace],
+    excluded: &[Vec<u32>],
+) -> Result<(), SelectionError> {
     let fail = || SelectionError::InvalidCheckpoint;
     if state.face_index > faces.len()
         || state.polygon_copy.len() > MAX_FACE_VERTICES
@@ -430,6 +534,11 @@ fn validate_state(state: &State, faces: &[RoadFace]) -> Result<(), SelectionErro
             .best_index
             .is_some_and(|index| index >= state.face_index || index >= faces.len())
         || state.identity_cursor > MAX_FACE_VERTICES
+        || state.excluded_index > excluded.len()
+        || (!matches!(
+            state.phase,
+            Phase::CheckExclusions | Phase::NextExclusion | Phase::SkipExcludedFace
+        ) && (state.excluded_index != 0 || state.excluded_identity_cursor != 0))
     {
         return Err(fail());
     }
@@ -439,7 +548,11 @@ fn validate_state(state: &State, faces: &[RoadFace]) -> Result<(), SelectionErro
             .ok_or_else(fail);
     }
     if state.phase == Phase::Done {
-        if state.face_index != faces.len() || state.sampler_active || !state.polygon_copy.is_empty()
+        if state.face_index != faces.len()
+            || state.sampler_active
+            || !state.polygon_copy.is_empty()
+            || state.excluded_index != 0
+            || state.excluded_identity_cursor != 0
         {
             return Err(fail());
         }
@@ -450,11 +563,52 @@ fn validate_state(state: &State, faces: &[RoadFace]) -> Result<(), SelectionErro
     }
     let polygon_len = faces[state.face_index].polygon.len();
     match state.phase {
+        Phase::CheckExclusions | Phase::NextExclusion | Phase::SkipExcludedFace => {
+            if excluded.is_empty()
+                || state.sampler_active
+                || !state.polygon_copy.is_empty()
+                || !state.candidate_centers.is_empty()
+                || state.excluded_index >= excluded.len()
+                || state.excluded_identity_cursor
+                    > faces[state.face_index]
+                        .identity
+                        .len()
+                        .min(excluded[state.excluded_index].len())
+            {
+                return Err(fail());
+            }
+            let candidate = &faces[state.face_index].identity;
+            let identity = &excluded[state.excluded_index];
+            let common = candidate.len().min(identity.len());
+            let mismatch = state.phase == Phase::NextExclusion
+                && state.excluded_identity_cursor > 0
+                && candidate[state.excluded_identity_cursor - 1]
+                    != identity[state.excluded_identity_cursor - 1];
+            let verified_prefix = state.excluded_identity_cursor - usize::from(mismatch);
+            if candidate[..verified_prefix] != identity[..verified_prefix] {
+                return Err(fail());
+            }
+            if state.phase == Phase::NextExclusion {
+                let length_mismatch = state.excluded_identity_cursor == common
+                    && candidate.len() != identity.len();
+                if !mismatch && !length_mismatch {
+                    return Err(fail());
+                }
+            }
+            if state.phase == Phase::SkipExcludedFace
+                && (state.excluded_identity_cursor != candidate.len()
+                    || state.excluded_identity_cursor != identity.len())
+            {
+                return Err(fail());
+            }
+        }
         Phase::CopyPolygon => {
             if state.sampler_active
                 || !state.candidate_centers.is_empty()
                 || state.polygon_copy.len() >= polygon_len
                 || (state.polygon_copy.is_empty() && state.polygon_fingerprint != 0)
+                || state.excluded_index != 0
+                || state.excluded_identity_cursor != 0
             {
                 return Err(fail());
             }
@@ -573,7 +727,7 @@ mod tests {
             assert!(step.work_used > 0, "selection must make bounded progress");
             if checkpoint {
                 let bytes = serde_json::to_vec(&selection.checkpoint()).unwrap();
-                let checkpoint = serde_json::from_slice(&bytes).unwrap();
+                let checkpoint: FaceSelectionCheckpoint = serde_json::from_slice(&bytes).unwrap();
                 selection = FaceSelection::restore(checkpoint, selection.context.clone()).unwrap();
             }
         }
@@ -658,5 +812,105 @@ mod tests {
             }
         );
         assert_eq!(selection.selection().unwrap().map(|v| v.face_index), None);
+    }
+
+    #[test]
+    fn exclusions_skip_the_default_winner_and_all_excluded_faces() {
+        let faces = vec![
+            rectangle(&[1, 2, 3, 4], 40.0, 40.0),
+            rectangle(&[5, 6, 7, 8], 40.0, 40.0),
+        ];
+        let default = run(
+            FaceSelection::new(faces.clone(), context(false)).unwrap(),
+            7,
+            false,
+        );
+        assert_eq!(default.face_index, 0);
+
+        let runner_up = run(
+            FaceSelection::new_excluding(
+                faces.clone(),
+                context(false),
+                vec![faces[0].identity.clone()],
+            )
+            .unwrap(),
+            1,
+            true,
+        );
+        assert_eq!(runner_up.face_index, 1);
+        assert_eq!(runner_up.centers.len(), default.centers.len());
+
+        let none = run(
+            FaceSelection::new_excluding(
+                faces.clone(),
+                context(false),
+                faces.iter().map(|face| face.identity.clone()).collect(),
+            )
+            .unwrap(),
+            1,
+            true,
+        );
+        assert_eq!(none.face_index, usize::MAX);
+        assert!(none.centers.is_empty());
+    }
+
+    #[test]
+    fn exclusions_resume_identically_across_quotas_and_reject_malformed_ids() {
+        let faces = vec![
+            rectangle(&[1, 2, 3, 4], 40.0, 40.0),
+            rectangle(&[5, 6, 7, 8], 40.0, 40.0),
+        ];
+        let excluded = vec![vec![1, 2, 3, 4], vec![90, 91, 92]];
+        let one = run(
+            FaceSelection::new_excluding(faces.clone(), context(false), excluded.clone())
+                .unwrap(),
+            1,
+            true,
+        );
+        let seven = run(
+            FaceSelection::new_excluding(faces.clone(), context(false), excluded.clone())
+                .unwrap(),
+            7,
+            true,
+        );
+        let uninterrupted = run(
+            FaceSelection::new_excluding(faces.clone(), context(false), excluded)
+                .unwrap(),
+            7,
+            false,
+        );
+        assert_eq!(one, seven);
+        assert_eq!(seven, uninterrupted);
+
+        assert_eq!(
+            FaceSelection::new_excluding(
+                faces.clone(),
+                context(false),
+                vec![vec![1, 2]],
+            )
+            .err(),
+            Some(SelectionError::InvalidExclusion)
+        );
+        assert_eq!(
+            FaceSelection::new_excluding(
+                faces.clone(),
+                context(false),
+                vec![vec![0; MAX_FACE_VERTICES + 1]],
+            )
+            .err(),
+            Some(SelectionError::InvalidExclusion)
+        );
+        let mut checkpoint = FaceSelection::new_excluding(
+            faces,
+            context(false),
+            vec![vec![1, 2, 3]],
+        )
+        .unwrap()
+        .checkpoint();
+        checkpoint.excluded_identities[0].clear();
+        assert_eq!(
+            FaceSelection::restore(checkpoint, context(false)).err(),
+            Some(SelectionError::InvalidCheckpoint)
+        );
     }
 }

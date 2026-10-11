@@ -89,7 +89,13 @@ fn route_after_host_split(
     (route, lengths)
 }
 
-fn add_travelers(engine: &mut Engine, host: &Road, count: usize, route_nodes: usize) {
+fn add_travelers(
+    engine: &mut Engine,
+    host: &Road,
+    count: usize,
+    route_nodes: usize,
+    all_affected: bool,
+) {
     let route_road = route_away_from_split(engine, host);
     let long_route: Vec<u32> = (0..route_nodes)
         .map(|index| {
@@ -103,7 +109,7 @@ fn add_travelers(engine: &mut Engine, host: &Road, count: usize, route_nodes: us
     let long_edge_lengths = vec![route_road.length; route_nodes - 1];
 
     for index in 0..count {
-        let affected = index == 0;
+        let affected = index == 0 || all_affected;
         let (route, route_lengths, edge_index, edge_progress) = if affected {
             // One actor is actively travelling over the host edge, so the
             // transaction must insert the split node and remap its cursor.
@@ -283,10 +289,11 @@ fn make_case(
     route_nodes: usize,
     roads: usize,
     connected_geometry: bool,
+    all_affected: bool,
 ) -> (Engine, u32) {
     let mut engine = Engine::new(SEED);
     let host = split_host(&engine);
-    add_travelers(&mut engine, &host, travelers, route_nodes);
+    add_travelers(&mut engine, &host, travelers, route_nodes, all_affected);
     let target_roads = roads.max(engine.state.roads.len());
     if target_roads > engine.state.roads.len() {
         if connected_geometry {
@@ -306,20 +313,33 @@ fn export_stress_fixture_if_requested() {
     if std::env::var_os("EXPORT_ROAD_SPLIT_PROFILE").is_none() {
         return;
     }
-    let (engine, host_road_id) = make_case(MAX_TRAVELERS, MAX_ROUTE_NODES, MAX_SEGMENTS - 1, false);
+    let connected = std::env::var_os("ROAD_SPLIT_PROFILE_CONNECTED").is_some();
+    let all_affected = std::env::var_os("ROAD_SPLIT_PROFILE_ALL_AFFECTED").is_some();
+    let (engine, host_road_id) = make_case(
+        MAX_TRAVELERS,
+        MAX_ROUTE_NODES,
+        MAX_SEGMENTS - 1,
+        connected,
+        all_affected,
+    );
     engine.validate().expect("stress fixture is valid");
     let fixture = serde_json::json!({
         "schema": 1,
+        "connected_geometry": connected,
+        "all_affected": all_affected,
         "host_road_id": host_road_id,
         "split_fraction": 0.5,
         "save_json": engine.save_json(),
     });
+    let path = std::env::var_os("ROAD_SPLIT_PROFILE_OUTPUT")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation/road-split-profile-stress.json"));
     std::fs::write(
-        "validation/road-split-profile-stress.json",
+        &path,
         serde_json::to_vec(&fixture).expect("profile fixture serializes"),
     )
     .expect("write opted-in profile fixture");
-    println!("road_split_profile exported validation/road-split-profile-stress.json");
+    println!("road_split_profile exported {}", path.display());
 }
 
 fn measure(
@@ -330,7 +350,7 @@ fn measure(
     connected_geometry: bool,
     samples: usize,
 ) {
-    let (base, host_id) = make_case(travelers, route_nodes, roads, connected_geometry);
+    let (base, host_id) = make_case(travelers, route_nodes, roads, connected_geometry, false);
     let roads_before = base.state.roads.len();
     let nodes_before = base.state.nodes.len();
     let saved = base.save_json();
@@ -361,7 +381,7 @@ fn measure(
 
 #[test]
 fn atomic_split_preserves_actor_positions_and_late_failure_writes_nothing() {
-    let (mut engine, host_id) = make_case(32, 128, 0, false);
+    let (mut engine, host_id) = make_case(32, 128, 0, false, false);
     let roads_before = engine.state.roads.len();
     let before_positions: Vec<_> = engine
         .state
@@ -389,7 +409,7 @@ fn atomic_split_preserves_actor_positions_and_late_failure_writes_nothing() {
         }
     }
 
-    let (mut rejected, host_id) = make_case(8, 128, 0, false);
+    let (mut rejected, host_id) = make_case(8, 128, 0, false, false);
     rejected
         .state
         .travelers
@@ -429,4 +449,34 @@ fn profile_atomic_open_road_split_cost() {
         true,
         25,
     );
+    if std::env::var_os("ROAD_SPLIT_PROFILE_ALL_AFFECTED").is_some() {
+        let (base, host_id) = make_case(
+            MAX_TRAVELERS,
+            MAX_ROUTE_NODES,
+            MAX_SEGMENTS - 1,
+            true,
+            true,
+        );
+        base.validate().expect("all-affected profile case is valid");
+        let saved = base.save_json();
+        let samples = 25;
+        let mut durations = Vec::with_capacity(samples);
+        for _ in 0..samples {
+            let mut engine = Engine::restore_json(&saved).expect("all-affected profile fixture restores");
+            let start = Instant::now();
+            engine.try_split_open_road(host_id, 0.5).expect("all-affected split succeeds");
+            durations.push(start.elapsed());
+        }
+        durations.sort_unstable();
+        println!(
+            "road_split_profile all_affected_connected_road_cap: travelers={MAX_TRAVELERS}, affected_travelers={MAX_TRAVELERS}, route_nodes={}, roads_before={}, nodes_before={}, samples={samples}, mean_us={}, p50_us={}, p95_us={}, max_us={}",
+            MAX_ROUTE_NODES,
+            base.state.roads.len(),
+            base.state.nodes.len(),
+            (durations.iter().copied().sum::<Duration>() / samples as u32).as_micros(),
+            percentile(&durations, 0.50).as_micros(),
+            percentile(&durations, 0.95).as_micros(),
+            durations.last().unwrap().as_micros(),
+        );
+    }
 }

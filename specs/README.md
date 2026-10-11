@@ -23,7 +23,7 @@ Confirmed direction: living observation experience; independent random cities wi
 
 The geography dimensions, density, population, time rates, and resource budgets below are proposed defaults. Tune them against measured hardware and watchability. They are finite constraints, not promises of benchmark performance.
 
-External morphology research: [PLATEAU findings and bounded pilot](../validation/plateau-research.md). Root-reviewed direction is procedural calibration first, with offline source processing and a shared cross-style benchmark. No source datasets or measured Tokyo morphology statistics have been extracted; the report is research, not implementation or visual-acceptance evidence.
+External morphology research: [PLATEAU findings and bounded pilot](../validation/plateau-research.md). Root-reviewed direction is procedural calibration first, with offline source processing and a shared cross-style benchmark. Three bounded Tokyo sources now have hash-pinned provenance, reconciled feature counts, extracted roof-edge metrics and diagrams in the [source pilot](../validation/plateau-pilot/README.md). District calibration, synthetic comparisons and visual acceptance remain pending; these samples are not production density targets.
 
 ## Governing decisions
 

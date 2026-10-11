@@ -670,6 +670,36 @@ Source inspection, not a new test or performance run: browser subsystems have se
 
 Recommended incremental refactor, not yet implemented: extract pure geometry and model types first; then isolate growth planning, construction, routing/transit, and persistence with explicit inputs and mutation ownership. Preserve a single deterministic tick coordinator. Split renderer environment/post-processing and architectural building families while retaining centralized GPU resource ownership. Move the development review route out of application startup. Preserve save compatibility, ordering, random consumption, and same-target replay with existing fixtures; avoid combining these extractions with behavior changes. Merely moving methods into files without restricting shared-state access is insufficient. Overall assessment: useful subsystem separation, but the engine is not yet well factored for the next generation features.
 
+2026-10-11 routing follow-up: per-query compact adjacency removes repeated
+full-road scans while retaining source-order search behavior. Four oracle tests
+and the native release suite pass (359 tests, 43 ignored); the 300,000-tick WASM
+save matches the prior build exactly. Standalone time is 54.24 s vs 56.05 s
+previously, a single-run observation rather than a browser performance claim.
+See [measurement and limitations](routing-adjacency/README.md). This does not
+complete routing modularization, maximum-cap scaling, or visual acceptance.
+
+2026-10-11 density study: [within-block subdivision evidence](block-subdivision-study/README.md)
+compares 11/14/18 m frontage targets in the same 73 observed block footprints,
+retaining every outside parcel and protecting all future perimeter roads.
+Wider targets consistently increase feasible nominal area but reduce lot count.
+The current floor/use-only capacity policy prevents treating that area gain as
+more population or activity. No production subdivision change was promoted;
+mixed building programs need end-to-end simulation and visual evidence first.
+
+The [mixed-row follow-up](block-subdivision-study/mixed-rows.md) preserves one
+narrow row exactly and halves the uniform-widening lot-count penalty. Its area
+gain remains modest (2.5–4.3% across the tested alternatives). It is test-only;
+capacity units and footprint assumptions need explicit calibration before a
+growth treatment, followed by real street-level review. No geometry score is
+being substituted for the approved art direction.
+
+Follow-up: oversized route reconstruction now fails closed instead of returning
+a suffix missing the requested origin. Boundary and delivery dispatch regression
+tests pass; 361 native tests pass and the 300,000-tick WASM baseline save remains
+unchanged. [Evidence and limits](route-cap-safety.md). This prevents new partial
+trip dispatch, but does not complete cancellation/recovery for passengers already
+aboard transit when their onward destination becomes unreachable.
+
 Latest visual review, 2026-10-09: the public-WASM bridge candidate has 580 buildings and 170 roads. The reviewed Miniature 08:00 overview, with depth of field disabled, shows growth on both riverbanks but still fails artistic acceptance because of green gaps, repetitive architecture, and washed-out lighting. See [integration evidence and capture](multiblock-integration.md#visual-review). The world-growth spec now records the researched block-first generation proposals separately from implemented behavior. This documentation update does not establish a newer full-test checkpoint or completion of the bus-demand repair.
 
 Read-only comparison of the eight experience specifications, README, implementation, tests, and current review evidence on 2026-10-09. “Implemented” means code and tests demonstrate the behavior; it does not mean visual acceptance. “Partial” means a working slice still differs materially from the specification. “Unverified” means browser, device, listening, or visual evidence is still required. Numeric targets remain proposals unless a specification states an acceptance condition.
@@ -1364,3 +1394,303 @@ Addressed all nine inline comments; see [review fixes](pr-review-fixes.md) for m
 ## 2026-10-10 — Incorporate 45b727f
 
 Merged edge-sample coverage and shared per-road budgeting from `claude/pr-review-6mz8wa`. This supersedes the previous zero-proposal limitation: 3,180 descriptors over 67 pages now recover the known legal road-3317 route with two lots. Local native suite: 301 passed; mature planning passed; build passed. Web suite had one timeout (261 passed), and the affected file passed all 11 tests in isolation. See [integration verification](merge-review-verification.md). Goal remains paused.
+
+
+## 2026-10-10 — Node WASM atomic split measurement
+
+Continued after PR #1 merged, on `access/wasm-split-budget`. Added an opt-in `profiling` Cargo feature and `npm run wasm -- --profiling` output under ignored `.tools/wasm-profiling`, outside Vite public assets. The harness checks actor positions/routes and atomic rejection before measuring restored detached/connected cap fixtures. Primary independently reran the Luna contribution; see [WASM split profile](road-split-wasm-profile.md). Evidence supports retaining atomic preflight/commit provisionally, avoiding actor-state snapshots across ticks. This is Node WASM call timing, not browser or full-tick acceptance; only one actor route is affected. Live scheduling and art-quality work remain incomplete.
+
+
+## 2026-10-10 — Live planner integration follow-up
+
+Attached frozen discovery plus fresh revision-bound proposal validation to Engine ticks before actor movement. Scheduling, cursors and bounded stale retries persist; road splitting retains atomic current-actor preflight. Controlled mature-fixture integration admits road 3317 and two lots with moving travelers and equivalent resumed saves. Initial broad regression exposed f64 polygon-area JSON parsing drift in two canonical-save checks; enabling serde_json float_roundtrip fixes both. Native release suite: 307 passed, 39 ignored. Production WASM build passes and does not expose the opt-in split mutation API.
+
+Primary independently reran all three Node WASM split fixtures, including all 2,000 affected travelers; route topology, positions, canonical restore and late over-limit rejection pass. Current measurements are in road-split-wasm-profile.json and its matching report. This supersedes the prior one-affected-actor limitation. Browser worker tick timing, actual live construction/opening under geometry churn, and visual acceptance remain pending. Live work quota 4,096 and periodic interval 1,200 ticks remain provisional; snapshot capture is synchronous and outside the quota. No new commit or push yet.
+
+
+## 2026-10-10 — Construction and browser worker integration
+
+Extended the known-route test through ordinary project construction: branch opens connected, both dependent lots wait for opening, resumed state matches. Added a real Engine::step test with geometry mutations during search and repeated restores. Primary focused run: 7 passed. Web build passes.
+
+Primary ran the actual module worker in Chromium for 20.002 seconds: 2,789 ticks advanced, 850 to 852 buildings, no worker errors. The active planner checkpoint at tick 242701 is 275,047 bytes and restores byte-identically in a fresh epoch; final idle save also restores canonically. Maximum of 20 sampled batch-mean tick costs is 2.975 ms, not a per-tick p95 or worst case. See live-worker-profile.md/json. This proves short worker runtime and persistence, not maximum-world performance, long-duration face-driven construction, or visual acceptance.
+
+
+## 2026-10-10 — Tick tails and scaling limits
+
+Primary ran a dedicated Chromium worker against production WASM for 6,000 individual step calls. p95 0.5 ms, p99 10.3 ms, max 25.2 ms; final save is canonical. Largest sampled live-job checkpoint: 888,622 bytes. This complements, rather than replaces, the actual application-worker run. It excludes rendering, message scheduling and maximum-world cases. See live-tick-profile.md/json.
+
+Source audit confirms the 512 graph cap is coupled across the complete tracing/discovery pipeline. Simply raising it is insufficient: quadratic preflight, half-edge/output caps, all-node capacity and doubled legacy parcel envelopes need coordinated treatment. Indexed broad-phase work and complete-graph tests are required before claiming the full 5,000-road limit. No cap was silently raised or graph truncated.
+
+## 2026-10-10 — Exhausted face sweep
+
+Live searches now retain a bounded, saved history of exhausted face identities,
+excluding them before target sampling on subsequent searches. This allows a
+runner-up block to be considered after the selected block yields no admission.
+History clears when a completed search finds no remaining viable face; failed
+jobs do not advance that history. Admission, connectivity and construction gates
+are unchanged. See HANDOFF.md for limits and nested checkpoint compatibility.
+
+Primary verification: selector 7/7, discovery 12/12, live integration 9/9.
+Full native release run: 315 passed, one failed, 39 ignored. The failure was the
+frontier purity test's generated-city assumption that a frontier proposal remains
+available after 72,000 ticks. It passed in an isolated checkout of 9348104, but
+the new interior search changes that generated world. The test now disables the
+independent interior scheduler during fixture setup; all original purity,
+proposal-repeatability, exhausted-frontier and plan replay assertions remain.
+Its focused rerun passes. The complete suite has not been rerun after that
+test-only setup change. Production WASM and web builds pass; diff whitespace
+checks pass. Existing compiler and bundle-size warnings remain.
+
+Visual review still shows overly large green block interiors and insufficient
+continuous Tokyo street fabric. A brighter lighting experiment was rejected and
+reverted because it flattened the buildings. This planner change is tested
+behavioral progress, not evidence of improved visual density or completed art
+direction. No additional commit or remote push was made during this follow-up.
+
+
+## 2026-10-10 — Sweep integration rerun
+
+Full native release suite now passes: 316 tests, zero failures, 39 ignored.
+Primary reran the actual Chromium simulation worker after rebuilding WASM:
+2,766 ticks in 20.003 seconds, active 275,165-byte planner checkpoint and final
+save restore byte-identically. The updated live-worker-profile.json/md records
+this run; it supersedes the earlier short-run metrics above. Long continuation
+construction observations and visual density comparison remain pending.
+
+
+## 2026-10-10 — 30,000-tick sweep continuation
+
+See face-sweep-browser-profile.md/json. Production Chromium WASM visits 11
+sampled face identities and retains 10 exhausted faces. One access branch is
+observed through connected opening, with zero frontage at its sampled structure
+stage and both frontage parcels present at the end. Buildings increase 850 to
+853. Final save restores exactly. This confirms useful sweep behavior and a
+construction continuation, but the small gain leaves density acceptance unmet.
+Per-step timing remains fixture-specific and excludes rendering.
+
+
+## 2026-10-10 — Fragmented frontage coverage and negative growth result
+
+Preserved multi-span midpoint prefixes and appended at most two clearance-aware
+edge samples; host cap stays six and single-span descriptors are unchanged.
+Full native suite: 321 passes, 39 ignored, mature golden descriptors and production
+WASM build pass. Geometric regression proves a clear candidate entrance missed
+by old midpoints. Quota 1/7 replay checks pass. Host-preparation schema is now 4.
+
+Matched 30,000-tick Chromium continuation yields a byte-identical final save to the prior
+sweep build: 853 buildings, 210 roads, one opened access branch. See
+fragmented-frontage-browser-profile.md/json. This is useful coverage correctness
+with no measured density benefit on this fixture. Further density changes need
+rejection/upstream-layout evidence. Runtime screenshots and concrete remaining
+render gaps are saved under screenshots/latest; art acceptance remains unmet.
+
+## 2026-10-10 — Exhausted-face rejection evidence
+
+A test-only audit restores the 30,000-tick continuation and runs fresh discovery
+and exact proposal validation for one exhausted face. All 2,440 candidates reject;
+2,401 intersect existing parcel envelopes under the existing 5 m branch clearance.
+Prefix probes distinguish clear start points from collisions deeper along rays;
+72 parcel-conflicting rays remain clear through 20 m. See exhausted-face-rejections.md
+for the exact counts, replay command and limitations. This is diagnostic evidence,
+not new growth or visual acceptance. The water-material experiment was reverted;
+its unmatched-camera captures are retained as rejected exploration only.
+
+## 2026-10-11 — Bounded two-segment access search
+
+See bent-access-witness.md and three JSON comparisons. Each checks the same
+29,280 routes on one exhausted face. Standard, closer and small-lot templates
+all yield no witness after root review corrected the new-bend node clearance
+from 1 m to 18 m. The provisional positive was invalidated and its diagram
+removed. Tests now explicitly reject that clearance error. No production engine
+behavior changed; no density gain or visual acceptance is claimed. This excludes
+one finite route family, not all possible connectors or redevelopment solutions.
+
+## 2026-10-11 — Night facade readability
+
+Changed shared hemisphere night intensity 0.65 → 1.05 and added a neutral night
+ground-bounce tint; daytime intensity/color endpoints are preserved. Matched
+paused WebGPU comparisons in both styles show more readable opaque facades and
+lanes. The Anime noon control preserves daytime appearance. Evidence and limits:
+screenshots/night-fill/README.md. Temporary comparison UI removed; final build
+passes with the existing bundle-size warning. No added GPU lights/passes/assets,
+no performance claim, and no overall art or density acceptance.
+## Destination-first diagnostic follow-up — 2026-10-11
+
+`validation/destination-first-access.md` records an independently reproduced
+negative result: 8,976 lane layouts on the prior exhausted face, no two-lot
+layout, no search truncation. Forty overlapping layouts admit one lot before
+connection checks; that is not forty distinct development sites. Nine synthetic
+tests pass. The code is test-only, and live density/artistic acceptance remains
+unmet. Further road bending alone cannot rescue this tested layout family;
+future work must examine packing or earlier subdivision with matched coverage
+and lifecycle evidence.
+
+## Shallower shared-edge fallback rejected — 2026-10-11
+
+The archived `shallow-block-experiment/README.md` records a test-only geometry
+fallback with zero selected shallow plans in two matched seeds. Additional
+candidate attempts displaced baseline search work; actual kit coverage declined
+1.55% and 3.06%. Root reproduced all four saved worlds and snapshots exactly,
+verified the geometry/lifecycle test, and independently measured coverage. The
+rejected runtime hooks were removed; no production behavior changed. Candidate
+budget fairness remains a requirement for future adaptive block experiments.
+
+## Independent alternative budget — 2026-10-11
+
+The shallow-block fair-budget control preserves both mature city saves and
+snapshots exactly. Independent eight-attempt sampling found zero feasible
+alternatives in 13,737/16,021 checks, so ranking cannot recover those proposals.
+Evidence and reproduction patch: `shallow-block-experiment/fair-budget/README.md`.
+Root verified all output bytes against the preceding independently rerun controls
+and reran the geometry/manual lifecycle test. Experimental hooks were removed;
+production and visual acceptance are unchanged.
+
+## 2026-10-11 — isolated road-pair scaling component
+
+Progress toward bounded larger graph processing: deterministic quota-stepped AABB index, JSON resume validation and 5,000-segment grid oracle check. Five focused native tests; 14,701 candidates and 1,370,078 logical work units on the grid. See `road-pair-broadphase.md` for limits. Not integrated; production capture remains 512 nodes/edges. This does not satisfy metropolis-scale acceptance or change the screenshots.
+
+### Spatial filter f32 compatibility follow-up
+
+Added a concrete omission regression, projection-aware bounds adapter, and native parity checks using the same predicate as live preflight. Eight focused preflight tests pass across malformed geometry, save/resume, shared endpoints and 24 seeded filtered/all-pairs comparisons. Production enumeration and caps remain unchanged; integration and WASM parity are pending.
+
+### Live spatial preflight integration and measured correction
+
+Integrated incremental f32-compatible bounds construction, streaming candidates, separately charged exact checks, persisted pending pairs and bounded legacy fallback. A one-axis implementation raised mature preflight work to 140,936; replaced it with a 16 × 16 grid, reducing work to 102,097 from the prior 119,232 (14.37%) with identical output. Full release native suite: 342 passed / 42 ignored. Explicit mature graph and composed trace checks pass. Rebuilt production WASM matches all 3,180 native discovery descriptors and quota/resume runs. Preflight/filter schema2; old active nested jobs still require restart/migration. This is logical work and Node parity evidence, not browser-frame improvement, a cap increase, or visual acceptance. Details: `road-pair-broadphase.md`.
+
+### Legacy preflight migration
+
+Resolved the schema1 active-preflight load limitation without discarding the city or surrounding job: restart derived validation from frozen nodes/edges/proposededge. Native migration tests (2) and preflight suite (12) pass. Production WASM rebuilt; Node check preserves world fields, exact save roundtrip and 24-tick deterministic migrated continuation; corrupt current and future schemas reject. Fixture is synthesized from a real active mature checkpoint by removing schema2 fields; not an old-binary export. Reproducible script: `scripts/test-legacy-preflight-wasm.mjs`. This does not cover unrelated historical planner schemas or alter current visuals/caps.
+
+### Deterministic identity indexes and worker timing check
+
+Replaced preflight linear node/edge identity and endpoint scans with transient BTree indexes, reconstructed from validated saved prefixes. Mature preflight102,097→18,095 logical units; total discovery7,476,821→7,392,819 (approximately1.12%). Native345pass/42ignored; WASM3180descriptor parity; schema1/2→3 migration verified. Added empty-node failed-checkpoint regression. Two6,000tick Chromium runs show p95unchanged0.4ms and maximum25.6→25.8ms, so no overall timing win is claimed. Details `identity-index-preflight.md`. Node coincidence and other graph stages remain scaling work;512cap and visuals unchanged.
+
+### Node coincidence index — 2026-10-11
+
+Preflight uses a bounded transient spatial index with exact f32 narrow-phase checks and source-index checkpoint cursors. Mature fixture work18,095→5,692; complete discovery7,392,819→7,380,416, preserving3180native/WASM descriptors. Native351pass/42ignored. See `node-coincidence-index.md` for evidence and limits. This supports bounded planning but does not establish larger graph caps, visual fidelity or browser frame performance.
+
+### Shared live access capture — 2026-10-11
+
+Startup reuses one computed viability projection with a borrow-bound source token, preserving independent caps and exact outputs. Native355pass/43ignored,200tick live checkpoint equivalence, rebuilt WASM live save/resume and3180descriptor parity verified. Native capture-only medians improve about0.1ms; no browser FPS improvement or fully quota-stepped capture is claimed. See `shared-live-capture.md`. City density and artistic acceptance remain unmet.
+
+### Compact midrise envelope review — 2026-10-11
+
+A development-only candidate reduces proportional midrise setbacks on wider lots without changing authoritative parcels, styles, clocks or growth. Measured projected kit union increases 1.09%; triangles increase 0.81%, counted geometry arrays 0.88%. The limited effect narrows its role to possible street-wall refinement, not a density solution. Geometry checks and production build pass; screenshots remain unavailable while the Mac is locked, so visual acceptance and promotion are explicitly pending. Details and comparison reports: `compact-midrise-review/README.md`.
+
+## Bounded PLATEAU source pilot — 2026-10-11
+
+[Source pilot](plateau-pilot/README.md) now contains three individually retrieved
+Tokyo meshes, exact provenance/hashes/resource license statements, and provisional
+250 m crop geometry/metrics. Sources plus metadata total 26,254,659 compressed
+bytes; no browser dependency is added. Six extractor tests and three source runs
+pass, but Taito direct Building count differs from catalog by one and two catalog
+byte counts disagree. Roof-edge semantics, missingness and unresolved completeness
+are explicit. Calibration is not accepted; source-member reconciliation, diagrams,
+district/context review and synthetic visual/performance comparisons remain.
+
+## PLATEAU source reconciliation and diagrams — 2026-10-11
+
+[The pilot](plateau-pilot/README.md) now reconciles all three catalog feature
+counts: Taito's extra item is a geometry-free CityObjectGroup, not a missing
+building. Explicit raw/status fields exclude 9999 unknown markers from floor
+statistics. Twelve focused tests pass; root reran all sources and reproduced
+the five generated JSON/SVG artifacts byte-for-byte. Three same-scale diagrams
+were rendered in Chromium and visually checked. Compact sample median roof-edge
+area is57.62m², station114.67m²; this supports preserving small-building fabric
+rather than promoting uniform wider lots. No density targets or production
+changes are accepted. Next compare matched synthetic crops and resolve land-use,
+frontage and roof-shape calibration before a multi-seed growth/render trial.
+
+## Matched-size synthetic morphology — 2026-10-11
+
+[Three250m synthetic crops](synthetic-morphology/README.md) separate exact nominal
+envelopes and actual production-kit raster coverage. The most envelope-covered
+inland crop among60 tested windows yields37.75% nominal versus28.87% rendered;
+compact PLATEAU roof-edge coverage is48.47%. Methods/selection differ and are
+explicit, but facade widening alone is insufficient. Compact synthetic count130
+versus source452 supports testing finer varied frontage and connected blocks,
+with capacity semantics and finite caps retained. Four coverage tests pass; three
+real-kit measurements and independent polygon unions are recorded. No production
+policy change. Next: a compact-block prototype assessed through multi-seed growth
+and actual rendered views; do not turn the sample directly into a citywide target.
+
+## Compact varied frontage prototype — 2026-10-11
+
+[Test-only compact rows](block-subdivision-study/compact-rows.md) add20–21% feasible
+lots across the same73 blocks, but reduce nominal area3–4%. They preserve required
+clearances and retain occasional larger merged sites. All16 block/spine tests and
+the long diagnostic pass; the prior five variants remain exact. Not promoted as
+a density fix. Land-budget accounting of the strongest inland crop shows37.75%
+envelopes,25.65% open-road5m buffers and36.60% unclassified remainder; the latter
+is not proven buildable. Next investigate connected usable remainder and block
+layout, then integrate smaller frontage with footprint-aware capacity and actual
+multi-seed construction/render validation. Production appearance remains unchanged.
+
+## Production narrow midpoint infill — 2026-10-11
+
+[Concrete enumeration fix](synthetic-morphology/narrow-midpoint-infill.md): append
+existing-minimum8×12m shapes at grid positions after old candidates. Road2985
+provides a regression where wider/shifted production candidates fail but this
+shape passes exact geometry/access. Normal admission, construction and save/resume
+are covered. Full native369pass/45ignored; rebuilt WASM normal30,000tick mature
+continuation850→871buildings, including18new narrow buildings open; exact resumed
+saves match every200ticks after midpoint. Per-road list cap66→100;48-site and
+24-road evaluation caps remain. No save schema change. Browser timing and visual
+review remain open; this is incremental infill, not overall density/art acceptance.
+
+## Narrow-building entrance correction — 2026-10-11
+
+The new mature continuation is exported for review. A geometry audit found five
+new low apartment/office instances with no visible generic-facade entrance. The
+shared kit now supplies a centered door and clear window opening, constrains
+balconies with parcel bounds, and bounds narrow gable trim. Root verifies 19
+focused geometry tests and production build/typecheck; style geometry matches.
+[Coverage and reproduction](synthetic-morphology/narrow-midpoint-infill.md#render-review-follow-up--2026-10-11)
+record a modest gain, not density acceptance. Headless WebGPU loaded 871 buildings
+but screenshot capture timed out without frame metrics. Usable captures remain
+the 850-building views; live visual and browser-performance review are still open.
+
+## First-frame readiness and recovery — 2026-10-11
+
+Graphics startup now waits for a successful JS frame submission before clearing
+its watchdog. Synchronous frame exceptions stop the loop and reach startup or
+runtime recovery feedback; disposal safely settles pending startup. Root passes
+11 focused lifecycle/recovery tests, production build/typecheck, and a local
+browser fault-injection check with saving still available. A software WebGL
+founder capture succeeds, but the mature WebGPU capture remains unresolved; no
+GPU presentation/performance or artistic acceptance follows from this fix.
+[Evidence and limitations](screenshots/render-startup/README.md).
+
+## 871-building static visual review — 2026-10-11
+
+[Latest capture](screenshots/narrow-infill/README.md) now renders the complete
+871-building continuation on software WebGL, with building/chunk queues empty.
+Intermediate GPU draws were skipped during preparation; this is not normal
+loading, hardware WebGPU or performance evidence. Root rejects overall art
+acceptance: broad green block interiors and detached development strips remain
+the dominant morphology problem. A four-floor office crown audit finds only two
+instances, so that geometry change was not promoted as a density intervention.
+Next prioritize connected interior development and matched-view comparison.
+
+## Deeper center-street trial rejected — 2026-10-11
+
+[Matched WASM evidence](deep-spine-review/README.md) tests adding an 82×110 m
+center-street candidate before the existing square, retaining the fixed scan
+budget and all clearances. Pure layouts and 10,000-tick candidate save/resume
+pass, but actual projected coverage changes +2.46% in seed0 and −3.37% in seed87231
+at tick242000. Candidate native tests also exposed three planning/scheduling
+expectation failures. Production planner and WASM were restored; only rectangle
+geometry/replay regressions and evidence are retained. Restored native371pass,
+0fail,45ignored. Next isolate displaced projects/reservation timing before
+promoting another local ranking or size preference; no art acceptance claimed.
+
+## Spatial trial follow-up — 2026-10-11
+
+[Matched layout map](deep-spine-review/layout-87231.png) locates the rejected
+deep-spine trial's gains and losses. Seed87231 has fewer ordinary road metres
+and stops new-building completions earlier, but final saves cannot prove which
+reservation displaced an alternative project. Corrected the earlier scan-budget
+explanation: spine exhaustion does not stop ordinary candidate scanning. Keep
+production unchanged; trace planning/admission decisions before another policy
+change. The SVG generator uses exact saved nominal envelopes, not rendered
+coverage; root rendered and inspected the final PNG.

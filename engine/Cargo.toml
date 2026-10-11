@@ -7,9 +7,14 @@ description = "Deterministic simulation core for a watchable Tokyo-inspired city
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+# Opt-in diagnostic mutation API; never enabled for application builds.
+profiling = []
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# Live planning checkpoints retain f64 polygon areas across saves.
+serde_json = { version = "1", features = ["float_roundtrip"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "=0.2.108"

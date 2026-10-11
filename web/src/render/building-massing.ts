@@ -17,6 +17,14 @@ export interface MidriseMassing {
 
 type MidriseBuilding = Pick<Building, 'kind' | 'floors' | 'width' | 'depth' | 'appearance_seed' | 'anchor'>;
 
+/** Review candidate only: retain small-lot clearances while reducing oversized
+ * percentage setbacks on wider midrise parcels. Does not change authoritative lots. */
+export function compactMidriseEnvelope(b: MidriseBuilding, width: number, depth: number) {
+  if (!Number.isFinite(b.width) || !Number.isFinite(b.depth)
+      || b.width < 8 || b.depth < 8 || !midriseMassing(b, width, depth)) return { width, depth };
+  return { width: Math.max(width, b.width - 1.6), depth: Math.max(depth, b.depth - 1.8) };
+}
+
 /**
  * Compose a deterministic midrise silhouette inside the supplied building
  * envelope. Floor counts and world-state dimensions remain authoritative; this

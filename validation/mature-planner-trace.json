@@ -1,0 +1,1874 @@
+{
+  "input_path": "/Users/jung/Development/thecity/.tools/narrow-frontage-review/final-save.json",
+  "seed": 87231,
+  "source_tick": 272000,
+  "source_demand": 4.0,
+  "source_save_unchanged": true,
+  "gate_inputs": {
+    "plan_absent": true,
+    "pending_interior_access_absent": true,
+    "demand": 4.0,
+    "demand_pass": true,
+    "active_buildings": 871,
+    "active_buildings_pass": true,
+    "population": 8078,
+    "population_pass": true,
+    "roads_plus_projects": 289,
+    "segment_capacity_pass": true,
+    "active_projects": 0,
+    "active_road_projects": 0,
+    "active_building_projects": 0,
+    "node_count": 162,
+    "connected_ordinary_roads": 208,
+    "local_qualified_anchors": 160
+  },
+  "anchor_attempt_cap": 24,
+  "shared_candidate_cap": 32,
+  "full_candidate_cap": 32,
+  "spine_candidate_cap": 24,
+  "reuse_edge_cap": 24,
+  "planner_calls": [
+    {
+      "call": 1,
+      "cursor_start": 157,
+      "cursor_end": 0,
+      "cursor_anchors_examined": 5,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "proposed_lot_geometry": 56,
+          "too_few_proposed_lots": 4
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 2,
+      "cursor_start": 0,
+      "cursor_end": 9,
+      "cursor_anchors_examined": 9,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 20,
+          "proposed_lot_geometry": 48,
+          "too_few_proposed_lots": 8
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 3,
+      "cursor_start": 9,
+      "cursor_end": 18,
+      "cursor_anchors_examined": 9,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 18,
+          "proposed_lot_geometry": 36,
+          "too_few_proposed_lots": 18
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 4,
+      "cursor_start": 18,
+      "cursor_end": 26,
+      "cursor_anchors_examined": 8,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 30,
+          "proposed_lot_geometry": 40,
+          "too_few_proposed_lots": 10
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 5,
+      "cursor_start": 26,
+      "cursor_end": 33,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 32,
+          "proposed_lot_geometry": 28,
+          "too_few_proposed_lots": 12
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 6,
+      "cursor_start": 33,
+      "cursor_end": 42,
+      "cursor_anchors_examined": 9,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 18,
+          "proposed_lot_geometry": 42,
+          "road_corner_out_of_bounds": 1,
+          "too_few_proposed_lots": 19
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 7,
+      "cursor_start": 42,
+      "cursor_end": 49,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 34,
+          "proposed_lot_geometry": 42,
+          "road_corner_out_of_bounds": 1,
+          "too_few_proposed_lots": 3
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 8,
+      "cursor_start": 49,
+      "cursor_end": 55,
+      "cursor_anchors_examined": 6,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 34,
+          "proposed_lot_geometry": 4,
+          "too_few_proposed_lots": 10
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 9,
+      "cursor_start": 55,
+      "cursor_end": 62,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 24,
+          "proposed_lot_geometry": 48,
+          "road_corridor_parcel_conflict": 1,
+          "too_few_proposed_lots": 7
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 10,
+      "cursor_start": 62,
+      "cursor_end": 71,
+      "cursor_anchors_examined": 9,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 14,
+          "proposed_lot_geometry": 44,
+          "road_corridor_parcel_conflict": 4,
+          "too_few_proposed_lots": 18
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 11,
+      "cursor_start": 71,
+      "cursor_end": 76,
+      "cursor_anchors_examined": 5,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "proposed_lot_geometry": 56,
+          "too_few_proposed_lots": 8
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 12,
+      "cursor_start": 76,
+      "cursor_end": 80,
+      "cursor_anchors_examined": 4,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "proposed_lot_geometry": 56,
+          "too_few_proposed_lots": 10
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 13,
+      "cursor_start": 80,
+      "cursor_end": 88,
+      "cursor_anchors_examined": 8,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 30,
+          "proposed_lot_geometry": 36,
+          "too_few_proposed_lots": 6
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 14,
+      "cursor_start": 88,
+      "cursor_end": 95,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 40,
+          "proposed_lot_geometry": 32
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 15,
+      "cursor_start": 95,
+      "cursor_end": 102,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 30,
+          "proposed_lot_geometry": 34,
+          "too_few_proposed_lots": 8
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 16,
+      "cursor_start": 102,
+      "cursor_end": 109,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 30,
+          "proposed_lot_geometry": 22,
+          "too_few_proposed_lots": 10
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 17,
+      "cursor_start": 109,
+      "cursor_end": 117,
+      "cursor_anchors_examined": 8,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 26,
+          "proposed_lot_geometry": 40,
+          "road_corner_out_of_bounds": 2,
+          "road_corridor_parcel_conflict": 1,
+          "too_few_proposed_lots": 11
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 18,
+      "cursor_start": 117,
+      "cursor_end": 123,
+      "cursor_anchors_examined": 6,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 8,
+          "proposed_lot_geometry": 54,
+          "road_corner_out_of_bounds": 2,
+          "too_few_proposed_lots": 14
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 19,
+      "cursor_start": 123,
+      "cursor_end": 129,
+      "cursor_anchors_examined": 6,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 4,
+          "proposed_lot_geometry": 54,
+          "road_corner_out_of_bounds": 1,
+          "too_few_proposed_lots": 13
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 20,
+      "cursor_start": 129,
+      "cursor_end": 136,
+      "cursor_anchors_examined": 7,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 4,
+          "proposed_lot_geometry": 56,
+          "road_corridor_parcel_conflict": 1,
+          "too_few_proposed_lots": 5
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 21,
+      "cursor_start": 136,
+      "cursor_end": 140,
+      "cursor_anchors_examined": 4,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 2,
+          "proposed_lot_geometry": 56
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 22,
+      "cursor_start": 140,
+      "cursor_end": 144,
+      "cursor_anchors_examined": 4,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "proposed_lot_geometry": 56,
+          "too_few_proposed_lots": 8
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 23,
+      "cursor_start": 144,
+      "cursor_end": 148,
+      "cursor_anchors_examined": 4,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "anchor_degree_limit": 2,
+          "proposed_lot_geometry": 56,
+          "too_few_proposed_lots": 6
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 24,
+      "cursor_start": 148,
+      "cursor_end": 152,
+      "cursor_anchors_examined": 4,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "proposed_lot_geometry": 55,
+          "road_crosses_protected_land": 1
+        },
+        "witnesses": []
+      }
+    },
+    {
+      "call": 25,
+      "cursor_start": 152,
+      "cursor_end": 157,
+      "cursor_anchors_examined": 5,
+      "production_method_accepted": false,
+      "accepted_plan": null,
+      "geometry_rejection_capture": {
+        "accepted_candidates": 0,
+        "reason_counts": {
+          "proposed_lot_geometry": 56,
+          "too_few_proposed_lots": 6
+        },
+        "witnesses": []
+      }
+    }
+  ],
+  "rejection_histogram": {
+    "anchor_degree_limit": 400,
+    "proposed_lot_geometry": 1107,
+    "road_corner_out_of_bounds": 7,
+    "road_corridor_parcel_conflict": 7,
+    "road_crosses_protected_land": 1,
+    "too_few_proposed_lots": 214
+  },
+  "rejection_witnesses": [
+    {
+      "anchor_node": 3904,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          -368.83902,
+          154.37344
+        ],
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -315.9129,
+          79.254845
+        ],
+        [
+          -318.87598,
+          156.29507
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -368.83902,
+          154.37344
+        ],
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -283.93655,
+          80.48469
+        ],
+        [
+          -286.8996,
+          157.52492
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -354.57986,
+          140.09877,
+          13.624298,
+          11.400009,
+          -1.6092384
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 557
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          -368.83902,
+          154.37344
+        ],
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -415.83905,
+          75.41158
+        ],
+        [
+          -418.80206,
+          152.45181
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -368.83902,
+          154.37344
+        ],
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -447.8154,
+          74.18174
+        ],
+        [
+          -450.77844,
+          151.22197
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -381.95963,
+          139.0457,
+          13.624298,
+          11.400009,
+          1.5323542
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 1137
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -358.39026,
+          1.2197571
+        ],
+        [
+          -308.63034,
+          6.113619
+        ],
+        [
+          -316.11606,
+          82.22707
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -358.39026,
+          1.2197571
+        ],
+        [
+          -276.784,
+          9.24569
+        ],
+        [
+          -284.2697,
+          85.359146
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -350.79953,
+          64.0098,
+          13.470171,
+          11.399996,
+          -1.6688305
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 56
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -358.39026,
+          1.2197571
+        ],
+        [
+          -408.15018,
+          -3.6741047
+        ],
+        [
+          -415.6359,
+          72.439354
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -358.39026,
+          1.2197571
+        ],
+        [
+          -439.99652,
+          -6.806176
+        ],
+        [
+          -447.48224,
+          69.30728
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -378.06796,
+          61.32796,
+          13.470171,
+          11.399996,
+          1.4727621
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 1139
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -365.87598,
+          -4.666786
+        ],
+        [
+          -315.87598,
+          -4.666786
+        ],
+        [
+          -315.87598,
+          77.33321
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -349.92596,
+          63.613216,
+          11.440001,
+          15.9,
+          -1.5707964
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 56
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -365.87598,
+          -4.666786
+        ],
+        [
+          -283.87598,
+          -4.666786
+        ],
+        [
+          -283.87598,
+          77.33321
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -352.17596,
+          63.613216,
+          11.440001,
+          11.4,
+          -1.5707964
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 56
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -365.87598,
+          -4.666786
+        ],
+        [
+          -415.87598,
+          -4.666786
+        ],
+        [
+          -415.87598,
+          77.33321
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -381.826,
+          63.613216,
+          11.440001,
+          15.9,
+          1.5707964
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 1139
+      }
+    },
+    {
+      "anchor_node": 3904,
+      "reason": "proposed_lot_geometry",
+      "corners": [
+        [
+          -365.87598,
+          77.33321
+        ],
+        [
+          -365.87598,
+          -4.666786
+        ],
+        [
+          -447.87598,
+          -4.666786
+        ],
+        [
+          -447.87598,
+          77.33321
+        ]
+      ],
+      "lot_geometry": {
+        "failed_lot_rect": [
+          -379.576,
+          63.613216,
+          11.440001,
+          11.4,
+          1.5707964
+        ],
+        "failure_category": "existing_parcel_clearance",
+        "first_overlapping_parcel_footprint_index": 1139
+      }
+    },
+    {
+      "anchor_node": 1,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          365.0,
+          42.0
+        ],
+        [
+          371.49567,
+          -33.94458
+        ],
+        [
+          321.67755,
+          -38.205605
+        ],
+        [
+          315.1819,
+          37.738976
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 1,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          365.0,
+          42.0
+        ],
+        [
+          371.49567,
+          -33.94458
+        ],
+        [
+          421.31378,
+          -29.683556
+        ],
+        [
+          414.8181,
+          46.261024
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          -18.0,
+          42.0
+        ],
+        [
+          -18.0,
+          92.0
+        ],
+        [
+          72.0,
+          92.0
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          -18.0,
+          42.0
+        ],
+        [
+          -18.0,
+          124.0
+        ],
+        [
+          72.0,
+          124.0
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          -18.0,
+          42.0
+        ],
+        [
+          -18.0,
+          -8.0
+        ],
+        [
+          72.0,
+          -8.0
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          -18.0,
+          42.0
+        ],
+        [
+          -18.0,
+          -40.0
+        ],
+        [
+          72.0,
+          -40.0
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          -18.0,
+          42.0
+        ],
+        [
+          -20.844788,
+          92.50282
+        ],
+        [
+          61.02543,
+          97.11452
+        ],
+        [
+          63.870216,
+          46.61169
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2,
+      "reason": "too_few_proposed_lots",
+      "corners": [
+        [
+          -18.0,
+          42.0
+        ],
+        [
+          -20.844788,
+          92.50282
+        ],
+        [
+          -102.715004,
+          87.89113
+        ],
+        [
+          -99.87022,
+          37.38831
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 4,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          153.0,
+          58.0
+        ],
+        [
+          162.68932,
+          8.947811
+        ],
+        [
+          81.68932,
+          -7.052189
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 4,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          153.0,
+          58.0
+        ],
+        [
+          168.89049,
+          -22.445587
+        ],
+        [
+          87.89049,
+          -38.445587
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 4,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          153.0,
+          58.0
+        ],
+        [
+          143.31068,
+          107.052185
+        ],
+        [
+          62.310677,
+          91.052185
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 4,
+      "reason": "anchor_degree_limit",
+      "corners": [
+        [
+          72.0,
+          42.0
+        ],
+        [
+          153.0,
+          58.0
+        ],
+        [
+          137.10951,
+          138.44559
+        ],
+        [
+          56.109512,
+          122.44559
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 1501,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          -247.75002,
+          -326.7375
+        ],
+        [
+          -165.75002,
+          -326.7375
+        ],
+        [
+          -165.75002,
+          -376.7375
+        ],
+        [
+          -247.75002,
+          -376.7375
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 1502,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          -247.75002,
+          -326.7375
+        ],
+        [
+          -165.75002,
+          -326.7375
+        ],
+        [
+          -165.75002,
+          -376.7375
+        ],
+        [
+          -247.75002,
+          -376.7375
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 1929,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          347.79727,
+          133.83444
+        ],
+        [
+          347.79727,
+          215.83444
+        ],
+        [
+          397.79727,
+          215.83444
+        ],
+        [
+          397.79727,
+          133.83444
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2001,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          1.7972717,
+          347.83444
+        ],
+        [
+          83.79727,
+          347.83444
+        ],
+        [
+          83.79727,
+          397.83444
+        ],
+        [
+          1.7972717,
+          397.83444
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2002,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          83.79727,
+          347.83444
+        ],
+        [
+          165.79727,
+          347.83444
+        ],
+        [
+          165.79727,
+          397.83444
+        ],
+        [
+          83.79727,
+          397.83444
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2078,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          297.79727,
+          347.83444
+        ],
+        [
+          215.79727,
+          347.83444
+        ],
+        [
+          215.79727,
+          397.83444
+        ],
+        [
+          297.79727,
+          397.83444
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 2079,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          347.79727,
+          347.83444
+        ],
+        [
+          347.79727,
+          265.83444
+        ],
+        [
+          397.79727,
+          265.83444
+        ],
+        [
+          397.79727,
+          347.83444
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3132,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          123.85897,
+          -353.86212
+        ],
+        [
+          41.85897,
+          -353.86212
+        ],
+        [
+          41.85897,
+          -403.86212
+        ],
+        [
+          123.85897,
+          -403.86212
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3133,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          41.85897,
+          -353.86212
+        ],
+        [
+          -39.185013,
+          -351.52634
+        ],
+        [
+          -40.625473,
+          -401.50558
+        ],
+        [
+          40.41851,
+          -403.84137
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3183,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          155.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -389.86212
+        ],
+        [
+          155.85898,
+          -389.86212
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3184,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          155.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -389.86212
+        ],
+        [
+          155.85898,
+          -389.86212
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3184,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          319.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -389.86212
+        ],
+        [
+          319.85898,
+          -389.86212
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3334,
+      "reason": "road_corner_out_of_bounds",
+      "corners": [
+        [
+          319.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -339.86212
+        ],
+        [
+          237.85898,
+          -389.86212
+        ],
+        [
+          319.85898,
+          -389.86212
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3527,
+      "reason": "road_corridor_parcel_conflict",
+      "corners": [
+        [
+          41.85897,
+          -353.86212
+        ],
+        [
+          -39.185013,
+          -351.52634
+        ],
+        [
+          -40.625473,
+          -401.50558
+        ],
+        [
+          40.41851,
+          -403.84137
+        ]
+      ],
+      "lot_geometry": null
+    },
+    {
+      "anchor_node": 3808,
+      "reason": "road_crosses_protected_land",
+      "corners": [
+        [
+          -356.06735,
+          -345.33066
+        ],
+        [
+          -274.06735,
+          -345.33066
+        ],
+        [
+          -274.06735,
+          -395.33066
+        ],
+        [
+          -356.06735,
+          -395.33066
+        ]
+      ],
+      "lot_geometry": null
+    }
+  ],
+  "scanned_anchor_count": 162,
+  "full_anchor_cursor_coverage": true,
+  "production_plan_found": false,
+  "planner_outcome": "all_anchor_cursor_windows_exhausted_without_feasible_candidate",
+  "normal_ticks": {
+    "requested_ticks": 2000,
+    "start_tick": 272000,
+    "end_tick": 274000,
+    "start_buildings": 871,
+    "end_buildings": 871,
+    "start_parcels": 871,
+    "end_parcels": 871,
+    "start_roads": 210,
+    "end_roads": 210,
+    "start_projects": 76,
+    "end_projects": 76,
+    "start_anchor_cursor": 157,
+    "end_anchor_cursor": 157,
+    "start_early_access_attempts": 0,
+    "end_early_access_attempts": 0,
+    "start_early_block_reservation_attempts": 0,
+    "end_early_block_reservation_attempts": 25,
+    "samples_at_80_tick_boundaries": [
+      {
+        "tick": 272080,
+        "anchor_cursor": 9,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 1,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272160,
+        "anchor_cursor": 26,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 2,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272240,
+        "anchor_cursor": 42,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 3,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272320,
+        "anchor_cursor": 55,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 4,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272400,
+        "anchor_cursor": 71,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 5,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272480,
+        "anchor_cursor": 80,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 6,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272560,
+        "anchor_cursor": 95,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 7,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272640,
+        "anchor_cursor": 109,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 8,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272720,
+        "anchor_cursor": 123,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 9,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272800,
+        "anchor_cursor": 136,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 10,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272880,
+        "anchor_cursor": 144,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 11,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 272960,
+        "anchor_cursor": 152,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 12,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273040,
+        "anchor_cursor": 0,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 13,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273120,
+        "anchor_cursor": 18,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 14,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273200,
+        "anchor_cursor": 33,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 15,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273280,
+        "anchor_cursor": 49,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 16,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273360,
+        "anchor_cursor": 62,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 17,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273440,
+        "anchor_cursor": 76,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 18,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273520,
+        "anchor_cursor": 88,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 19,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273600,
+        "anchor_cursor": 102,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 20,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273680,
+        "anchor_cursor": 117,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 21,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273760,
+        "anchor_cursor": 129,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 22,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273840,
+        "anchor_cursor": 140,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 23,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 273920,
+        "anchor_cursor": 148,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 24,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      },
+      {
+        "tick": 274000,
+        "anchor_cursor": 157,
+        "anchor_cursor_changed": true,
+        "early_access_attempts": 0,
+        "early_block_reservation_attempts": 25,
+        "plan": null,
+        "buildings": 871,
+        "parcels": 871,
+        "roads": 210,
+        "active_projects": 0,
+        "active_road_projects": 0,
+        "active_building_projects": 0,
+        "planner_frontdoor_eligible": true,
+        "planner_frontdoor_blockers": []
+      }
+    ],
+    "final_plan": null,
+    "planner_frontdoor_eligible_at_end": true,
+    "planner_frontdoor_blockers_at_end": []
+  },
+  "limitations": "The planner method is run against its unchanged production gates on a restored clone. A full no-plan sweep shows no candidate survived the production method's current bounded geometry checks for the sampled anchor set; it does not identify a specific primitive geometry rejection or prove all possible layouts infeasible."
+}

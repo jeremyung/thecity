@@ -87,10 +87,19 @@ impl AccessPlanningJob {
         proposal_input: ProposalValidationInput,
         geometry_revision: u64,
     ) -> Result<Self, PlanningError> {
+        Self::new_excluding(discovery_input, proposal_input, geometry_revision, Vec::new())
+    }
+
+    pub(crate) fn new_excluding(
+        discovery_input: DiscoveryInput,
+        proposal_input: ProposalValidationInput,
+        geometry_revision: u64,
+        excluded_faces: Vec<Vec<u32>>,
+    ) -> Result<Self, PlanningError> {
         if discovery_input.viability != proposal_input.viability {
             return Err(PlanningError::SnapshotMismatch);
         }
-        let discovery = DiscoveryJob::new(discovery_input).map_err(PlanningError::Discovery)?;
+        let discovery = DiscoveryJob::new_excluding(discovery_input, excluded_faces).map_err(PlanningError::Discovery)?;
         let proposal_input =
             ProposalValidationContext::new(proposal_input).map_err(PlanningError::ProposalInput)?;
         Ok(Self {
@@ -111,6 +120,10 @@ impl AccessPlanningJob {
 
     pub(crate) fn geometry_revision(&self) -> u64 {
         self.geometry_revision
+    }
+
+    pub(crate) fn selected_face_identity(&self) -> Option<&[u32]> {
+        self.discovery.selected_face_identity()
     }
 
     pub(crate) fn ready_page(&self) -> Option<&[AccessProposal]> {

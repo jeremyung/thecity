@@ -719,11 +719,24 @@ pub(crate) fn host_split_samples(
                 .total_cmp(&(left.1 - left.0))
                 .then_with(|| left.0.total_cmp(&right.0))
         });
+        let fragmented = free.len() > 1;
+        let selected = free.into_iter().take(MAX_INTERVAL_SPLITS).collect::<Vec<_>>();
         split_samples.extend(
-            free.into_iter()
-                .take(MAX_INTERVAL_SPLITS)
+            selected
+                .iter()
                 .map(|(start, end)| (start + end) * 0.5),
         );
+        // Preserve all historical midpoint candidates and their order. Use
+        // the two remaining slots for deterministic obstacle-edge positions,
+        // preferring the widest selected spans and falling through when an
+        // edge is too close to an existing midpoint or accepted edge sample.
+        if fragmented {
+            let midpoint_count = split_samples.len();
+            let spans = selected.iter().copied().collect::<Vec<_>>();
+            let added_edges =
+                append_fragmented_edge_samples(&mut split_samples, &spans, host_len);
+            debug_assert_eq!(split_samples.len(), midpoint_count + added_edges);
+        }
     }
     split_samples.truncate(MAX_SPLITS_PER_HOST);
     split_samples
@@ -756,6 +769,38 @@ pub(crate) fn edge_split_samples(start: f32, end: f32, host_len: f32) -> Vec<f32
         samples.push(end - end_inset);
     }
     samples
+}
+
+/// Whether a fragmented-span edge sample crowds an existing split point.
+/// Shared by the synchronous and resumable selectors to keep their decisions
+/// identical while the resumable caller charges each comparison separately.
+pub(crate) fn edge_sample_is_duplicate(sample: f32, existing: f32) -> bool {
+    (sample - existing).abs() < 1.0
+}
+
+/// Synchronous reference selection for the at-most-two fragmented edge
+/// samples. `samples` already contains the historical midpoint prefix.
+pub(crate) fn append_fragmented_edge_samples(
+    samples: &mut Vec<f32>,
+    selected_spans: &[(f32, f32)],
+    host_len: f32,
+) -> usize {
+    let mut added = 0;
+    for &(start, end) in selected_spans {
+        for edge in edge_split_samples(start, end, host_len) {
+            if added >= MAX_EDGE_SPLITS {
+                return added;
+            }
+            if samples
+                .iter()
+                .all(|old| !edge_sample_is_duplicate(edge, *old))
+            {
+                samples.push(edge);
+                added += 1;
+            }
+        }
+    }
+    added
 }
 
 pub(crate) fn dot(a: (f32, f32), b: (f32, f32)) -> f32 {
@@ -1004,6 +1049,132 @@ mod tests {
         let long_parcel = crate::geometry::OrientedRect { x: 61.0, z: 0.0, width: 74.0, depth: 10.0, rotation: 0.0 };
         let short = host_split_samples(host, &[], &[long_parcel]);
         assert_eq!(short[MAX_INTERVAL_SPLITS..], [11.0]);
+    }
+
+    #[test]
+    fn fragmented_intervals_keep_midpoint_prefix_then_add_edge_entrances() {
+        let host = BoundaryHost {
+            road_id: 1,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        };
+        let nodes = [
+            CandidateNode { id: 5, x: 35.0, z: 0.0 },
+            CandidateNode { id: 6, x: 60.0, z: 0.0 },
+        ];
+        let samples = host_split_samples(host, &nodes, &[]);
+        assert_eq!(&samples[..3], &[75.5, 22.0, 47.5]);
+        assert_eq!(&samples[3..], &[64.0, 89.0]);
+        assert_eq!(samples.len(), 5);
+        assert!(samples.len() <= MAX_SPLITS_PER_HOST);
+        // This entrance is 4m from node 6, within the existing split-node
+        // clearance, while the previous midpoint prefix did not sample it.
+        assert!(!samples[..3].contains(&64.0));
+        assert!((64.0_f32 - nodes[1].x).abs() >= SPLIT_NODE_CLEARANCE_M);
+    }
+
+    #[test]
+    fn two_fragmented_spans_keep_both_midpoints_before_two_edges() {
+        let host = BoundaryHost {
+            road_id: 1,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        };
+        let samples = host_split_samples(
+            host,
+            &[CandidateNode { id: 5, x: 50.0, z: 0.0 }],
+            &[],
+        );
+        assert_eq!(&samples[..2], &[29.5, 70.5]);
+        assert_eq!(&samples[2..], &[11.0, 46.0]);
+        assert_eq!(samples.len(), 4);
+    }
+
+    #[test]
+    fn fragmented_edge_start_has_a_clear_branch_ray_where_midpoints_are_blocked() {
+        let face = RoadFace {
+            identity: vec![1, 2, 3, 4],
+            vertex_ids: vec![1, 2, 3, 4],
+            polygon: vec![(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)],
+            area: 10_000.0,
+            boundary_edge_ids: vec![10, 11, 12, 13],
+            contains_proposed_edge: false,
+        };
+        let host = BoundaryHost {
+            road_id: 10,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        };
+        let node = CandidateNode {
+            id: 5,
+            x: 50.0,
+            z: 0.0,
+        };
+        let blockers = [
+            crate::geometry::OrientedRect {
+                x: 29.5,
+                z: 20.0,
+                width: 20.0,
+                depth: 20.0,
+                rotation: 0.0,
+            },
+            crate::geometry::OrientedRect {
+                x: 70.5,
+                z: 20.0,
+                width: 20.0,
+                depth: 20.0,
+                rotation: 0.0,
+            },
+        ];
+        let split_points = host_split_samples(host, &[node], &blockers);
+        assert_eq!(&split_points[..2], &[29.5, 70.5]);
+        assert_eq!(&split_points[2..], &[11.0, 46.0]);
+        let midpoint_ray_clear = |x: f32| {
+            blockers.iter().all(|rect| {
+                crate::geometry::rect_segment_distance(rect, x, 0.0, x, 24.0)
+                    >= PARCEL_HOST_CLEARANCE_M
+            })
+        };
+        assert!(!midpoint_ray_clear(split_points[0]));
+        assert!(!midpoint_ray_clear(split_points[1]));
+        assert!(midpoint_ray_clear(split_points[2]));
+        assert!(midpoint_ray_clear(split_points[3]));
+
+        let scan = candidates_for_face_with_work(&face, &[host], &[node], &blockers, &[]);
+        assert!(scan.candidates.iter().any(|candidate| {
+            (candidate.host_t - split_points[3] / 100.0).abs() < 1.0e-6
+        }));
+        assert!(!scan.candidates.iter().any(|candidate| {
+            (candidate.host_t - split_points[0] / 100.0).abs() < 1.0e-6
+                || (candidate.host_t - split_points[1] / 100.0).abs() < 1.0e-6
+        }));
+    }
+
+    #[test]
+    fn fragmented_edge_selection_skips_duplicates_and_falls_through() {
+        let selected = [(10.0_f32, 30.0_f32), (10.0, 30.0), (40.0, 70.0)];
+        // Synthetic existing prefix deliberately crowds the first two spans'
+        // edge points, so the production helper must fall through to span 3.
+        let mut samples = vec![11.0, 27.0, 55.0];
+        let midpoint_prefix = samples.clone();
+        let added = append_fragmented_edge_samples(&mut samples, &selected, 100.0);
+        assert_eq!(&samples[..], &[11.0, 27.0, 55.0, 43.0, 67.0]);
+        assert_eq!(&samples[..midpoint_prefix.len()], midpoint_prefix.as_slice());
+        assert_eq!(added, MAX_EDGE_SPLITS);
+        assert_eq!(samples.iter().filter(|sample| (**sample - 11.0).abs() < 1.0).count(), 1);
+        assert!(samples.len() <= MAX_SPLITS_PER_HOST);
     }
 
     #[test]

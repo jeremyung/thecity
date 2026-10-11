@@ -1,0 +1,255 @@
+{
+  "scope": "Node WASM mature continuation; normal scheduling and admissions, no cursor override.30,000ticks at rate16. Save/resume exact every200ticks during second15,000ticks. Not browser performance or visual acceptance.",
+  "inputSha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+  "wasmSha256": "8696434fdd1e115c72ada5033ff1d4c750c1cfc4cb92538856ddfb1de1256973",
+  "checkpoints": [
+    {
+      "tick": 247000,
+      "buildings": 861,
+      "roads": 210
+    },
+    {
+      "tick": 252000,
+      "buildings": 866,
+      "roads": 210
+    },
+    {
+      "tick": 257000,
+      "buildings": 870,
+      "roads": 210
+    },
+    {
+      "tick": 262000,
+      "buildings": 871,
+      "roads": 210
+    },
+    {
+      "tick": 267000,
+      "buildings": 871,
+      "roads": 210
+    },
+    {
+      "tick": 272000,
+      "buildings": 871,
+      "roads": 210
+    }
+  ],
+  "initialBuildings": 850,
+  "finalBuildings": 871,
+  "addedBuildings": [
+    {
+      "id": 3997,
+      "parcelId": 3996,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": 351.93887,
+      "z": 18.691195
+    },
+    {
+      "id": 4000,
+      "parcelId": 3999,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 15,
+      "x": -4.048359,
+      "z": -61.65719
+    },
+    {
+      "id": 4003,
+      "parcelId": 4002,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 10,
+      "x": 20.2384,
+      "z": 6.7633123
+    },
+    {
+      "id": 4007,
+      "parcelId": 4006,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": -2.3617544,
+      "z": -322.4735
+    },
+    {
+      "id": 4015,
+      "parcelId": 4014,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 8,
+      "x": 5.2639723,
+      "z": 114.872795
+    },
+    {
+      "id": 4019,
+      "parcelId": 4017,
+      "width": 12.533337,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": 205.29605,
+      "z": -8.90304
+    },
+    {
+      "id": 4021,
+      "parcelId": 4018,
+      "width": 12.533337,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": 190.92284,
+      "z": -5.6654263
+    },
+    {
+      "id": 4024,
+      "parcelId": 4023,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": -350.29083,
+      "z": -53.11729
+    },
+    {
+      "id": 4027,
+      "parcelId": 4026,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 20,
+      "x": -389.31918,
+      "z": -183.03796
+    },
+    {
+      "id": 4030,
+      "parcelId": 4029,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 20,
+      "x": -295.63358,
+      "z": 389.8847
+    },
+    {
+      "id": 4033,
+      "parcelId": 4032,
+      "width": 14,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": -55.66136,
+      "z": -319.813
+    },
+    {
+      "id": 4037,
+      "parcelId": 4036,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": -26.843527,
+      "z": 16.826075
+    },
+    {
+      "id": 4040,
+      "parcelId": 4039,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": 109.5932,
+      "z": 64.71565
+    },
+    {
+      "id": 4043,
+      "parcelId": 4042,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": -170.91681,
+      "z": 14.819522
+    },
+    {
+      "id": 4046,
+      "parcelId": 4045,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 8,
+      "x": -203.13586,
+      "z": -14.945085
+    },
+    {
+      "id": 4049,
+      "parcelId": 4048,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 20,
+      "x": -181.37556,
+      "z": -86.43444
+    },
+    {
+      "id": 4053,
+      "parcelId": 4052,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 12,
+      "x": 266.28262,
+      "z": 147.14836
+    },
+    {
+      "id": 4056,
+      "parcelId": 4055,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": 221.39563,
+      "z": 115.417496
+    },
+    {
+      "id": 4059,
+      "parcelId": 4058,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 20,
+      "x": -48.111897,
+      "z": 336.14484
+    },
+    {
+      "id": 4063,
+      "parcelId": 4061,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 20,
+      "x": 140.85898,
+      "z": -214.86212
+    },
+    {
+      "id": 4067,
+      "parcelId": 4065,
+      "width": 8,
+      "depth": 12,
+      "stage": "open",
+      "occupancy": 0,
+      "x": -173.21323,
+      "z": -17.097967
+    }
+  ],
+  "narrow8x12Count": 18,
+  "narrow8x12OpenCount": 18,
+  "finalSaveSha256": "74db8e9f9ac2bef4a828bd877d6d31a124ba522d9365033a50c51bc963add01d",
+  "resumeExact": true
+}

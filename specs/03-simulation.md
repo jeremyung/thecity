@@ -72,6 +72,16 @@ Vehicles use left-hand lanes, speed limits, following distance, and intersection
 
 Arrival changes an agent's activity and occupancy records at a tick boundary. At an external gateway, entering and leaving represent the region beyond the simulated domain.
 
+Implementation checkpoint (2026-10-11): bus and inbound train passengers can
+alight into a persisted, visible waiting-at-stop state when the final walking
+route is unavailable. Recovery caps are 256 waiting residents and eight examined
+entries/route queries per tick; unchanged failed-route geometry suppresses repeat
+searches. Reconnection preserves the physical waiting position and original trip
+intent. Native and WASM replay evidence is recorded in
+[the handoff](../validation/HANDOFF.md). A permanently unavailable route still
+needs an explicit cancellation/replanning policy; this checkpoint does not close
+the complete travel requirement.
+
 ## Determinism
 
 Use separate seeded streams for geography, growth, schedules, weather, and cosmetic definitions. Rendering randomness has no access to simulation streams. Stable iteration order and deterministic event ordering are required. Avoid dependence on hash-map iteration, wall time, or asynchronous job completion order.

@@ -22,7 +22,10 @@ use crate::road_faces::{RoadFace, RoadFaceEdge, RoadFaceError, RoadFaceNode};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-const CHECKPOINT_SCHEMA: u8 = 3;
+const CHECKPOINT_SCHEMA: u8 = 4;
+const MAX_EXCLUDED_FACES: usize = 512;
+const MAX_EXCLUDED_FACE_IDS: usize = 32_768;
+const MAX_FACE_IDENTITY_LEN: usize = 1_024;
 const MAX_GRAPH_NODES: usize = 512;
 const MAX_GRAPH_EDGES: usize = 512;
 const MAX_CANDIDATE_NODES: usize = MAX_PREPARED_INPUT_NODES;
@@ -69,6 +72,7 @@ pub(crate) struct DiscoveryAdvance {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum CopyKind {
+    Identity,
     Parcels,
     Roads,
     Nodes,
@@ -139,6 +143,8 @@ pub(crate) struct DiscoveryCheckpoint {
     schema: u8,
     all_nodes: Vec<CandidateNode>,
     viability: FrozenViabilityInput,
+    excluded_faces: Vec<Vec<u32>>,
+    selected_face_identity: Option<Vec<u32>>,
     stage: StageCheckpoint,
 }
 
@@ -207,6 +213,8 @@ enum Stage {
 pub(crate) struct DiscoveryJob {
     all_nodes: Vec<CandidateNode>,
     viability: Arc<FrozenViabilityContext>,
+    excluded_faces: Vec<Vec<u32>>,
+    selected_face_identity: Option<Vec<u32>>,
     stage: Stage,
 }
 
@@ -214,6 +222,14 @@ impl DiscoveryJob {
     /// Fixed-size/count validation is synchronous and bounded. The graph and
     /// candidate caps match the constituent trace/descriptor stages.
     pub(crate) fn new(input: DiscoveryInput) -> Result<Self, DiscoveryError> {
+        Self::new_excluding(input, Vec::new())
+    }
+
+    pub(crate) fn new_excluding(
+        input: DiscoveryInput,
+        excluded_faces: Vec<Vec<u32>>,
+    ) -> Result<Self, DiscoveryError> {
+        validate_excluded_faces(&excluded_faces).map_err(|_| DiscoveryError::InputTooLarge)?;
         validate_nodes(&input.all_nodes)?;
         if input.graph_nodes.len() > MAX_GRAPH_NODES
             || input.graph_edges.len() > MAX_GRAPH_EDGES
@@ -231,6 +247,8 @@ impl DiscoveryJob {
         Ok(Self {
             all_nodes: input.all_nodes,
             viability,
+            excluded_faces,
+            selected_face_identity: None,
             stage: Stage::CopyGraph {
                 graph_nodes: input.graph_nodes,
                 graph_edges: input.graph_edges,
@@ -242,6 +260,52 @@ impl DiscoveryJob {
 
     pub(crate) fn restore(checkpoint: DiscoveryCheckpoint) -> Result<Self, DiscoveryError> {
         if checkpoint.schema != CHECKPOINT_SCHEMA {
+            return Err(DiscoveryError::InvalidCheckpoint);
+        }
+        validate_excluded_faces(&checkpoint.excluded_faces)
+            .map_err(|_| DiscoveryError::InvalidCheckpoint)?;
+        validate_selected_identity(checkpoint.selected_face_identity.as_deref())
+            .map_err(|_| DiscoveryError::InvalidCheckpoint)?;
+        let exclusion_ownership_valid = match &checkpoint.stage {
+            StageCheckpoint::CopyGraph { .. }
+            | StageCheckpoint::Trace { .. }
+            | StageCheckpoint::Failed(_) => true,
+            _ => checkpoint.excluded_faces.is_empty(),
+        };
+        if !exclusion_ownership_valid {
+            return Err(DiscoveryError::InvalidCheckpoint);
+        }
+        let selected_matches_stage = match &checkpoint.stage {
+            StageCheckpoint::CopyRankInputs {
+                face,
+                kind: CopyKind::Identity,
+                cursor,
+                ..
+            } => {
+                *cursor <= face.identity.len()
+                    && checkpoint.selected_face_identity.as_deref()
+                        == Some(&face.identity[..*cursor])
+            }
+            StageCheckpoint::CopyRankInputs { face, .. }
+            | StageCheckpoint::Ranking { face, .. }
+            | StageCheckpoint::BuildDescriptors { face, .. } => {
+                valid_selected_identity(checkpoint.selected_face_identity.as_deref())
+                    && checkpoint.selected_face_identity.as_deref()
+                        == Some(face.identity.as_slice())
+            }
+            StageCheckpoint::Descriptors(_) => {
+                valid_selected_identity(checkpoint.selected_face_identity.as_deref())
+                    && checkpoint.selected_face_identity.is_some()
+            }
+            StageCheckpoint::Done(_) | StageCheckpoint::Failed(_) => {
+                checkpoint
+                    .selected_face_identity
+                    .as_deref()
+                    .is_none_or(|identity| valid_selected_identity(Some(identity)))
+            }
+            _ => checkpoint.selected_face_identity.is_none(),
+        };
+        if !selected_matches_stage {
             return Err(DiscoveryError::InvalidCheckpoint);
         }
         validate_nodes(&checkpoint.all_nodes).map_err(|_| DiscoveryError::InvalidCheckpoint)?;
@@ -320,6 +384,7 @@ impl DiscoveryJob {
                     &checkpoint.all_nodes,
                     &viability,
                     &retained_edges,
+                    checkpoint.selected_face_identity.as_deref(),
                 )?;
                 Stage::CopyRankInputs {
                     face,
@@ -427,6 +492,8 @@ impl DiscoveryJob {
         Ok(Self {
             all_nodes: checkpoint.all_nodes,
             viability,
+            excluded_faces: checkpoint.excluded_faces,
+            selected_face_identity: checkpoint.selected_face_identity,
             stage,
         })
     }
@@ -527,8 +594,14 @@ impl DiscoveryJob {
             schema: CHECKPOINT_SCHEMA,
             all_nodes: self.all_nodes.clone(),
             viability: self.viability.checkpoint(),
+            excluded_faces: self.excluded_faces.clone(),
+            selected_face_identity: self.selected_face_identity.clone(),
             stage,
         }
+    }
+
+    pub(crate) fn selected_face_identity(&self) -> Option<&[u32]> {
+        self.selected_face_identity.as_deref()
     }
 
     pub(crate) fn descriptors(&self) -> Option<Result<&[AccessGeometryCandidate], DiscoveryError>> {
@@ -592,7 +665,11 @@ impl DiscoveryJob {
                                     self.stage = Stage::Failed(DiscoveryError::Trace(error))
                                 }
                                 Ok(faces) => {
-                                    match FaceSelection::new(faces, self.viability.clone()) {
+                                    match FaceSelection::new_excluding(
+                                        faces,
+                                        self.viability.clone(),
+                                        std::mem::take(&mut self.excluded_faces),
+                                    ) {
                                         Ok(selection) => {
                                             self.stage = Stage::Selection {
                                                 selection,
@@ -630,10 +707,12 @@ impl DiscoveryJob {
                                 Err(_) => self.stage = Stage::Failed(DiscoveryError::Selection),
                                 Ok(None) => self.stage = Stage::Done(Vec::new()),
                                 Ok(Some((face, centers))) => {
+                                    self.selected_face_identity =
+                                        Some(Vec::with_capacity(face.identity.len()));
                                     self.stage = Stage::CopyRankInputs {
                                         face,
                                         centers,
-                                        kind: CopyKind::Parcels,
+                                        kind: CopyKind::Identity,
                                         cursor: 0,
                                         parcels: Vec::with_capacity(
                                             self.viability.input().parcel_footprints.len(),
@@ -654,6 +733,7 @@ impl DiscoveryJob {
                     }
                 }
                 Stage::CopyRankInputs {
+                    face,
                     kind,
                     cursor,
                     parcels,
@@ -663,6 +743,19 @@ impl DiscoveryJob {
                 } => {
                     let source = self.viability.input();
                     match kind {
+                        CopyKind::Identity if *cursor < face.identity.len() => {
+                            self.selected_face_identity
+                                .as_mut()
+                                .expect("selected identity was reserved")
+                                .push(face.identity[*cursor]);
+                            *cursor += 1;
+                            used += 1;
+                        }
+                        CopyKind::Identity => {
+                            *kind = CopyKind::Parcels;
+                            *cursor = 0;
+                            used += 1;
+                        }
                         CopyKind::Parcels if *cursor < source.parcel_footprints.len() => {
                             parcels.push(source.parcel_footprints[*cursor]);
                             *cursor += 1;
@@ -844,6 +937,10 @@ impl DiscoveryJob {
                     } else {
                         let viability = self.viability.input();
                         match copy_kind {
+                            CopyKind::Identity => {
+                                self.stage = Stage::Failed(DiscoveryError::InvalidInput);
+                                used += 1;
+                            }
                             CopyKind::Parcels if *cursor < viability.parcel_footprints.len() => {
                                 parcels.push(viability.parcel_footprints[*cursor]);
                                 *cursor += 1;
@@ -927,6 +1024,34 @@ fn validate_nodes(nodes: &[CandidateNode]) -> Result<(), DiscoveryError> {
         return Err(DiscoveryError::InvalidInput);
     }
     Ok(())
+}
+
+fn validate_excluded_faces(faces: &[Vec<u32>]) -> Result<(), DiscoveryError> {
+    if faces.len() > MAX_EXCLUDED_FACES
+        || faces
+            .iter()
+            .any(|identity| identity.len() < 3 || identity.len() > MAX_FACE_IDENTITY_LEN)
+        || faces
+            .iter()
+            .fold(0usize, |total, identity| total.saturating_add(identity.len()))
+            > MAX_EXCLUDED_FACE_IDS
+    {
+        return Err(DiscoveryError::InputTooLarge);
+    }
+    Ok(())
+}
+
+fn validate_selected_identity(identity: Option<&[u32]>) -> Result<(), DiscoveryError> {
+    if identity.is_some_and(|identity| identity.len() > MAX_FACE_IDENTITY_LEN) {
+        return Err(DiscoveryError::InvalidCheckpoint);
+    }
+    Ok(())
+}
+
+fn valid_selected_identity(identity: Option<&[u32]>) -> bool {
+    identity.is_some_and(|identity| {
+        (3..=MAX_FACE_IDENTITY_LEN).contains(&identity.len())
+    })
 }
 
 fn valid_graph(nodes: &[RoadFaceNode], edges: &[RoadFaceEdge]) -> bool {
@@ -1034,9 +1159,23 @@ fn validate_copy_rank(
     all_nodes: &[CandidateNode],
     viability: &FrozenViabilityContext,
     edges: &[RoadFaceEdge],
+    selected_identity: Option<&[u32]>,
 ) -> Result<(), DiscoveryError> {
     let source = viability.input();
+    let identity_matches = match (kind, selected_identity) {
+        (CopyKind::Identity, Some(identity)) => {
+            identity == face.identity.get(..identity.len()).unwrap_or(&[])
+                && cursor == identity.len()
+                && identity.len() <= face.identity.len()
+                && parcels.is_empty()
+                && roads.is_empty()
+                && nodes.is_empty()
+        }
+        (_, Some(identity)) => identity == face.identity.as_slice(),
+        (_, None) => false,
+    };
     let cursor_matches = match kind {
+        CopyKind::Identity => true,
         CopyKind::Parcels => {
             cursor == parcels.len()
                 && roads.is_empty()
@@ -1061,6 +1200,7 @@ fn validate_copy_rank(
         }
     };
     if !valid_face(face)
+        || !identity_matches
         || edges.len() > MAX_GRAPH_EDGES
         || face.boundary_edge_ids.len() > MAX_GRAPH_EDGES
         || centers.len() > 576
@@ -1069,6 +1209,7 @@ fn validate_copy_rank(
             .any(|(x, z)| !x.is_finite() || !z.is_finite())
         || cursor
             > match kind {
+                CopyKind::Identity => face.identity.len(),
                 CopyKind::Parcels => source.parcel_footprints.len(),
                 CopyKind::Roads => source.open_roads.len(),
                 CopyKind::Nodes => all_nodes.len(),
@@ -1102,7 +1243,11 @@ fn validate_descriptor_build(
     viability: &FrozenViabilityContext,
     edges: &[RoadFaceEdge],
 ) -> Result<(), DiscoveryError> {
+    if kind == CopyKind::Identity {
+        return Err(DiscoveryError::InvalidCheckpoint);
+    }
     let source_len = match kind {
+        CopyKind::Identity => 0,
         CopyKind::Parcels => viability.input().parcel_footprints.len(),
         CopyKind::Roads => all_nodes.len(),
         CopyKind::Nodes => ranking
@@ -1111,6 +1256,7 @@ fn validate_descriptor_build(
             .len(),
     };
     let (expected_parcels, expected_nodes, expected_targets) = match kind {
+        CopyKind::Identity => (0, 0, 0),
         CopyKind::Parcels => (cursor, 0, 0),
         CopyKind::Roads => (viability.input().parcel_footprints.len(), cursor, 0),
         CopyKind::Nodes => (
@@ -1393,6 +1539,106 @@ mod tests {
     }
 
     #[test]
+    fn selected_identity_is_stable_across_checkpoint_restore_and_exclusion() {
+        let mut job = DiscoveryJob::new(input(true)).unwrap();
+        assert_eq!(job.selected_face_identity(), None);
+        for _ in 0..100_000 {
+            job.advance(1);
+            if matches!(
+                &job.stage,
+                Stage::CopyRankInputs {
+                    kind: CopyKind::Identity,
+                    ..
+                }
+            ) {
+                break;
+            }
+        }
+        assert_eq!(job.selected_face_identity(), Some(&[][..]));
+        let bytes = serde_json::to_vec(&job.checkpoint()).unwrap();
+        job = DiscoveryJob::restore(serde_json::from_slice(&bytes).unwrap()).unwrap();
+        for _ in 0..100_000 {
+            job.advance(16);
+            if job.selected_face_identity() == Some(&[1, 2, 3, 4][..]) {
+                break;
+            }
+        }
+        assert_eq!(job.selected_face_identity(), Some(&[1, 2, 3, 4][..]));
+        let bytes = serde_json::to_vec(&job.checkpoint()).unwrap();
+        let restored = DiscoveryJob::restore(serde_json::from_slice(&bytes).unwrap()).unwrap();
+        assert_eq!(restored.selected_face_identity(), Some(&[1, 2, 3, 4][..]));
+
+        let excluded =
+            DiscoveryJob::new_excluding(input(true), vec![vec![1, 2, 3, 4]]).unwrap();
+        let mut excluded = excluded;
+        for _ in 0..100_000 {
+            let step = excluded.advance(16);
+            if step.done {
+                break;
+            }
+        }
+        assert_eq!(excluded.selected_face_identity(), None);
+        assert!(excluded.descriptors().unwrap().unwrap().is_empty());
+    }
+
+    #[test]
+    fn exclusions_are_capped_at_construction_and_restore() {
+        assert_eq!(
+            DiscoveryJob::new_excluding(
+                input(false),
+                vec![vec![1; MAX_FACE_IDENTITY_LEN + 1]],
+            )
+            .err(),
+            Some(DiscoveryError::InputTooLarge)
+        );
+        let mut checkpoint = DiscoveryJob::new(input(false)).unwrap().checkpoint();
+        checkpoint.excluded_faces = vec![vec![1]; MAX_EXCLUDED_FACES + 1];
+        assert_eq!(
+            DiscoveryJob::restore(checkpoint).err(),
+            Some(DiscoveryError::InvalidCheckpoint)
+        );
+    }
+
+    #[test]
+    fn restore_enforces_exclusion_ownership_after_selection_transition() {
+        let mut job = DiscoveryJob::new_excluding(input(true), vec![vec![1, 2, 3]]).unwrap();
+        for _ in 0..100_000 {
+            if matches!(&job.stage, Stage::Selection { .. }) {
+                break;
+            }
+            job.advance(1);
+        }
+        assert!(matches!(&job.stage, Stage::Selection { .. }));
+        let mut checkpoint = job.checkpoint();
+        assert!(checkpoint.excluded_faces.is_empty());
+        checkpoint.excluded_faces.push(vec![4, 5, 6]);
+        assert_eq!(
+            DiscoveryJob::restore(checkpoint).err(),
+            Some(DiscoveryError::InvalidCheckpoint)
+        );
+    }
+
+    #[test]
+    fn restore_rejects_empty_selected_identity_but_allows_no_face_done() {
+        let mut no_face = DiscoveryJob::new(input(false)).unwrap();
+        for _ in 0..100_000 {
+            if no_face.advance(32).done {
+                break;
+            }
+        }
+        assert!(matches!(&no_face.stage, Stage::Done(_)));
+        assert_eq!(no_face.selected_face_identity(), None);
+        assert!(DiscoveryJob::restore(no_face.checkpoint()).is_ok());
+
+        let mut checkpoint = no_face.checkpoint();
+        checkpoint.selected_face_identity = Some(Vec::new());
+        assert_eq!(
+            DiscoveryJob::restore(checkpoint).err(),
+            Some(DiscoveryError::InvalidCheckpoint)
+        );
+    }
+
+    #[test]
     fn duplicate_snapshot_node_ids_reject_before_work() {
         let mut invalid = input(false);
         invalid.all_nodes = vec![
@@ -1473,6 +1719,8 @@ mod tests {
             schema: CHECKPOINT_SCHEMA,
             all_nodes: input.all_nodes,
             viability: context.checkpoint(),
+            excluded_faces: Vec::new(),
+            selected_face_identity: None,
             stage: StageCheckpoint::BuildDescriptors {
                 face,
                 ranking: ranking.checkpoint(),

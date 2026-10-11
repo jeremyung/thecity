@@ -38,6 +38,17 @@ Expose coarse operations: initialize definitions and seed; enqueue command batch
 
 Batch boundary crossings. Never invoke WASM once per agent from the renderer. Avoid rebuilding a JavaScript object tree of the entire city each frame.
 
+Rear-extension checkpoint (2026-10-11): `engine/src/rear_extensions.rs` owns
+bounded admission, parcel reservation, pending construction, completion and
+validation. Save activity schema 4 carries both pending plans and the earliest
+original footprint for each extended building. Structural snapshots expose
+`rear_extensions` and `building_original_footprints`; the renderer preserves the
+original kit and adds the rear volume independently of style. Geometry and
+capacity remain authoritative engine fields. Incremental neighborhood batches
+report exact descriptor visibility only after their atomic scene commit, allowing
+temporary construction geometry to remain until its replacement is visible.
+See [the checkpoint and verification limits](../validation/HANDOFF.md#inhabited-rear-extensions--implementation-in-progress-2026-10-11).
+
 ## Worker protocol
 
 Every message carries protocol version and world epoch. Epoch changes on load or new world; discard messages from old epochs.

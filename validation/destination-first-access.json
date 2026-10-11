@@ -1,0 +1,173 @@
+{
+  "connections": {
+    "cap": 20000,
+    "count": 0,
+    "truncated": false
+  },
+  "descriptor_count_available": 2440,
+  "grid": {
+    "cap": 10000,
+    "estimated_in_bounds": 891,
+    "examined": 891,
+    "inside_face": 561,
+    "step_m": 5.0,
+    "truncated": false
+  },
+  "host_starts": {
+    "cap": 10000,
+    "truncated": false,
+    "unique_count": 48
+  },
+  "layouts": {
+    "cap": 160000,
+    "count": 8976,
+    "lane_lengths_m": [
+      28.0,
+      40.0
+    ],
+    "orientations_radians": [
+      0.0,
+      0.7853981852531433,
+      1.5707963705062866,
+      2.356194496154785,
+      3.1415927410125732,
+      3.9269909858703613,
+      4.71238899230957,
+      5.4977874755859375
+    ],
+    "truncated": false
+  },
+  "limitations": [
+    "offline geometry only; no live admission, demand, capacity, construction, routing or persistence acceptance",
+    "bounded grid, layout, connection and viability-query work; truncation is reported",
+    "lot templates use existing standard 12x14 frontage geometry at 11.25m center offset"
+  ],
+  "lots": {
+    "center_offset_m": 11.25,
+    "depth_m": 12,
+    "failure_histogram": {
+      "generated=2,contained=1,valid=0": 9,
+      "generated=2,contained=2,valid=0": 20,
+      "generated=2,contained=2,valid=1": 32,
+      "generated=4,contained=2,valid=0": 3,
+      "generated=4,contained=3,valid=0": 1,
+      "generated=4,contained=4,valid=0": 1,
+      "generated=4,contained=4,valid=1": 8
+    },
+    "failure_samples": [
+      {
+        "face_contained_lots": 2,
+        "generated_lots": 2,
+        "lane": {
+          "ax": 72.5,
+          "az": -272.5,
+          "bx": 92.29898834228516,
+          "bz": -252.7010040283203
+        },
+        "world_valid_lots": 1
+      },
+      {
+        "face_contained_lots": 2,
+        "generated_lots": 2,
+        "lane": {
+          "ax": 72.5,
+          "az": -272.5,
+          "bx": 72.5,
+          "bz": -244.5
+        },
+        "world_valid_lots": 1
+      },
+      {
+        "face_contained_lots": 4,
+        "generated_lots": 4,
+        "lane": {
+          "ax": 72.5,
+          "az": -272.5,
+          "bx": 72.5,
+          "bz": -232.5
+        },
+        "world_valid_lots": 1
+      },
+      {
+        "face_contained_lots": 2,
+        "generated_lots": 2,
+        "lane": {
+          "ax": 77.5,
+          "az": -272.5,
+          "bx": 97.29898834228516,
+          "bz": -252.7010040283203
+        },
+        "world_valid_lots": 1
+      }
+    ],
+    "target_width_m": 14,
+    "viable_lot_first_layout_count": 0
+  },
+  "mode": "offline_destination_first_geometry_witness_only",
+  "note": "A witness records at least two lots validated against the proposed final lane and then revalidated against both connected segments and the captured world.",
+  "outcome_counts": {
+    "fewer_than_two_lot_first_valid_lots": 74,
+    "lane_outside_face": 3744,
+    "lane_road_clearance": 2627,
+    "parcel_or_reservation_clearance": 2531
+  },
+  "production_valid": false,
+  "samples": [],
+  "save_path": "/tmp/thecity-fragmented-final.json",
+  "target_face_identity": [
+    2656,
+    2657,
+    2772,
+    2773,
+    3131,
+    3010,
+    3011,
+    2895
+  ],
+  "target_face_polygon_xz": [
+    [
+      -8.141029357910156,
+      -139.86212158203125
+    ],
+    [
+      -8.141029357910156,
+      -221.86212158203125
+    ],
+    [
+      41.858970642089844,
+      -221.86212158203125
+    ],
+    [
+      41.858970642089844,
+      -303.86212158203125
+    ],
+    [
+      123.85897064208984,
+      -303.86212158203125
+    ],
+    [
+      123.85897064208984,
+      -221.86212158203125
+    ],
+    [
+      73.85897064208984,
+      -221.86212158203125
+    ],
+    [
+      73.85897064208984,
+      -139.86212158203125
+    ]
+  ],
+  "tick": 272000,
+  "viability_work": {
+    "cap": 100000000,
+    "per_query_cap": 100000,
+    "truncated": false,
+    "used": 219806
+  },
+  "witness": null,
+  "work": {
+    "discovery": 4839936,
+    "face_trace": 146764
+  }
+}

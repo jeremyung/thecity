@@ -124,3 +124,27 @@ Rechecked the [MLIT Open Data directory](https://www.mlit.go.jp/plateau/open-dat
 - [Sumida ward, catalog identifier 2025](https://www.geospatial.jp/ckan/dataset/plateau-13107-sumida-ku-2025): candidate for compact ordinary urban fabric calibration.
 
 These exact catalog destinations were verified by following the directory links, but all three catalog fetches returned HTTP 403. The year in an identifier is not independently verified acquisition vintage. Sizes, feature attributes, LOD extents and resource-specific licenses remain unresolved. The directory is a current official index into G Spatial downloads, not a separate download host bypassing that restriction. Prioritize these explicit ward resources over assuming the old combined Tokyo catalog is the latest option. Takeshiba is labeled a sample; its actual size is still unknown. The pilot remains offline and bounded, with no large download required or performed.
+
+## Bounded PLATEAU source pilot — 2026-10-11
+
+[Source pilot](plateau-pilot/README.md) now contains three individually retrieved
+Tokyo meshes, exact provenance/hashes/resource license statements, and provisional
+250 m crop geometry/metrics. Sources plus metadata total 26,254,659 compressed
+bytes; no browser dependency is added. Six extractor tests and three source runs
+pass, but Taito direct Building count differs from catalog by one and two catalog
+byte counts disagree. Roof-edge semantics, missingness and unresolved completeness
+are explicit. Calibration is not accepted; source-member reconciliation, diagrams,
+district/context review and synthetic visual/performance comparisons remain.
+
+## PLATEAU source reconciliation and diagrams — 2026-10-11
+
+[The pilot](plateau-pilot/README.md) now reconciles all three catalog feature
+counts: Taito's extra item is a geometry-free CityObjectGroup, not a missing
+building. Explicit raw/status fields exclude 9999 unknown markers from floor
+statistics. Twelve focused tests pass; root reran all sources and reproduced
+the five generated JSON/SVG artifacts byte-for-byte. Three same-scale diagrams
+were rendered in Chromium and visually checked. Compact sample median roof-edge
+area is57.62m², station114.67m²; this supports preserving small-building fabric
+rather than promoting uniform wider lots. No density targets or production
+changes are accepted. Next compare matched synthetic crops and resolve land-use,
+frontage and roof-shape calibration before a multi-seed growth/render trial.

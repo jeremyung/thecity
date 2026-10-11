@@ -1,0 +1,50 @@
+{
+  "source": "mature871 scheduler fixture, real engine snapshots",
+  "backend": "software WebGL",
+  "method": "pipeline detached while manually draining bounded update queues; restored for captures",
+  "performanceEvidence": false,
+  "settings": {
+    "previewHour": 12,
+    "depthOfField": false,
+    "style": "anime",
+    "quality": "balanced",
+    "camera": [
+      190,
+      105,
+      -75
+    ],
+    "target": [
+      106,
+      4,
+      20
+    ],
+    "viewport": [
+      1200,
+      800
+    ],
+    "uiClock": "unchanged simulation time, not preview time"
+  },
+  "miniatureCapture": "Separate attempt completed style-switch await but screenshot readback timed out after 30s; no accepted full-city miniature capture",
+  "initial": {
+    "tick": 275520,
+    "steps": 1832,
+    "buildings": 0,
+    "chunks": 0,
+    "staging": 2
+  },
+  "transition": {
+    "steps": 139,
+    "initialStaging": 2,
+    "finalStaging": 1,
+    "handoffs": [
+      {
+        "step": 139,
+        "from": 2,
+        "to": 1,
+        "remainingChunks": 0
+      }
+    ],
+    "buildings": 0,
+    "chunks": 0
+  }
+}

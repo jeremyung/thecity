@@ -1,0 +1,6603 @@
+{
+  "artifacts": {
+    "report_path": "/Users/jung/Development/thecity/validation/face-sweep-browser-profile.json",
+    "final_save_path": "/tmp/thecity-face-sweep-final.json"
+  },
+  "scope": "Production WASM CityEngine.step(1) call timings from a dedicated headless Chromium module worker; excludes the application simulation worker scheduler, renderer, browser frames, and worker message scheduling",
+  "runtime": {
+    "browser": "Chromium",
+    "version": "145.0.7632.6",
+    "wasm_sha256": "d19115361d3786f217880cd19775bb3519a96e423f53cd49faae3e8d62d18a28",
+    "wasm_module_url": "http://127.0.0.1:5173/wasm/city_engine.js"
+  },
+  "fixture": {
+    "path": "validation/early-reservation-wasm-87231-save.json",
+    "seed": 87231,
+    "start_tick": 242000,
+    "bytes_utf8": 2703924
+  },
+  "measurement": {
+    "requested_ticks": 30000,
+    "completed_ticks": 30000,
+    "start_tick": 242000,
+    "final_tick": 272000,
+    "elapsed_wall_ms_including_checkpoints_and_yields": 23831,
+    "raw_step_call_ms": {
+      "p50": 0,
+      "p95": 0.4000000022351742,
+      "p99": 10,
+      "max": 27.800000000745058
+    },
+    "top_20_ticks": [
+      {
+        "tick": 252800,
+        "duration_ms": 27.800000000745058
+      },
+      {
+        "tick": 266800,
+        "duration_ms": 27.5
+      },
+      {
+        "tick": 250800,
+        "duration_ms": 26.600000001490116
+      },
+      {
+        "tick": 266400,
+        "duration_ms": 25.600000001490116
+      },
+      {
+        "tick": 242400,
+        "duration_ms": 24.899999998509884
+      },
+      {
+        "tick": 267200,
+        "duration_ms": 24.5
+      },
+      {
+        "tick": 268800,
+        "duration_ms": 24.5
+      },
+      {
+        "tick": 265600,
+        "duration_ms": 24.399999998509884
+      },
+      {
+        "tick": 270800,
+        "duration_ms": 24.199999999254942
+      },
+      {
+        "tick": 256800,
+        "duration_ms": 23.599999997764826
+      },
+      {
+        "tick": 246800,
+        "duration_ms": 23.400000002235174
+      },
+      {
+        "tick": 264800,
+        "duration_ms": 23.399999998509884
+      },
+      {
+        "tick": 253600,
+        "duration_ms": 23.100000001490116
+      },
+      {
+        "tick": 258800,
+        "duration_ms": 23
+      },
+      {
+        "tick": 254800,
+        "duration_ms": 22.800000000745058
+      },
+      {
+        "tick": 266000,
+        "duration_ms": 22.699999999254942
+      },
+      {
+        "tick": 270400,
+        "duration_ms": 22.699999999254942
+      },
+      {
+        "tick": 258400,
+        "duration_ms": 22
+      },
+      {
+        "tick": 265200,
+        "duration_ms": 21.800000000745058
+      },
+      {
+        "tick": 253200,
+        "duration_ms": 21.5
+      }
+    ],
+    "checkpoint_interval_ticks": 200,
+    "yield_interval_ticks": 100,
+    "transition_observation_interval_ticks": 20,
+    "checkpoint_and_snapshot_overhead_ms_excluded_from_raw_step_call_times": 3071.699999976903,
+    "per_tick_transition_snapshot_overhead_ms_excluded_from_raw_step_call_times": 10994.699999988079,
+    "call_scope": "Each sample brackets one synchronous JS-to-WASM CityEngine.step(1) call with performance.now(). Save serialization, JSON parsing, snapshot generation, checkpoint inspection, and yields are outside each sample."
+  },
+  "checkpoint_observations": [
+    {
+      "tick": 242200,
+      "stage": "Maturity",
+      "revision": 8469,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 850,
+        "buildings": 850,
+        "projects": 76,
+        "travelers": 298,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3186830,
+      "live_access_present": true,
+      "live_access_bytes": 275171,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 200,
+      "elapsed_tick_index": 200
+    },
+    {
+      "tick": 242400,
+      "stage": "Maturity",
+      "revision": 8474,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 850,
+        "buildings": 850,
+        "projects": 76,
+        "travelers": 350,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3040689,
+      "live_access_present": true,
+      "live_access_bytes": 275372,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 400,
+      "elapsed_tick_index": 400
+    },
+    {
+      "tick": 242600,
+      "stage": "Maturity",
+      "revision": 8479,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 850,
+        "buildings": 850,
+        "projects": 76,
+        "travelers": 392,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3066238,
+      "live_access_present": true,
+      "live_access_bytes": 275180,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 600,
+      "elapsed_tick_index": 600
+    },
+    {
+      "tick": 242800,
+      "stage": "Maturity",
+      "revision": 8484,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 850,
+        "buildings": 850,
+        "projects": 76,
+        "travelers": 413,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3172876,
+      "live_access_present": true,
+      "live_access_bytes": 363684,
+      "live_access_phase": "discover",
+      "discovery_phase": "Ranking",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 800,
+      "elapsed_tick_index": 800
+    },
+    {
+      "tick": 243000,
+      "stage": "Maturity",
+      "revision": 8489,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 850,
+        "buildings": 850,
+        "projects": 76,
+        "travelers": 450,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3197959,
+      "live_access_present": true,
+      "live_access_bytes": 366150,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 1000,
+      "elapsed_tick_index": 1000
+    },
+    {
+      "tick": 243200,
+      "stage": "Maturity",
+      "revision": 8495,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 850,
+        "projects": 76,
+        "travelers": 483,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3462473,
+      "live_access_present": true,
+      "live_access_bytes": 430361,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 1200,
+      "elapsed_tick_index": 1200
+    },
+    {
+      "tick": 243400,
+      "stage": "Maturity",
+      "revision": 8501,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 504,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3358276,
+      "live_access_present": true,
+      "live_access_bytes": 489925,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 1400,
+      "elapsed_tick_index": 1400
+    },
+    {
+      "tick": 243600,
+      "stage": "Maturity",
+      "revision": 8507,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 488,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3405802,
+      "live_access_present": true,
+      "live_access_bytes": 544899,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 1600,
+      "elapsed_tick_index": 1600
+    },
+    {
+      "tick": 243800,
+      "stage": "Maturity",
+      "revision": 8512,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 465,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3456214,
+      "live_access_present": true,
+      "live_access_bytes": 607405,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 1800,
+      "elapsed_tick_index": 1800
+    },
+    {
+      "tick": 244000,
+      "stage": "Maturity",
+      "revision": 8517,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 423,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3712835,
+      "live_access_present": true,
+      "live_access_bytes": 888496,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 2000,
+      "elapsed_tick_index": 2000
+    },
+    {
+      "tick": 244200,
+      "stage": "Maturity",
+      "revision": 8522,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 392,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3872580,
+      "live_access_present": true,
+      "live_access_bytes": 888675,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 2200,
+      "elapsed_tick_index": 2200
+    },
+    {
+      "tick": 244400,
+      "stage": "Maturity",
+      "revision": 8527,
+      "counts": {
+        "nodes": 160,
+        "roads": 208,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 349,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3668048,
+      "live_access_present": true,
+      "live_access_bytes": 888718,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 2400,
+      "elapsed_tick_index": 2400
+    },
+    {
+      "tick": 244600,
+      "stage": "Maturity",
+      "revision": 8534,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 851,
+        "buildings": 851,
+        "projects": 76,
+        "travelers": 313,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2738721,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": {
+        "branch_road_id": 4003,
+        "road_stage": "structure",
+        "project_id": 4004,
+        "project_stage": "structure",
+        "planned_lot_count": 2,
+        "actual_frontage_count": 0
+      },
+      "completed_interior_branch_ids": [],
+      "observed_opened_branches": [],
+      "step_index": 2600,
+      "elapsed_tick_index": 2600
+    },
+    {
+      "tick": 244800,
+      "stage": "Maturity",
+      "revision": 8542,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 277,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2717948,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 2800,
+      "elapsed_tick_index": 2800
+    },
+    {
+      "tick": 245000,
+      "stage": "Maturity",
+      "revision": 8549,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 247,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2878061,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 3000,
+      "elapsed_tick_index": 3000
+    },
+    {
+      "tick": 245200,
+      "stage": "Maturity",
+      "revision": 8554,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 213,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2678971,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 3200,
+      "elapsed_tick_index": 3200
+    },
+    {
+      "tick": 245400,
+      "stage": "Maturity",
+      "revision": 8559,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 185,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2661185,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 3400,
+      "elapsed_tick_index": 3400
+    },
+    {
+      "tick": 245600,
+      "stage": "Maturity",
+      "revision": 8564,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 158,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2644383,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 3600,
+      "elapsed_tick_index": 3600
+    },
+    {
+      "tick": 245800,
+      "stage": "Maturity",
+      "revision": 8569,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 129,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2912087,
+      "live_access_present": true,
+      "live_access_bytes": 276521,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 3800,
+      "elapsed_tick_index": 3800
+    },
+    {
+      "tick": 246000,
+      "stage": "Maturity",
+      "revision": 8574,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 112,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3079870,
+      "live_access_present": true,
+      "live_access_bytes": 276580,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 4000,
+      "elapsed_tick_index": 4000
+    },
+    {
+      "tick": 246200,
+      "stage": "Maturity",
+      "revision": 8579,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 97,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2891509,
+      "live_access_present": true,
+      "live_access_bytes": 276504,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 4200,
+      "elapsed_tick_index": 4200
+    },
+    {
+      "tick": 246400,
+      "stage": "Maturity",
+      "revision": 8584,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 76,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2878679,
+      "live_access_present": true,
+      "live_access_bytes": 276527,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 0,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 4400,
+      "elapsed_tick_index": 4400
+    },
+    {
+      "tick": 246600,
+      "stage": "Maturity",
+      "revision": 8589,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 58,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2942692,
+      "live_access_present": true,
+      "live_access_bytes": 347259,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        2656,
+        2657,
+        2772,
+        2773,
+        3131,
+        3010,
+        3011,
+        2895
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 4600,
+      "elapsed_tick_index": 4600
+    },
+    {
+      "tick": 246800,
+      "stage": "Maturity",
+      "revision": 8594,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 49,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3013612,
+      "live_access_present": true,
+      "live_access_bytes": 422403,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        2656,
+        2657,
+        2772,
+        2773,
+        3131,
+        3010,
+        3011,
+        2895
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 4800,
+      "elapsed_tick_index": 4800
+    },
+    {
+      "tick": 247000,
+      "stage": "Maturity",
+      "revision": 8599,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 42,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3274201,
+      "live_access_present": true,
+      "live_access_bytes": 506195,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        2656,
+        2657,
+        2772,
+        2773,
+        3131,
+        3010,
+        3011,
+        2895
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 5000,
+      "elapsed_tick_index": 5000
+    },
+    {
+      "tick": 247200,
+      "stage": "Maturity",
+      "revision": 8604,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 32,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3348748,
+      "live_access_present": true,
+      "live_access_bytes": 764675,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        2656,
+        2657,
+        2772,
+        2773,
+        3131,
+        3010,
+        3011,
+        2895
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 5200,
+      "elapsed_tick_index": 5200
+    },
+    {
+      "tick": 247400,
+      "stage": "Maturity",
+      "revision": 8609,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 27,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3345496,
+      "live_access_present": true,
+      "live_access_bytes": 764676,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        2656,
+        2657,
+        2772,
+        2773,
+        3131,
+        3010,
+        3011,
+        2895
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 5400,
+      "elapsed_tick_index": 5400
+    },
+    {
+      "tick": 247600,
+      "stage": "Maturity",
+      "revision": 8614,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 22,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3342531,
+      "live_access_present": true,
+      "live_access_bytes": 764667,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 0,
+      "selected_face_identity": [
+        2656,
+        2657,
+        2772,
+        2773,
+        3131,
+        3010,
+        3011,
+        2895
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 5600,
+      "elapsed_tick_index": 5600
+    },
+    {
+      "tick": 247800,
+      "stage": "Maturity",
+      "revision": 8619,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 20,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2558275,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 5800,
+      "elapsed_tick_index": 5800
+    },
+    {
+      "tick": 248000,
+      "stage": "Maturity",
+      "revision": 8624,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 12,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2732204,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 6000,
+      "elapsed_tick_index": 6000
+    },
+    {
+      "tick": 248200,
+      "stage": "Maturity",
+      "revision": 8629,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 9,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2551671,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 6200,
+      "elapsed_tick_index": 6200
+    },
+    {
+      "tick": 248400,
+      "stage": "Maturity",
+      "revision": 8634,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 6,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2549862,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 6400,
+      "elapsed_tick_index": 6400
+    },
+    {
+      "tick": 248600,
+      "stage": "Maturity",
+      "revision": 8639,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 3,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2548246,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 6600,
+      "elapsed_tick_index": 6600
+    },
+    {
+      "tick": 248800,
+      "stage": "Maturity",
+      "revision": 8644,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 2,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2726591,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 6800,
+      "elapsed_tick_index": 6800
+    },
+    {
+      "tick": 249000,
+      "stage": "Maturity",
+      "revision": 8649,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2832346,
+      "live_access_present": true,
+      "live_access_bytes": 276201,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 7000,
+      "elapsed_tick_index": 7000
+    },
+    {
+      "tick": 249200,
+      "stage": "Maturity",
+      "revision": 8654,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2832487,
+      "live_access_present": true,
+      "live_access_bytes": 276426,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 7200,
+      "elapsed_tick_index": 7200
+    },
+    {
+      "tick": 249400,
+      "stage": "Maturity",
+      "revision": 8659,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2832540,
+      "live_access_present": true,
+      "live_access_bytes": 276522,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 7400,
+      "elapsed_tick_index": 7400
+    },
+    {
+      "tick": 249600,
+      "stage": "Maturity",
+      "revision": 8664,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2832530,
+      "live_access_present": true,
+      "live_access_bytes": 276450,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 1,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 7600,
+      "elapsed_tick_index": 7600
+    },
+    {
+      "tick": 249800,
+      "stage": "Maturity",
+      "revision": 8669,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3181597,
+      "live_access_present": true,
+      "live_access_bytes": 438089,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 7800,
+      "elapsed_tick_index": 7800
+    },
+    {
+      "tick": 250000,
+      "stage": "Maturity",
+      "revision": 8674,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 6,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2975965,
+      "live_access_present": true,
+      "live_access_bytes": 410482,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 8000,
+      "elapsed_tick_index": 8000
+    },
+    {
+      "tick": 250200,
+      "stage": "Maturity",
+      "revision": 8679,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 30,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3051123,
+      "live_access_present": true,
+      "live_access_bytes": 469535,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 8200,
+      "elapsed_tick_index": 8200
+    },
+    {
+      "tick": 250400,
+      "stage": "Maturity",
+      "revision": 8684,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 57,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3127376,
+      "live_access_present": true,
+      "live_access_bytes": 528024,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 8400,
+      "elapsed_tick_index": 8400
+    },
+    {
+      "tick": 250600,
+      "stage": "Maturity",
+      "revision": 8689,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 95,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3420572,
+      "live_access_present": true,
+      "live_access_bytes": 796809,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 8600,
+      "elapsed_tick_index": 8600
+    },
+    {
+      "tick": 250800,
+      "stage": "Maturity",
+      "revision": 8694,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 127,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3619962,
+      "live_access_present": true,
+      "live_access_bytes": 797028,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 8800,
+      "elapsed_tick_index": 8800
+    },
+    {
+      "tick": 251000,
+      "stage": "Maturity",
+      "revision": 8699,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 151,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3455901,
+      "live_access_present": true,
+      "live_access_bytes": 797018,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 1,
+      "selected_face_identity": [
+        1,
+        4,
+        2489,
+        2504,
+        2855,
+        4000,
+        3293,
+        3294,
+        2854,
+        2853,
+        3450,
+        3436
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 9000,
+      "elapsed_tick_index": 9000
+    },
+    {
+      "tick": 251200,
+      "stage": "Maturity",
+      "revision": 8704,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 195,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2666727,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 9200,
+      "elapsed_tick_index": 9200
+    },
+    {
+      "tick": 251400,
+      "stage": "Maturity",
+      "revision": 8709,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 215,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2679213,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 9400,
+      "elapsed_tick_index": 9400
+    },
+    {
+      "tick": 251600,
+      "stage": "Maturity",
+      "revision": 8714,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 230,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2688792,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 9600,
+      "elapsed_tick_index": 9600
+    },
+    {
+      "tick": 251800,
+      "stage": "Maturity",
+      "revision": 8719,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 255,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2883595,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 9800,
+      "elapsed_tick_index": 9800
+    },
+    {
+      "tick": 252000,
+      "stage": "Maturity",
+      "revision": 8724,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 264,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2710655,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 10000,
+      "elapsed_tick_index": 10000
+    },
+    {
+      "tick": 252200,
+      "stage": "Maturity",
+      "revision": 8729,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 277,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2719018,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 10200,
+      "elapsed_tick_index": 10200
+    },
+    {
+      "tick": 252400,
+      "stage": "Maturity",
+      "revision": 8734,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 303,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3020559,
+      "live_access_present": true,
+      "live_access_bytes": 276196,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 10400,
+      "elapsed_tick_index": 10400
+    },
+    {
+      "tick": 252600,
+      "stage": "Maturity",
+      "revision": 8739,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 311,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3025351,
+      "live_access_present": true,
+      "live_access_bytes": 276160,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 10600,
+      "elapsed_tick_index": 10600
+    },
+    {
+      "tick": 252800,
+      "stage": "Maturity",
+      "revision": 8744,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 323,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3211463,
+      "live_access_present": true,
+      "live_access_bytes": 276185,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 2,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 10800,
+      "elapsed_tick_index": 10800
+    },
+    {
+      "tick": 253000,
+      "stage": "Maturity",
+      "revision": 8749,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 343,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3120085,
+      "live_access_present": true,
+      "live_access_bytes": 346876,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 2,
+      "selected_face_identity": [
+        2,
+        4,
+        122,
+        1570,
+        1700,
+        2384
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 11000,
+      "elapsed_tick_index": 11000
+    },
+    {
+      "tick": 253200,
+      "stage": "Maturity",
+      "revision": 8754,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 347,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3162728,
+      "live_access_present": true,
+      "live_access_bytes": 386414,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 2,
+      "selected_face_identity": [
+        2,
+        4,
+        122,
+        1570,
+        1700,
+        2384
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 11200,
+      "elapsed_tick_index": 11200
+    },
+    {
+      "tick": 253400,
+      "stage": "Maturity",
+      "revision": 8759,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 354,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3272476,
+      "live_access_present": true,
+      "live_access_bytes": 489735,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 2,
+      "selected_face_identity": [
+        2,
+        4,
+        122,
+        1570,
+        1700,
+        2384
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 11400,
+      "elapsed_tick_index": 11400
+    },
+    {
+      "tick": 253600,
+      "stage": "Maturity",
+      "revision": 8764,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 351,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3686191,
+      "live_access_present": true,
+      "live_access_bytes": 720925,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 2,
+      "selected_face_identity": [
+        2,
+        4,
+        122,
+        1570,
+        1700,
+        2384
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 11600,
+      "elapsed_tick_index": 11600
+    },
+    {
+      "tick": 253800,
+      "stage": "Maturity",
+      "revision": 8769,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 371,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3643819,
+      "live_access_present": true,
+      "live_access_bytes": 849121,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 2,
+      "selected_face_identity": [
+        2,
+        4,
+        122,
+        1570,
+        1700,
+        2384
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 11800,
+      "elapsed_tick_index": 11800
+    },
+    {
+      "tick": 254000,
+      "stage": "Maturity",
+      "revision": 8774,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 376,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2777718,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 12000,
+      "elapsed_tick_index": 12000
+    },
+    {
+      "tick": 254200,
+      "stage": "Maturity",
+      "revision": 8779,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 361,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2768157,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 12200,
+      "elapsed_tick_index": 12200
+    },
+    {
+      "tick": 254400,
+      "stage": "Maturity",
+      "revision": 8784,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 332,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2750014,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 12400,
+      "elapsed_tick_index": 12400
+    },
+    {
+      "tick": 254600,
+      "stage": "Maturity",
+      "revision": 8789,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 303,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2910932,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 12600,
+      "elapsed_tick_index": 12600
+    },
+    {
+      "tick": 254800,
+      "stage": "Maturity",
+      "revision": 8794,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 271,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2712030,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 12800,
+      "elapsed_tick_index": 12800
+    },
+    {
+      "tick": 255000,
+      "stage": "Maturity",
+      "revision": 8799,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 256,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2702772,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 13000,
+      "elapsed_tick_index": 13000
+    },
+    {
+      "tick": 255200,
+      "stage": "Maturity",
+      "revision": 8804,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 240,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3012201,
+      "live_access_present": true,
+      "live_access_bytes": 309712,
+      "live_access_phase": "discover",
+      "discovery_phase": "Trace",
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 13200,
+      "elapsed_tick_index": 13200
+    },
+    {
+      "tick": 255400,
+      "stage": "Maturity",
+      "revision": 8809,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 215,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2962856,
+      "live_access_present": true,
+      "live_access_bytes": 276194,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 13400,
+      "elapsed_tick_index": 13400
+    },
+    {
+      "tick": 255600,
+      "stage": "Maturity",
+      "revision": 8814,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 187,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3124424,
+      "live_access_present": true,
+      "live_access_bytes": 276204,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 3,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 13600,
+      "elapsed_tick_index": 13600
+    },
+    {
+      "tick": 255800,
+      "stage": "Maturity",
+      "revision": 8819,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 168,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3008632,
+      "live_access_present": true,
+      "live_access_bytes": 346658,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 3,
+      "selected_face_identity": [
+        1797,
+        1798,
+        2133,
+        2078
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 13800,
+      "elapsed_tick_index": 13800
+    },
+    {
+      "tick": 256000,
+      "stage": "Maturity",
+      "revision": 8824,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 154,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3054913,
+      "live_access_present": true,
+      "live_access_bytes": 400335,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 3,
+      "selected_face_identity": [
+        1797,
+        1798,
+        2133,
+        2078
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 14000,
+      "elapsed_tick_index": 14000
+    },
+    {
+      "tick": 256200,
+      "stage": "Maturity",
+      "revision": 8829,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 131,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3161957,
+      "live_access_present": true,
+      "live_access_bytes": 521123,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 3,
+      "selected_face_identity": [
+        1797,
+        1798,
+        2133,
+        2078
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 14200,
+      "elapsed_tick_index": 14200
+    },
+    {
+      "tick": 256400,
+      "stage": "Maturity",
+      "revision": 8834,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 108,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2610748,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 14400,
+      "elapsed_tick_index": 14400
+    },
+    {
+      "tick": 256600,
+      "stage": "Maturity",
+      "revision": 8839,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 98,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2783667,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 14600,
+      "elapsed_tick_index": 14600
+    },
+    {
+      "tick": 256800,
+      "stage": "Maturity",
+      "revision": 8844,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 84,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2595891,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 14800,
+      "elapsed_tick_index": 14800
+    },
+    {
+      "tick": 257000,
+      "stage": "Maturity",
+      "revision": 8849,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 74,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2589656,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 15000,
+      "elapsed_tick_index": 15000
+    },
+    {
+      "tick": 257200,
+      "stage": "Maturity",
+      "revision": 8854,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 53,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2576475,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 15200,
+      "elapsed_tick_index": 15200
+    },
+    {
+      "tick": 257400,
+      "stage": "Maturity",
+      "revision": 8859,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 45,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2750775,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 15400,
+      "elapsed_tick_index": 15400
+    },
+    {
+      "tick": 257600,
+      "stage": "Maturity",
+      "revision": 8864,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 34,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2850744,
+      "live_access_present": true,
+      "live_access_bytes": 276136,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 15600,
+      "elapsed_tick_index": 15600
+    },
+    {
+      "tick": 257800,
+      "stage": "Maturity",
+      "revision": 8869,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 32,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2849403,
+      "live_access_present": true,
+      "live_access_bytes": 276214,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 15800,
+      "elapsed_tick_index": 15800
+    },
+    {
+      "tick": 258000,
+      "stage": "Maturity",
+      "revision": 8874,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 26,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2845723,
+      "live_access_present": true,
+      "live_access_bytes": 276329,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 4,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 16000,
+      "elapsed_tick_index": 16000
+    },
+    {
+      "tick": 258200,
+      "stage": "Maturity",
+      "revision": 8879,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 25,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2949964,
+      "live_access_present": true,
+      "live_access_bytes": 376249,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 4,
+      "selected_face_identity": [
+        2489,
+        2506,
+        2655,
+        2656,
+        2897,
+        3248,
+        3414
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 16200,
+      "elapsed_tick_index": 16200
+    },
+    {
+      "tick": 258400,
+      "stage": "Maturity",
+      "revision": 8884,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 17,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3223645,
+      "live_access_present": true,
+      "live_access_bytes": 473484,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 4,
+      "selected_face_identity": [
+        2489,
+        2506,
+        2655,
+        2656,
+        2897,
+        3248,
+        3414
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 16400,
+      "elapsed_tick_index": 16400
+    },
+    {
+      "tick": 258600,
+      "stage": "Maturity",
+      "revision": 8889,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 14,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3218936,
+      "live_access_present": true,
+      "live_access_bytes": 649056,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 4,
+      "selected_face_identity": [
+        2489,
+        2506,
+        2655,
+        2656,
+        2897,
+        3248,
+        3414
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 16600,
+      "elapsed_tick_index": 16600
+    },
+    {
+      "tick": 258800,
+      "stage": "Maturity",
+      "revision": 8894,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 13,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3218312,
+      "live_access_present": true,
+      "live_access_bytes": 649079,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 4,
+      "selected_face_identity": [
+        2489,
+        2506,
+        2655,
+        2656,
+        2897,
+        3248,
+        3414
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 16800,
+      "elapsed_tick_index": 16800
+    },
+    {
+      "tick": 259000,
+      "stage": "Maturity",
+      "revision": 8899,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 9,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2549669,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 17000,
+      "elapsed_tick_index": 17000
+    },
+    {
+      "tick": 259200,
+      "stage": "Maturity",
+      "revision": 8904,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 7,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2548458,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 17200,
+      "elapsed_tick_index": 17200
+    },
+    {
+      "tick": 259400,
+      "stage": "Maturity",
+      "revision": 8909,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 5,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2726381,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 17400,
+      "elapsed_tick_index": 17400
+    },
+    {
+      "tick": 259600,
+      "stage": "Maturity",
+      "revision": 8914,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 3,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2546199,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 17600,
+      "elapsed_tick_index": 17600
+    },
+    {
+      "tick": 259800,
+      "stage": "Maturity",
+      "revision": 8919,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 1,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2544971,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 17800,
+      "elapsed_tick_index": 17800
+    },
+    {
+      "tick": 260000,
+      "stage": "Maturity",
+      "revision": 8924,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2544320,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 18000,
+      "elapsed_tick_index": 18000
+    },
+    {
+      "tick": 260200,
+      "stage": "Maturity",
+      "revision": 8929,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2829950,
+      "live_access_present": true,
+      "live_access_bytes": 276127,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 18200,
+      "elapsed_tick_index": 18200
+    },
+    {
+      "tick": 260400,
+      "stage": "Maturity",
+      "revision": 8934,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3009058,
+      "live_access_present": true,
+      "live_access_bytes": 276264,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 18400,
+      "elapsed_tick_index": 18400
+    },
+    {
+      "tick": 260600,
+      "stage": "Maturity",
+      "revision": 8939,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2829987,
+      "live_access_present": true,
+      "live_access_bytes": 276195,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 5,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 18600,
+      "elapsed_tick_index": 18600
+    },
+    {
+      "tick": 260800,
+      "stage": "Maturity",
+      "revision": 8944,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2913643,
+      "live_access_present": true,
+      "live_access_bytes": 355458,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 5,
+      "selected_face_identity": [
+        2595,
+        2596,
+        2700,
+        2853
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 18800,
+      "elapsed_tick_index": 18800
+    },
+    {
+      "tick": 261000,
+      "stage": "Maturity",
+      "revision": 8949,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 0,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3118750,
+      "live_access_present": true,
+      "live_access_bytes": 558357,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 5,
+      "selected_face_identity": [
+        2595,
+        2596,
+        2700,
+        2853
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 19000,
+      "elapsed_tick_index": 19000
+    },
+    {
+      "tick": 261200,
+      "stage": "Maturity",
+      "revision": 8954,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 3,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3120402,
+      "live_access_present": true,
+      "live_access_bytes": 558354,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 5,
+      "selected_face_identity": [
+        2595,
+        2596,
+        2700,
+        2853
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 19200,
+      "elapsed_tick_index": 19200
+    },
+    {
+      "tick": 261400,
+      "stage": "Maturity",
+      "revision": 8959,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 5,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2726122,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 19400,
+      "elapsed_tick_index": 19400
+    },
+    {
+      "tick": 261600,
+      "stage": "Maturity",
+      "revision": 8964,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 7,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2548385,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 19600,
+      "elapsed_tick_index": 19600
+    },
+    {
+      "tick": 261800,
+      "stage": "Maturity",
+      "revision": 8969,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 9,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2549618,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 19800,
+      "elapsed_tick_index": 19800
+    },
+    {
+      "tick": 262000,
+      "stage": "Maturity",
+      "revision": 8974,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 13,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2552053,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 20000,
+      "elapsed_tick_index": 20000
+    },
+    {
+      "tick": 262200,
+      "stage": "Maturity",
+      "revision": 8979,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 15,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2732233,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 20200,
+      "elapsed_tick_index": 20200
+    },
+    {
+      "tick": 262400,
+      "stage": "Maturity",
+      "revision": 8984,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 15,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2553265,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 20400,
+      "elapsed_tick_index": 20400
+    },
+    {
+      "tick": 262600,
+      "stage": "Maturity",
+      "revision": 8989,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 17,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2840205,
+      "live_access_present": true,
+      "live_access_bytes": 276215,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 20600,
+      "elapsed_tick_index": 20600
+    },
+    {
+      "tick": 262800,
+      "stage": "Maturity",
+      "revision": 8994,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 20,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2841970,
+      "live_access_present": true,
+      "live_access_bytes": 276222,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 6,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 20800,
+      "elapsed_tick_index": 20800
+    },
+    {
+      "tick": 263000,
+      "stage": "Maturity",
+      "revision": 8999,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 18,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2915652,
+      "live_access_present": true,
+      "live_access_bytes": 346691,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 6,
+      "selected_face_identity": [
+        2504,
+        2505,
+        2595,
+        2855
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 21000,
+      "elapsed_tick_index": 21000
+    },
+    {
+      "tick": 263200,
+      "stage": "Maturity",
+      "revision": 9004,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 16,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3162373,
+      "live_access_present": true,
+      "live_access_bytes": 414041,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 6,
+      "selected_face_identity": [
+        2504,
+        2505,
+        2595,
+        2855
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 21200,
+      "elapsed_tick_index": 21200
+    },
+    {
+      "tick": 263400,
+      "stage": "Maturity",
+      "revision": 9009,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 17,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3119109,
+      "live_access_present": true,
+      "live_access_bytes": 548352,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 6,
+      "selected_face_identity": [
+        2504,
+        2505,
+        2595,
+        2855
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 21400,
+      "elapsed_tick_index": 21400
+    },
+    {
+      "tick": 263600,
+      "stage": "Maturity",
+      "revision": 9014,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 16,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2554181,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 21600,
+      "elapsed_tick_index": 21600
+    },
+    {
+      "tick": 263800,
+      "stage": "Maturity",
+      "revision": 9019,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 17,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2554796,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 21800,
+      "elapsed_tick_index": 21800
+    },
+    {
+      "tick": 264000,
+      "stage": "Maturity",
+      "revision": 9025,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 15,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2553597,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 22000,
+      "elapsed_tick_index": 22000
+    },
+    {
+      "tick": 264200,
+      "stage": "Maturity",
+      "revision": 9030,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 13,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2731381,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 22200,
+      "elapsed_tick_index": 22200
+    },
+    {
+      "tick": 264400,
+      "stage": "Maturity",
+      "revision": 9035,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 10,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2550677,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 22400,
+      "elapsed_tick_index": 22400
+    },
+    {
+      "tick": 264600,
+      "stage": "Maturity",
+      "revision": 9040,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 10,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2550654,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 22600,
+      "elapsed_tick_index": 22600
+    },
+    {
+      "tick": 264800,
+      "stage": "Maturity",
+      "revision": 9045,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 9,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2835733,
+      "live_access_present": true,
+      "live_access_bytes": 276179,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 22800,
+      "elapsed_tick_index": 22800
+    },
+    {
+      "tick": 265000,
+      "stage": "Maturity",
+      "revision": 9050,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 12,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2837650,
+      "live_access_present": true,
+      "live_access_bytes": 276226,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 23000,
+      "elapsed_tick_index": 23000
+    },
+    {
+      "tick": 265200,
+      "stage": "Maturity",
+      "revision": 9055,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 78,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3057010,
+      "live_access_present": true,
+      "live_access_bytes": 276241,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 7,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 23200,
+      "elapsed_tick_index": 23200
+    },
+    {
+      "tick": 265400,
+      "stage": "Maturity",
+      "revision": 9060,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 128,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2998499,
+      "live_access_present": true,
+      "live_access_bytes": 361740,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 7,
+      "selected_face_identity": [
+        3081,
+        3184,
+        3334,
+        3333
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 23400,
+      "elapsed_tick_index": 23400
+    },
+    {
+      "tick": 265600,
+      "stage": "Maturity",
+      "revision": 9065,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 172,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3257374,
+      "live_access_present": true,
+      "live_access_bytes": 591098,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 7,
+      "selected_face_identity": [
+        3081,
+        3184,
+        3334,
+        3333
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 23600,
+      "elapsed_tick_index": 23600
+    },
+    {
+      "tick": 265800,
+      "stage": "Maturity",
+      "revision": 9070,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 219,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3286277,
+      "live_access_present": true,
+      "live_access_bytes": 591097,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 7,
+      "selected_face_identity": [
+        3081,
+        3184,
+        3334,
+        3333
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 23800,
+      "elapsed_tick_index": 23800
+    },
+    {
+      "tick": 266000,
+      "stage": "Maturity",
+      "revision": 9075,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 268,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2888327,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 24000,
+      "elapsed_tick_index": 24000
+    },
+    {
+      "tick": 266200,
+      "stage": "Maturity",
+      "revision": 9080,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 298,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2728431,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 24200,
+      "elapsed_tick_index": 24200
+    },
+    {
+      "tick": 266400,
+      "stage": "Maturity",
+      "revision": 9085,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 350,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2760348,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 24400,
+      "elapsed_tick_index": 24400
+    },
+    {
+      "tick": 266600,
+      "stage": "Maturity",
+      "revision": 9090,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 392,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2786147,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 24600,
+      "elapsed_tick_index": 24600
+    },
+    {
+      "tick": 266800,
+      "stage": "Maturity",
+      "revision": 9095,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 413,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2799738,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 24800,
+      "elapsed_tick_index": 24800
+    },
+    {
+      "tick": 267000,
+      "stage": "Maturity",
+      "revision": 9100,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 451,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3001551,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 25000,
+      "elapsed_tick_index": 25000
+    },
+    {
+      "tick": 267200,
+      "stage": "Maturity",
+      "revision": 9105,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 476,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3124390,
+      "live_access_present": true,
+      "live_access_bytes": 276228,
+      "live_access_phase": "discover",
+      "discovery_phase": "Trace",
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 25200,
+      "elapsed_tick_index": 25200
+    },
+    {
+      "tick": 267400,
+      "stage": "Maturity",
+      "revision": 9110,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 497,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3137421,
+      "live_access_present": true,
+      "live_access_bytes": 276254,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 25400,
+      "elapsed_tick_index": 25400
+    },
+    {
+      "tick": 267600,
+      "stage": "Maturity",
+      "revision": 9115,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 481,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3128391,
+      "live_access_present": true,
+      "live_access_bytes": 276244,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 8,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 25600,
+      "elapsed_tick_index": 25600
+    },
+    {
+      "tick": 267800,
+      "stage": "Maturity",
+      "revision": 9120,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 468,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3195305,
+      "live_access_present": true,
+      "live_access_bytes": 347218,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 8,
+      "selected_face_identity": [
+        1641,
+        1642,
+        1844,
+        1845,
+        2002,
+        2134,
+        2135,
+        1798
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 25800,
+      "elapsed_tick_index": 25800
+    },
+    {
+      "tick": 268000,
+      "stage": "Maturity",
+      "revision": 9125,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 426,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3426458,
+      "live_access_present": true,
+      "live_access_bytes": 422238,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 8,
+      "selected_face_identity": [
+        1641,
+        1642,
+        1844,
+        1845,
+        2002,
+        2134,
+        2135,
+        1798
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 26000,
+      "elapsed_tick_index": 26000
+    },
+    {
+      "tick": 268200,
+      "stage": "Maturity",
+      "revision": 9130,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 395,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3425394,
+      "live_access_present": true,
+      "live_access_bytes": 617720,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 8,
+      "selected_face_identity": [
+        1641,
+        1642,
+        1844,
+        1845,
+        2002,
+        2134,
+        2135,
+        1798
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 26200,
+      "elapsed_tick_index": 26200
+    },
+    {
+      "tick": 268400,
+      "stage": "Maturity",
+      "revision": 9135,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 351,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2764138,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 26400,
+      "elapsed_tick_index": 26400
+    },
+    {
+      "tick": 268600,
+      "stage": "Maturity",
+      "revision": 9140,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 320,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2745291,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 26600,
+      "elapsed_tick_index": 26600
+    },
+    {
+      "tick": 268800,
+      "stage": "Maturity",
+      "revision": 9145,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 288,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2725972,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 26800,
+      "elapsed_tick_index": 26800
+    },
+    {
+      "tick": 269000,
+      "stage": "Maturity",
+      "revision": 9150,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 254,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2884467,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 27000,
+      "elapsed_tick_index": 27000
+    },
+    {
+      "tick": 269200,
+      "stage": "Maturity",
+      "revision": 9155,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 214,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2681414,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 27200,
+      "elapsed_tick_index": 27200
+    },
+    {
+      "tick": 269400,
+      "stage": "Maturity",
+      "revision": 9160,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 185,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2663388,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 27400,
+      "elapsed_tick_index": 27400
+    },
+    {
+      "tick": 269600,
+      "stage": "Maturity",
+      "revision": 9165,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 158,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2931853,
+      "live_access_present": true,
+      "live_access_bytes": 276778,
+      "live_access_phase": "discover",
+      "discovery_phase": "Trace",
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 27600,
+      "elapsed_tick_index": 27600
+    },
+    {
+      "tick": 269800,
+      "stage": "Maturity",
+      "revision": 9170,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 129,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2913325,
+      "live_access_present": true,
+      "live_access_bytes": 276286,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 27800,
+      "elapsed_tick_index": 27800
+    },
+    {
+      "tick": 270000,
+      "stage": "Maturity",
+      "revision": 9175,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 109,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3079268,
+      "live_access_present": true,
+      "live_access_bytes": 276281,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 9,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 28000,
+      "elapsed_tick_index": 28000
+    },
+    {
+      "tick": 270200,
+      "stage": "Maturity",
+      "revision": 9180,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 94,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2974857,
+      "live_access_present": true,
+      "live_access_bytes": 355594,
+      "live_access_phase": "discover",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 9,
+      "selected_face_identity": [
+        1796,
+        1797,
+        2080,
+        1930
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 28200,
+      "elapsed_tick_index": 28200
+    },
+    {
+      "tick": 270400,
+      "stage": "Maturity",
+      "revision": 9185,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 73,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3139926,
+      "live_access_present": true,
+      "live_access_bytes": 531693,
+      "live_access_phase": "validate",
+      "discovery_phase": "Descriptors",
+      "exhausted_face_count": 9,
+      "selected_face_identity": [
+        1796,
+        1797,
+        2080,
+        1930
+      ],
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 28400,
+      "elapsed_tick_index": 28400
+    },
+    {
+      "tick": 270600,
+      "stage": "Maturity",
+      "revision": 9190,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 55,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2581395,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 28600,
+      "elapsed_tick_index": 28600
+    },
+    {
+      "tick": 270800,
+      "stage": "Maturity",
+      "revision": 9195,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 46,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2754683,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 28800,
+      "elapsed_tick_index": 28800
+    },
+    {
+      "tick": 271000,
+      "stage": "Maturity",
+      "revision": 9200,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 39,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2571385,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 29000,
+      "elapsed_tick_index": 29000
+    },
+    {
+      "tick": 271200,
+      "stage": "Maturity",
+      "revision": 9205,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 31,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2566524,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 29200,
+      "elapsed_tick_index": 29200
+    },
+    {
+      "tick": 271400,
+      "stage": "Maturity",
+      "revision": 9210,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 27,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2563936,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 29400,
+      "elapsed_tick_index": 29400
+    },
+    {
+      "tick": 271600,
+      "stage": "Maturity",
+      "revision": 9215,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 22,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2560782,
+      "live_access_present": false,
+      "live_access_bytes": 0,
+      "live_access_phase": null,
+      "discovery_phase": null,
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 29600,
+      "elapsed_tick_index": 29600
+    },
+    {
+      "tick": 271800,
+      "stage": "Maturity",
+      "revision": 9220,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 20,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 3024313,
+      "live_access_present": true,
+      "live_access_bytes": 276255,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 29800,
+      "elapsed_tick_index": 29800
+    },
+    {
+      "tick": 272000,
+      "stage": "Maturity",
+      "revision": 9225,
+      "counts": {
+        "nodes": 162,
+        "roads": 210,
+        "parcels": 853,
+        "buildings": 853,
+        "projects": 76,
+        "travelers": 12,
+        "residents": 800,
+        "trains": 1,
+        "buses": 2,
+        "events": 10000
+      },
+      "save_bytes": 2840348,
+      "live_access_present": true,
+      "live_access_bytes": 276262,
+      "live_access_phase": "discover",
+      "discovery_phase": "Selection",
+      "exhausted_face_count": 10,
+      "selected_face_identity": null,
+      "pending_interior_branch": null,
+      "completed_interior_branch_ids": [
+        4003
+      ],
+      "observed_opened_branches": [
+        {
+          "road_id": 4003,
+          "stage": "open",
+          "connected": true,
+          "frontage_parcel_ids": [
+            4005,
+            4006
+          ]
+        }
+      ],
+      "step_index": 30000,
+      "elapsed_tick_index": 30000
+    }
+  ],
+  "construction_transitions": [
+    {
+      "type": "construction_admission_observed",
+      "tick": 244500,
+      "project_id": 4004,
+      "branch_road_id": 4003,
+      "project_stage": "clearing",
+      "branch_stage": "clearing"
+    },
+    {
+      "type": "connected_opening_observed",
+      "tick": 244700,
+      "project_id": 4004,
+      "branch_road_id": 4003,
+      "project_stage": "finishing",
+      "branch_stage": "open",
+      "admission_observed_in_run": true
+    }
+  ],
+  "final_world": {
+    "tick": 272000,
+    "stage": "Maturity",
+    "revision": 9225,
+    "counts": {
+      "nodes": 162,
+      "roads": 210,
+      "parcels": 853,
+      "buildings": 853,
+      "projects": 76,
+      "travelers": 12,
+      "residents": 800,
+      "trains": 1,
+      "buses": 2,
+      "events": 10000
+    },
+    "save_bytes": 2840348,
+    "live_access_present": true,
+    "live_access_bytes": 276262,
+    "live_access_phase": "discover",
+    "discovery_phase": "Selection",
+    "exhausted_face_count": 10,
+    "selected_face_identity": null,
+    "pending_interior_branch": null,
+    "completed_interior_branch_ids": [
+      4003
+    ],
+    "observed_opened_branches": [
+      {
+        "road_id": 4003,
+        "stage": "open",
+        "connected": true,
+        "frontage_parcel_ids": [
+          4005,
+          4006
+        ]
+      }
+    ]
+  },
+  "restore": {
+    "same_save_restores_and_serializes_byte_identically": true
+  },
+  "observation_limits": "Pending-plan, exhausted-face count, and selected-face identity are read from serialized saves every 200 ticks, so face switches between checkpoints may be missed. Construction admission/opening observations come from snapshots every 20 tick(s); interval 1 records the exact observed step, while coarser intervals can miss or delay transitions. An observed open connected road does not prove which planner caused it or that any dependent lots were released. Snapshot probes are outside raw step timings but increase overall run time.",
+  "claims": "Per-call WASM timing only. These measurements do not predict whole-app tick throughput or browser frame rate."
+}

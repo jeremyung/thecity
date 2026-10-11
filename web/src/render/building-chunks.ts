@@ -51,6 +51,8 @@ export class BuildingChunks {
   readonly root=new THREE.Group();
   private sources=new Map<number,Source>();
   private batches=new Map<string,THREE.Group>();
+  /** Source descriptors whose geometry is represented by each committed batch. */
+  private committedSources=new Map<string,Map<number,RebuildableBuildingSource|null>>();
   private dirty=new Set<string>();
   private dirtySince=new Map<string,number>();
   private revisions=new Map<string,number>();
@@ -62,6 +64,11 @@ export class BuildingChunks {
   constructor(private material:BuildingSurfaceResolver,private retire:(dispose:()=>void)=>void,private contourMaterial?:THREE.LineBasicNodeMaterial){}
 
   get pendingCount(){return this.dirty.size+(this.active&&!this.dirty.has(this.active.key)?1:0);}
+  /** True only when this exact descriptor's source is present in a visible committed chunk. */
+  isSourceVisible(id:number,descriptor:RebuildableBuildingSource):boolean{
+    for(const sources of this.committedSources.values())if(sources.get(id)===descriptor)return true;
+    return false;
+  }
   setContoursVisible(visible:boolean){this.contoursVisible=visible;this.root.traverse(o=>{if(o instanceof THREE.LineSegments)o.visible=visible;});if(this.active)this.active.next.traverse(o=>{if(o instanceof THREE.LineSegments)o.visible=visible;});}
   private key(group:THREE.Group){return buildingChunkKey(group.position.x,group.position.z);}
   private markDirty(key:string){if(!this.dirty.has(key))this.dirtySince.set(key,this.updateSequence);this.dirty.add(key);this.revisions.set(key,(this.revisions.get(key)??0)+1);}
@@ -259,6 +266,7 @@ export class BuildingChunks {
     const old=this.batches.get(build.key);
     if(old){old.removeFromParent();this.retire(()=>disposeGroup(old));}
     this.root.add(build.next);this.batches.set(build.key,build.next);
+    this.committedSources.set(build.key,new Map(build.sources.map(source=>[source.id,source.descriptor])));
     const releases=this.retired.get(build.key);
     if(releases){const pending:RetiredSource[]=[];for(const retired of releases){if(retired.afterRevision<=build.revision)retired.release();else pending.push(retired);}if(pending.length)this.retired.set(build.key,pending);else this.retired.delete(build.key);}
     this.releaseBuildSources(build);this.active=null;
@@ -284,7 +292,7 @@ export class BuildingChunks {
     this.cancelBuild();
     for(const group of this.batches.values()){group.removeFromParent();this.retire(()=>disposeGroup(group));}
     for(const source of this.sources.values())this.retireSource(source);
-    this.batches.clear();this.sources.clear();this.dirty.clear();this.dirtySince.clear();this.revisions.clear();this.updateSequence=0;
+    this.batches.clear();this.committedSources.clear();this.sources.clear();this.dirty.clear();this.dirtySince.clear();this.revisions.clear();this.updateSequence=0;
     for(const releases of this.retired.values())for(const {release}of releases)release();this.retired.clear();
   }
 }

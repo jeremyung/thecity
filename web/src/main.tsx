@@ -140,6 +140,7 @@ function CityExperience(){
     const isReady=()=>{if(graphicsReady&&simReady&&!disposed)setReady(true);};
     renderer.onPick=(id,kind)=>{if(kind==='building'){setSelectedId(id);setSubject(null);renderer.setSelected(id);}else{setSelectedId(null);renderer.setSelected(null);void client.inspect(id).then(data=>{if(!disposed)setSubject(inspectedSubject(id,data,currentWorld.current));}).catch(()=>{});}};
     renderer.director.onModeChange=setMode;renderer.onMetrics=setMetrics;
+    renderer.onError=error=>{if(disposed)return;graphicsStartup.complete();graphicsReady=false;setReady(false);styleSwitch.current++;setPreparingStyle(null);setError(`Graphics stopped: ${error.message}. Try Retry or the WebGL fallback.`);};
     client.onError(e=>{if(!disposed)setError(e.message);});
     client.subscribeWorld(w=>{if(disposed)return;const replaced=audioEpoch!==client.worldEpoch;if(replaced){audioEpoch=client.worldEpoch;setDevelopment(w.development_rate);}currentWorld.current=w;renderer.setWorld(w,replaced);setWorld(w);simReady=true;if(recoveryInitPending){const url=new URL(window.location.href);url.searchParams.delete('recover');window.history.replaceState(null,'',`${url.pathname}${url.search}${url.hash}`);recoveryInitPending=false;}isReady();});
     client.subscribeMovement((data,tick,minute,day)=>{renderer.setMovement(data,tick,minute);if(currentWorld.current){currentWorld.current.tick=tick;currentWorld.current.minute_of_day=minute;currentWorld.current.day=day;}});

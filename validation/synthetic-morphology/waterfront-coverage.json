@@ -1,0 +1,100 @@
+{
+  "methodology": {
+    "label": "projected kit geometry above 1m within cropped bounds",
+    "cellSizeM": 0.5,
+    "comparison": "rotated nominal parcel envelopes from saved building width/depth; envelope area is a union too",
+    "domainDenominator": "cropped world bounds, including any river, protected land, and undevelopable areas inside the crop",
+    "yCriterion": "clip production kit triangles at building-local y=1m before projection",
+    "limitations": "Visual plan-view union of authored kit surfaces; includes roof/eaves/props above 1m. It is not a legal footprint, parcel coverage, floor area, or net developable-land ratio. Raster coverage is cell-center sampled and may miss features narrower than the cell size."
+  },
+  "source": {
+    "seed": 87231,
+    "tick": 242000,
+    "engineVersion": "0.1.0",
+    "snapshot": "validation/early-reservation-wasm-87231-snapshot.json",
+    "sha256": "0559e20d76403429dffcc8a13d0953b699accf0ce2c73df0e30401c4da40c94f",
+    "kitModule": "web/src/render/kit.ts",
+    "kitBundleSha256": "600991cfbcb44199f6bc8c561aade39a0a77f9219e245c23295e39f602aa37a4",
+    "compactMidriseReview": false
+  },
+  "cropBounds": {
+    "min_x": -237,
+    "min_z": -83,
+    "max_x": 13,
+    "max_z": 167
+  },
+  "grid": {
+    "columns": 500,
+    "rows": 500,
+    "maxCells": 4000000,
+    "blockSizeM": 100
+  },
+  "buildings": {
+    "snapshotCount": 850,
+    "renderedCount": 850
+  },
+  "domain": {
+    "areaM2": 62500,
+    "projectedKitGeometryAreaM2": 6966.75,
+    "projectedKitGeometryPercent": 11.146799999999999,
+    "nominalParcelEnvelopeUnionM2": 9072.75,
+    "nominalParcelEnvelopeUnionPercent": 14.516399999999999,
+    "projectedVsEnvelopePercent": 76.78763329751177
+  },
+  "cells": [
+    {
+      "x": -237,
+      "z": -83,
+      "projectedKitGeometryM2": 1358,
+      "nominalParcelEnvelopeM2": 1738.5
+    },
+    {
+      "x": -137,
+      "z": -83,
+      "projectedKitGeometryM2": 686,
+      "nominalParcelEnvelopeM2": 946.25
+    },
+    {
+      "x": -37,
+      "z": -83,
+      "projectedKitGeometryM2": 675.5,
+      "nominalParcelEnvelopeM2": 906.5
+    },
+    {
+      "x": -237,
+      "z": 17,
+      "projectedKitGeometryM2": 1476.5,
+      "nominalParcelEnvelopeM2": 1920.5
+    },
+    {
+      "x": -137,
+      "z": 17,
+      "projectedKitGeometryM2": 138.25,
+      "nominalParcelEnvelopeM2": 215
+    },
+    {
+      "x": -37,
+      "z": 17,
+      "projectedKitGeometryM2": 783.75,
+      "nominalParcelEnvelopeM2": 981.75
+    },
+    {
+      "x": -237,
+      "z": 117,
+      "projectedKitGeometryM2": 1154.75,
+      "nominalParcelEnvelopeM2": 1439.5
+    },
+    {
+      "x": -137,
+      "z": 117,
+      "projectedKitGeometryM2": 216.25,
+      "nominalParcelEnvelopeM2": 285.5
+    },
+    {
+      "x": -37,
+      "z": 117,
+      "projectedKitGeometryM2": 477.75,
+      "nominalParcelEnvelopeM2": 639.25
+    }
+  ]
+}
