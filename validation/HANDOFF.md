@@ -2,6 +2,17 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Shallower block fallback rejected — 2026-10-11
+
+A 42 m shared-edge fallback for rejected 50 m blocks produced zero winning
+admissions in two matched seeds, despite 19,330/22,689 attempts. Charging those
+attempts to the existing candidate budget changed baseline selection and reduced
+rendered coverage by 1.55%/3.06%. Root reproduced all four saves and snapshots
+byte-for-byte and independently audited kit coverage. The experiment is removed
+from engine source; its [patch and evidence](shallow-block-experiment/README.md)
+remain reproducible. Future adaptive block search must account for candidate
+budget displacement rather than treating extra shapes as free improvements.
+
 ## Destination-first follow-up — 2026-10-11
 
 The [destination-first diagnostic](destination-first-access.md) tests lanes and

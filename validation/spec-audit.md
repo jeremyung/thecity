@@ -1494,3 +1494,13 @@ tests pass. The code is test-only, and live density/artistic acceptance remains
 unmet. Further road bending alone cannot rescue this tested layout family;
 future work must examine packing or earlier subdivision with matched coverage
 and lifecycle evidence.
+
+## Shallower shared-edge fallback rejected — 2026-10-11
+
+The archived `shallow-block-experiment/README.md` records a test-only geometry
+fallback with zero selected shallow plans in two matched seeds. Additional
+candidate attempts displaced baseline search work; actual kit coverage declined
+1.55% and 3.06%. Root reproduced all four saved worlds and snapshots exactly,
+verified the geometry/lifecycle test, and independently measured coverage. The
+rejected runtime hooks were removed; no production behavior changed. Candidate
+budget fairness remains a requirement for future adaptive block experiments.
