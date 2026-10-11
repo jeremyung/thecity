@@ -1,5 +1,14 @@
 # Engineering checkpoint — 2026-10-10
 
+## Resumed living-city fidelity work — 2026-10-11
+
+The goal has resumed. Current work is isolated on `codex/living-city-fidelity`
+above the reviewed PR #3 head. See [the evidence and ranked visual gaps](living-city-fidelity.md).
+The mature WebGPU city loads through the normal scheduler. The first bounded
+intervention corrects blank elevated-road furniture and lamp height; it does
+not establish concept fidelity or hardware performance acceptance.
+
+
 ## Current review corrections — 2026-10-11
 
 PR #3 now validates saved master-plan entity mappings and tests continuation of

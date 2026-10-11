@@ -16,6 +16,7 @@ import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
+import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
@@ -529,6 +530,10 @@ export class CityRenderer {
       shape.lineTo(len/2,-.15);shape.lineTo(len/2-ramp,.8);shape.lineTo(-len/2+ramp,.8);shape.lineTo(-len/2,-.15);shape.closePath();
       const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
     }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
+    if(expressway){
+      if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)});
+      return;
+    }
     if(rail){
       for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*1.35,y+.45,mid.z-Math.sin(angle)*side*1.35,.14,.17,len,this.art.get('#a3aca7',.4),angle);
       for(let distance=0;distance<len;distance+=2.5){const t=distance/len;kit.box(a.x+dx*t,y+.29,a.z+dz*t,5,.15,.4,this.art.get('#6d6457'),angle);}

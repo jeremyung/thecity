@@ -49,6 +49,12 @@ Master-plan lots tile each block with no gaps. Bodies run to the shared lot line
 
 At 3,000 buildings, distant low-rise fabric must use simplified merged geometry: body box, roof color and window band. Full kits are reserved for focal and near chunks, so the triangle budget stays within the existing performance policy.
 
+Expressway furniture checkpoint (2026-10-11): completed elevated roads now use
+shared-style lane/shoulder markings, a median and deck-mounted lamps rather than
+the ground-road fallback. The mature browser view exposes an unresolved flat
+crossing between elevated corridors; this is not accepted interchange geometry
+or a traffic implementation. See [the fidelity workstream](../validation/living-city-fidelity.md).
+
 ### Compact architectural families — next implementation
 
 The 799-building overview exposes a massing problem beyond density: most non-tower buildings share a rectangular shell, many typology differences are applied only to facades, and apartment setbacks usually affect just one top floor. Color variation alone cannot resolve this repetition.
