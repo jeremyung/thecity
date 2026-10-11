@@ -1,3 +1,4 @@
+import { MOVEMENT_STRIDE } from '../movement';
 import { WORKER_PROTOCOL_VERSION, type Metrics, type WorkerInput, type WorkerOutput, type World } from "../types";
 
 type WorldListener = (world: World) => void;
@@ -230,7 +231,7 @@ export class SimulationClient {
         break;
       }
       case "movement": {
-        const movement = new Float32Array(message.buffer, 0, message.count * 5);
+        const movement = new Float32Array(message.buffer, 0, message.count * MOVEMENT_STRIDE);
         try {
           this.callListeners(this.movementListeners, (listener) => listener(movement, message.tick, message.minute, message.day));
         } finally {

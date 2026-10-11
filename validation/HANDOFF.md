@@ -1,5 +1,27 @@
 # Engineering checkpoint — 2026-10-10
 
+## Station layout and movement elevation — 2026-10-11
+
+Engine-owned terminal frames, compact queue slots, saved elevated walking paths,
+and shared platform/stair geometry replace the incorrect queue placement.
+Worker protocol 2 carries surface height through rendering, following and rain
+accessories. Native 405/405 and focused frontend 71/71 pass; the full frontend
+suite has 294 passes and three timeouts. Current WASM queue containment/height
+and 800-tick continuation pass. See [evidence and open motion gates](station-passengers.md#implementation-checkpoint).
+Changes are in progress on `codex/living-city-fidelity`; broader visual acceptance
+is not established. Older master-plan saves reject; use the fresh local
+`.tools/fidelity-review/station-fixed-87231.json` checkpoint for this build.
+
+## Station passenger baseline — 2026-10-11
+
+The next realism correction has a reproducible failing WASM baseline:
+seed 87231 at tick 170480 has two station waiters, both on the opposite side
+of the tracks from the rendered platform. Source review also finds oversized
+queue rows, missing elevation in the movement contract, and no physical entry
+stairs. A renderer-only height offset would be incomplete. See
+[the evidence and implementation acceptance](station-passengers.md).
+No station fix or new visual acceptance is claimed. The goal remains active.
+
 ## Expressway crossing correction — 2026-10-11
 
 The mature city's expressways now cross as independent 11 m/20 m routes. Plan

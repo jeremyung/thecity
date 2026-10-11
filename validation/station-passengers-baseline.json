@@ -1,0 +1,39 @@
+{
+  "revision": "2e3583781bde786eb68b8958932a5739f58124f6",
+  "seed": 87231,
+  "tick": 170480,
+  "station": 38,
+  "rail": 91,
+  "geometrySource": "web/src/render/city.ts: CityRenderer.rebuildRoads",
+  "slab": {
+    "minX": 2.6,
+    "maxX": 7.8,
+    "minZ": -1,
+    "maxZ": 48
+  },
+  "queued": 2,
+  "outsidePlatform": 2,
+  "actors": [
+    {
+      "id": 835,
+      "x": 171.35110473632812,
+      "z": -75.01524353027344,
+      "heading": 0,
+      "kind": 0,
+      "localX": -7.8000064697265685,
+      "localZ": 12.000004736328123,
+      "insidePlatform": false
+    },
+    {
+      "id": 1089,
+      "x": 171.35110473632812,
+      "z": -73.71524810791016,
+      "heading": 0,
+      "kind": 0,
+      "localX": -9.10000189208985,
+      "localZ": 12.000004736328123,
+      "insidePlatform": false
+    }
+  ],
+  "limitations": "XZ containment only. Elevation, approach paths, boarding, motion, and style fidelity require separate verification."
+}

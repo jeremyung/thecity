@@ -1,3 +1,4 @@
+import { MOVEMENT_STRIDE } from '../movement';
 import { WORKER_PROTOCOL_VERSION, type Metrics, type WorkerInput, type WorkerOutput, type World } from "../types";
 import { ControlSequenceGate } from "./protocol";
 
@@ -33,7 +34,7 @@ const TICK_MS = 1000 / TICK_RATE;
 const MAX_STEPS_PER_TURN = 8;
 const WORLD_PUBLISH_MS = 500;
 const MAX_BACKLOG_TICKS = 160;
-const MOVEMENT_STRIDE = 5;
+
 const scope = globalThis as unknown as WorkerScope;
 
 /** A tiny transferable pool that also enforces the two-snapshot backpressure cap. */

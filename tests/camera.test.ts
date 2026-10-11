@@ -622,7 +622,7 @@ describe("CameraDirector", () => {
     director.follow(500);
     for (let frame = 0; frame < 30; frame++) {
       const x = 20 + frame * 4;
-      director.setPositions(new Float32Array([500, x, 10, 0.2, 2]));
+      director.setPositions(new Float32Array([500, x, 10, 0.2, 2, -1]));
       director.update(1 / 60, frame / 60);
       expect([...director.camera.position.toArray(), ...director.target.toArray()].every(Number.isFinite)).toBe(true);
     }
@@ -652,7 +652,7 @@ describe("CameraDirector", () => {
     const first = makeWorld();
     director.world(first);
     director.follow(500);
-    director.setPositions(new Float32Array([91, 80, -30, 0.2, 0, 500, 42, 26, 0.1, 2]));
+    director.setPositions(new Float32Array([91, 80, -30, 0.2, 0, -1, 500, 42, 26, 0.1, 2, -1]));
     director.update(0.1, 0.1);
     expect(director.label).toBe("Train");
 
@@ -950,11 +950,27 @@ describe("CameraDirector", () => {
     const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
     director.world(makeWorld());
     director.follow(500);
-    director.setPositions(new Float32Array([500, 80, 90, heading, 0]));
+    director.setPositions(new Float32Array([500, 80, 90, heading, 0, -1]));
     for (let i = 0; i < 45; i++) director.update(0.1, i * 0.1);
 
     expect(director.target.x).toBeCloseTo(expectedX, 0);
     expect(director.target.z).toBeCloseTo(expectedZ, 0);
+    director.dispose();
+  });
+
+  it("uses an elevated movement surface as the follow target height", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    director.world(makeWorld());
+    director.follow(500);
+    const state = director as unknown as { followPosition: THREE.Vector3; desiredTarget: THREE.Vector3 };
+
+    director.setPositions(new Float32Array([500, 80, 90, 0, 0, -1]));
+    director.update(0.1, 0.1);
+    expect(state.desiredTarget.y).toBe(0);
+    director.setPositions(new Float32Array([500, 80, 90, 0, 0, 8]));
+    director.update(0.1, 0.2);
+    expect(state.followPosition.y).toBe(8);
+    expect(state.desiredTarget.y).toBe(8);
     director.dispose();
   });
 
@@ -982,12 +998,12 @@ describe("CameraDirector", () => {
     vi.stubGlobal("window", { matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }) });
     const camera=new THREE.PerspectiveCamera(39,817/753,.1,2000),director=new CameraDirector(camera,makeElement());
     director.world(makeWorld());director.follow(500);
-    director.setPositions(new Float32Array([500,15,0,0,2]));director.update(.1,0);
+    director.setPositions(new Float32Array([500,15,0,0,2,-1]));director.update(.1,0);
     const firstSide=camera.position.clone().sub(director.target).normalize();
     expect(camera.position.distanceTo(director.target)).toBeLessThan(190);
     camera.updateMatrixWorld(true);
     for(const x of [-8.5,38.5]){const screen=new THREE.Vector3(x,3,0).project(camera);expect(Math.abs(screen.x)).toBeLessThan(.9);expect(Math.abs(screen.y)).toBeLessThan(.9);}
-    director.setPositions(new Float32Array([500,15,0,Math.PI,2]));director.update(.1,.1);
+    director.setPositions(new Float32Array([500,15,0,Math.PI,2,-1]));director.update(.1,.1);
     const reversedSide=camera.position.clone().sub(director.target).normalize();
     expect(firstSide.dot(reversedSide)).toBeGreaterThan(.99);
     director.dispose();
@@ -1002,7 +1018,7 @@ describe("CameraDirector", () => {
     const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
     director.world(withResident(world, resident));
     director.follow(resident.id);
-    director.setPositions(new Float32Array([resident.id, 82, 37, 0, 0]));
+    director.setPositions(new Float32Array([resident.id, 82, 37, 0, 0, -1]));
 
     const nextWorld = withResident({ ...world, revision: world.revision + 1 }, { ...resident, location_node: 2, activity: "at_work" });
     director.world(nextWorld);
@@ -1064,7 +1080,7 @@ describe("CameraDirector", () => {
 
     // When the movement buffer publishes the train tuple, follow it while the
     // resident's persistent ID and label stay selected.
-    director.setPositions(new Float32Array([500, 22, 5, Math.PI, 2]));
+    director.setPositions(new Float32Array([500, 22, 5, Math.PI, 2, -1]));
     const next = withResident({ ...reversed, revision: 2 }, { ...resident, location_node: 2 });
     next.trains[0].direction = 1;
     next.trains[0].progress = 17;
@@ -1104,7 +1120,7 @@ describe("CameraDirector", () => {
     expect(director.label).toBe("Yuki Tanaka");
 
     // Movement is keyed by bus ID in transit, but the camera continues to track resident ID.
-    director.setPositions(new Float32Array([600, 45, 0, Math.PI, 3]));
+    director.setPositions(new Float32Array([600, 45, 0, Math.PI, 3, -1]));
     expect(state.followPosition.x).toBe(45);
     expect(state.followId).toBe(resident.id);
 
@@ -1139,16 +1155,16 @@ describe("CameraDirector", () => {
     const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
     director.world(withResident(world, resident));
     director.follow(resident.id);
-    director.setPositions(new Float32Array([500, 80, 0, Math.PI, 2]));
+    director.setPositions(new Float32Array([500, 80, 0, Math.PI, 2, -1]));
 
     const waiting = withResident({ ...world, revision: 2 }, {
       ...resident, activity: "waiting_for_route", transfer: "waiting_alight",
       train_id: null, bus_id: null, location_node: 2,
     });
     director.world(waiting);
-    director.setPositions(new Float32Array([500, 65, 0, Math.PI, 2, 91, 98, 6, 0, 0]));
+    director.setPositions(new Float32Array([500, 65, 0, Math.PI, 2, -1, 91, 98, 6, 0, 0, 8]));
     const state = director as unknown as { followPosition: THREE.Vector3; followId: number; followKind: number };
-    expect(state.followPosition.toArray()).toEqual([98, 0, 6]);
+    expect(state.followPosition.toArray()).toEqual([98, 8, 6]);
     expect(state.followId).toBe(91);
     expect(state.followKind).toBe(0);
     expect(director.label).toBe("Yuki Tanaka");
@@ -1156,9 +1172,9 @@ describe("CameraDirector", () => {
     // A structural update must not replace the precise platform tuple with
     // either the road node or the departing train's position.
     director.world({ ...waiting, revision: 3 });
-    expect(state.followPosition.toArray()).toEqual([98, 0, 6]);
-    director.setPositions(new Float32Array([500, 40, 0, Math.PI, 2, 91, 98, 6, 0, 0]));
-    expect(state.followPosition.toArray()).toEqual([98, 0, 6]);
+    expect(state.followPosition.toArray()).toEqual([98, 8, 6]);
+    director.setPositions(new Float32Array([500, 40, 0, Math.PI, 2, -1, 91, 98, 6, 0, 0, 8]));
+    expect(state.followPosition.toArray()).toEqual([98, 8, 6]);
     director.dispose();
   });
 

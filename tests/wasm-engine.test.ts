@@ -61,8 +61,8 @@ function findOnboard(engine: CityEngine, maxBatches = 48): EngineSnapshot | null
 }
 
 function findMovement(movements: Float32Array, id: number) {
-  for (let offset = 0; offset < movements.length; offset += 5) {
-    if (movements[offset] === id) return [movements[offset + 1], movements[offset + 2], movements[offset + 3], movements[offset + 4]];
+  for (let offset = 0; offset < movements.length; offset += 6) {
+    if (movements[offset] === id) return [movements[offset + 1], movements[offset + 2], movements[offset + 3], movements[offset + 4], movements[offset + 5]];
   }
   return null;
 }
@@ -96,17 +96,28 @@ function expectQueuePlatform(movements: Float32Array, resident: EngineSave['resi
   expect(axisEnd).toBeDefined();
 
   const axisLength = Math.hypot(axisEnd!.x - stationNode!.x, axisEnd!.z - stationNode!.z);
-  const axisX = (axisEnd!.x - stationNode!.x) / axisLength;
-  const axisZ = (axisEnd!.z - stationNode!.z) / axisLength;
-  const direction = atStation ? 1 : -1;
-  const along = 12 + Math.floor(resident.queue_slot! / 8) * 2.4;
-  const across = 5.2 + (resident.queue_slot! % 8) * 1.3;
-  const expectedX = terminal!.x + axisX * direction * along - axisZ * across;
-  const expectedZ = terminal!.z + axisZ * direction * along + axisX * across;
+  const outwardX = (axisEnd!.x - stationNode!.x) / axisLength * (atStation ? 1 : -1);
+  const outwardZ = (axisEnd!.z - stationNode!.z) / axisLength * (atStation ? 1 : -1);
+  const normalX = outwardZ;
+  const normalZ = -outwardX;
+  const slot = resident.queue_slot!;
+  const expectedAcross = slot % 2 === 0 ? 3.6 : 4.5;
+  const expectedAlong = 2 + Math.floor(slot / 2) * 0.9;
   const movement = findMovement(movements, resident.id);
   expect(movement).not.toBeNull();
-  expect(Math.hypot(movement![0] - expectedX, movement![1] - expectedZ)).toBeLessThan(0.03);
+  const dx = movement![0] - terminal!.x;
+  const dz = movement![1] - terminal!.z;
+  const localX = dx * normalX + dz * normalZ;
+  const localZ = dx * outwardX + dz * outwardZ;
+  expect(localX).toBeGreaterThanOrEqual(2.6);
+  expect(localX).toBeLessThanOrEqual(7.8);
+  expect(localX + 0.45).toBeLessThanOrEqual(5.125);
+  expect(localZ).toBeGreaterThanOrEqual(-1);
+  expect(localZ).toBeLessThanOrEqual(48);
+  expect(localX).toBeCloseTo(expectedAcross, 2);
+  expect(localZ).toBeCloseTo(expectedAlong, 2);
   expect(movement![3]).toBe(0);
+  expect(movement![4]).toBe(8);
 
   const queuedAtSameTerminal = state.residents.filter((item) => item.transfer === resident.transfer && item.queue_slot !== null && item.queue_slot !== undefined);
   const positions = queuedAtSameTerminal.map((item) => findMovement(movements, item.id)).filter(Boolean) as number[][];
@@ -159,9 +170,9 @@ function expectConsistentBoarding(world: EngineSnapshot, state: EngineSave, move
     }
   }
 
-  expect(movements.length % 5).toBe(0);
+  expect(movements.length % 6).toBe(0);
   const movementIds: number[] = [];
-  for (let offset = 0; offset < movements.length; offset += 5) movementIds.push(movements[offset]);
+  for (let offset = 0; offset < movements.length; offset += 6) movementIds.push(movements[offset]);
   expect(new Set(movementIds).size).toBe(movementIds.length);
   for (const residentId of passengerIds) expect(movementIds).not.toContain(residentId);
   for (const trainId of trainIds) expect(movementIds.filter((id) => id === trainId)).toHaveLength(1);

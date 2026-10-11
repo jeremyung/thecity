@@ -141,19 +141,21 @@ describe('compiled city engine', () => {
     const seenIds = new Set<number>();
     let trainCount = 0;
 
-    expect(movement.length % 5).toBe(0);
-    for (let offset = 0; offset < movement.length; offset += 5) {
+    expect(movement.length % 6).toBe(0);
+    for (let offset = 0; offset < movement.length; offset += 6) {
       const id = movement[offset];
       const x = movement[offset + 1];
       const z = movement[offset + 2];
       const heading = movement[offset + 3];
       const kind = movement[offset + 4];
+      const surfaceY = movement[offset + 5];
       expect(Number.isInteger(id)).toBe(true);
       expect(id).toBeGreaterThan(0);
       expect(id).toBeLessThan(state.next_id);
       expect(seenIds.has(id)).toBe(false);
       seenIds.add(id);
       expect(Number.isFinite(x) && Number.isFinite(z) && Number.isFinite(heading)).toBe(true);
+      expect(Number.isFinite(surfaceY) && (surfaceY === -1 || surfaceY >= 0)).toBe(true);
       expect(x).toBeGreaterThanOrEqual(world.bounds.min_x);
       expect(x).toBeLessThanOrEqual(world.bounds.max_x);
       expect(z).toBeGreaterThanOrEqual(world.bounds.min_z);

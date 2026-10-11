@@ -1,0 +1,33 @@
+{
+  "revision": "2e3583781bde786eb68b8958932a5739f58124f6",
+  "worktreeDirty": true,
+  "wasmSha256": "87a445db7412cc1466700be16ba97c212104f3ee0bb377af4ddcdcc61ab64561",
+  "seed": 87231,
+  "tick": 170720,
+  "station": 38,
+  "geometrySource": "web/src/render/station-kit.ts: buildStationPlatform",
+  "slab": {
+    "minX": 2.6,
+    "maxX": 7.8,
+    "minZ": -1,
+    "maxZ": 48
+  },
+  "queued": 1,
+  "incorrectHeight": 0,
+  "outsidePlatform": 0,
+  "actors": [
+    {
+      "id": 767,
+      "x": 161.35110473632812,
+      "z": -87.31524658203125,
+      "heading": 0,
+      "kind": 0,
+      "surfaceY": 8,
+      "localX": 4.499996582031244,
+      "localZ": 2.0000047363281226,
+      "onPlatformSurface": true,
+      "insidePlatform": true
+    }
+  ],
+  "limitations": "Queue XZ and surface height only. Approach paths, boarding, motion, and style fidelity require separate verification."
+}

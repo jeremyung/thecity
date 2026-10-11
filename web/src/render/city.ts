@@ -1,3 +1,5 @@
+import { buildStationPlatform } from './station-kit';
+import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '../movement';
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples } from './style-warmup';
 import * as THREE from 'three/webgpu';
@@ -105,7 +107,7 @@ export class CityRenderer {
     return !!current&&current.signature===buildingRenderSignature(building,original)&&this.chunks.isSourceVisible(building.id,current.source);
   });
   private umbrellas=new Umbrellas(2000,hex=>this.art.get(hex));
-  private umbrellaTuples=new Float32Array(2000*5);
+  private umbrellaTuples=new Float32Array(2000*MOVEMENT_STRIDE);
   private umbrellaCount=0;
   private pedestrians:THREE.InstancedMesh;
   private heads:THREE.InstancedMesh;
@@ -117,8 +119,8 @@ export class CityRenderer {
   private trainGlass:THREE.InstancedMesh;
   private trainStripe:THREE.InstancedMesh;
   private wheels:THREE.InstancedMesh;
-  private previous=new Map<number,{x:number,z:number,h:number,k:number}>();
-  private current=new Map<number,{x:number,z:number,h:number,k:number}>();
+  private previous=new Map<number,{x:number,z:number,h:number,k:number,y:number}>();
+  private current=new Map<number,{x:number,z:number,h:number,k:number,y:number}>();
   private received=performance.now();
   private interval=50;
   private lastTick=0;
@@ -308,7 +310,7 @@ export class CityRenderer {
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
     this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
     const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
-    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|')+JSON.stringify(world.road_decks??[]);
+    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|')+JSON.stringify(world.road_decks??[])+JSON.stringify(world.rail_platforms??[]);
     if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
@@ -332,7 +334,7 @@ export class CityRenderer {
   }
   setMovement(data:Float32Array,tick:number,minute:number){
     this.previous=this.current;this.current=new Map();
-    for(let i=0;i<data.length;i+=5)this.current.set(data[i],{x:data[i+1],z:data[i+2],h:data[i+3],k:data[i+4]});
+    for(let i=0;i+MOVEMENT_STRIDE<=data.length;i+=MOVEMENT_STRIDE)this.current.set(data[i],{x:data[i+1],z:data[i+2],h:data[i+3],k:data[i+4],y:data[i+5]});
     const now=performance.now();this.interval=Math.max(20,Math.min(250,now-this.received));this.received=now;this.motionDelta=Math.max(.05,(tick-this.motionTick)*.05);this.motionTick=tick;this.hour=minute/60;
     this.director.setPositions(data);
   }
@@ -480,32 +482,15 @@ export class CityRenderer {
     for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
     this.roads.add(kit.finish(),buildStreetLighting(world,this.art));
     this.retireGroup(this.station);this.station=new THREE.Group();this.scene.add(this.station);
-    const stationNode=world.nodes.find(n=>n.kind==='station');
     const stationProject=world.projects.find(p=>p.kind==='station');
-    if(stationNode){
-      const s=new Kit(),rail=world.roads.find(r=>r.kind==='rail'&&(r.from===stationNode.id||r.to===stationNode.id));
-      const other=rail?nodes.get(rail.from===stationNode.id?rail.to:rail.from):null;
-      const bearing=other?Math.atan2(other.x-stationNode.x,other.z-stationNode.z):0;
-      // The 47 m train stops alongside a platform aligned to its real corridor.
-      // Local z points down the line; the platform stays beside the tracks.
-      s.box(5.2,1,23.5,5.2,2,49,this.art.get('#b9bbb1'));
-      s.box(2.9,2.08,23.5,.45,.1,48,this.art.get('#d3b962'));
-      if((stationProject?.progress??1)>.2){
-        s.box(5.5,6,23.5,7,.22,51,this.art.get('#546d6c'));
-        for(let d=3;d<=45;d+=10.5){s.cylinder(6.7,3.95,d,.14,3.9,this.art.get('#d1d3c5'));s.box(5.4,5.55,d,3.8,.12,.12,this.art.get('#94a4a0'));s.box(4.7,5.7,d,1.7,.08,.3,this.art.get('#ffdda5',.5,true));}
-      }
-      for(const z of [12,34]){s.box(5.7,2.6,z,1.15,.15,3.1,this.art.get('#7a6754'));s.box(6.2,3,z,.13,.75,3.1,this.art.get('#7a6754'));}
-      s.box(5.6,2.85,43,1.1,1.7,1.1,this.art.get('#557777'));s.box(5.58,3.15,42.42,.72,.85,.04,this.art.get('#ceddd8',.35,true));
-      // Entry ramp and its small ticket shelter connect to the station node.
-      s.box(6,.6,-4,4.5,1.2,7,this.art.get('#aaa99e'));s.box(6,2.7,-6,3,3.2,2.4,this.art.get('#c9c8c1'));s.box(6,4.45,-6,3.8,.2,3.1,this.art.get('#59676a'));s.box(5.96,2.8,-7.23,1.5,1.4,.08,this.art.get('#52757a',.35));
-      for(const z of [2,23.5,45])s.box(5.2,-RAIL_DECK/2,z,2.4,RAIL_DECK,2.4,this.art.get('#9a9d93'));
-      s.box(9.4,-RAIL_DECK/2+.2,-2,2.6,RAIL_DECK+.4,8,this.art.get('#aaa99e'));
-      const platform=s.finish();platform.position.set(stationNode.x,RAIL_DECK,stationNode.z);platform.rotation.y=bearing;
+    for(const layout of world.rail_platforms??[]){
+      const platform=buildStationPlatform(layout,this.art,(stationProject?.progress??1)>.2);
       const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
-      const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,4.6,24);platform.add(board);
+      const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,layout.surface_y+2.6,24);platform.add(board);
       this.station.add(platform);
     }
   }
+
   private roadKit(kit:Kit,a:Point,b:Point,r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[]){
     if(r.stage!=='open'){
       const fullDx=b.x-a.x,fullDz=b.z-a.z,fullLength=Math.hypot(fullDx,fullDz),bearing=Math.atan2(fullDx,fullDz);
@@ -595,7 +580,7 @@ export class CityRenderer {
     this.updateTreeDetail();
     this.updateActors(now);
     this.updateLight(dt);
-    const alpha=Math.min(1,(now-this.received)/this.interval);const time=Math.max(0,(this.motionTick-1+alpha)*.05);const waterDt=Math.max(0,Math.min(.1,time-this.waterTime));this.water?.update(waterDt,time,this.rain,this.style,1-this.daylight);this.umbrellas.update(this.umbrellaTuples.subarray(0,this.umbrellaCount*5),this.rain,time);this.art.time.value=time;this.waterTime=time;this.lastTick=this.motionTick;this.rainTime.value=time;this.rainLines.visible=this.rain>.1;this.rainOpacity.value=.035+this.rain*.13;this.rainLines.position.set(this.director.target.x,0,this.director.target.z);
+    const alpha=Math.min(1,(now-this.received)/this.interval);const time=Math.max(0,(this.motionTick-1+alpha)*.05);const waterDt=Math.max(0,Math.min(.1,time-this.waterTime));this.water?.update(waterDt,time,this.rain,this.style,1-this.daylight);this.umbrellas.update(this.umbrellaTuples.subarray(0,this.umbrellaCount*MOVEMENT_STRIDE),this.rain,time);this.art.time.value=time;this.waterTime=time;this.lastTick=this.motionTick;this.rainTime.value=time;this.rainLines.visible=this.rain>.1;this.rainOpacity.value=.035+this.rain*.13;this.rainLines.position.set(this.director.target.x,0,this.director.target.z);
     this.camera.updateMatrixWorld();
     this.focusTargetView.copy(this.director.controls.target).applyMatrix4(this.camera.matrixWorldInverse);
     const focusTarget=focusDepthFromViewZ(this.focusTargetView.z,this.camera.near,this.camera.far);
@@ -610,8 +595,8 @@ export class CityRenderer {
   }
   private updateActors(now:number){
     const t=Math.min(1,(now-this.received)/this.interval);let ped=0,car=0,train=0,bus=0;this.buses.begin();const pedIds:number[]=[],carIds:number[]=[],trainIds:number[]=[];
-    for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=THREE.MathUtils.lerp(old.x,current.x,t),z=THREE.MathUtils.lerp(old.z,current.z,t);let h=current.h;const dh=Math.atan2(Math.sin(current.h-old.h),Math.cos(current.h-old.h));h=Math.PI/2-(old.h+dh*t);const lift=current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
-      if(current.k===0&&ped<2000){const offset=ped*5;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
+    for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=THREE.MathUtils.lerp(old.x,current.x,t),z=THREE.MathUtils.lerp(old.z,current.z,t);let h=current.h;const dh=Math.atan2(Math.sin(current.h-old.h),Math.cos(current.h-old.h));h=Math.PI/2-(old.h+dh*t);const lift=current.k===0?THREE.MathUtils.lerp(pedestrianSurface(old.y,bridgeLift(old,this.bridgeSpans)),pedestrianSurface(current.y,bridgeLift(current,this.bridgeSpans)),t)-PEDESTRIAN_GROUND_SURFACE:current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
+      if(current.k===0&&ped<2000){const offset=ped*MOVEMENT_STRIDE;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;this.umbrellaTuples[offset+5]=lift;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
       else if(current.k===1&&car<1000){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);dummy.position.set(x,1.07+vehicle.lift,z);dummy.rotation.set(-vehicle.pitch,h,0,'YXZ');dummy.scale.setScalar(1);dummy.updateMatrix();this.cars.setMatrixAt(car,dummy.matrix);this.cars.setColorAt(car,carColors[id%carColors.length]);dummy.position.y=.67+vehicle.lift;dummy.updateMatrix();this.carWheels.setMatrixAt(car,dummy.matrix);dummy.position.y=1.04+vehicle.lift;dummy.updateMatrix();this.carLights.setMatrixAt(car,dummy.matrix);dummy.position.y=1.77+vehicle.lift;dummy.updateMatrix();this.carGlass.setMatrixAt(car,dummy.matrix);carIds[car]=id;car++;}
       else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+.22,vehicle.pitch);}
       else if(current.k===2&&train<24){for(let coach=0;coach<3;coach++){dummy.position.set(x-Math.sin(h)*(coach-1)*16,2.75+RAIL_DECK,z-Math.cos(h)*(coach-1)*16);dummy.rotation.set(0,h,0);dummy.scale.setScalar(1);dummy.updateMatrix();this.trains.setMatrixAt(train,dummy.matrix);dummy.position.y=3.05+RAIL_DECK;dummy.updateMatrix();this.trainGlass.setMatrixAt(train,dummy.matrix);dummy.position.y=2.35+RAIL_DECK;dummy.updateMatrix();this.trainStripe.setMatrixAt(train,dummy.matrix);dummy.position.y=1.1+RAIL_DECK;dummy.updateMatrix();this.wheels.setMatrixAt(train,dummy.matrix);trainIds[train]=id;train++;}}

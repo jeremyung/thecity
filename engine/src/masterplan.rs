@@ -1476,6 +1476,9 @@ impl MasterPlan {
                 hash = hash.wrapping_mul(0x0100_0000_01b3);
             }
         };
+        // Rail platform placement and access are part of the realized plan
+        // contract. Changing this salt rejects saves with stale station paths.
+        feed(0x5250_4c01);
         for node in &self.nodes {
             feed(node.p.x.to_bits());
             feed(node.p.z.to_bits());

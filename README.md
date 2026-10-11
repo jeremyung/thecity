@@ -47,6 +47,8 @@ The current prototype covers an 800 m by 800 m bounded district. The 2.4 km squa
 
 Building heights and uses now respond to the founding market, station catchment, and outer neighborhoods. Local balancing retains a mix of low-rise housing, commerce, and taller station blocks. Building batches preserve authored colors as vertex data while sharing compatible materials.
 
+Elevated stations now publish shared platform frames and saved walking-surface heights. Queue positions, stair access, pedestrian rendering and follow cameras use that contract. Close-up transit motion and artistic acceptance remain under review; see [station validation](validation/station-passengers.md). Older master-plan checkpoints are incompatible with the revised station layout.
+
 Visual fidelity is still under active review against the concept boards. The art gate remains open: architectural modules still repeat visibly, concept fidelity is incomplete, and sky, foliage, and water need further polish. Passing engine tests does not establish that the art is finished. The [visual release gate](specs/08-delivery.md#visual-quality-is-a-release-gate) covers composition, architecture, lighting, water, and both rendering styles.
 
 The scope and numeric targets are still evolving; see [`specs/README.md`](specs/README.md) for the experience specifications.

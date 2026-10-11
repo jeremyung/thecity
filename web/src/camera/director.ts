@@ -1,3 +1,4 @@
+import { MOVEMENT_STRIDE } from '../movement';
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { LENS_PRESETS, verticalFovDegrees, type LensPresetId } from "./lens";
@@ -357,15 +358,15 @@ export class CameraDirector {
     return true;
   }
 
-  /** Copy only the selected subject's tuple [id,x,z,heading,kind]. */
+  /** Copy only the selected subject's tuple [id,x,z,heading,kind,surfaceY]. */
   setPositions(data: Float32Array): void {
     if (this.followId === null || this.disposed) return;
     this.followMovementPresent = false;
     const resident = this.findResident(this.followId);
     const movementId = resident?.bus_id ?? resident?.train_id ?? this.followId;
-    for (let index = 0; index + 4 < data.length; index += 5) {
+    for (let index = 0; index + MOVEMENT_STRIDE <= data.length; index += MOVEMENT_STRIDE) {
       if (data[index] !== movementId) continue;
-      this.followPosition.set(data[index + 1], 0, data[index + 2]);
+      this.followPosition.set(data[index + 1], Math.max(0,data[index + 5]), data[index + 2]);
       this.followHeading = data[index + 3];
       this.followKind = data[index + 4];
       this.followPositionValid = true;
@@ -808,7 +809,7 @@ export class CameraDirector {
     const forward = this.headingForward(this.followHeading, this.followForward);
     this.desiredTarget.set(
       point.x + forward.x * lookAhead,
-      0,
+      point.y,
       point.z + forward.z * lookAhead,
     );
     if(this.followKind===2){

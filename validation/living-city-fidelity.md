@@ -40,6 +40,9 @@ Diagnostic triangle/draw counters are observations, not a hardware benchmark.
    light variation compared with the luminous banks, bridges and reflections.
 4. **Grounded activity:** raised-platform passengers and physical flag-lot
    access remain known gaps; inspect motion in the same accepted compositions.
+   [The station baseline](station-passengers.md) now proves the queue is also
+   on the wrong side of the tracks. This is the next bounded workstream;
+   layout, traversal, and presentation elevation must be corrected together.
 5. **Composition and atmosphere:** controlled reference compositions, layered
    foreground vegetation and the distinction between the two styles need a
    complete dawn/day/dusk/night review.

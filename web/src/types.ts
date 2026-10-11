@@ -3,6 +3,12 @@ export interface Point { x: number; z: number }
 export interface BuildingAccess { building_id: number; road_id: number; points: readonly [Point, Point] }
 export interface WorldNode extends Point { id: number; kind: string }
 export interface RoadDeck { road_id: number; deck_height: number }
+/** Engine-owned rail terminal frame; +X=(uz,-ux), +Z=(ux,uz). */
+export interface RailPlatform extends Point {
+  node_id: number; ux: number; uz: number; surface_y: number;
+  stair_x: number; stair_bottom_z: number; stair_top_z: number;
+  ground_y: number; stair_steps: number;
+}
 export interface Road { id: number; from: number; to: number; kind: string; stage: string; progress: number; connected: boolean; length: number; lanes: number }
 export interface Parcel extends Point { id: number; width: number; depth: number; rotation?: number; access_node: number; suitability: number; protected: boolean; reservation: number | null }
 export interface Building extends Point { id: number; parcel_id: number; rotation: number; width: number; depth: number; floors: number; kind: string; stage: string; progress: number; capacity: number; occupancy: number; business_active?: boolean; built_day: number; name: string; appearance_seed: number; history: string[]; anchor: boolean; vacant_days: number }
@@ -23,6 +29,7 @@ export interface World {
   schema_version: number; engine_version: string; seed: number; tick: number; day: number; minute_of_day: number; development_rate: number; revision: number; stage: string;
   bounds: { min_x: number; max_x: number; min_z: number; max_z: number };
   road_decks?: RoadDeck[];
+  rail_platforms?: RailPlatform[];
   terrain: { river: Point[]; river_half_width?: number; protected: Point[][]; gateways: number[] };
   weather: { kind: 'clear' | 'overcast' | 'rain'; intensity: number };
   nodes: WorldNode[]; roads: Road[]; parcels: Parcel[]; buildings: Building[]; ground?: { block: number; points: [number, number][] }[];
@@ -37,7 +44,7 @@ export interface World {
 }
 export type Style = 'anime' | 'miniature';
 export interface Metrics { tickMs: number; memoryBytes: number; backlog: number; tick: number; achievableSpeed: number; droppedWallMs: number }
-export const WORKER_PROTOCOL_VERSION = 1 as const;
+export const WORKER_PROTOCOL_VERSION = 2 as const;
 export type WorkerInput =
   | { type: 'init'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; seed: number; save?: string }
   | { type: 'control'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; sequence: number; paused?: boolean; hidden?: boolean; speed?: number; development?: number }

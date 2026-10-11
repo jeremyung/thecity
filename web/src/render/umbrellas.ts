@@ -1,3 +1,4 @@
+import { MOVEMENT_STRIDE } from '../movement';
 import * as THREE from 'three/webgpu';
 
 const CANOPY_COLORS = ['#b96f5a', '#d2ad68', '#6f8e7c', '#667f96', '#d8cbb0', '#9b879b'] as const;
@@ -53,7 +54,7 @@ export class Umbrellas {
     }
   }
 
-  /** Update from [id, x, z, heading, kind] tuples; kind 0 is a pedestrian. */
+  /** Update from [id, x, z, heading, kind, resolved ground-relative lift] tuples; kind 0 is a pedestrian. */
   update(positions: Float32Array, rain: number, time: number): void {
     if (this.disposed || this.capacity === 0 || !this.shaftMesh) return;
     const rainLevel = clamp01(rain);
@@ -69,7 +70,7 @@ export class Umbrellas {
     }
 
     let count = 0;
-    for (let offset = 0; offset + 4 < positions.length; offset += 5) {
+    for (let offset = 0; offset + MOVEMENT_STRIDE <= positions.length; offset += MOVEMENT_STRIDE) {
       if (positions[offset + 4] !== 0) continue;
       const id = Math.trunc(positions[offset]);
       const priority = stablePriority(id);
@@ -117,7 +118,7 @@ export class Umbrellas {
 
       const radius = this.opening;
       const helper = this.matrixHelper;
-      helper.position.set(x, 2.32, z);
+      helper.position.set(x, 2.32 + positions[offset + 5], z);
       helper.rotation.set(0, heading, 0);
       helper.scale.set(radius, 0.72 + this.opening * 0.28, radius);
       helper.updateMatrix();
@@ -125,7 +126,7 @@ export class Umbrellas {
       canopy.setMatrixAt(canopyIndex, helper.matrix);
       canopy.count = canopyIndex + 1;
 
-      helper.position.set(x, 1.93, z);
+      helper.position.set(x, 1.93 + positions[offset + 5], z);
       helper.rotation.set(0, heading, 0);
       helper.scale.setScalar(1);
       helper.updateMatrix();

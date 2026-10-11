@@ -257,8 +257,8 @@ describe("simulation worker support", () => {
     const worker = FakeWorker.instances[0];
     const firstInit = worker.sent[0].message as { protocolVersion: number; epoch: number };
     const firstControl = worker.sent[1].message as { protocolVersion: number; epoch: number; sequence: number };
-    expect(firstInit).toMatchObject({ protocolVersion: 1, epoch: 1 });
-    expect(firstControl).toMatchObject({ protocolVersion: 1, epoch: 1, sequence: 1 });
+    expect(firstInit).toMatchObject({ protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1 });
+    expect(firstControl).toMatchObject({ protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, sequence: 1 });
 
     client.controls({ paused: true });
     client.controls({ speed: 4 });
@@ -267,8 +267,8 @@ describe("simulation worker support", () => {
       return { sequence: control.sequence, ...(control.paused !== undefined ? { paused: control.paused } : {}), ...(control.speed !== undefined ? { speed: control.speed } : {}) };
     });
     expect(controls.slice(-2)).toEqual([{ sequence: 2, paused: true }, { sequence: 3, paused: true, speed: 4 }]);
-    worker.emit({ type: "controlAck", protocolVersion: 1, epoch: 1, appliedSequence: 2, tick: 0 });
-    worker.emit({ type: "controlAck", protocolVersion: 1, epoch: 1, appliedSequence: 3, tick: 4 });
+    worker.emit({ type: "controlAck", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, appliedSequence: 2, tick: 0 });
+    worker.emit({ type: "controlAck", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, appliedSequence: 3, tick: 4 });
     client.init(5);
     const lastControl = worker.sent.filter(({ message }) => (message as { type?: string }).type === "control").at(-1)!.message as { epoch: number; sequence: number };
     expect(lastControl).toMatchObject({ epoch: 2, sequence: 1 });
@@ -299,8 +299,8 @@ describe("simulation worker support", () => {
     client.onError((error) => errors.push(error.message));
     client.init(9);
     const worker = FakeWorker.instances[0];
-    worker.emit({ type: "movement", protocolVersion: 2, epoch: 1, tick: 1, count: 1, buffer: new ArrayBuffer(20), minute: 360, day: 0 } as unknown as WorkerOutput);
-    expect(errors[0]).toContain("requires version 1");
+    worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION + 1, epoch: 1, tick: 1, count: 1, buffer: new ArrayBuffer(24), minute: 360, day: 0 } as unknown as WorkerOutput);
+    expect(errors[0]).toContain(`requires version ${WORKER_PROTOCOL_VERSION}`);
     expect(errors[0]).toContain("Reload the app");
     expect(worker.terminated).toBe(true);
     expect(worker.sent.some(({ message }) => (message as { type?: string }).type === "recycle")).toBe(false);
@@ -339,7 +339,7 @@ describe("simulation worker support", () => {
 
     client.init(2);
     worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, world: sampleWorld(99) });
-    const staleBuffer = new ArrayBuffer(20);
+    const staleBuffer = new ArrayBuffer(24);
     worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, tick: 4, count: 1, buffer: staleBuffer, minute: 360, day: 0 });
     worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 2, world: sampleWorld(2) });
 

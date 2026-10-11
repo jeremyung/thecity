@@ -212,6 +212,7 @@ function CityExperience(){
       onGraphicsRetry={()=>void recoverGraphics(new URLSearchParams(window.location.search).has('webgl'))} onGraphicsFallback={()=>void recoverGraphics(!new URLSearchParams(window.location.search).has('webgl'))}
       onReviewMature={import.meta.env.DEV?()=>void reviewMature():undefined} onSave={()=>void save()} onExport={()=>void exportCity()} onImport={file=>void importCity(file)} onResume={()=>void resume()} onNewWorld={seed=>void newWorld(seed)}
       onReviewSkyline={import.meta.env.DEV?()=>{if(!runtime.current?.renderer.director.reviewSkyline())notice('This city has no completed tall-building scene yet.');}:undefined}
+      onReviewStation={import.meta.env.DEV?()=>{const station=currentWorld.current?.nodes.find(n=>n.kind==='station');if(station)runtime.current?.renderer.director.follow(station.id);}:undefined}
       onCloseInspector={()=>{setSelectedId(null);setSubject(null);runtime.current?.renderer.setSelected(null);runtime.current?.renderer.director.follow(null);}}
       onFollow={id=>{const r=runtime.current;if(!r)return;r.renderer.director.follow(id);if(!currentWorld.current?.buildings.some(b=>b.id===id)){void r.client.inspect(id).then(data=>{setSubject(inspectedSubject(id,data,currentWorld.current));setSelectedId(null);}).catch(()=>{});}}} />
   </main>;

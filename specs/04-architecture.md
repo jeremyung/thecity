@@ -76,6 +76,17 @@ Every message carries protocol version and world epoch. Epoch changes on load or
 
 Publish movement at 10–20 Hz initially. Interpolate between two snapshots with a short presentation delay; avoid extrapolating through intersections. Structural changes are applied in revision order. Reliable deltas are never dropped; request a full resync if a gap is detected.
 
+Station-placement correction in progress (2026-10-11): worker protocol 2 uses
+six Float32 values per actor: `[id, x, z, heading, kind, surfaceY]`. Actor kind
+continues to identify person/car/train/bus (0/1/2/3). A nonnegative `surfaceY`
+is an authoritative absolute pedestrian walking-surface height; -1 delegates
+to the existing ground/road presentation policy. Do not infer elevated access
+from proximity to a station, because other travelers can pass underneath.
+Interpolate resolved pedestrian surfaces along with horizontal positions and
+use the same elevation for picking geometry, follow targeting and accessories.
+Structural snapshots supply `rail_platforms` terminal frames and stair dimensions
+for both styles. See [implementation evidence and remaining acceptance](../validation/station-passengers.md).
+
 ## Buffer ownership and backpressure
 
 WASM linear memory remains worker-owned. Copy render-relevant fields into pooled transferable ArrayBuffers, send them, and return released buffers to the worker. Do not transfer or detach the engine's live memory. This is one bounded copy, not a zero-copy claim.

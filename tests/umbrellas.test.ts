@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three/webgpu";
 import { Umbrellas } from "../web/src/render/umbrellas";
 
-function tuples(...actors: Array<[number, number, number, number, number]>): Float32Array {
+function tuples(...actors: Array<[number, number, number, number, number, number]>): Float32Array {
   return new Float32Array(actors.flat());
 }
 
@@ -38,14 +38,23 @@ function canopyScale(umbrellas: Umbrellas): number {
   return scale.x;
 }
 
+function canopyY(umbrellas: Umbrellas): number {
+  const meshes = meshesOfType(umbrellas.root);
+  const shaftGeometry = meshes.at(-1)!.geometry;
+  const canopy = meshes.find((mesh) => mesh.count > 0 && mesh.geometry !== shaftGeometry)!;
+  const matrix = new THREE.Matrix4();
+  canopy.getMatrixAt(0, matrix);
+  return matrix.elements[13];
+}
+
 describe("Umbrellas", () => {
   it("renders only pedestrians, stays within capacity, and uses finite reusable instance geometry", () => {
     const umbrellas = new Umbrellas(2);
     const stream = tuples(
-      [10, 10, 2, 0.2, 0],
-      [11, 20, 3, 0.6, 0],
-      [12, 30, 4, 0.8, 1],
-      [13, 40, 5, 1.1, 2],
+      [10, 10, 2, 0.2, 0, 0],
+      [11, 20, 3, 0.6, 0, 0],
+      [12, 30, 4, 0.8, 1, 0],
+      [13, 40, 5, 1.1, 2, 0],
     );
     umbrellas.update(stream, 0.2, 1);
     const meshes = meshesOfType(umbrellas.root);
@@ -79,12 +88,21 @@ describe("Umbrellas", () => {
 
   it("keeps the same seeded pedestrian subset when movement order changes", () => {
     const umbrellas = new Umbrellas(3);
-    const actors: Array<[number, number, number, number, number]> = Array.from({ length: 12 }, (_, index) => [index + 1, (index + 1) * 10, 0, index * 0.1, 0] as [number, number, number, number, number]);
+    const actors: Array<[number, number, number, number, number, number]> = Array.from({ length: 12 }, (_, index) => [index + 1, (index + 1) * 10, 0, index * 0.1, 0, 0]);
     umbrellas.update(tuples(...actors), 0.7, 10);
     const initial = selectedXs(umbrellas);
     expect(initial).toHaveLength(3);
     umbrellas.update(tuples(...actors.slice().reverse()), 0.7, 10.1);
     expect(selectedXs(umbrellas)).toEqual(initial);
+    umbrellas.dispose();
+  });
+
+  it("raises the canopy with the pedestrian's resolved walking surface", () => {
+    const umbrellas = new Umbrellas(1);
+    umbrellas.update(tuples([52, 4, -8, 0.4, 0, 0]), 1, 1);
+    const groundCanopyY = canopyY(umbrellas);
+    umbrellas.update(tuples([52, 4, -8, 0.4, 0, 6]), 1, 1.1);
+    expect(canopyY(umbrellas) - groundCanopyY).toBeCloseTo(6, 5);
     umbrellas.dispose();
   });
 
@@ -97,7 +115,7 @@ describe("Umbrellas", () => {
     };
     const first = new Umbrellas(1, materialForColor);
     const second = new Umbrellas(1, materialForColor);
-    const actor = tuples([52, 4, -8, 0.4, 0]);
+    const actor = tuples([52, 4, -8, 0.4, 0, 0]);
     first.update(actor, 0, 0);
     second.update(actor, 0, 0);
     first.update(actor, 1, 0.05);
@@ -122,7 +140,7 @@ describe("Umbrellas", () => {
 
   it("shows an initially rainy paused world fully open, then hides canopies after dry weather settles", () => {
     const umbrellas = new Umbrellas(2);
-    const actor = tuples([7, 2, 3, 0.4, 0], [8, 5, 6, 0.8, 0]);
+    const actor = tuples([7, 2, 3, 0.4, 0, 0], [8, 5, 6, 0.8, 0, 0]);
     umbrellas.update(actor, 0.8, 44); // The first snapshot has no elapsed presentation delta.
     expect(canopyScale(umbrellas)).toBeCloseTo(0.8, 5);
     expect(meshesOfType(umbrellas.root).at(-1)!.count).toBe(2);
