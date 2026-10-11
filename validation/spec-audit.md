@@ -670,6 +670,14 @@ Source inspection, not a new test or performance run: browser subsystems have se
 
 Recommended incremental refactor, not yet implemented: extract pure geometry and model types first; then isolate growth planning, construction, routing/transit, and persistence with explicit inputs and mutation ownership. Preserve a single deterministic tick coordinator. Split renderer environment/post-processing and architectural building families while retaining centralized GPU resource ownership. Move the development review route out of application startup. Preserve save compatibility, ordering, random consumption, and same-target replay with existing fixtures; avoid combining these extractions with behavior changes. Merely moving methods into files without restricting shared-state access is insufficient. Overall assessment: useful subsystem separation, but the engine is not yet well factored for the next generation features.
 
+2026-10-11 routing follow-up: per-query compact adjacency removes repeated
+full-road scans while retaining source-order search behavior. Four oracle tests
+and the native release suite pass (359 tests, 43 ignored); the 300,000-tick WASM
+save matches the prior build exactly. Standalone time is 54.24 s vs 56.05 s
+previously, a single-run observation rather than a browser performance claim.
+See [measurement and limitations](routing-adjacency/README.md). This does not
+complete routing modularization, maximum-cap scaling, or visual acceptance.
+
 Latest visual review, 2026-10-09: the public-WASM bridge candidate has 580 buildings and 170 roads. The reviewed Miniature 08:00 overview, with depth of field disabled, shows growth on both riverbanks but still fails artistic acceptance because of green gaps, repetitive architecture, and washed-out lighting. See [integration evidence and capture](multiblock-integration.md#visual-review). The world-growth spec now records the researched block-first generation proposals separately from implemented behavior. This documentation update does not establish a newer full-test checkpoint or completion of the bus-demand repair.
 
 Read-only comparison of the eight experience specifications, README, implementation, tests, and current review evidence on 2026-10-09. “Implemented” means code and tests demonstrate the behavior; it does not mean visual acceptance. “Partial” means a working slice still differs materially from the specification. “Unverified” means browser, device, listening, or visual evidence is still required. Numeric targets remain proposals unless a specification states an acceptance condition.

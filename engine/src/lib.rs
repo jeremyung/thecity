@@ -43,6 +43,8 @@ mod face_target_selection;
 mod face_target_viability;
 mod frontage;
 mod node_coincidence_index;
+#[cfg(test)]
+mod route_equivalence_tests;
 mod road_pair_broadphase;
 mod frontier;
 mod geometry;
@@ -8843,6 +8845,21 @@ impl Engine {
         if start == goal {
             return vec![start];
         }
+        // Keep source order, including parallel edges, so equal-cost choices
+        // match the full-road scan. This index lives only for this immutable
+        // query; road openings and splits cannot leave a stale route cache.
+        let mut adjacency = Vec::with_capacity(self.state.roads.len() * 2);
+        for (index, road) in self.state.roads.iter().enumerate().filter(|(_, road)| {
+            road.connected
+                && road.stage == "open"
+                && ((rail && road.kind == "rail") || (!rail && road.kind != "rail"))
+        }) {
+            adjacency.push((road.from, index));
+            if road.to != road.from {
+                adjacency.push((road.to, index));
+            }
+        }
+        adjacency.sort_unstable();
         let mut dist: BTreeMap<u32, f32> = BTreeMap::new();
         let mut prev: BTreeMap<u32, u32> = BTreeMap::new();
         let mut open: BTreeSet<(u32, u32)> = BTreeSet::new();
@@ -8854,12 +8871,9 @@ impl Engine {
                 break;
             }
             let base = *dist.get(&current).unwrap_or(&f32::INFINITY);
-            for r in self.state.roads.iter().filter(|r| {
-                r.connected
-                    && r.stage == "open"
-                    && ((rail && r.kind == "rail") || (!rail && r.kind != "rail"))
-                    && (r.from == current || r.to == current)
-            }) {
+            let first = adjacency.partition_point(|(node, _)| *node < current);
+            for &(_, index) in adjacency[first..].iter().take_while(|(node, _)| *node == current) {
+                let r = &self.state.roads[index];
                 let next = if r.from == current { r.to } else { r.from };
                 if blocked.contains(&next) && next != goal {
                     continue;

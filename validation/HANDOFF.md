@@ -2,6 +2,18 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Compact routing adjacency — 2026-10-11
+
+[Routing now builds a source-ordered adjacency vector per query](routing-adjacency/README.md),
+avoiding the previous full-road scan at every visited node. The 300,000-tick
+standalone WASM run takes 54.24 s versus the prior 56.05 s measurement, with an
+identical final-save hash and cap/restore checks passing. This single comparison
+is not proof of browser speedup. Native release suite: 359 passed, 43 ignored.
+The temporary index is rebuilt per query; no persistence or cache invalidation
+changes. A BTreeMap variant was slower and is not used.
+The production WASM rebuild and all five tests in `tests/wasm.test.ts` also pass
+(82.51 s for the file, with the endurance case's 60 s timeout unchanged).
+
 ## Endurance timing baseline — 2026-10-11
 
 [Current production WASM measurements](endurance-profile/README.md) reproduce
