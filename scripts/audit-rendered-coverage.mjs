@@ -188,10 +188,21 @@ function geometryTriangles(mesh, placement, grid) {
  * Audit a production kit through an injected create/dispose pair. The
  * injection keeps geometric self-tests independent from DOM and WebGPU.
  */
-export function auditRenderedCoverage(snapshot, kit, { cellSize = DEFAULT_CELL_SIZE, blockSize = DEFAULT_BLOCK_SIZE, maxGridCells = DEFAULT_MAX_GRID_CELLS } = {}) {
+export function auditRenderedCoverage(snapshot, kit, { cellSize = DEFAULT_CELL_SIZE, blockSize = DEFAULT_BLOCK_SIZE, maxGridCells = DEFAULT_MAX_GRID_CELLS, cropBounds = null } = {}) {
   if (!snapshot || !Array.isArray(snapshot.buildings)) throw new TypeError('Snapshot requires a buildings array');
   if (!Number.isFinite(blockSize) || blockSize <= 0) throw new RangeError('blockSize must be positive');
-  const bounds = snapshot.bounds;
+  const worldBounds = snapshot.bounds;
+  if (!worldBounds || ![worldBounds.min_x, worldBounds.max_x, worldBounds.min_z, worldBounds.max_z].every(Number.isFinite)
+      || worldBounds.max_x <= worldBounds.min_x || worldBounds.max_z <= worldBounds.min_z) {
+    throw new TypeError('Snapshot world bounds must be finite and increasing');
+  }
+  if (cropBounds !== null && (!cropBounds || ![cropBounds.min_x, cropBounds.max_x, cropBounds.min_z, cropBounds.max_z].every(Number.isFinite)
+      || cropBounds.max_x <= cropBounds.min_x || cropBounds.max_z <= cropBounds.min_z
+      || cropBounds.min_x < worldBounds.min_x || cropBounds.min_z < worldBounds.min_z
+      || cropBounds.max_x > worldBounds.max_x || cropBounds.max_z > worldBounds.max_z)) {
+    throw new RangeError('Crop bounds must be finite, increasing, and wholly inside snapshot world bounds');
+  }
+  const bounds = cropBounds ?? worldBounds;
   const grid = createChannels(bounds, cellSize, maxGridCells);
   let renderedBuildingCount = 0;
   for (const building of snapshot.buildings) {
@@ -218,14 +229,17 @@ export function auditRenderedCoverage(snapshot, kit, { cellSize = DEFAULT_CELL_S
   const nominalArea = gridArea(grid, grid.envelopeMask);
   return {
     methodology: {
-      label: 'projected kit geometry above 1m',
+      label: cropBounds ? 'projected kit geometry above 1m within cropped bounds' : 'projected kit geometry above 1m',
       cellSizeM: cellSize,
       comparison: 'rotated nominal parcel envelopes from saved building width/depth; envelope area is a union too',
-      domainDenominator: 'full world bounds, including river, protected land, and undevelopable areas',
+      domainDenominator: cropBounds
+        ? 'cropped world bounds, including any river, protected land, and undevelopable areas inside the crop'
+        : 'full world bounds, including river, protected land, and undevelopable areas',
       yCriterion: 'clip production kit triangles at building-local y=1m before projection',
       limitations: 'Visual plan-view union of authored kit surfaces; includes roof/eaves/props above 1m. It is not a legal footprint, parcel coverage, floor area, or net developable-land ratio. Raster coverage is cell-center sampled and may miss features narrower than the cell size.',
     },
     source: { seed: snapshot.seed, tick: snapshot.tick, engineVersion: snapshot.engine_version },
+    cropBounds: cropBounds ? { ...cropBounds } : null,
     grid: { columns: grid.columns, rows: grid.rows, maxCells: grid.maxCells, blockSizeM: blockSize },
     buildings: { snapshotCount: snapshot.buildings.length, renderedCount: renderedBuildingCount },
     domain: { areaM2: domainArea, projectedKitGeometryAreaM2: projectedArea, projectedKitGeometryPercent: projectedArea / domainArea * 100, nominalParcelEnvelopeUnionM2: nominalArea, nominalParcelEnvelopeUnionPercent: nominalArea / domainArea * 100, projectedVsEnvelopePercent: nominalArea > 0 ? projectedArea / nominalArea * 100 : null },
@@ -285,7 +299,7 @@ async function loadSnapshot(savePath) {
   }
 }
 
-async function auditFile(inputPath, outputPath, inputKind = 'save', compactMidrise = false) {
+async function auditFile(inputPath, outputPath, inputKind = 'save', compactMidrise = false, cropBounds = null) {
   let loaded;
   if (inputKind === 'snapshot') {
     const data = await readFile(inputPath, 'utf8');
@@ -302,7 +316,7 @@ async function auditFile(inputPath, outputPath, inputKind = 'save', compactMidri
       const report = auditRenderedCoverage(snapshot, {
         create: (building) => runtime.module.buildingKit(building, art, {compactMidrise}),
         dispose: (group) => runtime.module.disposeGroup(group),
-      });
+      }, { cropBounds });
       report.source = { ...report.source, [inputKind]: relative(root, inputPath), sha256: inputSha256, kitModule: 'web/src/render/kit.ts', kitBundleSha256: runtime.bundleSha256, compactMidriseReview: compactMidrise };
       const output = `${JSON.stringify(report, null, 2)}\n`;
       if (outputPath) await writeFile(outputPath, output);
@@ -318,7 +332,7 @@ async function auditFile(inputPath, outputPath, inputKind = 'save', compactMidri
 }
 
 async function runCli(argv) {
-  let inputPath = null, outputPath = null, inputKind = 'save', compactMidrise = false;
+  let inputPath = null, outputPath = null, inputKind = 'save', compactMidrise = false, cropBounds = null;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--input' || argv[i] === '--snapshot') {
       if (inputPath) throw new Error('Choose one save input or one snapshot input');
@@ -330,8 +344,13 @@ async function runCli(argv) {
       outputPath = resolve(argv[++i]);
     } else if (argv[i] === '--compact-midrise') {
       compactMidrise = true;
+    } else if (argv[i] === '--crop') {
+      if (!argv[i + 1]) throw new Error('--crop requires minX,minZ,maxX,maxZ');
+      const values = argv[++i].split(',').map(Number);
+      if (values.length !== 4 || !values.every(Number.isFinite)) throw new Error('--crop requires four finite comma-separated values: minX,minZ,maxX,maxZ');
+      cropBounds = { min_x: values[0], min_z: values[1], max_x: values[2], max_z: values[3] };
     } else if (argv[i] === '--help' || argv[i] === '-h') {
-      process.stdout.write('Usage: node scripts/audit-rendered-coverage.mjs (--input save.json | --snapshot snapshot.json) [--output report.json] [--compact-midrise]\n');
+      process.stdout.write('Usage: node scripts/audit-rendered-coverage.mjs (--input save.json | --snapshot snapshot.json) [--output report.json] [--compact-midrise] [--crop minX,minZ,maxX,maxZ]\n');
       return;
     } else if (argv[i].startsWith('-')) throw new Error(`Unknown option: ${argv[i]}`);
     else {
@@ -340,7 +359,7 @@ async function runCli(argv) {
     }
   }
   if (!inputPath) throw new Error('Provide a verified save or snapshot path');
-  await auditFile(inputPath, outputPath, inputKind, compactMidrise);
+  await auditFile(inputPath, outputPath, inputKind, compactMidrise, cropBounds);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

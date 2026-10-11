@@ -72,4 +72,50 @@ describe('projected kit coverage raster', () => {
     expect(report.domain.projectedKitGeometryAreaM2).toBeGreaterThan(0);
     expect(report.methodology.label).toBe('projected kit geometry above 1m');
   });
+
+  it('clips crossing building unions and denominators to a validated crop', () => {
+    const snapshot = {
+      bounds: { min_x: 0, max_x: 10, min_z: 0, max_z: 10 },
+      buildings: [
+        { id: 1, x: 3, z: 4, rotation: 0, width: 4, depth: 2 },
+        { id: 2, x: 9, z: 9, rotation: 0, width: 1, depth: 1 },
+      ],
+    };
+    const vertices = [[-2, 2, -1], [2, 2, -1], [2, 2, 1], [-2, 2, -1], [2, 2, 1], [-2, 2, 1]];
+    const position = {
+      count: vertices.length,
+      itemSize: 3,
+      getX: (i: number) => vertices[i][0],
+      getY: (i: number) => vertices[i][1],
+      getZ: (i: number) => vertices[i][2],
+    };
+    const kit = {
+      create: (building: typeof snapshot.buildings[number]) => {
+        const mesh = {
+          isMesh: true,
+          geometry: { index: null, getAttribute: () => position },
+          matrixWorld: { elements: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, building.x, 0, building.z, 1] },
+          updateMatrixWorld() {},
+        };
+        return {
+          position: { set() {} }, rotation: { y: 0 }, updateMatrixWorld() {},
+          traverse(callback: (object: typeof mesh) => void) { callback(mesh); },
+        };
+      },
+      dispose() {},
+    };
+    const cropBounds = { min_x: 2, min_z: 2, max_x: 6, max_z: 6 };
+    const report = auditRenderedCoverage(snapshot, kit, { cellSize: 1, cropBounds });
+
+    expect(report.cropBounds).toEqual(cropBounds);
+    expect(report.buildings.snapshotCount).toBe(2);
+    expect(report.buildings.renderedCount).toBe(2);
+    expect(report.domain.areaM2).toBe(16);
+    expect(report.domain.projectedKitGeometryAreaM2).toBe(6);
+    expect(report.domain.nominalParcelEnvelopeUnionM2).toBe(6);
+    expect(report.domain.projectedKitGeometryPercent).toBe(37.5);
+    expect(report.methodology.label).toBe('projected kit geometry above 1m within cropped bounds');
+    expect(report.methodology.domainDenominator).toMatch(/cropped world bounds/);
+    expect(() => auditRenderedCoverage(snapshot, kit, { cropBounds: { min_x: -1, min_z: 2, max_x: 6, max_z: 6 } })).toThrow(/wholly inside/);
+  });
 });

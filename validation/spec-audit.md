@@ -1600,3 +1600,16 @@ area is57.62m², station114.67m²; this supports preserving small-building fabri
 rather than promoting uniform wider lots. No density targets or production
 changes are accepted. Next compare matched synthetic crops and resolve land-use,
 frontage and roof-shape calibration before a multi-seed growth/render trial.
+
+## Matched-size synthetic morphology — 2026-10-11
+
+[Three250m synthetic crops](synthetic-morphology/README.md) separate exact nominal
+envelopes and actual production-kit raster coverage. The most envelope-covered
+inland crop among60 tested windows yields37.75% nominal versus28.87% rendered;
+compact PLATEAU roof-edge coverage is48.47%. Methods/selection differ and are
+explicit, but facade widening alone is insufficient. Compact synthetic count130
+versus source452 supports testing finer varied frontage and connected blocks,
+with capacity semantics and finite caps retained. Four coverage tests pass; three
+real-kit measurements and independent polygon unions are recorded. No production
+policy change. Next: a compact-block prototype assessed through multi-seed growth
+and actual rendered views; do not turn the sample directly into a citywide target.
