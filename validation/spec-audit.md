@@ -1660,3 +1660,14 @@ browser fault-injection check with saving still available. A software WebGL
 founder capture succeeds, but the mature WebGPU capture remains unresolved; no
 GPU presentation/performance or artistic acceptance follows from this fix.
 [Evidence and limitations](screenshots/render-startup/README.md).
+
+## 871-building static visual review — 2026-10-11
+
+[Latest capture](screenshots/narrow-infill/README.md) now renders the complete
+871-building continuation on software WebGL, with building/chunk queues empty.
+Intermediate GPU draws were skipped during preparation; this is not normal
+loading, hardware WebGPU or performance evidence. Root rejects overall art
+acceptance: broad green block interiors and detached development strips remain
+the dominant morphology problem. A four-floor office crown audit finds only two
+instances, so that geometry change was not promoted as a density intervention.
+Next prioritize connected interior development and matched-view comparison.
