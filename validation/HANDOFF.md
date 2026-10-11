@@ -235,3 +235,14 @@ Live search startup now computes the shared viability/collision snapshot once, r
 Development-only `?midrise=compact` tests wider 4–11-floor apartment/office bodies inside existing parcels; production ignores the flag. The 850-building fixture gains only 1,341 m² projected kit coverage (+1.09%), with +0.81% triangles and +1.93 MB counted CPU geometry arrays. This cannot solve the citywide empty interiors. Containment, entry and cross-style vertex checks pass; runtime visual approval is pending because both screenshot APIs failed while the Mac was locked. Default appearance remains selected. See [study and reproduction](compact-midrise-review/README.md); do not promote without matched style/time views and browser measurements.
 
 The focused render suite passes 34 tests and the production build passes. Full web testing is not green: unrestricted run264pass/2timeouts; two-worker run265pass/1timeout; isolated300,000-tick WASM endurance also exceeded60seconds (62.15seconds). Timeout limits were not relaxed. See the study report for scope; do not present this checkpoint as full validation or visual acceptance.
+
+## Bounded PLATEAU source pilot — 2026-10-11
+
+[Source pilot](plateau-pilot/README.md) now contains three individually retrieved
+Tokyo meshes, exact provenance/hashes/resource license statements, and provisional
+250 m crop geometry/metrics. Sources plus metadata total 26,254,659 compressed
+bytes; no browser dependency is added. Six extractor tests and three source runs
+pass, but Taito direct Building count differs from catalog by one and two catalog
+byte counts disagree. Roof-edge semantics, missingness and unresolved completeness
+are explicit. Calibration is not accepted; source-member reconciliation, diagrams,
+district/context review and synthetic visual/performance comparisons remain.

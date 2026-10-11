@@ -1576,3 +1576,14 @@ Startup reuses one computed viability projection with a borrow-bound source toke
 ### Compact midrise envelope review — 2026-10-11
 
 A development-only candidate reduces proportional midrise setbacks on wider lots without changing authoritative parcels, styles, clocks or growth. Measured projected kit union increases 1.09%; triangles increase 0.81%, counted geometry arrays 0.88%. The limited effect narrows its role to possible street-wall refinement, not a density solution. Geometry checks and production build pass; screenshots remain unavailable while the Mac is locked, so visual acceptance and promotion are explicitly pending. Details and comparison reports: `compact-midrise-review/README.md`.
+
+## Bounded PLATEAU source pilot — 2026-10-11
+
+[Source pilot](plateau-pilot/README.md) now contains three individually retrieved
+Tokyo meshes, exact provenance/hashes/resource license statements, and provisional
+250 m crop geometry/metrics. Sources plus metadata total 26,254,659 compressed
+bytes; no browser dependency is added. Six extractor tests and three source runs
+pass, but Taito direct Building count differs from catalog by one and two catalog
+byte counts disagree. Roof-edge semantics, missingness and unresolved completeness
+are explicit. Calibration is not accepted; source-member reconciliation, diagrams,
+district/context review and synthetic visual/performance comparisons remain.

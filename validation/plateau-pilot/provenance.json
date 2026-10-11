@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "retrievedDate": "2026-10-11",
+  "attribution": "Project PLATEAU / MLIT, selected Tokyo municipal resources",
+  "license": "CC BY 4.0, as stated in each resource metadata",
+  "licenseURL": "https://creativecommons.org/licenses/by/4.0/",
+  "modifications": "Selected metric crops and derived morphology. No raw geometry is a browser dependency. Dataset year is not a verified survey date.",
+  "selectionCaveat": "District labels are candidate sampling contexts, not independently validated land-use classifications. One municipality file per mesh; overlapping neighboring-ward catalog entries are not combined.",
+  "sourceCRS": "EPSG:6697 latitude/longitude/height; horizontal EPSG:6668 transformed with always_xy to EPSG:6677",
+  "compressedSourceAndMetadataBytes": 26254659,
+  "downloadBudgetBytes": 52428800,
+  "samples": [
+    {
+      "id": "station",
+      "sourceIndex": 0,
+      "city": {
+        "cityCode": "13104",
+        "cityName": "新宿区",
+        "year": 2025,
+        "registrationYear": 2025,
+        "spec": "5.0"
+      },
+      "catalogBuildingFile": {
+        "code": "53394526",
+        "maxLod": 2,
+        "url": "https://assets.cms.plateau.reearth.io/assets/84/48ebed-93d8-4196-bdda-e1db9590d3d1/13104_shinjuku-ku_pref_2025_citygml_1_op/udx/bldg/53394526_bldg_6697_op.gml",
+        "fileSize": 62405121,
+        "features": 1411,
+        "lod0": 1411,
+        "lod1": 1411,
+        "lod2": 556,
+        "lod3": 0,
+        "lod4": 0
+      },
+      "compressedBytes": 6269598,
+      "decodedBytes": 62700939,
+      "catalogSizeMatches": false,
+      "compressedSha256": "848c2ea436f11ca6ac1aeb5125c9d5566613dcbc13fdad30d34dad6d5b3fe52a",
+      "decodedSha256": "b6a84b0148dff5a33fbaf012549eb482979ffa75fd9f764f20fb9a7434fcda3c",
+      "metadata": {
+        "url": "https://assets.cms.plateau.reearth.io/assets/e3/7cb09d-c77c-4a58-835a-5f65842426fb/13104_shinjuku-ku_pref_2025_citygml_1_op_metadata.zip",
+        "member": "metadata/udx_13104_pref_2025_fld_op.xml",
+        "sha256": "ff758d4ca7ed806dce908138669d086624b590bb7095b712b7eb9d0eb06d77da",
+        "compressedBytes": 26786,
+        "licenseStatements": [
+          "Licensed under CC BY 4.0"
+        ]
+      },
+      "surveyDate": null,
+      "crop": {
+        "centerLon": 139.704,
+        "centerLat": 35.69,
+        "sizeM": 250,
+        "metricCRS": "EPSG:6677",
+        "cornersLonLat": [
+          [
+            139.70262072068857,
+            35.688871797999326
+          ],
+          [
+            139.70261704424126,
+            35.69112521840264
+          ],
+          [
+            139.70537931815622,
+            35.69112818606695
+          ],
+          [
+            139.70538291691398,
+            35.68887476541879
+          ]
+        ],
+        "meshBoundsLonLat": [
+          139.7,
+          35.68333333333334,
+          139.71249999999998,
+          35.69166666666667
+        ],
+        "cornersInsideMesh": true
+      }
+    },
+    {
+      "id": "ordinary",
+      "sourceIndex": 1,
+      "city": {
+        "cityCode": "13106",
+        "cityName": "台東区",
+        "year": 2025,
+        "registrationYear": 2025,
+        "spec": "5.0"
+      },
+      "catalogBuildingFile": {
+        "code": "53394653",
+        "maxLod": 4,
+        "url": "https://assets.cms.plateau.reearth.io/assets/80/45b2b1-5a88-40ab-9877-70b540b8707e/13106_taito-ku_city_2025_citygml_1_op/udx/bldg/53394653_bldg_6697_op.gml",
+        "fileSize": 142672806,
+        "features": 4614,
+        "lod0": 4613,
+        "lod1": 4613,
+        "lod2": 4536,
+        "lod3": 4,
+        "lod4": 1
+      },
+      "compressedBytes": 11269328,
+      "decodedBytes": 142672806,
+      "catalogSizeMatches": true,
+      "compressedSha256": "6ceb66021a3bbbafceae184cc8a90c88b9853aa86113763dd0a5d53fb2aa4f60",
+      "decodedSha256": "57e8a933ccf054d5e1eece56ebe23ff38392522d8f7037c467cd81d792f6f644",
+      "metadata": {
+        "url": "https://assets.cms.plateau.reearth.io/assets/26/b33070-e033-4a3c-83a4-c49a55fd56ef/13106_taito-ku_city_2025_citygml_1_op_metadata.zip",
+        "member": "metadata/udx_13106_city_2025_fld_op.xml",
+        "sha256": "9b3b65810f1ff41519a087b1bc0c747aa1ed4f792724de275a43e128296c506c",
+        "compressedBytes": 28646,
+        "licenseStatements": [
+          "Licensed under CC BY 4.0"
+        ]
+      },
+      "surveyDate": null,
+      "crop": {
+        "centerLon": 139.7895,
+        "centerLat": 35.7145,
+        "sizeM": 250,
+        "metricCRS": "EPSG:6677",
+        "cornersLonLat": [
+          [
+            139.78811909317383,
+            35.7133727805966
+          ],
+          [
+            139.7881178203224,
+            35.71562619698569
+          ],
+          [
+            139.7908809457182,
+            35.71562720337442
+          ],
+          [
+            139.7908821407856,
+            35.71337378690233
+          ]
+        ],
+        "meshBoundsLonLat": [
+          139.7875,
+          35.708333333333336,
+          139.79999999999998,
+          35.71666666666667
+        ],
+        "cornersInsideMesh": true
+      }
+    },
+    {
+      "id": "waterfront",
+      "sourceIndex": 2,
+      "city": {
+        "cityCode": "13103",
+        "cityName": "港区",
+        "year": 2025,
+        "registrationYear": 2025,
+        "spec": "5.0"
+      },
+      "catalogBuildingFile": {
+        "code": "53393680",
+        "maxLod": 2,
+        "url": "https://assets.cms.plateau.reearth.io/assets/ea/d75459-6d62-4a1f-8081-317603bd5f8d/13103_minato-ku_pref_2025_citygml_1_op/udx/bldg/53393680_bldg_6697_op.gml",
+        "fileSize": 86250714,
+        "features": 1614,
+        "lod0": 1614,
+        "lod1": 1614,
+        "lod2": 1611,
+        "lod3": 0,
+        "lod4": 0
+      },
+      "compressedBytes": 8633510,
+      "decodedBytes": 86551681,
+      "catalogSizeMatches": false,
+      "compressedSha256": "975f26fbe727d517963f4f570aeb5aaf0613f4e688e65687cca56eba930194cd",
+      "decodedSha256": "da65326eec632e45a78f552ada6dcaae03e899e6e004d12e3121454945c4f46b",
+      "metadata": {
+        "url": "https://assets.cms.plateau.reearth.io/assets/30/ed97ea-35ee-47a7-96f7-17ac19a0befb/13103_minato-ku_pref_2025_citygml_1_op_metadata.zip",
+        "member": "metadata/udx_13103_pref_2025_fld_op.xml",
+        "sha256": "42d2119066b3f0a9775e59352257c97c851da575ed51d41992be1ae3fbfec4c9",
+        "compressedBytes": 26791,
+        "licenseStatements": [
+          "Licensed under CC BY 4.0"
+        ]
+      },
+      "surveyDate": null,
+      "crop": {
+        "centerLon": 139.7605,
+        "centerLat": 35.6515,
+        "sizeM": 250,
+        "metricCRS": "EPSG:6677",
+        "cornersLonLat": [
+          [
+            139.75912058528095,
+            35.65037243776828
+          ],
+          [
+            139.7591185009124,
+            35.652625876595614
+          ],
+          [
+            139.76187945349048,
+            35.65262754626688
+          ],
+          [
+            139.7618814603162,
+            35.65037410730173
+          ]
+        ],
+        "meshBoundsLonLat": [
+          139.75,
+          35.650000000000006,
+          139.7625,
+          35.65833333333334
+        ],
+        "cornersInsideMesh": true
+      }
+    }
+  ]
+}
