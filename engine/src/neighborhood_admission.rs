@@ -38,7 +38,7 @@ pub(super) enum NeighborhoodRejection {
 
 impl NeighborhoodRejection {
     #[cfg(test)]
-    fn label(self) -> &'static str {
+    pub(super) fn label(self) -> &'static str {
         match self {
             Self::AnchorNotInCandidateCorners => "anchor_not_in_candidate_corners",
             Self::RoadSegmentCapacity => "road_segment_capacity",
@@ -432,9 +432,30 @@ impl Engine {
             record_lot_geometry_failure(self, proposed_lots, collision_context);
             return Err(NeighborhoodRejection::ProposedLotGeometry);
         }
+        #[cfg(test)]
+        if self.partial_full_block_experiment
+            && reused_edge.is_none()
+            && spine_plan.is_none()
+            && selected_lots.is_some()
+            && !Engine::partial_full_block_lots_useful(corners, proposed_lots)
+        {
+            return Err(NeighborhoodRejection::InsufficientInteriorFrontage);
+        }
+        #[cfg(test)]
+        let partial_full_block_is_explicit = self.partial_full_block_experiment
+            && selected_lots.is_some_and(|selected| {
+                selected.len() < canonical_lots.len()
+                    && selected.iter().enumerate().all(|(index, lot)| {
+                        canonical_lots.contains(lot) && !selected[..index].contains(lot)
+                    })
+                    && Engine::partial_full_block_lots_useful(corners, selected)
+            });
+        #[cfg(not(test))]
+        let partial_full_block_is_explicit = false;
         if spine_plan.is_none()
             && reused_edge.is_none()
             && proposed_lots.len() != canonical_lots.len()
+            && !partial_full_block_is_explicit
         {
             return Err(NeighborhoodRejection::IncompleteFullBlockLots);
         }

@@ -35,6 +35,8 @@ mod rear_extension_diagnostic;
 #[cfg(test)]
 mod initial_depth_diagnostic;
 #[cfg(test)]
+mod partial_block_diagnostic;
+#[cfg(test)]
 mod access_density_diagnostic;
 #[cfg(test)]
 mod access_bend_diagnostic;
@@ -838,6 +840,10 @@ pub struct Engine {
     /// separate control for matched comparisons.
     #[cfg(test)]
     face_conditioned_access_experiment: bool,
+    /// Test-only admission treatment allowing a canonical clear-lot subset on
+    /// otherwise ordinary full-block candidates.
+    #[cfg(test)]
+    partial_full_block_experiment: bool,
     #[cfg(test)]
     road_opening_access_attempts: u32,
     #[cfg(test)]
@@ -1152,6 +1158,8 @@ impl Engine {
             road_opening_access_experiment: false,
             #[cfg(test)]
             face_conditioned_access_experiment: false,
+            #[cfg(test)]
+            partial_full_block_experiment: false,
             #[cfg(test)]
             road_opening_access_attempts: 0,
             #[cfg(test)]
@@ -5255,13 +5263,10 @@ impl Engine {
                         z: anchor.z + vz * NEIGHBORHOOD_BLOCK_WIDTH,
                     },
                 ];
-                if self.neighborhood_candidate_clear(
-                    &anchor,
-                    &corners,
-                    &tower_envelopes,
-                    &collision_context,
-                ) {
-                    let score_lots = blocks::subdivide_rectangular_block(
+                #[cfg(test)]
+                let partial_lots = if self.partial_full_block_experiment {
+                    let lots = self.available_coordinated_block_lots(&corners, &collision_context);
+                    let canonical_count = blocks::subdivide_rectangular_block(
                         corners.map(|point| blocks::BlockPoint {
                             x: point.x,
                             z: point.z,
@@ -5269,13 +5274,99 @@ impl Engine {
                         8.0,
                         11.0,
                         2.2,
+                    )
+                    .len();
+                    (lots.len() < canonical_count).then_some(lots)
+                } else {
+                    None
+                };
+                #[cfg(test)]
+                let candidate_clear = if let Some(lots) = partial_lots.as_deref() {
+                    let candidate_result = self.neighborhood_candidate_clear_with_layout_reason(
+                        &anchor,
+                        &corners,
+                        &tower_envelopes,
+                        &collision_context,
+                        [Some(anchor.id), None, None, None],
+                        None,
+                        Some(lots),
+                        None,
+                    );
+                    neighborhood_admission::record_outcome(
+                        &candidate_result,
+                        anchor.id,
+                        &corners,
+                    );
+                    {
+                        let canonical_count = blocks::subdivide_rectangular_block(
+                            corners.map(|point| blocks::BlockPoint {
+                                x: point.x,
+                                z: point.z,
+                            }),
+                            8.0,
+                            11.0,
+                            2.2,
+                        )
+                        .len();
+                        partial_block_diagnostic::record_partial_candidate(
+                            anchor.id,
+                            &corners,
+                            canonical_count,
+                            lots,
+                            &candidate_result,
+                        );
+                    }
+                    candidate_result.is_ok()
+                } else {
+                    self.neighborhood_candidate_clear(
+                        &anchor,
+                        &corners,
+                        &tower_envelopes,
+                        &collision_context,
+                    )
+                };
+                #[cfg(not(test))]
+                let candidate_clear = self.neighborhood_candidate_clear(
+                    &anchor,
+                    &corners,
+                    &tower_envelopes,
+                    &collision_context,
+                );
+                if candidate_clear {
+                    #[cfg(test)]
+                    let (score_lots, selected_lots) = if let Some(lots) = partial_lots {
+                        (lots, None)
+                    } else {
+                        let canonical_lots = blocks::subdivide_rectangular_block(
+                            corners.map(|point| blocks::BlockPoint {
+                                x: point.x,
+                                z: point.z,
+                            }),
+                            8.0,
+                            11.0,
+                            2.2,
+                        );
+                        (canonical_lots, None)
+                    };
+                    #[cfg(not(test))]
+                    let (score_lots, selected_lots) = (
+                        blocks::subdivide_rectangular_block(
+                            corners.map(|point| blocks::BlockPoint {
+                                x: point.x,
+                                z: point.z,
+                            }),
+                            8.0,
+                            11.0,
+                            2.2,
+                        ),
+                        None,
                     );
                     let candidate = Self::ranked_neighborhood_candidate(
                         anchor.id,
                         corners,
                         [Some(anchor.id), None, None, None],
                         None,
-                        None,
+                        selected_lots,
                         &score_lots,
                         [anchor.id, 1, option as u32],
                         None,
@@ -10652,6 +10743,8 @@ impl Engine {
             road_opening_access_experiment: false,
             #[cfg(test)]
             face_conditioned_access_experiment: false,
+            #[cfg(test)]
+            partial_full_block_experiment: false,
             #[cfg(test)]
             road_opening_access_attempts: 0,
             #[cfg(test)]

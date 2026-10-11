@@ -138,6 +138,32 @@ with four new roads require the complete canonical lot set. The next bounded
 diagnostic examines this asymmetry without relaxing geometry or access checks;
 no partial-block production policy is approved yet.
 
+The test-only sweep now checks all 162 anchor indices in 25 bounded planner
+calls on seed 87231/tick 272000. Baseline and partial-lot treatment both admit
+zero plans. Of 623 partial full-block evaluations (not guaranteed unique),
+599 retain fewer than four collision-clear lots, 13 fail the experiment's
+additional usefulness floor of two lots on each long edge, eight fail world
+bounds and three fail road/parcel corridor clearance. Only 24 retain at least
+four lots; none passes all remaining checks. This rejects the tested partial
+82×50 m four-road family for this checkpoint, not arbitrary irregular blocks,
+other seeds or all residual land development. No fresh-seed growth trial is
+justified by these results. The source state is unchanged, both post-scan states
+validate and restore canonically; construction replay is correctly untested
+because no plan was admitted. See [the diagnostic](partial-block-diagnostic.json).
+The unchanged baseline reproduces all six rejection counts from the prior mature
+trace exactly. Root verified the source/save hashes, reviewed the bounded
+witnesses, and ran the native release suite: 384 passed, zero failed, 50 ignored.
+Two subsequently added focused diagnostic tests pass separately. The ignored
+25-call diagnostic was run separately by the agent and its report reviewed by
+root. No browser/WASM or visual improvement is claimed by this test-only change.
+
+Reproduce:
+
+```sh
+PARTIAL_BLOCK_REPORT="$PWD/validation/partial-block-diagnostic.json" \
+node scripts/test-engine.mjs --release mature_full_block_partial_lot_diagnostic -- --ignored --nocapture
+```
+
 The renderer already paves 96% of each open/renovating building's parcel width
 and depth and draws a separate entrance-to-road access path. Broad green gaps
 in the recent full-city capture mostly expose land outside these developed
