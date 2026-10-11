@@ -678,6 +678,13 @@ previously, a single-run observation rather than a browser performance claim.
 See [measurement and limitations](routing-adjacency/README.md). This does not
 complete routing modularization, maximum-cap scaling, or visual acceptance.
 
+Follow-up: oversized route reconstruction now fails closed instead of returning
+a suffix missing the requested origin. Boundary and delivery dispatch regression
+tests pass; 361 native tests pass and the 300,000-tick WASM baseline save remains
+unchanged. [Evidence and limits](route-cap-safety.md). This prevents new partial
+trip dispatch, but does not complete cancellation/recovery for passengers already
+aboard transit when their onward destination becomes unreachable.
+
 Latest visual review, 2026-10-09: the public-WASM bridge candidate has 580 buildings and 170 roads. The reviewed Miniature 08:00 overview, with depth of field disabled, shows growth on both riverbanks but still fails artistic acceptance because of green gaps, repetitive architecture, and washed-out lighting. See [integration evidence and capture](multiblock-integration.md#visual-review). The world-growth spec now records the researched block-first generation proposals separately from implemented behavior. This documentation update does not establish a newer full-test checkpoint or completion of the bus-demand repair.
 
 Read-only comparison of the eight experience specifications, README, implementation, tests, and current review evidence on 2026-10-09. “Implemented” means code and tests demonstrate the behavior; it does not mean visual acceptance. “Partial” means a working slice still differs materially from the specification. “Unverified” means browser, device, listening, or visual evidence is still required. Numeric targets remain proposals unless a specification states an acceptance condition.

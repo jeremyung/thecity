@@ -1,6 +1,64 @@
 use super::*;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[test]
+fn route_limit_accepts_complete_boundary_and_rejects_suffix() {
+    let count = MAX_ROUTE_NODES as u32 + 1;
+    let roads = (0..count - 1)
+        .map(|id| road(id, id, id + 1, "local", "open", true, 1.0))
+        .collect();
+    let engine = engine_with_graph(count, roads);
+    let valid = engine.route(0, count - 2, false);
+    assert_eq!(valid, (0..count - 1).collect::<Vec<_>>());
+    let old = route_avoiding_scan(&engine, 0, count - 1, false, &BTreeSet::new());
+    assert_eq!(old.len(), MAX_ROUTE_NODES);
+    assert_eq!(old.first(), Some(&1)); // concrete witness for the old bug
+    assert!(engine.route(0, count - 1, false).is_empty());
+    assert!(engine.route(count - 1, 0, false).is_empty());
+}
+
+#[test]
+fn delivery_does_not_spawn_midway_along_an_oversized_route() {
+    let count = MAX_ROUTE_NODES as u32 + 1;
+    let roads = (0..count - 1)
+        .map(|id| road(id, id, id + 1, "local", "open", true, 1.0))
+        .collect();
+    let mut engine = engine_with_graph(count, roads);
+    engine.state.nodes[0].kind = "gateway".into();
+    engine.state.buildings.truncate(1);
+    let business = &mut engine.state.buildings[0];
+    business.kind = "shop".into();
+    business.stage = "open".into();
+    business.business_active = true;
+    let parcel_id = business.parcel_id;
+    engine
+        .state
+        .parcels
+        .iter_mut()
+        .find(|p| p.id == parcel_id)
+        .unwrap()
+        .access_node = count - 1;
+    engine.state.travelers.clear();
+    engine.state.next_delivery_tick = engine.state.tick;
+    let cursor = engine.state.delivery_cursor;
+    engine.schedule_deliveries();
+    assert!(engine.state.travelers.is_empty());
+    assert_eq!(engine.state.delivery_cursor, cursor);
+    // Make the journey fit: dispatch must still work from the real gateway.
+    engine
+        .state
+        .parcels
+        .iter_mut()
+        .find(|p| p.id == parcel_id)
+        .unwrap()
+        .access_node = count - 2;
+    engine.state.next_delivery_tick = engine.state.tick;
+    engine.schedule_deliveries();
+    assert_eq!(engine.state.travelers.len(), 1);
+    assert_eq!(engine.state.travelers[0].route.first(), Some(&0));
+    assert_eq!(engine.state.travelers[0].route.last(), Some(&(count - 2)));
+}
+
 // Frozen copy of Engine::route_avoiding before adjacency indexing. Keep this
 // source-order scan as the behavioral oracle while the production search is
 // optimized.
@@ -97,9 +155,15 @@ fn road(
 
 fn assert_matches_oracle(engine: &Engine, start: u32, goal: u32, rail: bool, blocked: &[u32]) {
     let blocked = blocked.iter().copied().collect::<BTreeSet<_>>();
+    let mut expected = route_avoiding_scan(engine, start, goal, rail, &blocked);
+    // The sole intentional difference from the old search: oversized routes
+    // must not return a suffix missing the requested origin.
+    if expected.first().is_some_and(|node| *node != start) {
+        expected.clear();
+    }
     assert_eq!(
         engine.route_avoiding(start, goal, rail, &blocked),
-        route_avoiding_scan(engine, start, goal, rail, &blocked),
+        expected,
         "start={start}, goal={goal}, rail={rail}, blocked={blocked:?}"
     );
 }
@@ -260,8 +324,7 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
     let long_path =
         engine.route_avoiding(node_id(0), node_id(NODE_COUNT - 1), false, &BTreeSet::new());
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
-    assert_eq!(long_path.len(), MAX_ROUTE_NODES);
-    assert_ne!(long_path.first(), Some(&node_id(0)));
+    assert!(long_path.is_empty());
 
     let rail_path = engine.route_avoiding(node_id(0), node_id(2), true, &BTreeSet::new());
     assert_matches_oracle(&engine, node_id(0), node_id(2), true, &[]);

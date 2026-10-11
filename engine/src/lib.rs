@@ -8898,6 +8898,12 @@ impl Engine {
             cur = p;
             path.push(cur);
         }
+        // A capped suffix does not start at the requested origin. Consumers
+        // interpret any nonempty path as a usable trip, so fail closed instead
+        // of spawning an actor partway along an oversized journey.
+        if cur != start {
+            return vec![];
+        }
         path.reverse();
         path
     }

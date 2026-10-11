@@ -1,0 +1,23 @@
+{
+  "scope": "Node WASM 300000-tick correctness; concurrent native suite, timings intentionally excluded",
+  "node": "v26.7.0",
+  "seed": 1204,
+  "developmentRate": 60,
+  "ticks": 300000,
+  "nodeExecArgv": [],
+  "wasmSha256": "c85ef25b3d6a7ea55a054fbb0a5647714bea1d4930e3a22df09be44bbf2ae9a1",
+  "finalSaveSha256": "e803f8f16b23d28d8dcf8c4cb002367bc1f1263c523108cc9f14ff33fe535ffb",
+  "saveBytes": 2858922,
+  "counts": {
+    "buildings": 854,
+    "roads": 214,
+    "parcels": 854,
+    "projects": 76,
+    "pendingProjects": 0,
+    "travelers": 214,
+    "events": 10000,
+    "population": 8146
+  },
+  "roundTripExact": true,
+  "matchesPreOptimizationBaseline": true
+}

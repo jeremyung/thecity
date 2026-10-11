@@ -39,10 +39,10 @@ Reproduce with `npm run wasm` followed by
 as an independent oracle. Cases cover equal-cost diamonds, source reversal,
 disconnected graphs, filters, parallel edges, self-loops, blocked endpoints,
 80 deterministic generated graphs, and a 200-node sparse-ID graph with
-fractional costs and mutations between queries. The long-path test deliberately
-records the existing reconstruction truncation at `MAX_ROUTE_NODES`; this
-optimization does not fix or broaden that behavior. It should not be taken as
-proof that arbitrary oversized routes are safe for consumers.
+fractional costs and mutations between queries. This optimization originally
+preserved reconstruction truncation at `MAX_ROUTE_NODES`. A subsequent
+[safety fix](../route-cap-safety.md) explicitly rejects oversized suffixes that
+omit the requested origin, with separate boundary and delivery regression tests.
 
 Browser worker tail latency, maximum-cap graph performance and visual fidelity
 remain unverified by this checkpoint. No test timeout has been increased.

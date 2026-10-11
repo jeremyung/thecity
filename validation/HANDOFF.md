@@ -2,6 +2,17 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Oversized-route safety — 2026-10-11
+
+[Route reconstruction now rejects a capped suffix missing its origin](route-cap-safety.md).
+Previously consumers could accept it and spawn an actor midway through a trip.
+Exactly 128 nodes remain accepted; longer reconstructed paths return no route.
+Six routing tests and the native release suite pass (361 passed, 43 ignored).
+The rebuilt WASM 300,000-tick final save remains identical to the baseline.
+Transit cancellation/recovery is still incomplete. Visual review was retried,
+but screenshot capture remains unavailable while the Mac is locked; no renderer
+study was promoted.
+
 ## Compact routing adjacency — 2026-10-11
 
 [Routing now builds a source-ordered adjacency vector per query](routing-adjacency/README.md),
