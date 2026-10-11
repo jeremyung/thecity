@@ -284,3 +284,15 @@ envelopes,25.65% open-road5m buffers and36.60% unclassified remainder; the latte
 is not proven buildable. Next investigate connected usable remainder and block
 layout, then integrate smaller frontage with footprint-aware capacity and actual
 multi-seed construction/render validation. Production appearance remains unchanged.
+
+## Production narrow midpoint infill — 2026-10-11
+
+[Concrete enumeration fix](synthetic-morphology/narrow-midpoint-infill.md): append
+existing-minimum8×12m shapes at grid positions after old candidates. Road2985
+provides a regression where wider/shifted production candidates fail but this
+shape passes exact geometry/access. Normal admission, construction and save/resume
+are covered. Full native369pass/45ignored; rebuilt WASM normal30,000tick mature
+continuation850→871buildings, including18new narrow buildings open; exact resumed
+saves match every200ticks after midpoint. Per-road list cap66→100;48-site and
+24-road evaluation caps remain. No save schema change. Browser timing and visual
+review remain open; this is incremental infill, not overall density/art acceptance.

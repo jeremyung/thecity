@@ -25,6 +25,8 @@ mod blocks;
 #[cfg(test)]
 mod block_subdivision_diagnostic;
 #[cfg(test)]
+mod compact_frontage_diagnostic;
+#[cfg(test)]
 mod density_gap_diagnosis;
 #[cfg(test)]
 mod access_density_diagnostic;
@@ -90,7 +92,7 @@ const FRONTAGE_GAP_OFFSET: f32 = 15.0;
 const FRONTAGE_SHALLOW_DEPTH: f32 = 8.0;
 const FRONTAGE_SHALLOW_OFFSET: f32 = 12.0;
 const MAX_FRONTAGE_SITES_PER_ROAD: usize =
-    MAX_FRONTAGE_GRID_SITES_PER_ROAD + 4 * MAX_FRONTAGE_GAP_LOTS_PER_SIDE;
+    2 * MAX_FRONTAGE_GRID_SITES_PER_ROAD + 4 * MAX_FRONTAGE_GAP_LOTS_PER_SIDE;
 const MAX_ROAD_ORIGINS_PER_EVALUATION: usize = 6;
 const MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION: usize = 24;
 const MAX_NEIGHBORHOOD_REUSE_EDGES_PER_EVALUATION: usize = 24;
@@ -4328,6 +4330,7 @@ impl Engine {
         if let Some(index) = tower_candidate {
             candidates.swap(0, index);
         }
+        let grid_candidate_count = candidates.len();
         let mut dimensions = vec![(grid_width, grid_depth); candidates.len()];
         for (site, width) in self.frontage_gap_candidates(a, b, collision_context, tower_envelopes)
         {
@@ -4353,6 +4356,23 @@ impl Engine {
             if !duplicate_shape {
                 candidates.push(site);
                 dimensions.push((width, FRONTAGE_SHALLOW_DEPTH));
+            }
+        }
+        // A legal narrow lot may fit at a grid midpoint even when projected
+        // gap exclusions shift their centers or the ordinary grid lot is too
+        // wide. Append the existing minimum-width shape without changing the
+        // old grid/gap/shallow prefix or any admission clearance. The persisted
+        // scan still visits at most MAX_FRONTAGE_SITES_PER_EVALUATION sites.
+        for index in 0..grid_candidate_count {
+            let site = candidates[index];
+            let duplicate_shape = candidates.iter().zip(dimensions.iter()).any(|(old, size)| {
+                (old.0 - site.0).hypot(old.1 - site.1) <= 1.0e-4
+                    && (size.0 - 8.0).abs() <= 1.0e-4
+                    && (size.1 - FRONTAGE_GAP_DEPTH).abs() <= 1.0e-4
+            });
+            if !duplicate_shape {
+                candidates.push(site);
+                dimensions.push((8.0, FRONTAGE_GAP_DEPTH));
             }
         }
         debug_assert!(candidates.len() <= MAX_FRONTAGE_SITES_PER_ROAD);
@@ -15483,7 +15503,10 @@ mod tests {
             .zip(dimensions.iter().skip(old_prefix_len))
         {
             assert!((8.0..=14.0).contains(width));
-            assert_eq!(*depth, FRONTAGE_SHALLOW_DEPTH);
+            assert!(
+                *depth == FRONTAGE_SHALLOW_DEPTH
+                    || (*width == 8.0 && *depth == FRONTAGE_GAP_DEPTH)
+            );
         }
         let mut shapes = BTreeSet::new();
         for ((x, z, _, _, _), (width, depth)) in all.iter().zip(dimensions.iter()) {

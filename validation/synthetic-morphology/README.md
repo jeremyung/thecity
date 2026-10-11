@@ -77,3 +77,17 @@ The compact crop has25.65% road buffers and36.60% outside envelopes and buffers.
 The complement is unclassified, not net developable land or an admission result.
 See [compact prototype results](../block-subdivision-study/compact-rows.md) for
 the smaller-lot tradeoff and next layout investigation.
+
+The refined descriptive partition of the compact crop's22,877m² remainder is:
+11,238m² within2m of existing building envelopes;6,982m² farther from buildings
+but within12m of any open-road centerline;4,658m² beyond both distance bands.
+These disjoint categories close to the exact gross crop area within1e-6m².
+The2m halo uses Euclidean polygon distance, not the engine's SAT rectangle test;
+12m is a diagnostic band, not an access certification. Much of the blank land
+is narrow spacing or near-road land, so investigate existing-road frontage before
+assuming a large inaccessible interior needs another road.
+
+The actual frontage-generator audit led to a [production narrow midpoint
+fallback](narrow-midpoint-infill.md), using the existing8m minimum and unchanged
+clearances. Its normal WASM continuation constructs18new narrow buildings; visual
+and browser timing review remain outstanding.
