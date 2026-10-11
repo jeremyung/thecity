@@ -62,3 +62,38 @@ COMPACT_FRONTAGE_REPORT=/tmp/frontage.json node scripts/test-engine.mjs --releas
 npm run wasm
 node scripts/verify-narrow-frontage-wasm.mjs
 ```
+
+## Render review follow-up — 2026-10-11
+
+The optional output-directory argument to `verify-narrow-frontage-wasm.mjs`
+exports the final save and snapshot for browser review:
+
+```
+node scripts/verify-narrow-frontage-wasm.mjs .tools/narrow-frontage-review
+node scripts/audit-rendered-coverage.mjs --snapshot .tools/narrow-frontage-review/final-snapshot.json --output validation/synthetic-morphology/narrow-final-coverage.json
+```
+
+The recorded report measures the kit **before the entrance correction below**.
+Its bundle hash matches `../compact-midrise-review/baseline-coverage.json`: projected
+coverage increases from 122,736.25 to 124,446.75 m² (+1,710.50 m², about 1.39%).
+This compares the full continuation, including renewal and all 21 additional
+buildings; it does not isolate the 18 narrow buildings' contribution. This is
+a CPU projection at 0.5 m sampling, not a rendered screenshot or performance result.
+
+Inspection found five new two-/three-floor apartment/office instances lacked
+visible doors in the generic urban facade. That path now reuses the midrise
+entrance and reserves its window opening; parcel bounds also constrain balcony
+projection. The 8 m gable trim had a 4.5 cm lateral overrun, now bounded to the
+parcel width. The regression uses all five actual archetype/seed combinations
+and checks door glazing, parcel containment and matching geometry in both styles.
+
+A headless WebGPU attempt loaded the final 871-building world, but yielded no
+frame metrics and timed out during screenshot capture. No new visual acceptance
+is claimed; the last usable screenshots still show the earlier 850-building city.
+
+After the entrance/containment correction, `narrow-entrances-coverage.json` records
+124,413.25 m² with the same final snapshot (33.50 m² less projected kit geometry
+than before the correction). This includes changes to all affected existing
+low urban facades, not just newly added buildings. Root independently passes
+19 lowrise/midrise tests and the production build/typecheck; the existing large
+bundle warning remains.

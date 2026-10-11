@@ -136,6 +136,38 @@ describe('midrise family geometry integration',()=>{
     art.dispose();
   });
 
+  it('keeps centered entrances clear on 8x12 two- and three-floor apartment and office variants',()=>{
+    const art=new ArtMaterials();
+    const styleVertices:Record<'anime'|'miniature',number[][][]>={anime:[],miniature:[]};
+    const cases=[
+      ['apartment',2,2714839168],['apartment',3,1441647569],
+      ['office',2,2128358164],['office',2,878632987],['office',3,2471553678],
+    ] as const;
+    for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      for(const [kind,floors,appearance_seed] of cases){
+        const b=midrise(kind,'open',1,floors,8,12,appearance_seed);
+        const group=buildingKit(b,art),context=`${style} ${kind} ${floors} floors seed ${appearance_seed}`;
+        let doorwayGlassVertices=0;
+        const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
+        group.traverse(object=>{
+          if(!(object instanceof THREE.Mesh)||!paneMaterials.some(material=>material===object.material))return;
+          const position=object.geometry.getAttribute('position');
+          for(let i=0;i<position.count;i++){
+            const x=position.getX(i),y=position.getY(i),z=position.getZ(i);
+            if(Math.abs(x)<.4&&y>=.74&&y<=2.68&&z>12*.84/2+.12)doorwayGlassVertices++;
+          }
+        });
+        expect(doorwayGlassVertices,`${context} has only the centered door glazing`).toBe(24);
+        expectParcelContained(group,b);
+        styleVertices[style].push(positions(group).map(point=>point.toArray()));
+        disposeGroup(group);
+      }
+    }
+    expect(styleVertices.miniature).toEqual(styleVertices.anime);
+    art.dispose();
+  });
+
   it('clips upper construction to the same office-family tiers and keeps the early scaffold at street level',()=>{
     const art=new ArtMaterials();
     const open=buildingKit(midrise('office','open'),art);

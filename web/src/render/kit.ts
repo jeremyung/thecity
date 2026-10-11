@@ -261,11 +261,19 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
     } else if (isHome && floors <= 2) {
       renderHouseFacade(kit, b, art, { w, d, base, top, floor, wood, dark, glass, lightGlass, trim, glow, iron, green, ivory, concrete });
     } else {
-      renderUrbanFacade(kit, b, art, { w, d, base, top, floor, floors, wood, dark, glass, lightGlass, trim, glow, iron, concrete, paleConcrete, isApartment });
+      const compactUrbanEntry = floors >= 2 && floors <= 3 && (isApartment || b.kind === 'office');
+      renderUrbanFacade(kit, b, art, {
+        w, d, base, top, floor, floors, entryX: compactUrbanEntry ? 0 : undefined,
+        parcelD: compactUrbanEntry ? b.depth : undefined,
+        parcelW: compactUrbanEntry ? b.width : undefined,
+        massOffsetZ: 0, massOffsetX: 0,
+        wood, dark, glass, lightGlass, trim, glow, iron, concrete, paleConcrete, isApartment,
+      });
+      if (compactUrbanEntry) renderMidriseEntry(kit, 0, d, base, dark, glass, trim, concrete);
     }
 
     if (floors <= 3 && (isHome || isShop || (isApartment && pick(seed, 3) !== 0))) {
-      renderGabledRoof(kit, w, d, top, roof, roofTile, trim, iron, dark, seed);
+      renderGabledRoof(kit, w, d, top, roof, roofTile, trim, iron, dark, seed, b.width);
     } else {
       renderFlatRoof(kit, { w, d, top, roof, trim, concrete, iron, paleConcrete, seed, art });
     }
@@ -350,10 +358,7 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
         if(mass.baseFloor===0){
           const doorX=-mass.x;
           if(Math.abs(doorX)<mass.width*.32){
-            kit.box(doorX,massBase+1.13,mass.depth/2+.075,.98,2.18,.16,dark);
-            kit.box(doorX,massBase+1.13,mass.depth/2+.17,.76,1.92,.045,glass);
-            kit.box(doorX+.29,massBase+1.12,mass.depth/2+.205,.045,.1,.025,trim);
-            kit.box(doorX,massBase+2.31,mass.depth/2+.22,1.24,.13,.46,concrete);
+            renderMidriseEntry(kit,doorX,mass.depth,massBase,dark,glass,trim,concrete);
           }
         }
       }
@@ -408,6 +413,13 @@ function renderMidriseCoreFacade(kit:Kit,m:{width:number;depth:number;base:numbe
       }
     }
   }
+}
+
+function renderMidriseEntry(kit:Kit,doorX:number,depth:number,base:number,dark:THREE.Material,glass:THREE.Material,trim:THREE.Material,concrete:THREE.Material){
+  kit.box(doorX,base+1.13,depth/2+.075,.98,2.18,.16,dark);
+  kit.box(doorX,base+1.13,depth/2+.17,.76,1.92,.045,glass);
+  kit.box(doorX+.29,base+1.12,depth/2+.205,.045,.1,.025,trim);
+  kit.box(doorX,base+2.31,depth/2+.22,1.24,.13,.46,concrete);
 }
 
 function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:number;parcelW:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
@@ -1114,13 +1126,13 @@ function renderUrbanFacade(
 }
 
 function renderGabledRoof(
-  kit: Kit, w: number, d: number, top: number, roof: THREE.Material, tiles: THREE.Material, trim: THREE.Material, iron: THREE.Material, dark: THREE.Material, seed: number,
+  kit: Kit, w: number, d: number, top: number, roof: THREE.Material, tiles: THREE.Material, trim: THREE.Material, iron: THREE.Material, dark: THREE.Material, seed: number, parcelWidth: number,
 ) {
   const half = d / 2 + .58;
   const rise = THREE.MathUtils.clamp(half * .48, .82, 2.1);
   const angle = Math.atan2(rise, half);
   const slopeLength = Math.hypot(half, rise);
-  const roofW = w + 1.15;
+  const roofW = Math.min(w + 1.15, parcelWidth);
   // Two correctly mirrored planes meet at a straight ridge with their eaves at the walls.
   for (const side of [-1, 1]) {
     const panel = new THREE.BoxGeometry(roofW, .25, slopeLength);
@@ -1146,12 +1158,12 @@ function renderGabledRoof(
       kit.add(geo, i % 2 ? tiles : trim);
     }
     // Eaves and their short exposed rafter tails.
-    kit.box(0, top - .02, side * half, roofW + .22, .18, .2, trim);
+    kit.box(0, top - .02, side * half, Math.min(roofW + .22, parcelWidth), .18, .2, trim);
     for (let x = -w / 2; x <= w / 2; x += 1.65) {
       kit.box(x, top - .1, side * (d / 2 + .32), .1, .24, .46, iron);
     }
   }
-  kit.box(0, top + rise + .12, 0, roofW + .12, .26, .3, roof);
+  kit.box(0, top + rise + .12, 0, Math.min(roofW + .12, parcelWidth), .26, .3, roof);
   // Gable-end fascia frames a small attic vent and painted end boards.
   for (const side of [-1, 1]) {
     kit.box(0, top + rise * .5, side * (d / 2 + .32), w * .88, .13, .12, trim);

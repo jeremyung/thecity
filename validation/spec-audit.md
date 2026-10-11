@@ -1637,3 +1637,15 @@ continuation850→871buildings, including18new narrow buildings open; exact resu
 saves match every200ticks after midpoint. Per-road list cap66→100;48-site and
 24-road evaluation caps remain. No save schema change. Browser timing and visual
 review remain open; this is incremental infill, not overall density/art acceptance.
+
+## Narrow-building entrance correction — 2026-10-11
+
+The new mature continuation is exported for review. A geometry audit found five
+new low apartment/office instances with no visible generic-facade entrance. The
+shared kit now supplies a centered door and clear window opening, constrains
+balconies with parcel bounds, and bounds narrow gable trim. Root verifies 19
+focused geometry tests and production build/typecheck; style geometry matches.
+[Coverage and reproduction](synthetic-morphology/narrow-midpoint-infill.md#render-review-follow-up--2026-10-11)
+record a modest gain, not density acceptance. Headless WebGPU loaded 871 buildings
+but screenshot capture timed out without frame metrics. Usable captures remain
+the 850-building views; live visual and browser-performance review are still open.

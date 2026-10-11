@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {CityEngine,initSync} from '../public/wasm/city_engine.js';
 const sha=value=>createHash('sha256').update(value).digest('hex');
@@ -19,6 +20,8 @@ try {
   if(batch%25===0) {const s=JSON.parse(engine.snapshot());checkpoints.push({tick:s.tick,buildings:s.buildings.length,roads:s.roads.length});}
  }
  const final=JSON.parse(engine.snapshot());const state=JSON.parse(engine.save());
+ const reviewDirectory=process.argv[2];
+ if(reviewDirectory) {mkdirSync(reviewDirectory,{recursive:true});writeFileSync(resolve(reviewDirectory,'final-save.json'),engine.save());writeFileSync(resolve(reviewDirectory,'final-snapshot.json'),JSON.stringify(final));}
  const added=final.buildings.filter(b=>!originalIds.has(b.id));
  const narrow=added.filter(b=>b.width===8&&b.depth===12);
  assert.ok(final.buildings.length<=2000&&final.parcels.length<=4000&&final.roads.length<=5000);
