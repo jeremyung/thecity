@@ -135,3 +135,16 @@ pass, but Taito direct Building count differs from catalog by one and two catalo
 byte counts disagree. Roof-edge semantics, missingness and unresolved completeness
 are explicit. Calibration is not accepted; source-member reconciliation, diagrams,
 district/context review and synthetic visual/performance comparisons remain.
+
+## PLATEAU source reconciliation and diagrams — 2026-10-11
+
+[The pilot](plateau-pilot/README.md) now reconciles all three catalog feature
+counts: Taito's extra item is a geometry-free CityObjectGroup, not a missing
+building. Explicit raw/status fields exclude 9999 unknown markers from floor
+statistics. Twelve focused tests pass; root reran all sources and reproduced
+the five generated JSON/SVG artifacts byte-for-byte. Three same-scale diagrams
+were rendered in Chromium and visually checked. Compact sample median roof-edge
+area is57.62m², station114.67m²; this supports preserving small-building fabric
+rather than promoting uniform wider lots. No density targets or production
+changes are accepted. Next compare matched synthetic crops and resolve land-use,
+frontage and roof-shape calibration before a multi-seed growth/render trial.

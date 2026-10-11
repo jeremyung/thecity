@@ -32,12 +32,49 @@ Nearest-building distances use full geometry of selected buildings and remain
 window-censored. LOD2 availability is recorded, but roof forms are not classified.
 
 `morphology.json` retains per-building source IDs and local clipped geometry.
-Its extractor completeness flag covers recognized direct Building records only:
-Taito yields 4,613 records versus 4,614 catalog features. This discrepancy remains
-unresolved, so all samples are marked unaccepted for calibration. No source
-metrics should become production targets before this and source semantics are
-reviewed. Diagrams, source/context visual review, distributions and matched
-synthetic benchmarks remain pending.
+The catalog count is now reconciled: Taito contains 4,613 Building records plus
+one geometry-free CityObjectGroup referencing an existing building. All three
+sources have zero missing/duplicate building IDs, missing selected LOD0 geometry,
+invalid polygons or unhandled nonbuilding geometry. This establishes supported
+geometry extraction, not completeness of the real-world survey.
+
+Source `9999` numeric values are retained in raw fields, labeled sentinel, and
+excluded from statistics. [MLIT's work-procedure guidance](https://www.mlit.go.jp/plateau/file/libraries/doc/plateau_doc_0002_ver02.pdf)
+discusses unknown-value markers including 9999 and source-specific null semantics.
+This pilot conservatively excludes that exact marker; it does not establish the
+meaning of every possible source code. Zero values have not been reinterpreted.
+
+[Station diagram](station.svg), [compact-neighborhood diagram](ordinary.svg), and
+[waterfront diagram](waterfront.svg) share the same 250 m extent and height legend.
+Root rendered and visually checked all three SVGs in Chromium. Empty areas are
+unclassified; they are not inferred lawns, roads or water polygons. `summary.json`
+records linear-interpolated percentiles with known counts and missing values
+excluded. Roof-edge gaps can include touching/overlapping eaves and must not be
+used directly as wall, collision, fire-access or cadastral clearance rules.
+
+| Candidate | Building area median / p90 | Height median / p90 | Known heights | Known above-ground floors |
+| --- | --- | --- | ---: | ---: |
+| Station | 114.67 / 651.21 m² | 17.45 / 32.86 m | 130 / 140 | 121 / 140 |
+| Compact | 57.62 / 136.69 m² | 12.05 / 22.08 m | 452 / 452 | 417 / 452 |
+| Waterfront | 203.92 / 787.53 m² | 7.20 / 31.40 m | 21 / 25 | 20 / 25 |
+
+Area percentiles use full projected geometry of buildings intersecting the crop;
+edge-intersection selection biases distributions toward larger buildings. Coverage
+alone uses the exact clipped union. All 140 station and 452 compact selected
+buildings expose direct LOD2, as do 22/25 waterfront records. Roof-family extraction,
+verified context, street frontage, land-use masks and net coverage remain pending.
+
+## Consequences for the generator
+
+The compact sample demonstrates many small footprints with a long larger-building
+tail, rather than a uniform larger lot. The mixed-row experiment's 2.5–4.3% area
+gain from widening one row is not sufficient evidence to promote it. Next compare
+matched 250 m synthetic crops, including separate parcel and rendered-roof unions,
+area/height joint distributions, usable street access and resource counts. Keep
+small-building rows; test occasional larger assembled sites in appropriate context.
+Do not translate 452 intersecting source buildings into a whole-city entity target
+or loosen engine clearances to match roof-edge gaps. Occupancy capacity needs its
+own explicit units and lifecycle validation.
 
 ## Reproduce
 
@@ -45,12 +82,19 @@ Create a Python virtual environment and install `scripts/requirements-plateau.tx
 Retrieve each `catalogBuildingFile.url` in provenance with `Accept-Encoding: gzip`
 without automatic decompression; verify the recorded compressed SHA-256. Save as
 `.tools/plateau-pilot/thecity-plateau-{sourceIndex}.gml.gz`. Do not fetch whole wards.
-Run `scripts/extract-plateau-crop.py` with `--input`, `--center-lon`, `--center-lat`,
-`--size 250`, and `--output`; crop arguments are in provenance. The JSON adds
-review status separately from raw extractor output.
+Run `.tools/plateau-python/bin/python scripts/build-plateau-reference.py` to verify
+hashes, rebuild all three crops, reconcile catalog counts and generate the summaries
+and SVGs. For individual crops, use `scripts/extract-plateau-crop.py`; arguments
+are recorded in provenance. The builder adds review status separately from extraction.
 
-Six synthetic tests pass via `.tools/plateau-python/bin/python scripts/test-plateau-crop.py`.
+Twelve synthetic tests pass via `.tools/plateau-python/bin/python scripts/test-plateau-crop.py`.
 Root independently reran all three sources. Tests exercise holes, clipping,
-identifiers, CRS rejection and missing/invalid attributes. Further hardening is
-needed for envelope inheritance and non-Building members; the extractor is a
-narrow offline pilot, not a general CityGML importer.
+identifiers, CRS rejection and missing/invalid attributes. Envelope inheritance, group references, positive nearest distances, overlapping
+unions and unknown numeric markers also have focused checks. The extractor remains
+a narrow offline pilot, not a general CityGML importer.
+
+A repeat rebuild produced identical morphology, summary and all three SVGs. The
+full per-building diagnostic JSON compresses to131,696bytes and remains offline;
+it exceeds the proposed100KiB compact-pack target. The separate summary is below
+1KiB gzip, but is not yet an adequate joint-distribution runtime archetype pack.
+Do not bundle either as production calibration without the remaining review.

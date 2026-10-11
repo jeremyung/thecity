@@ -1,0 +1,114 @@
+{
+  "quantileMethod": "linear interpolation, index=(n-1)*p, missing excluded",
+  "calibrationAccepted": false,
+  "samples": [
+    {
+      "sampleId": "station",
+      "selectedBuildingCount": 140,
+      "grossRoofEdgeCoverage": 0.4603790242552952,
+      "completeAreaM2": {
+        "known": 140,
+        "p10": 18.168138609797996,
+        "p50": 114.66638350371655,
+        "p90": 651.2137896251307
+      },
+      "aspectRatio": {
+        "known": 140,
+        "p10": 1.07097003396419,
+        "p50": 1.6588638843154935,
+        "p90": 3.353680983698441
+      },
+      "heightM": {
+        "known": 130,
+        "p10": 6.3,
+        "p50": 17.45,
+        "p90": 32.86
+      },
+      "storeysAboveGround": {
+        "known": 121,
+        "p10": 2.0,
+        "p50": 5.0,
+        "p90": 9.0
+      },
+      "selectedDirectLOD2Count": 140,
+      "nearestSelectedBuildingDistanceQuantilesM": {
+        "p10": 0.0008166076177372424,
+        "p50": 0.16388879698948766,
+        "p90": 1.4439722170980778
+      },
+      "nearestDistancesWindowCensored": true
+    },
+    {
+      "sampleId": "ordinary",
+      "selectedBuildingCount": 452,
+      "grossRoofEdgeCoverage": 0.484726556550445,
+      "completeAreaM2": {
+        "known": 452,
+        "p10": 31.026440472543147,
+        "p50": 57.62422086690573,
+        "p90": 136.68547123793417
+      },
+      "aspectRatio": {
+        "known": 452,
+        "p10": 1.1387823630350344,
+        "p50": 1.7068353327373433,
+        "p90": 3.0248581444671365
+      },
+      "heightM": {
+        "known": 452,
+        "p10": 7.609999999999999,
+        "p50": 12.05,
+        "p90": 22.08000000000001
+      },
+      "storeysAboveGround": {
+        "known": 417,
+        "p10": 2.0,
+        "p50": 3.0,
+        "p90": 5.0
+      },
+      "selectedDirectLOD2Count": 452,
+      "nearestSelectedBuildingDistanceQuantilesM": {
+        "p10": 0.05399889530591375,
+        "p50": 0.2262260752957853,
+        "p90": 0.6228412233439888
+      },
+      "nearestDistancesWindowCensored": true
+    },
+    {
+      "sampleId": "waterfront",
+      "selectedBuildingCount": 25,
+      "grossRoofEdgeCoverage": 0.10052466701001099,
+      "completeAreaM2": {
+        "known": 25,
+        "p10": 37.895865596784716,
+        "p50": 203.92008940844178,
+        "p90": 787.5302437149771
+      },
+      "aspectRatio": {
+        "known": 25,
+        "p10": 1.3528852409492915,
+        "p50": 2.431335268298372,
+        "p90": 6.631436572363207
+      },
+      "heightM": {
+        "known": 21,
+        "p10": 3.6,
+        "p50": 7.2,
+        "p90": 31.4
+      },
+      "storeysAboveGround": {
+        "known": 20,
+        "p10": 1.0,
+        "p50": 1.0,
+        "p90": 8.200000000000003
+      },
+      "selectedDirectLOD2Count": 22,
+      "nearestSelectedBuildingDistanceQuantilesM": {
+        "p10": 0.034257240442139895,
+        "p50": 0.8054176117737476,
+        "p90": 23.18894366001367
+      },
+      "nearestDistancesWindowCensored": true
+    }
+  ]
+}

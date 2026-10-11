@@ -16,6 +16,8 @@ spec.loader.exec_module(pc)
 GML = pc.GML
 CORE = pc.CORE
 BLDG = pc.BLDG
+GRP = "http://www.opengis.net/citygml/cityobjectgroup/2.0"
+XLINK = "http://www.w3.org/1999/xlink"
 
 
 def ring(coords):
@@ -35,13 +37,14 @@ def building(gid, geometry="", lod="lod0FootPrint", fields=""):
     return f"<bldg:Building gml:id='{gid}'>{fields}{geom}</bldg:Building>"
 
 
-def dataset(buildings, crs="http://www.opengis.net/def/crs/EPSG/0/6697", dim="3", envelope=True):
+def dataset(buildings, crs="http://www.opengis.net/def/crs/EPSG/0/6697", dim="3", envelope=True,
+            root_attrs="", member_attrs=""):
     env = (f"<gml:boundedBy><gml:Envelope srsName='{crs}' srsDimension='{dim}'>"
            "<gml:lowerCorner>35.0 139.0 0</gml:lowerCorner><gml:upperCorner>36.0 140.0 100</gml:upperCorner>"
            "</gml:Envelope></gml:boundedBy>") if envelope else ""
-    return (f"<core:CityModel xmlns:core='{CORE}' xmlns:gml='{GML}' xmlns:bldg='{BLDG}'>"
+    return (f"<core:CityModel xmlns:core='{CORE}' xmlns:gml='{GML}' xmlns:bldg='{BLDG}' xmlns:grp='{GRP}' xmlns:xlink='{XLINK}' {root_attrs}>"
             + env
-            + "".join(f"<core:cityObjectMember>{b}</core:cityObjectMember>" for b in buildings)
+            + "".join(f"<core:cityObjectMember {member_attrs}>{b}</core:cityObjectMember>" for b in buildings)
             + "</core:CityModel>")
 
 
@@ -79,6 +82,22 @@ class ExtractTests(unittest.TestCase):
         self.assertTrue(all(row["distanceM"] == 0 for row in doc["nearestSelectedBuildingDistances"]))
         self.assertEqual(doc["nearestSelectedBuildingDistanceQuantilesM"]["p50"], 0)
 
+    def test_overlapping_union_does_not_double_count(self):
+        a = [(139.749, 35.679), (139.751, 35.679), (139.751, 35.681), (139.749, 35.681), (139.749, 35.679)]
+        b = [(139.750, 35.679), (139.752, 35.679), (139.752, 35.681), (139.750, 35.681), (139.750, 35.679)]
+        doc = self.run_doc(dataset([building("a", polygon(a)), building("b", polygon(b))]))
+        self.assertEqual(doc["selectedBuildingCount"], 2)
+        summed = sum(f["clippedAreaM2"] for f in doc["features"])
+        self.assertLess(doc["clippedUnionAreaM2"], summed)
+
+    def test_positive_nearest_distance_uses_complete_footprints(self):
+        a = [(139.7490, 35.679), (139.7495, 35.679), (139.7495, 35.680), (139.7490, 35.680), (139.7490, 35.679)]
+        b = [(139.7500, 35.679), (139.7505, 35.679), (139.7505, 35.680), (139.7500, 35.680), (139.7500, 35.679)]
+        doc = self.run_doc(dataset([building("a", polygon(a)), building("b", polygon(b))]))
+        expected = (139.7500 - 139.7495) * 111000 * math.cos(math.radians(35.679))
+        self.assertGreater(doc["nearestSelectedBuildingDistances"][0]["distanceM"], 0)
+        self.assertAlmostEqual(doc["nearestSelectedBuildingDistances"][0]["distanceM"], expected, delta=1.0)
+
     def test_dedup_missing_fields_and_lod0_fallback(self):
         coords = [(139.749, 35.679), (139.751, 35.679), (139.751, 35.681), (139.749, 35.681), (139.749, 35.679)]
         doc = self.run_doc(dataset([building("a", polygon(coords), lod="lod0RoofEdge"),
@@ -96,6 +115,32 @@ class ExtractTests(unittest.TestCase):
             self.run_doc(dataset([], dim="2"))
         with self.assertRaisesRegex(ValueError, "missing source CRS envelope"):
             self.run_doc(dataset([], envelope=False))
+
+    def test_nested_envelope_and_inherited_crs_overrides_fail(self):
+        crs = "http://www.opengis.net/def/crs/EPSG/0/6697"
+        nested = dataset(["<gml:Envelope srsName='" + crs + "' srsDimension='3'/>"], envelope=False)
+        with self.assertRaisesRegex(ValueError, "direct root boundedBy"):
+            self.run_doc(nested)
+        with self.assertRaisesRegex(ValueError, "CityModel root"):
+            self.run_doc(dataset([], root_attrs="srsName='EPSG:4326'"))
+        with self.assertRaisesRegex(ValueError, "cityObjectMember"):
+            self.run_doc(dataset([building("a")], member_attrs="srsName='EPSG:4326'"))
+
+    def test_group_reconciles_catalog_without_building_double_count(self):
+        coords = [(139.749, 35.679), (139.751, 35.679), (139.751, 35.681), (139.749, 35.681), (139.749, 35.679)]
+        group = "<grp:CityObjectGroup gml:id='grp_x'><grp:groupMember xlink:href='#bldg_a'/></grp:CityObjectGroup>"
+        doc = self.run_doc(dataset([building("a", polygon(coords)), group]))
+        self.assertEqual(doc["counts"]["buildings"], 1)
+        self.assertEqual(doc["topLevelMemberTypeCounts"], {"Building": 1, "CityObjectGroup": 1})
+        self.assertEqual(doc["topLevelNonBuildingObjects"], [{"id": "grp_x", "type": "CityObjectGroup", "parentReferences": ["#bldg_a"]}])
+        self.assertEqual(doc["unsupportedNonBuildingGeometryCount"], 0)
+        self.assertFalse(doc["coverageIncomplete"])
+
+    def test_nonbuilding_geometry_marks_coverage_incomplete(self):
+        object_with_geometry = "<grp:CityObjectGroup gml:id='grp_x'><gml:pos>35.68 139.75 1</gml:pos></grp:CityObjectGroup>"
+        doc = self.run_doc(dataset([object_with_geometry]))
+        self.assertEqual(doc["unsupportedNonBuildingGeometryCount"], 1)
+        self.assertTrue(doc["coverageIncomplete"])
 
     def test_nested_crs_override_and_unclosed_hole_fail_closed(self):
         coords = [(139.749, 35.679), (139.751, 35.679), (139.751, 35.681), (139.749, 35.681), (139.749, 35.679)]
@@ -117,6 +162,18 @@ class ExtractTests(unittest.TestCase):
         self.assertIsNone(feature["measuredHeight"])
         self.assertIsNone(feature["storeysAboveGround"])
         self.assertIsNone(feature["storeysBelowGround"])
+
+    def test_9999_sentinel_is_retained_but_not_numeric(self):
+        coords = [(139.749, 35.679), (139.751, 35.679), (139.751, 35.681), (139.749, 35.681), (139.749, 35.679)]
+        attrs = "<bldg:measuredHeight uom='m'>9999</bldg:measuredHeight><bldg:storeysAboveGround>9999</bldg:storeysAboveGround>"
+        doc = self.run_doc(dataset([building("a", polygon(coords), fields=attrs)]))
+        feature = doc["features"][0]
+        self.assertIsNone(feature["measuredHeight"])
+        self.assertEqual(feature["measuredHeightRaw"], "9999")
+        self.assertEqual(feature["measuredHeightStatus"], "sentinel")
+        self.assertIsNone(feature["storeysAboveGround"])
+        self.assertEqual(feature["storeysAboveGroundRaw"], "9999")
+        self.assertEqual(feature["storeysAboveGroundStatus"], "sentinel")
 
 
 if __name__ == "__main__":
