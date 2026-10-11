@@ -1130,6 +1130,38 @@ describe("CameraDirector", () => {
     director.dispose();
   });
 
+  it("follows a stranded passenger at the waiting position after their vehicle departs", () => {
+    const world = makeWorld();
+    const resident: ResidentFixture = {
+      id: 91, name: "Yuki Tanaka", home_building: 700, work_building: null,
+      activity: "commuting", transfer: "riding_inbound", train_id: 500,
+    };
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    director.world(withResident(world, resident));
+    director.follow(resident.id);
+    director.setPositions(new Float32Array([500, 80, 0, Math.PI, 2]));
+
+    const waiting = withResident({ ...world, revision: 2 }, {
+      ...resident, activity: "waiting_for_route", transfer: "waiting_alight",
+      train_id: null, bus_id: null, location_node: 2,
+    });
+    director.world(waiting);
+    director.setPositions(new Float32Array([500, 65, 0, Math.PI, 2, 91, 98, 6, 0, 0]));
+    const state = director as unknown as { followPosition: THREE.Vector3; followId: number; followKind: number };
+    expect(state.followPosition.toArray()).toEqual([98, 0, 6]);
+    expect(state.followId).toBe(91);
+    expect(state.followKind).toBe(0);
+    expect(director.label).toBe("Yuki Tanaka");
+
+    // A structural update must not replace the precise platform tuple with
+    // either the road node or the departing train's position.
+    director.world({ ...waiting, revision: 3 });
+    expect(state.followPosition.toArray()).toEqual([98, 0, 6]);
+    director.setPositions(new Float32Array([500, 40, 0, Math.PI, 2, 91, 98, 6, 0, 0]));
+    expect(state.followPosition.toArray()).toEqual([98, 0, 6]);
+    director.dispose();
+  });
+
   it("uses the authoritative directional curb marker for a queued bus passenger fallback", () => {
     const world = makeWorld();
     world.bus_lines = [

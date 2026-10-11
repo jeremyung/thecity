@@ -56,6 +56,7 @@ mod interior_access;
 mod neighborhood_spine;
 mod network_split;
 mod project_scoring;
+mod transit_recovery;
 mod road_face_bridges;
 mod road_face_preflight;
 mod road_face_topology;
@@ -73,7 +74,7 @@ mod spine_ranking_experiment_tests;
 mod spine_replay_tests;
 
 const SCHEMA_VERSION: u32 = 1;
-const ACTIVITY_SCHEMA_VERSION: u8 = 1;
+const ACTIVITY_SCHEMA_VERSION: u8 = 2;
 const ENGINE_VERSION: &str = "0.1.0";
 const MIN: f32 = -400.0;
 const MAX: f32 = 400.0;
@@ -594,6 +595,8 @@ struct Resident {
     bus_destination_stop: Option<u32>,
     #[serde(default)]
     bus_stop_node: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pending_alight: Option<transit_recovery::PendingAlight>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -681,6 +684,10 @@ struct WorldState {
     buses: Vec<Bus>,
     #[serde(default)]
     next_bus_evaluation_tick: u64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pending_alight_ids: Vec<u32>,
+    #[serde(default)]
+    pending_alight_cursor: usize,
     events: VecDeque<Event>,
     population: u32,
     demand: f32,
@@ -1029,6 +1036,8 @@ impl Engine {
                 bus_line: None,
                 buses: vec![],
                 next_bus_evaluation_tick: 0,
+                pending_alight_ids: Vec::new(),
+                pending_alight_cursor: 0,
                 events: VecDeque::new(),
                 population: 3,
                 demand: 0.6,
@@ -2201,6 +2210,7 @@ impl Engine {
         self.advance_travelers();
         self.advance_trains();
         self.advance_buses();
+        self.advance_pending_alights();
         if self.state.tick % 40 == 0 {
             self.state.revision = self.state.revision.saturating_add(1);
         }
@@ -7916,6 +7926,7 @@ impl Engine {
                     bus_origin_stop: None,
                     bus_destination_stop: None,
                     bus_stop_node: None,
+                    pending_alight: None,
                 });
             }
         }
@@ -8451,7 +8462,11 @@ impl Engine {
             }
             if matches!(
                 resident.transfer.as_str(),
-                "walking_to_bus" | "waiting_bus" | "riding_bus" | "walking_from_bus"
+                "walking_to_bus"
+                    | "waiting_bus"
+                    | "riding_bus"
+                    | "walking_from_bus"
+                    | "waiting_alight"
             ) {
                 continue;
             }
@@ -9668,8 +9683,65 @@ impl Engine {
         } else {
             resident.work_building.unwrap_or(resident.home_building)
         };
-        let route = self.route(stop, target_node, false);
+        let wait_position = self
+            .state
+            .buses
+            .get(bus_index)
+            .and_then(|bus| {
+                self.bus_queue_position(
+                    stop,
+                    bus.direction,
+                    resident.queue_slot.unwrap_or(0),
+                )
+            })
+            .or_else(|| {
+                self.node(stop).map(|node| WorldPoint {
+                    x: node.x,
+                    z: node.z,
+                })
+            });
+        let Some(wait_position) = wait_position else {
+            return;
+        };
+        let activity = if resident.at_work { "return" } else { "commute" };
+        let route_attempted = self.state.travelers.len() < MAX_TRAVELERS;
+        let route = if route_attempted {
+            self.route(stop, target_node, false)
+        } else {
+            Vec::new()
+        };
         if route.is_empty() || route.len() > MAX_ROUTE_NODES {
+            let queued = self.queue_pending_alight(
+                resident_id,
+                stop,
+                target_node,
+                destination_building,
+                activity,
+                "walking_from_bus",
+                wait_position,
+                route_attempted,
+            );
+            if !queued {
+                let reason = format!("Still aboard at stop {stop}: pedestrian route queue is full");
+                let current = &mut self.state.residents[resident_index];
+                if current.history.last() != Some(&reason) {
+                    push_history(&mut current.history, reason);
+                }
+                return;
+            }
+            let bus_id = self.state.buses[bus_index].id;
+            self.state.buses[bus_index]
+                .passengers
+                .retain(|id| *id != resident_id);
+            push_history(
+                &mut self.state.residents[resident_index].history,
+                format!("Waited at stop {stop} for a legal walking route at tick {}", self.state.tick),
+            );
+            self.record(
+                "BusPassengerWaitingForRoute",
+                resident_id,
+                format!("A resident alights from bus {bus_id} into the bounded route queue at stop {stop}"),
+            );
             return;
         }
         let mut traveler = Traveler {
@@ -9681,12 +9753,7 @@ impl Engine {
             edge_progress: 0.0,
             speed: 1.5,
             destination: target_node,
-            activity: if resident.at_work {
-                "return"
-            } else {
-                "commute"
-            }
-            .into(),
+            activity: activity.into(),
             resident: resident.id,
             name: resident.name.clone(),
             origin_building: None,
@@ -9874,8 +9941,50 @@ impl Engine {
             };
             let resident = self.state.residents[resident_index].clone();
             if at_station && resident.transfer == "riding_inbound" {
-                let route = self.route(station, resident.home_node, false);
+                let queue_slot = (resident.id % RAIL_QUEUE_CAPACITY as u32) as u16;
+                let wait_position = self.platform_position(true, queue_slot);
+                let route_attempted = resident.home_node != station
+                    && self.state.travelers.len() < MAX_TRAVELERS;
+                let route = if resident.home_node == station {
+                    vec![station]
+                } else if route_attempted {
+                    self.route(station, resident.home_node, false)
+                } else {
+                    Vec::new()
+                };
                 if route.is_empty() {
+                    let queued = wait_position.is_some_and(|wait_position| {
+                        self.queue_pending_alight(
+                            resident_id,
+                            station,
+                            resident.home_node,
+                            resident.home_building,
+                            "walking_home",
+                            "walking_home",
+                            wait_position,
+                            route_attempted,
+                        )
+                    });
+                    if !queued {
+                        let reason = format!(
+                            "Still aboard at station {station}: pedestrian route queue is full"
+                        );
+                        let current = &mut self.state.residents[resident_index];
+                        if current.history.last() != Some(&reason) {
+                            push_history(&mut current.history, reason);
+                        }
+                        continue;
+                    }
+                    unloaded.insert(resident_id);
+                    push_history(
+                        &mut self.state.residents[resident_index].history,
+                        format!("Waited at station {station} for a legal walking route at tick {}", self.state.tick),
+                    );
+                    self.record(
+                        "TrainPassengerWaitingForRoute",
+                        resident_id,
+                        format!("A resident alights from train {train_id} into the bounded route queue at station {station}"),
+                    );
                     continue;
                 }
                 if route.len() == 1 {
@@ -9898,7 +10007,7 @@ impl Engine {
                             resident.name
                         ),
                     );
-                } else if self.state.travelers.len() < MAX_TRAVELERS {
+                } else {
                     unloaded.insert(resident_id);
                     let mut traveler = Traveler {
                         id: resident.id,
@@ -9923,7 +10032,7 @@ impl Engine {
                     traveler.origin_access = self.platform_exit_path(
                         &traveler.route,
                         true,
-                        (resident.id % RAIL_QUEUE_CAPACITY as u32) as u16,
+                        queue_slot,
                         traveler.id,
                     );
                     traveler.destination_access = self.building_access_path(
@@ -10108,7 +10217,11 @@ impl Engine {
     }
     pub fn movement_buffer(&self) -> Vec<f32> {
         let mut out = Vec::with_capacity(
-            (self.state.travelers.len() + self.state.trains.len() + self.state.buses.len()) * 5,
+            (self.state.travelers.len()
+                + self.state.pending_alight_ids.len()
+                + self.state.trains.len()
+                + self.state.buses.len())
+                * 5,
         );
         for t in &self.state.travelers {
             if t.access_phase == 0 || t.access_phase == 2 {
@@ -10199,6 +10312,25 @@ impl Engine {
                 continue;
             };
             out.extend_from_slice(&[resident.id as f32, position.x, position.z, 0.0, 0.0]);
+        }
+        let mut pending_alights: Vec<&Resident> = self
+            .state
+            .residents
+            .iter()
+            .filter(|resident| resident.transfer == "waiting_alight")
+            .collect();
+        pending_alights.sort_by_key(|resident| resident.id);
+        for resident in pending_alights {
+            let Some(pending) = &resident.pending_alight else {
+                continue;
+            };
+            out.extend_from_slice(&[
+                resident.id as f32,
+                pending.wait_position.x,
+                pending.wait_position.z,
+                0.0,
+                0.0,
+            ]);
         }
         for t in &self.state.trains {
             if t.route.len() < 2 {
@@ -10362,7 +10494,7 @@ impl Engine {
             };
             serde_json::json!({"entityType":"traveler","id":t.id,"name":t.name,"activity":t.activity,"kind":if t.kind == 1 {"car"} else {"pedestrian"},"origin":t.origin_building,"destination":t.destination_building,"history":history,"wait_ticks":t.wait_ticks})
         } else if let Some(r) = self.state.residents.iter().find(|r| r.id == id) {
-            serde_json::json!({"entityType":"resident","id":r.id,"name":r.name,"activity":r.activity,"kind":if r.train_id.is_some() {"rail passenger"} else if r.bus_id.is_some() {"bus passenger"} else if r.mode == 1 {"car"} else {"pedestrian"},"origin":r.home_building,"destination":r.work_building,"home_building":r.home_building,"work_building":r.work_building,"transfer":r.transfer,"train_id":r.train_id,"bus_id":r.bus_id,"bus_origin_stop":r.bus_origin_stop,"bus_destination_stop":r.bus_destination_stop,"bus_stop_node":r.bus_stop_node,"location_node":self.resident_location_node(r),"history":r.history})
+            serde_json::json!({"entityType":"resident","id":r.id,"name":r.name,"activity":r.activity,"kind":if r.train_id.is_some() {"rail passenger"} else if r.bus_id.is_some() {"bus passenger"} else if r.mode == 1 {"car"} else {"pedestrian"},"origin":r.home_building,"destination":r.work_building,"home_building":r.home_building,"work_building":r.work_building,"transfer":r.transfer,"train_id":r.train_id,"bus_id":r.bus_id,"bus_origin_stop":r.bus_origin_stop,"bus_destination_stop":r.bus_destination_stop,"bus_stop_node":r.bus_stop_node,"pending_alight":r.pending_alight,"location_node":self.resident_location_node(r),"history":r.history})
         } else if let Some(t) = self.state.trains.iter().find(|t| t.id == id) {
             let terminal = if t.direction >= 0 {
                 *t.route.last().unwrap_or(&0)
@@ -10412,6 +10544,7 @@ impl Engine {
         match resident.transfer.as_str() {
             "home" => Some(resident.home_node),
             "waiting_bus" => resident.bus_stop_node,
+            "waiting_alight" => resident.pending_alight.as_ref().map(|pending| pending.stop_node),
             "riding_bus" => None,
             "waiting_station" => self.rail_terminals().map(|(station, _)| station),
             "waiting_gateway" | "working_external" => resident.work_node,
@@ -10627,6 +10760,7 @@ impl Engine {
             stats: Stats {
                 population: self.state.population,
                 active_travelers: (self.state.travelers.len()
+                    + self.state.pending_alight_ids.len()
                     + self.rail_waiting_count(true)
                     + self.rail_waiting_count(false)
                     + self.bus_platform_waiting_count()) as u32,
@@ -10703,8 +10837,11 @@ impl Engine {
                     }
                 }
             }
-            state.activity_schema_version = ACTIVITY_SCHEMA_VERSION;
         }
+        // Schema 2 adds explicit, persisted transit alighting waits. Older
+        // saves default these to empty; older binaries reject schema 2 rather
+        // than silently interpreting a waiting resident as a normal trip.
+        state.activity_schema_version = ACTIVITY_SCHEMA_VERSION;
         // Validate frozen checkpoint shapes and timeline before replaying any
         // saved prefix to reconstruct derived accumulator state.
         state.district_controller.validate(state.tick)?;
@@ -11222,6 +11359,30 @@ impl Engine {
         if self.state.population > MAX_POPULATION {
             return Err("represented population cap exceeded".into());
         }
+        if self.state.pending_alight_ids.len() > transit_recovery::MAX_PENDING_ALIGHT_WAITERS {
+            return Err("pending transit alighting queue exceeded its cap".into());
+        }
+        if (self.state.pending_alight_ids.is_empty() && self.state.pending_alight_cursor != 0)
+            || (!self.state.pending_alight_ids.is_empty()
+                && self.state.pending_alight_cursor >= self.state.pending_alight_ids.len())
+        {
+            return Err("pending transit alighting cursor is invalid".into());
+        }
+        let mut pending_alight_ids = BTreeSet::new();
+        for resident_id in &self.state.pending_alight_ids {
+            if !pending_alight_ids.insert(*resident_id) {
+                return Err(format!("resident {resident_id} is queued to alight twice"));
+            }
+            if !self.state.residents.iter().any(|resident| {
+                resident.id == *resident_id
+                    && resident.transfer == "waiting_alight"
+                    && resident.pending_alight.is_some()
+                    && resident.bus_id.is_none()
+                    && resident.train_id.is_none()
+            }) {
+                return Err(format!("pending alight {resident_id} has no waiting resident"));
+            }
+        }
         let mut resident_ids = BTreeSet::new();
         for resident in &self.state.residents {
             if !resident_ids.insert(resident.id) {
@@ -11257,6 +11418,32 @@ impl Engine {
             if resident.history.len() > 8 {
                 return Err(format!("resident {} history exceeded its cap", resident.id));
             }
+            if let Some(pending) = &resident.pending_alight {
+                if resident.transfer != "waiting_alight"
+                    || resident.bus_id.is_some()
+                    || resident.train_id.is_some()
+                    || !pending_alight_ids.contains(&resident.id)
+                    || !pending.wait_position.x.is_finite()
+                    || !pending.wait_position.z.is_finite()
+                    || !self.state.nodes.iter().any(|node| node.id == pending.stop_node)
+                    || !self
+                        .state
+                        .nodes
+                        .iter()
+                        .any(|node| node.id == pending.destination_node)
+                    || !self
+                        .state
+                        .buildings
+                        .iter()
+                        .any(|building| building.id == pending.destination_building)
+                    || !matches!(pending.activity.as_str(), "commute" | "return" | "walking_home")
+                    || !matches!(pending.transfer_after_route.as_str(), "walking_from_bus" | "walking_home")
+                {
+                    return Err(format!("resident {} has an invalid pending alight", resident.id));
+                }
+            } else if resident.transfer == "waiting_alight" {
+                return Err(format!("resident {} is waiting without an alight target", resident.id));
+            }
             if resident.rail_commuter
                 && !matches!(
                     resident.transfer.as_str(),
@@ -11268,6 +11455,7 @@ impl Engine {
                         | "waiting_gateway"
                         | "riding_inbound"
                         | "walking_home"
+                        | "waiting_alight"
                 )
             {
                 return Err(format!(
@@ -12659,9 +12847,348 @@ mod tests {
                 bus_origin_stop: None,
                 bus_destination_stop: None,
                 bus_stop_node: None,
+                pending_alight: None,
             });
         }
         (engine, ids)
+    }
+
+    #[test]
+    fn bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save() {
+        let (mut engine, ids) = bus_test_engine(1);
+        let resident_id = ids[0];
+        let line = engine.state.bus_line.as_ref().unwrap().clone();
+        let stop = *line.stops.last().unwrap();
+        let (stop_x, stop_z) = {
+            let stop_position = engine.node(stop).unwrap();
+            (stop_position.x, stop_position.z)
+        };
+        let target = engine.add_node(stop_x + 18.0, stop_z - 18.0, "junction");
+        let bus_id = engine.state.buses[0].id;
+        let resident = engine
+            .state
+            .residents
+            .iter_mut()
+            .find(|resident| resident.id == resident_id)
+            .unwrap();
+        resident.transfer = "riding_bus".into();
+        resident.bus_id = Some(bus_id);
+        resident.bus_origin_stop = Some(line.stops[0]);
+        resident.bus_destination_stop = Some(stop);
+        resident.bus_stop_node = Some(stop);
+        resident.queue_slot = Some(2);
+        resident.work_node = Some(target);
+        engine.state.buses[0].direction = 1;
+        engine.state.buses[0].passengers = vec![resident_id];
+
+        assert!(engine.route(stop, target, false).is_empty());
+        engine.alight_bus_passenger(0, resident_id, stop);
+        let waiting = engine
+            .state
+            .residents
+            .iter()
+            .find(|resident| resident.id == resident_id)
+            .unwrap();
+        assert_eq!(waiting.transfer, "waiting_alight");
+        assert_eq!(waiting.pending_alight.as_ref().unwrap().stop_node, stop);
+        assert_eq!(waiting.bus_id, None);
+        assert!(engine.state.buses[0].passengers.is_empty());
+        assert_eq!(engine.resident_location_node(waiting), Some(stop));
+        let saved_position = waiting.pending_alight.as_ref().unwrap().wait_position;
+        let failed_revision = waiting
+            .pending_alight
+            .as_ref()
+            .unwrap()
+            .last_checked_geometry_revision;
+        assert_eq!(failed_revision, Some(engine.state.access_geometry_revision));
+        engine.advance_pending_alights();
+        assert_eq!(
+            engine.state.residents[0]
+                .pending_alight
+                .as_ref()
+                .unwrap()
+                .last_checked_geometry_revision,
+            failed_revision,
+            "the failed alight must not route-search again on an unchanged graph"
+        );
+        assert!(engine.state.travelers.iter().all(|traveler| traveler.resident != resident_id));
+        let movement_before_save = engine.movement_buffer();
+        let waiting_movement = movement_before_save
+            .chunks_exact(5)
+            .find(|movement| movement[0] == resident_id as f32)
+            .expect("pending alighter is visible in movement output");
+        assert_eq!(waiting_movement[1], saved_position.x);
+        assert_eq!(waiting_movement[2], saved_position.z);
+        engine.validate().unwrap();
+
+        engine.set_development_rate(0);
+        let save = engine.save_json();
+        let mut restored = Engine::restore_json(&save).unwrap();
+        assert_eq!(restored.save_json(), save);
+        assert_eq!(restored.movement_buffer(), movement_before_save);
+        restored.step(80);
+        assert_eq!(restored.save_json(), {
+            let mut control = Engine::restore_json(&save).unwrap();
+            control.step(80);
+            control.save_json()
+        });
+        let pending = restored.state.residents[0].pending_alight.as_ref().unwrap();
+        assert!(pending.last_checked_geometry_revision.is_some());
+        assert!(pending.retry_after_tick > restored.state.tick);
+        assert!(restored.route(stop, target, false).is_empty());
+
+        restored.add_road(stop, target, "local", "open", 1.0);
+        restored.recompute_connectivity();
+        assert!(!restored.route(stop, target, false).is_empty());
+        restored.step(1);
+        let resumed = restored
+            .state
+            .travelers
+            .iter()
+            .find(|traveler| traveler.resident == resident_id)
+            .expect("legal route should resume the resident's walk");
+        assert_eq!(resumed.activity, "commute");
+        assert_eq!(resumed.access_phase, 0);
+        let origin_access = resumed.origin_access.as_ref().unwrap();
+        assert_eq!(origin_access.points[0].x, saved_position.x);
+        assert_eq!(origin_access.points[0].z, saved_position.z);
+        assert_eq!(resumed.edge_progress, 0.0);
+        assert!(restored.state.residents[0].pending_alight.is_none());
+        assert_eq!(restored.state.residents[0].transfer, "walking_from_bus");
+        assert_eq!(restored.state.buses[0].passengers.len(), 0);
+        restored.validate().unwrap();
+    }
+
+    #[test]
+    fn pending_alight_scheduler_checks_at_most_eight_waiters_per_tick() {
+        let (mut engine, ids) = bus_test_engine(10);
+        let line = engine.state.bus_line.as_ref().unwrap().clone();
+        let stop = line.stops[0];
+        let stop_position = engine.node(stop).unwrap();
+        let target = engine.add_node(stop_position.x + 18.0, stop_position.z - 18.0, "junction");
+        let building = engine.state.residents[0].home_building;
+        for id in ids {
+            let resident = engine
+                .state
+                .residents
+                .iter_mut()
+                .find(|resident| resident.id == id)
+                .unwrap();
+            resident.work_node = Some(target);
+            let position = engine
+                .node(stop)
+                .map(|node| WorldPoint { x: node.x, z: node.z })
+                .unwrap();
+            assert!(engine.queue_pending_alight(
+                id,
+                stop,
+                target,
+                building,
+                "commute",
+                "walking_from_bus",
+                position,
+                false,
+            ));
+        }
+        engine.state.tick = 40;
+        engine.advance_pending_alights();
+        let checked = engine
+            .state
+            .residents
+            .iter()
+            .filter(|resident| {
+                resident
+                    .pending_alight
+                    .as_ref()
+                    .is_some_and(|pending| pending.last_checked_geometry_revision.is_some())
+            })
+            .count();
+        assert_eq!(checked, 8);
+        assert_eq!(engine.state.pending_alight_ids.len(), 10);
+        engine.validate().unwrap();
+    }
+
+    #[test]
+    fn pending_alight_retries_when_destination_opens_without_geometry_change() {
+        let (mut engine, ids) = bus_test_engine(1);
+        let resident_id = ids[0];
+        let stop = *engine.state.bus_line.as_ref().unwrap().stops.last().unwrap();
+        let (stop_x, stop_z) = {
+            let stop_position = engine.node(stop).unwrap();
+            (stop_position.x, stop_position.z)
+        };
+        let target = engine.add_node(stop_x + 18.0, stop_z - 18.0, "junction");
+        let building_id = engine.state.residents[0].home_building;
+        engine.add_road(stop, target, "local", "open", 1.0);
+        engine.recompute_connectivity();
+        let position = WorldPoint {
+            x: stop_x,
+            z: stop_z,
+        };
+        let origin_stop = engine
+            .state
+            .bus_line
+            .as_ref()
+            .unwrap()
+            .stops
+            .first()
+            .copied();
+        {
+            let resident = engine
+                .state
+                .residents
+                .iter_mut()
+                .find(|resident| resident.id == resident_id)
+                .unwrap();
+            resident.bus_origin_stop = origin_stop;
+            resident.bus_destination_stop = Some(stop);
+        }
+        assert!(engine.queue_pending_alight(
+            resident_id,
+            stop,
+            target,
+            building_id,
+            "commute",
+            "walking_from_bus",
+            position,
+            false,
+        ));
+
+        let building = engine
+            .state
+            .buildings
+            .iter_mut()
+            .find(|building| building.id == building_id)
+            .unwrap();
+        building.stage = "structure".into();
+        let revision = engine.state.access_geometry_revision;
+        engine.advance_pending_alights();
+        let pending = engine.state.residents[0].pending_alight.as_ref().unwrap();
+        assert_eq!(pending.last_checked_geometry_revision, None);
+        assert_eq!(engine.state.access_geometry_revision, revision);
+        assert!(engine
+            .state
+            .travelers
+            .iter()
+            .all(|traveler| traveler.resident != resident_id));
+
+        engine
+            .state
+            .buildings
+            .iter_mut()
+            .find(|building| building.id == building_id)
+            .unwrap()
+            .stage = "open".into();
+        engine.advance_pending_alights();
+        assert!(engine.state.residents[0].pending_alight.is_none());
+        assert!(engine
+            .state
+            .travelers
+            .iter()
+            .any(|traveler| traveler.resident == resident_id));
+        engine.validate().unwrap();
+    }
+
+    #[test]
+    fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
+        let (mut engine, station, gateway) = rail_test_engine(477);
+        let resident_id = add_rail_test_resident(&mut engine, gateway);
+        let station_position = engine.node(station).unwrap();
+        let home_node = engine.add_node(
+            station_position.x + 18.0,
+            station_position.z - 18.0,
+            "junction",
+        );
+        let train_id = engine.id();
+        let resident = engine
+            .state
+            .residents
+            .iter_mut()
+            .find(|resident| resident.id == resident_id)
+            .unwrap();
+        resident.home_node = home_node;
+        resident.at_work = true;
+        resident.transfer = "riding_inbound".into();
+        resident.train_id = Some(train_id);
+        engine.state.trains.push(Train {
+            id: train_id,
+            route: vec![station, gateway],
+            distance: TRAIN_HALF_LENGTH,
+            speed: 8.0,
+            direction: 1,
+            dwell_ticks: 0,
+            passengers: vec![resident_id],
+        });
+
+        assert!(engine.route(station, home_node, false).is_empty());
+        engine.handle_train_terminal(train_id, true, station, gateway);
+        let waiting = engine
+            .state
+            .residents
+            .iter()
+            .find(|resident| resident.id == resident_id)
+            .unwrap();
+        assert_eq!(waiting.transfer, "waiting_alight");
+        assert_eq!(waiting.train_id, None);
+        assert_eq!(waiting.pending_alight.as_ref().unwrap().stop_node, station);
+        assert_eq!(engine.state.trains[0].passengers, Vec::<u32>::new());
+        let platform_position = waiting.pending_alight.as_ref().unwrap().wait_position;
+        assert_eq!(engine.resident_location_node(waiting), Some(station));
+        engine.validate().unwrap();
+
+        let save = engine.save_json();
+        let mut restored = Engine::restore_json(&save).unwrap();
+        assert_eq!(restored.save_json(), save);
+        restored.add_road(station, home_node, "local", "open", 1.0);
+        restored.recompute_connectivity();
+        restored.step(1);
+        let traveler = restored
+            .state
+            .travelers
+            .iter()
+            .find(|traveler| traveler.resident == resident_id)
+            .unwrap();
+        assert_eq!(traveler.activity, "walking_home");
+        assert_eq!(traveler.access_phase, 0);
+        let origin = &traveler.origin_access.as_ref().unwrap().points[0];
+        assert_eq!(origin.x, platform_position.x);
+        assert_eq!(origin.z, platform_position.z);
+        assert_eq!(restored.state.residents[0].transfer, "walking_home");
+        assert!(restored.state.trains[0].passengers.is_empty());
+        restored.validate().unwrap();
+    }
+
+    #[test]
+    fn full_pending_alight_queue_keeps_bus_passenger_seated() {
+        let (mut engine, ids) = bus_test_engine(1);
+        let resident_id = ids[0];
+        let line = engine.state.bus_line.as_ref().unwrap().clone();
+        let stop = *line.stops.last().unwrap();
+        let target = engine.add_node(340.0, -340.0, "junction");
+        let bus_id = engine.state.buses[0].id;
+        let resident = &mut engine.state.residents[0];
+        resident.at_work = false;
+        resident.work_node = Some(target);
+        resident.transfer = "riding_bus".into();
+        resident.bus_id = Some(bus_id);
+        resident.bus_origin_stop = Some(line.stops[0]);
+        resident.bus_destination_stop = Some(stop);
+        engine.state.buses[0].passengers = vec![resident_id];
+        engine.state.pending_alight_ids = (0..transit_recovery::MAX_PENDING_ALIGHT_WAITERS)
+            .map(|index| 900_000 + index as u32)
+            .collect();
+        engine.state.pending_alight_cursor = 0;
+
+        engine.alight_bus_passenger(0, resident_id, stop);
+        assert_eq!(engine.state.buses[0].passengers, vec![resident_id]);
+        assert_eq!(engine.state.residents[0].transfer, "riding_bus");
+        assert_eq!(engine.state.residents[0].bus_id, Some(bus_id));
+        assert!(engine.state.residents[0].pending_alight.is_none());
+        assert!(engine.state.residents[0]
+            .history
+            .last()
+            .unwrap()
+            .contains("queue is full"));
     }
 
     #[test]
@@ -13582,6 +14109,7 @@ mod tests {
             bus_origin_stop: None,
             bus_destination_stop: None,
             bus_stop_node: None,
+            pending_alight: None,
         });
         id
     }
@@ -18724,6 +19252,7 @@ mod tests {
             bus_origin_stop: None,
             bus_destination_stop: None,
             bus_stop_node: None,
+            pending_alight: None,
         });
         engine.state.travelers.push(Traveler {
             id: 900_002,
@@ -19595,6 +20124,7 @@ mod tests {
             bus_origin_stop: bus_stops.map(|stops| stops.0),
             bus_destination_stop: bus_stops.map(|stops| stops.1),
             bus_stop_node: None,
+            pending_alight: None,
         }
     }
 

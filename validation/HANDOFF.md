@@ -331,6 +331,31 @@ the dominant morphology problem. A four-floor office crown audit finds only two
 instances, so that geometry change was not promoted as a density intervention.
 Next prioritize connected interior development and matched-view comparison.
 
+## Transit recovery checkpoint — 2026-10-11
+
+Passengers whose final walking route is unavailable can now leave a bus or
+inbound train into a persisted waiting-at-stop state. The queue is capped at 256;
+the scheduler examines at most eight entries and issues at most eight route
+queries per tick. Failed paths are reconsidered on geometry changes, with a
+bounded timer fallback if the revision token is exhausted. Destination reopening
+without a geometry change is covered separately. Full waiting areas retain
+vehicle ownership; full traveler capacity avoids route queries.
+
+Waiting residents emit pedestrian movement tuples at their saved curb/platform
+position. Reconnection creates a walk from that exact position. Activity schema
+2 migrates old saves with empty recovery state; older binaries reject new saves.
+Root review caught and corrected missing movement tuples and same-geometry
+reopening. Independent checks: native **376 passed, 0 failed, 45 ignored**;
+rebuilt WASM and four focused web suites **43 passed**; production build passed
+with the existing large-bundle warning. The WASM recovery test uses the historical
+seed5 bus fixture with a deliberately disconnected final walking leg, then a
+synthetic road reconnection; it is not evidence of procedural road discovery.
+
+Permanent route unavailability still requires an explicit cancellation/replanning
+policy; a bounded waiting queue alone does not satisfy the complete travel
+requirement. Queue-full passengers may retry at later terminal visits. No density,
+art, hardware WebGPU, or browser performance acceptance follows from this change.
+
 ## Deeper center-street trial rejected — 2026-10-11
 
 [Matched WASM evidence](deep-spine-review/README.md) tests adding an 82×110 m
