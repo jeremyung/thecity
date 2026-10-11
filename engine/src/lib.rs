@@ -29,6 +29,8 @@ mod compact_frontage_diagnostic;
 #[cfg(test)]
 mod density_gap_diagnosis;
 #[cfg(test)]
+mod mature_planner_trace_tests;
+#[cfg(test)]
 mod access_density_diagnostic;
 #[cfg(test)]
 mod access_bend_diagnostic;
