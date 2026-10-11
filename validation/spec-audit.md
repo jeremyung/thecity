@@ -1514,3 +1514,7 @@ Evidence and reproduction patch: `shallow-block-experiment/fair-budget/README.md
 Root verified all output bytes against the preceding independently rerun controls
 and reran the geometry/manual lifecycle test. Experimental hooks were removed;
 production and visual acceptance are unchanged.
+
+## 2026-10-11 — isolated road-pair scaling component
+
+Progress toward bounded larger graph processing: deterministic quota-stepped AABB index, JSON resume validation and 5,000-segment grid oracle check. Five focused native tests; 14,701 candidates and 1,370,078 logical work units on the grid. See `road-pair-broadphase.md` for limits. Not integrated; production capture remains 512 nodes/edges. This does not satisfy metropolis-scale acceptance or change the screenshots.

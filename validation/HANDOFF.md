@@ -143,3 +143,7 @@ npm run dev
 WASM binaries, toolchains, dependencies, secrets and build outputs are ignored. `npm run wasm` requires the Rust wasm32 target and matching wasm-bindgen tooling (the build script also recognizes the local `.tools` runtime). The dev server uses http://127.0.0.1:5173/.
 
 Specifications under `specs/` remain the product source of truth. `validation/spec-audit.md` is chronological; later entries supersede earlier failed or pending checks. Historical failure logs are retained as evidence, not current acceptance results.
+
+## Road-pair spatial filter checkpoint
+
+An isolated 5,000-segment quota-stepped AABB pair iterator is implemented and independently checked, with checkpoint validation hardened by the primary agent. See [road-pair-broadphase.md](road-pair-broadphase.md). It is not connected to production preflight yet; the live 512-node/edge cap remains. Next: exact narrow-phase parity and coordinated graph-stage integration, including job versions and worker profiling.
