@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-const CHECKPOINT_SCHEMA: u8 = 1;
+const CHECKPOINT_SCHEMA: u8 = 2;
 const PAGE_SIZE: usize = MAX_PROPOSALS_PER_EVALUATION;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

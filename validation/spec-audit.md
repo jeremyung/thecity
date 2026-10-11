@@ -1354,3 +1354,8 @@ A live visual inspection still shows substantial grass between developed parcels
 Post-fix root composed mature hook passes again (`access-planning-mature-root-test.txt`). The indexed split native profile now measures3.66ms mean/6.61ms p95 for the detached geometry cap and5.90ms/8.31ms for the connected cap, all with2,000travelers; those are measurements of the named native fixtures, not guarantees for WASM or the full worker tick. The preferred next design is atomic split after incremental validation and current geometry/scalar checks, subject to WASM verification. Root full native regression is being rerun after the nested cursor fix.
 
 Final root post-fix full native regression: `test result: ok. 295 passed; 0 failed; 39 ignored; 0 measured; 0 filtered out; finished in 90.99s` Evidence: `planning-revision-native-regression.txt`. This includes geometry revision, indexed connectivity, composed-planning focused tests and split state-preservation regressions.
+
+
+## 2026-10-10 — PR #1 feedback
+
+Addressed all nine inline comments; see [review fixes](pr-review-fixes.md) for mapping and evidence. Native 299 tests and web 262 tests pass. Fourth-sample correction changes the fixture to 2,134 descriptors across 45 pages with **zero** accepted proposals; prior one-proposal claims are historical. An independent retained legal candidate preserves successful native/WASM validation coverage. New discovery/descriptor/host/proposal/planning diagnostic checkpoint schemas reject prior versions. Live-growth integration and improved sampling coverage remain pending; the overall goal stays paused for review.

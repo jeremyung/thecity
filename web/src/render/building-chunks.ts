@@ -298,8 +298,9 @@ function disposeOwnedResources(resources:readonly(THREE.Material|THREE.Texture)[
 
 function maxWorldBoundsDiagonalBelow(geometry:THREE.BufferGeometry,matrix:THREE.Matrix4,thresholdSq:number){
   if(geometry.morphAttributes.position?.length)return false;
-  let local=geometry.boundingBox;
-  if(!local){geometry.computeBoundingBox();local=geometry.boundingBox;}
+  // Positions can change without invalidating Three's cached bounding box.
+  geometry.computeBoundingBox();
+  const local=geometry.boundingBox;
   if(!local||local.isEmpty()||!finitePoint(local.min)||!finitePoint(local.max))return false;
   // Transform a copy: EdgesGeometry is still evaluated against the untouched
   // local geometry and its cached bounds remain in local coordinates.

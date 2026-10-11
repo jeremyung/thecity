@@ -9,7 +9,7 @@ use crate::road_faces::RoadFace;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-const CHECKPOINT_SCHEMA: u8 = 1;
+const CHECKPOINT_SCHEMA: u8 = 2;
 const MAX_HOST_INPUTS: usize = 512;
 pub(crate) const MAX_PREPARED_HOSTS: usize = 24;
 const MAX_NODES: usize = access_candidates::MAX_PREPARED_INPUT_NODES;
@@ -187,8 +187,8 @@ impl AccessHostPreparation {
             let edge_dz = bz - az;
             let host_dx = host.bx - host.ax;
             let host_dz = host.bz - host.az;
-            let edge_len = edge_dx.hypot(edge_dz);
-            let host_len = host_dx.hypot(host_dz);
+            let edge_len = crate::access_math::length(edge_dx, edge_dz);
+            let host_len = crate::access_math::length(host_dx, host_dz);
             if !edge_len.is_finite()
                 || !host_len.is_finite()
                 || host_len < 2.0 * HOST_END_CLEARANCE_M
@@ -361,7 +361,7 @@ impl AccessHostPreparation {
         if node.id != host.from && node.id != host.to {
             let dx = host.bx - host.ax;
             let dz = host.bz - host.az;
-            let length = dx.hypot(dz);
+            let length = crate::access_math::length(dx, dz);
             let rx = node.x - host.ax;
             let rz = node.z - host.az;
             let projection = (rx * dx + rz * dz) / length;
@@ -383,7 +383,7 @@ impl AccessHostPreparation {
         let (x, z) = rect.corners()[cp.parcel_corner_index];
         let dx = host.bx - host.ax;
         let dz = host.bz - host.az;
-        let length = dx.hypot(dz);
+        let length = crate::access_math::length(dx, dz);
         let rx = x - host.ax;
         let rz = z - host.az;
         let along = (rx * dx + rz * dz) / length;
@@ -511,7 +511,7 @@ impl AccessHostPreparation {
                 span.start + length * 0.25,
                 span.start + length * 0.5,
                 span.end - length * 0.25,
-                span.end - NODE_CLEARANCE_M,
+                span.end - length / 6.0,
             ];
             for along_m in starts {
                 cp.selected_spans.push(Interval {
@@ -825,7 +825,7 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
 }
 
 fn host_length(host: BoundaryHost) -> f32 {
-    (host.bx - host.ax).hypot(host.bz - host.az)
+    crate::access_math::length(host.bx - host.ax, host.bz - host.az)
 }
 
 #[cfg(test)]
@@ -895,7 +895,7 @@ mod tests {
     ) -> Vec<f32> {
         let dx = host.bx - host.ax;
         let dz = host.bz - host.az;
-        let length = dx.hypot(dz);
+        let length = crate::access_math::length(dx, dz);
         if length < 20.0 {
             return Vec::new();
         }
@@ -959,7 +959,7 @@ mod tests {
                 lo + span * 0.25,
                 lo + span * 0.5,
                 hi - span * 0.25,
-                hi - 1.0,
+                hi - span / 6.0,
             ]
         } else {
             free.sort_by(|left, right| {
@@ -1039,7 +1039,7 @@ mod tests {
                         .unwrap();
                     let (ax, az) = face.polygon[edge_index];
                     let (bx, bz) = face.polygon[(edge_index + 1) % face.polygon.len()];
-                    let edge_len = (bx - ax).hypot(bz - az);
+                    let edge_len = crate::access_math::length(bx - ax, bz - az);
                     expected.push(HostSplitSample {
                         road_id: host.road_id,
                         along_m,

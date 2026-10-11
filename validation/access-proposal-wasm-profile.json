@@ -1,14 +1,14 @@
 {
-  "wasm_sha256": "ef0c6aac8fce6cd25271c3a64723a0a4c30736bcf0d81a8bc28b60a96aa1b278",
+  "wasm_sha256": "ac1fd69dcc22c0cc35aa3317d285ceeb4ca25a8ec40d07ac89b0e5e6731aa328",
   "scope": "Node WASM proposal validation; not browser render timing or live scheduler",
-  "capture_including_city_restore_ms": 165.179708,
+  "capture_including_city_restore_ms": 169.61316699999998,
   "native_proposal_equal": true,
   "runs": [
     {
       "quota": 48,
-      "work": 2011920,
-      "restores": 2083,
-      "max_call_ms": 0.27591599999999517,
+      "work": 1939355,
+      "restores": 2139,
+      "max_call_ms": 0.35670899999999506,
       "proposals": [
         {
           "end_x": 179.3255615234375,
@@ -16,7 +16,7 @@
           "host_id": 3317,
           "host_t": 0.7799999713897705,
           "score": {
-            "fraction_index": 21,
+            "fraction_index": 22,
             "host_id": 3317,
             "length_index": 0,
             "road_length_mm": 60000,
@@ -48,9 +48,9 @@
     },
     {
       "quota": 4096,
-      "work": 2011920,
-      "restores": 2083,
-      "max_call_ms": 0.7289580000000342,
+      "work": 1939355,
+      "restores": 2139,
+      "max_call_ms": 0.1824579999999969,
       "proposals": [
         {
           "end_x": 179.3255615234375,
@@ -58,7 +58,7 @@
           "host_id": 3317,
           "host_t": 0.7799999713897705,
           "score": {
-            "fraction_index": 21,
+            "fraction_index": 22,
             "host_id": 3317,
             "length_index": 0,
             "road_length_mm": 60000,

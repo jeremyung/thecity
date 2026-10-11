@@ -946,22 +946,28 @@ fn corridor_crosses_protected(ax: f32, az: f32, bx: f32, bz: f32) -> bool {
     })
 }
 
+impl WorldState {
+    fn bump_access_geometry_revision(&mut self) {
+        if self.access_geometry_revision_exhausted {
+            return;
+        }
+        match self.access_geometry_revision.checked_add(1) {
+            Some(next) => self.access_geometry_revision = next,
+            None => {
+                self.access_geometry_revision = u64::MAX;
+                self.access_geometry_revision_exhausted = true;
+            }
+        }
+    }
+}
+
 impl Engine {
     /// Advance the persisted generation only after a committed change to the
     /// geometry, connectivity, reservation, or pending-road inputs used by
     /// access proposal validation. Never call from ordinary tick/revision
     /// updates.
     fn mark_access_geometry_changed(&mut self) {
-        if self.state.access_geometry_revision_exhausted {
-            return;
-        }
-        match self.state.access_geometry_revision.checked_add(1) {
-            Some(next) => self.state.access_geometry_revision = next,
-            None => {
-                self.state.access_geometry_revision = u64::MAX;
-                self.state.access_geometry_revision_exhausted = true;
-            }
-        }
+        self.state.bump_access_geometry_revision();
     }
 
     /// `None` is fail-closed: a proposal cannot be admitted against an
@@ -2396,21 +2402,16 @@ impl Engine {
                     } else {
                         "local"
                     };
-                    let mut road_opened = false;
                     let rid = if let Some(road) = self.state.roads.iter_mut().find(|r| {
                         ((r.from == a && r.to == b) || (r.from == b && r.to == a))
                             && r.stage != "open"
                     }) {
                         road.stage = "open".into();
                         road.progress = 1.0;
-                        road_opened = true;
                         road.id
                     } else {
                         self.add_road(a, b, kind, "open", 1.0)
                     };
-                    if road_opened {
-                        self.mark_access_geometry_changed();
-                    }
                     self.recompute_connectivity();
                     self.remember_neighborhood_plan_road(rid, a, b);
                     if let Some(r) = self.state.roads.iter_mut().find(|r| r.id == rid) {
@@ -10649,14 +10650,8 @@ impl Engine {
                 }
             }
         }
-        if migrated_access_geometry && !state.access_geometry_revision_exhausted {
-            match state.access_geometry_revision.checked_add(1) {
-                Some(next) => state.access_geometry_revision = next,
-                None => {
-                    state.access_geometry_revision = u64::MAX;
-                    state.access_geometry_revision_exhausted = true;
-                }
-            }
+        if migrated_access_geometry {
+            state.bump_access_geometry_revision();
         }
         let mut engine = Self {
             state,

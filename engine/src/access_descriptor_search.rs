@@ -13,7 +13,7 @@ use crate::road_faces::RoadFace;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-const SCHEMA: u8 = 2;
+const SCHEMA: u8 = 3;
 const MAX_HOSTS_INPUT: usize = 512;
 const MAX_FACE_EDGES_INPUT: usize = 512;
 const MAX_RECT_CORNERS: usize = 4;

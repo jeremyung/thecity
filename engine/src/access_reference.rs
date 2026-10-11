@@ -44,7 +44,7 @@ pub(crate) fn load() -> DescriptorReference {
     ))
     .unwrap();
     assert_eq!(stored.schema, 1);
-    assert_eq!(stored.descriptor_count, 2069);
+    assert_eq!(stored.descriptor_count, 2134);
     assert_eq!(
         stored.ordered_descriptor_bits.len(),
         stored.descriptor_count

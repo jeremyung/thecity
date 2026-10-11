@@ -253,16 +253,20 @@ fn candidates_for_face_mode(
     } else {
         MAX_PROPOSALS_PER_EVALUATION
     };
+    // Reserve an equal work share for each host so early hosts cannot starve
+    // later boundaries. Unused shares are not charged or redistributed.
     // Count both split-origin prefilter bundles and final endpoint checks.
     // A split bundle includes the bounded node/parcel interval work and its
     // target-heading/ray-prefix scans; counting it before those scans prevents
     // an output-only cap from allowing an unbounded candidate search.
     let mut evaluated = 0usize;
-    'hosts: for edge_index in boundary_edges.into_iter().take(MAX_HOSTS_PER_FACE) {
+    let mut visited_hosts = std::collections::BTreeSet::new();
+    for edge_index in boundary_edges.into_iter().take(MAX_HOSTS_PER_FACE) {
         let edge_id = face.boundary_edge_ids[edge_index];
         let Some(host) = hosts_by_id.get(&edge_id).copied() else {
             continue;
         };
+        if !visited_hosts.insert(host.road_id) { continue; }
         let (edge_ax, edge_az) = face.polygon[edge_index];
         let (edge_bx, edge_bz) = face.polygon[(edge_index + 1) % face.polygon.len()];
         let edge_dx = edge_bx - edge_ax;
@@ -284,15 +288,17 @@ fn candidates_for_face_mode(
         }
         let inward = (-edge_dz / edge_len, edge_dx / edge_len);
         let split_samples = host_split_samples(host, nodes, parcel_footprints);
-        for along in split_samples.into_iter().take(MAX_SPLITS_PER_HOST) {
-            if !exhaustive && evaluated >= MAX_PROPOSALS_PER_EVALUATION {
-                break 'hosts;
+        let mut host_work = 0usize;
+        'splits: for along in split_samples.into_iter().take(MAX_SPLITS_PER_HOST) {
+            if !exhaustive && host_work >= per_host_budget {
+                break 'splits;
             }
-            evaluated += 1;
             let host_candidate_count = per_host.entry(host.road_id).or_default().len();
             if host_candidate_count >= per_host_budget {
                 continue;
             }
+            evaluated += 1;
+            host_work += 1;
             let host_t = along / host_len;
             if !(0.0..1.0).contains(&host_t) {
                 continue;
@@ -340,7 +346,20 @@ fn candidates_for_face_mode(
                     {
                         continue;
                     }
-                    headings.push((direction, target_along + FRONTAGE_TARGET_MARGIN_M));
+                    // A bounded heading slot must reach its target with a clear
+                    // corridor. Exhaustive descriptors defer collision checks
+                    // to their separate quota-stepped proposal validator.
+                    let target_length = target_along + FRONTAGE_TARGET_MARGIN_M;
+                    let safe_length = (ray_length - FACE_EDGE_MARGIN_M).min(MAX_BRANCH_M);
+                    if !exhaustive && (target_length > safe_length
+                        || !parcel_footprints.iter().all(|parcel| {
+                            crate::geometry::rect_segment_distance(parcel, start.0, start.1,
+                                start.0 + direction.0 * target_length,
+                                start.1 + direction.1 * target_length) >= PARCEL_HOST_CLEARANCE_M
+                        })) {
+                        continue;
+                    }
+                    headings.push((direction, target_length));
                     if headings.len() == heading_limit {
                         break;
                     }
@@ -355,8 +374,8 @@ fn candidates_for_face_mode(
             // eight rays per target), rather than a uniform angle sweep.
             if !exhaustive && headings.len() < 2 {
                 for target in unserved_targets.iter().take(MAX_TARGETS_PER_SPLIT) {
-                    if !exhaustive && evaluated >= MAX_PROPOSALS_PER_EVALUATION {
-                        break 'hosts;
+                    if !exhaustive && host_work >= per_host_budget {
+                        break 'splits;
                     }
                     let Some(blocker) = parcel_footprints
                         .iter()
@@ -388,8 +407,8 @@ fn candidates_for_face_mode(
                             PARCEL_HOST_CLEARANCE_M + 0.5,
                         );
                         for direction in directions {
-                            if !exhaustive && evaluated >= MAX_PROPOSALS_PER_EVALUATION {
-                                break 'hosts;
+                            if !exhaustive && host_work >= per_host_budget {
+                                break 'splits;
                             }
                             if dot(inward, direction) <= 0.0
                                 || dot(direction, (target.0 - start.0, target.1 - start.1)) <= 0.0
@@ -494,14 +513,6 @@ fn candidates_for_face_mode(
                     }
                 }
             }
-            if headings.len() < 2 {
-                let ray_length = ray_exit_distance(start, inward, &face.polygon);
-                if ray_length >= MIN_BRANCH_M {
-                    if !headings.iter().any(|(old, _)| dot(*old, inward) > 0.9999) {
-                        headings.push((inward, f32::INFINITY));
-                    }
-                }
-            }
             for (heading, target_distance) in headings {
                 let ray_length = ray_exit_distance(start, heading, &face.polygon);
                 let ray_limit = (ray_length - FACE_EDGE_MARGIN_M).min(MAX_BRANCH_M);
@@ -529,13 +540,14 @@ fn candidates_for_face_mode(
                 lengths.sort_by(f32::total_cmp);
                 lengths.dedup_by(|left, right| (*left - *right).abs() < 1.0e-4);
                 for length in lengths {
-                    if !exhaustive && evaluated >= MAX_PROPOSALS_PER_EVALUATION {
-                        break 'hosts;
+                    if !exhaustive && host_work >= per_host_budget {
+                        break 'splits;
                     }
                     if per_host.get(&host.road_id).map_or(0, Vec::len) >= per_host_budget {
                         break;
                     }
                     evaluated += 1;
+                    host_work += 1;
                     let end = (start.0 + heading.0 * length, start.1 + heading.1 * length);
                     if segment_inside_polygon(start, end, &face.polygon)
                         && (exhaustive
@@ -694,7 +706,7 @@ pub(crate) fn host_split_samples(
             start + span * 0.25,
             start + span * 0.5,
             end - span * 0.25,
-            end - SPLIT_NODE_CLEARANCE_M,
+            end - span / 6.0,
         ]);
     } else {
         free.sort_by(|left, right| {
@@ -927,8 +939,37 @@ mod tests {
                 .map(|candidate| candidate.host_id)
                 .collect::<std::collections::BTreeSet<_>>()
                 .len()
-                > 1
+                == 4
         );
+    }
+
+    #[test]
+    fn fourth_split_stays_inside_free_interval_away_from_parcel_end() {
+        let host = BoundaryHost { road_id: 1, from: 1, to: 2, ax: 0.0, az: 0.0, bx: 100.0, bz: 0.0 };
+        let parcel = crate::geometry::OrientedRect { x: 85.0, z: 0.0, width: 10.0, depth: 10.0, rotation: 0.0 };
+        let samples = host_split_samples(host, &[], &[parcel]);
+        // Parcel starts at 80m; its projection margin ends the free span at 78m.
+        assert_eq!(samples[3], 78.0 - (78.0 - 10.0) / 6.0);
+        assert!(crate::geometry::rect_segment_distance(&parcel, samples[3], 0.0, samples[3], 24.0) >= PARCEL_HOST_CLEARANCE_M);
+    }
+
+    #[test]
+    fn unreachable_targets_do_not_change_bounded_candidate_slots() {
+        let face = RoadFace { identity: vec![1,2,3,4], vertex_ids: vec![1,2,3,4], polygon: vec![(0.0,0.0),(100.0,0.0),(100.0,300.0),(0.0,300.0)], area: 30_000.0, boundary_edge_ids: vec![1,2,3,4], contains_proposed_edge: false };
+        let hosts = [BoundaryHost { road_id:1, from:1, to:2, ax:0.0, az:0.0, bx:100.0, bz:0.0 }];
+        let baseline = candidates_for_face_with_work(&face,&hosts,&[],&[],&[]);
+        let distant = candidates_for_face_with_work(&face,&hosts,&[],&[],&[(50.0,200.0)]);
+        assert_eq!(baseline,distant);
+    }
+
+    #[test]
+    fn blocked_target_slots_leave_room_for_clear_corner_tangents() {
+        let face = RoadFace { identity: vec![1,2,3,4], vertex_ids: vec![1,2,3,4], polygon: vec![(0.0,0.0),(100.0,0.0),(100.0,100.0),(0.0,100.0)], area: 10_000.0, boundary_edge_ids: vec![1,2,3,4], contains_proposed_edge: false };
+        let hosts = [BoundaryHost { road_id:1, from:1, to:2, ax:0.0, az:0.0, bx:100.0, bz:0.0 }];
+        let blocker = crate::geometry::OrientedRect { x:30.0,z:18.0,width:18.0,depth:8.0,rotation:0.0 };
+        let scan = candidates_for_face_with_work(&face,&hosts,&[],&[blocker],&[(30.0,40.0)]);
+        assert!(scan.candidates.iter().any(|c| (c.host_t-0.3).abs()<1e-6 && (c.end_x-30.0).abs()>1.0), "blocked split must retain a tangent: {:?}",scan);
+        assert!(scan.work_units<=MAX_PROPOSALS_PER_EVALUATION);
     }
 
     #[test]

@@ -21,14 +21,14 @@ function legacyOutlines(group:THREE.Group){
   return new Float32Array(values);
 }
 
-function optimizedOutlines(group:THREE.Group){
+function optimizedOutlines(group:THREE.Group, refreshBounds=true){
   const ink=new THREE.LineBasicNodeMaterial(),chunks=new BuildingChunks(m=>m,()=>{},ink);
   const source=legacyOutlines(group);
   let positionReads=0;
   const restore:Array<()=>void>=[];
   group.traverse(object=>{
     if(!(object instanceof THREE.Mesh))return;
-    object.geometry.computeBoundingBox();
+    if(refreshBounds)object.geometry.computeBoundingBox();
     const geometry=object.geometry,target=geometry as any,original=geometry.getAttribute.bind(geometry);
     target.getAttribute=(name:string)=>{if(name==='position')positionReads++;return original(name);};
     restore.push(()=>{target.getAttribute=original;});
@@ -66,6 +66,19 @@ describe('conservative contour outline rejection',()=>{
     expect(Array.from(actual)).toEqual(Array.from(expected));
     expect(positionReadsAtSet).toBeGreaterThan(0); // Float32 endpoint rounding makes the near-threshold reject uncertain.
     dispose(translated.group,translated.geometry,translated.material);
+  });
+
+  it('uses rewritten positions even when a shared geometry retains stale small bounds',()=>{
+    const fixture=slenderBox(1);
+    fixture.geometry.computeBoundingBox();
+    const positions=fixture.geometry.getAttribute('position');
+    for(let i=0;i<positions.count;i++)positions.setX(i,positions.getX(i)*8);
+    positions.needsUpdate=true;
+    expect(fixture.geometry.boundingBox!.max.x).toBe(.5);
+    const {expected,actual}=optimizedOutlines(fixture.group,false);
+    expect(expected.length).toBeGreaterThan(0);
+    expect(Array.from(actual)).toEqual(Array.from(expected));
+    dispose(fixture.group,fixture.geometry,fixture.material);
   });
 
   it('matches the frozen edge output through nonuniform scale and nested rotations for tiny and retained meshes',()=>{

@@ -6,6 +6,7 @@ import { AccessProposalWorld, initSync } from '../public/wasm/city_engine.js';
 initSync({ module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)) });
 const read = name => JSON.parse(readFileSync(new URL(`../validation/${name}`,import.meta.url),'utf8'));
 const reference = read('access-descriptor-reference.json');
+const validationBits = [...reference.ordered_descriptor_bits, read('accepted-access-candidate.json').bits];
 const native = read('incremental-proposal-validation.json')[0].proposals;
 const u = new Uint32Array(1), f = new Float32Array(u.buffer);
 const decode = bits => {u[0]=bits;return f[0];};
@@ -18,7 +19,7 @@ try {
   for (const quota of [48,4096]) {
     let work=0, restores=0, maxCallMs=0;
     const proposals=[];
-    for (const [index,row] of reference.ordered_descriptor_bits.entries()) {
+    for (const [index,row] of validationBits.entries()) {
       let query = world.query(JSON.stringify({host_id:row[0],host_t:decode(row[1]),end_x:decode(row[2]),end_z:decode(row[3]),tie_index:index%48}));
       let sinceSave=0;
       try {

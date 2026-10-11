@@ -16,7 +16,7 @@ use crate::interior_access::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-const CHECKPOINT_SCHEMA: u8 = 1;
+const CHECKPOINT_SCHEMA: u8 = 2;
 const MAX_HOSTS: usize = crate::MAX_SEGMENTS;
 const MAX_ROADS: usize = crate::MAX_SEGMENTS;
 const MAX_PROJECT_RECORDS: usize = crate::MAX_PROJECTS + crate::COMPLETED_PROJECT_HISTORY;
@@ -172,7 +172,6 @@ enum Phase {
     SplitRoads,
     EndpointNodes,
     OpenRoads,
-    Projects,
     BuildIntervals,
     BuildLot,
     CheckLot,
@@ -588,7 +587,7 @@ impl ProposalValidator {
                 }
                 Phase::OpenRoads => {
                     if self.state.cursor == self.input.roads.len() {
-                        self.state.phase = Phase::Projects;
+                        self.state.phase = Phase::BuildIntervals;
                         self.state.cursor = 0;
                         continue;
                     }
@@ -601,41 +600,6 @@ impl ProposalValidator {
                     let Some(segment) = road.segment else {
                         self.reject(RejectReason::BranchRoadConflict);
                         continue;
-                    };
-                    let branch = self.state.branch.unwrap();
-                    if geometry::segments_distance_coords(
-                        branch.start_x,
-                        branch.start_z,
-                        branch.end_x,
-                        branch.end_z,
-                        segment.ax,
-                        segment.az,
-                        segment.bx,
-                        segment.bz,
-                    ) < 8.0
-                    {
-                        self.reject(RejectReason::BranchRoadConflict);
-                    }
-                }
-                Phase::Projects => {
-                    if self.state.cursor == self.input.projects.len() {
-                        self.state.phase = Phase::BuildIntervals;
-                        self.state.cursor = 0;
-                        continue;
-                    }
-                    work += 1;
-                    let project = self.input.projects[self.state.cursor];
-                    self.state.cursor += 1;
-                    if !project.active_road {
-                        continue;
-                    }
-                    let segment = match project.endpoints {
-                        ProjectEndpoints::NoIds => continue,
-                        ProjectEndpoints::MissingNode => {
-                            self.reject(RejectReason::BranchRoadConflict);
-                            continue;
-                        }
-                        ProjectEndpoints::Segment(segment) => segment,
                     };
                     let branch = self.state.branch.unwrap();
                     if geometry::segments_distance_coords(
@@ -1032,7 +996,6 @@ fn validate_checkpoint(
             | Phase::SplitRoads
             | Phase::EndpointNodes
             | Phase::OpenRoads
-            | Phase::Projects
             | Phase::BuildIntervals
             | Phase::BuildLot
             | Phase::CheckLot
@@ -1050,7 +1013,6 @@ fn validate_checkpoint(
             | Phase::SplitRoads
             | Phase::EndpointNodes
             | Phase::OpenRoads
-            | Phase::Projects
             | Phase::BuildIntervals
             | Phase::BuildLot
             | Phase::CheckLot
@@ -1082,7 +1044,7 @@ fn validate_checkpoint(
         | Phase::LotCapacity
         | Phase::SumArea
         | Phase::Done => 0,
-        Phase::ActiveProjects | Phase::Projects => input.projects.len(),
+        Phase::ActiveProjects => input.projects.len(),
         Phase::FindHost => input.hosts.len(),
         Phase::River => input.viability.input().river_segments.len(),
         Phase::ProtectedSamples => 17,

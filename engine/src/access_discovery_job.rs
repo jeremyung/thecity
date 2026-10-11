@@ -22,7 +22,7 @@ use crate::road_faces::{RoadFace, RoadFaceEdge, RoadFaceError, RoadFaceNode};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-const CHECKPOINT_SCHEMA: u8 = 1;
+const CHECKPOINT_SCHEMA: u8 = 2;
 const MAX_GRAPH_NODES: usize = 512;
 const MAX_GRAPH_EDGES: usize = 512;
 const MAX_CANDIDATE_NODES: usize = MAX_PREPARED_INPUT_NODES;
@@ -221,6 +221,11 @@ impl DiscoveryJob {
         {
             return Err(DiscoveryError::InputTooLarge);
         }
+        if !valid_graph(&input.graph_nodes, &input.graph_edges)
+            || !valid_retained_edges(&input.graph_edges, &input.all_nodes)
+        {
+            return Err(DiscoveryError::InvalidInput);
+        }
         let viability = FrozenViabilityContext::new(input.viability)?;
         let edge_capacity = input.graph_edges.len();
         Ok(Self {
@@ -257,6 +262,7 @@ impl DiscoveryJob {
                     || retained_edges.len() != cursor
                     || retained_edges.as_slice() != &graph_edges[..cursor]
                     || !valid_graph(&graph_nodes, &graph_edges)
+                    || !valid_retained_edges(&graph_edges, &checkpoint.all_nodes)
                 {
                     return Err(DiscoveryError::InvalidCheckpoint);
                 }
@@ -1405,6 +1411,26 @@ mod tests {
             DiscoveryJob::new(invalid).err(),
             Some(DiscoveryError::InvalidInput)
         );
+    }
+
+    #[test]
+    fn invalid_graphs_reject_at_construction_and_valid_copy_checkpoints_resume() {
+        for kind in 0..4 {
+            let mut invalid = input(true);
+            match kind {
+                0 => invalid.graph_edges[0].to = u32::MAX,
+                1 => invalid.graph_edges.push(invalid.graph_edges[0]),
+                2 => invalid.graph_nodes.push(invalid.graph_nodes[0]),
+                _ => { invalid.all_nodes.pop(); },
+            }
+            assert_eq!(DiscoveryJob::new(invalid).err(), Some(DiscoveryError::InvalidInput));
+        }
+        let mut job = DiscoveryJob::new(input(true)).unwrap();
+        for _ in 0..4 {
+            let bytes = serde_json::to_vec(&job.checkpoint()).unwrap();
+            job = DiscoveryJob::restore(serde_json::from_slice(&bytes).unwrap()).unwrap();
+            job.advance(1);
+        }
     }
 
     #[test]

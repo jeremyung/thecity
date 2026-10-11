@@ -1,67 +1,95 @@
 {
   "schema": 1,
-  "purpose": "Frozen mature descriptor fixture after algebraic heading migration; native/WASM parity verified before adoption",
-  "command": "npm run test:engine -- --release access_reference::",
-  "result": "2069 descriptors; exact fresh native/WASM parity and WASM uninterrupted/three checkpointed quota runs",
-  "regeneration": "EXPORT_ACCESS_REFERENCE=1 npm run test:engine -- --release exhaustive_prepared_pages_discover_mature_face_access_candidate -- --ignored --nocapture",
+  "purpose": "PR #1 fourth-sample correction; input JSON preserved, exact native/WASM descriptor parity verified",
+  "result": "2134 descriptors, 45 pages, no accepted generated proposal; independent legal candidate validates with two lots",
+  "migration": "validation/pr-review-descriptor-migration.json",
   "files": {
     "validation/access-descriptor-reference.json": {
-      "sha256": "908efb252e02c34e3c1de9f291e98cf827bce3264a810b531367e305902593bc",
-      "bytes": 357262
+      "sha256": "9cea2591f4ce3762c7faaee15c67cb9543a35331bc7f58dae6630f79c90cd811",
+      "bytes": 362173
+    },
+    "validation/face-target-reference.json": {
+      "sha256": "b150c51c45686f91d062416ca4212aeb2276950f84c37198fed1e1c6d8804087",
+      "bytes": 224129
     },
     "validation/early-reservation-wasm-87231-save.json": {
       "sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
       "bytes": 2703924
     },
     "engine/src/access_candidates.rs": {
-      "sha256": "2c9de534a82e3036656dfa9f1b6fd4ddd6934a440a04ca62355123a9195f2caf",
-      "bytes": 49227
+      "sha256": "6194ad57d2db7359bc821cacb69d0a31065e7b7515291311313b337c8cb0a22d",
+      "bytes": 52135
     },
-    "engine/src/geometry.rs": {
-      "sha256": "8630204381f80beff89485f932e693c431d9c76c218dd0b1af0f10bc4ca86bbd",
-      "bytes": 23689
-    },
-    "engine/src/face_access_exact_tests.rs": {
-      "sha256": "ca4fcdf12f172eb2ce828e4dac18c1f192d9bf29251141650b6a0bc549f5dff9",
-      "bytes": 135559
-    },
-    "engine/src/access_reference.rs": {
-      "sha256": "bef726c9c88f3bbcb2c0f9bfe6ca2419a67f267901175de71f5f15052da95927",
-      "bytes": 4146
+    "engine/src/access_search.rs": {
+      "sha256": "cbbd08ec466b3d369a9053fd9bc6df19f2b234415cff9c233152a11816baaf5c",
+      "bytes": 43110
     }
   },
-  "prior_trig_provenance": {
+  "prior_provenance": {
     "schema": 1,
-    "purpose": "Frozen mature descriptor fixture verified by reloading serialized inputs and checking all ordered geometry bits against offline preparation.",
+    "purpose": "Frozen mature descriptor fixture after algebraic heading migration; native/WASM parity verified before adoption",
     "command": "npm run test:engine -- --release access_reference::",
-    "result": "1 passed; all 2069 descriptors match",
+    "result": "2069 descriptors; exact fresh native/WASM parity and WASM uninterrupted/three checkpointed quota runs",
     "regeneration": "EXPORT_ACCESS_REFERENCE=1 npm run test:engine -- --release exhaustive_prepared_pages_discover_mature_face_access_candidate -- --ignored --nocapture",
     "files": {
       "validation/access-descriptor-reference.json": {
-        "sha256": "fea950567a294600d24aedb36c9c044d428ec3c549d906cebd07c8ab95329f63",
-        "bytes": 357261
+        "sha256": "908efb252e02c34e3c1de9f291e98cf827bce3264a810b531367e305902593bc",
+        "bytes": 357262
       },
       "validation/early-reservation-wasm-87231-save.json": {
         "sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
         "bytes": 2703924
       },
       "engine/src/access_candidates.rs": {
-        "sha256": "f65f738e73b49425d382c2bbd4abbaacb1be09add571a0fb23a25c23f73f96e5",
-        "bytes": 45196
+        "sha256": "2c9de534a82e3036656dfa9f1b6fd4ddd6934a440a04ca62355123a9195f2caf",
+        "bytes": 49227
       },
       "engine/src/geometry.rs": {
         "sha256": "8630204381f80beff89485f932e693c431d9c76c218dd0b1af0f10bc4ca86bbd",
         "bytes": 23689
       },
       "engine/src/face_access_exact_tests.rs": {
-        "sha256": "4ac67707eba7d4ec3c5f77168242ef10d242d360589375faaa4492487c941e4a",
-        "bytes": 70154
+        "sha256": "ca4fcdf12f172eb2ce828e4dac18c1f192d9bf29251141650b6a0bc549f5dff9",
+        "bytes": 135559
       },
       "engine/src/access_reference.rs": {
-        "sha256": "ba0efd35ac77827abb552d185dc4457def12b1234d5c57e5a03b4f4352de0ad6",
-        "bytes": 2719
+        "sha256": "bef726c9c88f3bbcb2c0f9bfe6ca2419a67f267901175de71f5f15052da95927",
+        "bytes": 4146
       }
-    }
-  },
-  "migration": "validation/access-vector-math-migration.json"
+    },
+    "prior_trig_provenance": {
+      "schema": 1,
+      "purpose": "Frozen mature descriptor fixture verified by reloading serialized inputs and checking all ordered geometry bits against offline preparation.",
+      "command": "npm run test:engine -- --release access_reference::",
+      "result": "1 passed; all 2069 descriptors match",
+      "regeneration": "EXPORT_ACCESS_REFERENCE=1 npm run test:engine -- --release exhaustive_prepared_pages_discover_mature_face_access_candidate -- --ignored --nocapture",
+      "files": {
+        "validation/access-descriptor-reference.json": {
+          "sha256": "fea950567a294600d24aedb36c9c044d428ec3c549d906cebd07c8ab95329f63",
+          "bytes": 357261
+        },
+        "validation/early-reservation-wasm-87231-save.json": {
+          "sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+          "bytes": 2703924
+        },
+        "engine/src/access_candidates.rs": {
+          "sha256": "f65f738e73b49425d382c2bbd4abbaacb1be09add571a0fb23a25c23f73f96e5",
+          "bytes": 45196
+        },
+        "engine/src/geometry.rs": {
+          "sha256": "8630204381f80beff89485f932e693c431d9c76c218dd0b1af0f10bc4ca86bbd",
+          "bytes": 23689
+        },
+        "engine/src/face_access_exact_tests.rs": {
+          "sha256": "4ac67707eba7d4ec3c5f77168242ef10d242d360589375faaa4492487c941e4a",
+          "bytes": 70154
+        },
+        "engine/src/access_reference.rs": {
+          "sha256": "ba0efd35ac77827abb552d185dc4457def12b1234d5c57e5a03b4f4352de0ad6",
+          "bytes": 2719
+        }
+      }
+    },
+    "migration": "validation/access-vector-math-migration.json"
+  }
 }

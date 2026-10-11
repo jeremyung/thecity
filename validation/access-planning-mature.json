@@ -1,16 +1,16 @@
 [
   {
-    "accepted": 1,
-    "pages": 44,
+    "accepted": 0,
+    "pages": 45,
     "quota": 48,
-    "restores": 106,
-    "work": 8246840
+    "restores": 108,
+    "work": 8239083
   },
   {
-    "accepted": 1,
-    "pages": 44,
+    "accepted": 0,
+    "pages": 45,
     "quota": 4096,
-    "restores": 105,
-    "work": 8246840
+    "restores": 107,
+    "work": 8239083
   }
 ]

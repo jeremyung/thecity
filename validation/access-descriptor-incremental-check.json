@@ -2,45 +2,45 @@
   "reference": "validation/access-descriptor-reference.json",
   "runs": [
     {
-      "advance_calls": 2422472,
-      "descriptor_count": 2069,
-      "max_checkpoint_json_bytes": 451843,
+      "advance_calls": 2495137,
+      "descriptor_count": 2134,
+      "max_checkpoint_json_bytes": 462349,
       "quotas": [
         1
       ],
-      "resume_count": 149,
-      "synchronous_construction_us": 364,
-      "total_including_serialization_us": 155963,
-      "work_units": 2422472
+      "resume_count": 154,
+      "synchronous_construction_us": 390,
+      "total_including_serialization_us": 399404,
+      "work_units": 2495137
     },
     {
-      "advance_calls": 346068,
-      "descriptor_count": 2069,
-      "max_checkpoint_json_bytes": 451843,
+      "advance_calls": 356449,
+      "descriptor_count": 2134,
+      "max_checkpoint_json_bytes": 462349,
       "quotas": [
         7
       ],
-      "resume_count": 149,
-      "synchronous_construction_us": 75,
-      "total_including_serialization_us": 141919,
-      "work_units": 2422472
+      "resume_count": 154,
+      "synchronous_construction_us": 73,
+      "total_including_serialization_us": 380178,
+      "work_units": 2495137
     },
     {
-      "advance_calls": 50469,
-      "descriptor_count": 2069,
-      "max_checkpoint_json_bytes": 451843,
+      "advance_calls": 51983,
+      "descriptor_count": 2134,
+      "max_checkpoint_json_bytes": 462349,
       "quotas": [
         48
       ],
-      "resume_count": 149,
-      "synchronous_construction_us": 75,
-      "total_including_serialization_us": 141279,
-      "work_units": 2422472
+      "resume_count": 153,
+      "synchronous_construction_us": 76,
+      "total_including_serialization_us": 376850,
+      "work_units": 2495137
     },
     {
-      "advance_calls": 63749,
-      "descriptor_count": 2069,
-      "max_checkpoint_json_bytes": 451843,
+      "advance_calls": 65662,
+      "descriptor_count": 2134,
+      "max_checkpoint_json_bytes": 462349,
       "quotas": [
         3,
         127,
@@ -48,10 +48,10 @@
         48,
         1
       ],
-      "resume_count": 149,
-      "synchronous_construction_us": 87,
-      "total_including_serialization_us": 137807,
-      "work_units": 2422472
+      "resume_count": 153,
+      "synchronous_construction_us": 73,
+      "total_including_serialization_us": 377375,
+      "work_units": 2495137
     }
   ],
   "scope": "native descriptor preparation parity; not production scheduling or browser timing"
