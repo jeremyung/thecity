@@ -31,6 +31,24 @@ const PROTECTED_LAND: OrientedRect = OrientedRect {
     depth: 80.0,
     rotation: 0.0,
 };
+const DESTINATION_GRID_STEP_M: f32 = 5.0;
+const DESTINATION_MAX_GRID_CENTERS: usize = 10_000;
+const DESTINATION_MAX_LAYOUTS: usize = DESTINATION_MAX_GRID_CENTERS * 8 * 2;
+const DESTINATION_MAX_HOST_STARTS: usize = 10_000;
+const DESTINATION_MAX_CONNECTIONS: usize = 20_000;
+const DESTINATION_MAX_QUERY_WORK: usize = 100_000;
+const DESTINATION_MAX_TOTAL_QUERY_WORK: usize = 100_000_000;
+const DESTINATION_LANE_LENGTHS: [f32; 2] = [28.0, 40.0];
+const DESTINATION_ORIENTATIONS: [f32; 8] = [
+    0.0,
+    std::f32::consts::FRAC_PI_4,
+    std::f32::consts::FRAC_PI_2,
+    3.0 * std::f32::consts::FRAC_PI_4,
+    std::f32::consts::PI,
+    5.0 * std::f32::consts::FRAC_PI_4,
+    3.0 * std::f32::consts::FRAC_PI_2,
+    7.0 * std::f32::consts::FRAC_PI_4,
+];
 
 #[derive(Clone, Copy)]
 struct BendPath {
@@ -47,6 +65,312 @@ struct Checks {
     candidates: usize,
     tested_lots: usize,
     accepted: usize,
+}
+
+#[derive(Clone, Copy)]
+struct HostStart {
+    host: ProposalHost,
+    point: (f32, f32),
+    host_t: f32,
+}
+
+#[test]
+#[ignore = "bounded destination-first lot/access witness search; writes evidence to /tmp"]
+fn diagnose_destination_first_access_witness() {
+    let save_path = std::env::var("DENSITY_AUDIT_SAVE")
+        .expect("set DENSITY_AUDIT_SAVE to the save file to audit");
+    let report_path = std::env::var("DESTINATION_AUDIT_REPORT")
+        .unwrap_or_else(|_| "/tmp/thecity-destination-first.json".into());
+    let save = std::fs::read_to_string(&save_path).expect("read diagnostic save");
+    let engine = Engine::restore_json(&save).expect("restore diagnostic save");
+    let original_save = engine.save_json();
+    let proposal = access_proposal_capture::capture(&engine).expect("capture immutable proposal");
+    let discovery_input = access_capture::capture(&engine).expect("capture face graph");
+    let mut excluded = engine.state.exhausted_access_faces.clone();
+    excluded.retain(|identity| identity.as_slice() != TARGET);
+    let mut discovery = DiscoveryJob::new_excluding(discovery_input.clone(), excluded)
+        .expect("start target face discovery");
+    let mut discovery_work = 0usize;
+    while discovery.descriptors().is_none() {
+        let step = discovery.advance(4096);
+        discovery_work += step.work_used;
+        assert!(
+            discovery_work <= MAX_DISCOVERY_WORK,
+            "discovery work cap exceeded"
+        );
+        assert!(step.work_used > 0 || step.done, "discovery stalled");
+    }
+    assert_eq!(discovery.selected_face_identity(), Some(TARGET));
+    let candidates = discovery.descriptors().unwrap().unwrap();
+    let mut trace = RoadFaceTrace::new(
+        discovery_input.graph_nodes.clone(),
+        discovery_input.graph_edges.clone(),
+        None,
+    )
+    .expect("trace graph");
+    let mut trace_work = 0usize;
+    while trace.faces().is_none() {
+        let step = trace.advance(4096);
+        trace_work += step.work_used;
+        assert!(trace_work <= MAX_TRACE_WORK, "face trace work cap exceeded");
+        assert!(step.work_used > 0 || step.done, "face tracing stalled");
+    }
+    let face = trace
+        .faces()
+        .unwrap()
+        .as_ref()
+        .unwrap()
+        .iter()
+        .find(|face| face.identity.as_slice() == TARGET)
+        .expect("target face polygon");
+    let ctx = FrozenViabilityContext::new(proposal.viability.clone()).expect("frozen context");
+    let mut host_starts = Vec::new();
+    let mut seen_starts = std::collections::BTreeSet::new();
+    let mut host_start_truncated = false;
+    for candidate in candidates {
+        let Some(host) = proposal
+            .hosts
+            .iter()
+            .find(|host| host.id == candidate.host_id)
+            .copied()
+        else {
+            continue;
+        };
+        let key = (candidate.host_id, candidate.host_t.to_bits());
+        if !seen_starts.insert(key) {
+            continue;
+        }
+        if host_starts.len() >= DESTINATION_MAX_HOST_STARTS {
+            host_start_truncated = true;
+            break;
+        }
+        host_starts.push(HostStart {
+            host,
+            point: (
+                host.segment.ax + (host.segment.bx - host.segment.ax) * candidate.host_t,
+                host.segment.az + (host.segment.bz - host.segment.az) * candidate.host_t,
+            ),
+            host_t: candidate.host_t,
+        });
+    }
+    let bounds = face.polygon.iter().fold(
+        (
+            f32::INFINITY,
+            f32::INFINITY,
+            f32::NEG_INFINITY,
+            f32::NEG_INFINITY,
+        ),
+        |b, p| (b.0.min(p.0), b.1.min(p.1), b.2.max(p.0), b.3.max(p.1)),
+    );
+    let mut centers = Vec::new();
+    let mut grid_centers_examined = 0usize;
+    let mut z = (bounds.1 / DESTINATION_GRID_STEP_M).floor() * DESTINATION_GRID_STEP_M
+        + DESTINATION_GRID_STEP_M * 0.5;
+    'grid: while z <= bounds.3 {
+        let mut x = (bounds.0 / DESTINATION_GRID_STEP_M).floor() * DESTINATION_GRID_STEP_M
+            + DESTINATION_GRID_STEP_M * 0.5;
+        while x <= bounds.2 {
+            if grid_centers_examined >= DESTINATION_MAX_GRID_CENTERS {
+                break 'grid;
+            }
+            grid_centers_examined += 1;
+            if point_in_polygon((x, z), &face.polygon) {
+                centers.push((x, z));
+            }
+            x += DESTINATION_GRID_STEP_M;
+        }
+        z += DESTINATION_GRID_STEP_M;
+    }
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    let mut query_work = QueryWorkBudget {
+        used: 0,
+        max_total: DESTINATION_MAX_TOTAL_QUERY_WORK,
+        max_query: DESTINATION_MAX_QUERY_WORK,
+    };
+    let mut query_work_truncated = false;
+    let mut layout_count = 0usize;
+    let mut viable_layout_count = 0usize;
+    let mut lot_layout_histogram = std::collections::BTreeMap::<String, usize>::new();
+    let mut lot_layout_samples = Vec::new();
+    let mut connection_count = 0usize;
+    let mut connection_truncated = false;
+    let mut witness = None;
+    let mut samples = Vec::new();
+    'layouts: for center in &centers {
+        for orientation in DESTINATION_ORIENTATIONS {
+            for lane_length in DESTINATION_LANE_LENGTHS {
+                if layout_count >= DESTINATION_MAX_LAYOUTS {
+                    break 'layouts;
+                }
+                layout_count += 1;
+                let tangent = (orientation.cos(), orientation.sin());
+                let lane = seg(
+                    *center,
+                    (
+                        center.0 + tangent.0 * lane_length,
+                        center.1 + tangent.1 * lane_length,
+                    ),
+                );
+                if !segment_inside_face(lane, face) {
+                    bump(&mut counts, "lane_outside_face");
+                    continue;
+                }
+                // Duplicate the lane only to reuse world-road checks; the
+                // real connected pair is checked again after lot viability.
+                if road_conflict(lane, lane, u32::MAX, &proposal).is_some() {
+                    bump(&mut counts, "lane_road_clearance");
+                    continue;
+                }
+                if let Some(reason) = segment_land_rejection(lane, &proposal) {
+                    bump(&mut counts, reason);
+                    continue;
+                }
+                let generated_lots = final_segment_lots(lane, 11.25, false);
+                let generated_count = generated_lots.len();
+                let lots = generated_lots
+                    .into_iter()
+                    .filter(|lot| rect_inside_face(lot, face))
+                    .collect::<Vec<_>>();
+                let contained_count = lots.len();
+                let Some(valid_lots) = validate_lots_bounded(
+                    &lots,
+                    [lane, lane],
+                    ctx.clone(),
+                    &mut Checks::default(),
+                    &mut query_work,
+                ) else {
+                    query_work_truncated = true;
+                    break 'layouts;
+                };
+                if valid_lots.len() < 2 {
+                    bump(&mut counts, "fewer_than_two_lot_first_valid_lots");
+                    let key = format!(
+                        "generated={generated_count},contained={contained_count},valid={}",
+                        valid_lots.len()
+                    );
+                    bump(&mut lot_layout_histogram, &key);
+                    if lot_layout_samples.len() < 4 {
+                        lot_layout_samples.push(json!({
+                            "lane": lane,
+                            "generated_lots": generated_count,
+                            "face_contained_lots": contained_count,
+                            "world_valid_lots": valid_lots.len(),
+                        }));
+                    }
+                    continue;
+                }
+                viable_layout_count += 1;
+                for host_start in &host_starts {
+                    if connection_count >= DESTINATION_MAX_CONNECTIONS {
+                        connection_truncated = true;
+                        break 'layouts;
+                    }
+                    connection_count += 1;
+                    let path = BendPath {
+                        start: host_start.point,
+                        bend: (lane.ax, lane.az),
+                        end: (lane.bx, lane.bz),
+                        host_id: host_start.host.id,
+                    };
+                    let first = seg(path.start, path.bend);
+                    let first_len = (first.bx - first.ax).hypot(first.bz - first.az);
+                    if !(10.0..=DIAGNOSTIC_MAX_LEG_M).contains(&first_len) {
+                        bump(&mut counts, "connection_leg_length");
+                        continue;
+                    }
+                    if !segment_inside_face(first, face) {
+                        bump(&mut counts, "connection_outside_face");
+                        continue;
+                    }
+                    if let Some(reason) = road_conflict(first, lane, path.host_id, &proposal) {
+                        bump(&mut counts, reason);
+                        continue;
+                    }
+                    if let Some(reason) = segment_land_rejection(first, &proposal) {
+                        bump(&mut counts, reason);
+                        continue;
+                    }
+                    if !valid_split_and_end(path, host_start.host, &proposal) {
+                        bump(&mut counts, "split_or_endpoint_clearance");
+                        continue;
+                    }
+                    let Some(checked) = validate_lots_bounded(
+                        &valid_lots,
+                        [first, lane],
+                        ctx.clone(),
+                        &mut Checks::default(),
+                        &mut query_work,
+                    ) else {
+                        query_work_truncated = true;
+                        break 'layouts;
+                    };
+                    if checked.len() >= 2 {
+                        witness = Some(
+                            json!({"host_id":path.host_id,"host_t":host_start.host_t,"host_start":path.start,"bend":path.bend,"end":path.end,"segments":[first,lane],"chosen_lots":checked}),
+                        );
+                        bump(&mut counts, "witness");
+                        break 'layouts;
+                    }
+                    bump(&mut counts, "lots_fail_connected_route");
+                    if samples.len() < 8 {
+                        samples.push(json!({"host_id":path.host_id,"host_t":host_start.host_t,"bend":path.bend,"reason":"lots_fail_connected_route","valid_lots":checked.len()}));
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(
+        engine.save_json(),
+        original_save,
+        "diagnostic mutated engine save"
+    );
+    let first_x = (bounds.0 / DESTINATION_GRID_STEP_M).floor() * DESTINATION_GRID_STEP_M
+        + DESTINATION_GRID_STEP_M * 0.5;
+    let first_z = (bounds.1 / DESTINATION_GRID_STEP_M).floor() * DESTINATION_GRID_STEP_M
+        + DESTINATION_GRID_STEP_M * 0.5;
+    let x_centers = if first_x <= bounds.2 {
+        ((bounds.2 - first_x) / DESTINATION_GRID_STEP_M).floor() as usize + 1
+    } else {
+        0
+    };
+    let z_centers = if first_z <= bounds.3 {
+        ((bounds.3 - first_z) / DESTINATION_GRID_STEP_M).floor() as usize + 1
+    } else {
+        0
+    };
+    let total_grid_centers = x_centers.saturating_mul(z_centers);
+    let report = json!({
+        "mode": "offline_destination_first_geometry_witness_only",
+        "production_valid": false,
+        "tick": engine.state.tick,
+        "save_path": save_path,
+        "target_face_identity": TARGET,
+        "target_face_polygon_xz": face.polygon,
+        "descriptor_count_available": discovery.descriptors().unwrap().unwrap().len(),
+        "work": json!({"discovery": discovery_work, "face_trace": trace_work}),
+        "host_starts": json!({"unique_count": host_starts.len(), "cap": DESTINATION_MAX_HOST_STARTS, "truncated": host_start_truncated}),
+        "grid": json!({"step_m": DESTINATION_GRID_STEP_M, "inside_face": centers.len(), "examined": grid_centers_examined, "cap": DESTINATION_MAX_GRID_CENTERS, "truncated": grid_centers_examined < total_grid_centers, "estimated_in_bounds": total_grid_centers}),
+        "layouts": json!({"count": layout_count, "cap": DESTINATION_MAX_LAYOUTS, "truncated": layout_count == DESTINATION_MAX_LAYOUTS && witness.is_none(), "orientations_radians": DESTINATION_ORIENTATIONS, "lane_lengths_m": DESTINATION_LANE_LENGTHS}),
+        "lots": json!({"depth_m": 12, "target_width_m": 14, "center_offset_m": 11.25, "viable_lot_first_layout_count": viable_layout_count, "failure_histogram": lot_layout_histogram, "failure_samples": lot_layout_samples}),
+        "connections": json!({"count": connection_count, "cap": DESTINATION_MAX_CONNECTIONS, "truncated": connection_truncated}),
+        "viability_work": json!({"used": query_work.used, "cap": DESTINATION_MAX_TOTAL_QUERY_WORK, "truncated": query_work_truncated, "per_query_cap": DESTINATION_MAX_QUERY_WORK}),
+        "outcome_counts": counts,
+        "witness": witness,
+        "samples": samples,
+        "limitations": [
+            "offline geometry only; no live admission, demand, capacity, construction, routing or persistence acceptance",
+            "bounded grid, layout, connection and viability-query work; truncation is reported",
+            "lot templates use existing standard 12x14 frontage geometry at 11.25m center offset",
+        ],
+        "note": "A witness records at least two lots validated against the proposed final lane and then revalidated against both connected segments and the captured world."
+    });
+    std::fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap())
+        .expect("write destination-first report");
+    println!("{report}");
+}
+
+fn bump(counts: &mut std::collections::BTreeMap<String, usize>, reason: &str) {
+    *counts.entry(reason.to_owned()).or_default() += 1;
 }
 
 #[test]
@@ -569,15 +893,49 @@ fn validate_lots(
     context: Arc<FrozenViabilityContext>,
     checks: &mut Checks,
 ) -> Vec<OrientedRect> {
+    let mut budget = QueryWorkBudget {
+        used: 0,
+        max_total: usize::MAX,
+        max_query: usize::MAX,
+    };
+    validate_lots_bounded(lots, roads, context, checks, &mut budget)
+        .expect("unbounded lot validation completes")
+}
+
+struct QueryWorkBudget {
+    used: usize,
+    max_total: usize,
+    max_query: usize,
+}
+
+fn validate_lots_bounded(
+    lots: &[OrientedRect],
+    roads: [Segment; 2],
+    context: Arc<FrozenViabilityContext>,
+    checks: &mut Checks,
+    budget: &mut QueryWorkBudget,
+) -> Option<Vec<OrientedRect>> {
     let mut valid: Vec<OrientedRect> = Vec::new();
     'lot: for lot in lots {
         checks.tested_lots += 1;
         for road in roads {
             let mut query = ViabilityQuery::new_with_extra_road(*lot, context.clone(), road)
                 .expect("finite lot and road");
+            let mut query_work = 0usize;
             while query.result().is_none() {
-                let step = query.advance(4096);
+                let remaining_total = budget.max_total.saturating_sub(budget.used);
+                let remaining_query = budget.max_query.saturating_sub(query_work);
+                let quota = 4096.min(remaining_total).min(remaining_query);
+                if quota == 0 {
+                    return None;
+                }
+                let step = query.advance(quota);
                 assert!(step.work_used > 0 || step.done, "viability query stalled");
+                query_work = query_work.saturating_add(step.work_used);
+                budget.used = budget.used.saturating_add(step.work_used);
+                if query_work > budget.max_query || budget.used > budget.max_total {
+                    return None;
+                }
             }
             if query.result() != Some(true) {
                 continue 'lot;
@@ -591,7 +949,7 @@ fn validate_lots(
         }
         valid.push(*lot);
     }
-    valid
+    Some(valid)
 }
 
 fn segment_inside_face(segment: Segment, face: &RoadFace) -> bool {
@@ -706,6 +1064,95 @@ mod tests {
         assert!(
             valid.len() >= 2,
             "clear synthetic geometry should provide two viable lots"
+        );
+    }
+
+    #[test]
+    fn synthetic_lot_first_layout_connects_to_unique_host_split() {
+        let host = ProposalHost {
+            id: 1,
+            from: 1,
+            to: 2,
+            segment: seg((0.0, 0.0), (0.0, 100.0)),
+        };
+        let input = synthetic_input(host);
+        let face = square();
+        let lane = seg((25.0, 60.0), (65.0, 60.0));
+        let lots = final_segment_lots(lane, 11.25, false)
+            .into_iter()
+            .filter(|lot| rect_inside_face(lot, &face))
+            .collect::<Vec<_>>();
+        let context = FrozenViabilityContext::new(input.viability.clone()).unwrap();
+        let mut checks = Checks::default();
+        let viable = validate_lots(&lots, [lane, lane], context.clone(), &mut checks);
+        assert!(
+            viable.len() >= 2,
+            "lot-first destination should have two viable lots"
+        );
+        let path = BendPath {
+            start: (0.0, 50.0),
+            bend: (lane.ax, lane.az),
+            end: (lane.bx, lane.bz),
+            host_id: host.id,
+        };
+        let first = seg(path.start, path.bend);
+        assert!(segment_inside_face(first, &face));
+        assert_eq!(road_conflict(first, lane, host.id, &input), None);
+        assert!(valid_split_and_end(path, host, &input));
+        assert!(validate_lots(&viable, [first, lane], context, &mut Checks::default()).len() >= 2);
+    }
+
+    #[test]
+    fn synthetic_lot_first_layout_stops_when_parcel_blocks_lots() {
+        let host = ProposalHost {
+            id: 1,
+            from: 1,
+            to: 2,
+            segment: seg((0.0, 0.0), (0.0, 100.0)),
+        };
+        let mut input = synthetic_input(host);
+        let lane = seg((25.0, 60.0), (65.0, 60.0));
+        let lots = final_segment_lots(lane, 11.25, false);
+        input
+            .viability
+            .parcel_footprints
+            .extend(lots.iter().copied());
+        let context = FrozenViabilityContext::new(input.viability.clone()).unwrap();
+        let mut checks = Checks::default();
+        let viable = validate_lots(&lots, [lane, lane], context, &mut checks);
+        assert!(
+            viable.len() < 2,
+            "blocked lot-first layout must not seek a connection"
+        );
+    }
+
+    #[test]
+    fn viability_work_budget_stops_without_exceeding_cap() {
+        let host = ProposalHost {
+            id: 1,
+            from: 1,
+            to: 2,
+            segment: seg((0.0, 0.0), (0.0, 100.0)),
+        };
+        let input = synthetic_input(host);
+        let lot = final_segment_lots(seg((25.0, 60.0), (65.0, 60.0)), 11.25, false)[0];
+        let context = FrozenViabilityContext::new(input.viability).unwrap();
+        let mut budget = QueryWorkBudget {
+            used: 0,
+            max_total: 3,
+            max_query: DESTINATION_MAX_QUERY_WORK,
+        };
+        let result = validate_lots_bounded(
+            &[lot],
+            [host.segment, host.segment],
+            context,
+            &mut Checks::default(),
+            &mut budget,
+        );
+        assert!(result.is_none(), "exhausted budget must report truncation");
+        assert_eq!(
+            budget.used, 3,
+            "a nonzero budget is consumed without overshoot"
         );
     }
 

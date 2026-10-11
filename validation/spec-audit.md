@@ -1484,3 +1484,13 @@ lanes. The Anime noon control preserves daytime appearance. Evidence and limits:
 screenshots/night-fill/README.md. Temporary comparison UI removed; final build
 passes with the existing bundle-size warning. No added GPU lights/passes/assets,
 no performance claim, and no overall art or density acceptance.
+## Destination-first diagnostic follow-up — 2026-10-11
+
+`validation/destination-first-access.md` records an independently reproduced
+negative result: 8,976 lane layouts on the prior exhausted face, no two-lot
+layout, no search truncation. Forty overlapping layouts admit one lot before
+connection checks; that is not forty distinct development sites. Nine synthetic
+tests pass. The code is test-only, and live density/artistic acceptance remains
+unmet. Further road bending alone cannot rescue this tested layout family;
+future work must examine packing or earlier subdivision with matched coverage
+and lifecycle evidence.

@@ -2,6 +2,18 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Destination-first follow-up — 2026-10-11
+
+The [destination-first diagnostic](destination-first-access.md) tests lanes and
+standard lots before connecting them to a host street. On the same exhausted
+face, all 8,976 layouts were scanned without truncation: 74 clear lanes remained,
+34 with zero viable lots and 40 with one. None supported two, so no connection
+was attempted. Root reproduced the report exactly and verified nine synthetic
+tests. This is test-only evidence, not a production density gain. Investigate
+lot packing/early block subdivision across faces and seeds before adding further
+route variants for these rejected layouts. Do not weaken occupied-parcel or
+new-node clearances based on this result.
+
 ## Follow-up: sweep exhausted block interiors
 
 Remote main is `5aaa0dd`; local checkpoint `9348104` is a separate, unpushed
