@@ -1,0 +1,110 @@
+{
+  "scope": "Node.js WASM split-call timing with profiling-only WASM build; includes JavaScript/WASM call boundary and small result JSON serialization, excludes fixture restore, state parsing, and post-split save; not browser, worker, or frame timing",
+  "runtime": {
+    "node": "v26.7.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "wasm_sha256": "74e936d907918094ef2c55088941a421290a6a5882f2bfd2448a436dbffa513a",
+  "cases": [
+    {
+      "name": "detached_geometry",
+      "fixture_path": "/tmp/road-split-profile-stress.json",
+      "host_road_id": 7,
+      "split_fraction": 0.5,
+      "roads_before": 4999,
+      "nodes_before": 9993,
+      "travelers": 2000,
+      "affected_route_nodes_before": 127,
+      "affected_travelers": 1,
+      "samples": 25,
+      "warmup_samples": 5,
+      "timing_ms": {
+        "p50": 2.3903329999998277,
+        "p95": 2.516834000000017,
+        "max": 2.5257910000000265
+      },
+      "correctness": {
+        "road_count_increased_by_one": true,
+        "split_node_at_requested_fraction": true,
+        "all_traveler_positions_preserved": true,
+        "affected_and_unaffected_route_topology_correct": true,
+        "post_split_save_restores_canonically": true,
+        "rejected_split_atomic": true,
+        "late_max_route_rejection": {
+          "supported": true,
+          "atomic": true,
+          "actor_index": 0,
+          "route_nodes_before": 128,
+          "expected_expanded_route_nodes": 129
+        }
+      }
+    },
+    {
+      "name": "connected_geometry",
+      "fixture_path": "/tmp/road-split-profile-connected.json",
+      "host_road_id": 7,
+      "split_fraction": 0.5,
+      "roads_before": 4999,
+      "nodes_before": 5000,
+      "travelers": 2000,
+      "affected_route_nodes_before": 127,
+      "affected_travelers": 1,
+      "samples": 25,
+      "warmup_samples": 5,
+      "timing_ms": {
+        "p50": 3.6781670000000304,
+        "p95": 7.182999999999993,
+        "max": 17.7056249999996
+      },
+      "correctness": {
+        "road_count_increased_by_one": true,
+        "split_node_at_requested_fraction": true,
+        "all_traveler_positions_preserved": true,
+        "affected_and_unaffected_route_topology_correct": true,
+        "post_split_save_restores_canonically": true,
+        "rejected_split_atomic": true,
+        "late_max_route_rejection": {
+          "supported": true,
+          "atomic": true,
+          "actor_index": 0,
+          "route_nodes_before": 128,
+          "expected_expanded_route_nodes": 129
+        }
+      }
+    },
+    {
+      "name": "all_affected_connected",
+      "fixture_path": "/tmp/road-split-profile-all-affected.json",
+      "host_road_id": 7,
+      "split_fraction": 0.5,
+      "roads_before": 4999,
+      "nodes_before": 5000,
+      "travelers": 2000,
+      "affected_route_nodes_before": 127,
+      "affected_travelers": 2000,
+      "samples": 25,
+      "warmup_samples": 5,
+      "timing_ms": {
+        "p50": 3.6940839999988384,
+        "p95": 3.7912500000002183,
+        "max": 3.811666999999943
+      },
+      "correctness": {
+        "road_count_increased_by_one": true,
+        "split_node_at_requested_fraction": true,
+        "all_traveler_positions_preserved": true,
+        "affected_and_unaffected_route_topology_correct": true,
+        "post_split_save_restores_canonically": true,
+        "rejected_split_atomic": true,
+        "late_max_route_rejection": {
+          "supported": true,
+          "atomic": true,
+          "actor_index": 0,
+          "route_nodes_before": 128,
+          "expected_expanded_route_nodes": 129
+        }
+      }
+    }
+  ]
+}

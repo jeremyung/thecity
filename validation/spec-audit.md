@@ -1364,3 +1364,29 @@ Addressed all nine inline comments; see [review fixes](pr-review-fixes.md) for m
 ## 2026-10-10 — Incorporate 45b727f
 
 Merged edge-sample coverage and shared per-road budgeting from `claude/pr-review-6mz8wa`. This supersedes the previous zero-proposal limitation: 3,180 descriptors over 67 pages now recover the known legal road-3317 route with two lots. Local native suite: 301 passed; mature planning passed; build passed. Web suite had one timeout (261 passed), and the affected file passed all 11 tests in isolation. See [integration verification](merge-review-verification.md). Goal remains paused.
+
+
+## 2026-10-10 — Node WASM atomic split measurement
+
+Continued after PR #1 merged, on `access/wasm-split-budget`. Added an opt-in `profiling` Cargo feature and `npm run wasm -- --profiling` output under ignored `.tools/wasm-profiling`, outside Vite public assets. The harness checks actor positions/routes and atomic rejection before measuring restored detached/connected cap fixtures. Primary independently reran the Luna contribution; see [WASM split profile](road-split-wasm-profile.md). Evidence supports retaining atomic preflight/commit provisionally, avoiding actor-state snapshots across ticks. This is Node WASM call timing, not browser or full-tick acceptance; only one actor route is affected. Live scheduling and art-quality work remain incomplete.
+
+
+## 2026-10-10 — Live planner integration follow-up
+
+Attached frozen discovery plus fresh revision-bound proposal validation to Engine ticks before actor movement. Scheduling, cursors and bounded stale retries persist; road splitting retains atomic current-actor preflight. Controlled mature-fixture integration admits road 3317 and two lots with moving travelers and equivalent resumed saves. Initial broad regression exposed f64 polygon-area JSON parsing drift in two canonical-save checks; enabling serde_json float_roundtrip fixes both. Native release suite: 307 passed, 39 ignored. Production WASM build passes and does not expose the opt-in split mutation API.
+
+Primary independently reran all three Node WASM split fixtures, including all 2,000 affected travelers; route topology, positions, canonical restore and late over-limit rejection pass. Current measurements are in road-split-wasm-profile.json and its matching report. This supersedes the prior one-affected-actor limitation. Browser worker tick timing, actual live construction/opening under geometry churn, and visual acceptance remain pending. Live work quota 4,096 and periodic interval 1,200 ticks remain provisional; snapshot capture is synchronous and outside the quota. No new commit or push yet.
+
+
+## 2026-10-10 — Construction and browser worker integration
+
+Extended the known-route test through ordinary project construction: branch opens connected, both dependent lots wait for opening, resumed state matches. Added a real Engine::step test with geometry mutations during search and repeated restores. Primary focused run: 7 passed. Web build passes.
+
+Primary ran the actual module worker in Chromium for 20.002 seconds: 2,789 ticks advanced, 850 to 852 buildings, no worker errors. The active planner checkpoint at tick 242701 is 275,047 bytes and restores byte-identically in a fresh epoch; final idle save also restores canonically. Maximum of 20 sampled batch-mean tick costs is 2.975 ms, not a per-tick p95 or worst case. See live-worker-profile.md/json. This proves short worker runtime and persistence, not maximum-world performance, long-duration face-driven construction, or visual acceptance.
+
+
+## 2026-10-10 — Tick tails and scaling limits
+
+Primary ran a dedicated Chromium worker against production WASM for 6,000 individual step calls. p95 0.5 ms, p99 10.3 ms, max 25.2 ms; final save is canonical. Largest sampled live-job checkpoint: 888,622 bytes. This complements, rather than replaces, the actual application-worker run. It excludes rendering, message scheduling and maximum-world cases. See live-tick-profile.md/json.
+
+Source audit confirms the 512 graph cap is coupled across the complete tracing/discovery pipeline. Simply raising it is insufficient: quadratic preflight, half-edge/output caps, all-node capacity and doubled legacy parcel envelopes need coordinated treatment. Indexed broad-phase work and complete-graph tests are required before claiming the full 5,000-road limit. No cap was silently raised or graph truncated.

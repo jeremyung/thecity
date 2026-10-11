@@ -2,6 +2,12 @@
 
 This plan connects the verified frozen-input pipeline (road graph → faces → target selection → ranked targets → access descriptors) to the live engine without pausing growth or restarting a long search whenever the city changes. It is a design boundary for production integration; the verified pure stages do not yet make a production policy.
 
+## Implementation status — 2026-10-10
+
+The follow-up now attaches `LiveAccess` to `Engine::step`, with frozen discovery, revision-bound fresh validation, two stale retries, and atomic current-actor admission. The controlled mature case opens the new connected road through ordinary construction and creates its two promised lots only after opening. A separate real-step test preserves save/resume equivalence through geometry churn. These supersede the historical test-only status below. Current descriptor totals are 3,180 / 67 pages, with one accepted mature-fixture route.
+
+The 4,096 work quota and 1,200-tick scan interval remain provisional. Synchronous capture, large-graph behavior, full tick-tail latency, and long-duration worker construction need further profiling. The graph adapter refuses input above 512 nodes/edges; it does not partition larger cities. See `HANDOFF.md` and `live-worker-profile.json` for current verification; the sections below retain the design rationale and historical source locations.
+
 ## Current runtime facts
 
 `Engine::step` runs fixed 50 ms ticks and caps a caller batch at 2,000 ticks (`engine/src/lib.rs:2089-2095`). In each `step_one`, growth evaluation runs every 40 ticks, project construction advances on development days, transit and actors advance, and the broad `state.revision` increments every 40 ticks (`2096-2139`). Weather also increments that revision at day changes (`2100-2117`). The revision is therefore a snapshot/UI revision, not an access-geometry revision.

@@ -6,8 +6,9 @@ mod access_capture;
 mod access_math;
 mod access_proposal_validation;
 mod access_proposal_capture;
-#[cfg(test)]
 mod access_planning_job;
+mod access_live;
+mod access_live_engine;
 #[cfg(target_arch = "wasm32")]
 mod access_discovery_wasm;
 #[cfg(test)]
@@ -686,6 +687,11 @@ struct WorldState {
     pending_interior_access: Option<interior_access::InteriorAccessPlan>,
     #[serde(default)]
     interior_access_cursor: usize,
+    #[serde(default)]
+    next_face_access_tick: u64,
+    // Runtime jobs are copied here only at explicit save boundaries.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    live_access_checkpoint: Option<access_live::LiveAccessCheckpoint>,
     /// Road ids that belonged to completed or active compact neighborhood
     /// blocks. Kept after a plan retires so historic block frontage keeps its
     /// parcel geometry and infill rules.
@@ -721,6 +727,7 @@ pub struct Engine {
     wait_scratch: Vec<u16>,
     lane_order: Vec<usize>,
     district_runtime: district_controller::Runtime,
+    live_access: Option<access_live::LiveAccess>,
     /// Non-persisted switch used to compare the first district-policy
     /// experiment against legacy scheduling. Production defaults to false.
     district_policy_experiment: bool,
@@ -1019,6 +1026,8 @@ impl Engine {
                 neighborhood_plan: None,
                 pending_interior_access: None,
                 interior_access_cursor: 0,
+                next_face_access_tick: 0,
+                live_access_checkpoint: None,
                 neighborhood_road_ids: BTreeSet::new(),
                 neighborhood_anchor_cursor: 0,
                 station_online: false,
@@ -1037,6 +1046,7 @@ impl Engine {
             wait_scratch: Vec::new(),
             lane_order: Vec::new(),
             district_runtime: district_controller::Runtime::empty(),
+            live_access: None,
             district_policy_experiment: false,
             #[cfg(test)]
             district_policy_comparisons: 0,
@@ -2167,6 +2177,7 @@ impl Engine {
             self.evaluate_growth();
         }
         self.trim_completed_projects();
+        self.advance_face_access();
         if self.state.tick % 200 == 0 {
             self.ensure_bus_service();
             self.schedule_residents(day);
@@ -10607,7 +10618,13 @@ impl Engine {
         ]
     }
     pub fn save_json(&self) -> String {
-        serde_json::to_string(&self.state).expect("serializing engine state cannot fail")
+        if let Some(job) = &self.live_access {
+            let mut saved = self.state.clone();
+            saved.live_access_checkpoint = Some(job.checkpoint());
+            serde_json::to_string(&saved).expect("serializing engine state cannot fail")
+        } else {
+            serde_json::to_string(&self.state).expect("serializing engine state cannot fail")
+        }
     }
     pub fn restore_json(json: &str) -> Result<Self, String> {
         let mut state: WorldState = serde_json::from_str(json).map_err(|e| e.to_string())?;
@@ -10653,8 +10670,12 @@ impl Engine {
         if migrated_access_geometry {
             state.bump_access_geometry_revision();
         }
+        let live_access = state.live_access_checkpoint.take()
+            .map(access_live::LiveAccess::restore).transpose()
+            .map_err(|error| format!("invalid live access checkpoint: {error:?}"))?;
         let mut engine = Self {
             state,
+            live_access,
             planned_progress: Vec::new(),
             wait_scratch: Vec::new(),
             lane_order: Vec::new(),
@@ -11632,6 +11653,18 @@ mod wasm {
             Engine::restore_json(json)
                 .map(|inner| CityEngine { inner })
                 .map_err(|e| JsValue::from_str(&e))
+        }
+        /// Opt-in benchmark boundary. Actor preflight and commit remain in one
+        /// atomic call; city restore and save serialization are timed separately.
+        #[cfg(feature = "profiling")]
+        pub fn split_open_road(&mut self, road_id: u32, fraction: f32) -> Result<String, JsValue> {
+            self.inner.try_split_open_road(road_id, fraction)
+                .map(|outcome| serde_json::json!({
+                    "split_node_id": outcome.split_node_id,
+                    "retained_road_id": outcome.retained_road_id,
+                    "new_road_id": outcome.new_road_id,
+                }).to_string())
+                .map_err(|error| JsValue::from_str(&format!("{error:?}")))
         }
         #[wasm_bindgen(js_name=set_development_rate)]
         pub fn set_development_rate(&mut self, rate: u32) {

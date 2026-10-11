@@ -1,0 +1,316 @@
+{
+  "scope": "Chromium module-worker runtime and engine telemetry only; no renderer, browser frame, or GPU performance claims",
+  "endpoint": "http://127.0.0.1:5173",
+  "worker_module_url": "http://127.0.0.1:5173/web/src/worker/simulation.worker.ts",
+  "worker_path_probe": {
+    "status": 200,
+    "content_type": "text/javascript"
+  },
+  "browser": {
+    "name": "Chromium",
+    "version": "145.0.7632.6"
+  },
+  "wasm_sha256": "77d55ea65019732312da4dffed9c2ba3fbaa89ae6b5d8a0758e7d098d12d2a6f",
+  "fixture": {
+    "path": "validation/early-reservation-wasm-87231-save.json",
+    "seed": 87231,
+    "tick_before": 242000,
+    "bytes": 2703924
+  },
+  "configuration": {
+    "duration_ms": 20000,
+    "speed": 8,
+    "startup_timeout_ms": 30000,
+    "overall_timeout_ms": 90000,
+    "require_live_access_checkpoint": true
+  },
+  "run": {
+    "elapsed_ms": 20002,
+    "start_tick": 242000,
+    "final_tick": 244789,
+    "ticks_advanced": 2789
+  },
+  "metrics": {
+    "sample_interval": "worker publishes approximately once per second",
+    "tick_ms_scope": "per-batch mean supplied by the worker, not per-tick p95",
+    "samples": [
+      {
+        "tickMs": 0.08750000037252903,
+        "memoryBytes": 8716288,
+        "backlog": 5,
+        "tick": 242053,
+        "achievableSpeed": 3.311258278158026,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 0.08749999990686774,
+        "memoryBytes": 8716288,
+        "backlog": 27,
+        "tick": 242197,
+        "achievableSpeed": 6.930407161405823,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 0.07499999972060323,
+        "memoryBytes": 8716288,
+        "backlog": 46,
+        "tick": 242341,
+        "achievableSpeed": 7.062285434036292,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 2.0500000002793968,
+        "memoryBytes": 8716288,
+        "backlog": 64,
+        "tick": 242485,
+        "achievableSpeed": 7.108302892694829,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 0.23749999981373549,
+        "memoryBytes": 8716288,
+        "backlog": 85,
+        "tick": 242629,
+        "achievableSpeed": 6.986221618464573,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 0.47500000009313226,
+        "memoryBytes": 12976128,
+        "backlog": 105,
+        "tick": 242773,
+        "achievableSpeed": 7.047768206749954,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 0.08749999990686774,
+        "memoryBytes": 12976128,
+        "backlog": 128,
+        "tick": 242917,
+        "achievableSpeed": 6.907800057560062,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 0.125,
+        "memoryBytes": 12976128,
+        "backlog": 148,
+        "tick": 243061,
+        "achievableSpeed": 7.016859955159871,
+        "droppedWallMs": 0
+      },
+      {
+        "tickMs": 2.3000000002793968,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 243205,
+        "achievableSpeed": 7.045699187797728,
+        "droppedWallMs": 98.14999999850986
+      },
+      {
+        "tickMs": 0.21250000037252903,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 243349,
+        "achievableSpeed": 6.948465547196658,
+        "droppedWallMs": 234.34999999776466
+      },
+      {
+        "tickMs": 0.6750000002793968,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 243493,
+        "achievableSpeed": 6.873508353221957,
+        "droppedWallMs": 381.8499999977646
+      },
+      {
+        "tickMs": 0.14999999990686774,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 243637,
+        "achievableSpeed": 7.016176183959355,
+        "droppedWallMs": 508.05000000074494
+      },
+      {
+        "tickMs": 0.03750000009313226,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 243781,
+        "achievableSpeed": 7.027132539542951,
+        "droppedWallMs": 632.6499999985095
+      },
+      {
+        "tickMs": 2.9750000000931323,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 243925,
+        "achievableSpeed": 7.077558242401186,
+        "droppedWallMs": 749.9499999992544
+      },
+      {
+        "tickMs": 1.1125000002793968,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 244069,
+        "achievableSpeed": 6.905150091114553,
+        "droppedWallMs": 892.6499999985093
+      },
+      {
+        "tickMs": 0.39999999990686774,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 244213,
+        "achievableSpeed": 6.822057987478446,
+        "droppedWallMs": 1048.0500000007444
+      },
+      {
+        "tickMs": 0.375,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 244357,
+        "achievableSpeed": 6.813665184068398,
+        "droppedWallMs": 1204.7499999999993
+      },
+      {
+        "tickMs": 0.024999999906867743,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 244501,
+        "achievableSpeed": 6.97201510603776,
+        "droppedWallMs": 1337.4499999992543
+      },
+      {
+        "tickMs": 0.8250000001862645,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 244645,
+        "achievableSpeed": 6.97201510603776,
+        "droppedWallMs": 1470.1499999985092
+      },
+      {
+        "tickMs": 0.02500000037252903,
+        "memoryBytes": 12976128,
+        "backlog": 152,
+        "tick": 244789,
+        "achievableSpeed": 6.978772899103615,
+        "droppedWallMs": 1601.8499999977641
+      }
+    ]
+  },
+  "world_counts": {
+    "before": {
+      "tick": 242000,
+      "day": 10,
+      "minute_of_day": 480,
+      "revision": 8464,
+      "stage": "Maturity",
+      "nodes": 160,
+      "roads": 208,
+      "parcels": 850,
+      "buildings": 850,
+      "projects": 76,
+      "residents": 800,
+      "travelers": 284,
+      "trains": 1,
+      "buses": 2,
+      "events": 10000,
+      "stats": {
+        "population": 7925,
+        "active_travelers": 284,
+        "buildings": 850,
+        "active_projects": 0
+      }
+    },
+    "after_run": {
+      "tick": 244733,
+      "day": 10,
+      "minute_of_day": 643.98,
+      "revision": 8539,
+      "stage": "Maturity",
+      "nodes": 162,
+      "roads": 210,
+      "parcels": 853,
+      "buildings": 852,
+      "projects": 76,
+      "residents": 800,
+      "travelers": 303,
+      "trains": 1,
+      "buses": 2,
+      "events": 10000,
+      "stats": {
+        "population": 7925,
+        "active_travelers": 303,
+        "buildings": 852,
+        "active_projects": 1
+      }
+    },
+    "restored_new_epoch": {
+      "tick": 244789,
+      "day": 10,
+      "minute_of_day": 647.33997,
+      "revision": 8540,
+      "stage": "Maturity",
+      "nodes": 162,
+      "roads": 210,
+      "parcels": 853,
+      "buildings": 852,
+      "projects": 76,
+      "residents": 800,
+      "travelers": 294,
+      "trains": 1,
+      "buses": 2,
+      "events": 10000,
+      "stats": {
+        "population": 7925,
+        "active_travelers": 294,
+        "buildings": 852,
+        "active_projects": 1
+      }
+    }
+  },
+  "movement_buffers": {
+    "received": 352,
+    "recycled": 352,
+    "total_bytes": 2839260,
+    "max_buffer_bytes": 10420,
+    "max_count": 521
+  },
+  "checkpoint": {
+    "present": true,
+    "bytes_utf8": 2719983,
+    "seed": 87231,
+    "tick": 244789,
+    "epoch": 1,
+    "paused_before_request": true,
+    "live_access_present": false,
+    "live_access_bytes": 0
+  },
+  "midrun_checkpoint": {
+    "captured_while_unpaused": true,
+    "target_elapsed_ms": 5000,
+    "captured_elapsed_ms": 5039,
+    "tick": 242701,
+    "bytes_utf8": 3239094,
+    "live_access_present": true,
+    "live_access_bytes": 275047
+  },
+  "restore": {
+    "new_epoch": 2,
+    "world_published": true,
+    "tick_matches_checkpoint": true,
+    "save_is_byte_identical": true,
+    "live_access_checkpoint": {
+      "attempted": true,
+      "verified": true,
+      "epoch": 3,
+      "tick": 242701,
+      "live_access_bytes": 275047,
+      "save_is_byte_identical": true
+    }
+  },
+  "errors": [],
+  "timeouts": {
+    "startup_ms": 30000,
+    "overall_ms": 90000,
+    "cleanup_runs_in_finally": true
+  }
+}
