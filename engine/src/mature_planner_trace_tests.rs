@@ -6,7 +6,7 @@
 
 use super::{site_active, Engine, NeighborhoodPlan, Road};
 use serde::Serialize;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 const TRACE_TICKS: u32 = 2_000;
@@ -39,6 +39,7 @@ struct PlannerCall {
     cursor_anchors_examined: usize,
     production_method_accepted: bool,
     accepted_plan: Option<PlanSummary>,
+    geometry_rejection_capture: super::neighborhood_admission::RejectionCapture,
 }
 
 #[derive(Serialize)]
@@ -108,6 +109,8 @@ struct Report {
     spine_candidate_cap: usize,
     reuse_edge_cap: usize,
     planner_calls: Vec<PlannerCall>,
+    rejection_histogram: BTreeMap<&'static str, usize>,
+    rejection_witnesses: Vec<super::neighborhood_admission::RejectionWitness>,
     scanned_anchor_count: usize,
     full_anchor_cursor_coverage: bool,
     production_plan_found: bool,
@@ -393,6 +396,9 @@ fn build_report() -> Report {
     let max_calls = node_count.saturating_add(1);
     let mut calls = Vec::new();
     let mut covered = BTreeSet::new();
+    let mut rejection_histogram = BTreeMap::<&'static str, usize>::new();
+    let mut rejection_witness_counts = BTreeMap::<&'static str, usize>::new();
+    let mut rejection_witnesses = Vec::new();
     let mut accepted = false;
 
     if gates.plan_absent
@@ -405,7 +411,23 @@ fn build_report() -> Report {
     {
         for call_index in 0..max_calls {
             let cursor_start = engine.state.neighborhood_anchor_cursor % node_count;
-            let accepted_this_call = engine.try_create_neighborhood_plan();
+            let (accepted_this_call, mut geometry_rejection_capture) =
+                super::neighborhood_admission::capture_rejections(|| {
+                    engine.try_create_neighborhood_plan()
+                });
+            for (reason, count) in &geometry_rejection_capture.reason_counts {
+                *rejection_histogram.entry(*reason).or_default() += count;
+            }
+            for witness in &geometry_rejection_capture.witnesses {
+                let count = rejection_witness_counts.entry(witness.reason).or_default();
+                if *count < 8 {
+                    rejection_witnesses.push(witness.clone());
+                    *count += 1;
+                }
+            }
+            // Keep per-window reason counts, while storing only the first
+            // eight geometric witnesses per reason for the whole trace.
+            geometry_rejection_capture.witnesses.clear();
             let cursor_end = engine.state.neighborhood_anchor_cursor % node_count;
             let cursor_delta = (cursor_end + node_count - cursor_start) % node_count;
             let examined = if cursor_delta == 0 && !accepted_this_call {
@@ -424,6 +446,7 @@ fn build_report() -> Report {
                 cursor_anchors_examined: examined,
                 production_method_accepted: accepted_this_call,
                 accepted_plan,
+                geometry_rejection_capture,
             });
             if accepted_this_call {
                 accepted = true;
@@ -480,6 +503,8 @@ fn build_report() -> Report {
         spine_candidate_cap: super::development::MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION,
         reuse_edge_cap: super::MAX_NEIGHBORHOOD_REUSE_EDGES_PER_EVALUATION,
         planner_calls: calls,
+        rejection_histogram,
+        rejection_witnesses,
         scanned_anchor_count: covered.len(),
         full_anchor_cursor_coverage: covered.len() == node_count,
         production_plan_found: accepted,
