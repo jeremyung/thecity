@@ -797,7 +797,7 @@ mod tests {
 
     #[test]
     fn master_plan_city_grows_connected_without_overlaps_and_replays() {
-        let engine = grown(87231, 40_000);
+        let mut engine = grown(87231, 40_000);
         eprintln!("{}", summary(&engine));
         assert!(engine.state.buildings.len() > 60, "{}", summary(&engine));
         engine.validate().unwrap();
@@ -829,10 +829,9 @@ mod tests {
         // Save/restore continues identically.
         let saved = engine.save_json();
         let mut restored = Engine::restore_json(&saved).unwrap();
-        let mut original = Engine::restore_json(&saved).unwrap();
-        original.step(1_500);
+        engine.step(1_500);
         restored.step(1_500);
-        assert_eq!(original.save_json(), restored.save_json());
+        assert_eq!(engine.save_json(), restored.save_json());
     }
 
     #[test]

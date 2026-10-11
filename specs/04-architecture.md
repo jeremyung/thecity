@@ -10,7 +10,7 @@ engine/
   world/           geography, parcels, spatial indexes
   infrastructure/  planning, graphs, construction
   population/      demand, activities, travel
-  persistence/     snapshots and migrations
+  persistence/     snapshots and validation
 web/src/
   worker/          WASM loading, scheduler, protocol
   render/          scene bridge, assets, water, styles
@@ -22,7 +22,7 @@ web/src/
 
 React never owns per-frame transforms or simulation entities. The renderer receives a read-only presentation model. The worker is the sole owner of authoritative state.
 
-The layout above is the target decomposition. As of 2026-10-09, browser subsystems are separated, but most Rust systems still live in `engine/src/lib.rs`. Pure scalar distance helpers have begun moving to `engine/src/geometry.rs`, which cannot access engine state. Continue extracting geometry/model boundaries before growth and transit systems. Keep deterministic scheduling and mutation ownership explicit; splitting files alone does not establish independence. Validate refactors separately from behavior corrections against save migration and same-target continuation fixtures.
+The layout above is the target decomposition. As of 2026-10-09, browser subsystems are separated, but most Rust systems still live in `engine/src/lib.rs`. Pure scalar distance helpers have begun moving to `engine/src/geometry.rs`, which cannot access engine state. Continue extracting geometry/model boundaries before growth and transit systems. Keep deterministic scheduling and mutation ownership explicit; splitting files alone does not establish independence. Validate refactors separately from behavior corrections against current-format save validation and same-target continuation fixtures.
 
 `engine/src/blocks.rs` now owns state-free rectangular subdivision with a hard 64-lot result bound. `geometry.rs` supplies oriented-rectangle overlap, bounds, and segment clearance. Engine orchestration reserves interiors and admits parcels only on infrastructure completion. These modules contain no renderer, RNG, or mutable world dependency. Optional parcel rotation and a default-false coordinated-plan marker preserve legacy save behavior; rendering continues to consume the authoritative building rotation.
 
@@ -97,7 +97,7 @@ PLATEAU or other city-model processing belongs in an offline reference pipeline.
 
 Store save payloads and compact metadata in IndexedDB. Keep two rotating checkpoints with transactional metadata updates. Autosave periodically and on important transitions. Request a checkpoint on visibility loss; also keep a recent checkpoint because unload work is not guaranteed to finish.
 
-Hidden tabs pause simulation and suspend or fade sound. Resume restores continuity without background catch-up. Handle storage quota failures visibly and offer export. Saved asset references use stable IDs; save migrations are explicit and tested.
+Hidden tabs pause simulation and suspend or fade sound. Resume restores continuity without background catch-up. Handle storage quota failures visibly and offer export. Saved asset references use stable IDs. Backward save compatibility and migrations are not required (user decision, 2026-10-11). Explicitly reject incompatible formats and offer a fresh world. Current-format restore must validate master-plan mappings against regenerated entity identities, geometry and frontage, as well as existing world invariants; a plan digest alone is insufficient. Replay tests must continue the original live engine against a restored copy, including construction in progress.
 
 ## Technical references
 

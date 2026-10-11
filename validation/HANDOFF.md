@@ -1,5 +1,20 @@
 # Engineering checkpoint — 2026-10-10
 
+## Current review corrections — 2026-10-11
+
+PR #3 now validates saved master-plan entity mappings and tests continuation of
+the original live engine against a restored copy during construction. See
+[review corrections and validation](pr3-review-corrections.md).
+
+The immediate milestone is the existing 800 m city: visual quality in both
+styles, normal startup/growth/loading, and browser measurements on named hardware.
+Larger maps and imports remain subsequent work. See the updated
+[delivery priorities](../specs/08-delivery.md#immediate-milestone-after-the-master-plan-review-2026-10-11).
+Backward save compatibility and migrations are not required; current-format
+validation and replay remain required. Older migration notes below are historical.
+The external goal objective has been updated and the goal remains paused for review.
+
+
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
 ## Inhabited rear extensions — implementation in progress, 2026-10-11

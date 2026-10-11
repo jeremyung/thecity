@@ -3,6 +3,9 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 mod masterplan;
 mod masterplan_growth;
+mod masterplan_validation;
+#[cfg(test)]
+mod masterplan_replay_tests;
 mod access_candidates;
 mod access_capture;
 mod access_math;
@@ -10827,6 +10830,7 @@ impl Engine {
         Ok(engine)
     }
     pub fn validate(&self) -> Result<(), String> {
+        self.validate_masterplan_progress()?;
         access_live_engine::validate_face_history(&self.state.exhausted_access_faces)?;
         if self.state.access_geometry_revision_exhausted
             && self.state.access_geometry_revision != u64::MAX

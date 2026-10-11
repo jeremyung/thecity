@@ -92,6 +92,19 @@ The [research report](../validation/plateau-research.md) defines a proposed, bou
 
 The report proposes crop-matching tolerances and a 10% frame-interval regression ceiling for the pilot. These are provisional experiment criteria, not established Tokyo statistics or permission to reduce beauty, water quality, anti-aliasing, audio or simulation scope. Verify and retain resource-specific attribution and processing disclosures before distributing derived data/assets.
 
+## Immediate milestone after the master-plan review (2026-10-11)
+
+Use the seeded master plan for new worlds. The next acceptance milestone is a beautiful, watchable, measured **800 m city**, first in Last Train, First Light and then verified in Little Tokyo using the same world, camera and time. This orders the work; it does not shrink the original release scope.
+
+- Exercise normal startup, development and mature-city loading. Geometry must become visible through the production scheduler without manual queue draining. Record time to a complete scene, worker step latency, render frame timing and memory on named hardware and browser; software WebGL captures establish appearance only.
+- Review matched founding, developing and mature scenes through dawn, noon, dusk and night. Preserve camera/lens behavior, style distinction with DOF disabled, simulated water, full-scene anti-aliasing, purposeful activity and spatial audio. Beauty is an acceptance gate, not a trade for density.
+- Profile the master-plan candidate scans at maturity. Introduce bounded/incremental work where measurements justify it, with saved progress and same-target replay. Keep visual quality and worker backpressure gates intact.
+- Correct raised-platform passenger placement and physical flag-lot access before accepting the affected scenes. Review street detail, district character and building variation against the approved concepts.
+- Remove obsolete planners as a separate tested cleanup, retaining or replacing generic travel, transit, business, current-save, determinism and bounded-state regression coverage. A failing test needs diagnosis, not deletion merely to make the suite green.
+- Defer generic map frames, OSM/PLATEAU imports and the 2.4 km domain until this milestone passes. Keep them on the roadmap. After two unsuccessful variants of an intervention, record the evidence and reconsider the approach before another small tweak.
+
+Backward save compatibility is not required (user decision, 2026-10-11). Do not build migration infrastructure for obsolete saves. Reject incompatible formats explicitly and offer a fresh world; do not silently reinterpret them. Current-format save validation and live-versus-restored continuation remain mandatory.
+
 ## Release criterion
 
 ### Visual quality is a release gate
