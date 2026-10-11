@@ -1,0 +1,138 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release mature_target_ranking_matches_reference -- --ignored --nocapture
+
+    Blocking waiting for file lock on build directory
+warning: variable does not need to be mutable
+   --> src/access_search.rs:846:13
+    |
+846 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `InvalidRuntimeState` is never constructed
+  --> src/face_target_selection.rs:31:5
+   |
+26 | pub(crate) enum SelectionError {
+   |                 -------------- variant in this enum
+...
+31 |     InvalidRuntimeState,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `SelectionError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `error` is never used
+   --> src/face_target_selection.rs:169:19
+    |
+ 89 | impl FaceSelection {
+    | ------------------ method in this implementation
+...
+169 |     pub(crate) fn error(&self) -> Option<SelectionError> {
+    |                   ^^^^^
+
+warning: multiple fields are never read
+     --> src/lib.rs:11508:9
+      |
+11507 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11508 |         x: f32,
+      |         ^
+11509 |         z: f32,
+      |         ^
+11510 |         width: f32,
+      |         ^^^^^
+11511 |         depth: f32,
+      |         ^^^^^
+11512 |         rotation: f32,
+      |         ^^^^^^^^
+11513 |         side: i8,
+      |         ^^^^
+11514 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `end` is never read
+     --> src/lib.rs:11522:9
+      |
+11518 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11522 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:328:13
+    |
+328 |             run(rectangle_nodes.clone(), rectangle_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+328 |             let _ = run(rectangle_nodes.clone(), rectangle_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:329:13
+    |
+329 |             run(rectangle_nodes.clone(), rectangle_edges[..3].to_vec(), Some(rectangle_edges[3]), quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+329 |             let _ = run(rectangle_nodes.clone(), rectangle_edges[..3].to_vec(), Some(rectangle_edges[3]), quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:330:13
+    |
+330 |             run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+330 |             let _ = run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:333:13
+    |
+333 |             run(Vec::new(), Vec::new(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+333 |             let _ = run(Vec::new(), Vec::new(), None, quotas);
+    |             +++++++
+
+warning: `tokyo-city-engine` (lib test) generated 10 warnings (run `cargo fix --lib -p tokyo-city-engine --tests` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 4.76s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 1 test
+mature target ranking quota=1 work=51852 restores=53
+mature target ranking quota=7 work=51852 restores=52
+mature target ranking quota=48 work=51852 restores=52
+test face_access_exact_tests::mature_target_ranking_matches_reference ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 289 filtered out; finished in 0.14s
+

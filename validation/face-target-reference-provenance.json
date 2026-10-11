@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "purpose": "PR #1 fourth-sample correction; input JSON preserved, exact native/WASM descriptor parity verified",
+  "result": "2134 descriptors, 45 pages, no accepted generated proposal; independent legal candidate validates with two lots",
+  "migration": "validation/pr-review-descriptor-migration.json",
+  "files": {
+    "validation/access-descriptor-reference.json": {
+      "sha256": "9cea2591f4ce3762c7faaee15c67cb9543a35331bc7f58dae6630f79c90cd811",
+      "bytes": 362173
+    },
+    "validation/face-target-reference.json": {
+      "sha256": "b150c51c45686f91d062416ca4212aeb2276950f84c37198fed1e1c6d8804087",
+      "bytes": 224129
+    },
+    "validation/early-reservation-wasm-87231-save.json": {
+      "sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+      "bytes": 2703924
+    },
+    "engine/src/access_candidates.rs": {
+      "sha256": "6194ad57d2db7359bc821cacb69d0a31065e7b7515291311313b337c8cb0a22d",
+      "bytes": 52135
+    },
+    "engine/src/access_search.rs": {
+      "sha256": "cbbd08ec466b3d369a9053fd9bc6df19f2b234415cff9c233152a11816baaf5c",
+      "bytes": 43110
+    }
+  },
+  "prior_provenance": {
+    "schema": 1,
+    "reference": "validation/face-target-reference.json",
+    "sha256": "d1dd14ca096722a19f03319fbe1312e6dee98a5a43ac42258e7f440a755666d5",
+    "source_save": "validation/early-reservation-wasm-87231-save.json",
+    "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
+    "seed": 87231,
+    "tick": 242000,
+    "export_command": "EXPORT_FACE_TARGET_REFERENCE=1 npm run test:engine -- --release exhaustive_prepared_pages_discover_mature_face_access_candidate -- --ignored --nocapture",
+    "faces": 49,
+    "viable_faces": 12,
+    "winning_centers": 34,
+    "selected_targets": 6,
+    "target_cap": 12,
+    "descriptors": 2069,
+    "bytes": 219217,
+    "verification": "Targets and ordered descriptor bits independently compared against previously frozen access-descriptor-reference.json; source save hash verified. Export is opt-in; ordinary diagnostic compares intermediate output without rewriting.",
+    "prior_sha256": "756b53e70f8a1e0dee3d87aa5c18dd5612df4e16c0c3445fe034898b2fbba54a",
+    "migration": "Only embedded ordered_descriptor_bits changed for shared algebraic headings; all face/target inputs retained. See validation/access-vector-math-migration.json."
+  },
+  "follow_up_45b727f": {
+    "result": "3180 descriptors, all previous 2134 retained; 67 pages and one known accepted two-lot route",
+    "verification": "validation/merge-review-verification.md",
+    "files": {
+      "validation/access-descriptor-reference.json": {
+        "sha256": "5336438099f6e7bf0d1346a5beda225960e1e2769ef0458d4faee6f1d6583fee",
+        "bytes": 443592
+      },
+      "validation/face-target-reference.json": {
+        "sha256": "3e1a8109f4d979f59fb00cb3e578d5b8045dccdfcd5763c0131e3ef5eb04a1cc",
+        "bytes": 305547
+      }
+    }
+  }
+}

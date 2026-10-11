@@ -1,0 +1,60 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release road_face_bridges::tests
+
+warning: variable does not need to be mutable
+   --> src/access_search.rs:846:13
+    |
+846 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: multiple fields are never read
+     --> src/lib.rs:11492:9
+      |
+11491 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11492 |         x: f32,
+      |         ^
+11493 |         z: f32,
+      |         ^
+11494 |         width: f32,
+      |         ^^^^^
+11495 |         depth: f32,
+      |         ^^^^^
+11496 |         rotation: f32,
+      |         ^^^^^^^^
+11497 |         side: i8,
+      |         ^^^^
+11498 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:11506:9
+      |
+11502 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11506 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 3 warnings (run `cargo fix --lib -p tokyo-city-engine --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.03s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 4 tests
+test road_face_bridges::tests::malformed_inputs_and_checkpoints_fail_closed ... ok
+test road_face_bridges::tests::zero_budget_and_finished_calls_are_noops ... ok
+test road_face_bridges::tests::tarjan_matches_reference_graph_shapes_and_parallel_edges ... ok
+test road_face_bridges::tests::capped_chain_drains_without_recursion_or_quota_overrun ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 251 filtered out; finished in 0.05s
+

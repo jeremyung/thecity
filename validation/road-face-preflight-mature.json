@@ -1,0 +1,50 @@
+{
+  "edges": 206,
+  "nodes": 159,
+  "reference_faces": 49,
+  "runs": [
+    {
+      "bridge_count": 44,
+      "bridge_restores": 2022,
+      "bridge_work_units": 2022,
+      "calls": 119233,
+      "quota": 1,
+      "restores": 16,
+      "topology_restores": 2427,
+      "topology_work_units": 2427,
+      "traced_reference_faces": 49,
+      "walk_restores": 6,
+      "walk_work_units": 19630,
+      "work_units": 119232
+    },
+    {
+      "bridge_count": 44,
+      "bridge_restores": 289,
+      "bridge_work_units": 2022,
+      "calls": 17034,
+      "quota": 7,
+      "restores": 16,
+      "topology_restores": 347,
+      "topology_work_units": 2427,
+      "traced_reference_faces": 49,
+      "walk_restores": 6,
+      "walk_work_units": 19630,
+      "work_units": 119232
+    },
+    {
+      "bridge_count": 44,
+      "bridge_restores": 43,
+      "bridge_work_units": 2022,
+      "calls": 2485,
+      "quota": 48,
+      "restores": 16,
+      "topology_restores": 51,
+      "topology_work_units": 2427,
+      "traced_reference_faces": 49,
+      "walk_restores": 6,
+      "walk_work_units": 19630,
+      "work_units": 119232
+    }
+  ],
+  "scope": "native graph validation, bridge, topology and complete face-walk parity; not production discovery"
+}

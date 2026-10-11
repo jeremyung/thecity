@@ -1,0 +1,14 @@
+{
+  "buildings": 850,
+  "capture_max_ns": 240041,
+  "capture_median_ns": 110917,
+  "capture_p95_ns": 135000,
+  "decision": "measure browser/WASM and cap-scale capture before accepting a synchronous setup boundary; do not treat this sample as a tick-budget guarantee",
+  "encode_median_ns": 209417,
+  "encode_p95_ns": 220125,
+  "json_bytes": 120794,
+  "runs": 32,
+  "scope": "native release only; current synchronous helper measured on one mature fixture, not worst-case caps, WASM, or browser timing",
+  "seed": 87231,
+  "tick": 242000
+}

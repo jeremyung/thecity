@@ -1,0 +1,15 @@
+{
+  "old_count": 2069,
+  "new_count": 2069,
+  "same_host_split_counts": true,
+  "exact_ordered_rows": 1105,
+  "max_new_to_old_nearest_same_host_split_m": 3.145679951185349e-05,
+  "reason": "Replace platform-dependent trig angle round-trip with shared algebraic vector rotation; fresh native and WASM candidate sequences agree exactly before reference migration.",
+  "sha256": {
+    "validation/access-descriptor-trig-reference.json": "fea950567a294600d24aedb36c9c044d428ec3c549d906cebd07c8ab95329f63",
+    "validation/access-descriptor-reference.json": "908efb252e02c34e3c1de9f291e98cf827bce3264a810b531367e305902593bc",
+    "validation/face-target-reference.json": "d1dd14ca096722a19f03319fbe1312e6dee98a5a43ac42258e7f440a755666d5",
+    "engine/src/access_math.rs": "7aa835f61a4de1563d6d088bdff4267ee37b3d6f1d4212fa93ff740abeaf1dc2",
+    "public/wasm/city_engine_bg.wasm": "a12c5936278dd088c0d1ff02ac68897a10a6c20868d1ceb7bc599f2dd1ad1c61"
+  }
+}

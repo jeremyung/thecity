@@ -1,0 +1,49 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release indexed_connectivity_matches_source_order_scan
+
+    Blocking waiting for file lock on build directory
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+error[E0609]: no field `done` on type `PlanningAdvance`
+    --> src/face_access_exact_tests.rs:3360:63
+     |
+3360 |             if since_save>=100_003 || step.page_ready || step.done {
+     |                                                               ^^^^ unknown field
+     |
+     = note: available fields are: `work_used`, `page_ready`, `exhausted`
+
+error[E0609]: no field `done` on type `PlanningAdvance`
+    --> src/face_access_exact_tests.rs:3368:28
+     |
+3368 |             } else if step.done {break;}
+     |                            ^^^^ unknown field
+     |
+     = note: available fields are: `work_used`, `page_ready`, `exhausted`
+
+warning: variable does not need to be mutable
+    --> src/access_search.rs:1130:13
+     |
+1130 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+     |             ----^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `road`
+     --> src/lib.rs:20976:13
+      |
+20976 |         let road = engine.add_road(1, node, "local", "open", 1.0);
+      |             ^^^^ help: if this is intentional, prefix it with an underscore: `_road`
+
+For more information about this error, try `rustc --explain E0609`.
+warning: `tokyo-city-engine` (lib test) generated 3 warnings
+error: could not compile `tokyo-city-engine` (lib test) due to 2 previous errors; 3 warnings emitted

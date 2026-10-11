@@ -78,6 +78,20 @@ Run headless accelerated worlds across a fixed seed corpus, then several multi-h
 
 Pin Three.js and Rust tool versions; record exact reference devices; select the primary AA technique; measure the reflection strategy; tune camera angles and focus; validate modular asset density; select initial music and sound assets. These do not block implementing the contracts above.
 
+## PLATEAU calibration pilot tasks
+
+The [research report](../validation/plateau-research.md) defines a proposed, bounded pilot; these are outstanding tasks, not measured results or replacement release gates.
+
+| Task | Deliverable and dependency |
+| --- | --- |
+| PLATEAU-01 | Verify resource-level availability, vintage, rights and sizes for three 250 m-square crops; measure footprint/height/frontage/gap distributions with clear denominators. Limit compressed source retrieval to 50 MiB; record a source limitation if distribution granularity prevents this. No whole-ward download. |
+| PLATEAU-02 | After 01, build a separate synthetic benchmark using existing kits and compare fixed cameras in both styles at noon/dusk/night. Keep normal seeded trajectories unchanged while calibrating. |
+| PLATEAU-03 | Package compact versioned definitions and source/transformation/attribution manifests. Optional imported geometry only after 02 proves a need; report proposes at most 3 silhouettes and a 2 MiB compressed pack, subject to existing resource budgets. |
+| PLATEAU-04 | After reference and access validation, compare calibrated growth across seeds 0, 87231 and a new seed, preserving connectivity/construction/save invariants. |
+| PLATEAU-05 | Before promoting 03/04, record hardware, matching camera/effect settings, browser frame timing and residency across style cycles; retain all existing visual and multi-hour gates. |
+
+The report proposes crop-matching tolerances and a 10% frame-interval regression ceiling for the pilot. These are provisional experiment criteria, not established Tokyo statistics or permission to reduce beauty, water quality, anti-aliasing, audio or simulation scope. Verify and retain resource-specific attribution and processing disclosures before distributing derived data/assets.
+
 ## Release criterion
 
 ### Visual quality is a release gate

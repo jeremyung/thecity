@@ -1,0 +1,4 @@
+Browser tab: 25, Title: "Last Train, First Light · The City", URL: "http://127.0.0.1:5173/".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~					66 text 67  fps ·  CPU  11.6  ms  ·  WebGPUBackend 1141  draws ·  7,033,814  triangles ·  141  textures ·  347  shapes 0  buildings queued ·  0  neighborhood batches queued Render quality
+The focused UI element is 20 checkbox Explore, Help: Move the camera through the city, Value: 1

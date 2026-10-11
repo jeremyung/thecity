@@ -12,6 +12,12 @@ Outside the domain, render inexpensive atmospheric hills, water, or distant silh
 
 Every seed must have at least one viable founding area and enough reachable land for several neighborhoods. Reject or repair invalid geography using deterministic rules before simulation starts.
 
+### Metropolitan map composition reference
+
+The [additional user map](../concepts/photo-references/metropolitan-waterways-block-patterns.png) reinforces a hierarchy of city form: a fine-grained continuous built fabric, distinct clusters of taller buildings, irregular older street patterns alongside more rectilinear districts, larger waterfront blocks, connected waterways, and concentrated open spaces. Use district-conditioned road directions, block dimensions and parcel subdivision rules instead of one global grid or independent random rotations. Major corridors should connect neighborhood networks and bridge crossings; infill should resolve leftover accessible spaces within those networks.
+
+Preserve meaningful parks, banks and larger open areas while reducing unexplained lawn between ordinary developed parcels. Do not translate green map fills directly into grass materials or land-use categories: the source legend and scale are unknown. These are qualitative visual goals, not extracted numeric Tokyo targets. At wide camera scales the finite city should read as connected neighborhoods with a coherent river/corridor structure; nearer views must retain usable street frontage, service gaps and purposeful movement. Existing art styles, simulation bounds and performance requirements remain unchanged.
+
 ## Growth stages
 
 Stages describe measured conditions, not scripted unlocks.
@@ -72,6 +78,10 @@ Maintain a finite queue of candidate projects. A candidate has prerequisites, la
 Score plausible projects from unmet demand, network access, local suitability, occupancy, service coverage, ecological constraints, and deterministic variation. Global checks enforce land, entity, infrastructure, and construction limits.
 
 Approve only a bounded number per development evaluation. Respect vacancy and moving averages so short-lived demand spikes do not create whole empty districts. An external baseline can help establish the first settlement, but external migration is bounded and reacts to available homes and employment.
+
+### PLATEAU-informed calibration
+
+Use the [PLATEAU research](../validation/plateau-research.md) to build a small, provenance-tagged reference pack before changing density targets. Measure joint footprint, height, frontage and gap distributions for station-edge, ordinary compact-neighborhood and waterfront samples. Keep rendered footprint union, nominal parcel/envelope coverage, gross land and net developable-land denominators separate. Preserve missing attributes and source vintage; do not fill measurements from visual guesses. Station-cluster archetypes must depend on working pedestrian access, with smaller older buildings retained around concentrated taller groups. Calibrate after access discovery is accepted and compare multiple seeds without bypassing demand, collision, construction or finite-capacity rules. Numerical targets remain unset until source extraction is verified.
 
 ## Roads being built
 

@@ -76,6 +76,10 @@ Building and district definitions use validated versioned schemas. Systems decla
 
 A new renderer implements material creation, style parameters, water treatment, pass construction, and disposal. It cannot import the simulation mutator API. A new building type normally adds definition data and assets, with engine code needed only for genuinely new behavior.
 
+### Offline morphology sources
+
+PLATEAU or other city-model processing belongs in an offline reference pipeline. Produce versioned compact morphology definitions with stable source IDs, local coordinates, source bounds and a provenance/license/transformation manifest. Optional simplified geometry is a separate presentation asset; it must fit authoritative bounds and the existing construction, picking and style contracts. The renderer cannot modify authoritative geography or growth based on downloaded source geometry. Keep CityGML parsing, geospatial conversion and source statistics out of the browser simulation loop. See the [bounded pilot](../validation/plateau-research.md); no dataset or asset is currently cleared for runtime import by this research.
+
 ## Saving and lifecycle
 
 Store save payloads and compact metadata in IndexedDB. Keep two rotating checkpoints with transactional metadata updates. Autosave periodically and on important transitions. Request a checkpoint on visibility loss; also keep a recent checkpoint because unload work is not guaranteed to finish.

@@ -1,0 +1,79 @@
+{
+  "outputPath": "/Users/jung/Development/thecity/validation/staged-building-chunks-benchmark.json",
+  "markdownPath": "/Users/jung/Development/thecity/validation/staged-building-chunks-benchmark.md",
+  "input": {
+    "file": "validation/early-reservation-wasm-87231-snapshot.json",
+    "sha256": "0559e20d76403429dffcc8a13d0953b699accf0ce2c73df0e30401c4da40c94f",
+    "bytes": 2013175,
+    "seed": 87231,
+    "tick": 242000,
+    "buildings": 850
+  },
+  "source": {
+    "buildings": 850,
+    "meshes": 14422,
+    "vertices": 4314662,
+    "indices": 6406914,
+    "maxAuthoredMeshVertices": 54000,
+    "authoredMeshesExceedingVertexQuota": 12,
+    "initialBuildingKitGenerationMs": 1171.2902850000003,
+    "initialSetOutlineMs": 3121.1605539999973,
+    "initialSetOutlinePerBuilding": {
+      "calls": 850,
+      "mean": 3.6719535929411733,
+      "p50": 2.4554999999998017,
+      "p95": 7.814249999999902,
+      "max": 118.83220800000004
+    }
+  },
+  "initialDrain": {
+    "totalMs": 867.0359170000002,
+    "updateCalls": 1290,
+    "perUpdate": {
+      "calls": 1290,
+      "mean": 0.6717063170542563,
+      "p50": 0.526042000000416,
+      "p95": 1.7739170000004378,
+      "max": 9.67645899999934
+    },
+    "batch": {
+      "meshes": 417,
+      "vertices": 4314662,
+      "indices": 6406914,
+      "triangles": 2135638
+    }
+  },
+  "replacement": {
+    "buildingId": 13,
+    "chunk": "1:2",
+    "regeneratedFactories": 33,
+    "factoryCallMaxPerUpdate": 1,
+    "updateCalls": 51,
+    "totalMs": 66.394542,
+    "perUpdate": {
+      "calls": 51,
+      "mean": 1.3001763921568221,
+      "p50": 1.4043330000004062,
+      "p95": 3.091500000000451,
+      "max": 4.492709000000104
+    },
+    "trianglesUnchanged": true,
+    "retainedSourceReferences": {
+      "sourceRecords": 850,
+      "recordsWithPendingGroup": 0,
+      "recordsWithLegacyGroup": 0,
+      "activeBuild": false,
+      "retainedSourceGroupRefs": 0
+    }
+  },
+  "machine": {
+    "platform": "darwin 25.6.0",
+    "architecture": "arm64",
+    "cpuModel": "Apple M2 Max",
+    "logicalCpus": 12,
+    "totalRamBytes": 34359738368,
+    "freeRamBeforeRunBytes": 142065664,
+    "node": "v26.7.0",
+    "note": "Node CPU-only wall-clock measurements; other host activity was not isolated. No browser/GPU timing or renderer frame pacing."
+  }
+}

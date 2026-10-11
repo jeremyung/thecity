@@ -1,0 +1,4 @@
+Browser tab: 26, Title: "Last Train, First Light · The City", URL: "http://127.0.0.1:5173/".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~					66 text 88  fps ·  CPU  10.3  ms  ·  WebGPUBackend 1130  draws ·  7,130,168  triangles ·  277  textures ·  504  shapes 0  buildings queued ·  0  neighborhood batches queued Last style switch to  miniature :  332 / 332  shader samples · prepare  2  ms · submit  1947  ms (largest  31  ms) · await  10924  ms · apply  0  ms ·  applied Render quality
+The focused UI element is 33 checkbox Miniature, Help: Miniature rendering, Value: 1

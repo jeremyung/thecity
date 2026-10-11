@@ -1,0 +1,48 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release exhaustive_prepared_pages_discover_mature_face_access_candidate -- --ignored --nocapture
+
+warning: multiple fields are never read
+     --> src/lib.rs:11478:9
+      |
+11477 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+11478 |         x: f32,
+      |         ^
+11479 |         z: f32,
+      |         ^
+11480 |         width: f32,
+      |         ^^^^^
+11481 |         depth: f32,
+      |         ^^^^^
+11482 |         rotation: f32,
+      |         ^^^^^^^^
+11483 |         side: i8,
+      |         ^^^^
+11484 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:11492:9
+      |
+11488 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+11492 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.01s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-5ef520320af34e80)
+
+running 1 test
+geometry access candidate admitted after complete page scan: viable_sites=34 face=[1, 4, 2489, 2504, 2855, 3293, 3294, 2854, 2853, 3450, 3436] hosts=11 candidates=2069 preparation_counted_units=2113 pages=44 max_page_work=48 exact_proposals=1 host=3317 t=0.78 endpoint=(179.32556, 12.322735) lots=2 area_m2=300.80
+test face_access_exact_tests::exhaustive_prepared_pages_discover_mature_face_access_candidate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 231 filtered out; finished in 0.41s
+

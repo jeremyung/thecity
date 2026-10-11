@@ -23,6 +23,8 @@ Confirmed direction: living observation experience; independent random cities wi
 
 The geography dimensions, density, population, time rates, and resource budgets below are proposed defaults. Tune them against measured hardware and watchability. They are finite constraints, not promises of benchmark performance.
 
+External morphology research: [PLATEAU findings and bounded pilot](../validation/plateau-research.md). Root-reviewed direction is procedural calibration first, with offline source processing and a shared cross-style benchmark. No source datasets or measured Tokyo morphology statistics have been extracted; the report is research, not implementation or visual-acceptance evidence.
+
 ## Governing decisions
 
 1. A fixed landscape contains a changing city. No infinite terrain generation.
@@ -40,6 +42,7 @@ The geography dimensions, density, population, time rates, and resource budgets 
 - [Little Tokyo](../concepts/01-little-tokyo.png)
 - [Painted Hours](../concepts/02-painted-hours.png)
 - [Ink After Rain](../concepts/03-ink-after-rain.png)
+- [Metropolitan waterways and block-pattern reference](../concepts/photo-references/metropolitan-waterways-block-patterns.png)
 - [Image generation prompts](../concepts/prompts.txt)
 
 Concept boards illustrate atmosphere and development stages. They are not executable rendering designs or evidence that the city develops within one day.

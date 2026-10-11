@@ -1,0 +1,98 @@
+
+> thecity@0.1.0 test:engine
+> node scripts/test-engine.mjs --release access_descriptor_search:: --no-run
+
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+error[E0425]: cannot find function `validate_checkpoint` in this scope
+   --> src/access_descriptor_search.rs:298:9
+    |
+298 |         validate_checkpoint(&checkpoint)?;
+    |         ^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+note: these functions exist but are inaccessible
+   --> src/access_search.rs:573:1
+    |
+573 | fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `crate::access_search::validate_checkpoint`: not accessible
+    |
+   ::: src/access_rays.rs:332:1
+    |
+332 | fn validate_checkpoint(cp: &RayCheckpoint) -> Result<(), RayError> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `crate::access_rays::validate_checkpoint`: not accessible
+help: consider importing this function
+    |
+  5 + use crate::district_density::validate_checkpoint;
+    |
+
+warning: variable does not need to be mutable
+   --> src/access_search.rs:846:13
+    |
+846 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `host_checkpoint`
+   --> src/access_descriptor_search.rs:236:13
+    |
+236 |         let host_checkpoint = host_preparation.checkpoint();
+    |             ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_host_checkpoint`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+error[E0502]: cannot borrow `*self` as immutable because it is also borrowed as mutable
+   --> src/access_descriptor_search.rs:504:54
+    |
+464 |           let cp = &mut self.checkpoint;
+    |                    -------------------- mutable borrow occurs here
+...
+504 |               || !access_candidates::junction_angle_ok(self.host_heading(), direction)
+    |                                                        ^^^^ immutable borrow occurs here
+...
+508 | /         cp.pending_heading = Some(Heading {
+509 | |             x: direction.0,
+510 | |             z: direction.1,
+511 | |             target_distance: Some(access_candidates::dot(delta, direction) + access_candidates::FRONTAGE_TARGET_MARGIN_M),
+512 | |         });
+    | |__________- mutable borrow later used here
+
+error[E0502]: cannot borrow `*self` as immutable because it is also borrowed as mutable
+   --> src/access_descriptor_search.rs:575:21
+    |
+552 |         let cp = &mut self.checkpoint;
+    |                  -------------------- mutable borrow occurs here
+...
+575 |         let start = self.split_start();
+    |                     ^^^^ immutable borrow occurs here
+576 |         let target = cp.targets[cp.blocker_target_index];
+    |                      ---------- mutable borrow later used here
+
+error[E0502]: cannot borrow `*self` as immutable because it is also borrowed as mutable
+   --> src/access_descriptor_search.rs:630:21
+    |
+609 |         let cp = &mut self.checkpoint;
+    |                  -------------------- mutable borrow occurs here
+...
+630 |         let start = self.split_start();
+    |                     ^^^^ immutable borrow occurs here
+631 |         let corner = corners[cp.tangent_corner_index];
+    |                              ----------------------- mutable borrow later used here
+
+error[E0502]: cannot borrow `*self` as immutable because it is also borrowed as mutable
+   --> src/access_descriptor_search.rs:652:54
+    |
+609 |         let cp = &mut self.checkpoint;
+    |                  -------------------- mutable borrow occurs here
+...
+652 |             || !access_candidates::junction_angle_ok(self.host_heading(), direction)
+    |                                                      ^^^^ immutable borrow occurs here
+...
+656 |         cp.pending_heading = Some(Heading { x: direction.0, z: direction.1, target_distance: None });
+    |         -------------------------------------------------------------------------------------------- mutable borrow later used here
+
+Some errors have detailed explanations: E0425, E0502.
+For more information about an error, try `rustc --explain E0425`.
+warning: `tokyo-city-engine` (lib test) generated 2 warnings
+error: could not compile `tokyo-city-engine` (lib test) due to 5 previous errors; 2 warnings emitted
