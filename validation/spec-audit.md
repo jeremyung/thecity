@@ -1534,3 +1534,7 @@ Resolved the schema1 active-preflight load limitation without discarding the cit
 ### Deterministic identity indexes and worker timing check
 
 Replaced preflight linear node/edge identity and endpoint scans with transient BTree indexes, reconstructed from validated saved prefixes. Mature preflight102,097→18,095 logical units; total discovery7,476,821→7,392,819 (approximately1.12%). Native345pass/42ignored; WASM3180descriptor parity; schema1/2→3 migration verified. Added empty-node failed-checkpoint regression. Two6,000tick Chromium runs show p95unchanged0.4ms and maximum25.6→25.8ms, so no overall timing win is claimed. Details `identity-index-preflight.md`. Node coincidence and other graph stages remain scaling work;512cap and visuals unchanged.
+
+### Node coincidence index — 2026-10-11
+
+Preflight uses a bounded transient spatial index with exact f32 narrow-phase checks and source-index checkpoint cursors. Mature fixture work18,095→5,692; complete discovery7,392,819→7,380,416, preserving3180native/WASM descriptors. Native351pass/42ignored. See `node-coincidence-index.md` for evidence and limits. This supports bounded planning but does not establish larger graph caps, visual fidelity or browser frame performance.

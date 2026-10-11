@@ -2,7 +2,7 @@
   "scope": "Node WASM legacy preflight migration, not browser UI",
   "sourceSchema": 2,
   "sourceSha256": "e8947be245af6a4faa96dc8732c9fce2ced9a9838d29b0f0bdf6f193ab5119f7",
-  "wasmSha256": "46a7b13525ad43695958acd82db57a93697dde6506b6435333b8b7b0c8ef924f",
+  "wasmSha256": "db31aaa0dc8fbfe97a9ee61875a64852a583dcfecce89837d591d1e359817f74",
   "worldFieldsPreserved": true,
   "migratedRoundtripExact": true,
   "deterministicContinuationTicks": 24,

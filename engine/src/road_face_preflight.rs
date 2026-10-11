@@ -6,6 +6,7 @@
 //! work budget.
 
 use crate::geometry::segments_distance_coords;
+use crate::node_coincidence_index::NodeCoincidenceIndex;
 use crate::road_faces::{RoadFaceEdge, RoadFaceError, RoadFaceNode};
 use crate::road_pair_broadphase::{Bounds, BroadPhase, Checkpoint as BroadPhaseCheckpoint};
 use serde::{Deserialize, Serialize};
@@ -147,6 +148,7 @@ pub(crate) struct GraphPreflight {
     checkpoint: GraphPreflightCheckpoint,
     filter: Option<BroadPhase>,
     node_ids: BTreeMap<u32, usize>,
+    node_cells: NodeCoincidenceIndex,
     edge_ids: BTreeSet<u32>,
     edge_pairs: BTreeSet<(u32, u32)>,
 }
@@ -210,6 +212,7 @@ impl GraphPreflight {
             },
             filter,
             node_ids: BTreeMap::new(),
+            node_cells: NodeCoincidenceIndex::default(),
             edge_ids: BTreeSet::new(),
             edge_pairs: BTreeSet::new(),
         })
@@ -254,11 +257,12 @@ impl GraphPreflight {
             .map(BroadPhase::restore)
             .transpose()
             .map_err(|_| RoadFaceError::InvalidEdge)?;
-        let (node_ids, edge_ids, edge_pairs) = rebuild_indexes(&checkpoint)?;
+        let (node_ids, edge_ids, edge_pairs, node_cells) = rebuild_indexes(&checkpoint)?;
         Ok(Self {
             checkpoint,
             filter,
             node_ids,
+            node_cells,
             edge_ids,
             edge_pairs,
         })
@@ -361,6 +365,8 @@ impl GraphPreflight {
                 cp.stage = Stage::Failed(PreflightError::DuplicateNode);
             } else {
                 self.node_ids.insert(id, cp.node_cursor);
+                let node = cp.nodes[cp.node_cursor];
+                self.node_cells.insert(cp.node_cursor, node.x, node.z);
             }
             return true;
         }
@@ -377,6 +383,20 @@ impl GraphPreflight {
             return false;
         }
         let left = cp.nodes[cp.coincident_left];
+        // Fixed nine-cell query: advance source-index cursors exactly as the
+        // old scan did, skipping only pairs outside the conservative cells.
+        match self
+            .node_cells
+            .next_candidate(left.x, left.z, cp.coincident_right)
+        {
+            Ok(Some(index)) => cp.coincident_right = index,
+            Ok(None) => {
+                cp.coincident_left += 1;
+                cp.coincident_right = cp.coincident_left + 1;
+                return true;
+            }
+            Err(()) => {} // Unsupported coordinates retain the exact scan.
+        }
         let right = cp.nodes[cp.coincident_right];
         let coincident = (left.x - right.x).hypot(left.z - right.z) <= COINCIDENT_EPSILON;
         if coincident {
@@ -1048,8 +1068,17 @@ fn validate_completed_nodes(nodes: &[NodeRecord]) -> Result<(), RoadFaceError> {
 
 fn rebuild_indexes(
     cp: &GraphPreflightCheckpoint,
-) -> Result<(BTreeMap<u32, usize>, BTreeSet<u32>, BTreeSet<(u32, u32)>), RoadFaceError> {
+) -> Result<
+    (
+        BTreeMap<u32, usize>,
+        BTreeSet<u32>,
+        BTreeSet<(u32, u32)>,
+        NodeCoincidenceIndex,
+    ),
+    RoadFaceError,
+> {
     let mut node_ids = BTreeMap::new();
+    let mut node_cells = NodeCoincidenceIndex::default();
     let node_prefix = match cp.stage {
         Stage::Nodes => {
             cp.node_cursor + usize::from(cp.node_finite_checked && cp.node_unique_cursor == 1)
@@ -1066,6 +1095,7 @@ fn rebuild_indexes(
         if !node.x.is_finite() || !node.z.is_finite() || node_ids.insert(node.id, index).is_some() {
             return Err(RoadFaceError::InvalidEdge);
         }
+        node_cells.insert(index, node.x, node.z);
     }
     let mut edge_ids = BTreeSet::new();
     let mut edge_pairs = BTreeSet::new();
@@ -1077,7 +1107,7 @@ fn rebuild_indexes(
             return Err(RoadFaceError::InvalidEdge);
         }
     }
-    Ok((node_ids, edge_ids, edge_pairs))
+    Ok((node_ids, edge_ids, edge_pairs, node_cells))
 }
 
 fn validate_completed_node_prefix(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceError> {
@@ -1307,6 +1337,65 @@ mod tests {
             let job = GraphPreflight::new(Vec::new(), vec![edge(1, 10, 20)], None).unwrap();
             let job = GraphPreflight::restore(job.checkpoint()).unwrap();
             assert_eq!(drain(job, &[quota]).0, Err(RoadFaceError::MissingNode));
+        }
+    }
+
+    #[test]
+    fn coincidence_index_preserves_first_pair_and_source_cursor_after_resume() {
+        for outside_index_domain in [false, true] {
+            let mut nodes = vec![
+                node(1, 10.0, 0.0),
+                node(2, -2.0e-5, 0.0),
+                node(3, 30.0, 0.0),
+                node(4, -1.1e-5, 0.0),
+                node(5, -1.9e-5, 0.0),
+            ];
+            if outside_index_domain {
+                nodes[0].x = 200_000.0;
+            }
+            // A schema-3 checkpoint from the former all-pairs scan can point
+            // at a distant pair that the new query would skip. Its cursor
+            // still denotes the next eligible source index, not a cell slot.
+            let mut old_cursor = GraphPreflight::new(nodes.clone(), vec![], None).unwrap();
+            while old_cursor.checkpoint.stage == Stage::Nodes {
+                old_cursor.advance(1);
+            }
+            let mut cp = old_cursor.checkpoint();
+            cp.coincident_left = 1;
+            cp.coincident_right = 2;
+            let mut resumed = GraphPreflight::restore(cp).unwrap();
+            while resumed.result().is_none() {
+                resumed.advance(1);
+            }
+            assert_eq!(
+                (
+                    resumed.checkpoint.coincident_left,
+                    resumed.checkpoint.coincident_right
+                ),
+                (1, 3)
+            );
+            for quota in [1, 7, 48] {
+                let mut job = GraphPreflight::new(nodes.clone(), vec![], None).unwrap();
+                while job.result().is_none() {
+                    assert!(job.advance(quota).work_used <= quota);
+                    let bytes = serde_json::to_vec(&job.checkpoint()).unwrap();
+                    let restored =
+                        GraphPreflight::restore(serde_json::from_slice(&bytes).unwrap()).unwrap();
+                    assert_eq!(restored, job);
+                    job = restored;
+                }
+                assert_eq!(
+                    job.result().unwrap().unwrap_err(),
+                    reference_error(&nodes, &[], None)
+                );
+                assert_eq!(
+                    (
+                        job.checkpoint.coincident_left,
+                        job.checkpoint.coincident_right
+                    ),
+                    (1, 3)
+                );
+            }
         }
     }
 

@@ -165,3 +165,7 @@ The previous old-job limitation is resolved for preflight schema1: restore resta
 Node IDs, endpoint lookup, edge IDs and undirected edge pairs now use transient deterministic tree indexes. Mature preflight falls from 102,097 to 18,095 logical units with the same indexed graph. Full native suite: 345 passed / 42 ignored; rebuilt WASM matches all 3,180 descriptors and legacy1/2 migration checks. Preflight schema3 automatically restarts those older computations from frozen inputs.
 
 Two 6,000-tick Chromium worker runs do not show a clear overall timing gain (p95 both0.4ms; max25.6→25.8ms). See `identity-index-preflight.md` for scope and raw evidence. Live cap remains512; next remove node-coincidence/remaining graph-stage scaling bottlenecks before increasing caps. Visual appearance is unchanged.
+
+## Node coincidence spatial indexing — 2026-10-11
+
+A transient nine-cell index replaces preflight's full node-pair scan for supported coordinates, retaining the exact f32 predicate, source-order failures and schema3 cursor meaning. Mature preflight falls18,095→5,692 units with unchanged49faces; full native351pass/42ignored and rebuilt WASM3180descriptor parity pass. Total discovery decreases only0.17%; no browser timing or density gain is claimed. See [node-coincidence-index.md](node-coincidence-index.md). Coupled512limits remain; continue graph-stage scaling and visual/density work.

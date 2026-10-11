@@ -42,6 +42,7 @@ mod face_target_sampling;
 mod face_target_selection;
 mod face_target_viability;
 mod frontage;
+mod node_coincidence_index;
 mod road_pair_broadphase;
 mod frontier;
 mod geometry;

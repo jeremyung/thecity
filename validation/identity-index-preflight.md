@@ -2,7 +2,7 @@
 
 Road preflight now uses a BTreeMap for node IDs and BTreeSets for road IDs and undirected endpoint pairs. Node duplicate checks and road endpoint/duplicate lookups no longer repeatedly scan prefixes. Source-node indices and validation precedence are retained: finite node coordinates before node identity checks; road self-check, from/to existence, ID duplication, endpoint-pair duplication, then geometry.
 
-Each bounded validation action consumes a work unit; tree operations cost O(log cap), so these units are not equal-cost CPU instructions. Successful validation inserts into transient indexes. Checkpoints contain no map copies. Restore reconstructs maps from validated prefixes, including partially completed node validation; that bounded reconstruction occurs outside advance accounting. Node coincidence testing is still quadratic, and the full planner still caps captures at 512 nodes/edges.
+Each bounded validation action consumes a work unit; tree operations cost O(log cap), so these units are not equal-cost CPU instructions. Successful validation inserts into transient indexes. Checkpoints contain no map copies. Restore reconstructs maps from validated prefixes, including partially completed node validation; that bounded reconstruction occurs outside advance accounting. At this checkpoint node coincidence testing was still quadratic. A subsequent [node-coincidence index](node-coincidence-index.md) addresses the sparse case; the full planner still caps captures at 512 nodes/edges.
 
 ## Verification and measured scope
 
