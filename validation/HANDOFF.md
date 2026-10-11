@@ -147,3 +147,5 @@ Specifications under `specs/` remain the product source of truth. `validation/sp
 ## Road-pair spatial filter checkpoint
 
 An isolated 5,000-segment quota-stepped AABB pair iterator is implemented and independently checked, with checkpoint validation hardened by the primary agent. See [road-pair-broadphase.md](road-pair-broadphase.md). It is not connected to production preflight yet; the live 512-node/edge cap remains. Next: exact narrow-phase parity and coordinated graph-stage integration, including job versions and worker profiling.
+
+The next compatibility gate is now covered natively: a concrete f32 endpoint-cancellation witness proves raw AABBs can omit an existing rejection. A projection-aware `Bounds::from_segment_f32` adapter and actual-predicate parity tests address this before integration; eight preflight tests pass. Details in `road-pair-broadphase.md`. Production preflight still uses all pairs.

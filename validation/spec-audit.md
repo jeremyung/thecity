@@ -1518,3 +1518,7 @@ production and visual acceptance are unchanged.
 ## 2026-10-11 — isolated road-pair scaling component
 
 Progress toward bounded larger graph processing: deterministic quota-stepped AABB index, JSON resume validation and 5,000-segment grid oracle check. Five focused native tests; 14,701 candidates and 1,370,078 logical work units on the grid. See `road-pair-broadphase.md` for limits. Not integrated; production capture remains 512 nodes/edges. This does not satisfy metropolis-scale acceptance or change the screenshots.
+
+### Spatial filter f32 compatibility follow-up
+
+Added a concrete omission regression, projection-aware bounds adapter, and native parity checks using the same predicate as live preflight. Eight focused preflight tests pass across malformed geometry, save/resume, shared endpoints and 24 seeded filtered/all-pairs comparisons. Production enumeration and caps remain unchanged; integration and WASM parity are pending.

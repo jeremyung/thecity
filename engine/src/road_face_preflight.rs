@@ -413,29 +413,7 @@ impl GraphPreflight {
         }
         let (a, b) = cp.indexed_edges[cp.pair_first];
         let (c, d) = cp.indexed_edges[cp.pair_second];
-        let shared = a == c || a == d || b == c || b == d;
-        let nonplanar = if shared {
-            let (shared, first_other, second_other) = if a == c {
-                (a, b, d)
-            } else if a == d {
-                (a, b, c)
-            } else if b == c {
-                (b, a, d)
-            } else {
-                (b, a, c)
-            };
-            let first_dx = cp.nodes[first_other].x - cp.nodes[shared].x;
-            let first_dz = cp.nodes[first_other].z - cp.nodes[shared].z;
-            let second_dx = cp.nodes[second_other].x - cp.nodes[shared].x;
-            let second_dz = cp.nodes[second_other].z - cp.nodes[shared].z;
-            let cross = first_dx * second_dz - first_dz * second_dx;
-            let dot = first_dx * second_dx + first_dz * second_dz;
-            let scale = first_dx.hypot(first_dz) * second_dx.hypot(second_dz);
-            cross.abs() <= COINCIDENT_EPSILON * scale && dot > COINCIDENT_EPSILON
-        } else {
-            let (a, b, c, d) = (cp.nodes[a], cp.nodes[b], cp.nodes[c], cp.nodes[d]);
-            segments_distance_coords(a.x, a.z, b.x, b.z, c.x, c.z, d.x, d.z) <= COINCIDENT_EPSILON
-        };
+        let nonplanar = pair_nonplanar(&cp.nodes, a, b, c, d);
         cp.pair_tests_done += 1;
         if nonplanar {
             cp.stage = Stage::Failed(PreflightError::NonPlanar);
@@ -447,6 +425,34 @@ impl GraphPreflight {
             }
         }
         true
+    }
+}
+
+// Shared by the live validator and broad-phase parity tests so the oracle
+// includes the actual f32 arithmetic and shared-node collinearity rule.
+fn pair_nonplanar(nodes: &[RoadFaceNode], a: usize, b: usize, c: usize, d: usize) -> bool {
+    let shared = a == c || a == d || b == c || b == d;
+    if shared {
+        let (shared, first_other, second_other) = if a == c {
+            (a, b, d)
+        } else if a == d {
+            (a, b, c)
+        } else if b == c {
+            (b, a, d)
+        } else {
+            (b, a, c)
+        };
+        let first_dx = nodes[first_other].x - nodes[shared].x;
+        let first_dz = nodes[first_other].z - nodes[shared].z;
+        let second_dx = nodes[second_other].x - nodes[shared].x;
+        let second_dz = nodes[second_other].z - nodes[shared].z;
+        let cross = first_dx * second_dz - first_dz * second_dx;
+        let dot = first_dx * second_dx + first_dz * second_dz;
+        let scale = first_dx.hypot(first_dz) * second_dx.hypot(second_dz);
+        cross.abs() <= COINCIDENT_EPSILON * scale && dot > COINCIDENT_EPSILON
+    } else {
+        let (a, b, c, d) = (nodes[a], nodes[b], nodes[c], nodes[d]);
+        segments_distance_coords(a.x, a.z, b.x, b.z, c.x, c.z, d.x, d.z) <= COINCIDENT_EPSILON
     }
 }
 
@@ -681,6 +687,113 @@ mod tests {
             assert!(turn < 2_000_000);
         }
         (job.result().unwrap().map(<[_]>::to_vec), work)
+    }
+
+    #[test]
+    fn spatial_candidates_preserve_actual_f32_planarity_rejections() {
+        use crate::road_pair_broadphase::{Bounds, BroadPhase};
+        let mut seed = 0x91e2_u64;
+        let mut random = || {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+            ((seed >> 32) as u32 as f64 / u32::MAX as f64 * 200_000.0 - 100_000.0) as f32
+        };
+        for case in 0..24 {
+            let mut nodes = vec![
+                node(0, -100_000.0, 0.0),
+                node(1, -0.001, 0.0),
+                node(2, 0.0, 0.0),
+                node(3, 0.0, 1.0),
+            ];
+            for id in 4..68 {
+                nodes.push(node(id, random(), random()));
+            }
+            let mut edges = vec![(0, 1), (2, 3)];
+            for j in 0..64 {
+                edges.push((j, (j + 1 + case) % nodes.len()));
+            }
+            let bounds: Vec<_> = edges
+                .iter()
+                .map(|&(a, b)| {
+                    Bounds::from_segment_f32(nodes[a].x, nodes[a].z, nodes[b].x, nodes[b].z)
+                        .unwrap()
+                })
+                .collect();
+            let mut expected = Vec::new();
+            for i in 0..edges.len() {
+                for j in i + 1..edges.len() {
+                    let (a, b) = edges[i];
+                    let (c, d) = edges[j];
+                    if pair_nonplanar(&nodes, a, b, c, d) {
+                        expected.push((i, j));
+                    }
+                }
+            }
+            assert!(
+                expected.contains(&(0, 1)),
+                "f32 endpoint cancellation witness"
+            );
+            for quota in [1, 7, 48] {
+                let mut bp = BroadPhase::new(bounds.clone()).unwrap();
+                let mut actual = Vec::new();
+                let mut calls = 0;
+                loop {
+                    let step = bp.advance(quota);
+                    assert!(step.work_used <= quota);
+                    if let Some((i, j)) = step.pair {
+                        let (a, b) = edges[i];
+                        let (c, d) = edges[j];
+                        if pair_nonplanar(&nodes, a, b, c, d) {
+                            actual.push((i, j));
+                        }
+                    }
+                    if step.done {
+                        break;
+                    }
+                    calls += 1;
+                    if calls % 97 == 0 {
+                        let json = serde_json::to_vec(&bp.checkpoint()).unwrap();
+                        bp = BroadPhase::restore(serde_json::from_slice(&json).unwrap()).unwrap();
+                    }
+                }
+                assert_eq!(actual, expected, "case {case}, quota {quota}");
+            }
+        }
+    }
+
+    #[test]
+    fn raw_segment_aabb_can_miss_f32_endpoint_projection() {
+        use crate::road_pair_broadphase::{Bounds, BroadPhase};
+        let a = node(0, -100_000.0, 0.0);
+        let b = node(1, -0.001, 0.0);
+        let c = node(2, 0.0, 0.0);
+        let d = node(3, 0.0, 1.0);
+        assert_eq!(a.x + (b.x - a.x), 0.0);
+        assert!(pair_nonplanar(&[a, b, c, d], 0, 1, 2, 3));
+        let mut raw = BroadPhase::new(vec![
+            Bounds {
+                min_x: a.x as f64,
+                max_x: b.x as f64,
+                min_z: 0.0,
+                max_z: 0.0,
+            },
+            Bounds {
+                min_x: 0.0,
+                max_x: 0.0,
+                min_z: 0.0,
+                max_z: 1.0,
+            },
+        ])
+        .unwrap();
+        loop {
+            let step = raw.advance(48);
+            assert!(step.pair.is_none());
+            if step.done {
+                break;
+            }
+        }
+        for (ax, az, bx, bz) in [(f32::NAN, 0., 1., 1.), (100_001., 0., 1., 1.)] {
+            assert!(Bounds::from_segment_f32(ax, az, bx, bz).is_err());
+        }
     }
 
     #[test]

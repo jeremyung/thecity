@@ -16,10 +16,18 @@ The grid emits 14,701 candidates versus 12,497,500 possible unordered pairs. Tot
 
 ## Remaining work
 
-- Integrate with the exact preflight intersection predicate, conservatively accounting for its f32 arithmetic; AABB parity alone does not prove live narrow-phase parity.
+- Integrate the iterator and f32 bounds adapter into quota-stepped preflight, including job serialization and a fallback for unsupported coordinates. The native predicate parity checks below are a prerequisite, not live integration or cross-target proof.
 - Replace other quadratic duplicate/node/endpoint validation, and update topology, bridges, face walk, selection and capture together. Never truncate the graph to fit a limit.
 - Version affected persisted planner jobs and validate native/WASM replay. Normal city saves must remain supported.
 - Profile complete worker steps, synchronous capture and restore, not just this iterator.
 - Address adversarial broad bounds: objects spanning all buckets can incur repeated visits, so the index does not guarantee subquadratic total work. Current membership storage is capped at 640,000 and pending candidates at 5,000.
 
 No density, frame-rate or visual-quality improvement is claimed by this checkpoint.
+
+## Actual f32 predicate compatibility
+
+A native regression demonstrates why raw endpoint AABBs are insufficient: segment (-100000, 0) → (-0.001, 0) and segment (0, 0) → (0, 1) have a mathematical x gap of 0.001. In the current f32 distance routine, `-100000 + (-0.001 - -100000)` rounds to 0. The live preflight therefore rejects this pair, but raw AABB filtering omits it.
+
+`Bounds::from_segment_f32` includes the rounded reconstructed endpoint in each axis, for both endpoint orders, and adds 2e-5 distance padding. For clamped finite t, each rounded multiply/add is monotone, so the computed coordinate lies between the start and reconstructed endpoint. This bounds the actual projection without guessing a fixed world-scale roundoff allowance. Inputs must be finite and within ±100000; unsupported inputs return an error and require exact fallback on integration. Bounds are clipped to that domain, which cannot increase distance to input endpoints within the domain.
+
+The live pair predicate was extracted without changing arithmetic or branch order. Eight preflight tests pass, including the cancellation witness and filtered-versus-all-pairs rejection equality on 24 seeded 66-edge cases at quotas 1, 7 and 48, with periodic JSON resume. Existing malformed-input, shared-endpoint, crossing, cap, checkpoint and handoff checks pass. The filter still is not called by production preflight; job formats and the 512-edge live limit are unchanged. WASM predicate parity remains to be verified after integration.

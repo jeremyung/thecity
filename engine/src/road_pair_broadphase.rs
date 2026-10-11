@@ -67,6 +67,45 @@ pub struct BroadPhase {
 }
 
 impl Bounds {
+    /// Bounds conservative for geometry::point_segment_distance's f32
+    /// projection, not just the mathematical segment. With clamped t in [0,1],
+    /// rounded a + t * (b-a) is monotone and lies between a and the rounded
+    /// endpoint a + (b-a). Include both orientations, and distance tolerance.
+    /// Reject out-of-domain inputs so callers can retain their exact fallback.
+    pub(crate) fn from_segment_f32(ax: f32, az: f32, bx: f32, bz: f32) -> Result<Self, Error> {
+        if [ax, az, bx, bz]
+            .iter()
+            .any(|v| !v.is_finite() || (*v as f64).abs() > MAX_COORDINATE)
+        {
+            return Err(Error::InvalidBounds);
+        }
+        let axis = |a: f32, b: f32| {
+            let values = [
+                a as f64,
+                b as f64,
+                (a + (b - a)) as f64,
+                (b + (a - b)) as f64,
+            ];
+            let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
+            let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+            // Two tolerances also cover rounding of the f32 subtraction in
+            // the distance test. Clipping is safe: all input endpoints are
+            // within this domain, so clipping cannot increase their distance.
+            (
+                (lo - 2.0 * EPSILON).max(-MAX_COORDINATE),
+                (hi + 2.0 * EPSILON).min(MAX_COORDINATE),
+            )
+        };
+        let (min_x, max_x) = axis(ax, bx);
+        let (min_z, max_z) = axis(az, bz);
+        Ok(Self {
+            min_x,
+            max_x,
+            min_z,
+            max_z,
+        })
+    }
+
     fn valid(self) -> bool {
         [self.min_x, self.min_z, self.max_x, self.max_z]
             .into_iter()
