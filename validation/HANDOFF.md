@@ -27,6 +27,18 @@ diagnostic checkpoints, and active live-job saves using those older nested
 schemas, are rejected; they are not silently restarted. City saves without an
 active job remain compatible and default to an empty exhausted-face history.
 
+## Fragmented frontage follow-up
+
+Host sampling now retains midpoint candidates and appends at most two edge
+samples for fragmented free spans, within the existing six-sample cap. Full
+native suite: 321 passed, 39 ignored; mature golden descriptors and WASM build
+pass. The matched 30,000-tick browser continuation is byte-identical to the
+previous run: this fixes a candidate-coverage blind spot but provides **no density
+gain on the mature fixture**. See [comparison](fragmented-frontage-browser-profile.md).
+Host-preparation checkpoint schema is now 4. Stop speculative sample expansion;
+investigate rejected geometry/upstream block layout and the documented render
+quality gaps. Runtime screenshots are in screenshots/latest/.
+
 ## Verified work
 
 - Persisted, quota-stepped face discovery, target selection, descriptor generation and proposal validation.
@@ -43,7 +55,7 @@ active job remain compatible and default to an empty exhausted-face history.
 ## Next implementation steps
 
 1. Replace quadratic graph-preflight scans with deterministic indexing before expanding the coupled 512 graph/face limits; reconcile node and legacy-footprint caps. Do not truncate the graph.
-2. Broaden split-sampling coverage beyond single-interval hosts: edge samples now recover the known mature-fixture route, but multi-interval hosts still sample only interval midpoints.
+2. Diagnose why the remaining viable block interiors reject access candidates. Fragmented-span edge sampling is implemented, but its matched mature continuation shows no density gain; inspect rejection causes and upstream street/block layout before broadening samples again.
 3. Measure browser worker tick cost, including snapshot capture and full simulation stepping, before accepting the provisional production admission budget.
 4. Validate the new live hook under geometry churn and through actual worker construction. Frozen discovery now persists across ticks; fresh validation retries twice before skipping a stale candidate; actor remapping remains atomic.
 5. Extend the short browser worker run to long-duration construction/opening and bounded-state acceptance; focused native admission-to-opening and real-step resume checks now pass (7 focused tests).

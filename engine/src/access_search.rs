@@ -9,7 +9,7 @@ use crate::road_faces::RoadFace;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-const CHECKPOINT_SCHEMA: u8 = 3;
+const CHECKPOINT_SCHEMA: u8 = 4;
 const MAX_HOST_INPUTS: usize = 512;
 pub(crate) const MAX_PREPARED_HOSTS: usize = 24;
 const MAX_NODES: usize = access_candidates::MAX_PREPARED_INPUT_NODES;
@@ -20,6 +20,7 @@ const PARCEL_HOST_CLEARANCE_M: f32 = 5.0;
 const PARCEL_PROJECTION_MARGIN_M: f32 = 2.0;
 const MAX_SPLITS_PER_HOST: usize = access_candidates::MAX_SPLITS_PER_HOST;
 const MAX_INTERVAL_SPLITS: usize = access_candidates::MAX_INTERVAL_SPLITS;
+const MAX_EDGE_SPLITS: usize = access_candidates::MAX_EDGE_SPLITS;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 struct Interval {
@@ -63,6 +64,7 @@ enum Phase {
     SubtractIntervals,
     FilterSpans,
     SelectSplits,
+    SelectEdges,
     Done,
 }
 
@@ -95,6 +97,10 @@ pub(crate) struct Checkpoint {
     select_index: usize,
     select_compare: usize,
     selected_spans: Vec<Interval>,
+    edge_span_cursor: usize,
+    edge_candidate_cursor: usize,
+    edge_compare_cursor: usize,
+    edge_samples: Vec<f32>,
     samples: Vec<HostSplitSample>,
 }
 
@@ -253,6 +259,10 @@ impl AccessHostPreparation {
             select_index: 0,
             select_compare: 0,
             selected_spans: Vec::new(),
+            edge_span_cursor: 0,
+            edge_candidate_cursor: 0,
+            edge_compare_cursor: 0,
+            edge_samples: Vec::new(),
             samples: Vec::new(),
         };
         Self { checkpoint }
@@ -291,6 +301,7 @@ impl AccessHostPreparation {
                 Phase::SubtractIntervals => self.advance_subtract(),
                 Phase::FilterSpans => self.advance_filter_spans(),
                 Phase::SelectSplits => self.advance_select(),
+                Phase::SelectEdges => self.advance_edge_select(),
                 Phase::Done => false,
             };
             if did_work {
@@ -341,6 +352,21 @@ impl AccessHostPreparation {
                 true
             }
             Phase::SelectSplits if cp.select_index >= cp.free_spans.len() => {
+                if cp.free_spans.len() > 1 && !cp.selected_spans.is_empty() {
+                    cp.phase = Phase::SelectEdges;
+                    cp.edge_span_cursor = 0;
+                    cp.edge_candidate_cursor = 0;
+                    cp.edge_compare_cursor = 0;
+                    cp.edge_samples.clear();
+                } else {
+                    self.finish_host();
+                }
+                true
+            }
+            Phase::SelectEdges
+                if cp.edge_samples.len() >= MAX_EDGE_SPLITS
+                    || cp.edge_span_cursor >= cp.selected_spans.len() =>
+            {
                 self.finish_host();
                 true
             }
@@ -350,6 +376,7 @@ impl AccessHostPreparation {
             | Phase::SubtractIntervals
             | Phase::FilterSpans
             | Phase::SelectSplits
+            | Phase::SelectEdges
             | Phase::Done => false,
         }
     }
@@ -545,6 +572,47 @@ impl AccessHostPreparation {
         true
     }
 
+    /// Examine at most two edge samples per selected span. Each generated
+    /// sample comparison against a midpoint or prior accepted edge consumes
+    /// one work unit; cursor transitions are charged by this phase as well.
+    fn advance_edge_select(&mut self) -> bool {
+        let cp = &mut self.checkpoint;
+        if cp.edge_samples.len() >= MAX_EDGE_SPLITS {
+            return true;
+        }
+        let span = cp.selected_spans[cp.edge_span_cursor];
+        let host_len = host_length(cp.hosts[cp.host_index].road);
+        let edges = access_candidates::edge_split_samples(span.start, span.end, host_len);
+        if cp.edge_candidate_cursor >= edges.len() {
+            cp.edge_span_cursor += 1;
+            cp.edge_candidate_cursor = 0;
+            cp.edge_compare_cursor = 0;
+            return true;
+        }
+        let edge = edges[cp.edge_candidate_cursor];
+        let comparison_count = cp.selected_spans.len() + cp.edge_samples.len();
+        if cp.edge_compare_cursor < comparison_count {
+            let duplicate = if cp.edge_compare_cursor < cp.selected_spans.len() {
+                let midpoint = cp.selected_spans[cp.edge_compare_cursor];
+                let midpoint = (midpoint.start + midpoint.end) * 0.5;
+                access_candidates::edge_sample_is_duplicate(edge, midpoint)
+            } else {
+                let old = cp.edge_samples[cp.edge_compare_cursor - cp.selected_spans.len()];
+                access_candidates::edge_sample_is_duplicate(edge, old)
+            };
+            cp.edge_compare_cursor += 1;
+            if duplicate {
+                cp.edge_candidate_cursor += 1;
+                cp.edge_compare_cursor = 0;
+            }
+            return true;
+        }
+        cp.edge_samples.push(edge);
+        cp.edge_candidate_cursor += 1;
+        cp.edge_compare_cursor = 0;
+        true
+    }
+
     fn finish_host(&mut self) {
         let cp = &mut self.checkpoint;
         let host = cp.hosts[cp.host_index].road;
@@ -555,6 +623,19 @@ impl AccessHostPreparation {
             } else {
                 (span.start + span.end) * 0.5
             };
+            let host_t = along_m / host_len;
+            if (0.0..1.0).contains(&host_t) {
+                let projection_host = cp.hosts[cp.host_index];
+                cp.samples.push(HostSplitSample {
+                    road_id: host.road_id,
+                    along_m,
+                    host_t,
+                    inward_x: projection_host.inward_x,
+                    inward_z: projection_host.inward_z,
+                });
+            }
+        }
+        for along_m in cp.edge_samples.drain(..) {
             let host_t = along_m / host_len;
             if (0.0..1.0).contains(&host_t) {
                 let projection_host = cp.hosts[cp.host_index];
@@ -585,6 +666,10 @@ impl AccessHostPreparation {
         cp.select_index = 0;
         cp.select_compare = 0;
         cp.selected_spans.clear();
+        cp.edge_span_cursor = 0;
+        cp.edge_candidate_cursor = 0;
+        cp.edge_compare_cursor = 0;
+        cp.edge_samples.clear();
         cp.node_index = 0;
         cp.parcel_index = 0;
         cp.parcel_corner_index = 0;
@@ -721,6 +806,10 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
         || cp.select_index > cp.free_spans.len()
         || cp.select_compare > cp.selected_spans.len()
         || cp.selected_spans.len() > MAX_SPLITS_PER_HOST
+        || cp.edge_span_cursor > cp.selected_spans.len()
+        || cp.edge_candidate_cursor > MAX_EDGE_SPLITS
+        || cp.edge_compare_cursor > cp.selected_spans.len() + cp.edge_samples.len()
+        || cp.edge_samples.len() > MAX_EDGE_SPLITS
         || cp.samples.len() > MAX_PREPARED_HOSTS * MAX_SPLITS_PER_HOST
     {
         return Err(SearchError::InvalidCursor);
@@ -751,6 +840,18 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
             && (cp.subtract_index != cp.forbidden.len()
                 || cp.filter_index != 0
                 || !cp.filtered_spans.is_empty()))
+        || (cp.phase == Phase::SelectEdges
+            && (cp.free_spans.len() <= 1
+                || cp.select_index != cp.free_spans.len()
+                || cp.selected_spans.is_empty()
+                || cp.edge_span_cursor > cp.selected_spans.len()
+                || (cp.edge_span_cursor == cp.selected_spans.len()
+                    && (cp.edge_candidate_cursor != 0 || cp.edge_compare_cursor != 0))))
+        || (cp.phase != Phase::SelectEdges
+            && (cp.edge_span_cursor != 0
+                || cp.edge_candidate_cursor != 0
+                || cp.edge_compare_cursor != 0
+                || !cp.edge_samples.is_empty()))
     {
         return Err(SearchError::InvalidCursor);
     }
@@ -778,6 +879,29 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
                 return Err(SearchError::InvalidCursor);
             }
         }
+        Phase::SelectEdges => {
+            if cp.edge_span_cursor < cp.selected_spans.len() {
+                let span = cp.selected_spans[cp.edge_span_cursor];
+                let edges = access_candidates::edge_split_samples(
+                    span.start,
+                    span.end,
+                    host_length(cp.hosts[cp.host_index].road),
+                );
+                if cp.edge_candidate_cursor > edges.len() {
+                    return Err(SearchError::InvalidCursor);
+                }
+            }
+            if cp.edge_samples.windows(2).any(|pair| (pair[0] - pair[1]).abs() < 1.0)
+                || cp.edge_samples.iter().any(|edge| {
+                    cp.selected_spans.iter().any(|selected| {
+                        let midpoint = (selected.start + selected.end) * 0.5;
+                        (midpoint - edge).abs() < 1.0
+                    })
+                })
+            {
+                return Err(SearchError::InvalidCursor);
+            }
+        }
         _ => {}
     }
     if cp
@@ -789,6 +913,7 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
         .chain(cp.filtered_spans.iter())
         .chain(cp.selected_spans.iter())
         .any(|i| !i.start.is_finite() || !i.end.is_finite())
+        || cp.edge_samples.iter().any(|edge| !edge.is_finite())
         || cp.parcel_bounds.iter().any(|v| !v.is_finite())
         || cp
             .samples
@@ -975,15 +1100,45 @@ mod tests {
             }
             samples
         } else {
+            let fragmented = free.len() > 1;
             free.sort_by(|left, right| {
                 (right.1 - right.0)
                     .total_cmp(&(left.1 - left.0))
                     .then_with(|| left.0.total_cmp(&right.0))
             });
-            free.into_iter()
-                .take(4)
+            let selected = free.into_iter().take(4).collect::<Vec<_>>();
+            let mut samples = selected
+                .iter()
                 .map(|(lo, hi)| (lo + hi) * 0.5)
-                .collect()
+                .collect::<Vec<_>>();
+            if fragmented {
+                let mut added = 0;
+                for &(lo, hi) in &selected {
+                    let quartile = (hi - lo) * 0.25;
+                    let lo_inset = if lo == 10.0 { 1.0 } else { 3.0 };
+                    let hi_inset = if hi == length - 10.0 { 1.0 } else { 3.0 };
+                    let mut edges = Vec::new();
+                    if quartile - lo_inset >= 1.0 {
+                        edges.push(lo + lo_inset);
+                    }
+                    if quartile - hi_inset >= 1.0 {
+                        edges.push(hi - hi_inset);
+                    }
+                    for edge in edges {
+                        if added >= 2 {
+                            break;
+                        }
+                        if samples.iter().all(|old| (old - edge).abs() >= 1.0) {
+                            samples.push(edge);
+                            added += 1;
+                        }
+                    }
+                    if added >= 2 {
+                        break;
+                    }
+                }
+            }
+            samples
         }
     }
 
@@ -1098,6 +1253,102 @@ mod tests {
             search = AccessHostPreparation::restore(complete).unwrap();
             assert_eq!(search.split_samples().unwrap(), expected.as_slice());
         }
+    }
+
+    #[test]
+    fn fragmented_edge_samples_match_sync_at_quotas_one_and_seven() {
+        let face = square_face();
+        let host = hosts()[0];
+        let nodes = [CandidateNode {
+            id: 5,
+            x: 50.0,
+            z: 0.0,
+        }];
+        let expected = access_candidates::host_split_samples(host, &nodes, &[])
+            .into_iter()
+            .map(|along_m| HostSplitSample {
+                road_id: host.road_id,
+                along_m,
+                host_t: along_m / host_length(host),
+                inward_x: 0.0,
+                inward_z: 1.0,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            expected.iter().map(|sample| sample.along_m).collect::<Vec<_>>(),
+            [29.5, 70.5, 11.0, 46.0]
+        );
+
+        for quota in [1, 7] {
+            let mut search = AccessHostPreparation::new(&face, &[host], &nodes, &[]).unwrap();
+            while !search.advance(quota).done {
+                let checkpoint: Checkpoint = serde_json::from_slice(
+                    &serde_json::to_vec(&search.checkpoint()).unwrap(),
+                )
+                .unwrap();
+                search = AccessHostPreparation::restore(checkpoint).unwrap();
+            }
+            assert_eq!(search.split_samples().unwrap(), expected.as_slice());
+            assert!(search.split_samples().unwrap().len() <= MAX_SPLITS_PER_HOST);
+        }
+    }
+
+    #[test]
+    fn fragmented_short_spans_exhaust_edge_scan_without_extra_samples() {
+        let face = square_face();
+        let host = hosts()[0];
+        let nodes = [20.0, 32.0, 44.0, 56.0, 68.0, 80.0]
+            .into_iter()
+            .enumerate()
+            .map(|(index, x)| CandidateNode {
+                id: 20 + index as u32,
+                x,
+                z: 0.0,
+            })
+            .collect::<Vec<_>>();
+        let expected_along = access_candidates::host_split_samples(host, &nodes, &[]);
+        assert_eq!(expected_along.len(), MAX_INTERVAL_SPLITS);
+        assert!(expected_along.iter().all(|sample| {
+            ![20.0, 32.0, 44.0, 56.0, 68.0, 80.0]
+                .iter()
+                .any(|node| (sample - node).abs() < 4.0)
+        }));
+        let mut search = AccessHostPreparation::new(&face, &[host], &nodes, &[]).unwrap();
+        let mut saw_edge_phase = false;
+        let mut saw_terminal_edge_cursor = false;
+        while !search.advance(1).done {
+            saw_edge_phase |= search.checkpoint.phase == Phase::SelectEdges;
+            saw_terminal_edge_cursor |= search.checkpoint.phase == Phase::SelectEdges
+                && search.checkpoint.edge_span_cursor == search.checkpoint.selected_spans.len();
+            let checkpoint: Checkpoint = serde_json::from_slice(
+                &serde_json::to_vec(&search.checkpoint()).unwrap(),
+            )
+            .unwrap();
+            search = AccessHostPreparation::restore(checkpoint).unwrap();
+        }
+        assert!(saw_edge_phase);
+        assert!(saw_terminal_edge_cursor);
+        assert_eq!(
+            search
+                .split_samples()
+                .unwrap()
+                .iter()
+                .map(|sample| sample.along_m)
+                .collect::<Vec<_>>(),
+            expected_along
+        );
+        assert!(search.split_samples().unwrap().len() <= MAX_INTERVAL_SPLITS);
+
+        let mut unfinished = AccessHostPreparation::new(&face, &[host], &nodes, &[]).unwrap();
+        while unfinished.checkpoint.phase != Phase::SelectEdges {
+            unfinished.advance(1);
+        }
+        let mut corrupt = unfinished.checkpoint();
+        corrupt.edge_span_cursor = usize::MAX;
+        assert_eq!(
+            AccessHostPreparation::restore(corrupt).unwrap_err(),
+            SearchError::InvalidCursor
+        );
     }
 
     #[test]

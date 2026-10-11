@@ -1437,3 +1437,19 @@ stage and both frontage parcels present at the end. Buildings increase 850 to
 853. Final save restores exactly. This confirms useful sweep behavior and a
 construction continuation, but the small gain leaves density acceptance unmet.
 Per-step timing remains fixture-specific and excludes rendering.
+
+
+## 2026-10-10 — Fragmented frontage coverage and negative growth result
+
+Preserved multi-span midpoint prefixes and appended at most two clearance-aware
+edge samples; host cap stays six and single-span descriptors are unchanged.
+Full native suite: 321 passes, 39 ignored, mature golden descriptors and production
+WASM build pass. Geometric regression proves a clear candidate entrance missed
+by old midpoints. Quota 1/7 replay checks pass. Host-preparation schema is now 4.
+
+Matched 30,000-tick Chromium continuation yields a byte-identical final save to the prior
+sweep build: 853 buildings, 210 roads, one opened access branch. See
+fragmented-frontage-browser-profile.md/json. This is useful coverage correctness
+with no measured density benefit on this fixture. Further density changes need
+rejection/upstream-layout evidence. Runtime screenshots and concrete remaining
+render gaps are saved under screenshots/latest; art acceptance remains unmet.
