@@ -15,7 +15,13 @@ const CAPTURE_TICK: u64 = 242_000;
 const SAMPLE_TICKS: u32 = 200;
 const DEVELOPMENT_RATE: u32 = 16;
 const MAX_UNIQUE_PLANS_PER_SEED: usize = 64;
-const TARGET_FRONTAGES: [f32; 3] = [11.0, 14.0, 18.0];
+const TARGET_FRONTAGES: [(f32, f32); 5] = [
+    (11.0, 11.0),
+    (14.0, 14.0),
+    (18.0, 18.0),
+    (11.0, 14.0),
+    (11.0, 18.0),
+];
 
 #[derive(Serialize)]
 struct SeedReport {
@@ -44,6 +50,7 @@ struct PlanReport {
 #[derive(Serialize)]
 struct VariantReport {
     target_frontage_m: f32,
+    opposite_target_frontage_m: f32,
     generated_lots: usize,
     accepted_lots: usize,
     rejected_lots: usize,
@@ -129,8 +136,14 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
     let variants = TARGET_FRONTAGES
         .iter()
         .copied()
-        .map(|target_frontage_m| {
-            let lots = blocks::subdivide_rectangular_block(corners, 8.0, target_frontage_m, 2.2);
+        .map(|(target_frontage_m, opposite_target_frontage_m)| {
+            let lots = blocks::subdivide_mixed_rectangular_block(
+                corners,
+                8.0,
+                target_frontage_m,
+                opposite_target_frontage_m,
+                2.2,
+            );
             let generated_lots = lots.len();
             let mut context = context.clone();
             let mut accepted_lots = 0;
@@ -153,6 +166,7 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
             }
             VariantReport {
                 target_frontage_m,
+                opposite_target_frontage_m,
                 generated_lots,
                 accepted_lots,
                 rejected_lots: generated_lots.saturating_sub(accepted_lots),

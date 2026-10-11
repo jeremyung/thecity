@@ -686,6 +686,13 @@ The current floor/use-only capacity policy prevents treating that area gain as
 more population or activity. No production subdivision change was promoted;
 mixed building programs need end-to-end simulation and visual evidence first.
 
+The [mixed-row follow-up](block-subdivision-study/mixed-rows.md) preserves one
+narrow row exactly and halves the uniform-widening lot-count penalty. Its area
+gain remains modest (2.5–4.3% across the tested alternatives). It is test-only;
+capacity units and footprint assumptions need explicit calibration before a
+growth treatment, followed by real street-level review. No geometry score is
+being substituted for the approved art direction.
+
 Follow-up: oversized route reconstruction now fails closed instead of returning
 a suffix missing the requested origin. Boundary and delivery dispatch regression
 tests pass; 361 native tests pass and the 300,000-tick WASM baseline save remains

@@ -178,6 +178,51 @@ pub(crate) fn subdivide_rectangular_block(
     lots
 }
 
+/// Test-only counterfactual that assigns different frontage targets to the
+/// two canonical frontage edges. Lot geometry and edge metadata come from the
+/// canonical subdivision routine, so both rows retain its winding convention.
+#[cfg(test)]
+pub(crate) fn subdivide_mixed_rectangular_block(
+    corners: [BlockPoint; 4],
+    street_inset: f32,
+    narrow_frontage: f32,
+    wide_frontage: f32,
+    gap: f32,
+) -> Vec<BlockLot> {
+    if !narrow_frontage.is_finite()
+        || narrow_frontage <= 0.0
+        || !wide_frontage.is_finite()
+        || wide_frontage <= 0.0
+    {
+        return Vec::new();
+    }
+
+    let edge_0 = subtract(corners[1], corners[0]);
+    let edge_1 = subtract(corners[2], corners[1]);
+    let len_0 = edge_0.x.hypot(edge_0.z);
+    let len_1 = edge_1.x.hypot(edge_1.z);
+    let first_edge = if len_0 >= len_1 { 0 } else { 1 };
+    let opposite_edge = (first_edge + 2) % 4;
+
+    let narrow = subdivide_rectangular_block(corners, street_inset, narrow_frontage, gap);
+    let wide = subdivide_rectangular_block(corners, street_inset, wide_frontage, gap);
+    if narrow.is_empty() || wide.is_empty() {
+        return Vec::new();
+    }
+    let mut mixed = Vec::with_capacity(narrow.len() + wide.len());
+    mixed.extend(
+        narrow
+            .into_iter()
+            .filter(|lot| lot.frontage_edge == first_edge),
+    );
+    mixed.extend(
+        wide.into_iter()
+            .filter(|lot| lot.frontage_edge == opposite_edge),
+    );
+    mixed.truncate(MAX_LOTS);
+    mixed
+}
+
 fn add(a: BlockPoint, b: BlockPoint) -> BlockPoint {
     BlockPoint {
         x: a.x + b.x,
@@ -220,7 +265,9 @@ fn vector_distance(a: BlockPoint, b: BlockPoint) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{subdivide_rectangular_block, BlockLot, BlockPoint};
+    use super::{
+        subdivide_mixed_rectangular_block, subdivide_rectangular_block, BlockLot, BlockPoint,
+    };
     use std::collections::BTreeSet;
     use std::f32::consts::PI;
 
@@ -518,5 +565,120 @@ mod tests {
         assert!(lots
             .iter()
             .all(|lot| lot.frontage_t.is_finite() && (0.0..=1.0).contains(&lot.frontage_t)));
+    }
+
+    #[test]
+    fn mixed_frontages_preserve_narrow_side_and_two_meter_clearance() {
+        for angle in [0.0, 0.73] {
+            for clockwise in [false, true] {
+                let corners = rectangle(82.0, 50.0, angle, clockwise);
+                let mixed = subdivide_mixed_rectangular_block(corners, 6.0, 11.0, 18.0, 2.0);
+                let canonical_narrow = subdivide_rectangular_block(corners, 6.0, 11.0, 2.0);
+                let first_edge = if clockwise { 1 } else { 0 };
+                let narrow: Vec<_> = canonical_narrow
+                    .into_iter()
+                    .filter(|lot| lot.frontage_edge == first_edge)
+                    .collect();
+                assert_eq!(
+                    mixed
+                        .iter()
+                        .filter(|lot| lot.frontage_edge == first_edge)
+                        .count(),
+                    narrow.len()
+                );
+                assert_eq!(
+                    mixed
+                        .iter()
+                        .filter(|lot| lot.frontage_edge == first_edge)
+                        .copied()
+                        .collect::<Vec<_>>(),
+                    narrow
+                );
+
+                for (index, a) in mixed.iter().enumerate() {
+                    for b in mixed.iter().skip(index + 1) {
+                        let axis_a = point(a.rotation.cos(), -a.rotation.sin());
+                        let axis_b = point(a.rotation.sin(), a.rotation.cos());
+                        let dx = b.center.x - a.center.x;
+                        let dz = b.center.z - a.center.z;
+                        let separated_a = (dx * axis_a.x + dz * axis_a.z).abs()
+                            >= (a.width + b.width) * 0.5 + 2.0 - 1.0e-3;
+                        let separated_b = (dx * axis_b.x + dz * axis_b.z).abs()
+                            >= (a.depth + b.depth) * 0.5 + 2.0 - 1.0e-3;
+                        assert!(
+                            separated_a || separated_b,
+                            "lots overlap or lose gap: {a:?}, {b:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn mixed_equal_frontage_is_struct_exactly_canonical() {
+        for clockwise in [false, true] {
+            let corners = rectangle(82.0, 50.0, 0.41, clockwise);
+            assert_eq!(
+                subdivide_mixed_rectangular_block(corners, 6.0, 18.0, 18.0, 2.0),
+                subdivide_rectangular_block(corners, 6.0, 18.0, 2.0)
+            );
+        }
+    }
+
+    #[test]
+    fn mixed_production_spacing_passes_exact_collision_predicate() {
+        for clockwise in [false, true] {
+            for angle in [0.0, 0.73, 1.57] {
+                let lots = subdivide_mixed_rectangular_block(
+                    rectangle(82.0, 50.0, angle, clockwise),
+                    8.0,
+                    11.0,
+                    18.0,
+                    2.2,
+                );
+                assert!(!lots.is_empty());
+                let rects: Vec<_> = lots
+                    .iter()
+                    .map(|lot| crate::geometry::OrientedRect {
+                        x: lot.center.x,
+                        z: lot.center.z,
+                        width: lot.width,
+                        depth: lot.depth,
+                        rotation: lot.rotation,
+                    })
+                    .collect();
+                for (i, a) in rects.iter().enumerate() {
+                    for b in rects.iter().skip(i + 1) {
+                        assert!(!crate::geometry::rects_overlap(a, b, 2.0));
+                    }
+                }
+            }
+        }
+        assert!(subdivide_mixed_rectangular_block(
+            rectangle(82.0, 50.0, 0.0, false),
+            8.0,
+            11.0,
+            1000.0,
+            2.2
+        )
+        .is_empty());
+    }
+
+    #[test]
+    fn mixed_frontage_rejects_invalid_inputs_and_stays_bounded() {
+        let valid = rectangle(82.0, 50.0, 0.0, false);
+        assert!(subdivide_mixed_rectangular_block(valid, 6.0, f32::NAN, 18.0, 2.0).is_empty());
+        assert!(subdivide_mixed_rectangular_block(valid, 6.0, 11.0, f32::INFINITY, 2.0).is_empty());
+        assert!(subdivide_mixed_rectangular_block(valid, f32::NAN, 11.0, 18.0, 2.0).is_empty());
+        assert!(subdivide_mixed_rectangular_block(valid, 6.0, 11.0, 18.0, f32::NAN).is_empty());
+        let large = subdivide_mixed_rectangular_block(
+            rectangle(2_000.0, 50.0, 0.0, false),
+            4.0,
+            1.0,
+            1.0,
+            1.0,
+        );
+        assert!(large.len() <= 64);
     }
 }

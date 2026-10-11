@@ -2,6 +2,16 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Mixed-row subdivision follow-up — 2026-10-11
+
+[One narrow row plus one wider row](block-subdivision-study/mixed-rows.md)
+preserves narrow-side lot positions and gains area in all 73 sampled blocks.
+The 11/14 option adds 2.5–2.9% nominal area with about 10% fewer lots; 11/18 adds
+4.2–4.3% with about 20% fewer lots. All previous baseline observations/variants
+remain exact. Four new mixed-layout tests and existing block/spine checks pass
+(14 total), plus the long diagnostic. This remains test-only: no district/use
+assignment, footprint-aware capacity, lifecycle or visual acceptance is claimed.
+
 ## Within-block subdivision study — 2026-10-11
 
 [Test-only comparison over 73 live block footprints](block-subdivision-study/README.md)
