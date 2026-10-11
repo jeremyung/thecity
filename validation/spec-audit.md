@@ -1453,3 +1453,14 @@ fragmented-frontage-browser-profile.md/json. This is useful coverage correctness
 with no measured density benefit on this fixture. Further density changes need
 rejection/upstream-layout evidence. Runtime screenshots and concrete remaining
 render gaps are saved under screenshots/latest; art acceptance remains unmet.
+
+## 2026-10-10 — Exhausted-face rejection evidence
+
+A test-only audit restores the 30,000-tick continuation and runs fresh discovery
+and exact proposal validation for one exhausted face. All 2,440 candidates reject;
+2,401 intersect existing parcel envelopes under the existing 5 m branch clearance.
+Prefix probes distinguish clear start points from collisions deeper along rays;
+72 parcel-conflicting rays remain clear through 20 m. See exhausted-face-rejections.md
+for the exact counts, replay command and limitations. This is diagnostic evidence,
+not new growth or visual acceptance. The water-material experiment was reverted;
+its unmatched-camera captures are retained as rejected exploration only.

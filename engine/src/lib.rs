@@ -24,6 +24,8 @@ mod access_search;
 mod blocks;
 #[cfg(test)]
 mod density_gap_diagnosis;
+#[cfg(test)]
+mod access_density_diagnostic;
 mod development;
 mod district_controller;
 mod district_density;

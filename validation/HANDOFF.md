@@ -39,6 +39,21 @@ Host-preparation checkpoint schema is now 4. Stop speculative sample expansion;
 investigate rejected geometry/upstream block layout and the documented render
 quality gaps. Runtime screenshots are in screenshots/latest/.
 
+## Exhausted-face geometry diagnosis
+
+The new [rejection audit](exhausted-face-rejections.md) evaluates all 2,440
+candidates for one exhausted face against fresh captured geometry. It rejects
+2,401 on existing parcel footprints, 22 on roads, 10 on endpoints and 7 on lot
+viability. All start points clear parcels; 1,597 conflict within 5 m and 2,329
+within 20 m. The remaining 72 parcel-conflicting rays clear their first 20 m.
+This supports investigating obstacle-aware connectors, not claiming the face
+is geometrically inaccessible. No alternative road shape has been validated.
+
+Do not repeat the rejected road-opening or spine-priority experiments; their
+mixed or negative coverage results are recorded in early-reservation-gap-diagnosis.md.
+The attempted water-material adjustment was reverted after visual review failed
+to establish an improvement; screenshots/water-review records the rejected trial.
+
 ## Verified work
 
 - Persisted, quota-stepped face discovery, target selection, descriptor generation and proposal validation.
