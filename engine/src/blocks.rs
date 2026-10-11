@@ -178,6 +178,60 @@ pub(crate) fn subdivide_rectangular_block(
     lots
 }
 
+/// Compact test-only template: start with 7 m frontage lots and combine a few
+/// selected adjacent pairs into larger envelopes while retaining the same row
+/// boundaries and gaps.
+#[cfg(test)]
+pub(crate) fn subdivide_compact_rectangular_block(
+    corners: [BlockPoint; 4],
+    street_inset: f32,
+    gap: f32,
+) -> Vec<BlockLot> {
+    let canonical = subdivide_rectangular_block(corners, street_inset, 7.0, gap);
+    if canonical.is_empty() {
+        return canonical;
+    }
+
+    let mut compact = Vec::with_capacity(canonical.len());
+    for edge in 0..4 {
+        let row: Vec<_> = canonical
+            .iter()
+            .copied()
+            .filter(|lot| lot.frontage_edge == edge)
+            .collect();
+        let mut slot = 0;
+        while slot < row.len() {
+            let merge_pair = slot >= 4 && (slot - 4) % 6 == 0 && slot + 1 < row.len();
+            if merge_pair {
+                let a = row[slot];
+                let b = row[slot + 1];
+                compact.push(BlockLot {
+                    center: point_midpoint(a.center, b.center),
+                    frontage_edge: edge,
+                    frontage_t: (a.frontage_t + b.frontage_t) * 0.5,
+                    width: a.width + gap + b.width,
+                    depth: a.depth,
+                    rotation: a.rotation,
+                });
+                slot += 2;
+            } else {
+                compact.push(row[slot]);
+                slot += 1;
+            }
+        }
+    }
+    compact.truncate(MAX_LOTS);
+    compact
+}
+
+#[cfg(test)]
+fn point_midpoint(a: BlockPoint, b: BlockPoint) -> BlockPoint {
+    BlockPoint {
+        x: (a.x + b.x) * 0.5,
+        z: (a.z + b.z) * 0.5,
+    }
+}
+
 /// Test-only counterfactual that assigns different frontage targets to the
 /// two canonical frontage edges. Lot geometry and edge metadata come from the
 /// canonical subdivision routine, so both rows retain its winding convention.
@@ -266,7 +320,8 @@ fn vector_distance(a: BlockPoint, b: BlockPoint) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        subdivide_mixed_rectangular_block, subdivide_rectangular_block, BlockLot, BlockPoint,
+        subdivide_compact_rectangular_block, subdivide_mixed_rectangular_block,
+        subdivide_rectangular_block, BlockLot, BlockPoint,
     };
     use std::collections::BTreeSet;
     use std::f32::consts::PI;
@@ -679,6 +734,101 @@ mod tests {
             1.0,
             1.0,
         );
+        assert!(large.len() <= 64);
+    }
+
+    #[test]
+    fn compact_template_merges_selected_slots_and_preserves_gaps() {
+        for clockwise in [false, true] {
+            for angle in [0.0, 0.73] {
+                let corners = rectangle(200.0, 50.0, angle, clockwise);
+                let compact = subdivide_compact_rectangular_block(corners, 8.0, 2.2);
+                let canonical = subdivide_rectangular_block(corners, 8.0, 7.0, 2.2);
+                assert_eq!(compact.len(), 34);
+                assert_inside_inset(corners, &compact, 8.0);
+
+                let edges: BTreeSet<_> = compact.iter().map(|lot| lot.frontage_edge).collect();
+                assert_eq!(edges.len(), 2);
+                for edge in edges {
+                    let base_row: Vec<_> = canonical
+                        .iter()
+                        .filter(|lot| lot.frontage_edge == edge)
+                        .copied()
+                        .collect();
+                    let compact_row: Vec<_> = compact
+                        .iter()
+                        .filter(|lot| lot.frontage_edge == edge)
+                        .copied()
+                        .collect();
+                    assert_eq!(base_row.len(), 20);
+                    assert_eq!(compact_row.len(), 17);
+                    let merged: Vec<_> = compact_row
+                        .iter()
+                        .filter(|lot| lot.width > base_row[0].width + 2.2)
+                        .collect();
+                    assert_eq!(merged.len(), 3);
+                    for slot in [4, 10, 16] {
+                        let a = base_row[slot];
+                        let b = base_row[slot + 1];
+                        let merged = compact_row
+                            .iter()
+                            .find(|lot| {
+                                (lot.center.x - (a.center.x + b.center.x) * 0.5).abs() < 1.0e-4
+                                    && (lot.center.z - (a.center.z + b.center.z) * 0.5).abs()
+                                        < 1.0e-4
+                            })
+                            .expect("merged pair center retained");
+                        approx(merged.width, a.width + 2.2 + b.width);
+                        approx(merged.depth, a.depth);
+                        approx(merged.frontage_t, (a.frontage_t + b.frontage_t) * 0.5);
+
+                        let axis_x = point(merged.rotation.cos(), -merged.rotation.sin());
+                        for old in [a, b] {
+                            for corner in lot_corners(old) {
+                                let distance = project(corner, merged.center, axis_x).abs();
+                                assert!(distance <= merged.width * 0.5 + 1.0e-4);
+                            }
+                        }
+                    }
+                }
+
+                let rects: Vec<_> = compact
+                    .iter()
+                    .map(|lot| crate::geometry::OrientedRect {
+                        x: lot.center.x,
+                        z: lot.center.z,
+                        width: lot.width,
+                        depth: lot.depth,
+                        rotation: lot.rotation,
+                    })
+                    .collect();
+                for (index, a) in rects.iter().enumerate() {
+                    for b in rects.iter().skip(index + 1) {
+                        assert!(!crate::geometry::rects_overlap(a, b, 2.0));
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn compact_template_rejects_invalid_geometry_and_is_bounded() {
+        let invalid = [point(0.0, 0.0); 4];
+        assert!(subdivide_compact_rectangular_block(invalid, 8.0, 2.2).is_empty());
+        assert!(subdivide_compact_rectangular_block(
+            rectangle(82.0, 50.0, 0.0, false),
+            f32::NAN,
+            2.2
+        )
+        .is_empty());
+        assert!(subdivide_compact_rectangular_block(
+            rectangle(82.0, 50.0, 0.0, false),
+            8.0,
+            f32::INFINITY
+        )
+        .is_empty());
+        let large =
+            subdivide_compact_rectangular_block(rectangle(2_000.0, 50.0, 0.0, false), 4.0, 1.0);
         assert!(large.len() <= 64);
     }
 }

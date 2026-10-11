@@ -272,3 +272,15 @@ with capacity semantics and finite caps retained. Four coverage tests pass; thre
 real-kit measurements and independent polygon unions are recorded. No production
 policy change. Next: a compact-block prototype assessed through multi-seed growth
 and actual rendered views; do not turn the sample directly into a citywide target.
+
+## Compact varied frontage prototype — 2026-10-11
+
+[Test-only compact rows](block-subdivision-study/compact-rows.md) add20–21% feasible
+lots across the same73 blocks, but reduce nominal area3–4%. They preserve required
+clearances and retain occasional larger merged sites. All16 block/spine tests and
+the long diagnostic pass; the prior five variants remain exact. Not promoted as
+a density fix. Land-budget accounting of the strongest inland crop shows37.75%
+envelopes,25.65% open-road5m buffers and36.60% unclassified remainder; the latter
+is not proven buildable. Next investigate connected usable remainder and block
+layout, then integrate smaller frontage with footprint-aware capacity and actual
+multi-seed construction/render validation. Production appearance remains unchanged.

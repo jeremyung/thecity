@@ -68,3 +68,12 @@ npx vitest run tests/rendered-coverage.test.ts
 Four focused tests pass, including crop-boundary clipping for both unions,
 outside-center processing and out-of-world rejection. Root reran all three
 production-kit measurements. No engine changes or browser performance claims.
+
+## Follow-up land budget
+
+`land-budget.json` partitions building envelopes, open-road5m centerline buffers
+and their complement. Generate with `scripts/audit-synthetic-land-budget.py`.
+The compact crop has25.65% road buffers and36.60% outside envelopes and buffers.
+The complement is unclassified, not net developable land or an admission result.
+See [compact prototype results](../block-subdivision-study/compact-rows.md) for
+the smaller-lot tradeoff and next layout investigation.

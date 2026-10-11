@@ -51,6 +51,8 @@ struct PlanReport {
 struct VariantReport {
     target_frontage_m: f32,
     opposite_target_frontage_m: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    recipe: Option<&'static str>,
     generated_lots: usize,
     accepted_lots: usize,
     rejected_lots: usize,
@@ -136,14 +138,23 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
     let variants = TARGET_FRONTAGES
         .iter()
         .copied()
-        .map(|(target_frontage_m, opposite_target_frontage_m)| {
-            let lots = blocks::subdivide_mixed_rectangular_block(
-                corners,
-                8.0,
-                target_frontage_m,
-                opposite_target_frontage_m,
-                2.2,
-            );
+        .map(|(a, b)| (a, b, None))
+        .chain([
+            (7.0, 7.0, Some("uniform-small")),
+            (7.0, 7.0, Some("compact-varied")),
+        ])
+        .map(|(target_frontage_m, opposite_target_frontage_m, recipe)| {
+            let lots = if recipe == Some("compact-varied") {
+                blocks::subdivide_compact_rectangular_block(corners, 8.0, 2.2)
+            } else {
+                blocks::subdivide_mixed_rectangular_block(
+                    corners,
+                    8.0,
+                    target_frontage_m,
+                    opposite_target_frontage_m,
+                    2.2,
+                )
+            };
             let generated_lots = lots.len();
             let mut context = context.clone();
             let mut accepted_lots = 0;
@@ -167,6 +178,7 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
             VariantReport {
                 target_frontage_m,
                 opposite_target_frontage_m,
+                recipe,
                 generated_lots,
                 accepted_lots,
                 rejected_lots: generated_lots.saturating_sub(accepted_lots),
