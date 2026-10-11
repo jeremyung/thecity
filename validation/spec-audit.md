@@ -1522,3 +1522,7 @@ Progress toward bounded larger graph processing: deterministic quota-stepped AAB
 ### Spatial filter f32 compatibility follow-up
 
 Added a concrete omission regression, projection-aware bounds adapter, and native parity checks using the same predicate as live preflight. Eight focused preflight tests pass across malformed geometry, save/resume, shared endpoints and 24 seeded filtered/all-pairs comparisons. Production enumeration and caps remain unchanged; integration and WASM parity are pending.
+
+### Live spatial preflight integration and measured correction
+
+Integrated incremental f32-compatible bounds construction, streaming candidates, separately charged exact checks, persisted pending pairs and bounded legacy fallback. A one-axis implementation raised mature preflight work to 140,936; replaced it with a 16 × 16 grid, reducing work to 102,097 from the prior 119,232 (14.37%) with identical output. Full release native suite: 342 passed / 42 ignored. Explicit mature graph and composed trace checks pass. Rebuilt production WASM matches all 3,180 native discovery descriptors and quota/resume runs. Preflight/filter schema2; old active nested jobs still require restart/migration. This is logical work and Node parity evidence, not browser-frame improvement, a cap increase, or visual acceptance. Details: `road-pair-broadphase.md`.

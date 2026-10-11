@@ -1,13 +1,14 @@
 //! Deterministic, quota-stepped broad phase for segment AABB pairs.
 //!
-//! The index uses 128 x-axis buckets. It emits conservative candidates in
+//! The index uses 16 × 16 spatial buckets. It emits conservative candidates in
 //! `(i, j)` lexicographic order and never materializes the full pair graph.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 pub const MAX_SEGMENTS: usize = 5_000;
-const BUCKETS: usize = 128;
+const GRID: usize = 16;
+const BUCKETS: usize = GRID * GRID;
 const MAX_COORDINATE: f64 = 100_000.0;
 const EPSILON: f64 = 1e-5;
 
@@ -33,13 +34,15 @@ pub struct Advance {
     pub done: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Checkpoint {
     schema: u8,
     bounds: Vec<Bounds>,
     phase: u8,
     min_x: f64,
     max_x: f64,
+    min_z: f64,
+    max_z: f64,
     cursor: usize,
     bucket_cursor: usize,
     buckets: Vec<Vec<usize>>,
@@ -50,12 +53,14 @@ pub struct Checkpoint {
     emit_cursor: Option<usize>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BroadPhase {
     bounds: Vec<Bounds>,
     phase: u8, // 0 min/max, 1 bucket insertion, 2 gather, 4 emit, 3 done
     min_x: f64,
     max_x: f64,
+    min_z: f64,
+    max_z: f64,
     cursor: usize,
     bucket_cursor: usize,
     buckets: Vec<Vec<usize>>,
@@ -129,6 +134,8 @@ impl BroadPhase {
             phase: 0,
             min_x: 0.0,
             max_x: 0.0,
+            min_z: 0.0,
+            max_z: 0.0,
             cursor: 0,
             bucket_cursor: 0,
             buckets: Vec::new(),
@@ -140,13 +147,46 @@ impl BroadPhase {
         })
     }
 
+    /// Append one validated input before any scan work starts. This allows
+    /// callers to charge incremental graph-to-bounds construction per record.
+    pub(crate) fn push_bounds(&mut self, bounds: Bounds) -> Result<(), Error> {
+        if self.phase != 0 || self.cursor != 0 {
+            return Err(Error::InvalidCheckpoint);
+        }
+        if self.bounds.len() == MAX_SEGMENTS {
+            return Err(Error::TooManySegments);
+        }
+        if !bounds.valid() {
+            return Err(Error::InvalidBounds);
+        }
+        self.bounds.push(bounds);
+        Ok(())
+    }
+
+    pub(crate) fn input_bounds(&self) -> &[Bounds] {
+        &self.bounds
+    }
+
+    /// Available only while paused immediately after emitting a pair. This
+    /// couples a caller's pending narrow-phase check to the saved scan cursor.
+    pub(crate) fn last_emitted_pair(&self) -> Option<(usize, usize)> {
+        if self.phase != 4 {
+            return None;
+        }
+        self.emit_cursor
+            .and_then(|next| next.checked_sub(1))
+            .map(|j| (self.query_i, j))
+    }
+
     pub fn checkpoint(&self) -> Checkpoint {
         Checkpoint {
-            schema: 1,
+            schema: 2,
             bounds: self.bounds.clone(),
             phase: self.phase,
             min_x: self.min_x,
             max_x: self.max_x,
+            min_z: self.min_z,
+            max_z: self.max_z,
             cursor: self.cursor,
             bucket_cursor: self.bucket_cursor,
             buckets: self.buckets.clone(),
@@ -159,9 +199,9 @@ impl BroadPhase {
     }
 
     /// Restore validates stored memberships and cursors synchronously. Its cost
-    /// is separate from `advance` and bounded by the 640,000 membership cap.
+    /// is separate from `advance` and bounded by the 1,280,000 membership cap.
     pub fn restore(c: Checkpoint) -> Result<Self, Error> {
-        if c.schema != 1
+        if c.schema != 2
             || c.bounds.len() > MAX_SEGMENTS
             || c.bounds.iter().any(|b| !b.valid())
             || c.buckets.len() > BUCKETS
@@ -186,7 +226,11 @@ impl BroadPhase {
         if c.phase != 0 {
             let actual_min = c.bounds.iter().map(|b| b.min_x).fold(0.0, f64::min);
             let actual_max = c.bounds.iter().map(|b| b.max_x).fold(0.0, f64::max);
-            if c.min_x != actual_min || c.max_x != actual_max {
+            if c.min_x != actual_min
+                || c.max_x != actual_max
+                || c.min_z != c.bounds.iter().map(|b| b.min_z).fold(0.0, f64::min)
+                || c.max_z != c.bounds.iter().map(|b| b.max_z).fold(0.0, f64::max)
+            {
                 return Err(Error::InvalidCheckpoint);
             }
         }
@@ -194,7 +238,11 @@ impl BroadPhase {
             let prefix = &c.bounds[..c.cursor];
             let expected_min = prefix.iter().map(|b| b.min_x).fold(0.0, f64::min);
             let expected_max = prefix.iter().map(|b| b.max_x).fold(0.0, f64::max);
-            if c.min_x != expected_min || c.max_x != expected_max {
+            if c.min_x != expected_min
+                || c.max_x != expected_max
+                || c.min_z != prefix.iter().map(|b| b.min_z).fold(0.0, f64::min)
+                || c.max_z != prefix.iter().map(|b| b.max_z).fold(0.0, f64::max)
+            {
                 return Err(Error::InvalidCheckpoint);
             }
         }
@@ -219,14 +267,16 @@ impl BroadPhase {
                     && if c.cursor == c.bounds.len() {
                         c.bucket_cursor == 0
                     } else {
-                        let (lo, hi) = bucket_range(c.bounds[c.cursor], c.min_x, c.max_x);
-                        (lo..=hi + 1).contains(&c.bucket_cursor)
+                        let (lo, hi) =
+                            bucket_range(c.bounds[c.cursor], c.min_x, c.max_x, c.min_z, c.max_z);
+                        cell_contains(c.bucket_cursor, lo, hi) || c.bucket_cursor == hi + 1
                     }
             }
             2 | 4 => {
-                let (lo, hi) = bucket_range(c.bounds[c.query_i], c.min_x, c.max_x);
+                let (lo, hi) =
+                    bucket_range(c.bounds[c.query_i], c.min_x, c.max_x, c.min_z, c.max_z);
                 let initial = c.query_bucket == 0 && c.query_member == 0;
-                let in_scan = (lo..=hi).contains(&c.query_bucket)
+                let in_scan = cell_contains(c.query_bucket, lo, hi)
                     && c.query_member <= c.buckets[c.query_bucket].len();
                 let scanned = c.query_bucket == hi + 1 && c.query_member == 0;
                 c.cursor == c.bounds.len()
@@ -268,11 +318,11 @@ impl BroadPhase {
                     .iter()
                     .enumerate()
                     .filter_map(|(idx, b)| {
-                        let (lo, hi) = bucket_range(*b, c.min_x, c.max_x);
+                        let (lo, hi) = bucket_range(*b, c.min_x, c.max_x, c.min_z, c.max_z);
                         let built = matches!(c.phase, 2 | 3 | 4)
                             || idx < c.cursor
                             || (idx == c.cursor && bi < c.bucket_cursor);
-                        (built && bi >= lo && bi <= hi).then_some(idx)
+                        (built && cell_contains(bi, lo, hi)).then_some(idx)
                     })
                     .collect();
                 if *bucket != expected {
@@ -281,8 +331,8 @@ impl BroadPhase {
             }
             // Memberships must correspond to the deterministic full build.
             for &idx in bucket {
-                let (lo, hi) = bucket_range(c.bounds[idx], c.min_x, c.max_x);
-                if bi < lo || bi > hi {
+                let (lo, hi) = bucket_range(c.bounds[idx], c.min_x, c.max_x, c.min_z, c.max_z);
+                if !cell_contains(bi, lo, hi) {
                     return Err(Error::InvalidCheckpoint);
                 }
             }
@@ -316,7 +366,7 @@ impl BroadPhase {
         // Prove the candidate set is the complete prefix of the query scan.
         // This costs at most the bounded bucket membership count on restore.
         if c.phase == 2 || c.phase == 4 {
-            let (lo, hi) = bucket_range(c.bounds[c.query_i], c.min_x, c.max_x);
+            let (lo, hi) = bucket_range(c.bounds[c.query_i], c.min_x, c.max_x, c.min_z, c.max_z);
             let through_bucket = if c.phase == 4 {
                 hi
             } else {
@@ -325,6 +375,9 @@ impl BroadPhase {
             let mut expected = BTreeSet::new();
             if lo <= through_bucket {
                 for bi in lo..=through_bucket {
+                    if !cell_contains(bi, lo, hi) {
+                        continue;
+                    }
                     let members = &c.buckets[bi];
                     let limit = if c.phase == 2 && bi == c.query_bucket {
                         c.query_member.min(members.len())
@@ -353,6 +406,8 @@ impl BroadPhase {
             phase: c.phase,
             min_x: c.min_x,
             max_x: c.max_x,
+            min_z: c.min_z,
+            max_z: c.max_z,
             cursor: c.cursor,
             bucket_cursor: c.bucket_cursor,
             buckets: c.buckets,
@@ -380,6 +435,8 @@ impl BroadPhase {
                         let b = self.bounds[self.cursor];
                         self.min_x = self.min_x.min(b.min_x);
                         self.max_x = self.max_x.max(b.max_x);
+                        self.min_z = self.min_z.min(b.min_z);
+                        self.max_z = self.max_z.max(b.max_z);
                         self.cursor += 1;
                         used += 1;
                     } else {
@@ -399,7 +456,14 @@ impl BroadPhase {
                         used += 1;
                     } else {
                         self.cursor = 0;
-                        self.bucket_cursor = bucket_range(self.bounds[0], self.min_x, self.max_x).0;
+                        self.bucket_cursor = bucket_range(
+                            self.bounds[0],
+                            self.min_x,
+                            self.max_x,
+                            self.min_z,
+                            self.max_z,
+                        )
+                        .0;
                         self.phase = 1;
                     }
                 }
@@ -409,15 +473,28 @@ impl BroadPhase {
                         self.query_i = 0;
                         continue;
                     }
-                    let (_, hi) = bucket_range(self.bounds[self.cursor], self.min_x, self.max_x);
+                    let (lo, hi) = bucket_range(
+                        self.bounds[self.cursor],
+                        self.min_x,
+                        self.max_x,
+                        self.min_z,
+                        self.max_z,
+                    );
                     if self.bucket_cursor <= hi {
                         self.buckets[self.bucket_cursor].push(self.cursor);
-                        self.bucket_cursor += 1;
+                        self.bucket_cursor = next_cell(self.bucket_cursor, lo, hi);
                         used += 1;
                     } else {
                         self.cursor += 1;
                         self.bucket_cursor = if self.cursor < self.bounds.len() {
-                            bucket_range(self.bounds[self.cursor], self.min_x, self.max_x).0
+                            bucket_range(
+                                self.bounds[self.cursor],
+                                self.min_x,
+                                self.max_x,
+                                self.min_z,
+                                self.max_z,
+                            )
+                            .0
                         } else {
                             0
                         };
@@ -429,10 +506,22 @@ impl BroadPhase {
                         continue;
                     }
                     if self.query_bucket == 0 && self.query_member == 0 {
-                        self.query_bucket =
-                            bucket_range(self.bounds[self.query_i], self.min_x, self.max_x).0;
+                        self.query_bucket = bucket_range(
+                            self.bounds[self.query_i],
+                            self.min_x,
+                            self.max_x,
+                            self.min_z,
+                            self.max_z,
+                        )
+                        .0;
                     }
-                    let (_, hi) = bucket_range(self.bounds[self.query_i], self.min_x, self.max_x);
+                    let (lo, hi) = bucket_range(
+                        self.bounds[self.query_i],
+                        self.min_x,
+                        self.max_x,
+                        self.min_z,
+                        self.max_z,
+                    );
                     if self.query_bucket <= hi {
                         let bucket = &self.buckets[self.query_bucket];
                         if self.query_member < bucket.len() {
@@ -445,7 +534,7 @@ impl BroadPhase {
                                 self.candidates.insert(j);
                             }
                         } else {
-                            self.query_bucket += 1;
+                            self.query_bucket = next_cell(self.query_bucket, lo, hi);
                             self.query_member = 0;
                             used += 1;
                         }
@@ -488,16 +577,35 @@ impl BroadPhase {
     }
 }
 
-fn bucket_range(b: Bounds, min: f64, max: f64) -> (usize, usize) {
-    if max <= min {
-        return (0, 0);
+fn cell_contains(cell: usize, lo: usize, hi: usize) -> bool {
+    cell >= lo && cell <= hi && cell % GRID >= lo % GRID && cell % GRID <= hi % GRID
+}
+
+fn next_cell(cell: usize, lo: usize, hi: usize) -> usize {
+    if cell == hi {
+        hi + 1
+    } else if cell % GRID == hi % GRID {
+        cell + GRID - hi % GRID + lo % GRID
+    } else {
+        cell + 1
     }
-    let scale = BUCKETS as f64 / (max - min);
-    let lo = (((b.min_x - EPSILON - min) * scale).floor() as isize).clamp(0, BUCKETS as isize - 1)
-        as usize;
-    let hi = (((b.max_x + EPSILON - min) * scale).floor() as isize).clamp(0, BUCKETS as isize - 1)
-        as usize;
-    (lo, hi)
+}
+
+fn bucket_range(b: Bounds, min_x: f64, max_x: f64, min_z: f64, max_z: f64) -> (usize, usize) {
+    let axis = |a: f64, b: f64, min: f64, max: f64| {
+        if max <= min {
+            return (0, 0);
+        }
+        let scale = GRID as f64 / (max - min);
+        let lo =
+            (((a - EPSILON - min) * scale).floor() as isize).clamp(0, GRID as isize - 1) as usize;
+        let hi =
+            (((b + EPSILON - min) * scale).floor() as isize).clamp(0, GRID as isize - 1) as usize;
+        (lo, hi)
+    };
+    let (lx, hx) = axis(b.min_x, b.max_x, min_x, max_x);
+    let (lz, hz) = axis(b.min_z, b.max_z, min_z, max_z);
+    (lz * GRID + lx, hz * GRID + hx)
 }
 
 fn overlaps(a: Bounds, b: Bounds) -> bool {
@@ -510,6 +618,32 @@ fn overlaps(a: Bounds, b: Bounds) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn incremental_input_matches_batch_and_rejects_late_or_invalid_append() {
+        let bounds = vec![
+            Bounds::from_segment_f32(0., 0., 1., 1.).unwrap(),
+            Bounds::from_segment_f32(0., 1., 1., 0.).unwrap(),
+        ];
+        let mut incremental = BroadPhase::new(Vec::new()).unwrap();
+        for b in &bounds {
+            incremental.push_bounds(*b).unwrap();
+        }
+        assert_eq!(incremental.input_bounds(), bounds.as_slice());
+        assert_eq!(incremental, BroadPhase::new(bounds.clone()).unwrap());
+        let before = incremental.clone();
+        let mut invalid = bounds[0];
+        invalid.min_x = f64::NAN;
+        assert_eq!(incremental.push_bounds(invalid), Err(Error::InvalidBounds));
+        assert_eq!(incremental, before);
+        incremental.advance(1);
+        assert_eq!(
+            incremental.push_bounds(bounds[0]),
+            Err(Error::InvalidCheckpoint)
+        );
+        let mut full = BroadPhase::new(vec![bounds[0]; MAX_SEGMENTS]).unwrap();
+        assert_eq!(full.push_bounds(bounds[0]), Err(Error::TooManySegments));
+    }
+
     #[test]
     fn random_small_sets_match_oracle_and_resume() {
         let mut seed = 17u64;
@@ -552,6 +686,9 @@ mod tests {
                     let a = bp.advance(quota);
                     assert!(a.work_used <= quota);
                     if let Some(p) = a.pair {
+                        assert_eq!(bp.last_emitted_pair(), Some(p));
+                        let restored = BroadPhase::restore(bp.checkpoint()).unwrap();
+                        assert_eq!(restored.last_emitted_pair(), Some(p));
                         got.push(p);
                     }
                     if a.done {

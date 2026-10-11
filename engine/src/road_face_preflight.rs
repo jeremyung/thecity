@@ -7,14 +7,15 @@
 
 use crate::geometry::segments_distance_coords;
 use crate::road_faces::{RoadFaceEdge, RoadFaceError, RoadFaceNode};
+use crate::road_pair_broadphase::{Bounds, BroadPhase, Checkpoint as BroadPhaseCheckpoint};
 use serde::{Deserialize, Serialize};
 
-const CHECKPOINT_SCHEMA: u8 = 1;
+const CHECKPOINT_SCHEMA: u8 = 2;
 const MAX_NODES: usize = 512;
 const MAX_EDGES: usize = 512;
 const MAX_PAIR_TESTS: usize = 131_072;
 const COINCIDENT_EPSILON: f32 = 1.0e-5;
-const MAX_PREFLIGHT_WORK: usize = 1_180_160;
+const MAX_PREFLIGHT_WORK: usize = 1_700_000;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct PreflightAdvance {
@@ -84,6 +85,7 @@ enum Stage {
     Nodes,
     CoincidentNodes,
     Edges,
+    FilterBuild,
     Planarity,
     Done,
     Failed(PreflightError),
@@ -124,12 +126,25 @@ pub(crate) struct GraphPreflightCheckpoint {
     pair_first: usize,
     pair_second: usize,
     pair_tests_done: usize,
+    #[serde(default)]
+    filter_work: usize,
+    #[serde(default)]
+    filter_build_cursor: usize,
+    #[serde(default)]
+    filter_fallback: bool,
+    #[serde(default)]
+    filter_checkpoint: Option<BroadPhaseCheckpoint>,
+    #[serde(default)]
+    pending_pair: Option<(usize, usize)>,
+    #[serde(default)]
+    last_checked_pair: Option<(usize, usize)>,
     work_completed: usize,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct GraphPreflight {
     checkpoint: GraphPreflightCheckpoint,
+    filter: Option<BroadPhase>,
 }
 
 impl GraphPreflight {
@@ -151,6 +166,7 @@ impl GraphPreflight {
             edges.reserve(1);
         }
         let empty = nodes.is_empty() && edge_count == 0;
+        let filter = BroadPhase::new(Vec::new()).ok();
         Ok(Self {
             checkpoint: GraphPreflightCheckpoint {
                 schema: CHECKPOINT_SCHEMA,
@@ -173,13 +189,22 @@ impl GraphPreflight {
                 pair_first: 0,
                 pair_second: 1,
                 pair_tests_done: 0,
+                filter_work: 0,
+                filter_build_cursor: 0,
+                filter_fallback: false,
+                filter_checkpoint: None,
+                pending_pair: None,
+                last_checked_pair: None,
                 work_completed: 0,
             },
+            filter,
         })
     }
 
     pub(crate) fn checkpoint(&self) -> GraphPreflightCheckpoint {
-        self.checkpoint.clone()
+        let mut checkpoint = self.checkpoint.clone();
+        checkpoint.filter_checkpoint = self.filter.as_ref().map(BroadPhase::checkpoint);
+        checkpoint
     }
 
     pub(crate) fn restore(mut checkpoint: GraphPreflightCheckpoint) -> Result<Self, RoadFaceError> {
@@ -189,7 +214,13 @@ impl GraphPreflight {
         if checkpoint.proposed_edge.is_some() {
             checkpoint.edges.reserve(1);
         }
-        Ok(Self { checkpoint })
+        let filter = checkpoint
+            .filter_checkpoint
+            .take()
+            .map(BroadPhase::restore)
+            .transpose()
+            .map_err(|_| RoadFaceError::InvalidEdge)?;
+        Ok(Self { checkpoint, filter })
     }
 
     pub(crate) fn result(&self) -> Option<Result<&[(usize, usize)], RoadFaceError>> {
@@ -231,13 +262,28 @@ impl GraphPreflight {
             };
         }
         let mut work_used = 0;
+        if self.checkpoint.work_completed >= MAX_PREFLIGHT_WORK {
+            self.checkpoint.stage = Stage::Failed(PreflightError::WorkLimit);
+            return PreflightAdvance {
+                work_used: 0,
+                done: true,
+            };
+        }
+        let budget = budget.min(MAX_PREFLIGHT_WORK - self.checkpoint.work_completed);
         while work_used < budget && !matches!(self.checkpoint.stage, Stage::Done | Stage::Failed(_))
         {
+            if self.checkpoint.stage == Stage::Planarity {
+                let consumed = self.advance_planarity(budget - work_used);
+                work_used += consumed;
+                self.checkpoint.work_completed += consumed;
+                continue;
+            }
             let consumed = match self.checkpoint.stage {
                 Stage::Nodes => self.advance_nodes(),
                 Stage::CoincidentNodes => self.advance_coincident_nodes(),
                 Stage::Edges => self.advance_edges(),
-                Stage::Planarity => self.advance_planarity(),
+                Stage::FilterBuild => self.advance_filter_build(),
+                Stage::Planarity => false,
                 Stage::Done | Stage::Failed(_) => false,
             };
             if consumed {
@@ -311,7 +357,7 @@ impl GraphPreflight {
             } else if pair_count == 0 {
                 cp.stage = Stage::Done;
             } else {
-                cp.stage = Stage::Planarity;
+                cp.stage = Stage::FilterBuild;
             }
             return false;
         }
@@ -405,26 +451,121 @@ impl GraphPreflight {
         }
     }
 
-    fn advance_planarity(&mut self) -> bool {
+    fn advance_filter_build(&mut self) -> bool {
         let cp = &mut self.checkpoint;
-        if cp.pair_first + 1 >= cp.indexed_edges.len() {
-            cp.stage = Stage::Done;
+        if cp.filter_fallback || self.filter.is_none() {
+            cp.filter_fallback = true;
+            cp.stage = Stage::Planarity;
             return false;
         }
-        let (a, b) = cp.indexed_edges[cp.pair_first];
-        let (c, d) = cp.indexed_edges[cp.pair_second];
-        let nonplanar = pair_nonplanar(&cp.nodes, a, b, c, d);
-        cp.pair_tests_done += 1;
-        if nonplanar {
+        if cp.filter_build_cursor == cp.indexed_edges.len() {
+            cp.stage = Stage::Planarity;
+            return false;
+        }
+        let (from, to) = cp.indexed_edges[cp.filter_build_cursor];
+        let a = cp.nodes[from];
+        let b = cp.nodes[to];
+        let bounds = Bounds::from_segment_f32(a.x, a.z, b.x, b.z);
+        cp.filter_work += 1;
+        match bounds {
+            Ok(bounds) => {
+                if self.filter.as_mut().unwrap().push_bounds(bounds).is_err() {
+                    cp.filter_fallback = true;
+                    self.filter = None;
+                } else {
+                    cp.filter_build_cursor += 1;
+                }
+            }
+            Err(_) => {
+                cp.filter_fallback = true;
+                self.filter = None;
+            }
+        }
+        true
+    }
+
+    fn advance_planarity(&mut self, budget: usize) -> usize {
+        let cp = &mut self.checkpoint;
+        if budget == 0 {
+            return 0;
+        }
+        if cp.pending_pair.is_none() {
+            if cp.filter_fallback {
+                if cp.pair_first + 1 >= cp.indexed_edges.len() {
+                    cp.stage = Stage::Done;
+                    return 0;
+                }
+                cp.pending_pair = Some((cp.pair_first, cp.pair_second));
+            } else {
+                let limit = pair_limit(cp.indexed_edges.len());
+                if cp.filter_work.saturating_sub(cp.filter_build_cursor) >= limit {
+                    cp.filter_fallback = true;
+                    self.filter = None;
+                    cp.pair_first = 0;
+                    cp.pair_second = 1;
+                    cp.pair_tests_done = 0;
+                    return 0;
+                }
+                let step = self.filter.as_mut().unwrap().advance(
+                    budget.min(limit - cp.filter_work.saturating_sub(cp.filter_build_cursor)),
+                );
+                cp.filter_work = cp.filter_work.saturating_add(step.work_used);
+                if let Some(pair) = step.pair {
+                    cp.pending_pair = Some(pair);
+                } else if step.done {
+                    cp.stage = Stage::Done;
+                    return step.work_used;
+                }
+                if cp.pending_pair.is_none() {
+                    if cp.filter_work.saturating_sub(cp.filter_build_cursor) >= limit {
+                        cp.filter_fallback = true;
+                        self.filter = None;
+                        cp.pair_first = 0;
+                        cp.pair_second = 1;
+                        cp.pair_tests_done = 0;
+                        cp.pending_pair = None;
+                        return step.work_used;
+                    }
+                    return step.work_used;
+                }
+                if cp.filter_work.saturating_sub(cp.filter_build_cursor) >= limit {
+                    cp.filter_fallback = true;
+                    self.filter = None;
+                    cp.pair_first = 0;
+                    cp.pair_second = 1;
+                    cp.pair_tests_done = 0;
+                    cp.pending_pair = None;
+                    return step.work_used;
+                }
+                // Candidate discovery has its own charge. Defer its exact
+                // test if this call exhausted the caller's quota.
+                if step.work_used >= budget {
+                    return step.work_used;
+                }
+                let exact = self.test_pending_pair();
+                return step.work_used + exact;
+            }
+        }
+        self.test_pending_pair()
+    }
+
+    fn test_pending_pair(&mut self) -> usize {
+        let cp = &mut self.checkpoint;
+        let (first, second) = cp.pending_pair.take().unwrap();
+        cp.last_checked_pair = Some((first, second));
+        let (a, b) = cp.indexed_edges[first];
+        let (c, d) = cp.indexed_edges[second];
+        if pair_nonplanar(&cp.nodes, a, b, c, d) {
             cp.stage = Stage::Failed(PreflightError::NonPlanar);
-        } else {
+        } else if cp.filter_fallback {
             cp.pair_second += 1;
             if cp.pair_second == cp.indexed_edges.len() {
                 cp.pair_first += 1;
                 cp.pair_second = cp.pair_first + 1;
             }
         }
-        true
+        cp.pair_tests_done += 1;
+        1
     }
 }
 
@@ -470,6 +611,7 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
         || cp.nodes.len() > MAX_NODES
         || edge_count > MAX_EDGES
         || cp.work_completed > MAX_PREFLIGHT_WORK
+        || cp.filter_work > MAX_PAIR_TESTS + MAX_EDGES
         || cp.edge_cursor > edge_count
         || cp.indexed_edges.len() > edge_count
         || cp.node_cursor > cp.nodes.len()
@@ -481,6 +623,7 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
     {
         return Err(invalid());
     }
+    validate_filter_state(cp)?;
     match cp.stage {
         Stage::Nodes => {
             if cp.node_cursor >= cp.nodes.len()
@@ -578,6 +721,13 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
                 return Err(invalid());
             }
         }
+        Stage::FilterBuild => {
+            if cp.edge_cursor != edge_count || cp.indexed_edges.len() != edge_count {
+                return Err(invalid());
+            }
+            validate_completed_nodes(&cp.nodes)?;
+            validate_indexed_edges(cp)?;
+        }
         Stage::Planarity => {
             let pairs = edge_count.saturating_mul(edge_count.saturating_sub(1)) / 2;
             if cp.edge_cursor != edge_count
@@ -586,20 +736,37 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
             {
                 return Err(invalid());
             }
-            let finished_pairs =
-                cp.pair_first == edge_count.saturating_sub(1) && cp.pair_second == edge_count;
-            if finished_pairs {
-                if cp.pair_tests_done != pairs {
+            if cp.filter_fallback {
+                let finished =
+                    cp.pair_first == edge_count.saturating_sub(1) && cp.pair_second == edge_count;
+                if (!finished
+                    && (cp.pair_first >= edge_count.saturating_sub(1)
+                        || cp.pair_second <= cp.pair_first
+                        || cp.pair_second >= edge_count))
+                    || cp.pair_tests_done
+                        != if finished {
+                            pairs
+                        } else {
+                            pair_ordinal(cp.pair_first, cp.pair_second, edge_count)
+                        }
+                    || cp
+                        .pending_pair
+                        .is_some_and(|pair| pair != (cp.pair_first, cp.pair_second))
+                {
                     return Err(invalid());
                 }
-            } else if cp.pair_first >= edge_count.saturating_sub(1)
-                || cp.pair_second <= cp.pair_first
-                || cp.pair_second >= edge_count
+            } else if cp.pair_first != 0
+                || cp.pair_second != 1
+                || cp.pair_tests_done > pairs
+                || cp.filter_build_cursor != cp.indexed_edges.len()
+                || cp.filter_work.saturating_sub(cp.filter_build_cursor) > pairs
+                || cp.pending_pair.is_some_and(|(i, j)| {
+                    i >= edge_count.saturating_sub(1)
+                        || j <= i
+                        || j >= edge_count
+                        || !bounds_overlap(cp, i, j)
+                })
             {
-                return Err(invalid());
-            }
-            let expected_done = pair_ordinal(cp.pair_first, cp.pair_second, edge_count);
-            if !finished_pairs && cp.pair_tests_done != expected_done {
                 return Err(invalid());
             }
             validate_completed_nodes(&cp.nodes)?;
@@ -615,6 +782,117 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
         Stage::Failed(_) => {}
     }
     Ok(())
+}
+
+fn validate_filter_state(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceError> {
+    let invalid = || RoadFaceError::InvalidEdge;
+    let early = matches!(
+        cp.stage,
+        Stage::Nodes | Stage::CoincidentNodes | Stage::Edges
+    );
+    if early {
+        if cp.filter_fallback
+            || cp.filter_build_cursor != 0
+            || cp.filter_work != 0
+            || cp.pair_tests_done != 0
+            || cp.pending_pair.is_some()
+            || cp.last_checked_pair.is_some()
+            || cp.pair_first != 0
+            || cp.pair_second != 1
+        {
+            return Err(invalid());
+        }
+    }
+    if cp.filter_fallback {
+        if cp.filter_checkpoint.is_some() || cp.filter_build_cursor > cp.indexed_edges.len() {
+            return Err(invalid());
+        }
+        if cp.stage == Stage::Done && cp.indexed_edges.len() >= 2 {
+            let edge_count = cp.indexed_edges.len();
+            if cp.pair_first != edge_count - 1
+                || cp.pair_second != edge_count
+                || cp.pair_tests_done != pair_limit(edge_count)
+                || cp.pending_pair.is_some()
+            {
+                return Err(invalid());
+            }
+        }
+        return Ok(());
+    }
+    let saved = cp.filter_checkpoint.clone().ok_or_else(invalid)?;
+    let filter = BroadPhase::restore(saved).map_err(|_| RoadFaceError::InvalidEdge)?;
+    if cp.filter_build_cursor != filter.input_bounds().len()
+        || cp.filter_build_cursor > cp.indexed_edges.len()
+    {
+        return Err(invalid());
+    }
+    if early || cp.stage == Stage::FilterBuild {
+        let pristine = BroadPhase::new(filter.input_bounds().to_vec())
+            .map_err(|_| RoadFaceError::InvalidEdge)?;
+        if filter != pristine || cp.pending_pair.is_some() || cp.last_checked_pair.is_some() {
+            return Err(invalid());
+        }
+    }
+    if cp.stage == Stage::Planarity || cp.stage == Stage::Done {
+        if cp.indexed_edges.len() >= 2 && cp.filter_build_cursor != cp.indexed_edges.len() {
+            return Err(invalid());
+        }
+        if cp.stage == Stage::Done && cp.indexed_edges.len() >= 2 {
+            let mut complete = filter.clone();
+            if !complete.advance(0).done {
+                return Err(invalid());
+            }
+        }
+        if let Some(emitted) = filter.last_emitted_pair() {
+            if Some(emitted) != cp.pending_pair.or(cp.last_checked_pair) {
+                return Err(invalid());
+            }
+        } else if cp.pending_pair.is_some() {
+            return Err(invalid());
+        }
+        if cp.pending_pair.is_some() && cp.pending_pair == cp.last_checked_pair {
+            return Err(invalid());
+        }
+    }
+    if cp
+        .pending_pair
+        .is_some_and(|pair| filter.last_emitted_pair() != Some(pair))
+    {
+        return Err(invalid());
+    }
+    for (index, &(from, to)) in cp
+        .indexed_edges
+        .iter()
+        .take(cp.filter_build_cursor)
+        .enumerate()
+    {
+        let a = *cp.nodes.get(from).ok_or_else(invalid)?;
+        let b = *cp.nodes.get(to).ok_or_else(invalid)?;
+        let expected =
+            Bounds::from_segment_f32(a.x, a.z, b.x, b.z).map_err(|_| RoadFaceError::InvalidEdge)?;
+        if filter.input_bounds()[index] != expected {
+            return Err(invalid());
+        }
+    }
+    Ok(())
+}
+
+fn bounds_overlap(cp: &GraphPreflightCheckpoint, i: usize, j: usize) -> bool {
+    let segment_bounds = |index: usize| {
+        let (a, b) = *cp.indexed_edges.get(index)?;
+        let a = cp.nodes.get(a)?;
+        let b = cp.nodes.get(b)?;
+        Bounds::from_segment_f32(a.x, a.z, b.x, b.z).ok()
+    };
+    match (segment_bounds(i), segment_bounds(j)) {
+        (Some(a), Some(b)) => {
+            a.min_x <= b.max_x + 1e-5
+                && b.min_x <= a.max_x + 1e-5
+                && a.min_z <= b.max_z + 1e-5
+                && b.min_z <= a.max_z + 1e-5
+        }
+        _ => false,
+    }
 }
 
 fn validate_completed_nodes(nodes: &[NodeRecord]) -> Result<(), RoadFaceError> {
@@ -647,6 +925,10 @@ fn pair_ordinal(first: usize, second: usize, edge_count: usize) -> usize {
     let preceding_rows =
         first * (edge_count - 1) - first.saturating_mul(first.saturating_sub(1)) / 2;
     preceding_rows + (second - first - 1)
+}
+
+fn pair_limit(edge_count: usize) -> usize {
+    edge_count.saturating_mul(edge_count.saturating_sub(1)) / 2
 }
 
 #[cfg(test)]
@@ -976,6 +1258,121 @@ mod tests {
             GraphPreflight::restore(checkpoint).unwrap_err(),
             RoadFaceError::InvalidEdge
         );
+    }
+
+    #[test]
+    fn zero_quota_is_stable_and_unsupported_coordinates_use_exact_fallback() {
+        let nodes = vec![
+            node(1, 200_000.0, 0.0),
+            node(2, 200_010.0, 10.0),
+            node(3, 200_010.0, 0.0),
+            node(4, 200_000.0, 10.0),
+        ];
+        let edges = vec![edge(1, 1, 2), edge(2, 3, 4)];
+        let mut job = GraphPreflight::new(nodes.clone(), edges.clone(), None).unwrap();
+        let before = serde_json::to_vec(&job.checkpoint()).unwrap();
+        assert_eq!(job.advance(0).work_used, 0);
+        assert_eq!(serde_json::to_vec(&job.checkpoint()).unwrap(), before);
+        while job.result().is_none() {
+            let step = job.advance(1);
+            assert!(step.work_used <= 1);
+            let checkpoint: GraphPreflightCheckpoint =
+                serde_json::from_slice(&serde_json::to_vec(&job.checkpoint()).unwrap()).unwrap();
+            job = GraphPreflight::restore(checkpoint).unwrap();
+        }
+        assert_eq!(job.result().unwrap().unwrap_err(), RoadFaceError::NonPlanar);
+        assert!(job.checkpoint.filter_fallback);
+    }
+
+    #[test]
+    fn schema_one_is_rejected_and_pending_candidate_cannot_be_forged() {
+        let edge_count = 256usize;
+        let mut nodes = Vec::with_capacity(edge_count * 2);
+        let mut edges = Vec::new();
+        for index in 0..edge_count {
+            let (x1, z1, x2, z2) = match index {
+                0 => (0.0, 0.0, 1.0, 0.0),
+                1 => (0.5, -1.0, 0.5, 1.0),
+                _ => {
+                    let x = 10.0 + index as f32 * 3.0;
+                    (x, 0.0, x + 1.0, 0.0)
+                }
+            };
+            let from = index as u32 * 2;
+            nodes.push(node(from, x1, z1));
+            nodes.push(node(from + 1, x2, z2));
+            edges.push(edge(index as u32, from, from + 1));
+        }
+        let mut job = GraphPreflight::new(nodes, edges, None).unwrap();
+        let mut legacy = job.checkpoint();
+        legacy.schema = 1;
+        assert_eq!(
+            GraphPreflight::restore(legacy).unwrap_err(),
+            RoadFaceError::InvalidEdge
+        );
+        while job.checkpoint.stage != Stage::Planarity {
+            job.advance(48);
+        }
+        let mut turns = 0;
+        while job.checkpoint.pending_pair.is_none() {
+            job.advance(1);
+            turns += 1;
+            assert!(
+                job.result().is_none(),
+                "completed before a candidate paused"
+            );
+            assert!(turns < 100_000);
+        }
+        let mut forged = job.checkpoint();
+        forged.stage = Stage::Done;
+        assert_eq!(
+            GraphPreflight::restore(forged.clone()).unwrap_err(),
+            RoadFaceError::InvalidEdge
+        );
+        forged.pending_pair = None;
+        assert_eq!(
+            GraphPreflight::restore(forged).unwrap_err(),
+            RoadFaceError::InvalidEdge
+        );
+    }
+
+    #[test]
+    fn dense_filter_falls_back_once_and_resumes_exact_scan() {
+        let count = 401usize;
+        let mut nodes = vec![node(0, 0.0, 0.0)];
+        let mut edges = Vec::new();
+        for index in 0..count - 1 {
+            let angle = std::f32::consts::TAU * index as f32 / (count - 1) as f32;
+            nodes.push(node(index as u32 + 1, angle.cos(), angle.sin()));
+            edges.push(edge(index as u32, 0, index as u32 + 1));
+        }
+        let mut job = GraphPreflight::new(nodes, edges, None).unwrap();
+        let mut turned_on_fallback = false;
+        while job.result().is_none() {
+            job.advance(48);
+            if job.checkpoint.filter_fallback {
+                let cp: GraphPreflightCheckpoint =
+                    serde_json::from_slice(&serde_json::to_vec(&job.checkpoint()).unwrap())
+                        .unwrap();
+                let mut premature_done = cp.clone();
+                premature_done.stage = Stage::Done;
+                assert_eq!(
+                    GraphPreflight::restore(premature_done).unwrap_err(),
+                    RoadFaceError::InvalidEdge
+                );
+                job = GraphPreflight::restore(cp).unwrap();
+                turned_on_fallback = true;
+                break;
+            }
+        }
+        assert!(
+            turned_on_fallback,
+            "dense candidates should hit the scan budget"
+        );
+        while job.result().is_none() {
+            job.advance(48);
+        }
+        assert_eq!(job.result().unwrap().unwrap().len(), count - 1);
     }
     #[test]
     fn proposed_edge_handoff_reuses_buffer_after_json_restore() {

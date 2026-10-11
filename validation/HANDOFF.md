@@ -149,3 +149,9 @@ Specifications under `specs/` remain the product source of truth. `validation/sp
 An isolated 5,000-segment quota-stepped AABB pair iterator is implemented and independently checked, with checkpoint validation hardened by the primary agent. See [road-pair-broadphase.md](road-pair-broadphase.md). It is not connected to production preflight yet; the live 512-node/edge cap remains. Next: exact narrow-phase parity and coordinated graph-stage integration, including job versions and worker profiling.
 
 The next compatibility gate is now covered natively: a concrete f32 endpoint-cancellation witness proves raw AABBs can omit an existing rejection. A projection-aware `Bounds::from_segment_f32` adapter and actual-predicate parity tests address this before integration; eight preflight tests pass. Details in `road-pair-broadphase.md`. Production preflight still uses all pairs.
+
+## Live spatial preflight integration
+
+Spatial filtering now runs in production preflight, using a 16 × 16 grid and rounding-aware bounds. The one-axis attempt regressed mature logical work and was replaced before acceptance. Mature preflight: 119,232 → 102,097 work units (same graph/49-face reference); full native release: 342 passed, 42 ignored; explicitly run mature preflight/composed-trace checks pass. Rebuilt WASM returns all 3,180 native-reference descriptors exactly across quotas and JSON resume. See `road-pair-broadphase.md` and `access-discovery-wasm-profile.json`.
+
+Preflight and filter checkpoints are schema 2. Unsupported-coordinate and high-work cases use bounded exact fallback. Normal saves without obsolete active jobs load; old nested preflight jobs reject explicitly and still need a migration/restart path. Live capture remains capped at 512 nodes/edges. Next: indexed node/edge validation and coordinated graph-stage scaling, then browser measurements. Visual appearance is unchanged by this engine change.
