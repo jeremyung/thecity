@@ -169,3 +169,7 @@ Two 6,000-tick Chromium worker runs do not show a clear overall timing gain (p95
 ## Node coincidence spatial indexing — 2026-10-11
 
 A transient nine-cell index replaces preflight's full node-pair scan for supported coordinates, retaining the exact f32 predicate, source-order failures and schema3 cursor meaning. Mature preflight falls18,095→5,692 units with unchanged49faces; full native351pass/42ignored and rebuilt WASM3180descriptor parity pass. Total discovery decreases only0.17%; no browser timing or density gain is claimed. See [node-coincidence-index.md](node-coincidence-index.md). Coupled512limits remain; continue graph-stage scaling and visual/density work.
+
+## Shared live capture — 2026-10-11
+
+Live search startup now computes the shared viability/collision snapshot once, retaining independent adapter limits and source order. Native355pass/43ignored; paired-vs-independent startup and200tick saves match; rebuilt WASM live200tick save/resume passes, as does3180descriptor parity. Native capture medians improve by roughly0.1ms on the mature fixture, not enough to explain prior worker spikes. Capture remains synchronous;512limits and visual acceptance are unchanged. See [shared-live-capture.md](shared-live-capture.md) for measured scope and the remaining consistency requirements.

@@ -1,7 +1,7 @@
 {
   "reference_path": "../validation/access-descriptor-reference.json",
   "reference_sha256": "5336438099f6e7bf0d1346a5beda225960e1e2769ef0458d4faee6f1d6583fee",
-  "wasm_sha256": "db31aaa0dc8fbfe97a9ee61875a64852a583dcfecce89837d591d1e359817f74",
+  "wasm_sha256": "080ff91fe777ca00ff4b0b87df1bee6a5080e23e618c958e6a4180fcaaa4790c",
   "scope": "Node WASM, not browser rendering or worker performance; advance includes WASM boundary and status JSON; construction includes city restore",
   "runs": [
     {
@@ -18,12 +18,12 @@
       "restores": 0,
       "max_checkpoint_bytes": 0,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 157.950291,
+      "construct_including_city_restore_ms": 161.266209,
       "calls": 1802,
-      "advance_median_ms": 0.04283399999999915,
-      "advance_p95_ms": 0.35504200000002584,
-      "advance_max_ms": 1.710583000000014,
-      "elapsed_including_persistence_ms": 277.78866600000003
+      "advance_median_ms": 0.0432920000000081,
+      "advance_p95_ms": 0.3697080000000028,
+      "advance_max_ms": 1.7167499999999905,
+      "elapsed_including_persistence_ms": 282.164042
     },
     {
       "quota": 48,
@@ -39,12 +39,12 @@
       "restores": 29,
       "max_checkpoint_bytes": 753449,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 103.69749999999999,
+      "construct_including_city_restore_ms": 105.49929199999997,
       "calls": 153759,
-      "advance_median_ms": 0.0012909999999806132,
-      "advance_p95_ms": 0.005791999999928521,
-      "advance_max_ms": 1.0229160000000093,
-      "elapsed_including_persistence_ms": 463.852792
+      "advance_median_ms": 0.0012920000000349319,
+      "advance_p95_ms": 0.005957999999964159,
+      "advance_max_ms": 0.7539579999998978,
+      "elapsed_including_persistence_ms": 473.593833
     },
     {
       "quota": 4096,
@@ -60,12 +60,12 @@
       "restores": 29,
       "max_checkpoint_bytes": 753449,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 101.10837500000002,
+      "construct_including_city_restore_ms": 103.34841600000004,
       "calls": 1802,
-      "advance_median_ms": 0.04120799999998326,
-      "advance_p95_ms": 0.3392079999999851,
-      "advance_max_ms": 0.5697920000000067,
-      "elapsed_including_persistence_ms": 270.453708
+      "advance_median_ms": 0.041624999999953616,
+      "advance_p95_ms": 0.3393750000000182,
+      "advance_max_ms": 0.47787500000004,
+      "elapsed_including_persistence_ms": 277.665041
     },
     {
       "quota": 16384,
@@ -81,12 +81,12 @@
       "restores": 29,
       "max_checkpoint_bytes": 753449,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 103.5445000000002,
+      "construct_including_city_restore_ms": 104.58629100000007,
       "calls": 451,
-      "advance_median_ms": 0.1689169999999649,
-      "advance_p95_ms": 0.8732079999999769,
-      "advance_max_ms": 1.5538340000000517,
-      "elapsed_including_persistence_ms": 273.1337500000002
+      "advance_median_ms": 0.1725420000000213,
+      "advance_p95_ms": 0.8906660000000102,
+      "advance_max_ms": 1.6007079999999405,
+      "elapsed_including_persistence_ms": 279.49137500000006
     }
   ]
 }

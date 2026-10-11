@@ -44,8 +44,7 @@ impl Engine {
     /// merely because the geometry revision changes during its search.
     fn start_face_access(&mut self) -> bool {
         if !self.face_access_admission_available() { return false; }
-        let Ok(discovery) = access_capture::capture(self) else { return false; };
-        let Ok(proposal) = access_proposal_capture::capture(self) else { return false; };
+        let Ok((discovery, proposal)) = access_capture::capture_pair(self) else { return false; };
         let Some(revision) = self.access_geometry_revision_token() else { return false; };
         let Ok(job) = AccessPlanningJob::new_excluding(discovery, proposal, revision,
             self.state.exhausted_access_faces.clone()) else { return false; };
@@ -118,6 +117,93 @@ impl Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn shared_capture_start_preserves_live_checkpoint_and_continuation() {
+        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let mut control = Engine::restore_json(source).unwrap();
+        let mut paired = Engine::restore_json(source).unwrap();
+        let discovery = access_capture::capture(&control).unwrap();
+        let proposal = access_proposal_capture::capture(&control).unwrap();
+        control.live_access = Some(LiveAccess::new(
+            AccessPlanningJob::new_excluding(
+                discovery,
+                proposal,
+                control.access_geometry_revision_token().unwrap(),
+                control.state.exhausted_access_faces.clone(),
+            )
+            .unwrap(),
+        ));
+        assert!(paired.start_face_access());
+        assert_eq!(control.save_json(), paired.save_json());
+        for _ in 0..200 {
+            control.step(1);
+            paired.step(1);
+        }
+        assert_eq!(control.save_json(), paired.save_json());
+    }
+
+    #[test]
+    #[ignore = "native capture microbenchmark; not browser or full-step performance"]
+    fn profile_shared_capture() {
+        fn samples(city: &Engine, shared: bool) -> Vec<f64> {
+            (0..250)
+                .map(|_| {
+                    let started = std::time::Instant::now();
+                    let inputs = if shared {
+                        access_capture::capture_pair(city).unwrap()
+                    } else {
+                        (
+                            access_capture::capture(city).unwrap(),
+                            access_proposal_capture::capture(city).unwrap(),
+                        )
+                    };
+                    std::hint::black_box(&inputs);
+                    let ms = started.elapsed().as_secs_f64() * 1000.0;
+                    drop(inputs);
+                    ms
+                })
+                .collect()
+        }
+        let city = Engine::restore_json(include_str!(
+            "../../validation/early-reservation-wasm-87231-save.json"
+        ))
+        .unwrap();
+        let before = city.save_json();
+        let expected = (
+            access_capture::capture(&city).unwrap(),
+            access_proposal_capture::capture(&city).unwrap(),
+        );
+        let paired = access_capture::capture_pair(&city).unwrap();
+        assert_eq!(
+            serde_json::to_vec(&expected).unwrap(),
+            serde_json::to_vec(&paired).unwrap()
+        );
+        let mut rounds = Vec::new();
+        for round in 0..4 {
+            // Alternate run order to reduce consistently favoring warm caches.
+            for shared in [round % 2 == 0, round % 2 != 0] {
+                let mut timings = samples(&city, shared);
+                timings.sort_by(f64::total_cmp);
+                rounds.push(serde_json::json!({
+                    "round": round, "shared": shared, "samples": timings.len(),
+                    "median_ms": timings[timings.len()/2],
+                    "p95_ms": timings[timings.len()*95/100],
+                    "max_ms": timings[timings.len()-1],
+                }));
+            }
+        }
+        assert_eq!(city.save_json(), before);
+        let report = serde_json::json!({
+            "scope": "native release synchronous capture only; excludes job construction, output destruction, WASM, browser worker and rendering",
+            "fixture": "early-reservation-wasm-87231-save.json", "tick": city.state.tick,
+            "nodes": city.state.nodes.len(), "roads": city.state.roads.len(), "parcels": city.state.parcels.len(),
+            "both_inputs_byte_equal": true, "world_unchanged": true, "rounds": rounds,
+        });
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../validation/shared-capture-profile.json");
+        std::fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+    }
 
     #[test]
     fn exhausted_face_sweep_survives_save_and_selects_another_interior() {

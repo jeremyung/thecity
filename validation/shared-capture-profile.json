@@ -1,0 +1,76 @@
+{
+  "both_inputs_byte_equal": true,
+  "fixture": "early-reservation-wasm-87231-save.json",
+  "nodes": 160,
+  "parcels": 850,
+  "roads": 208,
+  "rounds": [
+    {
+      "max_ms": 0.163958,
+      "median_ms": 0.128792,
+      "p95_ms": 0.13975,
+      "round": 0,
+      "samples": 250,
+      "shared": true
+    },
+    {
+      "max_ms": 0.246375,
+      "median_ms": 0.22175,
+      "p95_ms": 0.234875,
+      "round": 0,
+      "samples": 250,
+      "shared": false
+    },
+    {
+      "max_ms": 0.248875,
+      "median_ms": 0.221292,
+      "p95_ms": 0.235292,
+      "round": 1,
+      "samples": 250,
+      "shared": false
+    },
+    {
+      "max_ms": 0.145708,
+      "median_ms": 0.126792,
+      "p95_ms": 0.136875,
+      "round": 1,
+      "samples": 250,
+      "shared": true
+    },
+    {
+      "max_ms": 0.145625,
+      "median_ms": 0.12675,
+      "p95_ms": 0.13375,
+      "round": 2,
+      "samples": 250,
+      "shared": true
+    },
+    {
+      "max_ms": 0.279791,
+      "median_ms": 0.22125,
+      "p95_ms": 0.238708,
+      "round": 2,
+      "samples": 250,
+      "shared": false
+    },
+    {
+      "max_ms": 0.31229199999999996,
+      "median_ms": 0.231791,
+      "p95_ms": 0.245875,
+      "round": 3,
+      "samples": 250,
+      "shared": false
+    },
+    {
+      "max_ms": 0.144625,
+      "median_ms": 0.12141700000000001,
+      "p95_ms": 0.12825,
+      "round": 3,
+      "samples": 250,
+      "shared": true
+    }
+  ],
+  "scope": "native release synchronous capture only; excludes job construction, output destruction, WASM, browser worker and rendering",
+  "tick": 242000,
+  "world_unchanged": true
+}

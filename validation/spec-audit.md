@@ -1538,3 +1538,7 @@ Replaced preflight linear node/edge identity and endpoint scans with transient B
 ### Node coincidence index — 2026-10-11
 
 Preflight uses a bounded transient spatial index with exact f32 narrow-phase checks and source-index checkpoint cursors. Mature fixture work18,095→5,692; complete discovery7,392,819→7,380,416, preserving3180native/WASM descriptors. Native351pass/42ignored. See `node-coincidence-index.md` for evidence and limits. This supports bounded planning but does not establish larger graph caps, visual fidelity or browser frame performance.
+
+### Shared live access capture — 2026-10-11
+
+Startup reuses one computed viability projection with a borrow-bound source token, preserving independent caps and exact outputs. Native355pass/43ignored,200tick live checkpoint equivalence, rebuilt WASM live save/resume and3180descriptor parity verified. Native capture-only medians improve about0.1ms; no browser FPS improvement or fully quota-stepped capture is claimed. See `shared-live-capture.md`. City density and artistic acceptance remain unmet.
