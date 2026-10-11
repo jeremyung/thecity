@@ -8,6 +8,7 @@ import type { Building, Style } from '../types';
 
 /** Isolated development viewer for the same authored building kits used by the city. */
 export class ArchitectureAssetReview {
+  private readonly compactMidriseReview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('midrise') === 'compact';
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(38, 1, 0.1, 1400);
   readonly art = new ArtMaterials();
@@ -201,7 +202,7 @@ export class ArchitectureAssetReview {
     this.lowriseSamples = this.lowriseSamples.map(({ building, model: previous }) => {
       this.models.remove(previous);
       disposeGroup(previous);
-      const next = buildingKit({ ...building, stage, progress: boundedProgress }, this.art);
+      const next = buildingKit({ ...building, stage, progress: boundedProgress }, this.art, {compactMidrise:this.compactMidriseReview});
       next.position.set(building.x, 0, building.z);
       next.traverse((object) => {
         if (object instanceof THREE.Mesh) {
@@ -288,7 +289,7 @@ export class ArchitectureAssetReview {
         anchor: sample.anchor ?? false,
         vacant_days: 0,
       };
-      const model = buildingKit(building, this.art);
+      const model = buildingKit(building, this.art, {compactMidrise:this.compactMidriseReview});
       if (index === 0) {
         // Match the kit's deterministic wall material exactly. Other facade
         // parts (glass, trim, timber, roof and signage) keep their own materials.

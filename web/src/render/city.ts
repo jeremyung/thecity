@@ -39,6 +39,8 @@ const carColors=['#fff9e9','#d4e2dc','#4b767a','#a95049','#b3bdc9','#e8c778'].ma
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
 
 export class CityRenderer {
+  // Explicit development study; never selected by production or a saved world.
+  private readonly compactMidriseReview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('midrise') === 'compact';
   readonly scene=new THREE.Scene();
   readonly camera=new THREE.PerspectiveCamera(verticalFovDegrees(LENS_PRESETS.environment.focalLengthMm),1,.5,3500);
   readonly art=new ArtMaterials();
@@ -300,7 +302,7 @@ export class CityRenderer {
       // its data without appending duplicate closures or starving older parcels.
       const snapshot:Building={...b,history:[...b.history]};
       const source:RebuildableBuildingSource={
-        createGroup:()=>{const group=buildingKit(snapshot,this.art);group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
+        createGroup:()=>{const group=buildingKit(snapshot,this.art,{compactMidrise:this.compactMidriseReview});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
         disposeGroup:group=>disposeGroup(group),
       };
       this.objectQueue.set(b.id,{building:snapshot,signature,source});

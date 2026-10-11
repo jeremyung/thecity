@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { midriseMassing, type BuildingMass } from '../web/src/render/building-massing';
+import { compactMidriseEnvelope, midriseMassing, type BuildingMass } from '../web/src/render/building-massing';
 
 function building(overrides: Partial<{
   kind: string;
@@ -42,6 +42,28 @@ function expectSupported(masses: BuildingMass[]) {
 }
 
 describe('footprint-bounded midrise massing', () => {
+  it('widens only supported compact-midrise envelopes to the bounded parcel clearance', () => {
+    const input = building({ width: 40, depth: 32 });
+    expect(compactMidriseEnvelope(input, 33.6, 26.88)).toEqual({ width: 38.4, depth: 30.2 });
+    // Keep the existing envelope on narrow lots instead of shrinking their bodies.
+    expect(compactMidriseEnvelope(building({ width: 8, depth: 8 }), 6.72, 6.72)).toEqual({ width: 6.72, depth: 6.72 });
+    expect(compactMidriseEnvelope(building({ width: 14, depth: 12 }), 11.76, 10.08)).toEqual({ width: 12.4, depth: 10.2 });
+  });
+
+  it('leaves anchors, low-rise, towers, and undersized lots at their exact input dimensions', () => {
+    const cases = [
+      building({ anchor: true, width: 40, depth: 32 }),
+      building({ kind: 'home', floors: 2, width: 40, depth: 32 }),
+      building({ floors: 12, width: 40, depth: 32 }),
+      building({ width: 7.99, depth: 32 }),
+      building({ width: 40, depth: 7.99 }),
+    ];
+    for (const input of cases) {
+      const width = input.width * .84, depth = input.depth * .84;
+      expect(compactMidriseEnvelope(input, width, depth)).toEqual({ width, depth });
+    }
+  });
+
   it('supports every tier across floor counts, narrow plots and seeded variations', () => {
     for (const kind of ['apartment', 'office']) {
       for (let floors = 4; floors <= 11; floors++) {

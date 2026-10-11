@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ArtMaterials, signTexture } from './materials';
-import { midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
+import { compactMidriseEnvelope, midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing, type LowriseMass, type LowriseMassing } from './lowrise-massing';
 import { buildingPalette } from './building-palette';
 import { renderTower } from './tower-kit';
@@ -68,11 +68,15 @@ export function isModernHomeVariant(b:Pick<Building,'kind'|'floors'|'appearance_
   return !b.anchor&&b.kind==='home'&&(b.floors===2||b.floors===3)&&(((b.appearance_seed>>>2)&1)===0);
 }
 
-export function buildingKit(b: Building, art: ArtMaterials) {
+export interface BuildingKitReviewOptions { compactMidrise?: boolean }
+
+export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
   const seed = b.appearance_seed >>> 0;
   const initialWidth = Math.max(6, b.width * (b.anchor ? .66 : .84));
-  const d = Math.max(6, b.depth * .84), floor = 3.25;
-  const w = lowriseBuildingWidth(b, initialWidth, d);
+  const initialDepth = Math.max(6, b.depth * .84), floor = 3.25;
+  const envelope = review.compactMidrise ? compactMidriseEnvelope(b, initialWidth, initialDepth) : {width:initialWidth,depth:initialDepth};
+  const d = envelope.depth;
+  const w = lowriseBuildingWidth(b, envelope.width, d);
   const floors = Math.max(1, b.floors);
   const lowrise = lowriseMassing(b, w, d);
   const kit = new Kit();
@@ -141,7 +145,7 @@ export function buildingKit(b: Building, art: ArtMaterials) {
     if (midrise) {
       const progress = THREE.MathUtils.clamp(b.progress, 0, 1);
       const builtFloors = Math.ceil(floors * THREE.MathUtils.clamp((progress - .12) / .57, 0, 1));
-      renderMidriseConstruction(kit, midrise, { w, d, base, floor, floors, builtFloors, progress, wall, concrete, iron, glass, dark, wood, scaffold, caution, paleConcrete });
+      renderMidriseConstruction(kit, midrise, { w, d, parcelW: b.width, base, floor, floors, builtFloors, progress, wall, concrete, iron, glass, dark, wood, scaffold, caution, paleConcrete });
       return finishBuilding(kit, b, w, d, height, art, false);
     }
     if (lowrise) {
@@ -406,7 +410,7 @@ function renderMidriseCoreFacade(kit:Kit,m:{width:number;depth:number;base:numbe
   }
 }
 
-function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
+function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:number;parcelW:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
   const {base,floor,builtFloors,progress,wall,concrete,iron,glass,dark,wood,scaffold,caution,paleConcrete}=m;
   const installBudget=Math.ceil(THREE.MathUtils.clamp((progress-.69)/.23,0,1)*m.floors);
   for(const mass of layout.masses){
@@ -466,7 +470,7 @@ function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:n
   const craneZ=-Math.min(m.d*.22,Math.max(.45,m.d/2-.35));
   const craneHeight=Math.min(m.floors*floor+4,Math.max(4.4,base+Math.max(erectedMax(layout,builtFloors),0)*floor+2.8));
   kit.box(craneX,craneHeight/2,craneZ,.16,craneHeight,.16,caution);
-  const jibW=Math.max(1.4,m.w*.58);
+  const jibW=Math.min(Math.max(1.4,m.w*.58),2*(m.parcelW/2-craneX-.02));
   kit.box(craneX,craneHeight-.18,craneZ,jibW,.14,.15,caution);
   kit.box(craneX-jibW*.24,craneHeight-.65,craneZ,.1,1,.1,iron);
 }

@@ -173,3 +173,9 @@ A transient nine-cell index replaces preflight's full node-pair scan for support
 ## Shared live capture — 2026-10-11
 
 Live search startup now computes the shared viability/collision snapshot once, retaining independent adapter limits and source order. Native355pass/43ignored; paired-vs-independent startup and200tick saves match; rebuilt WASM live200tick save/resume passes, as does3180descriptor parity. Native capture medians improve by roughly0.1ms on the mature fixture, not enough to explain prior worker spikes. Capture remains synchronous;512limits and visual acceptance are unchanged. See [shared-live-capture.md](shared-live-capture.md) for measured scope and the remaining consistency requirements.
+
+## Compact midrise development study — 2026-10-11
+
+Development-only `?midrise=compact` tests wider 4–11-floor apartment/office bodies inside existing parcels; production ignores the flag. The 850-building fixture gains only 1,341 m² projected kit coverage (+1.09%), with +0.81% triangles and +1.93 MB counted CPU geometry arrays. This cannot solve the citywide empty interiors. Containment, entry and cross-style vertex checks pass; runtime visual approval is pending because both screenshot APIs failed while the Mac was locked. Default appearance remains selected. See [study and reproduction](compact-midrise-review/README.md); do not promote without matched style/time views and browser measurements.
+
+The focused render suite passes 34 tests and the production build passes. Full web testing is not green: unrestricted run264pass/2timeouts; two-worker run265pass/1timeout; isolated300,000-tick WASM endurance also exceeded60seconds (62.15seconds). Timeout limits were not relaxed. See the study report for scope; do not present this checkpoint as full validation or visual acceptance.

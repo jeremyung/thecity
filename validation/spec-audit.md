@@ -1542,3 +1542,7 @@ Preflight uses a bounded transient spatial index with exact f32 narrow-phase che
 ### Shared live access capture — 2026-10-11
 
 Startup reuses one computed viability projection with a borrow-bound source token, preserving independent caps and exact outputs. Native355pass/43ignored,200tick live checkpoint equivalence, rebuilt WASM live save/resume and3180descriptor parity verified. Native capture-only medians improve about0.1ms; no browser FPS improvement or fully quota-stepped capture is claimed. See `shared-live-capture.md`. City density and artistic acceptance remain unmet.
+
+### Compact midrise envelope review — 2026-10-11
+
+A development-only candidate reduces proportional midrise setbacks on wider lots without changing authoritative parcels, styles, clocks or growth. Measured projected kit union increases 1.09%; triangles increase 0.81%, counted geometry arrays 0.88%. The limited effect narrows its role to possible street-wall refinement, not a density solution. Geometry checks and production build pass; screenshots remain unavailable while the Mac is locked, so visual acceptance and promotion are explicitly pending. Details and comparison reports: `compact-midrise-review/README.md`.

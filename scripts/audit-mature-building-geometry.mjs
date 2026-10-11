@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 const root = resolve(import.meta.dirname, '..');
 const inputPath = resolve(process.argv[2] ?? 'validation/early-reservation-wasm-87231-snapshot.json');
 const outputPath = resolve(process.argv[3] ?? 'validation/mature-building-geometry-budget.json');
+const compactMidrise = process.argv.slice(4).includes('--compact-midrise');
 // Keep the temporary bundle beneath node_modules so its ESM imports resolve the
 // exact installed Three.js package used by the project.
 const cache = resolve(root, 'node_modules/.cache', `thecity-building-geometry-${process.pid}`);
@@ -137,7 +138,7 @@ try {
     const snapshot = { ...building, history: [...building.history] };
     return {
       createGroup() {
-        const group = buildingKit(snapshot, art);
+        const group = buildingKit(snapshot, art, {compactMidrise});
         group.position.set(snapshot.x, 0, snapshot.z);
         group.rotation.y = snapshot.rotation;
         return group;
@@ -147,7 +148,7 @@ try {
   }
 
   for (const building of world.buildings) {
-    const group = buildingKit(building, art);
+    const group = buildingKit(building, art, {compactMidrise});
     group.position.set(building.x, 0, building.z);
     group.rotation.y = building.rotation;
     const family = byFamily.get(building.kind) ?? freshStats();
@@ -241,6 +242,7 @@ try {
   };
   const report = {
     title: 'Mature authored building geometry budget',
+    compactMidriseReview: compactMidrise,
     measuredAt: new Date().toISOString(),
     method: 'Production buildingKit() and BuildingChunks with the production ArtMaterials resolver; Node CPU-side array accounting. Geometry is generated from every snapshot building, placed at its saved translation/rotation, and merged into actual 200 m chunks.',
     sources,

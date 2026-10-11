@@ -285,7 +285,7 @@ async function loadSnapshot(savePath) {
   }
 }
 
-async function auditFile(inputPath, outputPath, inputKind = 'save') {
+async function auditFile(inputPath, outputPath, inputKind = 'save', compactMidrise = false) {
   let loaded;
   if (inputKind === 'snapshot') {
     const data = await readFile(inputPath, 'utf8');
@@ -300,10 +300,10 @@ async function auditFile(inputPath, outputPath, inputKind = 'save') {
     const art = new runtime.module.ArtMaterials();
     try {
       const report = auditRenderedCoverage(snapshot, {
-        create: (building) => runtime.module.buildingKit(building, art),
+        create: (building) => runtime.module.buildingKit(building, art, {compactMidrise}),
         dispose: (group) => runtime.module.disposeGroup(group),
       });
-      report.source = { ...report.source, [inputKind]: relative(root, inputPath), sha256: inputSha256, kitModule: 'web/src/render/kit.ts', kitBundleSha256: runtime.bundleSha256 };
+      report.source = { ...report.source, [inputKind]: relative(root, inputPath), sha256: inputSha256, kitModule: 'web/src/render/kit.ts', kitBundleSha256: runtime.bundleSha256, compactMidriseReview: compactMidrise };
       const output = `${JSON.stringify(report, null, 2)}\n`;
       if (outputPath) await writeFile(outputPath, output);
       else process.stdout.write(output);
@@ -318,7 +318,7 @@ async function auditFile(inputPath, outputPath, inputKind = 'save') {
 }
 
 async function runCli(argv) {
-  let inputPath = null, outputPath = null, inputKind = 'save';
+  let inputPath = null, outputPath = null, inputKind = 'save', compactMidrise = false;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--input' || argv[i] === '--snapshot') {
       if (inputPath) throw new Error('Choose one save input or one snapshot input');
@@ -328,8 +328,10 @@ async function runCli(argv) {
     } else if (argv[i] === '--output') {
       if (!argv[i + 1]) throw new Error('--output requires a report path');
       outputPath = resolve(argv[++i]);
+    } else if (argv[i] === '--compact-midrise') {
+      compactMidrise = true;
     } else if (argv[i] === '--help' || argv[i] === '-h') {
-      process.stdout.write('Usage: node scripts/audit-rendered-coverage.mjs (--input save.json | --snapshot snapshot.json) [--output report.json]\n');
+      process.stdout.write('Usage: node scripts/audit-rendered-coverage.mjs (--input save.json | --snapshot snapshot.json) [--output report.json] [--compact-midrise]\n');
       return;
     } else if (argv[i].startsWith('-')) throw new Error(`Unknown option: ${argv[i]}`);
     else {
@@ -338,7 +340,7 @@ async function runCli(argv) {
     }
   }
   if (!inputPath) throw new Error('Provide a verified save or snapshot path');
-  await auditFile(inputPath, outputPath, inputKind);
+  await auditFile(inputPath, outputPath, inputKind, compactMidrise);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
