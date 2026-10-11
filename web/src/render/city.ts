@@ -581,9 +581,11 @@ export class CityRenderer {
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
     this.sun.intensity=.16+this.daylight*1.8;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#fff1d9'),this.daylight);
-    // Keep the moonlit floor while letting the daytime key describe facade
-    // orientation; excessive hemispherical fill flattened the miniature massing.
-    this.hemi.intensity=.65-this.daylight*.15;
+    // Soft urban bounce keeps opaque facades and lanes readable between local
+    // emitters. Preserve the daytime fill and ground tint so the sun continues
+    // to describe building orientation without flattening daytime massing.
+    this.hemi.intensity=1.05-this.daylight*.55;
+    this.hemi.groundColor.set('#a0a09a').lerp(new THREE.Color('#748998'),this.daylight);
     // A painted moonlit fill keeps rooflines and quiet lanes readable between
     // pools of warm shop light; the sky itself can remain a deep midnight blue.
     this.hemi.color.set('#829eb9').lerp(new THREE.Color('#d8e6e7'),this.daylight);

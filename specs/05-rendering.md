@@ -132,6 +132,13 @@ Flooding, erosion, hydraulic infrastructure, and full-domain fluid dynamics are 
 
 ## Lighting and weather
 
+Night readability checkpoint (2026-10-11): shared hemisphere fill now blends
+from 1.05 at night to the existing 0.5 in daylight, with neutral nighttime ground
+bounce. Matched WebGPU comparisons in both styles improve facade/road legibility;
+the daytime control retains its prior appearance. See
+[comparison evidence](../validation/screenshots/night-fill/README.md). This adds
+no local lights or passes and does not satisfy the full visual release gate.
+
 One shared sun and moon trajectory follows authoritative city time. Use a bounded shadow region around the observed area with distant lighting approximations. Window and sign emission depend on building use and activity. Avoid thousands of shadow-casting point lights; combine emissive surfaces with a small pool of nearby lights.
 
 Rain changes wetness, ripples, pedestrian accessories, visibility, and sound. Wetness rises and dries gradually. Clouds, trees, and particles follow presentation time derived from the simulation. Lighting preview changes only lighting and labels that fact in the UI.

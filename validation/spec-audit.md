@@ -1474,3 +1474,13 @@ from 1 m to 18 m. The provisional positive was invalidated and its diagram
 removed. Tests now explicitly reject that clearance error. No production engine
 behavior changed; no density gain or visual acceptance is claimed. This excludes
 one finite route family, not all possible connectors or redevelopment solutions.
+
+## 2026-10-11 — Night facade readability
+
+Changed shared hemisphere night intensity 0.65 → 1.05 and added a neutral night
+ground-bounce tint; daytime intensity/color endpoints are preserved. Matched
+paused WebGPU comparisons in both styles show more readable opaque facades and
+lanes. The Anime noon control preserves daytime appearance. Evidence and limits:
+screenshots/night-fill/README.md. Temporary comparison UI removed; final build
+passes with the existing bundle-size warning. No added GPU lights/passes/assets,
+no performance claim, and no overall art or density acceptance.

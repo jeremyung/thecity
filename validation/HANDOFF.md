@@ -66,6 +66,15 @@ now preserves that rule and has a regression for it. No runtime planner change
 is justified by this finite search; it does not prove that all bent routes are
 impossible. See the report for the exact family and remaining scope.
 
+## Evening rendering — 2026-10-11
+
+Accepted a modest hemisphere/ground-bounce adjustment after matched WebGPU
+Miniature and Anime comparisons. Facades and lanes read more clearly at 19:00;
+noon retains the previous lighting. The temporary A/B control was removed.
+See screenshots/night-fill/README.md. Build/typecheck passes. No added lights,
+passes or geometry; no performance improvement is claimed. This does not resolve
+the sparse layout, facade repetition or the overall art gate.
+
 ## Verified work
 
 - Persisted, quota-stepped face discovery, target selection, descriptor generation and proposal validation.
