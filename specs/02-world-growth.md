@@ -26,6 +26,18 @@ What makes the fabric read as Tokyo:
 - **A skyline organized by transit.** Taller clusters sit at working stations, and small old buildings stay within the clusters.
 - **Transport that structures the city:** elevated or at-grade rail with stations, an elevated expressway, river crossings, and arterials that follow the river and rail. These corridors are planned at generation time, not grown accidentally.
 
+### Street-network targets
+
+Measured from PLATEAU road surfaces and OpenStreetMap centerlines for 1 km meshes in Kyojima, Togoshi, Taito, Shinjuku and Minato; see the [street reference](../validation/street-reference/README.md). A generated plan must fall within Tokyo's range and must not be more grid-aligned than its most regular district:
+
+| Metric | Target | Tokyo reference range |
+| --- | --- | --- |
+| Street orientation order (1 = grid) | 0.3–0.65 | 0.14 Kyojima to 0.64 Taito |
+| Non-four-sided blocks | ≥ 55% | 44–91% |
+| T-junction share | 65–90% | 65–83% |
+| Dead ends per km² | 40–100 | 16–98 |
+| Junctions per km² | 400–550 | 217–502 |
+
 ### Fabric targets
 
 Measure over 250 m crops using the rendered footprint union, as in `scripts/audit-rendered-coverage.mjs`. Report gross and net-of-road coverage separately.
@@ -51,8 +63,8 @@ The plan is generated deterministically from the seed and the engine version bef
    - Stations sit on the line, at least 400 m apart in the production domain; the prototype has one active station.
    - An elevated expressway runs above one arterial row and one arterial column (Tokyo's Shuto pattern). It crosses the river only on a crossing row and never runs along the water. It is a separate grade-separated layer with its own nodes, has no at-grade junctions, and is never flattened into the street graph.
    - Gateways connect the arterial and rail layers to the region.
-3. **Arterial lattice:** a quad lattice of major lines. Tokyo arterials are far apart, so only the two river-bank roads, the gateway row south of the rail corridor, the expressway row north of it and the expressway column are arterials. The other lattice lines are local collector streets, and every crossing row gets a bridge. Columns follow the river course as offset polylines, so bank arterials frame the river. Rows include every river bend and the rail corridor's frontage streets. Interior junctions are perturbed by up to about 18 m, so superblocks are irregular convex quadrilaterals rather than rectangles. Lattice edges are straight segments between shared junction nodes. Every lattice cell is a superblock or a reserved corridor band.
-4. **Local streets:** each superblock is subdivided by recursive street cuts (hierarchical domain splitting). A polygon whose short side exceeds twice the district's minimum block depth is cut along its long axis; otherwise one longer than the district's maximum block length is cut across it. Each cut is tilted and offset by seeded jitter, and it ends where it meets an existing street, creating a T-junction. A cut is rejected if it would land within 14 m of an existing junction or leave a block below its minimum size. District patterns, from station distance and a seeded draw:
+3. **Arterial lattice:** a quad lattice of major lines. Tokyo arterials are far apart, so only the two river-bank roads, the gateway row south of the rail corridor, the expressway row north of it and the expressway column are arterials. The other lattice lines are local collector streets, and every crossing row gets a bridge. Columns follow the river course as offset polylines, so bank arterials frame the river. Rows include every river bend and the rail corridor's frontage streets. Interior arterial junctions get seeded slopes (up to about 15°) and offsets (up to about 30 m), so arterials bend and run diagonally across the fabric. A convexity guard keeps every superblock convex. The river-bank roads, the rail corridor frontage and the outer ring stay fixed. Lattice edges are straight segments between shared junction nodes. Every lattice cell is a superblock or a reserved corridor band.
+4. **Local streets:** each superblock gets its own street orientation: the superblock's long axis turned by a seeded angle, up to about 35° in compact districts and nearly none in the station core. It is then subdivided by recursive street cuts (hierarchical domain splitting) along that orientation, so blocks meet arterials at angles. A polygon whose short side exceeds twice the district's minimum block depth is cut along its long axis; otherwise one longer than the district's maximum block length is cut across it. Each cut is tilted and offset by seeded jitter, and it ends where it meets an existing street, creating a T-junction. A cut is rejected if it would land within 14 m of an existing junction or leave a block below its minimum size. District patterns, from station distance and a seeded draw:
    - station core: nearly straight cuts and deep blocks, for larger mid-rise lots;
    - compact: strongly jittered cuts and blocks at least 36 m deep;
    - strips: long narrow blocks whose cross cuts are mostly lanes;
@@ -66,7 +78,9 @@ Plan generation must be bit-identical on every supported target. Plan decisions 
 
 Plan geometry is the authority for collisions. Lots from one partition are disjoint by construction, so they skip pairwise clearance tests. Generation must still validate that no lot overlaps any road right-of-way, rail corridor, river setback, or protected land, and that no two lots overlap at all.
 
-Variety comes from district patterns, jittered cuts, T-junctions, lanes, lot widths, flag lots, building families and heights. Future work: bent streets, dead-end roji, retained old diagonal roads, and lot assembly, all through the same partition contract.
+Deep blocks in compact and strip districts often get a dead-end roji: a 4 m alley from a local street about two-thirds of the way into the block, replacing the lots in its path.
+
+Variety comes from district orientation, jittered cuts, T-junctions, roji, lot widths, flag lots, building families and heights. Future work: bent streets, dead-end roji, retained old diagonal roads, and lot assembly, all through the same partition contract.
 
 ## Growth: realizing the plan
 

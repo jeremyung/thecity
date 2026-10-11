@@ -349,6 +349,43 @@ fn segment_hits_rect(a: P, b: P, r: (f32, f32, f32, f32), margin: f32) -> bool {
     })
 }
 
+fn point_segment_distance(p: P, a: P, b: P) -> f32 {
+    let d = b.sub(a);
+    let t = (p.sub(a).dot(d) / d.dot(d).max(1.0e-9)).clamp(0.0, 1.0);
+    p.sub(a.lerp(b, t)).len()
+}
+
+/// Distance from a segment to a convex quad, using only IEEE-exact operations
+/// so plan decisions match on every target.
+fn quad_segment_distance(q: &[P; 4], a: P, b: P) -> f32 {
+    let inside = |p: P| {
+        let signs: Vec<f32> = (0..4).map(|i| q[(i + 1) % 4].sub(q[i]).cross(p.sub(q[i]))).collect();
+        signs.iter().all(|s| *s >= 0.0) || signs.iter().all(|s| *s <= 0.0)
+    };
+    if inside(a) || inside(b) {
+        return 0.0;
+    }
+    let crosses = |p1: P, p2: P, p3: P, p4: P| {
+        let d1 = p2.sub(p1).cross(p3.sub(p1));
+        let d2 = p2.sub(p1).cross(p4.sub(p1));
+        let d3 = p4.sub(p3).cross(p1.sub(p3));
+        let d4 = p4.sub(p3).cross(p2.sub(p3));
+        d1 * d2 < 0.0 && d3 * d4 < 0.0
+    };
+    let mut best = f32::INFINITY;
+    for i in 0..4 {
+        let (c, d) = (q[i], q[(i + 1) % 4]);
+        if crosses(a, b, c, d) {
+            return 0.0;
+        }
+        best = best
+            .min(point_segment_distance(c, a, b))
+            .min(point_segment_distance(a, c, d))
+            .min(point_segment_distance(b, c, d));
+    }
+    best
+}
+
 fn rect_corners(lot: &PlanLot) -> [P; 4] {
     // Local +Z is the facing (sin r, cos r); local +X is (cos r, -sin r).
     let f = lot.facing;
@@ -771,6 +808,61 @@ fn partition_block(
     }
 }
 
+/// Place a dead-end alley from the middle part of a block's longest local
+/// street edge, running about two-thirds of the way across the block.
+/// Returns the start junction (on the street) and the dead-end node.
+fn roji(b: &mut Builder, inner: &Poly, rng: &mut Rng) -> Option<(usize, usize)> {
+    let n = inner.len();
+    let (edge, line) = (0..n)
+        .filter_map(|i| inner[i].1.map(|line| (i, line)))
+        .filter(|(_, line)| b.lines[*line].kind == RoadKind::Local)
+        .max_by(|x, y| {
+            let lx = inner[(x.0 + 1) % n].0.sub(inner[x.0].0).len();
+            let ly = inner[(y.0 + 1) % n].0.sub(inner[y.0].0).len();
+            lx.total_cmp(&ly)
+        })?;
+    let a = inner[edge].0;
+    let edge_vec = inner[(edge + 1) % n].0.sub(a);
+    if edge_vec.len() < 30.0 {
+        return None;
+    }
+    let u = edge_vec.unit();
+    let mut v = P::new(-u.z, u.x);
+    if centroid(inner).sub(a).dot(v) < 0.0 {
+        v = v.scale(-1.0);
+    }
+    let foot = a.add(edge_vec.scale(rng.range(0.3, 0.7)));
+    // Depth available along v inside the convex block.
+    let mut exit = f32::INFINITY;
+    for i in 0..n {
+        let (c, d) = (inner[i].0, inner[(i + 1) % n].0);
+        let e = d.sub(c);
+        let denom = v.cross(e);
+        if denom.abs() < 1.0e-6 {
+            continue;
+        }
+        let t = c.sub(foot).cross(e) / denom;
+        let s2 = c.sub(foot).cross(v) / denom;
+        if t > 0.5 && (0.0..=1.0).contains(&s2) {
+            exit = exit.min(t);
+        }
+    }
+    if !exit.is_finite() || exit < 34.0 {
+        return None;
+    }
+    // Start on the street centreline, opposite the inset edge.
+    let (la, lb) = (b.nodes[b.lines[line].a].p, b.nodes[b.lines[line].b].p);
+    let d = lb.sub(la);
+    let t = (foot.sub(la).dot(d) / d.dot(d)).clamp(0.05, 0.95);
+    let street_point = la.lerp(lb, t);
+    if b.nearest_junction(line, street_point) < 12.0 {
+        return None;
+    }
+    let start = b.split(line, street_point);
+    let end = b.node(foot.add(v.scale(exit * rng.range(0.55, 0.7))), NodeKind::Junction);
+    Some((start, end))
+}
+
 /// Split a superblock into blocks with jittered street cuts. Cuts end on the
 /// street they meet, producing T-junctions and polygonal blocks rather than a
 /// continuous grid.
@@ -781,6 +873,7 @@ fn split_streets(
     district: District,
     rng: &mut Rng,
     depth: u32,
+    frame: P,
     blocks: &mut Vec<Poly>,
 ) {
     // Minimum block depth (centerline to centerline) keeps two rows of lots;
@@ -792,7 +885,20 @@ fn split_streets(
         District::Strips => (34.0, 130.0, 0.2),
         District::Waterfront => (50.0, 130.0, 0.12),
     };
-    let (u, v, center, lu, lv) = obb(&poly);
+    // Cuts follow the district's own street orientation (`frame`), not the
+    // superblock edges, so blocks meet arterials at angles as in Tokyo.
+    let (u, v, center, lu, lv) = {
+        let fu = frame;
+        let fv = P::new(-fu.z, fu.x);
+        let (u0, u1) = extent(&poly, fu);
+        let (v0, v1) = extent(&poly, fv);
+        let center = fu.scale((u0 + u1) * 0.5).add(fv.scale((v0 + v1) * 0.5));
+        if u1 - u0 >= v1 - v0 {
+            (fu, fv, center, u1 - u0, v1 - v0)
+        } else {
+            (fv, fu.scale(-1.0), center, v1 - v0, u1 - u0)
+        }
+    };
     let min_piece = if lv > 2.0 * min_short { min_short } else { 0.4 * max_long };
     let split_across_long = if lv > 2.0 * min_short {
         false
@@ -858,8 +964,8 @@ fn split_streets(
                 .map(|(p, label)| (p, label.or(Some(line))))
                 .collect()
         };
-        split_streets(b, relabel(a_piece), district, rng, depth + 1, blocks);
-        split_streets(b, relabel(b_piece), district, rng, depth + 1, blocks);
+        split_streets(b, relabel(a_piece), district, rng, depth + 1, frame, blocks);
+        split_streets(b, relabel(b_piece), district, rng, depth + 1, frame, blocks);
         return;
     }
     blocks.push(poly);
@@ -938,29 +1044,77 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     // Perturb interior arterial junctions so superblocks are irregular
     // quadrilaterals rather than a rectangular lattice. Bank arterials, rail
     // frontages and the outer ring keep their constraints.
-    let grid: Vec<Vec<usize>> = rows
+    let base: Vec<Vec<P>> = rows
         .iter()
-        .enumerate()
-        .map(|(r, (z, line))| {
-            columns
-                .iter()
-                .enumerate()
-                .map(|(c, (f, col_kind))| {
-                    let mut p = P::new(f(*z), *z);
-                    let ring_row = line.kind == LineKind::Ring;
-                    let rail_row = line.kind == LineKind::RailFrontage;
-                    let bank = c == RIVER_COL || c == RIVER_COL + 1;
-                    if matches!(*col_kind, LineKind::Arterial | LineKind::Collector) && !bank {
-                        p.x += rng.range(-18.0, 18.0);
-                    }
-                    if !ring_row && !rail_row && !bank {
-                        p.z += rng.range(-16.0, 16.0);
-                    }
-                    let _ = r;
-                    b.node(p, NodeKind::Junction)
-                })
-                .collect()
+        .map(|(z, _)| columns.iter().map(|(f, _)| P::new(f(*z), *z)).collect())
+        .collect();
+    let mut jittered = base.clone();
+    // Seeded slopes turn interior arterials diagonal, as Tokyo's main roads
+    // cut across the local fabric. Bank roads, the rail corridor frontage and
+    // the outer ring keep their positions.
+    let row_slope: Vec<f32> = rows.iter().map(|_| rng.range(-0.3, 0.3)).collect();
+    let col_slope: Vec<f32> = columns.iter().map(|_| rng.range(-0.28, 0.28)).collect();
+    for (r, (z, line)) in rows.iter().enumerate() {
+        for (c, (_, col_kind)) in columns.iter().enumerate() {
+            let bank = c == RIVER_COL || c == RIVER_COL + 1;
+            let ring_col = *col_kind == LineKind::Ring;
+            if bank || ring_col {
+                continue;
+            }
+            let p = base[r][c];
+            if !matches!(line.kind, LineKind::Ring | LineKind::RailFrontage) {
+                let anchor = if c < RIVER_COL { base[r][RIVER_COL].x } else { base[r][RIVER_COL + 1].x };
+                jittered[r][c].z = *z + row_slope[r] * (p.x - anchor) * 0.5;
+            }
+            if line.kind != LineKind::RailFrontage {
+                jittered[r][c].x = p.x + col_slope[c] * p.z * 0.5;
+            }
+        }
+    }
+    for (r, (_, line)) in rows.iter().enumerate() {
+        for (c, (_, col_kind)) in columns.iter().enumerate() {
+            let ring_row = line.kind == LineKind::Ring;
+            let rail_row = line.kind == LineKind::RailFrontage;
+            let bank = c == RIVER_COL || c == RIVER_COL + 1;
+            if matches!(*col_kind, LineKind::Arterial | LineKind::Collector) && !bank {
+                jittered[r][c].x += rng.range(-30.0, 30.0);
+            }
+            if !ring_row && !rail_row && !bank {
+                jittered[r][c].z += rng.range(-26.0, 26.0);
+            }
+        }
+    }
+    // Bent arterials must still bound convex superblocks with no sharp
+    // corners; pull offending junctions back toward the unbent lattice.
+    let convex = |q: [P; 4]| -> bool {
+        (0..4).all(|i| {
+            let a = q[(i + 1) % 4].sub(q[i]);
+            let b2 = q[(i + 2) % 4].sub(q[(i + 1) % 4]);
+            // sin of the turn angle; require turns of at least ~30 degrees.
+            a.cross(b2) > 0.5 * a.len() * b2.len()
         })
+    };
+    for _ in 0..12 {
+        let mut changed = false;
+        for r in 0..rows.len() - 1 {
+            for c in 0..columns.len() - 1 {
+                let corners = [(r, c), (r, c + 1), (r + 1, c + 1), (r + 1, c)];
+                if convex(corners.map(|(rr, cc)| jittered[rr][cc])) {
+                    continue;
+                }
+                for (rr, cc) in corners {
+                    jittered[rr][cc] = jittered[rr][cc].lerp(base[rr][cc], 0.5);
+                }
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    let grid: Vec<Vec<usize>> = jittered
+        .iter()
+        .map(|row| row.iter().map(|p| b.node(*p, NodeKind::Junction)).collect())
         .collect();
 
     let mut row_lines = vec![vec![None; columns.len() - 1]; rows.len()];
@@ -1036,7 +1190,18 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
                 District::Compact
             };
             let mut blocks = Vec::new();
-            split_streets(&mut b, poly, district, &mut rng, 0, &mut blocks);
+            // District street orientation: the superblock's long axis turned
+            // by a seeded angle. Old compact districts turn furthest.
+            let turn = match district {
+                District::StationCore => 0.08,
+                District::Waterfront => 0.18,
+                District::StationFringe => 0.35,
+                District::Strips => 0.45,
+                District::Compact => 0.7,
+            };
+            let (axis, _, _, _, _) = obb(&poly);
+            let frame = axis.add(P::new(-axis.z, axis.x).scale(rng.range(-turn, turn))).unit();
+            split_streets(&mut b, poly, district, &mut rng, 0, frame, &mut blocks);
             for block in blocks {
                 all_blocks.push((block, district));
             }
@@ -1065,7 +1230,32 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
             continue;
         }
         let is_arterial = |line: usize| b.lines[line].kind == RoadKind::Arterial;
+        let first_lot = pending.len();
         partition_block(&inner, *district, block_id, &is_arterial, &mut rng, &mut pending);
+        // Dead-end roji: a 4 m alley from a local street into a deep block.
+        let roji_chance = match district {
+            District::Compact => 0.55,
+            District::Strips => 0.45,
+            District::StationFringe => 0.3,
+            District::Waterfront => 0.2,
+            District::StationCore => 0.1,
+        };
+        if rng.unit() < roji_chance {
+            if let Some((start, end)) = roji(&mut b, &inner, &mut rng) {
+                let stub_a = b.nodes[start].p;
+                let stub_b = b.nodes[end].p;
+                b.line(start, end, RoadKind::Lane);
+                let mut index = first_lot;
+                while index < pending.len() {
+                    let corners = rect_corners(&pending[index].lot);
+                    if quad_segment_distance(&corners, stub_a, stub_b) < RoadKind::Lane.lot_setback() {
+                        pending.remove(index);
+                    } else {
+                        index += 1;
+                    }
+                }
+            }
+        }
         block_outlines.push(inner.iter().map(|v| v.0).collect());
         block_id += 1;
     }
@@ -1217,6 +1407,27 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
                 || (p.z - rail_z).abs() < RAIL_BAND_HALF - 0.5
                 || (p.x >= pr.0 - 2.0 && p.x <= pr.2 + 2.0 && p.z >= pr.1 - 2.0 && p.z <= pr.3 + 2.0)
         }) {
+            continue;
+        }
+        // Every street keeps its setback, including streets that continue
+        // past a block corner at an angle (bent arterials beyond a collector).
+        let corners_exact = rect_corners(&lot);
+        let reach = lot.width.max(lot.depth) + 12.0;
+        let intrudes = roads.iter().any(|road| {
+            if !road.kind.is_street() {
+                return false;
+            }
+            let (a, b2) = (nodes[road.a].p, nodes[road.b].p);
+            if a.x.min(b2.x) > lot.x + reach
+                || a.x.max(b2.x) < lot.x - reach
+                || a.z.min(b2.z) > lot.z + reach
+                || a.z.max(b2.z) < lot.z - reach
+            {
+                return false;
+            }
+            quad_segment_distance(&corners_exact, a, b2) < road.kind.lot_setback() - 0.5
+        });
+        if intrudes {
             continue;
         }
         lots.push(lot);
@@ -1504,5 +1715,54 @@ mod svg {
         let st = plan.nodes[plan.station].p;
         s += &format!(r##"<circle cx="{}" cy="{}" r="6" fill="#c0392b"/></svg>"##, st.x, -st.z);
         std::fs::write(path, s).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod export {
+    use super::*;
+
+    /// `PLAN_JSON=/path PLAN_SEED=87231 cargo test --release masterplan::export -- --ignored`
+    /// Exports the plan for scripts/plateau-street-reference.py.
+    #[test]
+    #[ignore]
+    fn export_plan_json() {
+        let path = std::env::var("PLAN_JSON").unwrap_or_else(|_| "plan.json".into());
+        let seed: u32 = std::env::var("PLAN_SEED").ok().and_then(|s| s.parse().ok()).unwrap_or(87231);
+        let bend = (seed % 5) as f32 * 9.0 - 18.0;
+        let river = [
+            P::new(-112.0 + bend, -400.0),
+            P::new(-98.0 + bend, -190.0),
+            P::new(-112.0 + bend, 20.0),
+            P::new(-94.0 + bend, 210.0),
+            P::new(-109.0 + bend, 400.0),
+        ];
+        let plan = generate(&Geography {
+            seed,
+            river,
+            river_clearance: 38.0,
+            protected: (-350.0, -350.0, -260.0, -270.0),
+        });
+        let nodes: Vec<[f32; 2]> = plan.nodes.iter().map(|n| [n.p.x, n.p.z]).collect();
+        let roads: Vec<serde_json::Value> = plan
+            .roads
+            .iter()
+            .map(|r| serde_json::json!({"a": r.a, "b": r.b, "kind": r.kind.as_str()}))
+            .collect();
+        let lots: Vec<[f32; 6]> = plan
+            .lots
+            .iter()
+            .map(|l| [l.x, l.z, l.width, l.depth, l.facing.x, l.facing.z])
+            .collect();
+        let json = serde_json::json!({
+            "seed": seed,
+            "extent": 400.0,
+            "river": river.iter().map(|p| [p.x, p.z]).collect::<Vec<_>>(),
+            "riverHalfWidth": 32.0,
+            "nodes": nodes,
+            "roads": roads,
+            "lots": lots,
+        });
+        std::fs::write(path, json.to_string()).unwrap();
     }
 }

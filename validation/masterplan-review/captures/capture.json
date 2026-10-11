@@ -7,11 +7,11 @@
   "depthOfField": false,
   "world": {
     "tick": 160000,
-    "buildings": 1925,
-    "steps": 3663,
+    "buildings": 1936,
+    "steps": 3440,
     "station": {
-      "id": 40,
-      "x": 163.8628,
+      "id": 38,
+      "x": 159.3511,
       "z": -82.81525,
       "kind": "station"
     },
@@ -56,12 +56,12 @@
     {
       "name": "station",
       "target": [
-        163.8628,
+        159.3511,
         8,
         -82.81525
       ],
       "position": [
-        303.8628,
+        299.3511,
         95,
         -232.81525
       ],

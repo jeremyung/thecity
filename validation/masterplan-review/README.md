@@ -7,7 +7,7 @@ This review replaces the incremental frontier/infill planner with the seeded mas
 - `engine/src/masterplan.rs` generates the plan from the seed and river geometry. It is pure and target-independent: plan decisions use only IEEE-exact arithmetic, and saves store a bit-level plan digest that restore verifies. The plan contains:
   - a transport skeleton: an elevated rail corridor with a station, an elevated expressway over the river with an arterial spur, and gateways;
   - a perturbed arterial lattice;
-  - local streets made by recursive jittered splitting (T-junctions, polygonal blocks);
+  - local streets made by recursive jittered splitting along a per-district orientation (T-junctions, polygonal blocks at angles to the arterials), plus dead-end roji;
   - gap-free lots by street-aligned row and frontage cuts, with flag lots (旗竿地) in deep rows.
 - `engine/src/masterplan_growth.rs` realizes the plan. Founding opens the gateway arterial to the waterfront market and a street path to the station. Growth then:
   - starts streets that touch the open network, scored by frontage lots, nearby demand, station access and kind;
@@ -31,12 +31,14 @@ This review replaces the incremental frontier/infill planner with the seeded mas
 
 | Crop | Legacy (seed 87231) | Master plan (seeds 87231 / 0 / 7) | Target | Tokyo reference |
 | --- | --- | --- | --- | --- |
-| Compact, rendered coverage | 28.87% | 52.25 / 50.19 / 53.29% | 40–50% | Taito 48.47% |
-| Station, rendered coverage | 20.11% | 38.97 / 40.22 / 42.41% | 38–48% | Shinjuku edge 46.04% |
-| Whole map, rendered coverage | ~19.9% | 35.36 / 34.75 / 35.84% | > 30% | — |
-| Compact, median body footprint | 181.9 m² (lot) | 99.90 / 90.80 / 78.10 m² | 55–140 m² | Taito 57.6 m² (roof edge) |
-| Compact, road share | 25.65% (5 m buffers) | 20.44 / 24.81 / 19.18% | 18–28% | — |
-| Station, road share | — | 35.63 / 35.42 / 34.21% | 20–30% | — |
+| Compact, rendered coverage | 28.87% | 50.08 / 50.28 / 47.72% | 40–50% | Taito 48.47% |
+| Station, rendered coverage | 20.11% | 40.51 / 40.28 / 42.06% | 38–48% | Shinjuku edge 46.04% |
+| Whole map, rendered coverage | ~19.9% | 32.70 / 31.89 / 31.42% | > 30% | — |
+| Compact, median body footprint | 181.9 m² (lot) | 101.80 / 113.00 / 109.20 m² | 55–140 m² | Taito 57.6 m² (roof edge) |
+| Compact, road share | 25.65% (5 m buffers) | 24.77 / 24.52 / 28.48% | 18–28% | — |
+| Station, road share | — | 35.82 / 35.36 / 33.55% | 20–30% | — |
+
+Street-network shape is compared with PLATEAU and OpenStreetMap in the [street reference](../street-reference/README.md). Orientation order is now 0.55–0.58 (Togoshi 0.52, Taito 0.64), down from 0.79–0.83.
 
 Heights (walls only; PLATEAU heights include roofs):
 
@@ -47,12 +49,12 @@ Heights (walls only; PLATEAU heights include roofs):
 
 Each city has 2–8 station towers of 16–32 floors, up to 105 m.
 
-Mature cities have 1,925 / 1,956 / 1,961 buildings, roughly double the legacy planner's 850–900 at tick 242,000. Full details are in [fabric-audit.json](fabric-audit.json).
+Mature cities have 1,936 / 1,834 / 1,976 buildings, roughly double the legacy planner's 850–900 at tick 242,000. Full details are in [fabric-audit.json](fabric-audit.json).
 
 Outside the targets:
 
-- The densest compact crops exceed the 50% upper bound by up to 3.3 points. The densest window is selected on purpose.
-- Station road share is 4–6 points high, because the crop includes the rail-corridor frontage streets, an arterial row and the station approach.
+- Seed 0's densest compact crop exceeds the 50% upper bound by 0.28 points. The densest window is selected on purpose.
+- Station road share is 3.5–6 points high, because the crop includes the rail-corridor frontage streets, an arterial row and the station approach.
 - Compact p90 height is about 5 m below Taito's, and median footprints (78–100 m²) are still above Taito's roof-edge median.
 
 ## Captures
@@ -61,7 +63,7 @@ Outside the targets:
 
 ## Validation
 
-- Native: 393 passed, 1 failed, 52 ignored. The failure (`frontier_proposal_scan_is_read_only_and_plan_road_replays`) already fails on the PR #2 head before these changes. New tests cover:
+- Native: 393 passed, 1 failed, 53 ignored. The failure (`frontier_proposal_scan_is_read_only_and_plan_road_replays`) already fails on the PR #2 head before these changes. New tests cover:
   - plan determinism, lot disjointness and density;
   - street setbacks and frontage facing;
   - gateway connectivity;
