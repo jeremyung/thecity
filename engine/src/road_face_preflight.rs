@@ -208,6 +208,23 @@ impl GraphPreflight {
     }
 
     pub(crate) fn restore(mut checkpoint: GraphPreflightCheckpoint) -> Result<Self, RoadFaceError> {
+        if checkpoint.schema == 1 {
+            // Schema 1 predates the spatial index. Preserve its frozen graph,
+            // but restart derived validation work instead of interpreting old
+            // pair cursors as spatial-index progress. Admission still uses the
+            // surrounding live job's fresh geometry validation.
+            if checkpoint.filter_checkpoint.is_some()
+                || checkpoint.filter_work != 0
+                || checkpoint.filter_build_cursor != 0
+                || checkpoint.filter_fallback
+                || checkpoint.pending_pair.is_some()
+                || checkpoint.last_checked_pair.is_some()
+                || checkpoint.stage == Stage::FilterBuild
+            {
+                return Err(RoadFaceError::InvalidEdge);
+            }
+            return Self::new(checkpoint.nodes, checkpoint.edges, checkpoint.proposed_edge);
+        }
         if let Err(error) = validate_checkpoint(&checkpoint) {
             return Err(error);
         }
@@ -1285,7 +1302,7 @@ mod tests {
     }
 
     #[test]
-    fn schema_one_is_rejected_and_pending_candidate_cannot_be_forged() {
+    fn mixed_schema_downgrade_is_rejected_and_pending_candidate_cannot_be_forged() {
         let edge_count = 256usize;
         let mut nodes = Vec::with_capacity(edge_count * 2);
         let mut edges = Vec::new();
@@ -1374,6 +1391,39 @@ mod tests {
         }
         assert_eq!(job.result().unwrap().unwrap().len(), count - 1);
     }
+    #[test]
+    fn legacy_preflight_restarts_frozen_graph_and_preserves_result() {
+        let nodes = vec![
+            node(1, 0., 0.),
+            node(2, 8., 0.),
+            node(3, 8., 8.),
+            node(4, 0., 8.),
+        ];
+        let edges = vec![edge(1, 1, 2), edge(2, 2, 3), edge(3, 3, 4)];
+        let original = GraphPreflight::new(nodes, edges, Some(edge(4, 4, 1))).unwrap();
+        let mut value = serde_json::to_value(original.checkpoint()).unwrap();
+        value["schema"] = 1.into();
+        for field in [
+            "filter_work",
+            "filter_build_cursor",
+            "filter_fallback",
+            "filter_checkpoint",
+            "pending_pair",
+            "last_checked_pair",
+        ] {
+            value.as_object_mut().unwrap().remove(field);
+        }
+        // Legacy progress is obsolete computation, never authoritative world state.
+        value["node_cursor"] = 2.into();
+        value["work_completed"] = 5.into();
+        let legacy: GraphPreflightCheckpoint = serde_json::from_value(value.clone()).unwrap();
+        let migrated = GraphPreflight::restore(legacy).unwrap();
+        assert_eq!(migrated, original);
+        assert_eq!(drain(migrated, &[1, 7, 48]), drain(original, &[48]));
+        value["schema"] = 3.into();
+        assert!(GraphPreflight::restore(serde_json::from_value(value).unwrap()).is_err());
+    }
+
     #[test]
     fn proposed_edge_handoff_reuses_buffer_after_json_restore() {
         let nodes = vec![

@@ -1,0 +1,11 @@
+{
+  "scope": "Node WASM legacy preflight migration, not browser UI",
+  "sourceSha256": "6f6849da0f0243b5f0517713c3c89b56dcae3134a4eda563e32aa093ab67070d",
+  "wasmSha256": "6a30ad82d2bc7ca7e9a12f685a00d5a267eb86102ab1d38209763a65b557dd40",
+  "worldFieldsPreserved": true,
+  "migratedRoundtripExact": true,
+  "deterministicContinuationTicks": 24,
+  "futureAndCorruptCurrentRejected": true,
+  "frozenNodes": 159,
+  "frozenEdges": 206
+}
