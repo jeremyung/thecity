@@ -13,7 +13,7 @@ it('migrates a real legacy city without changing its history or treating commerc
   let replay:CityEngine|undefined;
   try {
     const migrated=JSON.parse(engine.save());
-    expect(migrated.activity_schema_version).toBe(2);
+    expect(migrated.activity_schema_version).toBe(4);
     for(const field of ['tick','rng_growth','rng_schedule','rng_weather','next_id','events','residents','roads','parcels']) {
       expect(legacy[field],field).toBeDefined();
       expect(migrated[field],field).toEqual(legacy[field]);

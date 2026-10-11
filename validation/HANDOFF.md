@@ -2,6 +2,106 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Inhabited rear extensions — implementation in progress, 2026-10-11
+
+The production scheduler now admits at most two rear-extension projects, after
+usable infill opportunities. It scans at most eight buildings per 160-tick pass,
+reserves the enlarged parcel immediately, and keeps the original building open
+at its original geometry and capacity until completion. Pending hosts are excluded
+from turnover/renewal. Schema 4 persists pending plans, the scan cursor and the
+earliest original footprint of each extended building; older saves migrate with
+empty corresponding state. Renderer staging, vegetation
+clearance and construction audio are integrated. Footprint changes now invalidate
+the building render cache.
+
+The normal-step native diagnostic restores mature seed 87231 at tick 272000 and
+reaches two structure-stage extensions at tick 275520. Root then restored that
+fixture in the rebuilt WASM engine and verified exact same-target replay every
+20 ticks through both completions at tick 276200: capacities 35→70 and 8→14,
+depths 12→24 m and 12→20 m. Pending capacity stays unchanged and nominal front
+edges stay fixed. See [the machine-readable check](rear-extension-lifecycle.json)
+and `scripts/verify-rear-extension.mjs`. This cross-target fixture test does not
+claim native and WASM growth histories are identical.
+
+Validation: full native release suite 381 passed / 0 failed / 48 ignored;
+rebuilt WASM; five focused frontend/WASM files 17/17; TypeScript and production
+build pass (existing large-chunk warning). The ignored scheduler export was
+run separately by the engine agent; root verified its saved state through WASM.
+Large generated fixtures remain in `.tools/rear-extension-review/`.
+
+**Original form is now retained.** Completed extensions render the original kit
+at its unchanged world transform and add a permanent rear volume. Repeated
+extensions keep the earliest original descriptor through save/restore. Tests
+compare actual retained mesh geometry and world positions across rotations,
+check the rear wall join independently, and verify foundation contact with the
+ground. Construction uses the same final envelope and joins a previous annex
+when a building extends again. Apartment annex glazing now invalidates on
+empty/occupied transitions. Ordinary buildings keep their existing render path.
+
+Both-style asset inspections are in [apartment/anime](screenshots/rear-extension/1343-anime.png),
+[apartment/miniature](screenshots/rear-extension/1343-miniature.png),
+[shop/anime](screenshots/rear-extension/1369-anime.png), and
+[shop/miniature](screenshots/rear-extension/1369-miniature.png).
+They use real pending/completed snapshots and production kits, isolated studio
+lighting, the same camera, and software WebGL. They show original/construction/
+completed forms; they do not exercise the full city pipeline, water, DOF or
+hardware performance. The first capture harness used duplicate Three modules
+and produced white silhouettes; those images were replaced after fixing the
+harness to use Vite's shared module. **Full-city visual acceptance remains open:**
+review the shape in context and the incremental chunk swap at completion;
+the new upper annex is still a simple mass and needs art-direction review.
+
+Completion handoff now retains the last construction pose until the exact
+permanent building descriptor has committed to a visible neighborhood batch.
+Queued or partially merged geometry does not count as visible. The two-site
+temporary geometry cap remains: under rendering backlog, a newer construction
+site waits for an older handoff to free a slot. Chunk replacement, cross-chunk
+moves, clear/reset and delayed handoff tests pass. Four focused render suites
+pass 31/31, and the production build passes.
+
+Full-scene anime captures now show [construction](screenshots/rear-extension/city-construction-anime.png)
+and the [completed addition](screenshots/rear-extension/city-completed-anime.png)
+at the same camera. Software WebGL, noon preview, DOF disabled, balanced quality;
+the UI clock still displays simulation time rather than the forced preview hour.
+The renderer pipeline was detached while manually draining bounded geometry
+queues, then restored for capture; this is not normal startup/performance
+evidence. The region still has large green gaps and the new annex is visually
+plain. The full-city miniature attempt returned from the style-switch await but
+timed out after 30 seconds during screenshot readback. Asset-level miniature
+checks remain available; full-city miniature acceptance is unproven. Use
+`scripts/capture-rear-extension-city.mjs` for the anime capture and handoff report.
+The [successful handoff report](rear-extension-render-handoff.json) records
+1,832 initial geometry updates to drain the mature scene. The completion update
+keeps both old construction groups until update 139, when their replacement
+batch commits; the temporary group count then becomes one, matching the new
+survey-stage project (4076) already present in the completed snapshot. Both
+building and chunk queues finish empty. These are manual update counts, not
+elapsed frame-time measurements.
+
+[A 32,000-tick normal WASM continuation](rear-extension-growth.json) from the
+mature checkpoint reaches tick 304000 with the same 871 buildings and 210 roads,
+40 durable original-footprint records, and two pending extensions. Nominal
+building area increases from 162,545.24 to 166,441.37 m² (+2.397%) and total
+capacity from 12,346 to 12,835. Root recomputed those metrics from the saved
+states. The continuation script verifies canonical restore and another paired
+2,000 ticks; its hashes are included. These sums are not rendered area union,
+district density, or visual acceptance, and 40 is the number of extended hosts,
+not necessarily the total number of completed projects.
+The engine also retains a failed completion at .999 for retry; reservation tests
+cover conflicts, but a terminal recovery policy still needs review.
+
+Reproduce the scheduler fixture (absolute paths are required by the native test):
+
+```sh
+REAR_EXTENSION_FIXTURE_OUT="$PWD/.tools/rear-extension-review/scheduler-save.json" \
+REAR_EXTENSION_SNAPSHOT_OUT="$PWD/.tools/rear-extension-review/scheduler-snapshot.json" \
+node scripts/test-engine.mjs --release export_first_mature_rear_extension_fixture -- --ignored --nocapture
+npm run wasm
+node scripts/verify-rear-extension.mjs .tools/rear-extension-review/scheduler-save.json validation/rear-extension-lifecycle.json .tools/rear-extension-review/completed-snapshot.json
+# With the local Vite server running on 127.0.0.1:5173:
+node scripts/capture-rear-extension-study.mjs
+```
+
 ## Mixed-row subdivision follow-up — 2026-10-11
 
 [One narrow row plus one wider row](block-subdivision-study/mixed-rows.md)

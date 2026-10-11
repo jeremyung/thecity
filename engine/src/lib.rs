@@ -54,6 +54,7 @@ mod node_coincidence_index;
 #[cfg(test)]
 mod route_equivalence_tests;
 mod road_pair_broadphase;
+mod rear_extensions;
 mod frontier;
 mod geometry;
 mod interior_access;
@@ -79,7 +80,7 @@ mod spine_ranking_experiment_tests;
 mod spine_replay_tests;
 
 const SCHEMA_VERSION: u32 = 1;
-const ACTIVITY_SCHEMA_VERSION: u8 = 2;
+const ACTIVITY_SCHEMA_VERSION: u8 = 4;
 const ENGINE_VERSION: &str = "0.1.0";
 const MIN: f32 = -400.0;
 const MAX: f32 = 400.0;
@@ -288,6 +289,31 @@ pub struct BuildingAccessView {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RearExtensionView {
+    pub project_id: u32,
+    pub building_id: u32,
+    /// Center of the added rear strip, excluding the original building.
+    pub x: f32,
+    pub z: f32,
+    pub width: f32,
+    pub depth: f32,
+    pub rotation: f32,
+    pub floors: u8,
+    pub stage: String,
+    pub progress: f32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct BuildingOriginalFootprint {
+    pub building_id: u32,
+    pub x: f32,
+    pub z: f32,
+    pub width: f32,
+    pub depth: f32,
+    pub rotation: f32,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     pub schema_version: u32,
     pub engine_version: String,
@@ -307,6 +333,10 @@ pub struct Snapshot {
     pub buildings: Vec<Building>,
     #[serde(default)]
     pub building_access: Vec<BuildingAccessView>,
+    #[serde(default)]
+    pub rear_extensions: Vec<RearExtensionView>,
+    #[serde(default)]
+    pub building_original_footprints: Vec<BuildingOriginalFootprint>,
     pub projects: Vec<Project>,
     pub trains: Vec<TrainView>,
     #[serde(default)]
@@ -709,6 +739,12 @@ struct WorldState {
     neighborhood_plan: Option<NeighborhoodPlan>,
     #[serde(default)]
     pending_interior_access: Option<interior_access::InteriorAccessPlan>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pending_rear_extensions: Vec<rear_extensions::RearExtensionPlan>,
+    #[serde(default)]
+    rear_extension_cursor: usize,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    building_original_footprints: Vec<BuildingOriginalFootprint>,
     #[serde(default)]
     interior_access_cursor: usize,
     #[serde(default)]
@@ -1053,6 +1089,9 @@ impl Engine {
                 frontage_slot_cursor: 0,
                 neighborhood_plan: None,
                 pending_interior_access: None,
+                pending_rear_extensions: Vec::new(),
+                rear_extension_cursor: 0,
+                building_original_footprints: Vec::new(),
                 interior_access_cursor: 0,
                 next_face_access_tick: 0,
                 exhausted_access_faces: Vec::new(),
@@ -2424,6 +2463,10 @@ impl Engine {
             self.complete_interior_access_project(id);
             return;
         }
+        if p.kind == "extension" {
+            self.complete_rear_extension_project(id);
+            return;
+        }
         if self.complete_neighborhood_spine_project(id) {
             self.retire_completed_neighborhood_plan();
             self.mark_access_geometry_changed();
@@ -3018,6 +3061,13 @@ impl Engine {
                 return;
             }
             self.plan_next_neighborhood_segment();
+            return;
+        }
+        if connected_ordinary_roads >= 40
+            && self.state.tick % 160 == 0
+            && self.state.demand > 1.1
+            && self.try_start_rear_extension()
+        {
             return;
         }
         let connected_nodes: BTreeSet<u32> = self
@@ -7300,7 +7350,16 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|b| !b.anchor && site_vacant(b) && b.vacant_days > 5)
+            .filter(|b| {
+                !b.anchor
+                    && site_vacant(b)
+                    && b.vacant_days > 5
+                    && !self
+                        .state
+                        .pending_rear_extensions
+                        .iter()
+                        .any(|plan| plan.building_id == b.id)
+            })
             .map(|b| b.id)
             .collect();
         if candidates.is_empty() {
@@ -7381,6 +7440,11 @@ impl Engine {
                     && building.business_active
                     && building.stage == "open"
                     && !building.anchor
+                    && !self
+                        .state
+                        .pending_rear_extensions
+                        .iter()
+                        .any(|plan| plan.building_id == building.id)
                     && day.saturating_sub(building.built_day) >= 30
                     && !referenced.contains(&building.id)
                     && active_by_kind.get(&building.kind).copied().unwrap_or(0) > 1
@@ -10359,6 +10423,8 @@ impl Engine {
             parcels: self.state.parcels.clone(),
             buildings: self.state.buildings.clone(),
             building_access: self.building_access_views(),
+            rear_extensions: self.rear_extension_views(),
+            building_original_footprints: self.state.building_original_footprints.clone(),
             projects: self.state.projects.clone(),
             trains: self
                 .state
@@ -10513,9 +10579,9 @@ impl Engine {
                 }
             }
         }
-        // Schema 2 adds explicit, persisted transit alighting waits. Older
-        // saves default these to empty; older binaries reject schema 2 rather
-        // than silently interpreting a waiting resident as a normal trip.
+        // Schema 4 adds durable original building footprints after rear
+        // extensions. Older saves default the metadata to empty; older
+        // binaries reject schema 4 rather than silently losing render data.
         state.activity_schema_version = ACTIVITY_SCHEMA_VERSION;
         // Validate frozen checkpoint shapes and timeline before replaying any
         // saved prefix to reconstruct derived accumulator state.
@@ -10634,6 +10700,11 @@ impl Engine {
         {
             return Err("interior access scan cursor is outside its bounded range".into());
         }
+        if self.state.rear_extension_cursor > self.state.buildings.len() {
+            return Err("rear extension scan cursor is outside its bounded range".into());
+        }
+        self.validate_rear_extensions()?;
+        self.validate_building_original_footprints()?;
         if let Some(plan) = &self.state.pending_interior_access {
             if self.state.neighborhood_plan.is_some() {
                 return Err("neighborhood and interior access plans cannot overlap".into());
@@ -11510,13 +11581,26 @@ impl Engine {
                     .iter()
                     .find(|b| b.id == building_id && b.parcel_id == p.id)
                     .ok_or_else(|| format!("parcel {} reserves a missing building", p.id))?;
-                if building.stage == "open" {
+                let rear_extension_reserved = self
+                    .state
+                    .pending_rear_extensions
+                    .iter()
+                    .any(|plan| plan.building_id == building_id && plan.parcel_id == p.id);
+                if building.stage == "open" && !rear_extension_reserved {
                     return Err(format!("parcel {} reserves an open building", p.id));
                 }
                 if !self.state.projects.iter().any(|project| {
                     project.kind == "building"
                         && project.parcel_id == Some(p.id)
                         && project.progress < 1.0
+                }) && !self.state.pending_rear_extensions.iter().any(|plan| {
+                    plan.building_id == building_id
+                        && plan.parcel_id == p.id
+                        && self.state.projects.iter().any(|project| {
+                            project.kind == "extension"
+                                && project.id == plan.project_id
+                                && project.progress < 1.0
+                        })
                 }) {
                     return Err(format!(
                         "parcel {} has no active construction project",

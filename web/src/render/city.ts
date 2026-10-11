@@ -7,12 +7,14 @@ import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ArtMaterials, signTexture } from './materials';
-import { Kit, buildingKit, disposeGroup } from './kit';
+import { Kit, disposeGroup } from './kit';
 import { RiverWater } from './water';
 import { BuildingChunks, buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
 import { Umbrellas } from './umbrellas';
 import { CityBuses } from './buses';
 import { BuildingAccessPaths } from './building-access';
+import { RearExtensions } from './rear-extensions';
+import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
@@ -24,15 +26,16 @@ import { dampFocusDepth, focusDepthFromViewZ } from '../camera/focus';
 import type { LensPresetId } from '../camera/lens';
 import { LENS_PRESETS, verticalFovDegrees } from '../camera/lens';
 import { resolveAudioEventContext } from '../audio/event-context';
-import type { World, Style, Point, Road, Building } from '../types';
+import type { World, Style, Point, Road, Building, BuildingOriginalFootprint } from '../types';
 
 export interface StyleSwitchMetrics { target:Style; samples:number; compiledSamples:number; maxSubmitMs:number; prepareMs:number; submitMs:number; waitMs:number; applyMs:number; outcome:'compiling'|'applied'|'superseded'|'failed' }
 export interface RenderMetrics { styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number }
 /** Fields that affect a building's rendered group. Home occupancy is binary
  * because only the seeded window-light subset depends on whether anyone lives there. */
-export function buildingRenderSignature(b:Building):string {
-  const homeOccupancy=b.kind==='home'?(b.occupancy>0?'occupied':'vacant'):'-';
-  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}`;
+export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint):string {
+  const homeOccupancy=(b.kind==='home'||(original&&b.kind==='apartment'))?(b.occupancy>0?'occupied':'vacant'):'-';
+  const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
+  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
 }
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
@@ -95,6 +98,11 @@ export class CityRenderer {
   private treePoints:Array<{x:number,z:number,s:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
+  private rearExtensions=new RearExtensions(this.art,release=>this.retire(release),building=>{
+    const current=this.buildings.get(building.id);
+    const original=this.worldState?.building_original_footprints?.find(form=>form.building_id===building.id);
+    return !!current&&current.signature===buildingRenderSignature(building,original)&&this.chunks.isSourceVisible(building.id,current.source);
+  });
   private umbrellas=new Umbrellas(2000,hex=>this.art.get(hex));
   private umbrellaTuples=new Float32Array(2000*5);
   private umbrellaCount=0;
@@ -148,7 +156,7 @@ export class CityRenderer {
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
     this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
-    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.accessPaths.root,this.hemi,this.sun);
+    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
@@ -297,21 +305,24 @@ export class CityRenderer {
   setWorld(world:World,replaced=false){
     this.worldState=world;this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
-    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);
+    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
     const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
     const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+'-'+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|');
     if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
+    const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
     for(const b of world.buildings){
-      const signature=buildingRenderSignature(b);
+      const original=originals.get(b.id);
+      const signature=buildingRenderSignature(b,original);
       if(this.buildings.get(b.id)?.signature===signature){this.objectQueue.delete(b.id);continue;}
       // One pending update per authoritative building. Repeated snapshots replace
       // its data without appending duplicate closures or starving older parcels.
       const snapshot:Building={...b,history:[...b.history]};
+      const originalSnapshot=original?{...original}:undefined;
       const source:RebuildableBuildingSource={
-        createGroup:()=>{const group=buildingKit(snapshot,this.art,{compactMidrise:this.compactMidriseReview});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
+        createGroup:()=>{const group=buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
         disposeGroup:group=>disposeGroup(group),
       };
       this.objectQueue.set(b.id,{building:snapshot,signature,source});
@@ -326,7 +337,7 @@ export class CityRenderer {
   }
   private resetWorld(){
     this.focusResetPending=true;
-    this.umbrellas.reset();this.buses.reset();this.accessPaths.reset();this.umbrellaCount=0;this.qualityController.reset();
+    this.umbrellas.reset();this.buses.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
     this.buildings.clear();
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry;this.retire(()=>{near?.dispose();far?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
@@ -416,6 +427,7 @@ export class CityRenderer {
         return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
       });
       if(!hidden)hidden=world.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<(r.kind==='arterial'?11:8);});
+      if(!hidden)hidden=(world.rear_extensions??[]).slice(0,2).some(e=>{if(e.stage==='survey')return false;const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
@@ -535,6 +547,7 @@ export class CityRenderer {
     const pendingChunks=new Set<string>();
     for(const {building} of this.objectQueue.values())pendingChunks.add(buildingChunkKey(building.x,building.z));
     this.chunks.update(pendingChunks);
+    if(this.worldState)this.rearExtensions.flushCompleted(this.worldState);
     this.director.update(dt,now/1000);
     const activeLens=LENS_PRESETS[this.director.lens];
     this.lensFocalM.value=activeLens.focalLengthMm/1000;this.lensFNumber.value=activeLens.fNumber;
@@ -619,7 +632,8 @@ export class CityRenderer {
     let riverDistance=800;const river=world?.terrain.river??[];for(let i=0;i<river.length-1;i++)riverDistance=Math.min(riverDistance,Math.max(0,distanceToSegment({x:listener.x,z:listener.z},river[i],river[i+1])-this.riverHalfWidth));
     // Listen at the observed scene, with compressed height appropriate to a
     // miniature world, rather than silencing it from a distant aerial camera.
-    return{hour:this.hour,rain:this.rain,riverDistance,tick:this.motionTick,worldKey:world?.seed,developmentRate:world?.development_rate,traffic:traffic.slice(0,24),pedestrians,events,camera:{x:listener.x,y:this.camera.position.y*.15,z:listener.z,forward:{x:v.x,z:v.z}},trains,buses,construction:world?.buildings.filter(b=>b.stage!=='open').slice(0,12).map(b=>({id:b.id,x:b.x,z:b.z}))??[]};
+    const construction=[...(world?.rear_extensions??[]).slice(0,2).map(e=>({id:e.project_id,x:e.x,z:e.z})),...(world?.buildings.filter(b=>b.stage!=='open').map(b=>({id:b.id,x:b.x,z:b.z}))??[])].slice(0,12);
+    return{hour:this.hour,rain:this.rain,riverDistance,tick:this.motionTick,worldKey:world?.seed,developmentRate:world?.development_rate,traffic:traffic.slice(0,24),pedestrians,events,camera:{x:listener.x,y:this.camera.position.y*.15,z:listener.z,forward:{x:v.x,z:v.z}},trains,buses,construction};
   }
   private pointerDown=(e:PointerEvent)=>{this.pointerStart={x:e.clientX,y:e.clientY};};
   private pointerUp=(e:PointerEvent)=>{

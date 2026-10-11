@@ -50,6 +50,45 @@ function drain(chunks: BuildingChunks, pendingKeys?: ReadonlySet<string>, maxUpd
 afterEach(() => vi.restoreAllMocks());
 
 describe("BuildingChunks", () => {
+  it("reports only exact descriptors represented by committed chunks across replacement, moves, and clear", () => {
+    const material = new THREE.MeshBasicMaterial();
+    const chunks = new BuildingChunks((surface) => surface, (dispose) => dispose());
+    const makeSource = (x: number) => {
+      const authored = authoredBuilding(material, new THREE.Vector3(x, 0, 0));
+      const descriptor = {
+        createGroup: () => authored.group,
+        disposeGroup: (group: THREE.Group) => { group.removeFromParent(); authored.geometry.dispose(); },
+      };
+      return { ...authored, descriptor };
+    };
+
+    const original = makeSource(40);
+    chunks.set(9, original.group, original.descriptor);
+    expect(chunks.isSourceVisible(9, original.descriptor)).toBe(false);
+    drain(chunks);
+    expect(chunks.isSourceVisible(9, original.descriptor)).toBe(true);
+
+    const replacement = makeSource(42);
+    chunks.set(9, replacement.group, replacement.descriptor);
+    expect(chunks.isSourceVisible(9, original.descriptor)).toBe(true);
+    expect(chunks.isSourceVisible(9, replacement.descriptor)).toBe(false);
+    drain(chunks);
+    expect(chunks.isSourceVisible(9, original.descriptor)).toBe(false);
+    expect(chunks.isSourceVisible(9, replacement.descriptor)).toBe(true);
+
+    const moved = makeSource(260);
+    chunks.set(9, moved.group, moved.descriptor);
+    expect(chunks.isSourceVisible(9, replacement.descriptor)).toBe(true);
+    expect(chunks.isSourceVisible(9, moved.descriptor)).toBe(false);
+    drain(chunks);
+    expect(chunks.isSourceVisible(9, replacement.descriptor)).toBe(false);
+    expect(chunks.isSourceVisible(9, moved.descriptor)).toBe(true);
+
+    chunks.clear();
+    expect(chunks.isSourceVisible(9, moved.descriptor)).toBe(false);
+    material.dispose();
+  });
+
   it("keeps indexed inputs lossless, indexes non-indexed parts, and preserves face ownership and transformed triangle order", () => {
     const material = new THREE.MeshBasicMaterial({ color: "white" });
     const chunks = new BuildingChunks((surface) => surface, (dispose) => dispose());

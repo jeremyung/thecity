@@ -1,0 +1,76 @@
+{
+  "inputPath": ".tools/narrow-frontage-review/final-save.json",
+  "outputSavePath": ".tools/rear-extension-review/long-save.json",
+  "wasmSha256": "8f417c01efd9724aa081225c9bb59f4b5d370b4b15eab57fdbca41afb2ac700d",
+  "before": {
+    "tick": 272000,
+    "buildings": 871,
+    "roads": 210,
+    "nominalBuildingFootprintM2": 162545.2422556,
+    "totalCapacity": 12346,
+    "durableOriginalFootprintCount": 0,
+    "pendingRearExtensionCount": 0,
+    "pendingRearExtensions": []
+  },
+  "final": {
+    "tick": 304000,
+    "buildings": 871,
+    "roads": 210,
+    "nominalBuildingFootprintM2": 166441.36847560012,
+    "totalCapacity": 12835,
+    "durableOriginalFootprintCount": 40,
+    "pendingRearExtensionCount": 2,
+    "pendingRearExtensions": [
+      {
+        "project_id": 4120,
+        "building_id": 2280,
+        "x": 389.11554,
+        "z": 88.01126,
+        "width": 12.35783,
+        "depth": 8,
+        "rotation": -1.5901176,
+        "floors": 2,
+        "stage": "finishing",
+        "progress": 0.9583335
+      },
+      {
+        "project_id": 4121,
+        "building_id": 2295,
+        "x": 288.79727,
+        "z": 374.83444,
+        "width": 14,
+        "depth": 12,
+        "rotation": -3.1415927,
+        "floors": 4,
+        "stage": "surface",
+        "progress": 0.83333343
+      }
+    ]
+  },
+  "note": "Nominal sum of Building width \u00d7 depth, not rendered union, developable-area coverage, or native/art parity.",
+  "continuationVerification": {
+    "input": ".tools/narrow-frontage-review/final-save.json",
+    "output": ".tools/rear-extension-review/long-save.json",
+    "ticks": 32000,
+    "wasmSha256": "8f417c01efd9724aa081225c9bb59f4b5d370b4b15eab57fdbca41afb2ac700d",
+    "sourceSha256": "74db8e9f9ac2bef4a828bd877d6d31a124ba522d9365033a50c51bc963add01d",
+    "saveSha256": "4841b01b50ac386efe31f822a368ff56191c46eff0a02660d64780ae0bb3c876",
+    "before": {
+      "tick": 272000,
+      "buildings": 871,
+      "roads": 210,
+      "occupiedHomes": 538,
+      "activeCommerce": 333
+    },
+    "after": {
+      "tick": 304000,
+      "buildings": 871,
+      "roads": 210,
+      "occupiedHomes": 538,
+      "activeCommerce": 333
+    },
+    "canonicalRestore": true,
+    "continuationTicksVerified": 2000
+  },
+  "rootIndependentlyCheckedSavedMetrics": true
+}

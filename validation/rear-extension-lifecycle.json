@@ -1,0 +1,28 @@
+{
+  "sourceSha256": "e89007beb24e2eb5462a416c52ad700933c2a25056917d0938b1b6493ba4d23b",
+  "wasmSha256": "8f417c01efd9724aa081225c9bb59f4b5d370b4b15eab57fdbca41afb2ac700d",
+  "sourceTick": 275520,
+  "finalTick": 276200,
+  "steps": 680,
+  "hosts": [
+    {
+      "id": 1343,
+      "beforeCapacity": 35,
+      "afterCapacity": 70,
+      "beforeDepth": 12,
+      "afterDepth": 24
+    },
+    {
+      "id": 1369,
+      "beforeCapacity": 8,
+      "afterCapacity": 14,
+      "beforeDepth": 12,
+      "afterDepth": 20
+    }
+  ],
+  "sameTargetReplay": true,
+  "noEarlyCapacity": true,
+  "nominalFrontPreserved": true,
+  "originalFormsPersisted": true,
+  "visualAcceptance": false
+}
