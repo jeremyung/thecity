@@ -91,5 +91,19 @@
       }
     },
     "migration": "validation/access-vector-math-migration.json"
+  },
+  "follow_up_45b727f": {
+    "result": "3180 descriptors, all previous 2134 retained; 67 pages and one known accepted two-lot route",
+    "verification": "validation/merge-review-verification.md",
+    "files": {
+      "validation/access-descriptor-reference.json": {
+        "sha256": "5336438099f6e7bf0d1346a5beda225960e1e2769ef0458d4faee6f1d6583fee",
+        "bytes": 443592
+      },
+      "validation/face-target-reference.json": {
+        "sha256": "3e1a8109f4d979f59fb00cb3e578d5b8045dccdfcd5763c0131e3ef5eb04a1cc",
+        "bytes": 305547
+      }
+    }
   }
 }

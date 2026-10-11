@@ -8,7 +8,7 @@ This is a working checkpoint, not completed visual or live-growth acceptance.
 - Composed planning job reproduces 67 ranked pages and accepts the known legal mature-fixture route (road 3317, two lots), including JSON resume; see `pr-review-fixes.md`.
 - Geometry revisions track relevant mutations and fail closed on counter exhaustion.
 - Indexed atomic road splitting preserves routes, positions and rejection atomicity. Native capped connected benchmark: 5.90 ms mean, 8.31 ms p95; WASM split timing remains unmeasured.
-- Full native release regression: 299 passed, 39 ignored. Ignored mature integration gates were run separately; see `pr-review-planning.txt` and `spec-audit.md`.
+- Local post-merge native release regression: 301 passed, 39 ignored. Mature planning passes at both quotas. Web: 261 passed with one timeout in the full concurrent run; all 11 tests in the affected file pass in isolation. See `merge-review-verification.md`.
 - Native/WASM discovery descriptor output and proposal results match on the tested mature fixture. This is fixture-specific output parity, not proof of general cross-target replay.
 
 ## Next implementation steps

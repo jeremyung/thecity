@@ -1359,3 +1359,8 @@ Final root post-fix full native regression: `test result: ok. 295 passed; 0 fail
 ## 2026-10-10 — PR #1 feedback
 
 Addressed all nine inline comments; see [review fixes](pr-review-fixes.md) for mapping and evidence. Native 299 tests and web 262 tests pass. Fourth-sample correction changes the fixture to 2,134 descriptors across 45 pages with **zero** accepted proposals; prior one-proposal claims are historical. An independent retained legal candidate preserves successful native/WASM validation coverage. New discovery/descriptor/host/proposal/planning diagnostic checkpoint schemas reject prior versions. Live-growth integration and improved sampling coverage remain pending; the overall goal stays paused for review.
+
+
+## 2026-10-10 — Incorporate 45b727f
+
+Merged edge-sample coverage and shared per-road budgeting from `claude/pr-review-6mz8wa`. This supersedes the previous zero-proposal limitation: 3,180 descriptors over 67 pages now recover the known legal road-3317 route with two lots. Local native suite: 301 passed; mature planning passed; build passed. Web suite had one timeout (261 passed), and the affected file passed all 11 tests in isolation. See [integration verification](merge-review-verification.md). Goal remains paused.
