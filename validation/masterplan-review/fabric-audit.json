@@ -1,0 +1,279 @@
+{
+  "method": "Rendered coverage: production kit plan-view union (audit-rendered-coverage.mjs). Footprint is the main body box from the kit party-wall sizing (rear service volumes and roofs excluded); lot area is the parcel envelope. Road share rasterizes open street right-of-way (carriageway plus sidewalks). Compact crop: densest 250 m window on a 25 m lattice by lot area.",
+  "targets": {
+    "compact": {
+      "coverage": [
+        40,
+        50
+      ],
+      "footprintMedian": [
+        55,
+        140
+      ],
+      "footprintP90": [
+        0,
+        350
+      ],
+      "floorsMedian": [
+        2,
+        4
+      ],
+      "roadShare": [
+        18,
+        28
+      ]
+    },
+    "station": {
+      "coverage": [
+        38,
+        48
+      ],
+      "footprintMedian": [
+        100,
+        300
+      ],
+      "footprintP90": [
+        0,
+        900
+      ],
+      "floorsMedian": [
+        4,
+        7
+      ],
+      "roadShare": [
+        20,
+        30
+      ]
+    }
+  },
+  "worlds": [
+    {
+      "snapshot": ".tools/masterplan-review/mp-87231.json",
+      "seed": 87231,
+      "tick": 160000,
+      "buildings": 1784,
+      "crops": [
+        {
+          "name": "compact",
+          "crop": [
+            -50,
+            125,
+            200,
+            375
+          ],
+          "buildings": 225,
+          "renderedCoveragePercent": 51.55,
+          "lotEnvelopeCoveragePercent": 66.67,
+          "lotAreaMedianM2": 174.5,
+          "lotAreaP90M2": 315.9,
+          "footprintMedianM2": 133.8,
+          "footprintP90M2": 242.8,
+          "floorsMedian": 2,
+          "roadSharePercent": 24.88,
+          "withinTargets": {
+            "coverage": false,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": true
+          }
+        },
+        {
+          "name": "station",
+          "crop": [
+            38.86279999999999,
+            -207.81525,
+            288.8628,
+            42.18475000000001
+          ],
+          "buildings": 161,
+          "renderedCoveragePercent": 39.92,
+          "lotEnvelopeCoveragePercent": 50.75,
+          "lotAreaMedianM2": 187.8,
+          "lotAreaP90M2": 326.6,
+          "footprintMedianM2": 142.5,
+          "footprintP90M2": 251.3,
+          "floorsMedian": 5,
+          "roadSharePercent": 35.3,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": false
+          }
+        },
+        {
+          "name": "whole",
+          "crop": [
+            -400,
+            -400,
+            400,
+            400
+          ],
+          "buildings": 1784,
+          "renderedCoveragePercent": 34.77,
+          "lotEnvelopeCoveragePercent": 44.62,
+          "lotAreaMedianM2": 142.1,
+          "lotAreaP90M2": 270.8,
+          "footprintMedianM2": 106.3,
+          "footprintP90M2": 203.8,
+          "floorsMedian": 2,
+          "roadSharePercent": 26.82
+        }
+      ]
+    },
+    {
+      "snapshot": ".tools/masterplan-review/mp-0.json",
+      "seed": 0,
+      "tick": 160000,
+      "buildings": 1805,
+      "crops": [
+        {
+          "name": "compact",
+          "crop": [
+            0,
+            -350,
+            250,
+            -100
+          ],
+          "buildings": 219,
+          "renderedCoveragePercent": 51.08,
+          "lotEnvelopeCoveragePercent": 65.58,
+          "lotAreaMedianM2": 163.4,
+          "lotAreaP90M2": 297.7,
+          "footprintMedianM2": 121.9,
+          "footprintP90M2": 225.6,
+          "floorsMedian": 3,
+          "roadSharePercent": 25.42,
+          "withinTargets": {
+            "coverage": false,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": true
+          }
+        },
+        {
+          "name": "station",
+          "crop": [
+            14.272400000000005,
+            -210.426544,
+            264.2724,
+            39.57345599999999
+          ],
+          "buildings": 159,
+          "renderedCoveragePercent": 42.13,
+          "lotEnvelopeCoveragePercent": 53.01,
+          "lotAreaMedianM2": 193.4,
+          "lotAreaP90M2": 338.7,
+          "footprintMedianM2": 146.9,
+          "footprintP90M2": 259.9,
+          "floorsMedian": 5,
+          "roadSharePercent": 34.55,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": false
+          }
+        },
+        {
+          "name": "whole",
+          "crop": [
+            -400,
+            -400,
+            400,
+            400
+          ],
+          "buildings": 1805,
+          "renderedCoveragePercent": 34.27,
+          "lotEnvelopeCoveragePercent": 43.98,
+          "lotAreaMedianM2": 139.1,
+          "lotAreaP90M2": 264.5,
+          "footprintMedianM2": 104.9,
+          "footprintP90M2": 200.7,
+          "floorsMedian": 2,
+          "roadSharePercent": 27.35
+        }
+      ]
+    },
+    {
+      "snapshot": ".tools/masterplan-review/mp-7.json",
+      "seed": 7,
+      "tick": 160000,
+      "buildings": 1873,
+      "crops": [
+        {
+          "name": "compact",
+          "crop": [
+            -25,
+            -375,
+            225,
+            -125
+          ],
+          "buildings": 264,
+          "renderedCoveragePercent": 49.64,
+          "lotEnvelopeCoveragePercent": 63.57,
+          "lotAreaMedianM2": 139.7,
+          "lotAreaP90M2": 264.2,
+          "footprintMedianM2": 104.6,
+          "footprintP90M2": 202.7,
+          "floorsMedian": 3,
+          "roadSharePercent": 27.73,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": true
+          }
+        },
+        {
+          "name": "station",
+          "crop": [
+            6.974559999999997,
+            -219.49445,
+            256.97456,
+            30.50555
+          ],
+          "buildings": 143,
+          "renderedCoveragePercent": 42.17,
+          "lotEnvelopeCoveragePercent": 52.88,
+          "lotAreaMedianM2": 230.6,
+          "lotAreaP90M2": 395.2,
+          "footprintMedianM2": 173.6,
+          "footprintP90M2": 306.2,
+          "floorsMedian": 5,
+          "roadSharePercent": 33.69,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": false
+          }
+        },
+        {
+          "name": "whole",
+          "crop": [
+            -400,
+            -400,
+            400,
+            400
+          ],
+          "buildings": 1873,
+          "renderedCoveragePercent": 35.01,
+          "lotEnvelopeCoveragePercent": 44.84,
+          "lotAreaMedianM2": 126.3,
+          "lotAreaP90M2": 276,
+          "footprintMedianM2": 95.4,
+          "footprintP90M2": 210.8,
+          "floorsMedian": 2,
+          "roadSharePercent": 27.7
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+mod masterplan;
+mod masterplan_growth;
 mod access_candidates;
 mod access_capture;
 mod access_math;
@@ -91,7 +93,7 @@ const MAX: f32 = 400.0;
 const TICKS_PER_SECOND: u64 = 20;
 const TICKS_PER_DAY: u64 = 24_000;
 const DEVELOPMENT_TICKS_PER_DAY: u64 = 800;
-const MAX_BUILDINGS: usize = 2_000;
+const MAX_BUILDINGS: usize = 3_000;
 const MAX_SEGMENTS: usize = 5_000;
 const MAX_PARCELS: usize = 4_000;
 const MAX_FRONTAGE_ROADS_PER_EVALUATION: usize = 24;
@@ -342,6 +344,9 @@ pub struct Snapshot {
     #[serde(default)]
     pub building_original_footprints: Vec<BuildingOriginalFootprint>,
     pub projects: Vec<Project>,
+    /// Paved ground of developed master-plan blocks (outline in x/z).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ground: Vec<GroundPatch>,
     pub trains: Vec<TrainView>,
     #[serde(default)]
     pub bus_lines: Vec<BusLineView>,
@@ -350,6 +355,12 @@ pub struct Snapshot {
     pub residents: Vec<ResidentView>,
     pub events: Vec<Event>,
     pub stats: Stats,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GroundPatch {
+    pub block: u32,
+    pub points: Vec<[f32; 2]>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -784,11 +795,16 @@ struct WorldState {
         skip_serializing_if = "district_controller::DistrictControllerState::is_empty"
     )]
     district_controller: district_controller::DistrictControllerState,
+    /// Master-plan realization progress. Absent for legacy-planner worlds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    masterplan: Option<masterplan_growth::MasterplanProgress>,
 }
 
 /// Authoritative deterministic simulation. Public methods form the coarse WASM boundary.
 pub struct Engine {
     state: WorldState,
+    /// Regenerated master plan for `state.masterplan`; never serialized.
+    plan: Option<std::sync::Arc<masterplan_growth::PlanRuntime>>,
     planned_progress: Vec<f32>,
     wait_scratch: Vec<u16>,
     lane_order: Vec<usize>,
@@ -987,6 +1003,16 @@ fn push_history(history: &mut Vec<String>, entry: String) {
         history.remove(0);
     }
 }
+/// Rendered carriageway width. Tokyo local streets are narrow shared surfaces;
+/// only arterials carry raised sidewalks.
+fn road_width(kind: &str) -> f32 {
+    match kind {
+        "arterial" => 14.0,
+        "local" => 6.5,
+        "lane" => 4.0,
+        _ => 9.0,
+    }
+}
 fn in_protected_land(x: f32, z: f32) -> bool {
     (-350.0..=-260.0).contains(&x) && (-350.0..=-270.0).contains(&z)
 }
@@ -1054,9 +1080,21 @@ impl Engine {
             .then_some(self.state.access_geometry_revision)
     }
 
+    /// New world grown from the seeded master plan.
     pub fn new(seed: u32) -> Self {
+        Self::construct(seed, true)
+    }
+
+    /// New world using the retired incremental frontier/infill planner. Kept
+    /// only for the legacy test fixtures until they are removed.
+    pub fn new_legacy(seed: u32) -> Self {
+        Self::construct(seed, false)
+    }
+
+    fn construct(seed: u32, masterplan: bool) -> Self {
         let seed64 = (seed as u64).wrapping_add(0x9e3779b97f4a7c15).max(1);
         let mut engine = Self {
+            plan: None,
             state: WorldState {
                 schema_version: SCHEMA_VERSION,
                 activity_schema_version: ACTIVITY_SCHEMA_VERSION,
@@ -1104,6 +1142,7 @@ impl Engine {
                 next_face_access_tick: 0,
                 exhausted_access_faces: Vec::new(),
                 live_access_checkpoint: None,
+                masterplan: None,
                 neighborhood_road_ids: BTreeSet::new(),
                 neighborhood_anchor_cursor: 0,
                 station_online: false,
@@ -1167,7 +1206,11 @@ impl Engine {
             #[cfg(test)]
             road_opening_access_branch: None,
         };
-        engine.initialize_world();
+        if masterplan {
+            engine.initialize_masterplan_world();
+        } else {
+            engine.initialize_world();
+        }
         engine
     }
 
@@ -1464,7 +1507,7 @@ impl Engine {
                     && ((road.from == edge.0 && road.to == edge.1)
                         || (road.from == edge.1 && road.to == edge.0))
             })
-            .map(|road| if road.kind == "arterial" { 14.0 } else { 9.0 })
+            .map(|road| road_width(&road.kind))
             .unwrap_or(9.0);
         let lateral = if kind == 1 {
             1.65
@@ -1519,7 +1562,7 @@ impl Engine {
             x: a.x + dx * along,
             z: a.z + dz * along,
         };
-        let width = if road.kind == "arterial" { 14.0 } else { 9.0 };
+        let width = road_width(&road.kind);
         let sidewalk = width * 0.5 + 0.72;
         let frontage_side = frontage.side as f32;
         let frontage_walk = segment[1];
@@ -1594,7 +1637,7 @@ impl Engine {
             x: a.x + dx * along,
             z: a.z + dz * along,
         };
-        let width = if road.kind == "arterial" { 14.0 } else { 9.0 };
+        let width = road_width(&road.kind);
         let sidewalk = width * 0.5 + 0.72;
         let side = frontage.side as f32;
         let frontage_walk = WorldPoint {
@@ -2456,6 +2499,7 @@ impl Engine {
         for (project_id, stage, progress) in spine_road_progress {
             self.sync_neighborhood_spine_project(project_id, &stage, progress);
         }
+        self.sync_masterplan_road_projects();
         for id in completed {
             self.complete_project(id);
         }
@@ -2475,6 +2519,12 @@ impl Engine {
         }
         if p.kind == "extension" {
             self.complete_rear_extension_project(id);
+            return;
+        }
+        if self.masterplan_complete_project(&p) {
+            self.mark_access_geometry_changed();
+            self.state.revision = self.state.revision.saturating_add(1);
+            self.trim_completed_projects();
             return;
         }
         if self.complete_neighborhood_spine_project(id) {
@@ -2903,6 +2953,10 @@ impl Engine {
             return;
         }
         if self.state.buildings.len() >= MAX_BUILDINGS || self.state.roads.len() >= MAX_SEGMENTS {
+            return;
+        }
+        if self.masterplan_active() {
+            self.masterplan_growth();
             return;
         }
         // Bridge opens before western growth can be considered.
@@ -7238,7 +7292,7 @@ impl Engine {
             })
             .map(|(i, _)| i)
             .collect();
-        if choices.is_empty() {
+        if choices.is_empty() && !self.masterplan_active() {
             self.create_frontier_parcels();
             choices = self
                 .state
@@ -7304,6 +7358,7 @@ impl Engine {
             .filter(|b| b.kind == "shop" || b.kind == "cafe")
             .count();
         let (kind, capacity, floors, name) = self.choose_building_profile(&parcel, homes, shops);
+        let (kind, capacity, floors) = self.masterplan_adjust_profile(parcel.id, kind, capacity, floors);
         // Test-only matched experiment: before reserving a normal building
         // project, try a deeper initial parcel while retaining the original
         // parcel for use/floor selection and every production admission gate.
@@ -10294,7 +10349,7 @@ impl Engine {
                 && ((r.from == from && r.to == to) || (r.from == to && r.to == from))
         });
         let width = road
-            .map(|r| if r.kind == "arterial" { 14.0 } else { 9.0 })
+            .map(|r| road_width(&r.kind))
             .unwrap_or(9.0);
         let lateral = if traveler.kind == 1 {
             // Left-hand traffic: driver's left is the positive left-normal of the heading.
@@ -10522,6 +10577,7 @@ impl Engine {
             buildings: self.state.buildings.clone(),
             building_access: self.building_access_views(),
             rear_extensions: self.rear_extension_views(),
+            ground: self.masterplan_ground(),
             building_original_footprints: self.state.building_original_footprints.clone(),
             projects: self.state.projects.clone(),
             trains: self
@@ -10703,6 +10759,7 @@ impl Engine {
             .map_err(|error| format!("invalid live access checkpoint: {error:?}"))?;
         let mut engine = Self {
             state,
+            plan: None,
             live_access,
             planned_progress: Vec::new(),
             wait_scratch: Vec::new(),
@@ -10752,6 +10809,7 @@ impl Engine {
             #[cfg(test)]
             road_opening_access_branch: None,
         };
+        engine.load_masterplan()?;
         // Validate the serialized active plan before canonicalizing a
         // completed one; malformed empty plans must not disappear through
         // vacuous all() checks during migration.
@@ -11629,8 +11687,25 @@ impl Engine {
             if min_x < MIN || max_x > MAX || min_z < MIN || max_z > MAX {
                 return Err(format!("parcel {} outside boundary", p.id));
             }
+            // Master-plan lots tile blocks and share lot lines; only real
+            // overlap beyond float noise is invalid.
+            let party_wall = self.masterplan_active();
+            let shrink = |rect: geometry::OrientedRect| {
+                if party_wall {
+                    geometry::OrientedRect {
+                        width: rect.width - 0.1,
+                        depth: rect.depth - 0.1,
+                        ..rect
+                    }
+                } else {
+                    rect
+                }
+            };
             for other in self.state.parcels.iter().skip(i + 1) {
-                if geometry::rects_overlap(&footprint, &parcel_envelope(other), 0.0) {
+                if party_wall && ((other.x - p.x).abs() > 60.0 || (other.z - p.z).abs() > 60.0) {
+                    continue;
+                }
+                if geometry::rects_overlap(&shrink(footprint), &shrink(parcel_envelope(other)), 0.0) {
                     return Err(format!("parcels {} and {} overlap", p.id, other.id));
                 }
             }
@@ -11646,7 +11721,7 @@ impl Engine {
                 rendered.rotation = rendered_rotation;
                 road_envelopes.push(rendered);
             }
-            for road in self.state.roads.iter().filter(|r| r.stage == "open") {
+            for road in self.state.roads.iter().filter(|r| r.stage == "open" && r.kind != "expressway") {
                 let (Some(a), Some(b)) = (self.node(road.from), self.node(road.to)) else {
                     continue;
                 };
@@ -11654,6 +11729,12 @@ impl Engine {
                     .iter()
                     .map(|envelope| geometry::rect_segment_distance(envelope, a.x, a.z, b.x, b.z))
                     .fold(f32::INFINITY, f32::min);
+                // Lanes are 5 m shared surfaces; lots front them at 2.8 m.
+                let road_clearance = match road.kind.as_str() {
+                    "lane" => 2.2,
+                    "local" => f32::min(road_clearance, 3.4),
+                    _ => road_clearance,
+                };
                 let exact_clearance_ok = nearest_envelope_distance >= road_clearance;
                 let legacy_clearance_ok = p.rotation.is_none()
                     && point_segment_distance(p.x, p.z, a.x, a.z, b.x, b.z)
@@ -11727,6 +11808,13 @@ mod wasm {
         pub fn new(seed: u32) -> CityEngine {
             CityEngine {
                 inner: Engine::new(seed),
+            }
+        }
+        /// Legacy incremental planner, kept for comparison fixtures only.
+        #[wasm_bindgen(js_name=newLegacy)]
+        pub fn new_legacy(seed: u32) -> CityEngine {
+            CityEngine {
+                inner: Engine::new_legacy(seed),
             }
         }
         pub fn step(&mut self, ticks: u32) {
@@ -12501,7 +12589,7 @@ mod tests {
     }
 
     fn building_picker_engine() -> (Engine, u32) {
-        let mut engine = Engine::new(731);
+        let mut engine = Engine::new_legacy(731);
         engine.state.parcels.clear();
         engine.state.parcel_frontages.clear();
         engine.state.buildings.clear();
@@ -12611,7 +12699,7 @@ mod tests {
     }
 
     fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
-        let mut engine = Engine::new(217);
+        let mut engine = Engine::new_legacy(217);
         let founder = engine.state.buildings.first().unwrap().id;
         let parcel_id = engine.state.buildings.first().unwrap().parcel_id;
         engine.state.buildings[0].kind = "home".into();
@@ -13571,7 +13659,7 @@ mod tests {
 
     #[test]
     fn seeded_neighborhood_bus_carries_residents_on_connected_roads() {
-        let mut engine = Engine::new(0);
+        let mut engine = Engine::new_legacy(0);
         engine.set_development_rate(60);
         for _ in 0..36 {
             engine.step(2_000);
@@ -13699,7 +13787,7 @@ mod tests {
 
     #[test]
     fn generated_seed_five_bus_shuttle_runs_both_directions_after_bridge_growth() {
-        let mut engine = Engine::new(5);
+        let mut engine = Engine::new_legacy(5);
         engine.set_development_rate(60);
         for _ in 0..36 {
             engine.step(2_000);
@@ -13801,7 +13889,7 @@ mod tests {
 
     #[test]
     fn project_history_admission_trims_completed_and_respects_active_cap() {
-        let mut engine = Engine::new(88);
+        let mut engine = Engine::new_legacy(88);
         engine.state.projects.clear();
         let make_project = |id, progress| Project {
             id,
@@ -13868,7 +13956,7 @@ mod tests {
     }
 
     fn rail_test_engine(seed: u32) -> (Engine, u32, u32) {
-        let mut engine = Engine::new(seed);
+        let mut engine = Engine::new_legacy(seed);
         let (from, to) = {
             let rail = engine
                 .state
@@ -13975,8 +14063,8 @@ mod tests {
 
     #[test]
     fn same_seed_and_ticks_have_identical_state() {
-        let mut a = Engine::new(42);
-        let mut b = Engine::new(42);
+        let mut a = Engine::new_legacy(42);
+        let mut b = Engine::new_legacy(42);
         for _ in 0..32 {
             a.step(2_000);
             b.step(2_000);
@@ -13987,7 +14075,7 @@ mod tests {
     }
     #[test]
     fn early_growth_fills_connected_blocks_before_expanding_the_map() {
-        let mut engine = Engine::new(87_231);
+        let mut engine = Engine::new_legacy(87_231);
         engine.set_development_rate(16);
         let milestones = [
             (1_000, 5, 9),
@@ -14043,7 +14131,7 @@ mod tests {
 
     #[test]
     fn accelerated_growth_changes_measured_stage_without_a_calendar_unlock() {
-        let mut engine = Engine::new(87231);
+        let mut engine = Engine::new_legacy(87231);
         assert_eq!(engine.snapshot().stage, "Founding");
         engine.set_development_rate(60);
         engine.step(1_000);
@@ -14055,7 +14143,7 @@ mod tests {
 
     #[test]
     fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
-        let mut engine = Engine::new(0);
+        let mut engine = Engine::new_legacy(0);
         engine.set_development_rate(60);
         for _ in 0..36 {
             engine.step(2_000);
@@ -14270,7 +14358,7 @@ mod tests {
 
     #[test]
     fn road_frontage_benefit_accepts_two_sites_on_one_side() {
-        let mut engine = Engine::new(731);
+        let mut engine = Engine::new_legacy(731);
         // A long existing parcel blocks the north side while leaving the south
         // frontage unobstructed. Two same-side lots still represent useful
         // benefit for a road proposal.
@@ -14293,7 +14381,7 @@ mod tests {
 
     #[test]
     fn rotated_parcel_corner_blocks_a_corridor_that_passes_center_clearance() {
-        let mut engine = Engine::new(3);
+        let mut engine = Engine::new_legacy(3);
         engine.state.parcels.clear();
         engine.state.parcels.push(Parcel {
             id: 10_000,
@@ -14331,7 +14419,7 @@ mod tests {
 
     #[test]
     fn parcel_corridor_uses_exact_clearance_instead_of_max_dimension_radius() {
-        let mut engine = Engine::new(3);
+        let mut engine = Engine::new_legacy(3);
         engine.state.parcels.clear();
         engine.state.parcels.push(Parcel {
             id: 10_000,
@@ -14362,7 +14450,7 @@ mod tests {
 
     #[test]
     fn missing_parcel_rotation_keeps_legacy_and_rendered_envelopes() {
-        let mut engine = Engine::new(4);
+        let mut engine = Engine::new_legacy(4);
         engine.state.parcels.clear();
         engine.state.buildings.clear();
         engine.state.parcels.push(Parcel {
@@ -14548,7 +14636,7 @@ mod tests {
 
     #[test]
     fn seed_87231_growth_remains_valid_and_canonical_after_corridor_checks() {
-        let mut engine = Engine::new(87_231);
+        let mut engine = Engine::new_legacy(87_231);
         engine.set_development_rate(16);
         for _ in 0..121 {
             engine.step(2_000);
@@ -14686,7 +14774,7 @@ mod tests {
     #[test]
     fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
         fn developed_engine() -> Engine {
-            let mut engine = Engine::new(5);
+            let mut engine = Engine::new_legacy(5);
             engine.set_development_rate(60);
             for _ in 0..6 {
                 engine.step(2_000);
@@ -14815,7 +14903,7 @@ mod tests {
     }
     #[test]
     fn bounded_frontier_cursor_reaches_later_viable_origins() {
-        let mut engine = Engine::new(87231);
+        let mut engine = Engine::new_legacy(87231);
         engine.set_development_rate(60);
         engine.step(12_000);
         assert!(
@@ -14925,7 +15013,7 @@ mod tests {
     #[test]
     fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
         fn bridge_world(stage: &str, active_opposite: bool) -> (Engine, u32) {
-            let mut engine = Engine::new(87231);
+            let mut engine = Engine::new_legacy(87231);
             engine.state.nodes.clear();
             engine.state.roads.clear();
             engine.state.parcels.clear();
@@ -15144,7 +15232,7 @@ mod tests {
     }
     #[test]
     fn train_shuttle_dwells_and_reverses_inside_rail_end_clearances() {
-        let mut engine = Engine::new(77);
+        let mut engine = Engine::new_legacy(77);
         let rail = engine
             .state
             .roads
@@ -15337,7 +15425,7 @@ mod tests {
 
     #[test]
     fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
-        let mut engine = Engine::new(46);
+        let mut engine = Engine::new_legacy(46);
         engine.state.development_rate = 0;
         let founder = engine
             .state
@@ -15625,7 +15713,7 @@ mod tests {
 
     #[test]
     fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
-        let mut engine = Engine::new(49);
+        let mut engine = Engine::new_legacy(49);
         let founder = engine
             .state
             .buildings
@@ -15721,7 +15809,7 @@ mod tests {
 
     #[test]
     fn frontage_cursor_accepts_exact_candidate_cap_and_rejects_overflow() {
-        let mut engine = Engine::new(17);
+        let mut engine = Engine::new_legacy(17);
         engine.state.frontage_slot_cursor = MAX_FRONTAGE_SITES_PER_ROAD as u16;
         let at_cap = Engine::restore_json(&engine.save_json()).unwrap();
         assert_eq!(
@@ -15752,7 +15840,7 @@ mod tests {
 
     #[test]
     fn frontage_gap_default_layout_is_exactly_the_legacy_candidate_sequence() {
-        let engine = Engine::new(71);
+        let engine = Engine::new_legacy(71);
         let a = Node {
             id: 10,
             x: 0.0,
@@ -16566,7 +16654,7 @@ mod tests {
 
     #[test]
     fn frontage_access_selection_is_projection_based_and_orientation_stable() {
-        let engine = Engine::new(53);
+        let engine = Engine::new_legacy(53);
         // This real midpoint geometry exposed a platform-dependent hypot tie:
         // the side offset made one endpoint appear about 2e-5m closer in WASM.
         let a = Node {
@@ -16605,7 +16693,7 @@ mod tests {
 
     #[test]
     fn legacy_city_save_can_unlock_progressive_frontage() {
-        let mut engine = Engine::new(491);
+        let mut engine = Engine::new_legacy(491);
         engine.state.demand = 2.0;
         let first_candidate = engine
             .state
@@ -16696,7 +16784,7 @@ mod tests {
 
     #[test]
     fn rotated_progressive_frontage_uses_road_facing_footprint() {
-        let mut engine = Engine::new(904);
+        let mut engine = Engine::new_legacy(904);
         let a_id = engine.add_node(200.0, 200.0, "junction");
         let b_id = engine.add_node(280.0, 280.0, "junction");
         let road_id = engine.add_road(a_id, b_id, "local", "open", 1.0);
@@ -16762,7 +16850,7 @@ mod tests {
 
     #[test]
     fn frontage_grid_keeps_midpoint_spacing_clear_and_endpoint_bounded() {
-        let engine = Engine::new(41);
+        let engine = Engine::new_legacy(41);
         let a = Node {
             id: 90_001,
             x: 10.0,
@@ -16793,7 +16881,7 @@ mod tests {
     }
 
     fn engine_with_clear_local_chord() -> (Engine, u32, u32) {
-        let mut engine = Engine::new(87231);
+        let mut engine = Engine::new_legacy(87231);
         engine.state.nodes.clear();
         engine.state.roads.clear();
         engine.state.parcels.clear();
@@ -16852,7 +16940,7 @@ mod tests {
     }
 
     fn engine_with_developed_plan_site() -> Engine {
-        let mut engine = Engine::new(41);
+        let mut engine = Engine::new_legacy(41);
         engine.state.nodes.clear();
         engine.state.roads.clear();
         engine.state.parcels.clear();
@@ -17889,7 +17977,7 @@ mod tests {
 
     #[test]
     fn seed_87231_natural_growth_uses_a_saved_partial_shared_edge_layout() {
-        let mut engine = Engine::new(87_231);
+        let mut engine = Engine::new_legacy(87_231);
         engine.set_development_rate(16);
         let mut observed_shared_plan = false;
         for _ in 0..121 {
@@ -18183,7 +18271,7 @@ mod tests {
 
     #[test]
     fn oriented_admission_respects_legacy_saved_and_rendered_envelopes() {
-        let mut engine = Engine::new(87231);
+        let mut engine = Engine::new_legacy(87231);
         let mut building = engine.state.buildings[0].clone();
         engine.state.parcels.clear();
         engine.state.buildings.clear();
@@ -18455,7 +18543,7 @@ mod tests {
 
     #[test]
     fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
-        let mut engine = Engine::new(81);
+        let mut engine = Engine::new_legacy(81);
         let road = engine
             .state
             .roads
@@ -18499,7 +18587,7 @@ mod tests {
         let pedestrian = &movement[6..10];
         assert!((car[0] - center_x - nx * 1.65).abs() < 0.001);
         assert!((car[1] - center_z - nz * 1.65).abs() < 0.001);
-        let road_width = if arterial { 14.0 } else { 9.0 };
+        let road_width = if arterial { 14.0 } else { road_width("local") };
         let sidewalk_offset = road_width * 0.5 + 0.72;
         let sign = if 700_002 % 2 == 0 { 1.0 } else { -1.0 };
         assert!((pedestrian[0] - center_x - nx * sidewalk_offset * sign).abs() < 0.001);
@@ -18508,7 +18596,7 @@ mod tests {
 
     #[test]
     fn save_restore_preserves_residents_and_active_trips() {
-        let mut engine = Engine::new(91);
+        let mut engine = Engine::new_legacy(91);
         engine.set_development_rate(60);
         for _ in 0..12 {
             engine.step(2_000);
@@ -18541,7 +18629,7 @@ mod tests {
     }
     #[test]
     fn save_restore_replays_pending_projects() {
-        let mut a = Engine::new(8);
+        let mut a = Engine::new_legacy(8);
         a.step(1_337);
         assert!(a
             .state
@@ -18556,7 +18644,7 @@ mod tests {
     }
     #[test]
     fn bounded_world_keeps_open_buildings_connected() {
-        let mut e = Engine::new(19);
+        let mut e = Engine::new_legacy(19);
         e.set_development_rate(60);
         for _ in 0..12 {
             e.step(2_000);
@@ -18573,7 +18661,7 @@ mod tests {
         let mut saw_ordinary_loop = false;
         let mut bus_service_seeds = 0usize;
         for seed in 0..12 {
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(60);
             let mut max_travelers = 0usize;
             let mut max_night_travelers = 0usize;
@@ -18819,7 +18907,7 @@ mod tests {
     }
     #[test]
     fn active_commerce_does_not_age_into_false_vacancy() {
-        let mut engine = Engine::new(71);
+        let mut engine = Engine::new_legacy(71);
         engine.set_development_rate(60);
         for _ in 0..36 {
             engine.step(2_000);
@@ -18851,7 +18939,7 @@ mod tests {
 
     #[test]
     fn legacy_business_activity_migration_preserves_housing_and_pending_work() {
-        let mut engine = Engine::new(604);
+        let mut engine = Engine::new_legacy(604);
         let cafe_id = engine.add_building(
             engine.state.parcels[2].id,
             "cafe",
@@ -18996,7 +19084,7 @@ mod tests {
 
     #[test]
     fn active_commerce_is_not_vacant_when_residential_occupancy_is_zero() {
-        let mut engine = Engine::new(605);
+        let mut engine = Engine::new_legacy(605);
         let founder = &engine.state.buildings[0];
         assert_eq!(founder.occupancy, 0);
         assert!(founder.business_active);
@@ -19035,7 +19123,7 @@ mod tests {
 
     #[test]
     fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
-        let mut engine = Engine::new(606);
+        let mut engine = Engine::new_legacy(606);
         let home_parcel = engine.state.parcels[1].id;
         let cafe_parcel = engine.state.parcels[2].id;
         let other_cafe_parcel = engine.state.parcels[3].id;
@@ -19262,7 +19350,7 @@ mod tests {
     fn mature_neighborhoods_keep_low_rise_core_and_tall_station_cluster() {
         let mut signatures = BTreeSet::new();
         for seed in 0..6 {
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(60);
             for _ in 0..36 {
                 engine.step(2_000);
@@ -19388,7 +19476,7 @@ mod tests {
 
     #[test]
     fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
-        let mut engine = Engine::new(87_231);
+        let mut engine = Engine::new_legacy(87_231);
         engine.set_development_rate(16);
         for _ in 0..121 {
             engine.step(2_000);
@@ -19640,7 +19728,7 @@ mod tests {
 
     #[test]
     fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
-        let mut engine = Engine::new(31415);
+        let mut engine = Engine::new_legacy(31415);
         engine.state.nodes.clear();
         engine.state.roads.clear();
         engine.state.parcels.clear();
@@ -19713,7 +19801,7 @@ mod tests {
     #[test]
     fn long_run_keeps_state_collections_bounded_after_expansion() {
         use std::time::Instant;
-        let mut engine = Engine::new(1204);
+        let mut engine = Engine::new_legacy(1204);
         engine.set_development_rate(60);
         let started = Instant::now();
         let mut max_travelers = 0usize;
@@ -19772,7 +19860,7 @@ mod tests {
     }
     #[test]
     fn river_crossing_and_founder_are_present() {
-        let e = Engine::new(5);
+        let e = Engine::new_legacy(5);
         let s = e.snapshot();
         assert!(s.roads.iter().any(|r| r.kind == "bridge"));
         let founder = s
@@ -19784,7 +19872,7 @@ mod tests {
         assert!(e.distance_to_river(founder.x, founder.z) < 80.0);
         assert!(s.terrain.river.len() >= 4);
         for seed in 0..5 {
-            let world = Engine::new(seed);
+            let world = Engine::new_legacy(seed);
             let snapshot = world.snapshot();
             let shop = snapshot
                 .buildings
@@ -19827,7 +19915,7 @@ mod tests {
     }
     #[test]
     fn time_and_rate_are_integer_deterministic() {
-        let mut e = Engine::new(2);
+        let mut e = Engine::new_legacy(2);
         assert_eq!(e.snapshot().minute_of_day, 360.0);
         for _ in 0..10 {
             e.step(2_000);
@@ -20009,7 +20097,7 @@ mod tests {
 
     #[test]
     fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
-        let mut engine = Engine::new(7);
+        let mut engine = Engine::new_legacy(7);
         let host = engine
             .state
             .roads
@@ -20282,7 +20370,7 @@ mod tests {
 
     #[test]
     fn road_split_rejections_leave_state_and_ids_unchanged() {
-        let mut engine = Engine::new(8);
+        let mut engine = Engine::new_legacy(8);
         let host = engine
             .state
             .roads
@@ -20349,7 +20437,7 @@ mod tests {
         );
         assert_eq!(engine.save_json(), before);
 
-        let mut bus_engine = Engine::new(9);
+        let mut bus_engine = Engine::new_legacy(9);
         let bus_host = bus_engine
             .state
             .roads
@@ -20381,7 +20469,7 @@ mod tests {
         );
         assert_eq!(bus_engine.save_json(), before);
 
-        let mut project_engine = Engine::new(10);
+        let mut project_engine = Engine::new_legacy(10);
         let project_host = project_engine
             .state
             .roads
@@ -20409,7 +20497,7 @@ mod tests {
         );
         assert_eq!(project_engine.save_json(), before);
 
-        let mut plan_engine = Engine::new(11);
+        let mut plan_engine = Engine::new_legacy(11);
         let plan_host = plan_engine
             .state
             .roads
@@ -20827,7 +20915,7 @@ mod tests {
 
     #[test]
     fn interior_access_capacity_preflight_does_not_split_or_allocate() {
-        let mut engine = Engine::new(41);
+        let mut engine = Engine::new_legacy(41);
         engine.state.demand = 1.2;
         engine.state.next_id = u32::MAX - 4;
         let before_nodes = engine.state.nodes.clone();
@@ -20924,7 +21012,7 @@ mod tests {
 
     #[test]
     fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
-        let mut engine = Engine::new(0);
+        let mut engine = Engine::new_legacy(0);
         // Keep this fixture about frontier proposal purity. Independent live
         // interior searches can consume the last available frontier before
         // the probe; their interaction/replay is covered in access_live_engine.
@@ -21045,7 +21133,7 @@ mod tests {
     }
 
     fn engine_with_pending_measurement() -> Engine {
-        let mut engine = Engine::new(981);
+        let mut engine = Engine::new_legacy(981);
         engine.state.tick = 1;
         engine.state.district_controller.pending = Some(synthetic_district_checkpoint(40, 16));
         engine.state.district_controller.pending_capture_tick = 1;
@@ -21104,7 +21192,7 @@ mod tests {
 
     #[test]
     fn district_measurement_completes_and_reconstructs_cached_metrics() {
-        let mut engine = Engine::new(982);
+        let mut engine = Engine::new_legacy(982);
         engine.step(1);
         let controller = &engine.state.district_controller;
         assert!(controller.pending.is_none());
@@ -21162,7 +21250,7 @@ mod tests {
         future.state.district_controller.next_refresh_tick = u64::MAX;
         assert!(Engine::restore_json(&future.save_json()).is_err());
 
-        let engine = Engine::new(983);
+        let engine = Engine::new_legacy(983);
         let mut legacy: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
         legacy
             .as_object_mut()
@@ -21176,7 +21264,7 @@ mod tests {
 
     #[test]
     fn district_measurement_advances_at_most_sixteen_samples_per_fixed_tick() {
-        let mut engine = Engine::new(984);
+        let mut engine = Engine::new_legacy(984);
         engine.state.tick = 1;
         engine.state.district_controller.pending = Some(synthetic_district_checkpoint(80, 0));
         engine.state.district_controller.pending_capture_tick = 1;
@@ -21199,7 +21287,7 @@ mod tests {
             .unwrap()
             .finish()
             .unwrap();
-        let engine = Engine::new(985);
+        let engine = Engine::new_legacy(985);
         let rects: Vec<_> = (0..district_policy::MAX_FRONTIER_SITES)
             .map(|index| geometry::OrientedRect {
                 x: -350.0 + (index % 10) as f32 * 24.0,
@@ -21296,7 +21384,7 @@ mod tests {
         for seed in [87_231, 0] {
             for enabled in [false, true] {
                 let started = std::time::Instant::now();
-                let mut engine = Engine::new(seed);
+                let mut engine = Engine::new_legacy(seed);
                 engine.set_development_rate(16);
                 engine.district_policy_experiment = enabled;
                 for _ in 0..121 {
@@ -21437,7 +21525,7 @@ mod tests {
 
     #[test]
     fn access_geometry_revision_tracks_effective_writers_and_ignores_ticks() {
-        let mut engine = Engine::new(31);
+        let mut engine = Engine::new_legacy(31);
         let initial = engine.state.access_geometry_revision;
 
         // Snapshot/weather activity is outside the frozen access geometry.
@@ -21489,7 +21577,7 @@ mod tests {
 
     #[test]
     fn access_geometry_revision_tracks_road_opening_and_plan_reservations() {
-        let mut engine = Engine::new(33);
+        let mut engine = Engine::new_legacy(33);
         let bridge_project = engine
             .state
             .projects
@@ -21510,7 +21598,7 @@ mod tests {
 
     #[test]
     fn access_geometry_revision_is_backward_compatible_and_fails_closed_at_overflow() {
-        let engine = Engine::new(32);
+        let engine = Engine::new_legacy(32);
         let mut old_save: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
         let state = old_save.as_object_mut().unwrap();
         state.remove("access_geometry_revision");
@@ -21534,7 +21622,7 @@ mod tests {
     #[test]
     fn indexed_connectivity_matches_source_order_scan() {
         for seed in [1, 23, 87231] {
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             let gateway = engine.state.nodes.iter().find(|n| n.kind == "gateway").unwrap().id;
             let a = engine.add_node(120.0, 120.0, "junction");
             let b = engine.add_node(160.0, 120.0, "junction");

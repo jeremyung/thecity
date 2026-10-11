@@ -1,0 +1,85 @@
+{
+  "source": ".tools/masterplan-review/mp-87231.json.save.json",
+  "backend": "software WebGL (swiftshader)",
+  "method": "post pipeline detached while draining geometry queues; restored for captures",
+  "performanceEvidence": false,
+  "previewHour": 15,
+  "depthOfField": false,
+  "world": {
+    "tick": 160000,
+    "buildings": 1784,
+    "steps": 3293,
+    "station": {
+      "id": 40,
+      "x": 163.8628,
+      "z": -82.81525,
+      "kind": "station"
+    },
+    "market": {
+      "id": 26,
+      "x": -60,
+      "z": -190,
+      "kind": "market"
+    },
+    "queued": 0,
+    "chunks": 0
+  },
+  "views": [
+    {
+      "name": "overview",
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "position": [
+        380,
+        420,
+        -470
+      ],
+      "file": "validation/masterplan-review/captures/overview.png"
+    },
+    {
+      "name": "neighborhood",
+      "target": [
+        60,
+        4,
+        -130
+      ],
+      "position": [
+        240,
+        150,
+        -310
+      ],
+      "file": "validation/masterplan-review/captures/neighborhood.png"
+    },
+    {
+      "name": "station",
+      "target": [
+        163.8628,
+        8,
+        -82.81525
+      ],
+      "position": [
+        303.8628,
+        95,
+        -232.81525
+      ],
+      "file": "validation/masterplan-review/captures/station.png"
+    },
+    {
+      "name": "street",
+      "target": [
+        10,
+        6,
+        -150
+      ],
+      "position": [
+        55,
+        28,
+        -200
+      ],
+      "file": "validation/masterplan-review/captures/street.png"
+    }
+  ]
+}

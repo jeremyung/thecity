@@ -656,3 +656,7 @@ growth, construction, capacity, occupancy or rendering rule changed. Next build
 a bounded phased extension lifecycle with reservations, preserved entrances,
 completion-only capacity, save/replay and both-style visual checks. This is a
 candidate for testing, not acceptance of city density or the art target.
+
+## Master-plan generator (2026-10-11)
+
+The incremental frontier/infill planner is replaced for new worlds by a seeded master plan and its demand-driven realization; see [the master-plan review](masterplan-review/README.md) and [world growth](../specs/02-world-growth.md#master-plan). Three mature seeds measure 49.6–51.6% compact and 39.9–42.2% station rendered coverage, against 28.9% and 20.1% for the legacy planner. Native suite: 392 passed, 1 pre-existing failure, 52 ignored. Web suite: 290 of 290. Open items are listed in the review.

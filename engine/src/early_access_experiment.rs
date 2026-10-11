@@ -13,7 +13,7 @@ fn early_access_scheduling_matched_seeds() {
     for seed in [0_u32, 87_231] {
         for enabled in [false, true] {
             let started = std::time::Instant::now();
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             engine.district_policy_experiment = false;
             engine.early_access_experiment = enabled;

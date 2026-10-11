@@ -23,7 +23,8 @@ export interface World {
   bounds: { min_x: number; max_x: number; min_z: number; max_z: number };
   terrain: { river: Point[]; river_half_width?: number; protected: Point[][]; gateways: number[] };
   weather: { kind: 'clear' | 'overcast' | 'rain'; intensity: number };
-  nodes: WorldNode[]; roads: Road[]; parcels: Parcel[]; buildings: Building[]; projects: Project[];
+  nodes: WorldNode[]; roads: Road[]; parcels: Parcel[]; buildings: Building[]; ground?: { block: number; points: [number, number][] }[];
+  projects: Project[];
   rear_extensions?: RearExtensionView[];
   building_original_footprints?: BuildingOriginalFootprint[];
   residents?: {id:number;name:string;home_building:number;work_building:number|null;activity:string;transfer?:string;train_id?:number|null;bus_id?:number|null;bus_origin_stop?:number|null;bus_destination_stop?:number|null;bus_stop_node?:number|null;location_node?:number|null}[];

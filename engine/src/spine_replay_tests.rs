@@ -3,7 +3,7 @@ use crate::spine_plan::{SpinePlan, SpineStage, RECIPE_VERSION};
 use crate::*;
 
 fn reserved_rectangle(depth: f32) -> (Engine, [u32; 2]) {
-    let mut engine = Engine::new(48123);
+    let mut engine = Engine::new_legacy(48123);
     let gateway = engine
         .state
         .nodes

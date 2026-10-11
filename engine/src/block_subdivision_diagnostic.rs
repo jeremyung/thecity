@@ -208,7 +208,7 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
 }
 
 fn run_seed(seed: u32) -> SeedReport {
-    let mut engine = Engine::new(seed);
+    let mut engine = Engine::new_legacy(seed);
     engine.set_development_rate(DEVELOPMENT_RATE);
     let mut observed_segments = BTreeSet::new();
     let mut plans = Vec::new();
@@ -249,7 +249,7 @@ fn run_seed(seed: u32) -> SeedReport {
 
 #[test]
 fn subdivision_geometry_diagnostic_keeps_source_and_respects_parcel_blocker() {
-    let engine = Engine::new(0);
+    let engine = Engine::new_legacy(0);
     let source_before = engine.save_json();
     let mut witness = None;
 

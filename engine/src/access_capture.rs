@@ -277,12 +277,12 @@ mod tests {
 
     #[test]
     fn pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation() {
-        let initial = Engine::new(41);
+        let initial = Engine::new_legacy(41);
         let mature = Engine::restore_json(include_str!(
             "../../validation/early-reservation-wasm-87231-save.json"
         ))
         .expect("mature save restores");
-        let mut legacy = Engine::new(43);
+        let mut legacy = Engine::new_legacy(43);
         legacy.state.parcels[0].rotation = None;
         for engine in [&initial, &mature, &legacy] {
             let (discovery, proposal) = capture_pair(engine).expect("both bounded captures fit");
@@ -300,7 +300,7 @@ mod tests {
 
     #[test]
     fn pair_rejects_each_adapters_caps_without_mutating_engine() {
-        let mut discovery_over = Engine::new(42);
+        let mut discovery_over = Engine::new_legacy(42);
         let road = discovery_over
             .state
             .roads
@@ -322,7 +322,7 @@ mod tests {
         ));
         assert_eq!(discovery_over.save_json(), before);
 
-        let mut proposal_over = Engine::new(44);
+        let mut proposal_over = Engine::new_legacy(44);
         proposal_over.state.projects.resize_with(
             MAX_PROJECTS + crate::COMPLETED_PROJECT_HISTORY + 1,
             || crate::Project {
@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn shared_neighborhood_projection_keeps_first_duplicate_and_skips_missing_endpoints() {
-        let mut engine = Engine::new(45);
+        let mut engine = Engine::new_legacy(45);
         let first = engine.state.nodes[0].clone();
         let second = engine.state.nodes[1].clone();
         engine.state.nodes.push(crate::Node {
@@ -445,7 +445,7 @@ mod tests {
 
     #[test]
     fn capture_is_read_only_and_initial_world_counts_are_bounded() {
-        let engine = Engine::new(41);
+        let engine = Engine::new_legacy(41);
         let before = engine.save_json();
         let captured = capture(&engine).expect("initial city fits all caps");
         assert!(captured.graph_nodes.len() <= MAX_FACE_GRAPH_NODES);
@@ -457,7 +457,7 @@ mod tests {
 
     #[test]
     fn over_cap_graph_fails_without_truncating_or_mutating_world() {
-        let mut engine = Engine::new(42);
+        let mut engine = Engine::new_legacy(42);
         let road = engine
             .state
             .roads

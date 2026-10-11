@@ -872,7 +872,7 @@ fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
 
 #[test]
 fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
-    let mut engine = Engine::new(7);
+    let mut engine = Engine::new_legacy(7);
     let reserved = interior_access::InteriorAccessLot {
         x: -343.22574,
         z: 11.176857,
@@ -907,7 +907,7 @@ fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
 
 #[test]
 fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
-    let mut engine = Engine::new(87_231);
+    let mut engine = Engine::new_legacy(87_231);
     engine.set_development_rate(16);
     engine.road_opening_access_experiment = true;
     engine.early_access_experiment = false;
@@ -1079,7 +1079,7 @@ fn road_opening_access_matched_seeds() {
     };
     for (seed, enabled) in cases {
             let started = std::time::Instant::now();
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             engine.district_policy_experiment = false;
             engine.early_access_experiment = false;
@@ -1229,7 +1229,7 @@ fn face_conditioned_road_opening_access_matched_seeds() {
     };
     for (seed, enabled) in cases {
             let started = std::time::Instant::now();
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             engine.district_policy_experiment = false;
             engine.early_access_experiment = false;

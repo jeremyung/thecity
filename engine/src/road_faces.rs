@@ -878,7 +878,7 @@ mod tests {
     #[test]
     fn new_founder_network_is_planar_connected_and_keeps_nonincident_parcels_clear() {
         for seed in [0, 1, 5, 87_231, u32::MAX] {
-            let engine = crate::Engine::new(seed);
+            let engine = crate::Engine::new_legacy(seed);
             let market = engine
                 .state
                 .nodes
@@ -1020,7 +1020,7 @@ mod tests {
     fn fresh_mature_world_ordinary_graph_topology_diagnostic() {
         let mut worlds = Vec::new();
         for seed in [0, 87_231] {
-            let mut engine = crate::Engine::new(seed);
+            let mut engine = crate::Engine::new_legacy(seed);
             engine.set_development_rate(16);
             for _ in 0..121 {
                 engine.step(2_000);

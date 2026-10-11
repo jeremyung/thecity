@@ -6,7 +6,7 @@ import type { World } from '../web/src/types';
 
 it('develops explicitly oriented street-facing lots through the public engine and resumes them', () => {
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const engine=new CityEngine(87231);
+  const engine=CityEngine.newLegacy(87231);
   let replay:CityEngine|undefined;
   try {
     engine.set_development_rate(16);

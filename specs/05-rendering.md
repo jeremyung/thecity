@@ -43,6 +43,12 @@ Generated concept paintings are references, not substitutes for live scenery.
 
 Lowrise surface checkpoint (2026-10-10): non-anchor home windows now use layered dark reveals, separated sash frames and sills, preserving footprint and shared material batching. Anime matte surfaces use world-anchored pigment with derivative-based attenuation of fine strokes; horizontal paving receives a restrained wash. Root passes 26 focused geometry/material tests and inspects both styles in forced WebGL. The controlled views still have plain facades and weak style distinction; this is not art acceptance or motion-stability proof.
 
+### Party walls, lanes and elevated layers
+
+Master-plan lots tile each block with no gaps. Bodies run to the shared lot lines, keeping a fixed side margin for eaves, sills and foundation lips: 0.9 m for low-rise homes and shops, and 1.3 m for apartments and offices. Neighbors therefore stand about 0.9–1.3 m apart, near Tokyo's 0.5 m-per-side norm, and form a near-continuous street wall. Towers and anchors keep their proportional plaza inset; depth keeps a front setback and rear yard. Developed blocks render as paved urban ground, not lawn. Local streets render 6.5 m wide with painted edge lines and no raised sidewalk or center line. Lanes are 4 m. Only arterials have sidewalks and center markings. Party-wall sides should move to quiet, windowless material (not yet implemented). Elevated rail runs on a viaduct deck about 7 m above the ground, with piers at least every 24 m, and trains follow the deck height. The expressway deck sits about 11 m up on single-column piers with sound barriers. Neither elevated layer occludes construction picking or street lighting below.
+
+At 3,000 buildings, distant low-rise fabric must use simplified merged geometry: body box, roof color and window band. Full kits are reserved for focal and near chunks, so the triangle budget stays within the existing performance policy.
+
 ### Compact architectural families — next implementation
 
 The 799-building overview exposes a massing problem beyond density: most non-tower buildings share a rectangular shell, many typology differences are applied only to facades, and apartment setbacks usually affect just one top floor. Color variation alone cannot resolve this repetition.

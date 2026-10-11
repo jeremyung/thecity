@@ -122,6 +122,8 @@ Improve composition, assets, shaders, or batching when these fail. Under load,
 reduce optional effect resolution and distant detail before compromising the
 focal scene or removing required water and anti-aliasing.
 
+Fabric acceptance (2026-10-11): at maturity, rendered-footprint crops of compact and station districts meet the [fabric targets](02-world-growth.md#fabric-targets) for at least three seeds, with no overlapping lots, no inaccessible occupied building, and connected junctions. Run `node scripts/audit-masterplan-fabric.mjs` on a mature snapshot to report gross coverage, footprint median/p90, floor median and road share per crop.
+
 Procedural-generation research acceptance (proposed work, 2026-10-09): compare fixed-seed, fixed-tick scenes with matched camera, time, style, and focus settings. Measure rendered building footprint and net developable block coverage separately from parcel-envelope proxies. Check parcel overlap, real street access, connected junctions, bounded proposal queues, and save/resume of pending planning work. Verify infrastructure construction precedes adjacent opening. Evaluate several seeds and stages; one denser screenshot does not establish general quality. Architectural variation should remain coherent within districts and survive style switching without geometry changes. Prioritize compact blocks and street detail before using extra towers, blur, or grading to imply density.
 
 A viewer can watch infrastructure open new land, see homes and businesses grow around it, follow purposeful activity through a full daily cycle, and observe a mature city that continues changing within finite bounds. Last Train, First Light must feel complete before adding more art modes or larger maps.

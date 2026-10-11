@@ -118,7 +118,7 @@ fn route_avoiding_scan(
 }
 
 fn engine_with_graph(node_count: u32, roads: Vec<Road>) -> Engine {
-    let mut engine = Engine::new(17);
+    let mut engine = Engine::new_legacy(17);
     engine.state.nodes = (0..node_count)
         .map(|id| Node {
             id,
@@ -265,7 +265,7 @@ fn exact_routes_match_scan_for_deterministic_generated_graphs() {
 fn large_sparse_id_graph_matches_after_live_road_mutations() {
     const NODE_COUNT: u32 = 200;
     let node_id = |index: u32| 10_003 + index * 17;
-    let mut engine = Engine::new(91);
+    let mut engine = Engine::new_legacy(91);
     engine.state.nodes = (0..NODE_COUNT)
         .map(|index| Node {
             id: node_id(index),

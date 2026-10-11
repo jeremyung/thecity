@@ -61,6 +61,22 @@ export class Kit {
   }
 }
 
+/**
+ * Master-plan lots share lot lines, so the body keeps a fixed side margin for
+ * eaves, sills and the foundation lip instead of a proportional inset.
+ * Neighbours end up about 0.9 m apart, close to Tokyo's 0.5 m-per-side norm.
+ * Depth keeps its proportional front setback and rear yard.
+ */
+export function partyWallBodyWidth(width: number, anchor = false, floors = 2, kind = 'home'): number {
+  if (anchor || floors >= 14) return Math.max(6, width * (anchor ? .66 : .84));
+  // Apartment and office families carry balconies and entry reveals.
+  const lowrise = floors < 4 && (kind === 'home' || kind === 'shop' || kind === 'cafe');
+  return Math.max(6, width - (lowrise ? .9 : 1.3));
+}
+export function partyWallBodyDepth(depth: number): number {
+  return Math.max(6, depth * .84);
+}
+
 const pick = (seed: number, count: number) => Math.abs(Math.trunc(seed)) % count;
 
 /** About half of non-anchor two- and three-floor homes receive restrained modern service details. */
@@ -72,8 +88,10 @@ export interface BuildingKitReviewOptions { compactMidrise?: boolean }
 
 export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
   const seed = b.appearance_seed >>> 0;
-  const initialWidth = Math.max(6, b.width * (b.anchor ? .66 : .84));
-  const initialDepth = Math.max(6, b.depth * .84), floor = 3.25;
+  // Master-plan lots tile blocks without gaps, so bodies run to the shared lot
+  // lines (party walls) and keep only a shallow front setback and rear yard.
+  const initialWidth = partyWallBodyWidth(b.width, b.anchor, b.floors, b.kind);
+  const initialDepth = partyWallBodyDepth(b.depth), floor = 3.25;
   const envelope = review.compactMidrise ? compactMidriseEnvelope(b, initialWidth, initialDepth) : {width:initialWidth,depth:initialDepth};
   const d = envelope.depth;
   const w = lowriseBuildingWidth(b, envelope.width, d);

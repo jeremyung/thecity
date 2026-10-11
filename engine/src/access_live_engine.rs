@@ -56,6 +56,9 @@ impl Engine {
     /// Runs before actor movement so split preflight/remapping uses the actors'
     /// current routes and positions, never a snapshot from an earlier tick.
     pub(crate) fn advance_face_access(&mut self) {
+        if self.masterplan_active() {
+            return;
+        }
         if self.live_access.is_none() {
             if self.state.tick < self.state.next_face_access_tick { return; }
             self.state.next_face_access_tick = self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
