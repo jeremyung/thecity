@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
@@ -9,10 +9,14 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASE_URL = process.env.LIVE_TICK_BASE_URL ?? 'http://127.0.0.1:5173';
 const FIXTURE_PATH = resolve(ROOT, 'validation/early-reservation-wasm-87231-save.json');
 const WASM_PATH = resolve(ROOT, 'public/wasm/city_engine_bg.wasm');
-const REPORT_PATH = resolve(ROOT, 'validation/live-tick-profile.json');
+const REPORT_PATH = resolve(process.env.LIVE_TICK_REPORT_PATH ?? 'validation/live-tick-profile.json');
+const FINAL_SAVE_PATH = process.env.LIVE_TICK_FINAL_SAVE_PATH
+  ? resolve(process.env.LIVE_TICK_FINAL_SAVE_PATH)
+  : null;
 const TICK_COUNT = Number(process.env.LIVE_TICK_COUNT ?? 6_000);
 const YIELD_EVERY = 100;
 const CHECKPOINT_EVERY = 200;
+const TRANSITION_SAMPLE_EVERY = Number(process.env.LIVE_TICK_TRANSITION_SAMPLE_EVERY ?? CHECKPOINT_EVERY);
 const STARTUP_TIMEOUT_MS = Number(process.env.LIVE_TICK_STARTUP_TIMEOUT_MS ?? 30_000);
 const OVERALL_TIMEOUT_MS = Number(process.env.LIVE_TICK_OVERALL_TIMEOUT_MS ?? 90_000);
 const SEED = 87_231;
@@ -22,6 +26,8 @@ assert.ok(Number.isInteger(TICK_COUNT) && TICK_COUNT >= 200 && TICK_COUNT <= 100
   'LIVE_TICK_COUNT must be an integer from 200 to 100000');
 assert.ok(STARTUP_TIMEOUT_MS >= 1_000 && OVERALL_TIMEOUT_MS >= STARTUP_TIMEOUT_MS,
   'timeouts must be positive and overall timeout must cover startup');
+assert.ok(Number.isInteger(TRANSITION_SAMPLE_EVERY) && TRANSITION_SAMPLE_EVERY >= 1,
+  'LIVE_TICK_TRANSITION_SAMPLE_EVERY must be a positive integer');
 
 const fixtureText = readFileSync(FIXTURE_PATH, 'utf8');
 const fixture = JSON.parse(fixtureText);
@@ -59,10 +65,16 @@ async function main() {
     const workerSource = String.raw`
       let wasm;
       let engine;
-      function summarize(saveText) {
+      function summarize(saveText, completedBranchIds = []) {
         const save = JSON.parse(saveText);
         const world = JSON.parse(engine.snapshot());
         const live = save.live_access_checkpoint ?? null;
+        const pending = save.pending_interior_access ?? null;
+        const roadsById = new Map((save.roads ?? []).map(road => [road.id, road]));
+        const projectsById = new Map((save.projects ?? []).map(project => [project.id, project]));
+        const branch = pending === null ? null : roadsById.get(pending.branch_road_id) ?? null;
+        const project = pending === null ? null : projectsById.get(pending.project_id) ?? null;
+        const discovery = live?.planning?.discovery ?? null;
         return {
           tick: save.tick,
           stage: world.stage ?? null,
@@ -83,8 +95,27 @@ async function main() {
           live_access_present: live !== null,
           live_access_bytes: live === null ? 0 : new TextEncoder().encode(JSON.stringify(live)).byteLength,
           live_access_phase: live?.planning?.phase ?? null,
-          discovery_phase: live?.planning?.discovery?.stage == null ? null
-            : Object.keys(live.planning.discovery.stage)[0],
+          discovery_phase: discovery?.stage == null ? null : Object.keys(discovery.stage)[0],
+          exhausted_face_count: save.exhausted_access_faces?.length ?? 0,
+          selected_face_identity: discovery?.selected_face_identity ?? null,
+          pending_interior_branch: pending === null ? null : {
+            branch_road_id: pending.branch_road_id,
+            road_stage: branch?.stage ?? null,
+            project_id: pending.project_id,
+            project_stage: project?.stage ?? null,
+            planned_lot_count: pending.selected_lots?.length ?? 0,
+            actual_frontage_count: branch === null ? null
+              : (save.parcel_frontages ?? []).filter(frontage => frontage.road_id === branch.id).length,
+          },
+          completed_interior_branch_ids: [...completedBranchIds].sort((a, b) => a - b),
+          observed_opened_branches: [...completedBranchIds].sort((a, b) => a - b).map(id => ({
+            road_id: id,
+            stage: roadsById.get(id)?.stage ?? null,
+            connected: roadsById.get(id)?.connected ?? false,
+            frontage_parcel_ids: (save.parcel_frontages ?? [])
+              .filter(frontage => frontage.road_id === id)
+              .map(frontage => frontage.parcel_id).sort((a, b) => a - b),
+          })),
         };
       }
       self.onmessage = async event => {
@@ -108,15 +139,63 @@ async function main() {
             const durationsMs = [];
             const checkpoints = [];
             let checkpointOverheadMs = 0;
+            let transitionObservationOverheadMs = 0;
+            const transitions = [];
+            const openedBranchIds = new Set();
+            const seenInteriorProjects = new Set();
+            const admittedInteriorProjects = new Set();
+            const initialSnapshot = JSON.parse(engine.snapshot());
+            const initialSave = JSON.parse(engine.save());
+            const initialPendingProjectId = initialSave.pending_interior_access?.project_id ?? null;
+            const interiorReason = 'A neighborhood access street is being built from an established corridor';
+            for (const project of initialSnapshot.projects ?? []) {
+              if (project.reason === interiorReason) seenInteriorProjects.add(project.id);
+            }
+            function observeTransitions(snapshot) {
+              const roadsByEndpoints = new Map();
+              for (const road of snapshot.roads ?? []) {
+                roadsByEndpoints.set(String(road.from) + ':' + String(road.to), road);
+                roadsByEndpoints.set(String(road.to) + ':' + String(road.from), road);
+              }
+              for (const project of snapshot.projects ?? []) {
+                if (project.reason !== interiorReason) continue;
+                const road = roadsByEndpoints.get(String(project.from) + ':' + String(project.to)) ?? null;
+                if (!seenInteriorProjects.has(project.id)) {
+                  seenInteriorProjects.add(project.id);
+                  admittedInteriorProjects.add(project.id);
+                  transitions.push({
+                    type: 'construction_admission_observed', tick: snapshot.tick, project_id: project.id,
+                    branch_road_id: road?.id ?? null, project_stage: project.stage,
+                    branch_stage: road?.stage ?? null,
+                  });
+                }
+                const admissionObservedInRun = admittedInteriorProjects.has(project.id);
+                const wasPendingAtRunStart = project.id === initialPendingProjectId;
+                if ((admissionObservedInRun || wasPendingAtRunStart)
+                    && road?.stage === 'open' && road.connected && !openedBranchIds.has(road.id)) {
+                  openedBranchIds.add(road.id);
+                  transitions.push({
+                    type: 'connected_opening_observed', tick: snapshot.tick, project_id: project.id,
+                    branch_road_id: road.id, project_stage: project.stage, branch_stage: road.stage,
+                    admission_observed_in_run: admissionObservedInRun,
+                  });
+                }
+              }
+            }
             for (let index = 1; index <= message.count; index++) {
               const started = performance.now();
               engine.step(1);
               const ended = performance.now();
               durationsMs.push(ended - started);
+              if (index % ${TRANSITION_SAMPLE_EVERY} === 0) {
+                const observationStarted = performance.now();
+                observeTransitions(JSON.parse(engine.snapshot()));
+                transitionObservationOverheadMs += performance.now() - observationStarted;
+              }
               if (index % ${CHECKPOINT_EVERY} === 0) {
                 const checkpointStarted = performance.now();
                 const saveText = engine.save();
-                const summary = summarize(saveText);
+                const summary = summarize(saveText, openedBranchIds);
                 summary.step_index = index;
                 summary.elapsed_tick_index = index;
                 checkpoints.push(summary);
@@ -125,13 +204,15 @@ async function main() {
               if (index % ${YIELD_EVERY} === 0) await new Promise(resolve => setTimeout(resolve, 0));
             }
             const finalSave = engine.save();
-            const final = summarize(finalSave);
+            const final = summarize(finalSave, openedBranchIds);
             const restored = wasm.CityEngine.restore(finalSave);
             const canonicalRestoreEqual = restored.save() === finalSave;
             restored.free?.();
             engine.free?.();
             self.postMessage({ type: 'complete', startTick, count: message.count, durationsMs,
-              checkpoints, checkpointOverheadMs, final, canonicalRestoreEqual });
+              checkpoints, checkpointOverheadMs, transitionObservationOverheadMs, transitions,
+              transitionSampleEvery: ${TRANSITION_SAMPLE_EVERY}, finalSave, final,
+              canonicalRestoreEqual });
           }
         } catch (error) {
           self.postMessage({ type: 'error', message: error instanceof Error ? error.message : String(error) });
@@ -203,6 +284,7 @@ async function main() {
       .sort((a, b) => b.duration_ms - a.duration_ms)
       .slice(0, 20);
     const report = {
+      artifacts: { report_path: REPORT_PATH, final_save_path: FINAL_SAVE_PATH },
       scope: 'Production WASM CityEngine.step(1) call timings from a dedicated headless Chromium module worker; excludes the application simulation worker scheduler, renderer, browser frames, and worker message scheduling',
       runtime: { browser: 'Chromium', version: browser.version(), wasm_sha256: wasmHash,
         wasm_module_url: `${BASE_URL}/wasm/city_engine.js` },
@@ -219,15 +301,24 @@ async function main() {
         top_20_ticks: topTicks,
         checkpoint_interval_ticks: CHECKPOINT_EVERY,
         yield_interval_ticks: YIELD_EVERY,
+        transition_observation_interval_ticks: result.transitionSampleEvery,
         checkpoint_and_snapshot_overhead_ms_excluded_from_raw_step_call_times: result.checkpointOverheadMs,
+        per_tick_transition_snapshot_overhead_ms_excluded_from_raw_step_call_times: result.transitionObservationOverheadMs,
         call_scope: 'Each sample brackets one synchronous JS-to-WASM CityEngine.step(1) call with performance.now(). Save serialization, JSON parsing, snapshot generation, checkpoint inspection, and yields are outside each sample.',
       },
       checkpoint_observations: result.checkpoints,
+      construction_transitions: result.transitions,
       final_world: result.final,
       restore: { same_save_restores_and_serializes_byte_identically: result.canonicalRestoreEqual },
-      claims: 'Per-call WASM timing only. The observed checkpoint state is sampled every 200 ticks and does not establish the exact tick or cause of a planning phase transition. These measurements do not predict whole-app tick throughput or browser frame rate.',
+      observation_limits: `Pending-plan, exhausted-face count, and selected-face identity are read from serialized saves every ${CHECKPOINT_EVERY} ticks, so face switches between checkpoints may be missed. Construction admission/opening observations come from snapshots every ${result.transitionSampleEvery} tick(s); interval 1 records the exact observed step, while coarser intervals can miss or delay transitions. An observed open connected road does not prove which planner caused it or that any dependent lots were released. Snapshot probes are outside raw step timings but increase overall run time.`,
+      claims: 'Per-call WASM timing only. These measurements do not predict whole-app tick throughput or browser frame rate.',
     };
+    mkdirSync(dirname(REPORT_PATH), { recursive: true });
     writeFileSync(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
+    if (FINAL_SAVE_PATH) {
+      mkdirSync(dirname(FINAL_SAVE_PATH), { recursive: true });
+      writeFileSync(FINAL_SAVE_PATH, `${result.finalSave}\n`);
+    }
     console.log(JSON.stringify(report, null, 2));
   } finally {
     if (page) {

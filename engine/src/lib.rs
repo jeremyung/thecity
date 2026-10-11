@@ -689,6 +689,8 @@ struct WorldState {
     interior_access_cursor: usize,
     #[serde(default)]
     next_face_access_tick: u64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    exhausted_access_faces: Vec<Vec<u32>>,
     // Runtime jobs are copied here only at explicit save boundaries.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     live_access_checkpoint: Option<access_live::LiveAccessCheckpoint>,
@@ -1027,6 +1029,7 @@ impl Engine {
                 pending_interior_access: None,
                 interior_access_cursor: 0,
                 next_face_access_tick: 0,
+                exhausted_access_faces: Vec::new(),
                 live_access_checkpoint: None,
                 neighborhood_road_ids: BTreeSet::new(),
                 neighborhood_anchor_cursor: 0,
@@ -10628,6 +10631,7 @@ impl Engine {
     }
     pub fn restore_json(json: &str) -> Result<Self, String> {
         let mut state: WorldState = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        access_live_engine::validate_face_history(&state.exhausted_access_faces)?;
         if state.schema_version != SCHEMA_VERSION {
             return Err(format!(
                 "unsupported engine save schema {}",
@@ -10738,6 +10742,7 @@ impl Engine {
         Ok(engine)
     }
     pub fn validate(&self) -> Result<(), String> {
+        access_live_engine::validate_face_history(&self.state.exhausted_access_faces)?;
         if self.state.access_geometry_revision_exhausted
             && self.state.access_geometry_revision != u64::MAX
         {
@@ -20480,6 +20485,10 @@ mod tests {
     #[test]
     fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
         let mut engine = Engine::new(0);
+        // Keep this fixture about frontier proposal purity. Independent live
+        // interior searches can consume the last available frontier before
+        // the probe; their interaction/replay is covered in access_live_engine.
+        engine.state.next_face_access_tick = u64::MAX;
         engine.set_development_rate(60);
         for _ in 0..36 {
             engine.step(2_000);

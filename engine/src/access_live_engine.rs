@@ -4,6 +4,27 @@ use crate::{access_capture, access_live::LiveAccess, access_planning_job::Access
 
 const WORK_PER_TICK: usize = 4096;
 const SEARCH_INTERVAL_TICKS: u64 = 1200;
+const MAX_HISTORY_FACES: usize = 512;
+const MAX_HISTORY_ITEMS: usize = 32_768;
+
+pub(crate) fn validate_face_history(history: &[Vec<u32>]) -> Result<(), String> {
+    if history.len() > MAX_HISTORY_FACES
+        || history.iter().any(|ids| !(3..=1024).contains(&ids.len()))
+        || history.iter().map(Vec::len).sum::<usize>() > MAX_HISTORY_ITEMS
+    {
+        return Err("invalid exhausted access face history".into());
+    }
+    Ok(())
+}
+
+fn remember_exhausted_face(history: &mut Vec<Vec<u32>>, identity: &[u32]) {
+    if history.iter().any(|previous| previous == identity) { return; }
+    let mut items: usize = history.iter().map(Vec::len).sum();
+    while history.len() >= MAX_HISTORY_FACES || items + identity.len() > MAX_HISTORY_ITEMS {
+        items -= history.remove(0).len();
+    }
+    history.push(identity.to_vec());
+}
 
 impl Engine {
     fn face_access_admission_available(&self) -> bool {
@@ -26,7 +47,8 @@ impl Engine {
         let Ok(discovery) = access_capture::capture(self) else { return false; };
         let Ok(proposal) = access_proposal_capture::capture(self) else { return false; };
         let Some(revision) = self.access_geometry_revision_token() else { return false; };
-        let Ok(job) = AccessPlanningJob::new(discovery, proposal, revision) else { return false; };
+        let Ok(job) = AccessPlanningJob::new_excluding(discovery, proposal, revision,
+            self.state.exhausted_access_faces.clone()) else { return false; };
         self.live_access = Some(LiveAccess::new(job));
         true
     }
@@ -75,6 +97,17 @@ impl Engine {
             job.reject_or_consume();
         }
         if job.is_exhausted() {
+            // Only completed searches advance the sweep. A failed diagnostic
+            // job must not make a face appear searched or reset its history.
+            if !job.failed() {
+                if let Some(identity) = job.selected_face_identity() {
+                    remember_exhausted_face(&mut self.state.exhausted_access_faces, identity);
+                } else {
+                    // No viable unvisited face remains. Retry all faces on the
+                    // next sweep, including ones whose surroundings changed.
+                    self.state.exhausted_access_faces.clear();
+                }
+            }
             self.state.next_face_access_tick = self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
         } else {
             self.live_access = Some(job);
@@ -85,6 +118,65 @@ impl Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn exhausted_face_sweep_survives_save_and_selects_another_interior() {
+        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let mut city = Engine::restore_json(source).unwrap();
+        assert!(city.start_face_access());
+        let mut job = city.live_access.take().unwrap();
+        // Reject every candidate to exercise a genuinely exhausted search,
+        // without mutating geometry or reserving any IDs.
+        for _ in 0..100_000 {
+            job.advance(WORK_PER_TICK);
+            if job.needs_validation().is_some() { job.reject_or_consume(); }
+            if job.is_exhausted() { break; }
+        }
+        assert!(job.is_exhausted() && !job.failed());
+        let first = job.selected_face_identity().unwrap().to_vec();
+        let next_id = city.state.next_id;
+        let road_count = city.state.roads.len();
+        city.live_access = Some(job);
+        city.advance_face_access();
+        assert_eq!(city.state.exhausted_access_faces, vec![first.clone()]);
+        let saved = city.save_json();
+        let mut city = Engine::restore_json(&saved).unwrap();
+        assert_eq!(city.save_json(), saved);
+        assert!(city.start_face_access());
+        let job = city.live_access.as_mut().unwrap();
+        for _ in 0..100_000 {
+            job.advance(WORK_PER_TICK);
+            if job.needs_validation().is_some() || job.is_exhausted() { break; }
+        }
+        assert!(!job.failed());
+        assert_ne!(job.selected_face_identity().unwrap(), first.as_slice());
+        assert_eq!(city.state.next_id, next_id);
+        assert_eq!(city.state.roads.len(), road_count);
+    }
+
+    #[test]
+    fn exhausted_history_is_bounded_and_invalid_saves_are_rejected() {
+        let mut history = Vec::new();
+        for id in 0..600 {
+            remember_exhausted_face(&mut history, &[id, id + 1, id + 2]);
+        }
+        assert_eq!(history.len(), MAX_HISTORY_FACES);
+        assert_eq!(history[0], vec![88, 89, 90]);
+        let before = history.clone();
+        remember_exhausted_face(&mut history, &[599, 600, 601]);
+        assert_eq!(history, before);
+        for id in 0..100 {
+            remember_exhausted_face(&mut history, &vec![id; 1024]);
+        }
+        validate_face_history(&history).unwrap();
+        assert!(history.iter().map(Vec::len).sum::<usize>() <= MAX_HISTORY_ITEMS);
+        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let mut city = Engine::restore_json(source).unwrap();
+        city.state.exhausted_access_faces = vec![vec![1, 2]];
+        assert!(Engine::restore_json(&city.save_json()).is_err());
+        city.state.exhausted_access_faces = vec![vec![1; 1025]];
+        assert!(Engine::restore_json(&city.save_json()).is_err());
+    }
 
     #[test]
     fn mature_live_job_admits_known_route_and_resumes_with_moving_actors() {

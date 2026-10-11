@@ -139,6 +139,10 @@ impl LiveAccess {
         self.validation_revision
     }
 
+    pub(crate) fn selected_face_identity(&self) -> Option<&[u32]> {
+        self.planning.selected_face_identity()
+    }
+
     /// Advance live validation by a bounded quota. Rejected proposals are
     /// skipped automatically; accepted results wait for caller disposition.
     pub(crate) fn advance_validation(&mut self, budget: usize) -> usize {
@@ -195,6 +199,10 @@ impl LiveAccess {
             && self.planning.ready_page().is_none()
             && self.validator.is_none()
             && self.approved.is_none()
+    }
+
+    pub(crate) fn failed(&self) -> bool {
+        self.planning.error().is_some()
     }
 
     /// Create a persistence snapshot. This is the only point where the fresh

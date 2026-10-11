@@ -2,6 +2,31 @@
 
 This is a working checkpoint, not completed visual or live-growth acceptance.
 
+## Follow-up: sweep exhausted block interiors
+
+Remote main is `5aaa0dd`; local checkpoint `9348104` is a separate, unpushed
+follow-up. Current working changes add a saved, bounded history of exhausted
+face identities. Subsequent searches skip those exact faces before sampling,
+so an inaccessible winning block does not permanently hide runner-up interiors.
+Successful admission does not mark a face exhausted. A completed search with
+no remaining viable face resets the sweep; failures preserve history. History
+is capped at 512 faces and 32,768 node IDs, with FIFO eviction.
+
+The native integration test exhausts a mature search, saves/restores the city,
+and verifies that the next search selects a different face without changing
+roads or allocating IDs. Selector tests exercise quota-1/7 checkpoint replay;
+discovery tests reject malformed identity prefixes and ownership. Production
+WASM and the web build pass. Full native release suite: 316 passed, 39 ignored.
+The [30,000-tick browser continuation](face-sweep-browser-profile.md) observes
+11 selected faces, one connected road opening and both dependent frontages;
+buildings increase only 850 → 853. General visual density improvement is not yet
+demonstrated: the reviewed mature scene still has large undeveloped interiors.
+
+Discovery checkpoint schema is now 4 and face-selection schema is 2. Old
+diagnostic checkpoints, and active live-job saves using those older nested
+schemas, are rejected; they are not silently restarted. City saves without an
+active job remain compatible and default to an empty exhausted-face history.
+
 ## Verified work
 
 - Persisted, quota-stepped face discovery, target selection, descriptor generation and proposal validation.

@@ -1390,3 +1390,50 @@ Primary ran the actual module worker in Chromium for 20.002 seconds: 2,789 ticks
 Primary ran a dedicated Chromium worker against production WASM for 6,000 individual step calls. p95 0.5 ms, p99 10.3 ms, max 25.2 ms; final save is canonical. Largest sampled live-job checkpoint: 888,622 bytes. This complements, rather than replaces, the actual application-worker run. It excludes rendering, message scheduling and maximum-world cases. See live-tick-profile.md/json.
 
 Source audit confirms the 512 graph cap is coupled across the complete tracing/discovery pipeline. Simply raising it is insufficient: quadratic preflight, half-edge/output caps, all-node capacity and doubled legacy parcel envelopes need coordinated treatment. Indexed broad-phase work and complete-graph tests are required before claiming the full 5,000-road limit. No cap was silently raised or graph truncated.
+
+## 2026-10-10 — Exhausted face sweep
+
+Live searches now retain a bounded, saved history of exhausted face identities,
+excluding them before target sampling on subsequent searches. This allows a
+runner-up block to be considered after the selected block yields no admission.
+History clears when a completed search finds no remaining viable face; failed
+jobs do not advance that history. Admission, connectivity and construction gates
+are unchanged. See HANDOFF.md for limits and nested checkpoint compatibility.
+
+Primary verification: selector 7/7, discovery 12/12, live integration 9/9.
+Full native release run: 315 passed, one failed, 39 ignored. The failure was the
+frontier purity test's generated-city assumption that a frontier proposal remains
+available after 72,000 ticks. It passed in an isolated checkout of 9348104, but
+the new interior search changes that generated world. The test now disables the
+independent interior scheduler during fixture setup; all original purity,
+proposal-repeatability, exhausted-frontier and plan replay assertions remain.
+Its focused rerun passes. The complete suite has not been rerun after that
+test-only setup change. Production WASM and web builds pass; diff whitespace
+checks pass. Existing compiler and bundle-size warnings remain.
+
+Visual review still shows overly large green block interiors and insufficient
+continuous Tokyo street fabric. A brighter lighting experiment was rejected and
+reverted because it flattened the buildings. This planner change is tested
+behavioral progress, not evidence of improved visual density or completed art
+direction. No additional commit or remote push was made during this follow-up.
+
+
+## 2026-10-10 — Sweep integration rerun
+
+Full native release suite now passes: 316 tests, zero failures, 39 ignored.
+Primary reran the actual Chromium simulation worker after rebuilding WASM:
+2,766 ticks in 20.003 seconds, active 275,165-byte planner checkpoint and final
+save restore byte-identically. The updated live-worker-profile.json/md records
+this run; it supersedes the earlier short-run metrics above. Long continuation
+construction observations and visual density comparison remain pending.
+
+
+## 2026-10-10 — 30,000-tick sweep continuation
+
+See face-sweep-browser-profile.md/json. Production Chromium WASM visits 11
+sampled face identities and retains 10 exhausted faces. One access branch is
+observed through connected opening, with zero frontage at its sampled structure
+stage and both frontage parcels present at the end. Buildings increase 850 to
+853. Final save restores exactly. This confirms useful sweep behavior and a
+construction continuation, but the small gain leaves density acceptance unmet.
+Per-step timing remains fixture-specific and excludes rendering.
