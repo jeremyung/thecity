@@ -132,6 +132,7 @@ pub(crate) struct PlanRoad {
     pub(crate) a: usize,
     pub(crate) b: usize,
     pub(crate) kind: RoadKind,
+    pub(crate) deck_height: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -272,7 +273,8 @@ impl Builder {
         id
     }
     fn road(&mut self, a: usize, b: usize, kind: RoadKind) -> usize {
-        self.roads.push(PlanRoad { a, b, kind });
+        let deck_height = if kind == RoadKind::Expressway { 11.0 } else { 0.0 };
+        self.roads.push(PlanRoad { a, b, kind, deck_height });
         self.roads.len() - 1
     }
     fn line(&mut self, a: usize, b: usize, kind: RoadKind) -> usize {
@@ -1342,9 +1344,9 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     // bridge, never running along the water. Elevated nodes are separate from
     // street junctions, so the expressway is grade-separated from the grid.
     let mut expressway = Vec::new();
-    let mut elevated: BTreeMap<usize, usize> = BTreeMap::new();
-    let mut lift = |b: &mut Builder, street_node: usize| -> usize {
-        *elevated.entry(street_node).or_insert_with(|| {
+    let mut row_elevated: BTreeMap<usize, usize> = BTreeMap::new();
+    let mut row_lift = |b: &mut Builder, street_node: usize| -> usize {
+        *row_elevated.entry(street_node).or_insert_with(|| {
             b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated });
             b.nodes.len() - 1
         })
@@ -1361,24 +1363,34 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     let east_z = b.nodes[grid[expressway_row][columns.len() - 1]].p.z;
     let mut route: Vec<usize> = vec![edge_node(&mut b, P::new(EDGE, east_z))];
     for c in (0..columns.len()).rev() {
-        route.push(lift(&mut b, grid[expressway_row][c]));
+        route.push(row_lift(&mut b, grid[expressway_row][c]));
     }
     let west_z = b.nodes[grid[expressway_row][0]].p.z;
     route.push(edge_node(&mut b, P::new(-EDGE, west_z)));
     for pair in route.windows(2) {
         expressway.push(b.road(pair[0], pair[1], RoadKind::Expressway));
     }
-    // North-south spur above the first eastern interior arterial column.
+    drop(row_lift);
+    // Independent north-south route above the first eastern interior arterial column.
     let column = RIVER_COL + 2;
     let bottom_x = b.nodes[grid[0][column]].p.x;
     let mut spur: Vec<usize> = vec![edge_node(&mut b, P::new(bottom_x, -EDGE))];
+    let mut spur_elevated: BTreeMap<usize, usize> = BTreeMap::new();
+    let mut spur_lift = |b: &mut Builder, street_node: usize| -> usize {
+        *spur_elevated.entry(street_node).or_insert_with(|| {
+            b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated });
+            b.nodes.len() - 1
+        })
+    };
     for r in 0..rows.len() {
-        spur.push(lift(&mut b, grid[r][column]));
+        spur.push(spur_lift(&mut b, grid[r][column]));
     }
     let top_x = b.nodes[grid[rows.len() - 1][column]].p.x;
     spur.push(edge_node(&mut b, P::new(top_x, EDGE)));
     for pair in spur.windows(2) {
-        expressway.push(b.road(pair[0], pair[1], RoadKind::Expressway));
+        let road_index = b.road(pair[0], pair[1], RoadKind::Expressway);
+        b.roads[road_index].deck_height = 20.0;
+        expressway.push(road_index);
     }
 
     let Builder { nodes, roads, lines, .. } = b;
@@ -1472,6 +1484,7 @@ impl MasterPlan {
             feed(road.a as u32);
             feed(road.b as u32);
             feed(road.kind as u32);
+            feed(road.deck_height.to_bits());
         }
         for lot in &self.lots {
             for value in [lot.x, lot.z, lot.width, lot.depth, lot.facing.x, lot.facing.z] {
@@ -1494,6 +1507,7 @@ impl MasterPlan {
 mod tests {
     use super::*;
     use crate::geometry;
+    use std::collections::BTreeSet;
 
     fn geography(seed: u32) -> Geography {
         let bend = (seed % 5) as f32 * 9.0 - 18.0;
@@ -1633,6 +1647,40 @@ mod tests {
             // One perpendicular crossing of a ~76 m river corridor.
             assert!(wet < 110.0, "seed {seed}: expressway runs {wet} m over the river");
         }
+    }
+
+    #[test]
+    fn expressway_corridors_cross_as_separate_decks_without_a_junction() {
+        let mut plan = generate(&geography(87231));
+        let horizontal: Vec<usize> = plan.expressway.iter().copied()
+            .filter(|&i| plan.roads[i].deck_height == 11.0)
+            .collect();
+        let vertical: Vec<usize> = plan.expressway.iter().copied()
+            .filter(|&i| plan.roads[i].deck_height == 20.0)
+            .collect();
+        let horizontal_nodes: BTreeSet<usize> = horizontal.iter().flat_map(|&i| {
+            let road = plan.roads[i];
+            [road.a, road.b]
+        }).collect();
+        let vertical_nodes: BTreeSet<usize> = vertical.iter().flat_map(|&i| {
+            let road = plan.roads[i];
+            [road.a, road.b]
+        }).collect();
+        assert!(horizontal_nodes.is_disjoint(&vertical_nodes), "crossing corridors share a node");
+        assert!(horizontal.iter().all(|&i| plan.roads[i].deck_height == 11.0));
+        assert!(vertical.iter().all(|&i| plan.roads[i].deck_height == 20.0));
+        let crosses = horizontal_nodes.iter().any(|&h| {
+            vertical_nodes.iter().any(|&v| {
+                let hp = plan.nodes[h].p;
+                let vp = plan.nodes[v].p;
+                h != v && hp.x == vp.x && hp.z == vp.z
+            })
+        });
+        assert!(crosses, "expressway corridors should cross spatially");
+        assert_eq!(generate(&geography(87231)).digest(), plan.digest());
+        let previous = plan.digest();
+        plan.roads[vertical[0]].deck_height = 11.0;
+        assert_ne!(previous, plan.digest(), "deck changes must invalidate saved plans");
     }
 
     #[test]

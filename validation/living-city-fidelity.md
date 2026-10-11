@@ -93,3 +93,52 @@ uses the same held camera, noon preview and disabled DOF as the updated Anime
 view. The live style switch completes and preserves the visible scene; browser
 console inspection reports no errors/warnings. This verifies furniture appears
 in both styles, not the full style-fidelity or motion gates.
+
+## Second intervention: separate the crossing routes
+
+The flat cross was present in both plan topology and geometry: row and column
+expressways reused a lifted node. The plan now has separate nodes for each route,
+with 11 m east–west and 20 m north–south decks. Both remain independent regional
+corridors; this does not invent ramps or a turn connection. Deck heights are
+included in the plan digest and published through `road_decks` for realized roads.
+
+The renderer consumes those heights for deck, barriers, road furniture and piers.
+Upper supports skip the lower transverse carriageway/rail envelope plus 2 m;
+parallel ground streets retain the median-pier reservation. This is geometric
+clearance, not structural-engineering certification. The 9 m deck separation also
+clears the lower road's 6.6 m lamp poles beneath the upper deck.
+
+The new mature WASM checkpoint retains seed 87231, tick 160000 and 1,936 buildings.
+Its 16 expressway segments form two disjoint sets of nine nodes at heights 11/20.
+WASM restore preserves deck metadata, and the old master-plan checkpoint rejects
+explicitly as intended. Native snapshot verification uses ordinary 160,000-tick
+growth and restore, rather than fabricating open road state. Native/WASM live
+construction continuation tests remain part of verification.
+
+### Layered crossing verification
+
+- Native full release suite: **402 passed, 0 failed, 53 ignored**.
+- Five focused frontend geometry checks pass for deck furniture and crossing
+  supports, including reversed and skew road segments and both heights.
+- WASM rebuilt; two seeds replay all four live construction kinds; eight newly
+  exported native construction saves restore and step in WASM.
+- TypeScript and production build pass (existing bundle warning).
+- Full frontend suite with two workers: **292 passed, 1 timed out**. The movement
+  test in `wasm.test.ts` hits its existing 5-second limit, as recorded before this
+  intervention. No time limits were changed and no all-green suite is claimed.
+
+Matched current views: [Anime](screenshots/fidelity-baseline/layered-crossing-anime.jpg)
+and [Miniature](screenshots/fidelity-baseline/layered-crossing-miniature.jpg).
+Same held camera, seed 87231/tick 160000, 50 mm, noon preview, DOF off; browser
+viewport changed since the previous baseline, so compare these two styles with
+each other, not as registered before/after images. The [diagnostics view](screenshots/fidelity-baseline/layered-crossing-diagnostics.jpg)
+records zero geometry queues, with no manual draining. Browser console reports
+no graphics errors or warnings after the final render. An earlier startup warning
+cleared when rendering finished; startup latency is still an open requirement.
+
+The previously flat cross is now visibly an overpass, and the graph agrees.
+Ambient regional expressway traffic is still absent; this checkpoint does not
+claim complete transport behavior. The next visual workstream should address
+architectural/material richness against the concepts rather than extending the
+highway feature indefinitely. Large-map, art-fidelity, hardware-performance and
+full motion acceptance remain open.

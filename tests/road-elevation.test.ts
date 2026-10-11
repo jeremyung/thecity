@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bridgeDeckHeight, bridgeLift, bridgeVehiclePose } from '../web/src/render/road-elevation';
+import { bridgeDeckHeight, bridgeLift, bridgeVehiclePose, expresswayPierClear } from '../web/src/render/road-elevation';
 describe('bridge approach elevations',()=>{
   it('places vehicle axles on the deck through ascending and descending approaches',()=>{
     const spans=[{a:{x:0,z:0},b:{x:0,z:100}}];
@@ -17,5 +17,23 @@ describe('bridge approach elevations',()=>{
     expect(bridgeLift({x:40+8,z:60-6},[span])).toBe(0);
     expect(bridgeLift({x:10-.6,z:20-.8},[span])).toBe(0);
     expect(Math.abs(bridgeDeckHeight(12.001,100)-bridgeDeckHeight(11.999,100))).toBeLessThan(.001);
+  });
+});
+
+describe('expressway crossing supports',()=>{
+  it('reserves the entire lower carriageway including pier radius, in either direction',()=>{
+    const a={x:0,z:-80},b={x:0,z:80};
+    const lower={a:{x:-100,z:0},b:{x:100,z:0},width:20,height:11};
+    for(const [from,to] of [[a,b],[b,a]]){
+      for(const z of [-11.9,0,11.9])expect(expresswayPierClear({x:0,z},from,to,20,[lower])).toBe(false);
+      for(const z of [-14,14])expect(expresswayPierClear({x:0,z},from,to,20,[lower])).toBe(true);
+      // A lower road's pier cannot reach a deck above it.
+      expect(expresswayPierClear({x:0,z:0},from,to,11,[{...lower,height:20}])).toBe(true);
+    }
+  });
+  it('also clears skew crossings and keeps median supports on a parallel street',()=>{
+    const a={x:0,z:-80},b={x:0,z:80};
+    expect(expresswayPierClear({x:0,z:0},a,b,20,[{a:{x:-40,z:-30},b:{x:40,z:30},width:16,height:0}])).toBe(false);
+    expect(expresswayPierClear({x:0,z:0},a,b,20,[{a,b,width:16,height:0}])).toBe(true);
   });
 });

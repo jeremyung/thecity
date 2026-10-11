@@ -362,6 +362,21 @@ impl Engine {
             .collect()
     }
 
+    /// Deck elevations for realized expressway roads, derived from the
+    /// regenerated plan and its persisted road ID mapping.
+    pub(crate) fn masterplan_road_decks(&self) -> Vec<crate::RoadDeckView> {
+        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref()) else {
+            return Vec::new();
+        };
+        runtime.plan.roads.iter().enumerate().filter_map(|(index, road)| {
+            if road.kind != RoadKind::Expressway {
+                return None;
+            }
+            let road_id = *progress.road_ids.get(index)?;
+            (road_id != 0).then_some(crate::RoadDeckView { road_id, deck_height: road.deck_height })
+        }).collect()
+    }
+
     /// Keep visible construction state on pre-added plan road records.
     pub(crate) fn sync_masterplan_road_projects(&mut self) {
         if !self.masterplan_active() {
@@ -839,6 +854,24 @@ mod tests {
         let a = grown(7, 6_000);
         let b = grown(7, 6_000);
         assert_eq!(a.save_json(), b.save_json());
+    }
+
+    #[test]
+    fn snapshot_reports_realized_expressway_decks_from_plan_mappings() {
+        let engine = grown(87231, 160_000);
+        engine.validate().unwrap();
+        let snapshot = engine.snapshot();
+        let restored = Engine::restore_json(&engine.save_json()).unwrap();
+        assert_eq!(snapshot.road_decks, restored.snapshot().road_decks);
+        assert_eq!(snapshot.road_decks.len(), engine.plan_runtime().plan.expressway.len());
+        for deck in &snapshot.road_decks {
+            let road = snapshot.roads.iter().find(|road| road.id == deck.road_id).unwrap();
+            assert_eq!(road.kind, "expressway");
+            let plan_index = engine.plan_road_index(deck.road_id).unwrap();
+            assert_eq!(deck.deck_height, engine.plan_runtime().plan.roads[plan_index].deck_height);
+        }
+        assert!(snapshot.road_decks.iter().any(|deck| deck.deck_height == 11.0));
+        assert!(snapshot.road_decks.iter().any(|deck| deck.deck_height == 20.0));
     }
 
     /// `MASTERPLAN_TICKS=240000 MASTERPLAN_SNAPSHOT=/path cargo test --release masterplan_growth::tests::long_run -- --ignored --nocapture`

@@ -45,15 +45,15 @@ Lowrise surface checkpoint (2026-10-10): non-anchor home windows now use layered
 
 ### Party walls, lanes and elevated layers
 
-Master-plan lots tile each block with no gaps. Bodies run to the shared lot lines, keeping a fixed side margin for eaves, sills and foundation lips: 0.9 m for low-rise homes and shops, and 1.3 m for apartments and offices. Neighbors therefore stand about 0.9–1.3 m apart, near Tokyo's 0.5 m-per-side norm, and form a near-continuous street wall. Towers and anchors keep their proportional plaza inset; depth keeps a front setback and rear yard. Developed blocks render as paved urban ground, not lawn. Local streets render 6.5 m wide with painted edge lines and no raised sidewalk or center line. Lanes are 4 m. Only arterials have sidewalks and center markings. Party-wall sides should move to quiet, windowless material (not yet implemented). Elevated rail runs on a viaduct deck about 7 m above the ground, with piers at least every 24 m, and trains follow the deck height. The expressway deck sits about 11 m up on single-column piers with sound barriers. Neither elevated layer occludes construction picking or street lighting below.
+Master-plan lots tile each block with no gaps. Bodies run to the shared lot lines, keeping a fixed side margin for eaves, sills and foundation lips: 0.9 m for low-rise homes and shops, and 1.3 m for apartments and offices. Neighbors therefore stand about 0.9–1.3 m apart, near Tokyo's 0.5 m-per-side norm, and form a near-continuous street wall. Towers and anchors keep their proportional plaza inset; depth keeps a front setback and rear yard. Developed blocks render as paved urban ground, not lawn. Local streets render 6.5 m wide with painted edge lines and no raised sidewalk or center line. Lanes are 4 m. Only arterials have sidewalks and center markings. Party-wall sides should move to quiet, windowless material (not yet implemented). Elevated rail runs on a viaduct deck about 7 m above the ground, with piers at least every 24 m, and trains follow the deck height. Expressway deck elevations come from authoritative `road_decks`: the east–west route is at 11 m and the north–south route at 20 m, on single-column piers with sound barriers. Upper piers skip lower transverse road/rail clearance envelopes. Neither elevated layer occludes construction picking or street lighting below.
 
 At 3,000 buildings, distant low-rise fabric must use simplified merged geometry: body box, roof color and window band. Full kits are reserved for focal and near chunks, so the triangle budget stays within the existing performance policy.
 
 Expressway furniture checkpoint (2026-10-11): completed elevated roads now use
 shared-style lane/shoulder markings, a median and deck-mounted lamps rather than
-the ground-road fallback. The mature browser view exposes an unresolved flat
-crossing between elevated corridors; this is not accepted interchange geometry
-or a traffic implementation. See [the fidelity workstream](../validation/living-city-fidelity.md).
+the ground-road fallback. The former flat crossing now uses independent 11 m and 20 m corridors
+with plan-derived elevations and separate graph nodes. This is an overpass,
+not an interchange or a traffic implementation. See [the fidelity workstream](../validation/living-city-fidelity.md).
 
 ### Compact architectural families — next implementation
 

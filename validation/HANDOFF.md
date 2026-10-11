@@ -1,5 +1,15 @@
 # Engineering checkpoint — 2026-10-10
 
+## Expressway crossing correction — 2026-10-11
+
+The mature city's expressways now cross as independent 11 m/20 m routes. Plan
+node identity, digest, snapshot heights, deck geometry, furniture and lower-road
+pier clearance agree. Native 402/402, focused geometry 5/5, WASM construction
+replay and build pass; frontend full suite has 292 passes and the previously
+observed movement-test timeout. See [evidence and remaining gaps](living-city-fidelity.md#layered-crossing-verification).
+Older master-plan saves reject explicitly; no migration is provided. The goal
+remains active, and broader art/performance/behavior acceptance is unfinished.
+
 ## Resumed living-city fidelity work — 2026-10-11
 
 The goal has resumed. Current work is isolated on `codex/living-city-fidelity`

@@ -2,6 +2,7 @@ export interface Point { x: number; z: number }
 /** Fixed door-to-sidewalk segment shared with pedestrian routing. */
 export interface BuildingAccess { building_id: number; road_id: number; points: readonly [Point, Point] }
 export interface WorldNode extends Point { id: number; kind: string }
+export interface RoadDeck { road_id: number; deck_height: number }
 export interface Road { id: number; from: number; to: number; kind: string; stage: string; progress: number; connected: boolean; length: number; lanes: number }
 export interface Parcel extends Point { id: number; width: number; depth: number; rotation?: number; access_node: number; suitability: number; protected: boolean; reservation: number | null }
 export interface Building extends Point { id: number; parcel_id: number; rotation: number; width: number; depth: number; floors: number; kind: string; stage: string; progress: number; capacity: number; occupancy: number; business_active?: boolean; built_day: number; name: string; appearance_seed: number; history: string[]; anchor: boolean; vacant_days: number }
@@ -21,6 +22,7 @@ export interface BusLineView { id: number; name?: string; stops: number[]; route
 export interface World {
   schema_version: number; engine_version: string; seed: number; tick: number; day: number; minute_of_day: number; development_rate: number; revision: number; stage: string;
   bounds: { min_x: number; max_x: number; min_z: number; max_z: number };
+  road_decks?: RoadDeck[];
   terrain: { river: Point[]; river_half_width?: number; protected: Point[][]; gateways: number[] };
   weather: { kind: 'clear' | 'overcast' | 'rain'; intensity: number };
   nodes: WorldNode[]; roads: Road[]; parcels: Parcel[]; buildings: Building[]; ground?: { block: number; points: [number, number][] }[];

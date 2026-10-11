@@ -322,6 +322,12 @@ pub struct BuildingOriginalFootprint {
     pub rotation: f32,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct RoadDeckView {
+    pub road_id: u32,
+    pub deck_height: f32,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     pub schema_version: u32,
@@ -338,6 +344,8 @@ pub struct Snapshot {
     pub terrain: Terrain,
     pub nodes: Vec<Node>,
     pub roads: Vec<Road>,
+    #[serde(default)]
+    pub road_decks: Vec<RoadDeckView>,
     pub parcels: Vec<Parcel>,
     pub buildings: Vec<Building>,
     #[serde(default)]
@@ -10577,6 +10585,7 @@ impl Engine {
             },
             nodes: self.state.nodes.clone(),
             roads: self.state.roads.clone(),
+            road_decks: self.masterplan_road_decks(),
             parcels: self.state.parcels.clone(),
             buildings: self.state.buildings.clone(),
             building_access: self.building_access_views(),

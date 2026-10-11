@@ -19,7 +19,7 @@ import { buildStreetLighting } from './street-lighting';
 import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
-import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
+import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, expresswayPierClear, type CrossingDeck, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
 import { CameraDirector } from '../camera/director';
@@ -308,7 +308,7 @@ export class CityRenderer {
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
     this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
     const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
-    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|');
+    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|')+JSON.stringify(world.road_decks??[]);
     if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
@@ -463,7 +463,12 @@ export class CityRenderer {
       const geometry=new THREE.ShapeGeometry(shape);geometry.rotateX(-Math.PI/2);geometry.translate(0,.035,0);
       kit.add(geometry,this.art.get(groundTones[patch.block%groundTones.length]));
     }
-    for(const road of world.roads){const a=nodes.get(road.from),b=nodes.get(road.to);if(a&&b)this.roadKit(kit,a,b,road);}
+    const deckHeights=new Map((world.road_decks??[]).map(d=>[d.road_id,d.deck_height]));
+    const crossings:CrossingDeck[]=world.roads.flatMap(road=>{
+      const a=nodes.get(road.from),b=nodes.get(road.to);
+      return a&&b?[{a,b,width:roadWidth(road.kind),height:road.kind==='expressway'?(deckHeights.get(road.id)??EXPRESSWAY_DECK):road.kind==='rail'?1+RAIL_DECK:0}]:[];
+    });
+    for(const road of world.roads){const a=nodes.get(road.from),b=nodes.get(road.to);if(a&&b)this.roadKit(kit,a,b,road,deckHeights.get(road.id),crossings);}
     const junctions=new Map<number,{count:number,radius:number}>();
     for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'&&r.kind!=='expressway'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,roadWidth(road.kind)/2+.3);junctions.set(id,entry);}
     for(const [id,junction]of junctions){const node=nodes.get(id);if(node&&junction.count>1)kit.cylinder(node.x,.33,node.z,junction.radius,.07,this.art.get('#747f7b'),24);}
@@ -501,7 +506,7 @@ export class CityRenderer {
       this.station.add(platform);
     }
   }
-  private roadKit(kit:Kit,a:Point,b:Point,r:Road){
+  private roadKit(kit:Kit,a:Point,b:Point,r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[]){
     if(r.stage!=='open'){
       const fullDx=b.x-a.x,fullDz=b.z-a.z,fullLength=Math.hypot(fullDx,fullDz),bearing=Math.atan2(fullDx,fullDz);
       // Survey stakes show the reserved corridor before any usable deck exists.
@@ -512,11 +517,12 @@ export class CityRenderer {
     }
     const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),angle=Math.atan2(dx,dz),mid={x:(a.x+b.x)/2,z:(a.z+b.z)/2},rail=r.kind==='rail',open=r.stage==='open',bridge=r.kind==='bridge';
     const expressway=r.kind==='expressway',lane=r.kind==='lane';
-    const width=roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?EXPRESSWAY_DECK:lane?.12:.15;
+    const width=roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?deckHeight:lane?.12:.15;
     if(rail||expressway){
       // Viaduct piers: single columns under the expressway, paired under rail.
       const spacing=expressway?28:22,pierColor=this.art.get('#9a9d93');
       for(let distance=spacing/2;distance<len;distance+=spacing){const t=distance/len,px=a.x+dx*t,pz=a.z+dz*t;
+        if(expressway&&!expresswayPierClear({x:px,z:pz},a,b,y,crossings))continue;
         if(expressway)kit.box(px,y/2,pz,2.2,y,2.2,pierColor,angle);
         else for(const side of [-1,1])kit.box(px+Math.cos(angle)*side*2.4,y/2,pz-Math.sin(angle)*side*2.4,1.1,y,1.1,pierColor,angle);
         kit.box(px,y-.55,pz,width+1.2,.7,1.4,pierColor,angle);
@@ -531,7 +537,7 @@ export class CityRenderer {
       const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
     }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
     if(expressway){
-      if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)});
+      if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y);
       return;
     }
     if(rail){

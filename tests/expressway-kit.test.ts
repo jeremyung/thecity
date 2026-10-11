@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { Kit, disposeGroup } from '../web/src/render/kit';
 import { addExpresswayFurniture } from '../web/src/render/expressway-kit';
-import { EXPRESSWAY_DECK, roadWidth } from '../web/src/render/road-elevation';
+import { roadWidth } from '../web/src/render/road-elevation';
 
 describe('expressway deck furniture',()=>{
   it('keeps paint and lamp supports on the deck across rotated and reversed segments',()=>{
     const materials={paint:new THREE.MeshBasicMaterial(),concrete:new THREE.MeshBasicMaterial(),metal:new THREE.MeshBasicMaterial(),lamp:new THREE.MeshBasicMaterial()};
     try{
-      for(const [a,b] of [[{x:20,z:-30},{x:80,z:50}],[{x:80,z:50},{x:20,z:-30}]]){
-        const kit=new Kit();addExpresswayFurniture(kit,a,b,materials);const group=kit.finish();
-        const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),surface=EXPRESSWAY_DECK+.15;
+      for(const deckHeight of [11,20])for(const [a,b] of [[{x:20,z:-30},{x:80,z:50}],[{x:80,z:50},{x:20,z:-30}]]){
+        const kit=new Kit();addExpresswayFurniture(kit,a,b,materials,deckHeight);const group=kit.finish();
+        const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),surface=deckHeight+.15;
         let lamps=0,paint=0;
         group.traverse(object=>{
           if(!(object instanceof THREE.Mesh))return;

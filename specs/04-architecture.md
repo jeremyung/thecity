@@ -51,6 +51,13 @@ report exact descriptor visibility only after their atomic scene commit, allowin
 temporary construction geometry to remain until its replacement is visible.
 See [the checkpoint and verification limits](../validation/HANDOFF.md#inhabited-rear-extensions--implementation-in-progress-2026-10-11).
 
+The structural snapshot includes `road_decks` entries (`road_id`, `deck_height`)
+for realized master-plan expressways. They are derived from the regenerated plan
+and persisted road mapping, rather than guessed from road bearing in the renderer.
+Deck height participates in the plan digest. A changed plan rejects old saves;
+no migration is provided. Geometry invalidation includes this metadata so deck,
+markings, lamps and piers use a consistent elevation.
+
 ## Worker protocol
 
 Every message carries protocol version and world epoch. Epoch changes on load or new world; discard messages from old epochs.

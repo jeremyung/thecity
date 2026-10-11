@@ -6,10 +6,10 @@ import { EXPRESSWAY_DECK, roadWidth } from './road-elevation';
 /** Deck-local furniture for completed expressways; no ground-road junction furniture. */
 export function addExpresswayFurniture(kit: Kit, a: Point, b: Point, materials: {
   paint: Material; concrete: Material; metal: Material; lamp: Material;
-}) {
+}, deckHeight=EXPRESSWAY_DECK) {
   const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
   if(length<1)return;
-  const angle=Math.atan2(dx,dz),width=roadWidth('expressway'),surface=EXPRESSWAY_DECK+.15;
+  const angle=Math.atan2(dx,dz),width=roadWidth('expressway'),surface=deckHeight+.15;
   const box=(across:number,along:number,height:number,w:number,h:number,d:number,material:Material)=>
     kit.box(a.x+dx*along/length+Math.cos(angle)*across,surface+height,
       a.z+dz*along/length-Math.sin(angle)*across,w,h,d,material,angle);
