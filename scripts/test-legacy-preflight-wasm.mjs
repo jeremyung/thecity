@@ -12,7 +12,8 @@ const source = readFileSync(process.argv[2], 'utf8');
 const path = ['live_access_checkpoint', 'planning', 'discovery', 'stage', 'Trace', 'trace', 'stage', 'Preflight'];
 const preflightOf = (save) => path.reduce((value, key) => value[key], save);
 const expectedWorld = JSON.parse(source);
-assert.equal(preflightOf(expectedWorld).schema, 1, 'fixture must contain a legacy preflight');
+const sourceSchema = preflightOf(expectedWorld).schema;
+assert.ok([1, 2].includes(sourceSchema), 'fixture must contain a legacy preflight');
 
 const first = CityEngine.restore(source);
 const second = CityEngine.restore(source);
@@ -21,7 +22,7 @@ try {
   const migrated = first.save();
   const actual = JSON.parse(migrated);
   const preflight = preflightOf(actual);
-  assert.equal(preflight.schema, 2);
+  assert.equal(preflight.schema, 3);
   assert.equal(preflight.stage, 'Nodes');
   assert.equal(preflight.node_cursor, 0);
   for (const key of ['nodes', 'edges', 'proposed_edge']) {
@@ -44,7 +45,7 @@ try {
   for (const change of ['future', 'corrupt']) {
     const bad = structuredClone(actual);
     const checkpoint = preflightOf(bad);
-    if (change === 'future') checkpoint.schema = 3;
+    if (change === 'future') checkpoint.schema = 4;
     else checkpoint.node_cursor = 4294967295;
     assert.throws(() => CityEngine.restore(JSON.stringify(bad)));
   }
@@ -55,10 +56,10 @@ try {
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const report = {
   scope: 'Node WASM legacy preflight migration, not browser UI',
-  sourceSha256: sha256(source), wasmSha256: sha256(wasm),
+  sourceSchema, sourceSha256: sha256(source), wasmSha256: sha256(wasm),
   worldFieldsPreserved: true, migratedRoundtripExact: true,
   deterministicContinuationTicks: 24, futureAndCorruptCurrentRejected: true,
   frozenNodes, frozenEdges,
 };
-writeFileSync(new URL('../validation/legacy-preflight-wasm.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
+writeFileSync(new URL(sourceSchema === 1 ? '../validation/legacy-preflight-wasm.json' : '../validation/legacy-preflight-schema2-wasm.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));

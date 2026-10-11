@@ -9,8 +9,9 @@ use crate::geometry::segments_distance_coords;
 use crate::road_faces::{RoadFaceEdge, RoadFaceError, RoadFaceNode};
 use crate::road_pair_broadphase::{Bounds, BroadPhase, Checkpoint as BroadPhaseCheckpoint};
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 
-const CHECKPOINT_SCHEMA: u8 = 2;
+const CHECKPOINT_SCHEMA: u8 = 3;
 const MAX_NODES: usize = 512;
 const MAX_EDGES: usize = 512;
 const MAX_PAIR_TESTS: usize = 131_072;
@@ -145,6 +146,9 @@ pub(crate) struct GraphPreflightCheckpoint {
 pub(crate) struct GraphPreflight {
     checkpoint: GraphPreflightCheckpoint,
     filter: Option<BroadPhase>,
+    node_ids: BTreeMap<u32, usize>,
+    edge_ids: BTreeSet<u32>,
+    edge_pairs: BTreeSet<(u32, u32)>,
 }
 
 impl GraphPreflight {
@@ -165,7 +169,8 @@ impl GraphPreflight {
         if proposed_edge.is_some() {
             edges.reserve(1);
         }
-        let empty = nodes.is_empty() && edge_count == 0;
+        let no_nodes = nodes.is_empty();
+        let empty = no_nodes && edge_count == 0;
         let filter = BroadPhase::new(Vec::new()).ok();
         Ok(Self {
             checkpoint: GraphPreflightCheckpoint {
@@ -173,7 +178,13 @@ impl GraphPreflight {
                 nodes,
                 edges,
                 proposed_edge,
-                stage: if empty { Stage::Done } else { Stage::Nodes },
+                stage: if empty {
+                    Stage::Done
+                } else if no_nodes {
+                    Stage::Edges
+                } else {
+                    Stage::Nodes
+                },
                 node_cursor: 0,
                 node_finite_checked: false,
                 node_unique_cursor: 0,
@@ -198,6 +209,9 @@ impl GraphPreflight {
                 work_completed: 0,
             },
             filter,
+            node_ids: BTreeMap::new(),
+            edge_ids: BTreeSet::new(),
+            edge_pairs: BTreeSet::new(),
         })
     }
 
@@ -225,6 +239,9 @@ impl GraphPreflight {
             }
             return Self::new(checkpoint.nodes, checkpoint.edges, checkpoint.proposed_edge);
         }
+        if checkpoint.schema == 2 {
+            return Self::new(checkpoint.nodes, checkpoint.edges, checkpoint.proposed_edge);
+        }
         if let Err(error) = validate_checkpoint(&checkpoint) {
             return Err(error);
         }
@@ -237,7 +254,14 @@ impl GraphPreflight {
             .map(BroadPhase::restore)
             .transpose()
             .map_err(|_| RoadFaceError::InvalidEdge)?;
-        Ok(Self { checkpoint, filter })
+        let (node_ids, edge_ids, edge_pairs) = rebuild_indexes(&checkpoint)?;
+        Ok(Self {
+            checkpoint,
+            filter,
+            node_ids,
+            edge_ids,
+            edge_pairs,
+        })
     }
 
     pub(crate) fn result(&self) -> Option<Result<&[(usize, usize)], RoadFaceError>> {
@@ -329,11 +353,14 @@ impl GraphPreflight {
             }
             return true;
         }
-        if cp.node_unique_cursor < cp.node_cursor {
-            let duplicate = cp.nodes[cp.node_unique_cursor].id == cp.nodes[cp.node_cursor].id;
-            cp.node_unique_cursor += 1;
+        if cp.node_unique_cursor == 0 {
+            let id = cp.nodes[cp.node_cursor].id;
+            let duplicate = self.node_ids.contains_key(&id);
+            cp.node_unique_cursor = 1;
             if duplicate {
                 cp.stage = Stage::Failed(PreflightError::DuplicateNode);
+            } else {
+                self.node_ids.insert(id, cp.node_cursor);
             }
             return true;
         }
@@ -390,60 +417,47 @@ impl GraphPreflight {
                 true
             }
             EdgeStage::LookupFrom => {
-                if cp.lookup_cursor == cp.nodes.len() {
-                    cp.stage = Stage::Failed(PreflightError::MissingNode);
-                    return true;
-                }
-                let matched = cp.nodes[cp.lookup_cursor].id == current.from;
-                let index = cp.lookup_cursor;
-                cp.lookup_cursor += 1;
-                if matched {
+                if let Some(&index) = self.node_ids.get(&current.from) {
+                    cp.lookup_cursor = 0;
                     cp.from_index = Some(index);
                     cp.edge_stage = EdgeStage::LookupTo;
+                } else {
                     cp.lookup_cursor = 0;
+                    cp.stage = Stage::Failed(PreflightError::MissingNode);
                 }
                 true
             }
             EdgeStage::LookupTo => {
-                if cp.lookup_cursor == cp.nodes.len() {
-                    cp.stage = Stage::Failed(PreflightError::MissingNode);
-                    return true;
-                }
-                let matched = cp.nodes[cp.lookup_cursor].id == current.to;
-                let index = cp.lookup_cursor;
-                cp.lookup_cursor += 1;
-                if matched {
+                if let Some(&index) = self.node_ids.get(&current.to) {
+                    cp.lookup_cursor = 0;
                     cp.to_index = Some(index);
                     cp.edge_stage = EdgeStage::DuplicateId;
-                    cp.lookup_cursor = 0;
                     cp.unique_cursor = 0;
+                } else {
+                    cp.lookup_cursor = 0;
+                    cp.stage = Stage::Failed(PreflightError::MissingNode);
                 }
                 true
             }
             EdgeStage::DuplicateId => {
-                if cp.unique_cursor == cp.edge_cursor {
-                    cp.edge_stage = EdgeStage::DuplicatePair;
-                    cp.unique_cursor = 0;
-                    return false;
-                }
-                let duplicate = edge_at(cp, cp.unique_cursor).id == current.id;
-                cp.unique_cursor += 1;
+                let duplicate = self.edge_ids.contains(&current.id);
+                cp.unique_cursor = cp.edge_cursor;
                 if duplicate {
                     cp.stage = Stage::Failed(PreflightError::DuplicateEdge);
+                } else {
+                    cp.edge_stage = EdgeStage::DuplicatePair;
+                    cp.unique_cursor = 0;
                 }
                 true
             }
             EdgeStage::DuplicatePair => {
-                if cp.unique_cursor == cp.edge_cursor {
-                    cp.edge_stage = EdgeStage::Geometry;
-                    return false;
-                }
-                let prior = edge_at(cp, cp.unique_cursor);
-                let duplicate = (prior.from.min(prior.to), prior.from.max(prior.to))
-                    == (current.from.min(current.to), current.from.max(current.to));
-                cp.unique_cursor += 1;
+                let pair = (current.from.min(current.to), current.from.max(current.to));
+                let duplicate = self.edge_pairs.contains(&pair);
+                cp.unique_cursor = cp.edge_cursor;
                 if duplicate {
                     cp.stage = Stage::Failed(PreflightError::DuplicateEdge);
+                } else {
+                    cp.edge_stage = EdgeStage::Geometry;
                 }
                 true
             }
@@ -455,6 +469,9 @@ impl GraphPreflight {
                 if !dx.is_finite() || !dz.is_finite() || dx.hypot(dz) <= COINCIDENT_EPSILON {
                     cp.stage = Stage::Failed(PreflightError::InvalidEdge);
                 } else {
+                    self.edge_ids.insert(current.id);
+                    self.edge_pairs
+                        .insert((current.from.min(current.to), current.from.max(current.to)));
                     cp.indexed_edges.push((from, to));
                     cp.edge_cursor += 1;
                     cp.edge_stage = EdgeStage::SelfCheck;
@@ -632,9 +649,9 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
         || cp.edge_cursor > edge_count
         || cp.indexed_edges.len() > edge_count
         || cp.node_cursor > cp.nodes.len()
-        || cp.node_unique_cursor > cp.node_cursor
+        || cp.node_unique_cursor > 1
         || cp.coincident_left > cp.nodes.len()
-        || cp.coincident_right > cp.nodes.len()
+        || cp.coincident_right > cp.nodes.len().max(1)
         || cp.lookup_cursor > cp.nodes.len()
         || cp.unique_cursor > cp.edge_cursor
     {
@@ -659,10 +676,13 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
                     return Err(invalid());
                 }
             }
-            for prior in 0..cp.node_unique_cursor {
-                if cp.nodes[prior].id == cp.nodes[cp.node_cursor].id {
-                    return Err(invalid());
-                }
+            if cp.node_unique_cursor == 1
+                && cp.node_cursor < cp.nodes.len()
+                && cp.nodes[..cp.node_cursor]
+                    .iter()
+                    .any(|prior| prior.id == cp.nodes[cp.node_cursor].id)
+            {
+                return Err(invalid());
             }
         }
         Stage::CoincidentNodes => {
@@ -712,10 +732,16 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
                         && cp.unique_cursor == 0
                 }
                 EdgeStage::LookupFrom => {
-                    cp.from_index.is_none() && cp.to_index.is_none() && cp.unique_cursor == 0
+                    cp.from_index.is_none()
+                        && cp.to_index.is_none()
+                        && cp.lookup_cursor == 0
+                        && cp.unique_cursor == 0
                 }
                 EdgeStage::LookupTo => {
-                    cp.from_index.is_some() && cp.to_index.is_none() && cp.unique_cursor == 0
+                    cp.from_index.is_some()
+                        && cp.to_index.is_none()
+                        && cp.lookup_cursor == 0
+                        && cp.unique_cursor == 0
                 }
                 EdgeStage::DuplicateId | EdgeStage::DuplicatePair => {
                     cp.from_index.is_some() && cp.to_index.is_some() && cp.lookup_cursor == 0
@@ -796,7 +822,103 @@ fn validate_checkpoint(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceErro
             validate_completed_nodes(&cp.nodes)?;
             validate_indexed_edges(cp)?;
         }
-        Stage::Failed(_) => {}
+        Stage::Failed(_) => {
+            // Failed checkpoints retain the exact failure cursor. Validate all
+            // completed prefixes before rebuilding their transient indexes.
+            if cp.indexed_edges.len() != cp.edge_cursor || cp.node_cursor > cp.nodes.len() {
+                return Err(invalid());
+            }
+            match cp.stage {
+                Stage::Failed(
+                    PreflightError::InvalidCoordinate | PreflightError::DuplicateNode,
+                ) => {
+                    if cp.node_cursor >= cp.nodes.len() || cp.edge_cursor != 0 {
+                        return Err(invalid());
+                    }
+                    if cp.stage == Stage::Failed(PreflightError::DuplicateNode)
+                        && (!cp.nodes[cp.node_cursor].x.is_finite()
+                            || !cp.nodes[cp.node_cursor].z.is_finite()
+                            || cp.node_unique_cursor != 1)
+                    {
+                        return Err(invalid());
+                    }
+                    if cp.stage == Stage::Failed(PreflightError::DuplicateNode)
+                        && !cp.nodes[..cp.node_cursor]
+                            .iter()
+                            .any(|prior| prior.id == cp.nodes[cp.node_cursor].id)
+                    {
+                        return Err(invalid());
+                    }
+                }
+                Stage::Failed(PreflightError::CoincidentNodes) => {
+                    validate_completed_nodes(&cp.nodes)?;
+                    if cp.coincident_left + 1 >= cp.nodes.len()
+                        || cp.coincident_right <= cp.coincident_left
+                        || cp.coincident_right >= cp.nodes.len()
+                        || (cp.nodes[cp.coincident_left].x - cp.nodes[cp.coincident_right].x)
+                            .hypot(cp.nodes[cp.coincident_left].z - cp.nodes[cp.coincident_right].z)
+                            > COINCIDENT_EPSILON
+                    {
+                        return Err(invalid());
+                    }
+                }
+                _ => {}
+            }
+            if cp.stage == Stage::Failed(PreflightError::InvalidCoordinate)
+                && cp
+                    .nodes
+                    .get(cp.node_cursor)
+                    .is_none_or(|node| node.x.is_finite() && node.z.is_finite())
+            {
+                return Err(invalid());
+            }
+            if matches!(
+                cp.stage,
+                Stage::Failed(
+                    PreflightError::MissingNode
+                        | PreflightError::DuplicateEdge
+                        | PreflightError::InvalidEdge
+                        | PreflightError::NonPlanar
+                )
+            ) {
+                validate_completed_nodes(&cp.nodes)?;
+                validate_indexed_edges(cp)?;
+            }
+            if cp.stage == Stage::Failed(PreflightError::DuplicateEdge)
+                && cp.edge_cursor >= edge_count
+            {
+                return Err(invalid());
+            }
+            if cp.stage == Stage::Failed(PreflightError::MissingNode)
+                && cp.edge_cursor >= edge_count
+            {
+                return Err(invalid());
+            }
+            if cp.stage == Stage::Failed(PreflightError::NonPlanar) && cp.edge_cursor != edge_count
+            {
+                return Err(invalid());
+            }
+            if cp.stage == Stage::Failed(PreflightError::InvalidEdge)
+                && cp.edge_cursor >= edge_count
+            {
+                return Err(invalid());
+            }
+            if matches!(
+                cp.stage,
+                Stage::Failed(PreflightError::TooManyNodes)
+                    | Stage::Failed(PreflightError::TooManyEdges)
+                    | Stage::Failed(PreflightError::InvalidEmbedding)
+                    | Stage::Failed(PreflightError::NestedFacesUnsupported)
+                    | Stage::Failed(PreflightError::OutputLimit)
+            ) {
+                // These errors are not produced by the resumable graph scan.
+                return Err(invalid());
+            }
+            if cp.stage == Stage::Failed(PreflightError::WorkLimit) {
+                validate_completed_node_prefix(cp)?;
+                validate_indexed_edges(cp)?;
+            }
+        }
     }
     Ok(())
 }
@@ -918,6 +1040,56 @@ fn validate_completed_nodes(nodes: &[NodeRecord]) -> Result<(), RoadFaceError> {
             || !node.z.is_finite()
             || nodes[..index].iter().any(|prior| prior.id == node.id)
         {
+            return Err(RoadFaceError::InvalidEdge);
+        }
+    }
+    Ok(())
+}
+
+fn rebuild_indexes(
+    cp: &GraphPreflightCheckpoint,
+) -> Result<(BTreeMap<u32, usize>, BTreeSet<u32>, BTreeSet<(u32, u32)>), RoadFaceError> {
+    let mut node_ids = BTreeMap::new();
+    let node_prefix = match cp.stage {
+        Stage::Nodes => {
+            cp.node_cursor + usize::from(cp.node_finite_checked && cp.node_unique_cursor == 1)
+        }
+        Stage::Failed(PreflightError::InvalidCoordinate | PreflightError::DuplicateNode) => {
+            cp.node_cursor
+        }
+        Stage::Failed(PreflightError::WorkLimit) => {
+            cp.node_cursor + usize::from(cp.node_finite_checked && cp.node_unique_cursor == 1)
+        }
+        _ => cp.nodes.len(),
+    };
+    for (index, node) in cp.nodes.iter().take(node_prefix).enumerate() {
+        if !node.x.is_finite() || !node.z.is_finite() || node_ids.insert(node.id, index).is_some() {
+            return Err(RoadFaceError::InvalidEdge);
+        }
+    }
+    let mut edge_ids = BTreeSet::new();
+    let mut edge_pairs = BTreeSet::new();
+    for index in 0..cp.edge_cursor {
+        let edge = edge_at(cp, index);
+        if !edge_ids.insert(edge.id)
+            || !edge_pairs.insert((edge.from.min(edge.to), edge.from.max(edge.to)))
+        {
+            return Err(RoadFaceError::InvalidEdge);
+        }
+    }
+    Ok((node_ids, edge_ids, edge_pairs))
+}
+
+fn validate_completed_node_prefix(cp: &GraphPreflightCheckpoint) -> Result<(), RoadFaceError> {
+    let prefix_len = match cp.stage {
+        Stage::Failed(PreflightError::WorkLimit) => {
+            cp.node_cursor + usize::from(cp.node_finite_checked && cp.node_unique_cursor == 1)
+        }
+        _ => cp.nodes.len(),
+    };
+    let mut ids = BTreeSet::new();
+    for node in cp.nodes.iter().take(prefix_len) {
+        if !node.x.is_finite() || !node.z.is_finite() || !ids.insert(node.id) {
             return Err(RoadFaceError::InvalidEdge);
         }
     }
@@ -1130,6 +1302,15 @@ mod tests {
     }
 
     #[test]
+    fn empty_node_index_missing_endpoint_failure_restores() {
+        for quota in [1, 7, 48] {
+            let job = GraphPreflight::new(Vec::new(), vec![edge(1, 10, 20)], None).unwrap();
+            let job = GraphPreflight::restore(job.checkpoint()).unwrap();
+            assert_eq!(drain(job, &[quota]).0, Err(RoadFaceError::MissingNode));
+        }
+    }
+
+    #[test]
     fn malformed_inputs_preserve_preflight_errors() {
         let simple_nodes = vec![node(1, 0.0, 0.0), node(2, 4.0, 0.0), node(3, 0.0, 4.0)];
         for edges in [
@@ -1163,6 +1344,11 @@ mod tests {
         }
         assert_eq!(
             job.result().unwrap().unwrap_err(),
+            reference_error(&nonfinite, &[], None)
+        );
+        let failed = GraphPreflight::restore(job.checkpoint()).unwrap();
+        assert_eq!(
+            failed.result().unwrap().unwrap_err(),
             reference_error(&nonfinite, &[], None)
         );
     }
@@ -1247,6 +1433,24 @@ mod tests {
         job.advance(5);
         let mut checkpoint = job.checkpoint();
         checkpoint.node_cursor = usize::MAX;
+        assert_eq!(
+            GraphPreflight::restore(checkpoint).unwrap_err(),
+            RoadFaceError::InvalidEdge
+        );
+
+        let mut job = GraphPreflight::new(
+            vec![node(1, 0.0, 0.0), node(2, 10.0, 0.0)],
+            vec![edge(1, 1, 2)],
+            None,
+        )
+        .unwrap();
+        while job.checkpoint.stage != Stage::Edges
+            || job.checkpoint.edge_stage != EdgeStage::LookupFrom
+        {
+            job.advance(1);
+        }
+        let mut checkpoint = job.checkpoint();
+        checkpoint.lookup_cursor = 1;
         assert_eq!(
             GraphPreflight::restore(checkpoint).unwrap_err(),
             RoadFaceError::InvalidEdge
@@ -1419,8 +1623,17 @@ mod tests {
         let legacy: GraphPreflightCheckpoint = serde_json::from_value(value.clone()).unwrap();
         let migrated = GraphPreflight::restore(legacy).unwrap();
         assert_eq!(migrated, original);
-        assert_eq!(drain(migrated, &[1, 7, 48]), drain(original, &[48]));
-        value["schema"] = 3.into();
+        assert_eq!(drain(migrated, &[1, 7, 48]), drain(original.clone(), &[48]));
+
+        let mut schema_two = original.checkpoint();
+        schema_two.schema = 2;
+        schema_two.node_cursor = 2;
+        schema_two.work_completed = 5;
+        let migrated_two = GraphPreflight::restore(schema_two).unwrap();
+        assert_eq!(migrated_two, original);
+        assert_eq!(drain(migrated_two, &[1, 7, 48]), drain(original, &[48]));
+
+        value["schema"] = 4.into();
         assert!(GraphPreflight::restore(serde_json::from_value(value).unwrap()).is_err());
     }
 

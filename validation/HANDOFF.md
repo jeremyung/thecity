@@ -159,3 +159,9 @@ Preflight and filter checkpoints are schema 2. Unsupported-coordinate and high-w
 ## Legacy active preflight save compatibility
 
 The previous old-job limitation is resolved for preflight schema1: restore restarts only its validation over the original frozen graph. Every non-job city field is preserved. Two native legacy tests and all twelve preflight tests pass; rebuilt Node WASM verifies exact migrated roundtrip and deterministic 24-tick continuation on the 159-node/206-edge mature graph. Corrupt current and unknown future formats remain rejected. See `road-pair-broadphase.md` for reproduction and `legacy-preflight-wasm.json` for hashes. Other older planner formats are not covered by this migration.
+
+## Preflight identity indexing
+
+Node IDs, endpoint lookup, edge IDs and undirected edge pairs now use transient deterministic tree indexes. Mature preflight falls from 102,097 to 18,095 logical units with the same indexed graph. Full native suite: 345 passed / 42 ignored; rebuilt WASM matches all 3,180 descriptors and legacy1/2 migration checks. Preflight schema3 automatically restarts those older computations from frozen inputs.
+
+Two 6,000-tick Chromium worker runs do not show a clear overall timing gain (p95 both0.4ms; max25.6→25.8ms). See `identity-index-preflight.md` for scope and raw evidence. Live cap remains512; next remove node-coincidence/remaining graph-stage scaling bottlenecks before increasing caps. Visual appearance is unchanged.

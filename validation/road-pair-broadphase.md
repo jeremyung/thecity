@@ -66,3 +66,7 @@ node scripts/test-legacy-preflight-wasm.mjs /tmp/thecity-legacy-preflight-save.j
 ```
 
 `legacy-preflight-wasm.json` records input and WASM hashes. Node WASM verifies all non-job city fields, the 159-node/206-edge frozen graph, exact migrated save roundtrip, 24-tick deterministic twin continuation, and rejection of corrupt current/future checkpoints. This covers preflight schema1 specifically, not every older planner schema.
+
+## Subsequent identity-index integration
+
+Preflight is now schema3 with automatic schema1/2 restart; broadphase remains schema2. Identity indexing further reduces mature preflight to18,095 work units. See `identity-index-preflight.md` for current native/WASM and browser-worker results.

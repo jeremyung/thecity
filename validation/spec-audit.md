@@ -1530,3 +1530,7 @@ Integrated incremental f32-compatible bounds construction, streaming candidates,
 ### Legacy preflight migration
 
 Resolved the schema1 active-preflight load limitation without discarding the city or surrounding job: restart derived validation from frozen nodes/edges/proposededge. Native migration tests (2) and preflight suite (12) pass. Production WASM rebuilt; Node check preserves world fields, exact save roundtrip and 24-tick deterministic migrated continuation; corrupt current and future schemas reject. Fixture is synthesized from a real active mature checkpoint by removing schema2 fields; not an old-binary export. Reproducible script: `scripts/test-legacy-preflight-wasm.mjs`. This does not cover unrelated historical planner schemas or alter current visuals/caps.
+
+### Deterministic identity indexes and worker timing check
+
+Replaced preflight linear node/edge identity and endpoint scans with transient BTree indexes, reconstructed from validated saved prefixes. Mature preflight102,097→18,095 logical units; total discovery7,476,821→7,392,819 (approximately1.12%). Native345pass/42ignored; WASM3180descriptor parity; schema1/2→3 migration verified. Added empty-node failed-checkpoint regression. Two6,000tick Chromium runs show p95unchanged0.4ms and maximum25.6→25.8ms, so no overall timing win is claimed. Details `identity-index-preflight.md`. Node coincidence and other graph stages remain scaling work;512cap and visuals unchanged.

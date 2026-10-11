@@ -1,7 +1,7 @@
 {
   "reference_path": "../validation/access-descriptor-reference.json",
   "reference_sha256": "5336438099f6e7bf0d1346a5beda225960e1e2769ef0458d4faee6f1d6583fee",
-  "wasm_sha256": "7bf4724c0227cbba59df51ad79c31a6d2ec63a08a9ec5da3f1cbba8e09d41089",
+  "wasm_sha256": "46a7b13525ad43695958acd82db57a93697dde6506b6435333b8b7b0c8ef924f",
   "scope": "Node WASM, not browser rendering or worker performance; advance includes WASM boundary and status JSON; construction includes city restore",
   "runs": [
     {
@@ -14,16 +14,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 7476821,
+      "work": 7392819,
       "restores": 0,
       "max_checkpoint_bytes": 0,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 160.343041,
-      "calls": 1826,
-      "advance_median_ms": 0.042541999999997415,
-      "advance_p95_ms": 0.373958000000016,
-      "advance_max_ms": 0.7590419999999938,
-      "elapsed_including_persistence_ms": 283.3925
+      "construct_including_city_restore_ms": 158.568667,
+      "calls": 1805,
+      "advance_median_ms": 0.042792000000019925,
+      "advance_p95_ms": 0.3575000000000159,
+      "advance_max_ms": 0.9310000000000116,
+      "elapsed_including_persistence_ms": 278.08675
     },
     {
       "quota": 48,
@@ -35,16 +35,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 7476821,
+      "work": 7392819,
       "restores": 29,
       "max_checkpoint_bytes": 753449,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 108.359667,
-      "calls": 155768,
-      "advance_median_ms": 0.0013329999999882602,
-      "advance_p95_ms": 0.005917000000067674,
-      "advance_max_ms": 0.8986250000000382,
-      "elapsed_including_persistence_ms": 479.626458
+      "construct_including_city_restore_ms": 103.94883299999998,
+      "calls": 154018,
+      "advance_median_ms": 0.0012919999999780885,
+      "advance_p95_ms": 0.005791999999928521,
+      "advance_max_ms": 1.0631670000000213,
+      "elapsed_including_persistence_ms": 466.048208
     },
     {
       "quota": 4096,
@@ -56,16 +56,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 7476821,
+      "work": 7392819,
       "restores": 29,
       "max_checkpoint_bytes": 753449,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 102.06925000000001,
-      "calls": 1826,
-      "advance_median_ms": 0.04179099999998925,
-      "advance_p95_ms": 0.3537499999999909,
-      "advance_max_ms": 0.5625420000000076,
-      "elapsed_including_persistence_ms": 274.7655840000001
+      "construct_including_city_restore_ms": 102.35487499999999,
+      "calls": 1805,
+      "advance_median_ms": 0.041415999999912856,
+      "advance_p95_ms": 0.343166999999994,
+      "advance_max_ms": 0.48366699999996854,
+      "elapsed_including_persistence_ms": 275.95670800000005
     },
     {
       "quota": 16384,
@@ -77,16 +77,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 7476821,
+      "work": 7392819,
       "restores": 29,
       "max_checkpoint_bytes": 753449,
       "descriptor_count": 3180,
-      "construct_including_city_restore_ms": 103.14170800000011,
-      "calls": 457,
-      "advance_median_ms": 0.17062499999997272,
-      "advance_p95_ms": 0.8869999999999436,
-      "advance_max_ms": 1.5921249999998963,
-      "elapsed_including_persistence_ms": 273.97854200000006
+      "construct_including_city_restore_ms": 103.26062499999989,
+      "calls": 452,
+      "advance_median_ms": 0.16708399999993162,
+      "advance_p95_ms": 0.8678330000000187,
+      "advance_max_ms": 1.450458000000026,
+      "elapsed_including_persistence_ms": 274.99308299999984
     }
   ]
 }

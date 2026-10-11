@@ -7,43 +7,43 @@
       "bridge_count": 44,
       "bridge_restores": 2229,
       "bridge_work_units": 2229,
-      "calls": 102098,
+      "calls": 18096,
       "quota": 1,
-      "restores": 14,
+      "restores": 4,
       "topology_restores": 2587,
       "topology_work_units": 2587,
       "traced_reference_faces": 49,
       "walk_restores": 6,
       "walk_work_units": 19630,
-      "work_units": 102097
+      "work_units": 18095
     },
     {
       "bridge_count": 44,
       "bridge_restores": 319,
       "bridge_work_units": 2229,
-      "calls": 14586,
+      "calls": 2586,
       "quota": 7,
-      "restores": 14,
+      "restores": 4,
       "topology_restores": 370,
       "topology_work_units": 2587,
       "traced_reference_faces": 49,
       "walk_restores": 6,
       "walk_work_units": 19630,
-      "work_units": 102097
+      "work_units": 18095
     },
     {
       "bridge_count": 44,
       "bridge_restores": 47,
       "bridge_work_units": 2229,
-      "calls": 2128,
+      "calls": 377,
       "quota": 48,
-      "restores": 14,
+      "restores": 4,
       "topology_restores": 54,
       "topology_work_units": 2587,
       "traced_reference_faces": 49,
       "walk_restores": 6,
       "walk_work_units": 19630,
-      "work_units": 102097
+      "work_units": 18095
     }
   ],
   "scope": "native graph validation, bridge, topology and complete face-walk parity; not production discovery"

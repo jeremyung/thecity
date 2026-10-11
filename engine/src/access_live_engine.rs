@@ -280,67 +280,117 @@ mod tests {
         // Advance the real mature fixture until discovery reaches the graph
         // preflight checkpoint, then retain that exact nested save path.
         let path = [
-            "live_access_checkpoint", "planning", "discovery", "stage", "Trace", "trace",
-            "stage", "Preflight",
+            "live_access_checkpoint",
+            "planning",
+            "discovery",
+            "stage",
+            "Trace",
+            "trace",
+            "stage",
+            "Preflight",
         ];
         let mut current = serde_json::from_str::<serde_json::Value>(&city.save_json()).unwrap();
         for _ in 0..100 {
-            if path.iter().fold(&current, |value, key| &value[*key]).is_object() { break; }
+            if path
+                .iter()
+                .fold(&current, |value, key| &value[*key])
+                .is_object()
+            {
+                break;
+            }
             city.state.tick += 1;
             city.advance_face_access();
             current = serde_json::from_str(&city.save_json()).unwrap();
         }
         let legacy_preflight = path.iter().fold(&current, |value, key| &value[*key]);
-        assert!(legacy_preflight.is_object(), "fixture did not reach nested preflight");
+        assert!(
+            legacy_preflight.is_object(),
+            "fixture did not reach nested preflight"
+        );
         assert!(legacy_preflight["work_completed"].as_u64().unwrap() > 0);
-        assert!(legacy_preflight["nodes"].as_array().unwrap().len() > 100,
-            "expected a mature graph preflight, got {} nodes", legacy_preflight["nodes"].as_array().unwrap().len());
+        assert!(
+            legacy_preflight["nodes"].as_array().unwrap().len() > 100,
+            "expected a mature graph preflight, got {} nodes",
+            legacy_preflight["nodes"].as_array().unwrap().len()
+        );
 
-        let mut legacy = current.clone();
-        let preflight = path.iter().fold(&mut legacy, |value, key| &mut value[*key]);
-        preflight["schema"] = serde_json::json!(1);
-        for field in [
-            "filter_work", "filter_build_cursor", "filter_fallback", "filter_checkpoint",
-            "pending_pair", "last_checked_pair",
-        ] {
-            preflight.as_object_mut().unwrap().remove(field);
+        for legacy_schema in [1, 2] {
+            let mut legacy = current.clone();
+            let preflight = path.iter().fold(&mut legacy, |value, key| &mut value[*key]);
+            preflight["schema"] = serde_json::json!(legacy_schema);
+            if legacy_schema == 1 {
+                for field in [
+                    "filter_work",
+                    "filter_build_cursor",
+                    "filter_fallback",
+                    "filter_checkpoint",
+                    "pending_pair",
+                    "last_checked_pair",
+                ] {
+                    preflight.as_object_mut().unwrap().remove(field);
+                }
+            }
+            if legacy_schema == 1 {
+                if let Some(path) = std::env::var_os("LEGACY_PREFLIGHT_SAVE_PATH") {
+                    std::fs::write(path, legacy.to_string()).unwrap();
+                }
+            }
+            let restored = Engine::restore_json(&legacy.to_string()).unwrap();
+            let mut expected_world = legacy.clone();
+            expected_world
+                .as_object_mut()
+                .unwrap()
+                .remove("live_access_checkpoint");
+            let mut actual_world =
+                serde_json::from_str::<serde_json::Value>(&restored.save_json()).unwrap();
+            actual_world
+                .as_object_mut()
+                .unwrap()
+                .remove("live_access_checkpoint");
+            assert_eq!(
+                actual_world, expected_world,
+                "migration must preserve every world field"
+            );
+
+            let migrated_save = restored.save_json();
+            let migrated_json: serde_json::Value = serde_json::from_str(&migrated_save).unwrap();
+            let migrated_preflight = path.iter().fold(&migrated_json, |value, key| &value[*key]);
+            assert_eq!(migrated_preflight["schema"], serde_json::json!(3));
+            assert_eq!(migrated_preflight["stage"], serde_json::json!("Nodes"));
+            assert_eq!(migrated_preflight["node_cursor"], serde_json::json!(0));
+            assert_eq!(migrated_preflight["nodes"], legacy_preflight["nodes"]);
+            assert_eq!(migrated_preflight["edges"], legacy_preflight["edges"]);
+            assert_eq!(
+                migrated_preflight["proposed_edge"],
+                legacy_preflight["proposed_edge"]
+            );
+            assert_eq!(
+                Engine::restore_json(&migrated_save).unwrap().save_json(),
+                migrated_save
+            );
+            let mut first = Engine::restore_json(&legacy.to_string()).unwrap();
+            let mut second = Engine::restore_json(&legacy.to_string()).unwrap();
+            for _ in 0..24 {
+                first.step(1);
+                second.step(1);
+            }
+            assert_eq!(first.save_json(), second.save_json());
+
+            let mut corrupt_cursor =
+                serde_json::from_str::<serde_json::Value>(&migrated_save).unwrap();
+            let preflight = path
+                .iter()
+                .fold(&mut corrupt_cursor, |value, key| &mut value[*key]);
+            preflight["node_cursor"] = serde_json::json!(usize::MAX);
+            assert!(Engine::restore_json(&corrupt_cursor.to_string()).is_err());
+
+            let mut future_schema =
+                serde_json::from_str::<serde_json::Value>(&migrated_save).unwrap();
+            let preflight = path
+                .iter()
+                .fold(&mut future_schema, |value, key| &mut value[*key]);
+            preflight["schema"] = serde_json::json!(4);
+            assert!(Engine::restore_json(&future_schema.to_string()).is_err());
         }
-        if let Some(path) = std::env::var_os("LEGACY_PREFLIGHT_SAVE_PATH") {
-            std::fs::write(path, legacy.to_string()).unwrap();
-        }
-        let restored = Engine::restore_json(&legacy.to_string()).unwrap();
-        let mut expected_world = legacy.clone();
-        expected_world.as_object_mut().unwrap().remove("live_access_checkpoint");
-        let mut actual_world = serde_json::from_str::<serde_json::Value>(&restored.save_json()).unwrap();
-        actual_world.as_object_mut().unwrap().remove("live_access_checkpoint");
-        assert_eq!(actual_world, expected_world, "migration must preserve every world field");
-
-        let migrated_save = restored.save_json();
-        let migrated_json: serde_json::Value = serde_json::from_str(&migrated_save).unwrap();
-        let migrated_preflight = path.iter().fold(&migrated_json, |value, key| &value[*key]);
-        assert_eq!(migrated_preflight["schema"], serde_json::json!(2));
-        assert_eq!(migrated_preflight["stage"], serde_json::json!("Nodes"));
-        assert_eq!(migrated_preflight["node_cursor"], serde_json::json!(0));
-        assert_eq!(migrated_preflight["nodes"], legacy_preflight["nodes"]);
-        assert_eq!(migrated_preflight["edges"], legacy_preflight["edges"]);
-        assert_eq!(migrated_preflight["proposed_edge"], legacy_preflight["proposed_edge"]);
-        assert_eq!(Engine::restore_json(&migrated_save).unwrap().save_json(), migrated_save);
-        let mut first = Engine::restore_json(&legacy.to_string()).unwrap();
-        let mut second = Engine::restore_json(&legacy.to_string()).unwrap();
-        for _ in 0..24 {
-            first.step(1);
-            second.step(1);
-        }
-        assert_eq!(first.save_json(), second.save_json());
-
-        let mut corrupt_cursor = serde_json::from_str::<serde_json::Value>(&migrated_save).unwrap();
-        let preflight = path.iter().fold(&mut corrupt_cursor, |value, key| &mut value[*key]);
-        preflight["node_cursor"] = serde_json::json!(usize::MAX);
-        assert!(Engine::restore_json(&corrupt_cursor.to_string()).is_err());
-
-        let mut future_schema = serde_json::from_str::<serde_json::Value>(&migrated_save).unwrap();
-        let preflight = path.iter().fold(&mut future_schema, |value, key| &mut value[*key]);
-        preflight["schema"] = serde_json::json!(3);
-        assert!(Engine::restore_json(&future_schema.to_string()).is_err());
     }
 }
