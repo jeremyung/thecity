@@ -3066,10 +3066,15 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
                     .proposals,
             );
         }
-        // This finite split policy currently finds no accepted route on this
-        // fixture. Successful admission is covered independently by the frozen
-        // legal candidate, rather than silently coupling it to split sampling.
-        assert!(proposals.is_empty());
+        // The host-edge split samples recover the one known legal route on this
+        // fixture: road 3317, 1m inside its far end clearance, opening two lots.
+        assert_eq!(
+            proposals
+                .iter()
+                .map(|p| (p.host_id, p.selected_lots.len()))
+                .collect::<Vec<_>>(),
+            vec![(3317, 2)]
+        );
         let total_work = stage_work.iter().map(|(_, work)| work).sum::<usize>();
         if let Some(prior) = prior_work {
             assert_eq!(total_work, prior);
@@ -3329,16 +3334,19 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
             let actual = query.outcome().unwrap().ok().into_iter().collect::<Vec<_>>();
             assert_eq!(actual,expected,"candidate {i}, quota {quota}");
             if i < reference.ordered_bits.len() {
-                assert!(actual.is_empty(), "restored fourth-split policy has no accepted descriptor on this fixture");
+                // Only the edge-sample descriptor matching the frozen legal
+                // candidate is accepted on this fixture.
+                assert_eq!(actual.len(), usize::from(*bits == regression_bits), "candidate {i}");
             } else {
                 assert_eq!(actual.len(), 1, "independent legal candidate must still be accepted");
             }
             accepted.extend(actual);
         }
-        assert_eq!(accepted.len(),1);
-        assert_eq!(accepted[0].host_id,3317);
-        assert_eq!(accepted[0].selected_lots.len(),2);
-        totals.push(serde_json::json!({"quota":quota,"work":work,"restores":restores,"accepted":accepted.len(),"descriptor_accepted":0,"independent_regression_accepted":1,"proposals":accepted}));
+        assert_eq!(accepted.len(),2);
+        assert!(accepted.iter().all(|p| p.host_id == 3317 && p.selected_lots.len() == 2));
+        assert_eq!((accepted[0].host_t, accepted[0].end_x, accepted[0].end_z, &accepted[0].selected_lots),
+            (accepted[1].host_t, accepted[1].end_x, accepted[1].end_z, &accepted[1].selected_lots));
+        totals.push(serde_json::json!({"quota":quota,"work":work,"restores":restores,"accepted":accepted.len(),"descriptor_accepted":1,"independent_regression_accepted":1,"proposals":accepted}));
     }
     assert!(totals.windows(2).all(|w| w[0]["work"] == w[1]["work"]));
     std::fs::write(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation/incremental-proposal-validation.json"),serde_json::to_vec_pretty(&totals).unwrap()).unwrap();

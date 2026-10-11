@@ -1,10 +1,10 @@
 {
   "runs": [
     {
-      "descriptors": 2134,
-      "exact_proposals": 0,
+      "descriptors": 3180,
+      "exact_proposals": 1,
       "quota": 7,
-      "resumes": 386,
+      "resumes": 458,
       "stages": [
         [
           "trace",
@@ -20,16 +20,16 @@
         ],
         [
           "descriptors",
-          3022736
+          4211203
         ]
       ],
-      "total_work": 6298284
+      "total_work": 7486751
     },
     {
-      "descriptors": 2134,
-      "exact_proposals": 0,
+      "descriptors": 3180,
+      "exact_proposals": 1,
       "quota": 48,
-      "resumes": 386,
+      "resumes": 458,
       "stages": [
         [
           "trace",
@@ -45,16 +45,16 @@
         ],
         [
           "descriptors",
-          3022736
+          4211203
         ]
       ],
-      "total_work": 6298284
+      "total_work": 7486751
     },
     {
-      "descriptors": 2134,
-      "exact_proposals": 0,
+      "descriptors": 3180,
+      "exact_proposals": 1,
       "quota": 4096,
-      "resumes": 386,
+      "resumes": 459,
       "stages": [
         [
           "trace",
@@ -70,10 +70,10 @@
         ],
         [
           "descriptors",
-          3022736
+          4211203
         ]
       ],
-      "total_work": 6298284
+      "total_work": 7486751
     }
   ],
   "scope": "frozen native parity; synchronous input capture, transfers, constructors and exact evaluator remain outside advance accounting; no production scheduling claim"

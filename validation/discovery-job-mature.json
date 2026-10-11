@@ -1,25 +1,25 @@
 {
   "runs": [
     {
-      "descriptors": 2069,
-      "max_checkpoint_bytes": 559885,
+      "descriptors": 3180,
+      "max_checkpoint_bytes": 753353,
       "quota": 7,
-      "restores": 381,
-      "work": 6232851
+      "restores": 458,
+      "work": 7493294
     },
     {
-      "descriptors": 2069,
-      "max_checkpoint_bytes": 559885,
+      "descriptors": 3180,
+      "max_checkpoint_bytes": 753353,
       "quota": 48,
-      "restores": 380,
-      "work": 6232851
+      "restores": 457,
+      "work": 7493294
     },
     {
-      "descriptors": 2069,
-      "max_checkpoint_bytes": 559885,
+      "descriptors": 3180,
+      "max_checkpoint_bytes": 753353,
       "quota": 4096,
-      "restores": 381,
-      "work": 6232851
+      "restores": 458,
+      "work": 7493294
     }
   ],
   "scope": "persisted frozen native discovery, not live capture/admission or browser performance"

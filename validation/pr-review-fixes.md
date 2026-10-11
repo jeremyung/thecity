@@ -32,3 +32,11 @@ Diagnostic checkpoint schemas were incremented for changed sampling/phase semant
 - Fresh WASM proposal validation: 2,134 generated descriptors plus the independent accepted candidate; exact native proposal parity at quotas 48 and 4096.
 
 See `pr-review-*.txt`, `access-planning-mature.json`, `access-descriptor-incremental-check.json`, and the WASM profile JSON files for evidence. Earlier reports describe the previous sampling policy and are historical.
+
+## Follow-up: split coverage and repeated hosts
+
+- **Edge split samples.** Single-interval hosts keep the four reviewed samples and append up to two edge samples: 1m inside an end bounded by host end clearance, 3m inside an end bounded by a parcel projection or node (leaving the 5m parcel clearance after the 2m projection margin). Samples within 1m of the quartile offset are omitted. Bounded scans reach them only with spare host budget. The old end-minus-1m sample found the mature route because road 3317's free interval ends at host end clearance, not at a parcel.
+- **Repeated hosts.** A road bounding a face on both sides is scanned on both sides again; the two traversals share one per-road work allowance. The skipped-duplicate behaviour diverged from incremental host preparation, which never deduplicated.
+- **Reference migration.** Mature descriptors grow from 2,134 to 3,180: all 2,134 retained, 1,046 added. The descriptor at index 2824 is bit-identical to `accepted-access-candidate.json` and is the only accepted descriptor. Reference SHA-256 `9cea2591…cd811` → `53364380…83fee`; input JSON preserved verbatim. Composed planning: 67 pages, 1 accepted, 10,486,289 work units (was 45 pages, 0 accepted, 8,239,083).
+- **Checkpoint schemas** for host preparation, descriptor search, discovery and planning jobs were incremented.
+- **Validation (Linux x86_64, rustc 1.97):** native release suite 298 passed, 1 failed, 39 ignored; the failure, `frontier_proposal_scan_is_read_only_and_plan_road_replays`, also fails on `main` in this environment. Mature descriptor, discovery, proposal, pipeline, planning and paged-search gates pass. Fresh WASM discovery and proposal output match native exactly. Web: TypeScript passes; vitest 258/262, the four failures are fixed in-test timeouts that also time out on the unmodified PR head in this container.

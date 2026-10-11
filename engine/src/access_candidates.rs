@@ -43,7 +43,10 @@ pub(crate) const MIN_BRANCH_M: f32 = 24.0;
 pub(crate) const MAX_BRANCH_M: f32 = 60.0;
 pub(crate) const FACE_EDGE_MARGIN_M: f32 = 2.0;
 pub(crate) const MAX_HOSTS_PER_FACE: usize = 24;
-pub(crate) const MAX_SPLITS_PER_HOST: usize = 4;
+/// Quartile/midpoint samples per host; edge samples are appended after them.
+pub(crate) const MAX_INTERVAL_SPLITS: usize = 4;
+pub(crate) const MAX_EDGE_SPLITS: usize = 2;
+pub(crate) const MAX_SPLITS_PER_HOST: usize = MAX_INTERVAL_SPLITS + MAX_EDGE_SPLITS;
 pub(crate) const MAX_HEADINGS_PER_SPLIT: usize = 4;
 pub(crate) const PARCEL_HOST_CLEARANCE_M: f32 = 5.0;
 pub(crate) const PARCEL_PROJECTION_MARGIN_M: f32 = 2.0;
@@ -260,13 +263,14 @@ fn candidates_for_face_mode(
     // target-heading/ray-prefix scans; counting it before those scans prevents
     // an output-only cap from allowing an unbounded candidate search.
     let mut evaluated = 0usize;
-    let mut visited_hosts = std::collections::BTreeSet::new();
+    // Work is charged per road, not per boundary edge: a road bounding this
+    // face on both sides is traced twice and shares one allowance.
+    let mut host_work_by_road = BTreeMap::<u32, usize>::new();
     for edge_index in boundary_edges.into_iter().take(MAX_HOSTS_PER_FACE) {
         let edge_id = face.boundary_edge_ids[edge_index];
         let Some(host) = hosts_by_id.get(&edge_id).copied() else {
             continue;
         };
-        if !visited_hosts.insert(host.road_id) { continue; }
         let (edge_ax, edge_az) = face.polygon[edge_index];
         let (edge_bx, edge_bz) = face.polygon[(edge_index + 1) % face.polygon.len()];
         let edge_dx = edge_bx - edge_ax;
@@ -288,9 +292,9 @@ fn candidates_for_face_mode(
         }
         let inward = (-edge_dz / edge_len, edge_dx / edge_len);
         let split_samples = host_split_samples(host, nodes, parcel_footprints);
-        let mut host_work = 0usize;
+        let host_work = host_work_by_road.entry(host.road_id).or_default();
         'splits: for along in split_samples.into_iter().take(MAX_SPLITS_PER_HOST) {
-            if !exhaustive && host_work >= per_host_budget {
+            if !exhaustive && *host_work >= per_host_budget {
                 break 'splits;
             }
             let host_candidate_count = per_host.entry(host.road_id).or_default().len();
@@ -298,7 +302,7 @@ fn candidates_for_face_mode(
                 continue;
             }
             evaluated += 1;
-            host_work += 1;
+            *host_work += 1;
             let host_t = along / host_len;
             if !(0.0..1.0).contains(&host_t) {
                 continue;
@@ -374,7 +378,7 @@ fn candidates_for_face_mode(
             // eight rays per target), rather than a uniform angle sweep.
             if !exhaustive && headings.len() < 2 {
                 for target in unserved_targets.iter().take(MAX_TARGETS_PER_SPLIT) {
-                    if !exhaustive && host_work >= per_host_budget {
+                    if !exhaustive && *host_work >= per_host_budget {
                         break 'splits;
                     }
                     let Some(blocker) = parcel_footprints
@@ -407,7 +411,7 @@ fn candidates_for_face_mode(
                             PARCEL_HOST_CLEARANCE_M + 0.5,
                         );
                         for direction in directions {
-                            if !exhaustive && host_work >= per_host_budget {
+                            if !exhaustive && *host_work >= per_host_budget {
                                 break 'splits;
                             }
                             if dot(inward, direction) <= 0.0
@@ -540,14 +544,14 @@ fn candidates_for_face_mode(
                 lengths.sort_by(f32::total_cmp);
                 lengths.dedup_by(|left, right| (*left - *right).abs() < 1.0e-4);
                 for length in lengths {
-                    if !exhaustive && host_work >= per_host_budget {
+                    if !exhaustive && *host_work >= per_host_budget {
                         break 'splits;
                     }
                     if per_host.get(&host.road_id).map_or(0, Vec::len) >= per_host_budget {
                         break;
                     }
                     evaluated += 1;
-                    host_work += 1;
+                    *host_work += 1;
                     let end = (start.0 + heading.0 * length, start.1 + heading.1 * length);
                     if segment_inside_polygon(start, end, &face.polygon)
                         && (exhaustive
@@ -708,6 +712,7 @@ pub(crate) fn host_split_samples(
             end - span * 0.25,
             end - span / 6.0,
         ]);
+        split_samples.extend(edge_split_samples(start, end, host_len));
     } else {
         free.sort_by(|left, right| {
             (right.1 - right.0)
@@ -716,12 +721,41 @@ pub(crate) fn host_split_samples(
         });
         split_samples.extend(
             free.into_iter()
-                .take(MAX_SPLITS_PER_HOST)
+                .take(MAX_INTERVAL_SPLITS)
                 .map(|(start, end)| (start + end) * 0.5),
         );
     }
     split_samples.truncate(MAX_SPLITS_PER_HOST);
     split_samples
+}
+
+/// Junctions hugging each end of a single free interval, appended after the
+/// quartile samples so bounded scans reach them only with spare host budget.
+/// An end at the host's own end clearance only needs node clearance; an end
+/// at a parcel projection (already widened by its margin) or a node needs the
+/// remaining parcel clearance so perpendicular branches can pass the parcel.
+/// Samples that would crowd the quartile samples are omitted.
+pub(crate) fn edge_split_samples(start: f32, end: f32, host_len: f32) -> Vec<f32> {
+    let obstacle_inset = PARCEL_HOST_CLEARANCE_M - PARCEL_PROJECTION_MARGIN_M;
+    let start_inset = if start == HOST_END_CLEARANCE_M {
+        SPLIT_NODE_CLEARANCE_M
+    } else {
+        obstacle_inset
+    };
+    let end_inset = if end == host_len - HOST_END_CLEARANCE_M {
+        SPLIT_NODE_CLEARANCE_M
+    } else {
+        obstacle_inset
+    };
+    let quartile = (end - start) * 0.25;
+    let mut samples = Vec::with_capacity(MAX_EDGE_SPLITS);
+    if quartile - start_inset >= 1.0 {
+        samples.push(start + start_inset);
+    }
+    if quartile - end_inset >= 1.0 {
+        samples.push(end - end_inset);
+    }
+    samples
 }
 
 pub(crate) fn dot(a: (f32, f32), b: (f32, f32)) -> f32 {
@@ -951,6 +985,44 @@ mod tests {
         // Parcel starts at 80m; its projection margin ends the free span at 78m.
         assert_eq!(samples[3], 78.0 - (78.0 - 10.0) / 6.0);
         assert!(crate::geometry::rect_segment_distance(&parcel, samples[3], 0.0, samples[3], 24.0) >= PARCEL_HOST_CLEARANCE_M);
+    }
+
+    #[test]
+    fn edge_splits_hug_host_end_clearance_and_clear_parcels() {
+        let host = BoundaryHost { road_id: 1, from: 1, to: 2, ax: 0.0, az: 0.0, bx: 100.0, bz: 0.0 };
+        // Both ends bounded by host end clearance: 1m inside each.
+        let open = host_split_samples(host, &[], &[]);
+        assert_eq!(open[..MAX_INTERVAL_SPLITS], [30.0, 50.0, 70.0, 90.0 - 80.0 / 6.0]);
+        assert_eq!(open[MAX_INTERVAL_SPLITS..], [11.0, 89.0]);
+        // Far end bounded by a parcel projection: inset leaves parcel clearance.
+        let parcel = crate::geometry::OrientedRect { x: 85.0, z: 0.0, width: 10.0, depth: 10.0, rotation: 0.0 };
+        let blocked = host_split_samples(host, &[], &[parcel]);
+        assert_eq!(blocked[MAX_INTERVAL_SPLITS..], [11.0, 75.0]);
+        assert!(crate::geometry::rect_segment_distance(&parcel, 75.0, 0.0, 75.0, 24.0) >= PARCEL_HOST_CLEARANCE_M);
+        // A 12m span keeps the 1m host-end sample but omits the 3m parcel-end
+        // sample, which would land on the 3m quartile offset.
+        let long_parcel = crate::geometry::OrientedRect { x: 61.0, z: 0.0, width: 74.0, depth: 10.0, rotation: 0.0 };
+        let short = host_split_samples(host, &[], &[long_parcel]);
+        assert_eq!(short[MAX_INTERVAL_SPLITS..], [11.0]);
+    }
+
+    #[test]
+    fn road_bounding_face_twice_scans_both_sides_within_one_allowance() {
+        // Spur road 5 runs from the bottom edge into the face, so the face
+        // boundary traverses it once on each side.
+        let face = RoadFace {
+            identity: vec![10, 11, 12, 13, 14, 15],
+            vertex_ids: vec![10, 11, 12, 11, 13, 14, 15],
+            polygon: vec![(0.0, 0.0), (50.0, 0.0), (50.0, 40.0), (50.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)],
+            area: 10_000.0,
+            boundary_edge_ids: vec![1, 5, 5, 6, 2, 3, 4],
+            contains_proposed_edge: false,
+        };
+        let hosts = [BoundaryHost { road_id: 5, from: 11, to: 12, ax: 50.0, az: 0.0, bx: 50.0, bz: 40.0 }];
+        let scan = candidates_for_face_with_work(&face, &hosts, &[], &[], &[]);
+        assert!(scan.candidates.iter().any(|c| c.end_x < 49.0), "west side: {scan:?}");
+        assert!(scan.candidates.iter().any(|c| c.end_x > 51.0), "east side: {scan:?}");
+        assert!(scan.work_units <= MAX_PROPOSALS_PER_EVALUATION);
     }
 
     #[test]

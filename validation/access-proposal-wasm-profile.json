@@ -1,14 +1,14 @@
 {
-  "wasm_sha256": "ac1fd69dcc22c0cc35aa3317d285ceeb4ca25a8ec40d07ac89b0e5e6731aa328",
+  "wasm_sha256": "3c98f8c6b9b6c0f028b7681085105114b168756537352b6e189ba80ff43d1c18",
   "scope": "Node WASM proposal validation; not browser render timing or live scheduler",
-  "capture_including_city_restore_ms": 169.61316699999998,
+  "capture_including_city_restore_ms": 354.387558,
   "native_proposal_equal": true,
   "runs": [
     {
       "quota": 48,
-      "work": 1939355,
-      "restores": 2139,
-      "max_call_ms": 0.35670899999999506,
+      "work": 2997048,
+      "restores": 3199,
+      "max_call_ms": 1.8270519999999806,
       "proposals": [
         {
           "end_x": 179.3255615234375,
@@ -16,7 +16,41 @@
           "host_id": 3317,
           "host_t": 0.7799999713897705,
           "score": {
-            "fraction_index": 22,
+            "fraction_index": 40,
+            "host_id": 3317,
+            "length_index": 0,
+            "road_length_mm": 60000,
+            "side_index": 1,
+            "site_area": 3008000
+          },
+          "selected_lots": [
+            {
+              "along": 0.5,
+              "depth": 12,
+              "rotation": 0.22155560553073883,
+              "side": 1,
+              "width": 12.533336639404297,
+              "x": 205.29605102539062,
+              "z": -8.903039932250977
+            },
+            {
+              "along": 0.745555579662323,
+              "depth": 12,
+              "rotation": 0.22155560553073883,
+              "side": 1,
+              "width": 12.533336639404297,
+              "x": 190.92283630371094,
+              "z": -5.665426254272461
+            }
+          ]
+        },
+        {
+          "end_x": 179.3255615234375,
+          "end_z": 12.322736740112305,
+          "host_id": 3317,
+          "host_t": 0.7799999713897705,
+          "score": {
+            "fraction_index": 12,
             "host_id": 3317,
             "length_index": 0,
             "road_length_mm": 60000,
@@ -48,9 +82,9 @@
     },
     {
       "quota": 4096,
-      "work": 1939355,
-      "restores": 2139,
-      "max_call_ms": 0.1824579999999969,
+      "work": 2997048,
+      "restores": 3199,
+      "max_call_ms": 2.7410319999999047,
       "proposals": [
         {
           "end_x": 179.3255615234375,
@@ -58,7 +92,41 @@
           "host_id": 3317,
           "host_t": 0.7799999713897705,
           "score": {
-            "fraction_index": 22,
+            "fraction_index": 40,
+            "host_id": 3317,
+            "length_index": 0,
+            "road_length_mm": 60000,
+            "side_index": 1,
+            "site_area": 3008000
+          },
+          "selected_lots": [
+            {
+              "along": 0.5,
+              "depth": 12,
+              "rotation": 0.22155560553073883,
+              "side": 1,
+              "width": 12.533336639404297,
+              "x": 205.29605102539062,
+              "z": -8.903039932250977
+            },
+            {
+              "along": 0.745555579662323,
+              "depth": 12,
+              "rotation": 0.22155560553073883,
+              "side": 1,
+              "width": 12.533336639404297,
+              "x": 190.92283630371094,
+              "z": -5.665426254272461
+            }
+          ]
+        },
+        {
+          "end_x": 179.3255615234375,
+          "end_z": 12.322736740112305,
+          "host_id": 3317,
+          "host_t": 0.7799999713897705,
+          "score": {
+            "fraction_index": 12,
             "host_id": 3317,
             "length_index": 0,
             "road_length_mm": 60000,

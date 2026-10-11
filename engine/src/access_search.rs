@@ -9,7 +9,7 @@ use crate::road_faces::RoadFace;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-const CHECKPOINT_SCHEMA: u8 = 2;
+const CHECKPOINT_SCHEMA: u8 = 3;
 const MAX_HOST_INPUTS: usize = 512;
 pub(crate) const MAX_PREPARED_HOSTS: usize = 24;
 const MAX_NODES: usize = access_candidates::MAX_PREPARED_INPUT_NODES;
@@ -18,7 +18,8 @@ const NODE_CLEARANCE_M: f32 = 1.0;
 const HOST_END_CLEARANCE_M: f32 = 10.0;
 const PARCEL_HOST_CLEARANCE_M: f32 = 5.0;
 const PARCEL_PROJECTION_MARGIN_M: f32 = 2.0;
-const MAX_SPLITS_PER_HOST: usize = 4;
+const MAX_SPLITS_PER_HOST: usize = access_candidates::MAX_SPLITS_PER_HOST;
+const MAX_INTERVAL_SPLITS: usize = access_candidates::MAX_INTERVAL_SPLITS;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 struct Interval {
@@ -513,7 +514,9 @@ impl AccessHostPreparation {
                 span.end - length * 0.25,
                 span.end - length / 6.0,
             ];
-            for along_m in starts {
+            let host_len = host_length(cp.hosts[cp.host_index].road);
+            let edges = access_candidates::edge_split_samples(span.start, span.end, host_len);
+            for along_m in starts.into_iter().chain(edges) {
                 cp.selected_spans.push(Interval {
                     start: along_m,
                     end: along_m,
@@ -526,7 +529,7 @@ impl AccessHostPreparation {
             let old = cp.selected_spans[cp.select_compare];
             if split_order(span, old) == Ordering::Less {
                 cp.selected_spans.insert(cp.select_compare, span);
-                cp.selected_spans.truncate(MAX_SPLITS_PER_HOST);
+                cp.selected_spans.truncate(MAX_INTERVAL_SPLITS);
                 cp.select_index += 1;
                 cp.select_compare = 0;
             } else {
@@ -534,7 +537,7 @@ impl AccessHostPreparation {
             }
             return true;
         }
-        if cp.selected_spans.len() < MAX_SPLITS_PER_HOST {
+        if cp.selected_spans.len() < MAX_INTERVAL_SPLITS {
             cp.selected_spans.push(span);
         }
         cp.select_index += 1;
@@ -770,7 +773,7 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
                 && cp.select_index == cp.free_spans.len();
             if !fast_path
                 && cp.selected_spans.len()
-                    > cp.select_index.saturating_add(1).min(MAX_SPLITS_PER_HOST)
+                    > cp.select_index.saturating_add(1).min(MAX_INTERVAL_SPLITS)
             {
                 return Err(SearchError::InvalidCursor);
             }
@@ -955,12 +958,22 @@ mod tests {
         if free.len() == 1 && free[0].1 - free[0].0 >= 12.0 {
             let (lo, hi) = free[0];
             let span = hi - lo;
-            vec![
+            let mut samples = vec![
                 lo + span * 0.25,
                 lo + span * 0.5,
                 hi - span * 0.25,
                 hi - span / 6.0,
-            ]
+            ];
+            // Edge samples: 1m inside a host-end bound, 3m inside any other.
+            let lo_inset = if lo == 10.0 { 1.0 } else { 3.0 };
+            let hi_inset = if hi == length - 10.0 { 1.0 } else { 3.0 };
+            if span * 0.25 - lo_inset >= 1.0 {
+                samples.push(lo + lo_inset);
+            }
+            if span * 0.25 - hi_inset >= 1.0 {
+                samples.push(hi - hi_inset);
+            }
+            samples
         } else {
             free.sort_by(|left, right| {
                 (right.1 - right.0)

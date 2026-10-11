@@ -22,7 +22,7 @@ use crate::road_faces::{RoadFace, RoadFaceEdge, RoadFaceError, RoadFaceNode};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-const CHECKPOINT_SCHEMA: u8 = 2;
+const CHECKPOINT_SCHEMA: u8 = 3;
 const MAX_GRAPH_NODES: usize = 512;
 const MAX_GRAPH_EDGES: usize = 512;
 const MAX_CANDIDATE_NODES: usize = MAX_PREPARED_INPUT_NODES;

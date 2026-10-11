@@ -5,7 +5,7 @@ This is a working checkpoint, not completed visual or live-growth acceptance.
 ## Verified work
 
 - Persisted, quota-stepped face discovery, target selection, descriptor generation and proposal validation.
-- Composed planning job reproduces 45 ranked pages and zero accepted proposals under the restored split policy, including JSON resume. The separately retained valid candidate still produces two lots; see `pr-review-fixes.md`.
+- Composed planning job reproduces 67 ranked pages and accepts the known legal mature-fixture route (road 3317, two lots), including JSON resume; see `pr-review-fixes.md`.
 - Geometry revisions track relevant mutations and fail closed on counter exhaustion.
 - Indexed atomic road splitting preserves routes, positions and rejection atomicity. Native capped connected benchmark: 5.90 ms mean, 8.31 ms p95; WASM split timing remains unmeasured.
 - Full native release regression: 299 passed, 39 ignored. Ignored mature integration gates were run separately; see `pr-review-planning.txt` and `spec-audit.md`.
@@ -13,7 +13,7 @@ This is a working checkpoint, not completed visual or live-growth acceptance.
 
 ## Next implementation steps
 
-1. Improve finite split-sampling coverage: the restored fourth-sample policy no longer discovers the known legal mature-fixture route. Preserve the reviewed clearance/fairness fixes.
+1. Broaden split-sampling coverage beyond single-interval hosts: edge samples now recover the known mature-fixture route, but multi-interval hosts still sample only interval midpoints.
 2. Measure the optimized atomic split in WASM using the opt-in stress fixture export in `road_split_profile.rs`.
 3. Attach the composed planner to live growth with persisted scheduling, deterministic retries and fresh candidate revalidation when geometry changes. Keep actor remapping atomic: geometry revisions alone do not protect moving actor state across ticks.
 4. Verify actual construction/opening, dependent development, save/resume and bounded long-running behavior through the worker.

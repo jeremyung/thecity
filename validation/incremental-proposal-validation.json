@@ -1,7 +1,7 @@
 [
   {
-    "accepted": 1,
-    "descriptor_accepted": 0,
+    "accepted": 2,
+    "descriptor_accepted": 1,
     "independent_regression_accepted": 1,
     "proposals": [
       {
@@ -10,7 +10,41 @@
         "host_id": 3317,
         "host_t": 0.7799999713897705,
         "score": {
-          "fraction_index": 22,
+          "fraction_index": 40,
+          "host_id": 3317,
+          "length_index": 0,
+          "road_length_mm": 60000,
+          "side_index": 1,
+          "site_area": 3008000
+        },
+        "selected_lots": [
+          {
+            "along": 0.5,
+            "depth": 12.0,
+            "rotation": 0.22155560553073883,
+            "side": 1,
+            "width": 12.533336639404297,
+            "x": 205.29605102539062,
+            "z": -8.903039932250977
+          },
+          {
+            "along": 0.745555579662323,
+            "depth": 12.0,
+            "rotation": 0.22155560553073883,
+            "side": 1,
+            "width": 12.533336639404297,
+            "x": 190.92283630371094,
+            "z": -5.665426254272461
+          }
+        ]
+      },
+      {
+        "end_x": 179.3255615234375,
+        "end_z": 12.322736740112305,
+        "host_id": 3317,
+        "host_t": 0.7799999713897705,
+        "score": {
+          "fraction_index": 12,
           "host_id": 3317,
           "length_index": 0,
           "road_length_mm": 60000,
@@ -40,12 +74,12 @@
       }
     ],
     "quota": 1,
-    "restores": 2139,
-    "work": 1939355
+    "restores": 3199,
+    "work": 2997048
   },
   {
-    "accepted": 1,
-    "descriptor_accepted": 0,
+    "accepted": 2,
+    "descriptor_accepted": 1,
     "independent_regression_accepted": 1,
     "proposals": [
       {
@@ -54,7 +88,41 @@
         "host_id": 3317,
         "host_t": 0.7799999713897705,
         "score": {
-          "fraction_index": 22,
+          "fraction_index": 40,
+          "host_id": 3317,
+          "length_index": 0,
+          "road_length_mm": 60000,
+          "side_index": 1,
+          "site_area": 3008000
+        },
+        "selected_lots": [
+          {
+            "along": 0.5,
+            "depth": 12.0,
+            "rotation": 0.22155560553073883,
+            "side": 1,
+            "width": 12.533336639404297,
+            "x": 205.29605102539062,
+            "z": -8.903039932250977
+          },
+          {
+            "along": 0.745555579662323,
+            "depth": 12.0,
+            "rotation": 0.22155560553073883,
+            "side": 1,
+            "width": 12.533336639404297,
+            "x": 190.92283630371094,
+            "z": -5.665426254272461
+          }
+        ]
+      },
+      {
+        "end_x": 179.3255615234375,
+        "end_z": 12.322736740112305,
+        "host_id": 3317,
+        "host_t": 0.7799999713897705,
+        "score": {
+          "fraction_index": 12,
           "host_id": 3317,
           "length_index": 0,
           "road_length_mm": 60000,
@@ -84,12 +152,12 @@
       }
     ],
     "quota": 7,
-    "restores": 2139,
-    "work": 1939355
+    "restores": 3199,
+    "work": 2997048
   },
   {
-    "accepted": 1,
-    "descriptor_accepted": 0,
+    "accepted": 2,
+    "descriptor_accepted": 1,
     "independent_regression_accepted": 1,
     "proposals": [
       {
@@ -98,7 +166,41 @@
         "host_id": 3317,
         "host_t": 0.7799999713897705,
         "score": {
-          "fraction_index": 22,
+          "fraction_index": 40,
+          "host_id": 3317,
+          "length_index": 0,
+          "road_length_mm": 60000,
+          "side_index": 1,
+          "site_area": 3008000
+        },
+        "selected_lots": [
+          {
+            "along": 0.5,
+            "depth": 12.0,
+            "rotation": 0.22155560553073883,
+            "side": 1,
+            "width": 12.533336639404297,
+            "x": 205.29605102539062,
+            "z": -8.903039932250977
+          },
+          {
+            "along": 0.745555579662323,
+            "depth": 12.0,
+            "rotation": 0.22155560553073883,
+            "side": 1,
+            "width": 12.533336639404297,
+            "x": 190.92283630371094,
+            "z": -5.665426254272461
+          }
+        ]
+      },
+      {
+        "end_x": 179.3255615234375,
+        "end_z": 12.322736740112305,
+        "host_id": 3317,
+        "host_t": 0.7799999713897705,
+        "score": {
+          "fraction_index": 12,
           "host_id": 3317,
           "length_index": 0,
           "road_length_mm": 60000,
@@ -128,7 +230,7 @@
       }
     ],
     "quota": 48,
-    "restores": 2139,
-    "work": 1939355
+    "restores": 3199,
+    "work": 2997048
   }
 ]

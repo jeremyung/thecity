@@ -1,7 +1,7 @@
 {
   "reference_path": "../validation/access-descriptor-reference.json",
-  "reference_sha256": "9cea2591f4ce3762c7faaee15c67cb9543a35331bc7f58dae6630f79c90cd811",
-  "wasm_sha256": "ac1fd69dcc22c0cc35aa3317d285ceeb4ca25a8ec40d07ac89b0e5e6731aa328",
+  "reference_sha256": "5336438099f6e7bf0d1346a5beda225960e1e2769ef0458d4faee6f1d6583fee",
+  "wasm_sha256": "3c98f8c6b9b6c0f028b7681085105114b168756537352b6e189ba80ff43d1c18",
   "scope": "Node WASM, not browser rendering or worker performance; advance includes WASM boundary and status JSON; construction includes city restore",
   "runs": [
     {
@@ -14,16 +14,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 6305217,
+      "work": 7493944,
       "restores": 0,
       "max_checkpoint_bytes": 0,
-      "descriptor_count": 2134,
-      "construct_including_city_restore_ms": 163.582625,
-      "calls": 1540,
-      "advance_median_ms": 0.0449169999999981,
-      "advance_p95_ms": 0.30237499999998363,
-      "advance_max_ms": 0.735874999999993,
-      "elapsed_including_persistence_ms": 262.97179200000005
+      "descriptor_count": 3180,
+      "construct_including_city_restore_ms": 328.738142,
+      "calls": 1830,
+      "advance_median_ms": 0.10404399999998759,
+      "advance_p95_ms": 0.8311710000000403,
+      "advance_max_ms": 1.9151930000000448,
+      "elapsed_including_persistence_ms": 620.4598100000001
     },
     {
       "quota": 48,
@@ -35,16 +35,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 6305217,
-      "restores": 25,
-      "max_checkpoint_bytes": 570063,
-      "descriptor_count": 2134,
-      "construct_including_city_restore_ms": 105.548542,
-      "calls": 131359,
-      "advance_median_ms": 0.0013749999999959073,
-      "advance_p95_ms": 0.005832999999938693,
-      "advance_max_ms": 0.9085000000000036,
-      "elapsed_including_persistence_ms": 406.012333
+      "work": 7493944,
+      "restores": 29,
+      "max_checkpoint_bytes": 753353,
+      "descriptor_count": 3180,
+      "construct_including_city_restore_ms": 249.05229299999996,
+      "calls": 156124,
+      "advance_median_ms": 0.0034250000001065928,
+      "advance_p95_ms": 0.013373000000001412,
+      "advance_max_ms": 2.6797220000000834,
+      "elapsed_including_persistence_ms": 1290.634802
     },
     {
       "quota": 4096,
@@ -56,16 +56,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 6305217,
-      "restores": 25,
-      "max_checkpoint_bytes": 570063,
-      "descriptor_count": 2134,
-      "construct_including_city_restore_ms": 101.29141700000002,
-      "calls": 1540,
-      "advance_median_ms": 0.04279199999996308,
-      "advance_p95_ms": 0.2831670000000486,
-      "advance_max_ms": 0.4683750000000373,
-      "elapsed_including_persistence_ms": 231.6439170000001
+      "work": 7493944,
+      "restores": 29,
+      "max_checkpoint_bytes": 753353,
+      "descriptor_count": 3180,
+      "construct_including_city_restore_ms": 230.43150400000013,
+      "calls": 1830,
+      "advance_median_ms": 0.1012590000000273,
+      "advance_p95_ms": 0.7733089999996992,
+      "advance_max_ms": 1.0739360000002307,
+      "elapsed_including_persistence_ms": 615.7960000000003
     },
     {
       "quota": 16384,
@@ -77,16 +77,16 @@
         "examples": []
       },
       "wasm_quota_parity": true,
-      "work": 6305217,
-      "restores": 25,
-      "max_checkpoint_bytes": 570063,
-      "descriptor_count": 2134,
-      "construct_including_city_restore_ms": 106.84291699999994,
-      "calls": 385,
-      "advance_median_ms": 0.17291599999998652,
-      "advance_p95_ms": 0.8620830000002115,
-      "advance_max_ms": 1.4547089999998661,
-      "elapsed_including_persistence_ms": 236.7355419999999
+      "work": 7493944,
+      "restores": 29,
+      "max_checkpoint_bytes": 753353,
+      "descriptor_count": 3180,
+      "construct_including_city_restore_ms": 227.76346300000023,
+      "calls": 458,
+      "advance_median_ms": 0.4304019999999582,
+      "advance_p95_ms": 1.9636489999998048,
+      "advance_max_ms": 3.572269999999662,
+      "elapsed_including_persistence_ms": 611.5182920000002
     }
   ]
 }
