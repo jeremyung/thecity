@@ -119,6 +119,32 @@ node scripts/verify-rear-extension.mjs .tools/rear-extension-review/scheduler-sa
 node scripts/capture-rear-extension-study.mjs
 ```
 
+## Residual block diagnosis — 2026-10-11
+
+The [saved-frontage census](mature-frontage-allocation.json), reproduced with
+`scripts/audit-frontage-allocation.mjs`, follows explicit parcel frontage road
+IDs rather than proximity. At seed 87231/tick 304000, 560 of 871 buildings front
+neighborhood-tagged roads (116,709.93 m² of 166,441.37 m² nominal envelopes),
+309 front other roads and two have no frontage record. All 139 tagged road IDs
+are live. A tagged road does not prove a building came from the canonical block
+subdivider: outside frontage and subsequent infill can share it. Nevertheless,
+the evidence does not support treating neighborhood planning as absent.
+
+Do not repeat the road-opening reservation experiment. A new source review
+initially proposed that same rejected family; comparison with
+`early-reservation-gap-diagnosis.md` corrected the proposal before implementation.
+Shared-edge candidates already filter blocked canonical lots, whereas candidates
+with four new roads require the complete canonical lot set. The next bounded
+diagnostic examines this asymmetry without relaxing geometry or access checks;
+no partial-block production policy is approved yet.
+
+The renderer already paves 96% of each open/renovating building's parcel width
+and depth and draws a separate entrance-to-road access path. Broad green gaps
+in the recent full-city capture mostly expose land outside these developed
+surfaces. Painting those voids as service yards would obscure the urban-form
+problem. Keep undeveloped/protected ground distinct while improving actual
+occupation and access.
+
 ## Initial station-core depth experiment — not promoted, 2026-10-11
 
 `initial_depth_diagnostic.rs` tests a single 12→18 m depth increase at the

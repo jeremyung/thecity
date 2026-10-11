@@ -1,0 +1,74 @@
+{
+  "source": {
+    "save": ".tools/rear-extension-review/long-save.json",
+    "sha256": "9905249892e61e54e1f03d1accde6006eba2830dcba72f33c5ccb915d503a456",
+    "seed": 87231,
+    "tick": 304000
+  },
+  "method": "Attribute each building through its saved parcel_frontage.road_id to neighborhood_road_ids membership.",
+  "limitations": [
+    "A tagged road is not proof that a building came from a canonical coordinated block; exterior and later infill frontage may share that road.",
+    "Envelope/floor areas are sums of saved width × depth (× floors), not geometry unions or developable-land coverage.",
+    "Depth histogram rounds saved metres; capacity slots are the engine use/floor formula, not area-calibrated population."
+  ],
+  "roadTags": {
+    "total": 139,
+    "live": 139
+  },
+  "groups": {
+    "other_road": {
+      "buildings": 309,
+      "nominalEnvelopeAreaM2": 48853.43644,
+      "nominalFloorAreaM2": 151837.64929999993,
+      "capacitySlots": 4907,
+      "byKind": {
+        "shop": 49,
+        "home": 127,
+        "cafe": 43,
+        "apartment": 56,
+        "office": 34
+      },
+      "depthHistogramM": {
+        "8": 42,
+        "12": 238,
+        "16": 11,
+        "18": 1,
+        "20": 10,
+        "24": 7
+      }
+    },
+    "no_frontage_record": {
+      "buildings": 2,
+      "nominalEnvelopeAreaM2": 878,
+      "nominalFloorAreaM2": 2256,
+      "capacitySlots": 22,
+      "byKind": {
+        "home": 2
+      },
+      "depthHistogramM": {
+        "18": 1,
+        "20": 1
+      }
+    },
+    "tagged_neighborhood_road": {
+      "buildings": 560,
+      "nominalEnvelopeAreaM2": 116709.93203559965,
+      "nominalFloorAreaM2": 336323.4644598311,
+      "capacitySlots": 7906,
+      "byKind": {
+        "home": 260,
+        "office": 54,
+        "apartment": 93,
+        "cafe": 86,
+        "shop": 67
+      },
+      "depthHistogramM": {
+        "8": 4,
+        "12": 18,
+        "16": 533,
+        "20": 2,
+        "24": 3
+      }
+    }
+  }
+}
