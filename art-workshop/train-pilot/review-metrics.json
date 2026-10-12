@@ -1,0 +1,101 @@
+[
+  {
+    "id": "cab-side",
+    "view": "side",
+    "role": "driving cab car, side elevation",
+    "dimensionsM": [
+      20.0,
+      2.95,
+      3.63
+    ],
+    "measured_ratio": 4.556,
+    "body_ratio": 5.019,
+    "expected": 5.51,
+    "error_pct": -17.312,
+    "body_error_pct": -8.91,
+    "pantograph": 1.0,
+    "stripe_y": 0.443,
+    "window_y": 0.658,
+    "bg_std": 2.534,
+    "px": [
+      92,
+      265,
+      1968,
+      676
+    ]
+  },
+  {
+    "id": "intermediate-side",
+    "view": "side",
+    "role": "intermediate trailer car, side elevation",
+    "dimensionsM": [
+      20.0,
+      2.95,
+      3.63
+    ],
+    "measured_ratio": 4.825,
+    "body_ratio": 5.34,
+    "expected": 5.51,
+    "error_pct": -12.429,
+    "body_error_pct": -3.081,
+    "pantograph": 1.0,
+    "stripe_y": 0.409,
+    "window_y": 0.658,
+    "bg_std": 3.629,
+    "px": [
+      78,
+      282,
+      1978,
+      675
+    ]
+  },
+  {
+    "id": "cab-front",
+    "view": "front",
+    "role": "driving cab car, head-on front elevation",
+    "dimensionsM": [
+      2.95,
+      3.63
+    ],
+    "measured_ratio": 0.799,
+    "body_ratio": 0.952,
+    "expected": 0.813,
+    "error_pct": -1.639,
+    "body_error_pct": 17.199,
+    "pantograph": 1.0,
+    "stripe_y": 0.394,
+    "window_y": 0.656,
+    "bg_std": 1.817,
+    "px": [
+      83,
+      220,
+      823,
+      1146
+    ]
+  },
+  {
+    "id": "motor-roof",
+    "view": "side",
+    "role": "motor car with pantograph, side elevation for roof equipment",
+    "dimensionsM": [
+      20.0,
+      2.95,
+      3.63
+    ],
+    "measured_ratio": 4.825,
+    "body_ratio": 5.467,
+    "expected": 5.51,
+    "error_pct": -12.426,
+    "body_error_pct": -0.766,
+    "pantograph": 1.0,
+    "stripe_y": 0.427,
+    "window_y": 0.663,
+    "bg_std": 4.504,
+    "px": [
+      91,
+      280,
+      2020,
+      679
+    ]
+  }
+]
