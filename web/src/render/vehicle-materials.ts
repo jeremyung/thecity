@@ -13,25 +13,44 @@ const ATLAS_URL = '/art/vehicles/vehicle-atlas.png';
 const MASK_URL = '/art/vehicles/vehicle-mask.png';
 type Surface = THREE.MeshStandardNodeMaterial | THREE.MeshToonNodeMaterial;
 
+type BitmapLoad = (url: string, onLoad: (bitmap: ImageBitmap) => void, onError: () => void) => void;
+
+function loadBitmap(url: string, onLoad: (bitmap: ImageBitmap) => void, onError: () => void) {
+  new THREE.ImageBitmapLoader().setOptions({ imageOrientation: 'flipY' }).load(url, onLoad, undefined, onError);
+}
+
+/** Free a texture and close the decoded bitmap it owns, if any. */
+function release(texture: THREE.Texture) {
+  const image = texture.image as { close?: () => void } | null;
+  texture.dispose();
+  image?.close?.();
+}
+
 /**
  * A texture node that starts on a neutral 1x1 placeholder and switches to
  * the decoded image. GPU storage is sized on first upload, so the image goes
- * into a new Texture rather than into the placeholder.
+ * into a new Texture rather than into the placeholder. The bitmap stays open
+ * while its texture is live, so a lost device can re-upload it; it is closed
+ * when ArtMaterials is disposed. A load that completes after that is closed
+ * at once and never installed on the retired node.
  */
-function streamed(url: string, colorSpace: THREE.ColorSpace, art: ArtMaterials, fallback: [number, number, number, number]) {
+export function streamedTexture(url: string, colorSpace: THREE.ColorSpace, art: Pick<ArtMaterials, 'onDispose'>, fallback: [number, number, number, number], load: BitmapLoad | null = defaultLoad()) {
   const first = placeholder(fallback);
   const node = texture(first);
-  let current: THREE.Texture = first;
-  art.onDispose(() => current.dispose());
-  // Tests and headless tools have no image decoding; the placeholder stays.
-  if (typeof createImageBitmap === 'function' && typeof fetch === 'function') {
-    new THREE.ImageBitmapLoader().setOptions({ imageOrientation: 'flipY' }).load(url, bitmap => {
-      const loaded = new THREE.Texture(bitmap as unknown as HTMLImageElement);
-      loaded.flipY = false; loaded.colorSpace = colorSpace; loaded.anisotropy = 8; loaded.needsUpdate = true;
-      node.value = loaded; current.dispose(); current = loaded;
-    }, undefined, () => { /* Missing art keeps the placeholder rather than failing the city. */ });
-  }
+  let current: THREE.Texture = first, disposed = false;
+  art.onDispose(() => { disposed = true; release(current); });
+  load?.(url, bitmap => {
+    if (disposed) { bitmap.close(); return; }
+    const loaded = new THREE.Texture(bitmap as unknown as HTMLImageElement);
+    loaded.flipY = false; loaded.colorSpace = colorSpace; loaded.anisotropy = 8; loaded.needsUpdate = true;
+    node.value = loaded; release(current); current = loaded;
+  }, () => { /* Missing art keeps the placeholder rather than failing the city. */ });
   return node;
+}
+
+/** Tests and headless tools have no image decoding; the placeholder stays. */
+function defaultLoad(): BitmapLoad | null {
+  return typeof createImageBitmap === 'function' && typeof fetch === 'function' ? loadBitmap : null;
 }
 
 function placeholder(rgba: [number, number, number, number] = [200, 200, 200, 255]) {
@@ -60,8 +79,8 @@ function wheelPosition() {
 export function vehicleMaterial(art: ArtMaterials): Surface {
   return art.shared('vehicle-atlas', () => {
     // Until the mask arrives: plain paint, no lamps or glass.
-    const atlas = streamed(ATLAS_URL, THREE.SRGBColorSpace, art, [200, 200, 200, 255]);
-    const masks = streamed(MASK_URL, THREE.NoColorSpace, art, [255, 0, 0, 255]);
+    const atlas = streamedTexture(ATLAS_URL, THREE.SRGBColorSpace, art, [200, 200, 200, 255]);
+    const masks = streamedTexture(MASK_URL, THREE.NoColorSpace, art, [255, 0, 0, 255]);
     const base = atlas.sample(uv()), mask = masks.sample(uv());
     const tint = attribute<'vec3'>('vtint', 'vec3'), state = attribute<'vec4'>('vstate', 'vec4');
     const part = attribute<'float'>('vpart', 'float'), lateral = attribute<'float'>('lateral', 'float').abs();
