@@ -16,22 +16,35 @@ type Surface = THREE.MeshStandardNodeMaterial | THREE.MeshToonNodeMaterial;
 /**
  * A texture node that starts on a neutral 1x1 placeholder and switches to
  * the decoded image. GPU storage is sized on first upload, so the image goes
- * into a new Texture rather than into the placeholder.
+ * into a new Texture rather than into the placeholder. A bitmap that decodes
+ * after the art set is disposed is closed instead of installed.
  */
-function streamed(url: string, colorSpace: THREE.ColorSpace, art: ArtMaterials, fallback: [number, number, number, number]) {
+export function streamed(url: string, colorSpace: THREE.ColorSpace, art: ArtMaterials, fallback: [number, number, number, number], loader = new THREE.ImageBitmapLoader()) {
   const first = placeholder(fallback);
   const node = texture(first);
   let current: THREE.Texture = first;
-  art.onDispose(() => current.dispose());
+  let disposed = false;
+  art.onDispose(() => { disposed = true; release(current); });
   // Tests and headless tools have no image decoding; the placeholder stays.
   if (typeof createImageBitmap === 'function' && typeof fetch === 'function') {
-    new THREE.ImageBitmapLoader().setOptions({ imageOrientation: 'flipY' }).load(url, bitmap => {
+    loader.setOptions({ imageOrientation: 'flipY' }).load(url, bitmap => {
+      if (disposed) { closeBitmap(bitmap); return; }
       const loaded = new THREE.Texture(bitmap as unknown as HTMLImageElement);
       loaded.flipY = false; loaded.colorSpace = colorSpace; loaded.anisotropy = 8; loaded.needsUpdate = true;
-      node.value = loaded; current.dispose(); current = loaded;
+      node.value = loaded; release(current); current = loaded;
     }, undefined, () => { /* Missing art keeps the placeholder rather than failing the city. */ });
   }
   return node;
+}
+
+/** Dispose a texture and close the decoded bitmap it owns, if any. */
+function release(t: THREE.Texture) {
+  t.dispose();
+  closeBitmap(t.image);
+}
+
+function closeBitmap(image: unknown) {
+  if (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) image.close();
 }
 
 function placeholder(rgba: [number, number, number, number] = [200, 200, 200, 255]) {

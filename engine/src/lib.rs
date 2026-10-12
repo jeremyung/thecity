@@ -8978,6 +8978,15 @@ impl Engine {
         (limit, entry_busy)
     }
 
+    /// Park a car held at a busy driveway mouth at the end of its final road
+    /// edge. Returns false when the route has no edge to wait on.
+    fn hold_at_kerb(t: &mut Traveler) -> bool {
+        let Some(&last) = t.route_lengths.last() else { return false };
+        t.edge_index = t.route_lengths.len() - 1;
+        t.edge_progress = last.max(1.0);
+        true
+    }
+
     fn advance_travelers(&mut self) {
         if self.state.travelers.is_empty() {
             return;
@@ -9024,7 +9033,10 @@ impl Engine {
                         // A car waits at the kerb while another is still at the driveway mouth.
                         let mouth = traveler.destination_access.as_ref().and_then(|path| path.points.first()).map(|p| driveway_mouth(*p));
                         let held = traveler.kind == 1 && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
-                        if !held {
+                        if held {
+                            // Older saves parked held cars past their route; put them back on the road.
+                            skip_road[index] = !Self::hold_at_kerb(traveler);
+                        } else {
                             if traveler.destination_access.is_some() {
                                 traveler.access_phase = 2;
                                 traveler.access_progress = 0.0;
@@ -9236,8 +9248,8 @@ impl Engine {
                     }
                 }
             }
+            // Move from the current position; `remaining` carries across nodes.
             let mut remaining = (target - t.edge_progress).max(0.0);
-            t.edge_progress = target;
             while remaining > 0.0 && t.edge_index < t.route_lengths.len() {
                 let edge_len = t.route_lengths[t.edge_index].max(1.0);
                 let available = edge_len - t.edge_progress;
@@ -9267,8 +9279,11 @@ impl Engine {
             if t.edge_index >= t.route_lengths.len() {
                 let mouth = t.destination_access.as_ref().and_then(|path| path.points.first()).map(|p| driveway_mouth(*p));
                 let held = t.kind == 1 && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
-                // A held car waits at the kerb; the first loop admits it once the mouth clears.
-                if !held {
+                if held {
+                    // Wait at the end of the final lane: still drawn, still a
+                    // leader for followers, and retried here each tick.
+                    Self::hold_at_kerb(t);
+                } else {
                     if t.destination_access.is_some() {
                         t.access_phase = 2;
                         t.access_progress = 0.0;
@@ -18817,6 +18832,118 @@ mod tests {
         }
         // The follower is not stuck: both reach the road.
         assert_eq!(progress(&engine, 900_002).0, 1);
+    }
+
+    /// Two cars arriving at a driveway whose mouth (the end of their final
+    /// road edge) is still occupied by an earlier arrival with `occupant_speed`.
+    fn arrival_mouth_contention(occupant_speed: f32) -> (Engine, f32) {
+        let mut engine = Engine::new_legacy(81);
+        let road = engine
+            .state
+            .roads
+            .iter()
+            .find(|road| road.kind != "rail" && road.stage == "open")
+            .expect("founding road is open");
+        let (from, to) = (road.from, road.to);
+        let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
+        let mouth = engine.node(to).unwrap();
+        let driveway = AccessPath {
+            points: vec![WorldPoint { x: mouth.x, z: mouth.z }, WorldPoint { x: mouth.x + 20.0, z: mouth.z }],
+        };
+        let car = |id, phase, edge_progress, speed| Traveler {
+            id,
+            kind: 1,
+            route: vec![from, to],
+            route_lengths: vec![len],
+            edge_index: 0,
+            edge_progress,
+            speed,
+            destination: to,
+            activity: "commute".into(),
+            resident: 0,
+            name: "Arriving car".into(),
+            origin_building: None,
+            destination_building: Some(77),
+            wait_ticks: 0,
+            origin_access: None,
+            destination_access: Some(driveway.clone()),
+            access_phase: phase,
+            access_progress: 0.0,
+        };
+        engine.state.travelers.push(car(700_000, 2, len, occupant_speed));
+        engine.state.travelers.push(car(700_001, 1, len - 0.1, 6.0));
+        engine.state.travelers.push(car(700_002, 1, len - 12.0, 6.0));
+        (engine, len)
+    }
+
+    fn drawn(engine: &Engine, id: u32) -> Option<(f32, f32)> {
+        engine.movement_buffer().chunks(5).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]))
+    }
+
+    #[test]
+    fn cars_held_at_a_busy_arrival_mouth_stay_visible_and_lead_the_lane() {
+        let (mut engine, len) = arrival_mouth_contention(0.01);
+        for _ in 0..60 {
+            engine.advance_travelers();
+            let held = engine.state.travelers.iter().find(|t| t.id == 700_001).unwrap();
+            assert_eq!((held.access_phase, held.edge_index), (1, 0), "held on its final lane");
+            assert!((held.edge_progress - len.max(1.0)).abs() < 1e-3);
+            let (a, b) = (drawn(&engine, 700_001), drawn(&engine, 700_002));
+            let (a, b) = (a.expect("held car is drawn"), b.expect("follower is drawn"));
+            assert!((a.0 - b.0).hypot(a.1 - b.1) >= VEHICLE_MIN_GAP - 1e-3, "{a:?} {b:?}");
+        }
+        // The follower queued behind the held car rather than at the node.
+        let follower = engine.state.travelers.iter().find(|t| t.id == 700_002).unwrap();
+        assert_eq!((follower.access_phase, follower.edge_index), (1, 0));
+        assert!(follower.edge_progress <= len.max(1.0) - VEHICLE_MIN_GAP + 1e-3);
+    }
+
+    #[test]
+    fn held_arrivals_enter_in_turn_once_the_mouth_clears() {
+        let (mut engine, _) = arrival_mouth_contention(3.0);
+        let mut entered = Vec::new();
+        for _ in 0..600 {
+            engine.advance_travelers();
+            for t in &engine.state.travelers {
+                if t.access_phase == 2 && !entered.contains(&t.id) {
+                    entered.push(t.id);
+                }
+            }
+            let ours: Vec<_> = [700_000, 700_001, 700_002].iter().filter_map(|&id| drawn(&engine, id)).collect();
+            for (i, a) in ours.iter().enumerate() {
+                for b in &ours[i + 1..] {
+                    assert!((a.0 - b.0).hypot(a.1 - b.1) >= 1.0, "{a:?} {b:?}");
+                }
+            }
+            if engine.state.travelers.iter().all(|t| t.id < 700_000 || t.id > 700_002) {
+                break;
+            }
+        }
+        assert_eq!(entered, vec![700_000, 700_001, 700_002], "admitted one at a time, in queue order");
+        assert!(engine.state.travelers.iter().all(|t| t.id < 700_000 || t.id > 700_002), "all three arrive");
+    }
+
+    #[test]
+    fn a_held_arrival_survives_save_and_restore() {
+        let (mut engine, len) = arrival_mouth_contention(0.01);
+        for _ in 0..5 {
+            engine.advance_travelers();
+        }
+        let before = drawn(&engine, 700_001).expect("held car is drawn");
+        let mut restored = Engine::restore_json(&engine.save_json()).expect("save restores");
+        assert_eq!(drawn(&restored, 700_001), Some(before));
+        restored.advance_travelers();
+        let held = restored.state.travelers.iter().find(|t| t.id == 700_001).unwrap();
+        assert_eq!((held.access_phase, held.edge_index), (1, 0));
+        assert!((held.edge_progress - len.max(1.0)).abs() < 1e-3);
+
+        // Saves from before this fix parked held cars past their route.
+        let mut legacy = engine;
+        let held = legacy.state.travelers.iter_mut().find(|t| t.id == 700_001).unwrap();
+        held.edge_index = 1;
+        held.edge_progress = 0.0;
+        legacy.advance_travelers();
+        assert_eq!(drawn(&legacy, 700_001), Some(before));
     }
 
     #[test]
