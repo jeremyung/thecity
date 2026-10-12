@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "purpose": "Source images and measured dimensions for scripts/build-vehicle-kits.py. Every image is a side elevation with the vehicle facing left (front at low x).",
+  "pixelsPerMeter": 110,
+  "atlas": [
+    2048,
+    1024
+  ],
+  "bodies": [
+    {
+      "id": "kei",
+      "source": "vehicle-pilot/qwen-image-3--kei-wagon.png",
+      "length": 3.4,
+      "width": 1.48,
+      "height": 1.79,
+      "tumblehome": 0.08,
+      "lampFront": [
+        0.42,
+        0.52
+      ],
+      "lampRear": [
+        0.48,
+        0.62
+      ],
+      "wheelRadius": 0.28,
+      "clearance": 0.15,
+      "round": [
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "id": "compact",
+      "source": "vehicle-pilot/qwen-image-3--compact-hatch.png",
+      "length": 4.0,
+      "width": 1.7,
+      "height": 1.52,
+      "tumblehome": 0.14,
+      "lampFront": [
+        0.5,
+        0.6
+      ],
+      "lampRear": [
+        0.58,
+        0.7
+      ],
+      "wheelRadius": 0.31,
+      "clearance": 0.14,
+      "round": [
+        0.18,
+        0.14
+      ]
+    },
+    {
+      "id": "taxi",
+      "source": "vehicle-pilot/qwen-image-3--taxi.png",
+      "length": 4.4,
+      "width": 1.7,
+      "height": 1.75,
+      "tumblehome": 0.1,
+      "lampFront": [
+        0.46,
+        0.56
+      ],
+      "lampRear": [
+        0.5,
+        0.66
+      ],
+      "roofCut": true,
+      "wheelRadius": 0.31,
+      "clearance": 0.15,
+      "round": [
+        0.16,
+        0.1
+      ]
+    },
+    {
+      "id": "van",
+      "source": "vehicle-pilot/qwen-image-3--delivery-van.png",
+      "length": 4.7,
+      "width": 1.7,
+      "height": 1.98,
+      "tumblehome": 0.05,
+      "lampFront": [
+        0.36,
+        0.46
+      ],
+      "lampRear": [
+        0.42,
+        0.56
+      ],
+      "wheelRadius": 0.32,
+      "clearance": 0.17,
+      "round": [
+        0.1,
+        0.04
+      ]
+    },
+    {
+      "id": "truck",
+      "source": "vehicle-pilot/qwen-image-3--box-truck.png",
+      "length": 4.7,
+      "width": 1.7,
+      "height": 2.3,
+      "tumblehome": 0.02,
+      "lampFront": [
+        0.28,
+        0.36
+      ],
+      "lampRear": [
+        0.18,
+        0.26
+      ],
+      "wheelRadius": 0.36,
+      "paintRegion": [
+        0,
+        0.3
+      ],
+      "clearance": 0.28,
+      "round": [
+        0.08,
+        0
+      ]
+    },
+    {
+      "id": "bus",
+      "source": "vehicle-pilot/qwen-image-3--bus-left.png",
+      "sourceRight": "vehicle-pilot/qwen-image-3--bus-right.png",
+      "length": 9.0,
+      "width": 2.3,
+      "height": 3.1,
+      "tumblehome": 0.02,
+      "lampFront": [
+        0.2,
+        0.28
+      ],
+      "lampRear": [
+        0.2,
+        0.3
+      ],
+      "wheelRadius": 0.48,
+      "tint": false,
+      "clearance": 0.22,
+      "round": [
+        0.06,
+        0.04
+      ]
+    },
+    {
+      "id": "kei-hatch",
+      "source": "vehicle-pilot/qwen-image-3--kei-hatch-v2.png",
+      "length": 3.4,
+      "width": 1.48,
+      "height": 1.55,
+      "tumblehome": 0.1,
+      "lampFront": [
+        0.46,
+        0.58
+      ],
+      "lampRear": [
+        0.5,
+        0.66
+      ],
+      "wheelRadius": 0.27,
+      "clearance": 0.15,
+      "round": [
+        0.18,
+        0.12
+      ]
+    },
+    {
+      "id": "kei-truck",
+      "source": "vehicle-pilot/qwen-image-3--kei-truck.png",
+      "length": 3.4,
+      "width": 1.48,
+      "height": 1.8,
+      "tumblehome": 0.03,
+      "lampFront": [
+        0.34,
+        0.44
+      ],
+      "lampRear": [
+        0.3,
+        0.42
+      ],
+      "wheelRadius": 0.27,
+      "clearance": 0.2,
+      "round": [
+        0.08,
+        0
+      ],
+      "paintRegion": [
+        0,
+        0.36
+      ]
+    },
+    {
+      "id": "compact-crossover",
+      "source": "vehicle-pilot/qwen-image-3--compact-crossover-v2.png",
+      "length": 4.0,
+      "width": 1.75,
+      "height": 1.6,
+      "tumblehome": 0.14,
+      "lampFront": [
+        0.52,
+        0.62
+      ],
+      "lampRear": [
+        0.58,
+        0.7
+      ],
+      "wheelRadius": 0.35,
+      "clearance": 0.2,
+      "round": [
+        0.18,
+        0.14
+      ]
+    },
+    {
+      "id": "compact-minivan",
+      "source": "vehicle-pilot/qwen-image-3--compact-minivan.png",
+      "length": 4.0,
+      "width": 1.7,
+      "height": 1.68,
+      "tumblehome": 0.08,
+      "lampFront": [
+        0.44,
+        0.54
+      ],
+      "lampRear": [
+        0.48,
+        0.64
+      ],
+      "wheelRadius": 0.3,
+      "clearance": 0.15,
+      "round": [
+        0.16,
+        0.08
+      ]
+    },
+    {
+      "id": "taxi-classic",
+      "source": "vehicle-pilot/qwen-image-3--taxi-classic-v2.png",
+      "length": 4.4,
+      "width": 1.7,
+      "height": 1.5,
+      "tumblehome": 0.1,
+      "lampFront": [
+        0.4,
+        0.5
+      ],
+      "lampRear": [
+        0.42,
+        0.52
+      ],
+      "wheelRadius": 0.31,
+      "clearance": 0.16,
+      "round": [
+        0.08,
+        0.06
+      ],
+      "roofCut": true
+    }
+  ]
+}

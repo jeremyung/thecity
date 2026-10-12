@@ -1,0 +1,263 @@
+[
+  {
+    "id": "hy21-distilled--kei-wagon",
+    "unet": "hunyuanimage2.1_distilled_bf16.safetensors",
+    "steps": 8,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "seconds": 3.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-distilled--compact-hatch",
+    "unet": "hunyuanimage2.1_distilled_bf16.safetensors",
+    "steps": 8,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "seconds": 3.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-distilled--taxi",
+    "unet": "hunyuanimage2.1_distilled_bf16.safetensors",
+    "steps": 8,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "seconds": 3.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-distilled--delivery-van",
+    "unet": "hunyuanimage2.1_distilled_bf16.safetensors",
+    "steps": 8,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "seconds": 3.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-distilled--box-truck",
+    "unet": "hunyuanimage2.1_distilled_bf16.safetensors",
+    "steps": 8,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "seconds": 3.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full--kei-wagon",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 24.1,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full--compact-hatch",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 12.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full--taxi",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 12.1,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full--delivery-van",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full--box-truck",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--kei-wagon",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--compact-hatch",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--taxi",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--delivery-van",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--box-truck",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--taxi-black",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 32.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--taxi-indigo",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--van-hidamari",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--van-tsubame",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--van-post",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--truck-aoba",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--truck-yamabiko",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--truck-fuji-reefer",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-ortho-s2202--taxi-black",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-ortho-s2202--taxi-indigo",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-ortho-s3303--taxi-black",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-ortho-s3303--taxi-indigo",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-ortho-s4404--taxi-black",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.1,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-ortho-s4404--taxi-indigo",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seconds": 13.1,
+    "costUSD": 0
+  }
+]

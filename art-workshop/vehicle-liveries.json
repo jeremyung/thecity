@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "status": "approved",
+  "purpose": "Livery variants: the standard Tokyo taxi body, and delivery vans and trucks carrying invented operator brands. Brands are original to the city; no real company marks.",
+  "capUSD": 2,
+  "aspectRatio": "16:9",
+  "hostedModels": [
+    { "id": "qwen/qwen-image-3", "provider": "alibaba", "estimateUSD": 0.03, "request": { "resolution": "1K" } },
+    { "id": "tencent/hy-image-v3.5-preview", "provider": "tencent", "estimateUSD": 0.024, "request": { "resolution": "1K" } }
+  ],
+  "commonPrompt": "Strict orthographic side elevation of one single vehicle, exact profile, camera perpendicular to the vehicle side at axle height, zero perspective, not a three-quarter view. The vehicle faces left and spans almost the full image width, all wheels on one horizontal baseline. Plain uniform flat light-gray background, no ground, no cast shadow, soft even diffuse lighting without bright highlights. Realistic factory paint and fine details. No car manufacturer badges or emblems and no licence plate characters. The only graphics are the operator livery described, printed crisply and flat on the body side, with Japanese text spelled exactly as quoted. Clean reference for texturing a miniature Tokyo street model.",
+  "vehicles": [
+    {
+      "id": "taxi-black",
+      "dimensionsM": [4.4, 1.7, 1.75],
+      "prompt": "Standard modern Tokyo taxi: tall upright one-box compact hatch, short sloping bonnet with a large dark chrome grille, high flat roof, near-vertical rear hatch, large rear sliding passenger door with a long chrome rail, gloss black paint, small silver alloy wheels, rectangular illuminated roof sign reading \"まちタクシー\" in white on black, a small round green company mark on the front door."
+    },
+    {
+      "id": "taxi-indigo",
+      "dimensionsM": [4.4, 1.7, 1.75],
+      "prompt": "Standard modern Tokyo taxi: tall upright one-box compact hatch, short sloping bonnet with a large dark chrome grille, high flat roof, near-vertical rear hatch, large rear sliding passenger door with a long chrome rail, deep traditional indigo (koiai) paint, small silver alloy wheels, rectangular roof sign reading \"青葉交通\" in white, small gold lettering \"青葉交通\" on the front door."
+    },
+    {
+      "id": "van-hidamari",
+      "dimensionsM": [4.7, 1.7, 1.98],
+      "prompt": "White Japanese one-box cab-forward delivery van 4.7 m long and 2.0 m tall, flat slab sides, sliding cargo door. Livery: a broad warm marigold-yellow band along the lower body, a simple round orange rising-sun mark, and large dark-brown Japanese lettering \"ひだまり便\" on the cargo side."
+    },
+    {
+      "id": "van-tsubame",
+      "dimensionsM": [4.7, 1.7, 1.98],
+      "prompt": "White Japanese one-box cab-forward delivery van 4.7 m long and 2.0 m tall, flat slab sides, sliding cargo door. Livery: two thin parallel deep-blue stripes running the full length, a flat stylised swallow bird mark in blue, and blue Japanese lettering \"つばめ急便\" on the cargo side."
+    },
+    {
+      "id": "van-post",
+      "dimensionsM": [3.4, 1.48, 1.9],
+      "prompt": "Small Japanese kei one-box mail van 3.4 m long, tall boxy body, sliding door, entirely bright vermilion-red paint with a white horizontal stripe, white Japanese lettering \"まち郵便\" and a small white envelope mark on the side."
+    },
+    {
+      "id": "truck-aoba",
+      "dimensionsM": [4.7, 1.7, 2.3],
+      "prompt": "Japanese two-ton cab-over light truck: flat-fronted white cab and a tall rectangular aluminium cargo box. Livery on the box side: a large fresh-green leaf mark, a green band along the bottom edge, and green Japanese lettering \"あおば運輸\" with smaller text \"AOBA TRANSPORT\" below it."
+    },
+    {
+      "id": "truck-yamabiko",
+      "dimensionsM": [4.7, 1.7, 2.3],
+      "prompt": "Japanese two-ton cab-over light truck: flat-fronted white cab and a tall rectangular cargo box painted white. Livery on the box: a bold diagonal persimmon-orange stripe, a simple mountain-silhouette mark, and dark navy Japanese lettering \"やまびこ引越センター\"."
+    },
+    {
+      "id": "truck-fuji-reefer",
+      "dimensionsM": [4.7, 1.7, 2.3],
+      "prompt": "Japanese two-ton cab-over refrigerated truck: flat-fronted pale blue cab, smooth white insulated cargo box with a small refrigeration unit above the cab. Livery on the box: a flowing sky-blue wave mark and blue Japanese lettering \"ふじ冷凍便\"."
+    }
+  ]
+}

@@ -5,6 +5,8 @@ import { ArtMaterials, signTexture } from './materials';
 import { paintedSurfaceTint } from './painted-surface';
 import { buildingKit, disposeGroup, Kit } from './kit';
 import type { Building, Style } from '../types';
+import { VEHICLE_KINDS, VehicleFleet } from './vehicles';
+import { CityBuses } from './buses';
 
 /** Isolated development viewer for the same authored building kits used by the city. */
 export class ArchitectureAssetReview {
@@ -16,6 +18,11 @@ export class ArchitectureAssetReview {
   readonly controls: OrbitControls;
   private readonly models = new THREE.Group();
   private readonly street = new THREE.Group();
+  private readonly fleet: VehicleFleet;
+  private readonly buses: CityBuses;
+  private traffic: Array<{ id: number; kind: number; x: number; z: number; dir: number; speed: number }> = [];
+  private lastFrame = 0;
+  private trafficPaused = false;
   private readonly materialStudy = new THREE.Group();
   private lowriseSamples: Array<{ building: Building; model: THREE.Group }> = [];
   private readonly sun = new THREE.DirectionalLight('#fff1d1', 3);
@@ -77,6 +84,11 @@ export class ArchitectureAssetReview {
     this.ground.receiveShadow = true;
     this.scene.add(this.ground);
     this.buildStreet();
+    this.fleet = new VehicleFleet(this.art, 1000);
+    this.buses = new CityBuses(this.art, release => release());
+    this.scene.add(this.fleet.root, this.buses.root);
+    this.buildTraffic();
+    if (import.meta.env.DEV) Object.assign(window, { __review: this });
     this.buildArchitecture();
     this.buildMaterialStudy();
     this.art.setStyle(style);
@@ -97,8 +109,9 @@ export class ArchitectureAssetReview {
     }
     this.setSize();
     this.started = true;
-    this.renderer.setAnimationLoop(() => {
+    this.renderer.setAnimationLoop((now: number) => {
       if (this.disposed) return;
+      this.updateTraffic(now);
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
     });
@@ -239,6 +252,8 @@ export class ArchitectureAssetReview {
     this.shopFacadeTexture = null;
     disposeGroup(this.models);
     disposeGroup(this.street);
+    this.fleet.dispose();
+    this.buses.dispose();
     disposeGroup(this.materialStudy);
     this.ground.geometry.dispose();
     this.art.dispose();
@@ -247,6 +262,34 @@ export class ArchitectureAssetReview {
   }
 
   private readonly onWindowResize = () => this.setSize();
+
+  /** Mixed traffic in both lanes, driving slowly so variants, wheels and lamps read. */
+  private buildTraffic(): void {
+    const mix = [1, 4, 1, 5, 4, 6, 1, 7, 4, 8, 1, 5];
+    for (const [lane, dir, base] of [[3.4, 1, 100], [12.6, -1, 300]] as const) {
+      mix.forEach((kind, i) => this.traffic.push({ id: base + i * 7, kind, x: -56 + i * 8.6 + (dir < 0 ? 4 : 0), z: lane, dir, speed: 2.2 }));
+      this.traffic.push({ id: 900 + base, kind: 3, x: 52, z: lane, dir, speed: 1.6 });
+    }
+  }
+
+  /** Review controls for captures: freeze traffic at a pose. */
+  setTrafficPaused(paused: boolean): void { this.trafficPaused = paused; }
+
+  private updateTraffic(now: number): void {
+    const dt = this.lastFrame ? Math.min(.1, (now - this.lastFrame) / 1000) : 1 / 60;
+    this.lastFrame = now;
+    // The review street surface is 0.14 m below the city's road slab top.
+    const lift = 0.16 - 0.3;
+    this.fleet.begin(); this.buses.begin(now);
+    let bus = 0;
+    for (const v of this.traffic) {
+      if (!this.trafficPaused) { v.x += v.dir * v.speed * dt; if (v.x > 60) v.x = -60; if (v.x < -60) v.x = 60; }
+      const yaw = v.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+      if (v.kind === 3) this.buses.set(bus++, v.id, v.x, v.z, yaw, null, 0.16);
+      else this.fleet.add(v.id, v.kind, v.x, v.z, yaw, lift, 0, this.trafficPaused ? 0 : dt);
+    }
+    this.fleet.finish(); this.buses.finish(bus);
+  }
 
   private setSize(): void {
     if (this.disposed) return;

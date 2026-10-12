@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "status": "approved",
+  "purpose": "Compare local HunyuanImage-2.1 with hosted image models for vehicle side-elevation textures projected onto authored vehicle kits.",
+  "capUSD": 2,
+  "automaticRetries": false,
+  "aspectRatio": "16:9",
+  "hostedModels": [
+    { "id": "tencent/hy-image-v3.5-preview", "provider": "tencent", "estimateUSD": 0.024, "request": { "resolution": "1K" } },
+    { "id": "qwen/qwen-image-3", "provider": "alibaba", "estimateUSD": 0.03, "request": { "resolution": "1K" } },
+    { "id": "google/gemini-nano-banana-2.1", "provider": "google-ai-studio", "estimateUSD": 0.05, "request": {} }
+  ],
+  "local": {
+    "model": "hunyuanimage2.1_distilled_bf16.safetensors",
+    "width": 2048,
+    "height": 1152,
+    "steps": 8,
+    "cfg": 1,
+    "seed": 1101
+  },
+  "commonPrompt": "Strict orthographic side elevation of one single vehicle, exact profile, camera perpendicular to the vehicle side at axle height, zero perspective, not a three-quarter view. The vehicle faces left and spans almost the full image width, all wheels resting on one horizontal baseline. Plain uniform flat light-gray background, no ground, no cast shadow, no environment reflections, soft even diffuse lighting without bright specular highlights. Realistic factory paint and fine credible details: panel seams, door handles, window frames and pillars, mirrors, lamps, tyres and wheels. Generic contemporary Japanese design with no brand logos, badges, emblems, readable text or licence plate characters. Clean reference for texturing a miniature Tokyo street model.",
+  "vehicles": [
+    {
+      "id": "kei-wagon",
+      "dimensionsM": [3.4, 1.48, 1.79],
+      "prompt": "Japanese kei tall-wagon minicar: very boxy upright body 3.4 m long and 1.8 m tall, short sloping nose, near-vertical tailgate, large side glass, sliding rear passenger door, small 14 inch wheels, pale mint-cream paint."
+    },
+    {
+      "id": "compact-hatch",
+      "dimensionsM": [4.0, 1.7, 1.52],
+      "prompt": "Japanese compact five-door hatchback: 4.0 m long and 1.5 m tall, modest gently rounded proportions, short bonnet, steeply raked tailgate, 15 inch wheels, muted dusty-blue paint."
+    },
+    {
+      "id": "taxi",
+      "dimensionsM": [4.4, 1.7, 1.75],
+      "prompt": "Modern Japanese city taxi: upright tall compact people-carrier shape 4.4 m long and 1.75 m tall, deep indigo paint, thin chrome window trim, rear sliding passenger door, small blank roof-top taxi lamp sign with no writing."
+    },
+    {
+      "id": "delivery-van",
+      "dimensionsM": [4.7, 1.7, 1.98],
+      "prompt": "White Japanese commercial delivery van: long one-box cab-forward body 4.7 m long and 2.0 m tall, flat slab sides, small rear side windows, sliding cargo door, small steel wheels, completely blank sides without lettering."
+    },
+    {
+      "id": "box-truck",
+      "dimensionsM": [4.7, 1.7, 2.3],
+      "prompt": "Japanese two-ton cab-over light truck: flat-fronted white tilt cab followed by a tall rectangular ribbed silver aluminium cargo box, 4.7 m long and 2.3 m tall, single front wheels and dual rear wheels, plain box with no lettering."
+    }
+  ],
+  "criteria": [
+    "Orthographic: no visible perspective or three-quarter view; wheels share one baseline.",
+    "Proportion: measured length/height ratio within 10% of dimensionsM.",
+    "Flat lighting: no baked specular streaks or cast shadow that fight live shading.",
+    "Clean: no logos, text, plate characters or background clutter; easy to matte.",
+    "Typology: reads as the requested Japanese vehicle at 128 px wide.",
+    "Cost and time per usable image."
+  ]
+}

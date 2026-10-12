@@ -465,6 +465,73 @@ fn default_access_phase() -> u8 {
     1
 }
 
+/// Signed offset of the driving lane from the road centre line, measured along
+/// (-dz, dx), the counter-clockwise normal of the heading in the x-z plane.
+/// The renderer is right-handed with y up, where that normal is the driver's
+/// RIGHT, so Tokyo's left-hand traffic needs the negative side.
+const KERB_LANE: f32 = -1.65;
+/// Bus-stop poles stand on the kerb side, along the same normal.
+const BUS_STOP_KERB: f32 = -6.2;
+
+// Movement-buffer kinds for road vehicle bodies (web/src/render/vehicles.ts).
+// Kind 1 stays the private compact so older traces and tools keep working.
+const VEHICLE_COMPACT: u8 = 1;
+const VEHICLE_KEI: u8 = 4;
+const VEHICLE_TAXI: u8 = 5;
+const VEHICLE_VAN: u8 = 6;
+const VEHICLE_TRUCK: u8 = 7;
+const VEHICLE_MAIL: u8 = 8;
+/// Bumper-to-bumper allowance between queued road vehicles.
+const VEHICLE_QUEUE_MARGIN: f32 = 0.5;
+/// The historical fixed queue spacing; short bodies never queue tighter.
+const VEHICLE_MIN_GAP: f32 = 4.5;
+
+fn vehicle_hash(id: u32) -> u32 {
+    id.wrapping_mul(2_654_435_761) >> 16
+}
+
+/// Body length in metres; matches web/src/render/vehicle-manifest.json.
+fn vehicle_length(body: u8) -> f32 {
+    match body {
+        VEHICLE_KEI | VEHICLE_MAIL => 3.4,
+        VEHICLE_TAXI => 4.4,
+        VEHICLE_VAN | VEHICLE_TRUCK => 4.7,
+        _ => 4.0,
+    }
+}
+
+fn vehicle_name(body: u8) -> &'static str {
+    match body {
+        VEHICLE_KEI => "kei",
+        VEHICLE_TAXI => "taxi",
+        VEHICLE_VAN => "van",
+        VEHICLE_TRUCK => "truck",
+        VEHICLE_MAIL => "mail",
+        _ => "compact",
+    }
+}
+
+/// Where an access path meets the road, on a 10 cm grid, as a queue key.
+fn driveway_mouth(point: WorldPoint) -> (i32, i32) {
+    ((point.x * 10.0).round() as i32, (point.z * 10.0).round() as i32)
+}
+
+/// Park a car that reached the end of its route at the kerb end of its final
+/// lane while its driveway mouth is busy. It stays a road traveler there, so
+/// it is still drawn and still holds back the cars queued behind it.
+fn hold_at_kerb(t: &mut Traveler) {
+    if let Some(&last) = t.route_lengths.last() {
+        t.edge_index = t.route_lengths.len() - 1;
+        t.edge_progress = last.max(1.0);
+    }
+}
+
+/// Centre-to-centre following distance for two queued road vehicles.
+fn vehicle_gap(lead: u8, follower: u8) -> f32 {
+    ((vehicle_length(lead) + vehicle_length(follower)) * 0.5 + VEHICLE_QUEUE_MARGIN)
+        .max(VEHICLE_MIN_GAP)
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 struct WorldPoint {
     x: f32,
@@ -1223,6 +1290,37 @@ impl Engine {
         self.state.next_id = self.state.next_id.saturating_add(1);
         id
     }
+    /// The body a road trip uses, derived from the trip so saves need no new field.
+    /// Deliveries run vans, trucks and mail vans; residents drive kei cars and
+    /// compacts, and station trips are more often taxis.
+    /// `station` is `self.station_node()`, looked up once per pass by the caller.
+    fn vehicle_body(t: &Traveler, station: Option<u32>) -> u8 {
+        if t.kind != 1 {
+            return t.kind;
+        }
+        let h = vehicle_hash(t.id);
+        if t.activity.starts_with("delivery") {
+            return match h % 6 {
+                0 | 1 => VEHICLE_TRUCK,
+                2 => VEHICLE_MAIL,
+                _ => VEHICLE_VAN,
+            };
+        }
+        let station_trip = station
+            .is_some_and(|s| t.destination == s || t.route.first() == Some(&s));
+        if h % 10 == 0 || (station_trip && h % 3 == 0) {
+            VEHICLE_TAXI
+        } else if h % 10 < 5 {
+            VEHICLE_KEI
+        } else {
+            VEHICLE_COMPACT
+        }
+    }
+
+    fn station_node(&self) -> Option<u32> {
+        self.state.nodes.iter().find(|n| n.kind == "station").map(|n| n.id)
+    }
+
     fn node(&self, id: u32) -> Option<&Node> {
         self.state.nodes.iter().find(|n| n.id == id)
     }
@@ -1514,7 +1612,7 @@ impl Engine {
             .map(|road| road_width(&road.kind))
             .unwrap_or(9.0);
         let lateral = if kind == 1 {
-            1.65
+            KERB_LANE
         } else if traveler_id % 2 == 0 {
             width * 0.5 + 0.72
         } else {
@@ -1587,12 +1685,12 @@ impl Engine {
         let travel_nx = -dz * toward_frontage / length;
         let travel_nz = dx * toward_frontage / length;
         let access_lane = WorldPoint {
-            x: if access_node == road.from { a.x } else { b.x } + travel_nx * 1.65,
-            z: if access_node == road.from { a.z } else { b.z } + travel_nz * 1.65,
+            x: if access_node == road.from { a.x } else { b.x } + travel_nx * KERB_LANE,
+            z: if access_node == road.from { a.z } else { b.z } + travel_nz * KERB_LANE,
         };
         let frontage_lane = WorldPoint {
-            x: center.x + travel_nx * 1.65,
-            z: center.z + travel_nz * 1.65,
+            x: center.x + travel_nx * KERB_LANE,
+            z: center.z + travel_nz * KERB_LANE,
         };
         let (start_walk, end_walk) = if from_building {
             (frontage_walk, access_walk)
@@ -8151,8 +8249,8 @@ impl Engine {
         let length = distance(node, other).max(1.0);
         let along = 3.0 + slot as f32 * 1.25;
         Some(WorldPoint {
-            x: node.x + (other.x - node.x) / length * along - (other.z - node.z) / length * 6.2,
-            z: node.z + (other.z - node.z) / length * along + (other.x - node.x) / length * 6.2,
+            x: node.x + (other.x - node.x) / length * along - (other.z - node.z) / length * BUS_STOP_KERB,
+            z: node.z + (other.z - node.z) / length * along + (other.x - node.x) / length * BUS_STOP_KERB,
         })
     }
 
@@ -8185,7 +8283,7 @@ impl Engine {
                 let length = dx.hypot(dz).max(1.0);
                 let nx = -dz / length;
                 let nz = dx / length;
-                let curb = 6.2;
+                let curb = BUS_STOP_KERB;
                 views.push(BusStopView {
                     node_id: *stop,
                     x: node.x + nx * curb,
@@ -8840,6 +8938,56 @@ impl Engine {
         path.reverse();
         path
     }
+    /// Cars queue on driveways the way they do on roads. Access paths share
+    /// geometry at both ends: departures leave a shared door and merge where
+    /// neighbouring driveways meet the road; arrivals do the reverse. Each car
+    /// therefore queues against both ends of its path, ordered by distance from
+    /// that end. Returns, per traveler, the furthest access progress it may reach
+    /// this tick (one queue gap behind the car ahead; ties go to the lower id),
+    /// and the road mouths whose arrival driveway is still occupied.
+    fn driveway_queues(&self) -> (Vec<f32>, BTreeSet<(i32, i32)>) {
+        let station = self.station_node();
+        let travelers = &self.state.travelers;
+        let mut limit = vec![f32::INFINITY; travelers.len()];
+        // (phase, queues at the path start?, end point) -> (index, rank, path length).
+        // Rank grows toward the back of the queue.
+        let mut lanes: BTreeMap<(u8, bool, (i32, i32)), Vec<(usize, f32, f32)>> = BTreeMap::new();
+        for (index, t) in travelers.iter().enumerate() {
+            let path = match (t.kind, t.access_phase) {
+                (1, 0) => t.origin_access.as_ref(),
+                (1, 2) => t.destination_access.as_ref(),
+                _ => None,
+            };
+            let Some(path) = path else { continue };
+            let (Some(start), Some(end)) = (path.points.first(), path.points.last()) else { continue };
+            let length = path.length();
+            // Leaving the start: further along is ahead. Approaching the end: closer is ahead.
+            lanes.entry((t.access_phase, true, driveway_mouth(*start))).or_default().push((index, -t.access_progress, length));
+            lanes.entry((t.access_phase, false, driveway_mouth(*end))).or_default().push((index, length - t.access_progress, length));
+        }
+        let mut entry_busy = BTreeSet::new();
+        for ((phase, at_start, point), list) in &mut lanes {
+            list.sort_by(|a, b| a.1.total_cmp(&b.1).then(travelers[a.0].id.cmp(&travelers[b.0].id)));
+            for pair in list.windows(2) {
+                let ((lead, lead_rank, _), (follower, _, length)) = (pair[0], pair[1]);
+                let gap = vehicle_gap(
+                    Self::vehicle_body(&travelers[lead], station),
+                    Self::vehicle_body(&travelers[follower], station),
+                );
+                let allowed = if *at_start { -lead_rank - gap } else { length - (lead_rank + gap) };
+                limit[follower] = limit[follower].min(allowed);
+            }
+            // Arrival paths start at the road: the mouth is busy until the last car clears it.
+            if *phase == 2 && *at_start {
+                let last = &travelers[list.last().unwrap().0];
+                if last.access_progress < vehicle_length(Self::vehicle_body(last, station)) + VEHICLE_QUEUE_MARGIN {
+                    entry_busy.insert(*point);
+                }
+            }
+        }
+        (limit, entry_busy)
+    }
+
     fn advance_travelers(&mut self) {
         if self.state.travelers.is_empty() {
             return;
@@ -8849,13 +8997,15 @@ impl Engine {
         self.wait_scratch.resize(count, 0);
         let mut skip_road = vec![false; count];
         let mut arrivals = Vec::new();
+        let (driveway_limit, mut driveway_entry_busy) = self.driveway_queues();
         for index in 0..count {
             let traveler = &mut self.state.travelers[index];
             match traveler.access_phase {
                 0 => {
                     skip_road[index] = true;
                     if let Some(path) = &traveler.origin_access {
-                        traveler.access_progress += traveler.speed / TICKS_PER_SECOND as f32;
+                        let next = traveler.access_progress + traveler.speed / TICKS_PER_SECOND as f32;
+                        traveler.access_progress = next.min(driveway_limit[index].max(traveler.access_progress));
                         if traveler.access_progress >= path.length() {
                             traveler.access_phase = 1;
                             traveler.access_progress = 0.0;
@@ -8868,7 +9018,8 @@ impl Engine {
                 2 => {
                     skip_road[index] = true;
                     if let Some(path) = &traveler.destination_access {
-                        traveler.access_progress += traveler.speed / TICKS_PER_SECOND as f32;
+                        let next = traveler.access_progress + traveler.speed / TICKS_PER_SECOND as f32;
+                        traveler.access_progress = next.min(driveway_limit[index].max(traveler.access_progress));
                         if traveler.access_progress >= path.length() {
                             arrivals.push(traveler.clone());
                         }
@@ -8878,13 +9029,31 @@ impl Engine {
                 }
                 _ => {
                     traveler.access_phase = 1;
-                    if traveler.edge_index >= traveler.route_lengths.len() {
-                        skip_road[index] = true;
-                        if traveler.destination_access.is_some() {
-                            traveler.access_phase = 2;
-                            traveler.access_progress = 0.0;
+                    // A car held at the kerb by a busy driveway retries here, before
+                    // any signal can stop it short of the mouth it already reached.
+                    let at_kerb = traveler.kind == 1
+                        && traveler.edge_index + 1 == traveler.route_lengths.len()
+                        && traveler.route_lengths.last().is_some_and(|&len| traveler.edge_progress >= len.max(1.0));
+                    if traveler.edge_index >= traveler.route_lengths.len() || at_kerb {
+                        // A car waits at the kerb while another is still at the driveway mouth.
+                        let mouth = traveler.destination_access.as_ref().and_then(|path| path.points.first()).map(|p| driveway_mouth(*p));
+                        let held = traveler.kind == 1 && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
+                        if held {
+                            // Still a road traveler: drawn, and queued ahead of its followers.
+                            // (Saves from before kerb holding kept the car past its route.)
+                            hold_at_kerb(traveler);
+                            skip_road[index] = traveler.edge_index >= traveler.route_lengths.len();
                         } else {
-                            arrivals.push(traveler.clone());
+                            skip_road[index] = true;
+                            if traveler.destination_access.is_some() {
+                                traveler.access_phase = 2;
+                                traveler.access_progress = 0.0;
+                                if traveler.kind == 1 {
+                                    driveway_entry_busy.extend(mouth);
+                                }
+                            } else {
+                                arrivals.push(traveler.clone());
+                            }
                         }
                     }
                 }
@@ -8924,8 +9093,11 @@ impl Engine {
             self.state.travelers[index].wait_ticks = self.wait_scratch[index];
         }
         // Deterministic car-following queues by directed lane. Followers slow and stop
-        // behind the leader before reaching the intersection approach.
-        if self.state.tick % 4 == 0 {
+        // behind the leader before reaching the intersection approach. Runs every
+        // tick: the red-light stop above also does, and a sparser queue let
+        // followers creep onto the leader at the stop line between passes.
+        {
+            let station = self.station_node();
             self.lane_order.clear();
             self.lane_order.extend((0..count).filter(|index| {
                 !skip_road[*index]
@@ -8985,10 +9157,15 @@ impl Engine {
                 for i in start + 1..end {
                     let lead = self.lane_order[i - 1];
                     let follower = self.lane_order[i];
-                    let gap = if self.state.travelers[lead].kind == 1
-                        || self.state.travelers[follower].kind == 1
-                    {
-                        4.5
+                    let (lead_t, follower_t) =
+                        (&self.state.travelers[lead], &self.state.travelers[follower]);
+                    let gap = if lead_t.kind == 1 && follower_t.kind == 1 {
+                        vehicle_gap(
+                            Self::vehicle_body(lead_t, station),
+                            Self::vehicle_body(follower_t, station),
+                        )
+                    } else if lead_t.kind == 1 || follower_t.kind == 1 {
+                        VEHICLE_MIN_GAP
                     } else {
                         1.6
                     };
@@ -9040,6 +9217,23 @@ impl Engine {
                 }
             }
         }
+        // Merge gate: a car enters a road lane only when the last car to enter
+        // it is a queue gap down the road. Cars are admitted in index order and
+        // each admission becomes the lane's new tail, so two cars arriving from
+        // different approaches on one tick cannot both enter.
+        let station = self.station_node();
+        let mut lane_tail: BTreeMap<(u32, u32), (f32, u8)> = BTreeMap::new();
+        for (index, t) in self.state.travelers.iter().enumerate() {
+            if t.kind != 1 || skip_road[index] {
+                continue;
+            }
+            if let Some(r) = t.route.get(t.edge_index..=t.edge_index + 1) {
+                let entry = lane_tail.entry((r[0], r[1])).or_insert((f32::INFINITY, VEHICLE_COMPACT));
+                if t.edge_progress < entry.0 {
+                    *entry = (t.edge_progress, Self::vehicle_body(t, station));
+                }
+            }
+        }
         let (travelers, planned) = (&mut self.state.travelers, &self.planned_progress);
         for (index, t) in travelers.iter_mut().enumerate() {
             if skip_road[index] {
@@ -9049,8 +9243,20 @@ impl Engine {
                 arrivals.push(t.clone());
                 continue;
             }
-            let mut remaining = (planned[index] - t.edge_progress).max(0.0);
-            t.edge_progress = planned[index];
+            let body = Self::vehicle_body(t, station);
+            let mut target = planned[index];
+            if t.kind == 1 {
+                // Stop a queue gap behind the last car into the next lane, not at the node.
+                let edge_len = t.route_lengths[t.edge_index].max(1.0);
+                let next_lane = t.route.get(t.edge_index + 1..=t.edge_index + 2).map(|r| (r[0], r[1]));
+                if let Some(tail) = next_lane.and_then(|lane| lane_tail.get(&lane)) {
+                    let gap = vehicle_gap(tail.1, body);
+                    if tail.0 < gap {
+                        target = target.min(edge_len - (gap - tail.0)).max(t.edge_progress);
+                    }
+                }
+            }
+            let mut remaining = (target - t.edge_progress).max(0.0);
             while remaining > 0.0 && t.edge_index < t.route_lengths.len() {
                 let edge_len = t.route_lengths[t.edge_index].max(1.0);
                 let available = edge_len - t.edge_progress;
@@ -9058,16 +9264,42 @@ impl Engine {
                     t.edge_progress += remaining;
                     break;
                 }
+                let next_lane = t.route.get(t.edge_index + 1..=t.edge_index + 2).map(|r| (r[0], r[1]));
+                if t.kind == 1 {
+                    if let Some(tail) = next_lane.and_then(|lane| lane_tail.get(&lane)) {
+                        if tail.0 < vehicle_gap(tail.1, body) {
+                            // Wait at the junction for the lane ahead to clear.
+                            t.edge_progress = edge_len;
+                            break;
+                        }
+                    }
+                }
                 remaining = (remaining - available).max(0.0);
                 t.edge_index += 1;
                 t.edge_progress = 0.0;
+                if t.kind == 1 {
+                    if let Some(lane) = next_lane {
+                        lane_tail.insert(lane, (remaining.min(t.route_lengths.get(t.edge_index).copied().unwrap_or(0.0)), body));
+                    }
+                }
             }
             if t.edge_index >= t.route_lengths.len() {
-                if t.destination_access.is_some() {
-                    t.access_phase = 2;
-                    t.access_progress = 0.0;
+                let mouth = t.destination_access.as_ref().and_then(|path| path.points.first()).map(|p| driveway_mouth(*p));
+                let held = t.kind == 1 && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
+                // A held car waits at the kerb end of its last lane and retries
+                // admission each tick as it tries to advance past the end.
+                if held {
+                    hold_at_kerb(t);
                 } else {
-                    arrivals.push(t.clone());
+                    if t.destination_access.is_some() {
+                        t.access_phase = 2;
+                        t.access_progress = 0.0;
+                        if t.kind == 1 {
+                            driveway_entry_busy.extend(mouth);
+                        }
+                    } else {
+                        arrivals.push(t.clone());
+                    }
                 }
             }
         }
@@ -10119,8 +10351,14 @@ impl Engine {
                 + self.state.buses.len())
                 * 5,
         );
+        let station = self.station_node();
         for t in &self.state.travelers {
             if t.access_phase == 0 || t.access_phase == 2 {
+                // A car still at the start of its driveway has not pulled out:
+                // it waits off-screen behind the car ahead (see driveway_queues).
+                if t.kind == 1 && t.access_phase == 0 && t.access_progress <= 0.0 {
+                    continue;
+                }
                 let path = if t.access_phase == 0 {
                     t.origin_access.as_ref()
                 } else {
@@ -10128,7 +10366,7 @@ impl Engine {
                 };
                 if let Some((point, heading)) = path.and_then(|path| path.sample(t.access_progress))
                 {
-                    out.extend_from_slice(&[t.id as f32, point.x, point.z, heading, t.kind as f32]);
+                    out.extend_from_slice(&[t.id as f32, point.x, point.z, heading, Self::vehicle_body(t, station) as f32]);
                 }
                 continue;
             }
@@ -10155,7 +10393,7 @@ impl Engine {
                 x,
                 z,
                 (b.z - a.z).atan2(b.x - a.x),
-                t.kind as f32,
+                Self::vehicle_body(t, station) as f32,
             ]);
         }
         if let Some((station, gateway)) = self.rail_terminals() {
@@ -10329,8 +10567,8 @@ impl Engine {
                 let nx = -heading.sin();
                 let nz = heading.cos();
                 return Some((
-                    a.x + (b.x - a.x) * f + nx * 1.65,
-                    a.z + (b.z - a.z) * f + nz * 1.65,
+                    a.x + (b.x - a.x) * f + nx * KERB_LANE,
+                    a.z + (b.z - a.z) * f + nz * KERB_LANE,
                     heading,
                 ));
             }
@@ -10356,8 +10594,7 @@ impl Engine {
             .map(|r| road_width(&r.kind))
             .unwrap_or(9.0);
         let lateral = if traveler.kind == 1 {
-            // Left-hand traffic: driver's left is the positive left-normal of the heading.
-            1.65
+            KERB_LANE
         } else if traveler.id % 2 == 0 {
             width * 0.5 + 0.72
         } else {
@@ -10388,7 +10625,7 @@ impl Engine {
                     .map(|e| e.reason.clone())
                     .collect()
             };
-            serde_json::json!({"entityType":"traveler","id":t.id,"name":t.name,"activity":t.activity,"kind":if t.kind == 1 {"car"} else {"pedestrian"},"origin":t.origin_building,"destination":t.destination_building,"history":history,"wait_ticks":t.wait_ticks})
+            serde_json::json!({"entityType":"traveler","id":t.id,"name":t.name,"activity":t.activity,"kind":if t.kind == 1 {"car"} else {"pedestrian"},"vehicle":if t.kind == 1 {Some(vehicle_name(Self::vehicle_body(t, self.station_node())))} else {None},"origin":t.origin_building,"destination":t.destination_building,"history":history,"wait_ticks":t.wait_ticks})
         } else if let Some(r) = self.state.residents.iter().find(|r| r.id == id) {
             serde_json::json!({"entityType":"resident","id":r.id,"name":r.name,"activity":r.activity,"kind":if r.train_id.is_some() {"rail passenger"} else if r.bus_id.is_some() {"bus passenger"} else if r.mode == 1 {"car"} else {"pedestrian"},"origin":r.home_building,"destination":r.work_building,"home_building":r.home_building,"work_building":r.work_building,"transfer":r.transfer,"train_id":r.train_id,"bus_id":r.bus_id,"bus_origin_stop":r.bus_origin_stop,"bus_destination_stop":r.bus_destination_stop,"bus_stop_node":r.bus_stop_node,"pending_alight":r.pending_alight,"location_node":self.resident_location_node(r),"history":r.history})
         } else if let Some(t) = self.state.trains.iter().find(|t| t.id == id) {
@@ -13433,8 +13670,8 @@ mod tests {
         let a = engine.node(route[0]).unwrap();
         let b = engine.node(route[1]).unwrap();
         let normal = (-(b.z - a.z) / distance(a, b), (b.x - a.x) / distance(a, b));
-        assert!((x - a.x - normal.0 * 1.65).abs() < 0.001);
-        assert!((z - a.z - normal.1 * 1.65).abs() < 0.001);
+        assert!((x - a.x - normal.0 * KERB_LANE).abs() < 0.001);
+        assert!((z - a.z - normal.1 * KERB_LANE).abs() < 0.001);
         let views = engine.snapshot().bus_lines[0].stop_positions.clone();
         assert_eq!(views.len(), line.stops.len() * 2);
         assert!(views.iter().any(|view| view.direction == 1));
@@ -13487,12 +13724,12 @@ mod tests {
             let bus_lateral = (x - node.x) * nx + (z - node.z) * nz;
             let marker_lateral = (view.x - node.x) * nx + (view.z - node.z) * nz;
             assert!((heading - view.heading).sin().abs() < 0.0001);
-            assert!((bus_lateral - 1.65).abs() < 0.001);
-            assert!((marker_lateral - 6.2).abs() < 0.001);
+            assert!((bus_lateral - KERB_LANE).abs() < 0.001);
+            assert!((marker_lateral - BUS_STOP_KERB).abs() < 0.001);
             assert!(bus_lateral * marker_lateral > 0.0);
             let queue = engine.bus_queue_position(stop, direction, 0).unwrap();
             let queue_lateral = (queue.x - node.x) * nx + (queue.z - node.z) * nz;
-            assert!((queue_lateral - 6.2).abs() < 0.001);
+            assert!((queue_lateral - BUS_STOP_KERB).abs() < 0.001);
         }
     }
 
@@ -18547,6 +18784,251 @@ mod tests {
     }
 
     #[test]
+    fn cars_sharing_a_driveway_queue_instead_of_overlapping() {
+        let mut engine = Engine::new_legacy(81);
+        let road = engine
+            .state
+            .roads
+            .iter()
+            .find(|road| road.kind != "rail" && road.stage == "open")
+            .expect("founding road is open");
+        let (from, to) = (road.from, road.to);
+        let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
+        let driveway = AccessPath {
+            points: vec![WorldPoint { x: 250.0, z: 80.0 }, WorldPoint { x: 250.0, z: 50.0 }],
+        };
+        // Two residents of one building leave by car on the same tick.
+        for id in [900_001, 900_002] {
+            engine.state.travelers.push(Traveler {
+                id,
+                kind: 1,
+                route: vec![from, to],
+                route_lengths: vec![len],
+                edge_index: 0,
+                edge_progress: 0.0,
+                speed: 6.0,
+                destination: to,
+                activity: "commute".into(),
+                resident: 0,
+                name: "Driveway car".into(),
+                origin_building: Some(77),
+                destination_building: None,
+                wait_ticks: 0,
+                origin_access: Some(driveway.clone()),
+                destination_access: None,
+                access_phase: 0,
+                access_progress: 0.0,
+            });
+        }
+        let progress = |engine: &Engine, id| {
+            let t = engine.state.travelers.iter().find(|t| t.id == id).unwrap();
+            (t.access_phase, t.access_progress)
+        };
+        for _ in 0..400 {
+            engine.advance_travelers();
+            let (lead, follow) = (progress(&engine, 900_001), progress(&engine, 900_002));
+            if lead.0 == 0 && follow.0 == 0 && follow.1 > 0.0 {
+                assert!(lead.1 - follow.1 >= VEHICLE_MIN_GAP - 1e-3, "{lead:?} {follow:?}");
+            }
+            // Whatever is drawn never overlaps: the waiting car is not emitted.
+            let movement = engine.movement_buffer();
+            let at = |id: u32| movement.chunks(5).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]));
+            if let (Some(a), Some(b)) = (at(900_001), at(900_002)) {
+                assert!((a.0 - b.0).hypot(a.1 - b.1) >= VEHICLE_MIN_GAP - 1e-3);
+            }
+        }
+        // The follower is not stuck: both reach the road.
+        assert_eq!(progress(&engine, 900_002).0, 1);
+    }
+
+    /// A road with several cars arriving at one driveway whose mouth is the
+    /// final lane end, plus a car already pulling in so the mouth starts busy.
+    fn arrival_contention_engine() -> (Engine, f32, Vec<u32>) {
+        let mut engine = Engine::new_legacy(81);
+        let road = engine
+            .state
+            .roads
+            .iter()
+            .find(|road| road.kind != "rail" && road.stage == "open")
+            .expect("founding road is open");
+        let (from, to) = (road.from, road.to);
+        let end = engine.node(to).unwrap().clone();
+        let len = distance(engine.node(from).unwrap(), &end);
+        let driveway = AccessPath {
+            points: vec![WorldPoint { x: end.x, z: end.z }, WorldPoint { x: end.x + 30.0, z: end.z }],
+        };
+        let car = |id, access_phase, edge_progress: f32| Traveler {
+            id,
+            kind: 1,
+            route: vec![from, to],
+            route_lengths: vec![len],
+            edge_index: 0,
+            edge_progress,
+            speed: 6.0,
+            destination: to,
+            activity: "commute".into(),
+            resident: 0,
+            name: "Arriving car".into(),
+            origin_building: None,
+            destination_building: Some(77),
+            wait_ticks: 0,
+            origin_access: None,
+            destination_access: Some(driveway.clone()),
+            access_phase,
+            access_progress: 0.0,
+        };
+        // 1: in the driveway mouth. 2: 0.1 m from the mouth. 3, 4: queued behind.
+        engine.state.travelers.push(car(910_001, 2, len));
+        engine.state.travelers.push(car(910_002, 1, len - 0.1));
+        engine.state.travelers.push(car(910_003, 1, len - 6.0));
+        engine.state.travelers.push(car(910_004, 1, len - 12.0));
+        (engine, len, vec![910_001, 910_002, 910_003, 910_004])
+    }
+
+    fn movement_of(engine: &Engine, id: u32) -> Option<(f32, f32)> {
+        engine.movement_buffer().chunks(5).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]))
+    }
+
+    #[test]
+    fn cars_held_at_a_busy_driveway_stay_on_the_road_and_queue() {
+        let (mut engine, len, ids) = arrival_contention_engine();
+        engine.advance_travelers();
+        let held = engine.state.travelers.iter().find(|t| t.id == ids[1]).unwrap().clone();
+        assert_eq!((held.access_phase, held.edge_index), (1, 0), "held at the kerb on its final lane");
+        assert!((held.edge_progress - len.max(1.0)).abs() < 1e-4);
+        assert!(movement_of(&engine, ids[1]).is_some(), "a held car is still drawn");
+
+        let mut admitted = Vec::new();
+        for tick in 0..600 {
+            let gap = VEHICLE_MIN_GAP - 1e-3;
+            // Every road traveler is drawn, and queued cars on the lane keep their gap.
+            let road: Vec<&Traveler> = engine
+                .state
+                .travelers
+                .iter()
+                .filter(|t| ids.contains(&t.id) && t.access_phase == 1)
+                .collect();
+            for t in &road {
+                assert!(t.edge_index < t.route_lengths.len(), "tick {tick}: {} left its route", t.id);
+                assert!(movement_of(&engine, t.id).is_some(), "tick {tick}: {} is not drawn", t.id);
+            }
+            for a in &road {
+                for b in &road {
+                    if a.id < b.id {
+                        assert!((a.edge_progress - b.edge_progress).abs() >= gap, "tick {tick}: {} and {} overlap: {:?} {:?}", a.id, b.id, (a.edge_index, a.edge_progress, a.wait_ticks), (b.edge_index, b.edge_progress));
+                    }
+                }
+            }
+            // Only one car at a time is in the first car length of the driveway.
+            let in_mouth = engine
+                .state
+                .travelers
+                .iter()
+                .filter(|t| ids.contains(&t.id) && t.access_phase == 2 && t.access_progress < 4.5)
+                .count();
+            assert!(in_mouth <= 1, "tick {tick}: {in_mouth} cars share the driveway mouth");
+            for t in &engine.state.travelers {
+                if ids.contains(&t.id) && t.access_phase == 2 && !admitted.contains(&t.id) {
+                    admitted.push(t.id);
+                }
+            }
+            if !engine.state.travelers.iter().any(|t| ids.contains(&t.id)) {
+                break;
+            }
+            engine.advance_travelers();
+        }
+        // Admitted in road order, and every car arrives.
+        assert_eq!(admitted, ids);
+        assert!(!engine.state.travelers.iter().any(|t| ids.contains(&t.id)), "all arrivals complete");
+    }
+
+    #[test]
+    fn a_car_held_at_a_driveway_survives_save_and_restore() {
+        let (mut engine, _len, ids) = arrival_contention_engine();
+        engine.advance_travelers();
+        assert_eq!(engine.state.travelers.iter().find(|t| t.id == ids[1]).unwrap().access_phase, 1);
+        let mut restored = Engine::restore_json(&engine.save_json()).expect("held city restores");
+        for _ in 0..200 {
+            engine.advance_travelers();
+            restored.advance_travelers();
+            assert_eq!(restored.movement_buffer(), engine.movement_buffer());
+        }
+
+        // Saves from before kerb holding kept a held car past the end of its route.
+        let (mut legacy, len, ids) = arrival_contention_engine();
+        let old = legacy.state.travelers.iter_mut().find(|t| t.id == ids[1]).unwrap();
+        old.edge_index = 1;
+        old.edge_progress = 0.0;
+        let mut legacy = Engine::restore_json(&legacy.save_json()).expect("legacy held car restores");
+        legacy.advance_travelers();
+        let held = legacy.state.travelers.iter().find(|t| t.id == ids[1]).unwrap();
+        assert_eq!((held.access_phase, held.edge_index), (1, 0));
+        assert!((held.edge_progress - len.max(1.0)).abs() < 1e-4);
+        assert!(movement_of(&legacy, ids[1]).is_some());
+    }
+
+    #[test]
+    fn road_trips_choose_bodies_and_queue_by_length() {
+        // Short bodies keep the historical spacing; long ones need more room.
+        assert_eq!(vehicle_gap(VEHICLE_COMPACT, VEHICLE_COMPACT), VEHICLE_MIN_GAP);
+        assert_eq!(vehicle_gap(VEHICLE_KEI, VEHICLE_KEI), VEHICLE_MIN_GAP);
+        assert!((vehicle_gap(VEHICLE_VAN, VEHICLE_TRUCK) - 5.2).abs() < 1e-5);
+        assert!(vehicle_gap(VEHICLE_TAXI, VEHICLE_COMPACT) > VEHICLE_MIN_GAP);
+
+        let mut engine = Engine::new_legacy(81);
+        let road = engine
+            .state
+            .roads
+            .iter()
+            .find(|road| road.kind != "rail" && road.stage == "open")
+            .expect("founding road is open");
+        let (from, to) = (road.from, road.to);
+        let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
+        let ids: Vec<u32> = (800_000..800_240).collect();
+        for &id in &ids {
+            engine.state.travelers.push(Traveler {
+                id,
+                kind: 1,
+                route: vec![from, to],
+                route_lengths: vec![len],
+                edge_index: 0,
+                edge_progress: len * 0.5,
+                speed: 1.0,
+                destination: to,
+                activity: if id % 2 == 0 { "delivery".into() } else { "commute".into() },
+                resident: 0,
+                name: "Test vehicle".into(),
+                origin_building: None,
+                destination_building: None,
+                wait_ticks: 0,
+                origin_access: None,
+                destination_access: None,
+                access_phase: 1,
+                access_progress: 0.0,
+            });
+        }
+        let movement = engine.movement_buffer();
+        let mut delivery = std::collections::BTreeSet::new();
+        let mut private = std::collections::BTreeSet::new();
+        for chunk in movement.chunks(5) {
+            let id = chunk[0] as u32;
+            if !ids.contains(&id) {
+                continue;
+            }
+            let kind = chunk[4] as u8;
+            if id % 2 == 0 {
+                delivery.insert(kind);
+            } else {
+                private.insert(kind);
+            }
+        }
+        assert_eq!(delivery, [VEHICLE_VAN, VEHICLE_TRUCK, VEHICLE_MAIL].into());
+        assert_eq!(private, [VEHICLE_COMPACT, VEHICLE_KEI, VEHICLE_TAXI].into());
+        // Bodies are stable: the same trip reports the same body every tick.
+        assert_eq!(engine.movement_buffer(), movement);
+    }
+
+    #[test]
     fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
         let mut engine = Engine::new_legacy(81);
         let road = engine
@@ -18590,8 +19072,8 @@ mod tests {
         let nz = (b.x - a.x) / len;
         let car = &movement[1..5];
         let pedestrian = &movement[6..10];
-        assert!((car[0] - center_x - nx * 1.65).abs() < 0.001);
-        assert!((car[1] - center_z - nz * 1.65).abs() < 0.001);
+        assert!((car[0] - center_x - nx * KERB_LANE).abs() < 0.001);
+        assert!((car[1] - center_z - nz * KERB_LANE).abs() < 0.001);
         let road_width = road_width(if arterial { "arterial" } else { "local" });
         let sidewalk_offset = road_width * 0.5 + 0.72;
         let sign = if 700_002 % 2 == 0 { 1.0 } else { -1.0 };

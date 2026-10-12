@@ -1,0 +1,12 @@
+{
+  "id": "vehicle-mask",
+  "source": "Derived from the vehicle atlas sources by scripts/build-vehicle-kits.py",
+  "provenance": "art-workshop/vehicle-kit.json",
+  "status": "runtime: road vehicles and city bus",
+  "role": "atlas",
+  "colorSpace": "linear",
+  "width": 1024,
+  "height": 512,
+  "runtimeIntegration": true,
+  "note": "R paint, G lamp, B glass. Half the atlas resolution."
+}
