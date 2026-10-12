@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn exact_progressive_geometry_rejects_blockers_and_world_bounds() {
-        let engine = Engine::new(0);
+        let engine = Engine::new_legacy(0);
         let rect = geometry::OrientedRect {
             x: 340.0,
             z: 340.0,
@@ -391,7 +391,7 @@ fn metrics(engine: &Engine) -> (f64, f64, u64, BTreeMap<String, u64>) {
 }
 
 fn run_arm(seed: u32, treatment: bool, raw_dir: &std::path::Path) -> ArmResult {
-    let mut engine = Engine::new(seed);
+    let mut engine = Engine::new_legacy(seed);
     engine.set_development_rate(16);
     if treatment {
         reset_diagnostics();

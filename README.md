@@ -21,6 +21,10 @@ cargo install wasm-bindgen-cli --version 0.2.108 --locked
 
 The build script uses `.tools/cargo` and `.tools/rustup` when a local `.tools/cargo/bin` installation is present; otherwise it uses the Rust tools on `PATH`. Run `npm run wasm` again after changing the Rust engine. The browser and WASM integration tests read the generated files under `public/wasm`.
 
+## Current priority
+
+The next milestone is the existing 800 m city: visual fidelity, normal loading and growth, and measured browser performance in both rendering styles. Larger maps and imports follow that acceptance gate. See [delivery priorities](specs/08-delivery.md#immediate-milestone-after-the-master-plan-review-2026-10-11). Backward save compatibility is not required; current saves must validate and resume correctly.
+
 ## Checks
 
 ```sh

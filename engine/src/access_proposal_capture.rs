@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn initial_and_mature_capture_match_the_existing_geometry_projection() {
-        let initial = Engine::new(17);
+        let initial = Engine::new_legacy(17);
         let before = initial.save_json();
         let captured = capture(&initial).unwrap();
         assert_eq!(
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn capture_supports_more_than_face_tracer_host_limit_without_truncation() {
-        let mut engine = Engine::new(7);
+        let mut engine = Engine::new_legacy(7);
         let mut next_id = engine.state.next_id;
         for index in 0..513 {
             let from = next_id;
@@ -375,7 +375,7 @@ mod tests {
 
     #[test]
     fn over_cap_state_fails_before_projection_and_does_not_mutate_engine() {
-        let mut engine = Engine::new(19);
+        let mut engine = Engine::new_legacy(19);
         for index in 0..=MAX_NODES {
             engine.state.nodes.push(crate::Node {
                 id: 100_000 + index as u32,

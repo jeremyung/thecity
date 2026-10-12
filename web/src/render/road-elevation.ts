@@ -1,5 +1,18 @@
 import type { Point } from '../types';
 export type BridgeSpan={a:Point;b:Point};
+/** Elevated rail viaduct lift above the legacy at-grade rail height. */
+export const RAIL_DECK=6;
+/** Expressway deck height above ground. */
+export const EXPRESSWAY_DECK=11;
+/** Rendered carriageway width by road kind. */
+/**
+ * Rendered carriageway width by road kind. The hierarchy is deliberately
+ * legible: expressway 20 m (elevated), arterial and its bridges 16 m with
+ * 2.5 m sidewalks, local 6.5 m shared surface, alley (lane) 4 m.
+ */
+export function roadWidth(kind:string){return kind==='rail'?7:kind==='expressway'?20:kind==='arterial'||kind==='bridge'?16:kind==='local'?6.5:kind==='lane'?4:9;}
+/** Arterial sidewalk width on each side. */
+export const ARTERIAL_SIDEWALK=2.5;
 /** Deck joins street level at both ends, with bounded approach ramps. */
 export function bridgeDeckHeight(distance:number,length:number){
   const ramp=Math.min(12,length*.22);

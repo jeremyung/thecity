@@ -358,7 +358,7 @@ fn partial_full_block_usefulness_requires_four_lots_and_both_long_edges() {
 
 #[test]
 fn partial_full_block_experiment_hook_defaults_off_and_is_not_persisted() {
-    let engine = Engine::new(87231);
+    let engine = Engine::new_legacy(87231);
     assert!(!engine.partial_full_block_experiment);
     let save = engine.save_json();
     let restored = Engine::restore_json(&save).expect("restore default engine");

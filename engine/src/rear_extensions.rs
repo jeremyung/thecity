@@ -748,7 +748,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn mature_engine_with_extension_site(x: f32, z: f32) -> (Engine, u32) {
-        let mut engine = Engine::new(87231);
+        let mut engine = Engine::new_legacy(87231);
         let host = engine
             .state
             .roads
@@ -1051,7 +1051,7 @@ mod tests {
 
     #[test]
     fn extension_schema_migrates_legacy_saves_without_plans() {
-        let engine = Engine::new(13);
+        let engine = Engine::new_legacy(13);
         for old_version in [2, 3] {
             let mut value: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
             value["activity_schema_version"] = serde_json::json!(old_version);

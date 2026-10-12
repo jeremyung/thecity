@@ -873,7 +873,7 @@ mod tests {
     use super::*;
 
     fn square_fixture(seed: u32) -> (Engine, [u32; 4]) {
-        let mut engine = Engine::new(seed);
+        let mut engine = Engine::new_legacy(seed);
         let gateway = engine
             .state
             .nodes

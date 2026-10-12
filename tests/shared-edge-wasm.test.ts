@@ -13,7 +13,7 @@ const saved=(engine:CityEngine):Saved=>JSON.parse(engine.save());
 
 it('naturally reserves partial shared-edge lots and completes the same layout after restore',()=>{
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const engine=new CityEngine(87231);
+  const engine=CityEngine.newLegacy(87231);
   let resumed:CityEngine|undefined;
   try{
     engine.set_development_rate(16);

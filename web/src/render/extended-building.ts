@@ -4,7 +4,7 @@ import { ArtMaterials } from './materials';
 import { buildingPalette } from './building-palette';
 import { compactMidriseEnvelope, midriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing } from './lowrise-massing';
-import { buildingKit, Kit, type BuildingKitReviewOptions } from './kit';
+import { buildingKit, Kit, partyWallBodyDepth, partyWallBodyWidth, type BuildingKitReviewOptions } from './kit';
 
 const FLOOR_HEIGHT = 3.25;
 const BASE_HEIGHT = .58;
@@ -48,8 +48,8 @@ export function extendedAdditionEnvelope(
     .every(Number.isFinite) || b.depth <= original.depth || b.width <= 0 || original.width <= 0) return null;
 
   const source = originalBuilding(b, original);
-  const initialWidth = Math.max(6, source.width * (source.anchor ? .66 : .84));
-  const initialDepth = Math.max(6, source.depth * .84);
+  const initialWidth = partyWallBodyWidth(source.width, source.anchor, source.floors, source.kind);
+  const initialDepth = partyWallBodyDepth(source.depth);
   const envelope = review.compactMidrise
     ? compactMidriseEnvelope(source, initialWidth, initialDepth)
     : { width: initialWidth, depth: initialDepth };

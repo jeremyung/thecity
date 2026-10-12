@@ -18,7 +18,7 @@ import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
-import { bridgeDeckHeight, bridgeLift, bridgeVehiclePose, type BridgeSpan } from './road-elevation';
+import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
 import { CameraDirector } from '../camera/director';
@@ -307,7 +307,7 @@ export class CityRenderer {
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
     this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
     const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
-    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+'-'+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|');
+    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|');
     if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
@@ -426,7 +426,7 @@ export class CityRenderer {
       let hidden=world.buildings.some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
         return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
       });
-      if(!hidden)hidden=world.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<(r.kind==='arterial'?11:8);});
+      if(!hidden)hidden=world.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&r.kind!=='expressway'&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);});
       if(!hidden)hidden=(world.rear_extensions??[]).slice(0,2).some(e=>{if(e.stage==='survey')return false;const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
@@ -453,14 +453,23 @@ export class CityRenderer {
       kit.box(a.x,.73,a.z,.08,1.46,.08,bankMetal);
       for(const y of [.64,1.28])kit.box(middle.x,y,middle.z,.055,.065,length,bankMetal,angle);
     }
+    // Developed master-plan blocks are paved urban ground (concrete, gravel and
+    // service yards) rather than lawn; parcel paving and buildings sit above.
+    const groundTones=['#a7a59a','#9d9c92','#aaa69a','#a19f95'];
+    for(const patch of world.ground??[]){
+      if(patch.points.length<3)continue;
+      const shape=new THREE.Shape(patch.points.map(([x,z])=>new THREE.Vector2(x,-z)));
+      const geometry=new THREE.ShapeGeometry(shape);geometry.rotateX(-Math.PI/2);geometry.translate(0,.035,0);
+      kit.add(geometry,this.art.get(groundTones[patch.block%groundTones.length]));
+    }
     for(const road of world.roads){const a=nodes.get(road.from),b=nodes.get(road.to);if(a&&b)this.roadKit(kit,a,b,road);}
     const junctions=new Map<number,{count:number,radius:number}>();
-    for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,road.kind==='arterial'?7.3:4.8);junctions.set(id,entry);}
+    for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'&&r.kind!=='expressway'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,roadWidth(road.kind)/2+.3);junctions.set(id,entry);}
     for(const [id,junction]of junctions){const node=nodes.get(id);if(node&&junction.count>1)kit.cylinder(node.x,.33,node.z,junction.radius,.07,this.art.get('#747f7b'),24);}
     for(const project of world.projects.filter(p=>p.kind==='road'&&p.progress<1)){
       const a=nodes.get(project.from!),b=nodes.get(project.to!);if(!a||!b)continue;
       if(world.roads.some(r=>r.from===a.id&&r.to===b.id&&r.stage!=='open'))continue;
-      this.roadKit(kit,a,b,{id:project.id,from:a.id,to:b.id,kind:Math.abs(a.x-b.x)>100?'bridge':'local',stage:project.stage,progress:project.progress,connected:false,length:Math.hypot(a.x-b.x,a.z-b.z),lanes:1});
+      this.roadKit(kit,a,b,{id:project.id,from:a.id,to:b.id,kind:world.roads.find(r=>(r.from===a.id&&r.to===b.id)||(r.from===b.id&&r.to===a.id))?.kind??(Math.abs(a.x-b.x)>100?'bridge':'local'),stage:project.stage,progress:project.progress,connected:false,length:Math.hypot(a.x-b.x,a.z-b.z),lanes:1});
     }
     for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
     this.roads.add(kit.finish(),buildStreetLighting(world,this.art));
@@ -483,7 +492,9 @@ export class CityRenderer {
       s.box(5.6,2.85,43,1.1,1.7,1.1,this.art.get('#557777'));s.box(5.58,3.15,42.42,.72,.85,.04,this.art.get('#ceddd8',.35,true));
       // Entry ramp and its small ticket shelter connect to the station node.
       s.box(6,.6,-4,4.5,1.2,7,this.art.get('#aaa99e'));s.box(6,2.7,-6,3,3.2,2.4,this.art.get('#c9c8c1'));s.box(6,4.45,-6,3.8,.2,3.1,this.art.get('#59676a'));s.box(5.96,2.8,-7.23,1.5,1.4,.08,this.art.get('#52757a',.35));
-      const platform=s.finish();platform.position.set(stationNode.x,0,stationNode.z);platform.rotation.y=bearing;
+      for(const z of [2,23.5,45])s.box(5.2,-RAIL_DECK/2,z,2.4,RAIL_DECK,2.4,this.art.get('#9a9d93'));
+      s.box(9.4,-RAIL_DECK/2+.2,-2,2.6,RAIL_DECK+.4,8,this.art.get('#aaa99e'));
+      const platform=s.finish();platform.position.set(stationNode.x,RAIL_DECK,stationNode.z);platform.rotation.y=bearing;
       const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
       const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,4.6,24);platform.add(board);
       this.station.add(platform);
@@ -499,7 +510,19 @@ export class CityRenderer {
       b={x:a.x+fullDx*fraction,z:a.z+fullDz*fraction};
     }
     const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),angle=Math.atan2(dx,dz),mid={x:(a.x+b.x)/2,z:(a.z+b.z)/2},rail=r.kind==='rail',open=r.stage==='open',bridge=r.kind==='bridge';
-    const width=rail?7:r.kind==='arterial'?14:9,y=bridge?1.4:rail?1:.15;
+    const expressway=r.kind==='expressway',lane=r.kind==='lane';
+    const width=roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?EXPRESSWAY_DECK:lane?.12:.15;
+    if(rail||expressway){
+      // Viaduct piers: single columns under the expressway, paired under rail.
+      const spacing=expressway?28:22,pierColor=this.art.get('#9a9d93');
+      for(let distance=spacing/2;distance<len;distance+=spacing){const t=distance/len,px=a.x+dx*t,pz=a.z+dz*t;
+        if(expressway)kit.box(px,y/2,pz,2.2,y,2.2,pierColor,angle);
+        else for(const side of [-1,1])kit.box(px+Math.cos(angle)*side*2.4,y/2,pz-Math.sin(angle)*side*2.4,1.1,y,1.1,pierColor,angle);
+        kit.box(px,y-.55,pz,width+1.2,.7,1.4,pierColor,angle);
+      }
+      kit.box(mid.x,y-.35,mid.z,width+.6,.5,len,this.art.get('#a3a69c'),angle);
+      if(expressway)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+.25),y+.75,mid.z-Math.sin(angle)*side*(width/2+.25),.3,1.3,len,this.art.get('#b8bbb2'),angle);
+    }
     if(bridge){
       const ramp=Math.min(12,len*.22),shape=new THREE.Shape();
       shape.moveTo(-len/2,.3);shape.lineTo(-len/2+ramp,2);shape.lineTo(len/2-ramp,2);shape.lineTo(len/2,.3);
@@ -509,17 +532,24 @@ export class CityRenderer {
     if(rail){
       for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*1.35,y+.45,mid.z-Math.sin(angle)*side*1.35,.14,.17,len,this.art.get('#a3aca7',.4),angle);
       for(let distance=0;distance<len;distance+=2.5){const t=distance/len;kit.box(a.x+dx*t,y+.29,a.z+dz*t,5,.15,.4,this.art.get('#6d6457'),angle);}
+    }else if(lane){
+      // Lanes are shared-surface roji: no center line and no raised sidewalk.
     }else{
-      if(open){for(let distance=8;distance<len-4;distance+=12){
+      if(open&&(bridge||r.kind==='arterial')){for(let distance=8;distance<len-4;distance+=12){
         if(bridge){
           // Split painted marks at ramp creases so neither end floats or sinks.
           const ramp=Math.min(12,len*.22),cuts=[distance-2,...[ramp,len-ramp].filter(v=>v>distance-2&&v<distance+2),distance+2];
           for(let i=0;i<cuts.length-1;i++){const start=cuts[i],end=cuts[i+1],fromY=bridgeDeckHeight(start,len),toY=bridgeDeckHeight(end,len),along=(start+end)/2;
             const mark=new THREE.BoxGeometry(.18,.035,Math.hypot(end-start,toY-fromY));mark.rotateX(-Math.atan2(toY-fromY,end-start));mark.rotateY(angle);mark.translate(a.x+dx*along/len,(fromY+toY)/2+.035,a.z+dz*along/len);kit.add(mark,this.art.get('#dedaca'));
           }
-        }else{const t=distance/len;kit.box(a.x+dx*t,y+.19,a.z+dz*t,.18,.035,4,this.art.get('#dedaca'),angle);}
+        }else{const t=distance/len;kit.box(a.x+dx*t,y+.19,a.z+dz*t,.18,.035,4,this.art.get('#dedaca'),angle);
+          // Four-lane arterials: dashed lane dividers between the two lanes each way.
+          if(r.kind==='arterial')for(const side of [-1,1])kit.box(a.x+dx*t+Math.cos(angle)*side*width/4,y+.19,a.z+dz*t-Math.sin(angle)*side*width/4,.14,.03,2.4,this.art.get('#dedaca'),angle);}
       }
-      if(!bridge)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+.7),y+.15,mid.z-Math.sin(angle)*side*(width/2+.7),1.4,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
+      // Arterials keep raised sidewalks; local streets are shared surfaces with
+      // painted edge lines, as on Tokyo residential streets.
+      if(!bridge&&r.kind==='arterial')for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),y+.15,mid.z-Math.sin(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),ARTERIAL_SIDEWALK,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
+      else if(!bridge&&open)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2-.45),y+.16,mid.z-Math.sin(angle)*side*(width/2-.45),.14,.03,Math.max(1,len-width),this.art.get('#dedaca'),angle);
       }else{
         for(let distance=0;distance<len;distance+=12){const t=distance/len,x=a.x+dx*t,z=a.z+dz*t;kit.cylinder(x+width/2,y+.55,z,.25,.8,this.art.get('#c17d4f'),5);}
       }
@@ -573,7 +603,7 @@ export class CityRenderer {
       if(current.k===0&&ped<2000){const offset=ped*5;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
       else if(current.k===1&&car<1000){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);dummy.position.set(x,1.07+vehicle.lift,z);dummy.rotation.set(-vehicle.pitch,h,0,'YXZ');dummy.scale.setScalar(1);dummy.updateMatrix();this.cars.setMatrixAt(car,dummy.matrix);this.cars.setColorAt(car,carColors[id%carColors.length]);dummy.position.y=.67+vehicle.lift;dummy.updateMatrix();this.carWheels.setMatrixAt(car,dummy.matrix);dummy.position.y=1.04+vehicle.lift;dummy.updateMatrix();this.carLights.setMatrixAt(car,dummy.matrix);dummy.position.y=1.77+vehicle.lift;dummy.updateMatrix();this.carGlass.setMatrixAt(car,dummy.matrix);carIds[car]=id;car++;}
       else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+.22,vehicle.pitch);}
-      else if(current.k===2&&train<24){for(let coach=0;coach<3;coach++){dummy.position.set(x-Math.sin(h)*(coach-1)*16,2.75,z-Math.cos(h)*(coach-1)*16);dummy.rotation.set(0,h,0);dummy.scale.setScalar(1);dummy.updateMatrix();this.trains.setMatrixAt(train,dummy.matrix);dummy.position.y=3.05;dummy.updateMatrix();this.trainGlass.setMatrixAt(train,dummy.matrix);dummy.position.y=2.35;dummy.updateMatrix();this.trainStripe.setMatrixAt(train,dummy.matrix);dummy.position.y=1.1;dummy.updateMatrix();this.wheels.setMatrixAt(train,dummy.matrix);trainIds[train]=id;train++;}}
+      else if(current.k===2&&train<24){for(let coach=0;coach<3;coach++){dummy.position.set(x-Math.sin(h)*(coach-1)*16,2.75+RAIL_DECK,z-Math.cos(h)*(coach-1)*16);dummy.rotation.set(0,h,0);dummy.scale.setScalar(1);dummy.updateMatrix();this.trains.setMatrixAt(train,dummy.matrix);dummy.position.y=3.05+RAIL_DECK;dummy.updateMatrix();this.trainGlass.setMatrixAt(train,dummy.matrix);dummy.position.y=2.35+RAIL_DECK;dummy.updateMatrix();this.trainStripe.setMatrixAt(train,dummy.matrix);dummy.position.y=1.1+RAIL_DECK;dummy.updateMatrix();this.wheels.setMatrixAt(train,dummy.matrix);trainIds[train]=id;train++;}}
     }
     this.umbrellaCount=ped;
     this.buses.finish(bus);for(const mesh of this.buses.meshes)this.actorIds.set(mesh,this.buses.ids);

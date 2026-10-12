@@ -91,7 +91,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
             } else {
                 None
             };
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             let mut selected_spines = BTreeSet::new();
             let mut seen_spines = BTreeMap::<[u32; 8], Option<u32>>::new();

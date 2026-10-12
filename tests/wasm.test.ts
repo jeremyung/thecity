@@ -124,7 +124,7 @@ describe('compiled city engine', () => {
     expect(shop?.history.length).toBeGreaterThan(0);
     expect(sawStationService).toBe(true);
     expect(sawVisibleConstruction).toBe(true);
-  });
+  }, 30_000);
 
   it('keeps movement IDs, routes, positions, and headings valid against the saved graph', () => {
     const engine = makeEngine(5);

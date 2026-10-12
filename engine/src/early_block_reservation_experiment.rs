@@ -2,7 +2,7 @@ use crate::*;
 use serde_json::json;
 
 fn developed_site_with_one_open_lot() -> Engine {
-    let mut engine = Engine::new(41);
+    let mut engine = Engine::new_legacy(41);
     engine.state.nodes.clear();
     engine.state.roads.clear();
     engine.state.parcels.clear();
@@ -121,7 +121,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
     for &seed in seeds {
         for enabled in [false, true] {
             let started = std::time::Instant::now();
-            let mut engine = Engine::new(seed);
+            let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             engine.district_policy_experiment = false;
             engine.early_block_reservation_disable_override = !enabled;

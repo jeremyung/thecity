@@ -17,7 +17,7 @@ A browser based, autonomous, watchable Tokyo inspired city grows from sparse set
 
 ## Decision status
 
-Implementation and verification status live in [the specification gap audit](../validation/spec-audit.md); the latest city capture and density evidence are in [the integration review](../validation/multiblock-integration.md#visual-review). Specifications describe intended behavior, not proof of implementation. The world-growth specification also records [procedural-generation research and proposed next work](02-world-growth.md#procedural-generation-research-and-proposed-next-work).
+Implementation and verification status live in [the specification gap audit](../validation/spec-audit.md); the latest city capture and density evidence are in [the integration review](../validation/multiblock-integration.md#visual-review). Specifications describe intended behavior, not proof of implementation. The world-growth specification defines the [master plan](02-world-growth.md#master-plan) and [fabric targets](02-world-growth.md#fabric-targets); the retired incremental planner's checkpoint log is archived in [growth history](../validation/growth-history-2026-10.md).
 
 Confirmed direction: living observation experience; independent random cities with coherent internal histories; browser execution; shared simulation with selectable renderers; Last Train, First Light implemented first; Little Tokyo preferred visually; dynamic water and full-scene anti-aliasing; complete daily cycle; city sounds and indie lo-fi mood.
 
@@ -29,7 +29,7 @@ External morphology research: [PLATEAU findings and bounded pilot](../validation
 
 1. A fixed landscape contains a changing city. No infinite terrain generation.
 2. Road access and occupied destinations precede development; adjacency alone is insufficient.
-3. Growth opportunities are evaluated locally with global capacity checks.
+3. A seeded master plan fixes the transport skeleton, streets, blocks and gap-free lots. Growth realizes that plan locally, driven by demand and checked against global capacity. Density comes from lot partition and renewal, not from searching for free rectangles.
 4. City maturity shifts activity toward reuse and renewal rather than unbounded expansion.
 5. Camera changes never affect economic outcomes or random generation.
 6. The simulation is authoritative and independent of rendering and audio.

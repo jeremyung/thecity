@@ -519,7 +519,7 @@ mod tests {
     }
 
     fn actor_fixture(seed: u32) -> (Engine, [u32; 2], Vec<u32>) {
-        let mut engine = Engine::new(seed);
+        let mut engine = Engine::new_legacy(seed);
         let (first, second, forward) =
             adjacent_hosts(&engine).expect("seed should provide a connected pair of open roads");
         let reverse = forward.iter().copied().rev().collect::<Vec<_>>();

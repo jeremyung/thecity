@@ -291,7 +291,7 @@ fn make_case(
     connected_geometry: bool,
     all_affected: bool,
 ) -> (Engine, u32) {
-    let mut engine = Engine::new(SEED);
+    let mut engine = Engine::new_legacy(SEED);
     let host = split_host(&engine);
     add_travelers(&mut engine, &host, travelers, route_nodes, all_affected);
     let target_roads = roads.max(engine.state.roads.len());

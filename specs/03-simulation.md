@@ -10,7 +10,8 @@ Core resources: seeded geography, transport graphs, parcel index, demand aggrega
 
 Core components:
 
-- Parcel: polygon, zoning suitability, terrain constraints, access, reservation.
+- Parcel: polygon, zoning suitability, terrain constraints, access, reservation. Parcels are released from the seeded master plan's gap-free lot partition when their frontage road opens; they are not searched for at runtime.
+- Master plan: regenerated deterministically from seed and engine version on create and restore. Only realization progress (which plan roads and lots exist) is persisted.
 - Building: parcel, footprint, type, capacity, occupancy, construction stage, age, appearance seed.
 - Road or rail segment: endpoints, geometry, lanes or tracks, lifecycle, capacity, graph revision.
 - Traveler: route, progress, speed, destination, travel mode, activity identity.
