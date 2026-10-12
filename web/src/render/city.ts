@@ -19,6 +19,7 @@ import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
+import { treeOcclusion } from './tree-occlusion';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
@@ -411,15 +412,11 @@ export class CityRenderer {
     }
   }
   private updateTrees(world:World){
-    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
+    const hides=treeOcclusion(world,this.treePoints);
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
       const i=batch.indices[local];
       const p=this.treePoints[i];
-      let hidden=world.buildings.some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
-        return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
-      });
-      if(!hidden)hidden=world.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&r.kind!=='expressway'&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);});
-      if(!hidden)hidden=(world.rear_extensions??[]).slice(0,2).some(e=>{if(e.stage==='survey')return false;const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
+      const hidden=hides(p);
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
