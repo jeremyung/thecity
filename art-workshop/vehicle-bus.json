@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "status": "approved",
+  "purpose": "Route bus body for the vehicle kit pipeline. Both sides, because Japanese buses carry doors only on the left (kerb) side.",
+  "capUSD": 2,
+  "aspectRatio": "16:9",
+  "hostedModels": [
+    { "id": "qwen/qwen-image-3", "provider": "alibaba", "estimateUSD": 0.03, "request": { "resolution": "1K" } }
+  ],
+  "commonPrompt": "Strict orthographic side elevation of one single Japanese low-floor city route bus, exact profile, camera perpendicular to the bus side at axle height, zero perspective. The whole bus spans almost the full image width, all wheels on one horizontal baseline. Plain uniform flat light-gray background, no ground, no cast shadow, soft even diffuse lighting without highlights. Boxy 9 m body, 3.1 m tall, large flat side windows in a continuous dark band, two wheels per side with the front wheel under the driver and the rear wheel near the back. Two-tone livery: warm cream upper body and a deep muted green band along the lower body. No text, no destination display text, no logos, no numbers, no advertising.",
+  "vehicles": [
+    {
+      "id": "bus-left",
+      "dimensionsM": [9.0, 2.3, 3.1],
+      "prompt": "The bus faces LEFT. This is the kerb side: a glazed folding passenger door just behind the front wheel and a second wide glazed door in the middle of the body, between the wheels."
+    },
+    {
+      "id": "bus-right",
+      "dimensionsM": [9.0, 2.3, 3.1],
+      "prompt": "The bus faces RIGHT. This is the off side, with no passenger doors at all: an uninterrupted row of windows and a small driver's window at the front."
+    }
+  ]
+}

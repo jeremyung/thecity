@@ -105,6 +105,9 @@ export class ArtMaterials {
     return variants[this.style];
   }
   setStyle(style:Style){this.style=style;}
+  private disposers:Array<()=>void>=[];
+  /** Resources owned by `shared` materials (textures) released with the art set. */
+  onDispose(release:()=>void){this.disposers.push(release);}
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
   buildingBatch(material:THREE.Material):BuildingBatchSurface{
     const artClass=material.userData.artBuildingClass as BuildingArtClass|undefined;
@@ -118,9 +121,26 @@ export class ArtMaterials {
     const key=material.userData.artKey as string|undefined;
     return key?this.cache.get(key)?.[style]??material:material;
   }
-  dispose(){for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.contours.dispose();}
+  dispose(){this.disposers.splice(0).forEach(release=>release());for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.contours.dispose();}
 
+  /** Toon ramp shared by every Anime surface. */
+  get toonRamp(){return this.bands;}
+  /**
+   * Cache a style pair under `key` so style switches swap it like any other
+   * art material. `create` runs once; later calls return the current style.
+   */
+  shared(key:string,create:()=>{anime:Surface,miniature:Surface}):Surface{
+    let variants=this.cache.get(key);
+    if(!variants){variants=create();variants.anime.userData.artKey=key;variants.miniature.userData.artKey=key;this.cache.set(key,variants);}
+    return variants[this.style];
+  }
   private applyGlassSky(anime:Surface,miniature:Surface){
+    const radiance=this.glassRadiance();
+    (anime as unknown as {emissiveNode:typeof radiance}).emissiveNode=radiance.mul(.55);
+    (miniature as unknown as {emissiveNode:typeof radiance}).emissiveNode=radiance;
+  }
+  /** Sky radiance seen in glass: Miniature strength; Anime uses 0.55 of it. */
+  glassRadiance(){
     // A bounded analytic sky reflection, not scene reflections or transparent
     // interiors. Shared by source and batched surfaces to preserve appearance.
     const incident=positionWorld.sub(cameraPosition).normalize();
@@ -129,9 +149,7 @@ export class ArtMaterials {
     const fresnel=normalWorld.dot(incident).abs().oneMinus().pow(5).mul(.72).add(.08);
     const daySky=mix(color('#536c73'),color('#c4d8df'),skyAmount);
     const nightSky=mix(color('#090f1c'),color('#23364c'),skyAmount);
-    const radiance=mix(daySky,nightSky,this.night).mul(fresnel);
-    (anime as unknown as {emissiveNode:typeof radiance}).emissiveNode=radiance.mul(.55);
-    (miniature as unknown as {emissiveNode:typeof radiance}).emissiveNode=radiance;
+    return mix(daySky,nightSky,this.night).mul(fresnel);
   }
 
   private buildingVariants(artClass:BuildingArtClass):BuildingSurfaceVariants{

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "status": "approved",
+  "purpose": "Second silhouettes per length class so traffic does not repeat one body. Plain bodies: paint is tinted per vehicle and liveries are decals.",
+  "capUSD": 2,
+  "aspectRatio": "16:9",
+  "hostedModels": [
+    {
+      "id": "qwen/qwen-image-3",
+      "provider": "alibaba",
+      "estimateUSD": 0.03,
+      "request": {
+        "resolution": "1K"
+      }
+    }
+  ],
+  "commonPrompt": "Strict orthographic side elevation of one single vehicle, exact profile, camera perpendicular to the vehicle side at axle height, zero perspective, not a three-quarter view. The vehicle faces left and spans almost the full image width, all wheels resting on one horizontal baseline. Plain uniform flat light-gray background, no ground, no cast shadow, no environment reflections, soft even diffuse lighting without bright specular highlights. Realistic factory paint and fine credible details: panel seams, door handles, window frames and pillars, mirrors, lamps, tyres and wheels. Generic contemporary Japanese design with no brand logos, badges, emblems, readable text or licence plate characters. Clean reference for texturing a miniature Tokyo street model.",
+  "vehicles": [
+    {
+      "id": "kei-hatch-v2",
+      "dimensionsM": [
+        3.4,
+        1.48,
+        1.55
+      ],
+      "prompt": "Japanese kei city car with a rounded friendly profile: 3.4 m long and 1.55 m tall, short curved bonnet, rounded roofline sloping into a short hatch, round headlamps, 14 inch wheels, plain bright coral red paint, clearly different from the grey window glass."
+    },
+    {
+      "id": "compact-crossover-v2",
+      "dimensionsM": [
+        4.0,
+        1.75,
+        1.6
+      ],
+      "prompt": "Japanese compact crossover SUV: 4.2 m long and 1.6 m tall, raised ride height, black plastic wheel-arch trim, short bonnet, gently sloping rear hatch, roof rails, 17 inch alloy wheels, plain bright red paint, clearly different from the black plastic trim."
+    },
+    {
+      "id": "taxi-classic-v2",
+      "dimensionsM": [
+        4.4,
+        1.7,
+        1.5
+      ],
+      "prompt": "Classic Japanese 1990s-style taxi sedan: boxy three-box saloon 4.6 m long and 1.5 m tall, upright square front with chrome grille, long flat bonnet, separate boot, thin pillars, door mirrors on the front wings, chrome bumpers, 15 inch wheels with plain hubcaps, plain bright signal yellow paint, clearly different from the chrome and glass, small blank roof-top taxi lamp sign with no writing."
+    }
+  ]
+}

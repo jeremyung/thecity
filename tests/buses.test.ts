@@ -19,10 +19,12 @@ describe('bus presentation',()=>{
     expect(buses.ids).toEqual([91]);
     for(const mesh of buses.meshes){expect(mesh.count).toBe(1);const m=new THREE.Matrix4();mesh.getMatrixAt(0,m);expect(new THREE.Vector3().setFromMatrixPosition(m).toArray()).toEqual([30,0,40]);expect(mesh.geometry.getAttribute('position').count).toBeGreaterThan(0);}
     const entry=buses.root.children.find(o=>o instanceof THREE.InstancedMesh&&!buses.meshes.includes(o)) as THREE.InstancedMesh;
-    expect(entry.count).toBe(1);
-    // A bus facing +X opens on its left curb (+Z), matching engine queues.
+    // Both kerb-side doorways light while dwelling.
+    expect(entry.count).toBe(2);
+    // A bus facing +X opens on the driver's left, -Z in this right-handed y-up
+    // frame, matching the engine's KERB_LANE queues.
     const doorMatrix=new THREE.Matrix4();entry.getMatrixAt(0,doorMatrix);
-    expect(new THREE.Vector3().setFromMatrixPosition(doorMatrix).z).toBeGreaterThan(40);
+    expect(new THREE.Vector3().setFromMatrixPosition(doorMatrix).z).toBeLessThan(40);
     buses.begin();buses.set(0,91,31,40,Math.PI/2,{...world,buses:[{...world.buses![0],dwelling:false}]});buses.finish(1);expect(entry.count).toBe(0);
     buses.set(2,999,100,100,0,world);expect(buses.ids).toEqual([91]);
     buses.reset();expect(buses.ids).toEqual([]);expect(buses.meshes.every(mesh=>mesh.count===0)).toBe(true);
