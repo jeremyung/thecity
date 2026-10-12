@@ -1,0 +1,1096 @@
+{
+  "capUSD": 2,
+  "requests": [
+    {
+      "id": "hy-image-v3.5-preview--kei-wagon",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "kei-wagon",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:38:01.547Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--kei-wagon.png",
+      "seconds": 12.754,
+      "usage": {
+        "prompt_tokens": 245,
+        "completion_tokens": 15000,
+        "total_tokens": 15245,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--compact-hatch",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "compact-hatch",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:38:14.304Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--compact-hatch.png",
+      "seconds": 20.884,
+      "usage": {
+        "prompt_tokens": 235,
+        "completion_tokens": 15000,
+        "total_tokens": 15235,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--taxi",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "taxi",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:38:35.202Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--taxi.png",
+      "seconds": 14.302,
+      "usage": {
+        "prompt_tokens": 246,
+        "completion_tokens": 15000,
+        "total_tokens": 15246,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--delivery-van",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "delivery-van",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:38:49.507Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--delivery-van.png",
+      "seconds": 12.186,
+      "usage": {
+        "prompt_tokens": 246,
+        "completion_tokens": 15000,
+        "total_tokens": 15246,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--box-truck",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "box-truck",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:39:01.707Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--box-truck.png",
+      "seconds": 12.955,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 15000,
+        "total_tokens": 15248,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "qwen-image-3--kei-wagon",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "kei-wagon",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:39:20.617Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--kei-wagon.png",
+      "seconds": 50.53,
+      "usage": {
+        "prompt_tokens": 245,
+        "completion_tokens": 4175,
+        "total_tokens": 4420,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--compact-hatch",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "compact-hatch",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:40:11.150Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--compact-hatch.png",
+      "seconds": 52.813,
+      "usage": {
+        "prompt_tokens": 235,
+        "completion_tokens": 4175,
+        "total_tokens": 4410,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--taxi",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "taxi",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:41:03.978Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--taxi.png",
+      "seconds": 58.545,
+      "usage": {
+        "prompt_tokens": 246,
+        "completion_tokens": 4175,
+        "total_tokens": 4421,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--delivery-van",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "delivery-van",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:42:02.537Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--delivery-van.png",
+      "seconds": 47.604,
+      "usage": {
+        "prompt_tokens": 246,
+        "completion_tokens": 4175,
+        "total_tokens": 4421,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--box-truck",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "box-truck",
+      "status": "complete",
+      "submittedAt": "2026-10-12T03:42:50.155Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--box-truck.png",
+      "seconds": 52.486,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 4175,
+        "total_tokens": 4423,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "gemini-nano-banana-2.1--kei-wagon",
+      "model": "google/gemini-nano-banana-2.1",
+      "vehicle": "kei-wagon",
+      "status": "skipped-provider-quota",
+      "submittedAt": "2026-10-12T03:43:42.726Z",
+      "estimateUSD": 0.05,
+      "httpStatus": 429,
+      "body": "{\"error\":{\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current us…\",\"code\":429,\"metadata\":{\"provider_name\":\"Google AI Studio\"}}}",
+      "costUSD": 0
+    },
+    {
+      "id": "qwen-image-3--taxi-black",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "taxi-black",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:05:39.526Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--taxi-black.png",
+      "seconds": 50.669,
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 4175,
+        "total_tokens": 4455,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--taxi-indigo",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "taxi-indigo",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:06:30.201Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--taxi-indigo.png",
+      "seconds": 50.861,
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 4175,
+        "total_tokens": 4455,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--van-hidamari",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "van-hidamari",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:07:21.063Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--van-hidamari.png",
+      "seconds": 61.632,
+      "usage": {
+        "prompt_tokens": 253,
+        "completion_tokens": 4175,
+        "total_tokens": 4428,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--van-tsubame",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "van-tsubame",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:08:22.710Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--van-tsubame.png",
+      "seconds": 48.466,
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 4175,
+        "total_tokens": 4427,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--van-post",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "van-post",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:09:11.178Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--van-post.png",
+      "seconds": 61.794,
+      "usage": {
+        "prompt_tokens": 238,
+        "completion_tokens": 4175,
+        "total_tokens": 4413,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--truck-aoba",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "truck-aoba",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:10:12.987Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--truck-aoba.png",
+      "seconds": 66.721,
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 4175,
+        "total_tokens": 4427,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--truck-yamabiko",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "truck-yamabiko",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:11:19.723Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--truck-yamabiko.png",
+      "seconds": 87.454,
+      "usage": {
+        "prompt_tokens": 249,
+        "completion_tokens": 4175,
+        "total_tokens": 4424,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--truck-fuji-reefer",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "truck-fuji-reefer",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:12:47.191Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--truck-fuji-reefer.png",
+      "seconds": 54.399,
+      "usage": {
+        "prompt_tokens": 242,
+        "completion_tokens": 4175,
+        "total_tokens": 4417,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "hy-image-v3.5-preview--taxi-black",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "taxi-black",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:13:41.664Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--taxi-black.png",
+      "seconds": 12.243,
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 15000,
+        "total_tokens": 15280,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--taxi-indigo",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "taxi-indigo",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:13:53.909Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--taxi-indigo.png",
+      "seconds": 11.208,
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 15000,
+        "total_tokens": 15280,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--van-hidamari",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "van-hidamari",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:14:05.119Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--van-hidamari.png",
+      "seconds": 13.616,
+      "usage": {
+        "prompt_tokens": 253,
+        "completion_tokens": 15000,
+        "total_tokens": 15253,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--van-tsubame",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "van-tsubame",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:14:18.750Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--van-tsubame.png",
+      "seconds": 17.235,
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 15000,
+        "total_tokens": 15252,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--van-post",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "van-post",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:14:36.000Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--van-post.png",
+      "seconds": 11.465,
+      "usage": {
+        "prompt_tokens": 238,
+        "completion_tokens": 15000,
+        "total_tokens": 15238,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--truck-aoba",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "truck-aoba",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:14:47.466Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--truck-aoba.png",
+      "seconds": 17.732,
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 15000,
+        "total_tokens": 15252,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--truck-yamabiko",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "truck-yamabiko",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:15:05.213Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--truck-yamabiko.png",
+      "seconds": 12.317,
+      "usage": {
+        "prompt_tokens": 249,
+        "completion_tokens": 15000,
+        "total_tokens": 15249,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--truck-fuji-reefer",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "truck-fuji-reefer",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:15:17.531Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--truck-fuji-reefer.png",
+      "seconds": 13.518,
+      "usage": {
+        "prompt_tokens": 242,
+        "completion_tokens": 15000,
+        "total_tokens": 15242,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "qwen-image-3--bus-left",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "bus-left",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:44:49.347Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--bus-left.png",
+      "seconds": 54.455,
+      "usage": {
+        "prompt_tokens": 222,
+        "completion_tokens": 4175,
+        "total_tokens": 4397,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--bus-right",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "bus-right",
+      "status": "complete",
+      "submittedAt": "2026-10-12T04:45:43.804Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--bus-right.png",
+      "seconds": 54.095,
+      "usage": {
+        "prompt_tokens": 215,
+        "completion_tokens": 4175,
+        "total_tokens": 4390,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--kei-hatch",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "kei-hatch",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:25:48.295Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--kei-hatch.png",
+      "seconds": 47.129,
+      "usage": {
+        "prompt_tokens": 243,
+        "completion_tokens": 4175,
+        "total_tokens": 4418,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--kei-truck",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "kei-truck",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:26:35.427Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--kei-truck.png",
+      "seconds": 54.339,
+      "usage": {
+        "prompt_tokens": 243,
+        "completion_tokens": 4175,
+        "total_tokens": 4418,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--compact-crossover",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "compact-crossover",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:27:29.779Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--compact-crossover.png",
+      "seconds": 53.387,
+      "usage": {
+        "prompt_tokens": 242,
+        "completion_tokens": 4175,
+        "total_tokens": 4417,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--compact-minivan",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "compact-minivan",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:28:23.181Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--compact-minivan.png",
+      "seconds": 46.97,
+      "usage": {
+        "prompt_tokens": 246,
+        "completion_tokens": 4175,
+        "total_tokens": 4421,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--taxi-classic",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "taxi-classic",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:29:10.153Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--taxi-classic.png",
+      "seconds": 53.985,
+      "usage": {
+        "prompt_tokens": 275,
+        "completion_tokens": 4175,
+        "total_tokens": 4450,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--kei-hatch-v2",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "kei-hatch-v2",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:32:16.883Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--kei-hatch-v2.png",
+      "seconds": 54.827,
+      "usage": {
+        "prompt_tokens": 255,
+        "completion_tokens": 4175,
+        "total_tokens": 4430,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--compact-crossover-v2",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "compact-crossover-v2",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:33:11.712Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--compact-crossover-v2.png",
+      "seconds": 50.428,
+      "usage": {
+        "prompt_tokens": 255,
+        "completion_tokens": 4175,
+        "total_tokens": 4430,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--taxi-classic-v2",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "taxi-classic-v2",
+      "status": "complete",
+      "submittedAt": "2026-10-12T06:34:02.141Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--taxi-classic-v2.png",
+      "seconds": 77.605,
+      "usage": {
+        "prompt_tokens": 289,
+        "completion_tokens": 4175,
+        "total_tokens": 4464,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    }
+  ]
+}

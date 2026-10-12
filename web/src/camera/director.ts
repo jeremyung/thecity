@@ -64,6 +64,8 @@ const WATCH_DIRECTION = new THREE.Vector3(0.65, 0.28, 0.7).normalize();
 const OVERVIEW_DIRECTION = new THREE.Vector3(0.65, 0.42, 0.7).normalize();
 const KEY_TARGETS = "input, textarea, select, button, [contenteditable='true'], [role='textbox']";
 
+export type SkylineCluster = { x: number; z: number; floors: number; spread: number; score: number; towers: World["buildings"]; frameBuildings: World["buildings"] };
+
 /** Smooth scene direction around one shared world camera. */
 export class CameraDirector {
   readonly controls: OrbitControls;
@@ -108,6 +110,7 @@ export class CameraDirector {
   private reducedMotion = false;
   private mediaQuery: MediaQueryList | null = null;
   private disposed = false;
+  private skylineClusterCache: { key: string; best: SkylineCluster | null } | null = null;
   private currentLens: LensPresetId = "environment";
 
   private readonly onControlsStart = () => this.takeManualControl();
@@ -1059,24 +1062,7 @@ export class CameraDirector {
     });
     if (buildings.length === 0) return null;
 
-    let best: { x: number; z: number; floors: number; spread: number; score: number; towers: World["buildings"]; frameBuildings: World["buildings"] } | null = null;
-    for (const seed of buildings) {
-      const local = buildings.filter((building) => Math.hypot(building.x - seed.x, building.z - seed.z) <= 90);
-      const floors = Math.max(...local.map((building) => building.floors));
-      if (floors < 5) continue;
-      const towers = local.filter((building) => building.floors >= Math.max(5, floors * 0.68));
-      if (towers.length === 0) continue;
-      const totalWeight = towers.reduce((sum, building) => sum + Math.max(1, building.floors), 0);
-      const x = towers.reduce((sum, building) => sum + building.x * Math.max(1, building.floors), 0) / totalWeight;
-      const z = towers.reduce((sum, building) => sum + building.z * Math.max(1, building.floors), 0) / totalWeight;
-      const spread = Math.max(...towers.map((building) => Math.hypot(building.x - x, building.z - z)
-        + Math.hypot(building.width, building.depth) / 2));
-      const score = floors * 3 + towers.length * 1.2 + Math.min(local.length, 18) * 0.15;
-      // Include adjacent mid-rise roofs that can dominate screen area when
-      // they sit closer to the river camera than the tallest tower.
-      const frameBuildings = local.filter((building) => building.floors >= Math.max(5, floors * 0.4));
-      if (!best || score > best.score) best = { x, z, floors, spread, score, towers, frameBuildings };
-    }
+    const best = this.skylineCluster(buildings);
     if (!best) return null;
 
     // Only the selected local tall-building cluster is framed; distant
@@ -1145,6 +1131,19 @@ export class CameraDirector {
       activity: Math.min(10, world.stats.active_travelers * 0.02),
       suitability: "night",
     };
+  }
+
+  /**
+   * Snapshots arrive every couple of seconds while open buildings change far
+   * less often, so the cluster search is memoized on every building field it
+   * and skylineBounds read.
+   */
+  private skylineCluster(buildings: World["buildings"]): SkylineCluster | null {
+    const key = skylineClusterKey(buildings);
+    if (this.skylineClusterCache?.key === key) return this.skylineClusterCache.best;
+    const best = findSkylineCluster(buildings);
+    this.skylineClusterCache = { key, best };
+    return best;
   }
 
   /** Match the visible footprint and rooftop equipment produced by buildingKit. */
@@ -1428,4 +1427,56 @@ export class CameraDirector {
     for (let i = 0; i < value.length; i++) result = Math.imul(result ^ value.charCodeAt(i), 16777619);
     return result >>> 0;
   }
+}
+
+/** Cache key over every building field findSkylineCluster and skylineBounds read. */
+export function skylineClusterKey(buildings: World["buildings"]): string {
+  return buildings.map((b) => `${b.id},${b.x},${b.z},${b.floors},${b.width},${b.depth},${b.rotation},${b.kind},${b.anchor ? 1 : 0}`).join("|");
+}
+
+/**
+ * Highest-scoring tall-building cluster: each building seeds a 90 m
+ * neighborhood. Ties keep the earliest seed, and every list keeps world order.
+ */
+export function findSkylineCluster(buildings: World["buildings"]): SkylineCluster | null {
+  let best: SkylineCluster | null = null;
+  // Bucket by the 90 m search radius so each seed scans only its 3×3 cell
+  // neighborhood. Indices are re-sorted so `local` keeps world order exactly.
+  const cells = new Map<string, number[]>();
+  const cellOf = (value: number) => Math.floor(value / 90);
+  buildings.forEach((building, index) => {
+    const cellKey = `${cellOf(building.x)}:${cellOf(building.z)}`;
+    const cell = cells.get(cellKey);
+    if (cell) cell.push(index); else cells.set(cellKey, [index]);
+  });
+  const candidates: number[] = [];
+  for (const seed of buildings) {
+    candidates.length = 0;
+    const cx = cellOf(seed.x), cz = cellOf(seed.z);
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
+      const cell = cells.get(`${cx + dx}:${cz + dz}`);
+      if (cell) for (const index of cell) candidates.push(index);
+    }
+    candidates.sort((a, b) => a - b);
+    const local: World["buildings"] = [];
+    for (const index of candidates) {
+      const building = buildings[index];
+      if (Math.hypot(building.x - seed.x, building.z - seed.z) <= 90) local.push(building);
+    }
+    const floors = Math.max(...local.map((building) => building.floors));
+    if (floors < 5) continue;
+    const towers = local.filter((building) => building.floors >= Math.max(5, floors * 0.68));
+    if (towers.length === 0) continue;
+    const totalWeight = towers.reduce((sum, building) => sum + Math.max(1, building.floors), 0);
+    const x = towers.reduce((sum, building) => sum + building.x * Math.max(1, building.floors), 0) / totalWeight;
+    const z = towers.reduce((sum, building) => sum + building.z * Math.max(1, building.floors), 0) / totalWeight;
+    const spread = Math.max(...towers.map((building) => Math.hypot(building.x - x, building.z - z)
+      + Math.hypot(building.width, building.depth) / 2));
+    const score = floors * 3 + towers.length * 1.2 + Math.min(local.length, 18) * 0.15;
+    // Include adjacent mid-rise roofs that can dominate screen area when
+    // they sit closer to the river camera than the tallest tower.
+    const frameBuildings = local.filter((building) => building.floors >= Math.max(5, floors * 0.4));
+    if (!best || score > best.score) best = { x, z, floors, spread, score, towers, frameBuildings };
+  }
+  return best;
 }

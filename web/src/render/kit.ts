@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { ArtMaterials, signTexture } from './materials';
+import { ArtMaterials } from './materials';
 import { compactMidriseEnvelope, midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing, type LowriseMass, type LowriseMassing } from './lowrise-massing';
 import { buildingPalette } from './building-palette';
@@ -1417,20 +1417,18 @@ function seedInt(seed: number) { return Math.trunc(seed) >>> 0; }
 function finishBuilding(kit: Kit, b: Building, w: number, d: number, height: number, art: ArtMaterials, completed: boolean) {
   const group = kit.finish();
   if (completed && (b.anchor || b.kind === 'shop' || b.kind === 'cafe')) {
-    const tex = signTexture(b.anchor ? '喫茶 青葉' : (b.kind === 'cafe' ? '珈琲' : '商店'));
-    const mat = new THREE.MeshBasicNodeMaterial({ map: tex, transparent: true, side: THREE.DoubleSide });
+    const { material, v0, v1 } = art.shopSign(b.anchor ? '喫茶 青葉' : (b.kind === 'cafe' ? '珈琲' : '商店'));
     const signW = Math.min(w * .7, b.anchor ? 5.5 : 4.8);
     const signH = signW / 3.7;
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), mat);
+    const plane = new THREE.PlaneGeometry(signW, signH), uvs = plane.getAttribute('uv');
+    for (let i = 0; i < uvs.count; i++) uvs.setY(i, v0 + uvs.getY(i) * (v1 - v0));
+    const sign = new THREE.Mesh(plane, material);
     const signY = height < 5.2 ? height - signH / 2 - .06 : Math.max(4.45, Math.min(height - .25, 4.85));
     sign.position.set(0, signY, Math.min(d / 2 + .31, b.depth / 2 - .03));
     group.add(sign);
-    sign.userData.ownedTexture = tex;
-    sign.userData.ownedMaterial = true;
   }
   group.userData.buildingId = b.id;
   group.traverse(o => o.userData.buildingId = b.id);
-  void art;
   return group;
 }
 

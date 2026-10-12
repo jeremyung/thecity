@@ -14,6 +14,7 @@ import { RiverWater } from './water';
 import { BuildingChunks, buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
 import { Umbrellas } from './umbrellas';
 import { CityBuses } from './buses';
+import { isRoadVehicle, ROAD_SURFACE_Y, VehicleFleet } from './vehicles';
 import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
@@ -21,6 +22,7 @@ import { buildStreetLighting } from './street-lighting';
 import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
+import { treeOcclusion } from './tree-occlusion';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, expresswayPierClear, type CrossingDeck, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
@@ -42,7 +44,6 @@ export function buildingRenderSignature(b:Building,original?:BuildingOriginalFoo
 }
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
-const carColors=['#fff9e9','#d4e2dc','#4b767a','#a95049','#b3bdc9','#e8c778'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
 
 export class CityRenderer {
@@ -111,10 +112,8 @@ export class CityRenderer {
   private umbrellaCount=0;
   private pedestrians:THREE.InstancedMesh;
   private heads:THREE.InstancedMesh;
-  private cars:THREE.InstancedMesh;
-  private carGlass:THREE.InstancedMesh;
-  private carWheels:THREE.InstancedMesh;
-  private carLights:THREE.InstancedMesh;
+  private fleet=new VehicleFleet(this.art);
+  private lastActorFrame=0;
   private trains:THREE.InstancedMesh;
   private trainGlass:THREE.InstancedMesh;
   private trainStripe:THREE.InstancedMesh;
@@ -159,7 +158,7 @@ export class CityRenderer {
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
     this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
-    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
+    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
@@ -202,12 +201,6 @@ export class CityRenderer {
     this.scene.add(this.rainLines);
     this.pedestrians=this.instances(new THREE.CapsuleGeometry(.33,.9,3,5),this.art.get('#e7e5d9'),2000);
     this.heads=this.instances(new THREE.SphereGeometry(.28,6,4),this.art.get('#dfbe97'),2000);
-    this.cars=this.instances(new THREE.BoxGeometry(1.9,1.05,4.2),this.art.get('#e6e3d1',.45),1000);
-    this.carGlass=this.instances(new THREE.BoxGeometry(1.67,.65,2.3),this.art.get('#617d85',.3),1000);
-    const carDetail=new Kit();for(const side of [-1,1])for(const z of [-1.35,1.35]){const wheel=new THREE.CylinderGeometry(.36,.36,.22,10);wheel.rotateZ(Math.PI/2);wheel.translate(side*.94,0,z);carDetail.add(wheel,this.art.get('#344346'));}
-    this.carWheels=this.instances((carDetail.finish().children[0] as THREE.Mesh).geometry,this.art.get('#344346'),1000);
-    const lamps=new Kit();for(const side of [-1,1])lamps.box(side*.62,0,2.12,.42,.18,.06,this.art.get('#ffe7b2',.4,true));
-    this.carLights=this.instances((lamps.finish().children[0] as THREE.Mesh).geometry,this.art.get('#ffe7b2',.4,true),1000);
     this.trains=this.instances(new THREE.BoxGeometry(3.1,2.8,15),this.art.get('#c8d2cd',.4),30);
     const trainWindows=new Kit();for(const side of [-1,1])for(let z=-5.5;z<=5.5;z+=2.2)trainWindows.box(side*1.57,0,z,.06,1.12,1.6,this.art.get('#526e77',.3));
     const windowGroup=trainWindows.finish(false),windowMesh=windowGroup.children[0] as THREE.Mesh;
@@ -340,7 +333,7 @@ export class CityRenderer {
   }
   private resetWorld(){
     this.focusResetPending=true;
-    this.umbrellas.reset();this.buses.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
+    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
     this.buildings.clear();
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry;this.retire(()=>{near?.dispose();far?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
@@ -422,15 +415,11 @@ export class CityRenderer {
     }
   }
   private updateTrees(world:World){
-    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
+    const hides=treeOcclusion(world,this.treePoints);
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
       const i=batch.indices[local];
       const p=this.treePoints[i];
-      let hidden=world.buildings.some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
-        return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
-      });
-      if(!hidden)hidden=world.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&r.kind!=='expressway'&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);});
-      if(!hidden)hidden=(world.rear_extensions??[]).slice(0,2).some(e=>{if(e.stage==='survey')return false;const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
+      const hidden=hides(p);
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
@@ -594,18 +583,18 @@ export class CityRenderer {
     if(this.frame++%90===0&&this.onMetrics){const avg=this.frames.reduce((a,b)=>a+b,0)/this.frames.length;this.onMetrics({fps:1000/avg,frameMs:cost,calls:this.renderer.info.render.drawCalls,triangles:this.renderer.info.render.triangles,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,backend:this.renderer.backend.constructor.name,styleSwitch:this.styleSwitchMetrics?{...this.styleSwitchMetrics}:undefined,pendingBuildings:this.objectQueue.size,pendingChunks:this.chunks.pendingCount});}
   }
   private updateActors(now:number){
-    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,car=0,train=0,bus=0;this.buses.begin();const pedIds:number[]=[],carIds:number[]=[],trainIds:number[]=[];
+    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;const dt=this.lastActorFrame?Math.min(.1,(now-this.lastActorFrame)/1000):1/60;this.lastActorFrame=now;this.buses.begin(now);this.fleet.begin();const pedIds:number[]=[],trainIds:number[]=[];
     for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=THREE.MathUtils.lerp(old.x,current.x,t),z=THREE.MathUtils.lerp(old.z,current.z,t);let h=current.h;const dh=Math.atan2(Math.sin(current.h-old.h),Math.cos(current.h-old.h));h=Math.PI/2-(old.h+dh*t);const lift=current.k===0?THREE.MathUtils.lerp(pedestrianSurface(old.y,bridgeLift(old,this.bridgeSpans)),pedestrianSurface(current.y,bridgeLift(current,this.bridgeSpans)),t)-PEDESTRIAN_GROUND_SURFACE:current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
       if(current.k===0&&ped<2000){const offset=ped*MOVEMENT_STRIDE;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;this.umbrellaTuples[offset+5]=lift;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
-      else if(current.k===1&&car<1000){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);dummy.position.set(x,1.07+vehicle.lift,z);dummy.rotation.set(-vehicle.pitch,h,0,'YXZ');dummy.scale.setScalar(1);dummy.updateMatrix();this.cars.setMatrixAt(car,dummy.matrix);this.cars.setColorAt(car,carColors[id%carColors.length]);dummy.position.y=.67+vehicle.lift;dummy.updateMatrix();this.carWheels.setMatrixAt(car,dummy.matrix);dummy.position.y=1.04+vehicle.lift;dummy.updateMatrix();this.carLights.setMatrixAt(car,dummy.matrix);dummy.position.y=1.77+vehicle.lift;dummy.updateMatrix();this.carGlass.setMatrixAt(car,dummy.matrix);carIds[car]=id;car++;}
-      else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+.22,vehicle.pitch);}
+      else if(isRoadVehicle(current.k)){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,dt);}
+      else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+ROAD_SURFACE_Y,vehicle.pitch);}
       else if(current.k===2&&train<24){for(let coach=0;coach<3;coach++){dummy.position.set(x-Math.sin(h)*(coach-1)*16,2.75+RAIL_DECK,z-Math.cos(h)*(coach-1)*16);dummy.rotation.set(0,h,0);dummy.scale.setScalar(1);dummy.updateMatrix();this.trains.setMatrixAt(train,dummy.matrix);dummy.position.y=3.05+RAIL_DECK;dummy.updateMatrix();this.trainGlass.setMatrixAt(train,dummy.matrix);dummy.position.y=2.35+RAIL_DECK;dummy.updateMatrix();this.trainStripe.setMatrixAt(train,dummy.matrix);dummy.position.y=1.1+RAIL_DECK;dummy.updateMatrix();this.wheels.setMatrixAt(train,dummy.matrix);trainIds[train]=id;train++;}}
     }
     this.umbrellaCount=ped;
     this.buses.finish(bus);for(const mesh of this.buses.meshes)this.actorIds.set(mesh,this.buses.ids);
-    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.actorIds.set(this.cars,carIds);this.actorIds.set(this.carGlass,carIds);this.actorIds.set(this.trains,trainIds);this.actorIds.set(this.trainGlass,trainIds);
-    for(const [mesh,count]of [[this.pedestrians,ped],[this.heads,ped],[this.cars,car],[this.carGlass,car],[this.carWheels,car],[this.carLights,car],[this.trains,train],[this.trainGlass,train],[this.trainStripe,train],[this.wheels,train]] as const){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}
-    if(this.pedestrians.instanceColor)this.pedestrians.instanceColor.needsUpdate=true;if(this.cars.instanceColor)this.cars.instanceColor.needsUpdate=true;
+    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);this.actorIds.set(this.trains,trainIds);this.actorIds.set(this.trainGlass,trainIds);
+    for(const [mesh,count]of [[this.pedestrians,ped],[this.heads,ped],[this.trains,train],[this.trainGlass,train],[this.trainStripe,train],[this.wheels,train]] as const){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}
+    if(this.pedestrians.instanceColor)this.pedestrians.instanceColor.needsUpdate=true;
   }
   private updateLight(dt:number){
     const hour=this.preview??this.hour,angle=(hour-6)/12*Math.PI;
@@ -652,7 +641,7 @@ export class CityRenderer {
   getAudioContext(){
     const world=this.worldState,listener=this.director.target;this.camera.getWorldDirection(v);
     const trains:Array<{id:number,x:number,z:number,speed:number}>=[],buses:Array<{id:number,x:number,z:number,speed:number}>=[],traffic:Array<{id:number,x:number,z:number,speed:number,distance:number}>=[];let pedestrians=0;
-    for(const [id,p]of this.current){const old=this.previous.get(id)??p,speed=Math.hypot(p.x-old.x,p.z-old.z)/this.motionDelta,distance=Math.hypot(p.x-listener.x,p.z-listener.z);if(p.k===2)trains.push({id,x:p.x,z:p.z,speed});else if(p.k===3)buses.push({id,x:p.x,z:p.z,speed});else if(p.k===1&&distance<130)traffic.push({id,x:p.x,z:p.z,speed,distance});else if(p.k===0&&distance<45)pedestrians++;}
+    for(const [id,p]of this.current){const old=this.previous.get(id)??p,speed=Math.hypot(p.x-old.x,p.z-old.z)/this.motionDelta,distance=Math.hypot(p.x-listener.x,p.z-listener.z);if(p.k===2)trains.push({id,x:p.x,z:p.z,speed});else if(p.k===3)buses.push({id,x:p.x,z:p.z,speed});else if(isRoadVehicle(p.k)&&distance<130)traffic.push({id,x:p.x,z:p.z,speed,distance});else if(p.k===0&&distance<45)pedestrians++;}
     traffic.sort((a,b)=>a.distance-b.distance||a.id-b.id);
     const events=resolveAudioEventContext(world,this.current,this.motionTick);
     let riverDistance=800;const river=world?.terrain.river??[];for(let i=0;i<river.length-1;i++)riverDistance=Math.min(riverDistance,Math.max(0,distanceToSegment({x:listener.x,z:listener.z},river[i],river[i+1])-this.riverHalfWidth));
@@ -667,7 +656,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);if(!hits.length)return;const hit=hits[0],building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.retire(()=>this.fleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

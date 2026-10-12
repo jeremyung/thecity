@@ -1,0 +1,12 @@
+{
+  "id": "vehicle-atlas",
+  "source": "Side elevations generated with qwen/qwen-image-3 via OpenRouter (vehicle pilot), traced and packed by scripts/build-vehicle-kits.py",
+  "provenance": "art-workshop/vehicle-pilot/ledger.json",
+  "status": "runtime: road vehicles and city bus",
+  "role": "atlas",
+  "colorSpace": "sRGB",
+  "width": 2048,
+  "height": 1024,
+  "runtimeIntegration": true,
+  "note": "Paint regions are stored as grey at 0.8 of reference luminance and tinted per vehicle through vehicle-mask.png."
+}
