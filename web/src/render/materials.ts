@@ -22,6 +22,8 @@ export class ArtMaterials {
   private bands:THREE.DataTexture;
   private tenantAtlas:THREE.CanvasTexture|null=null;
   private leafMask:THREE.CanvasTexture|null=null;
+  private shopSignAtlas:THREE.CanvasTexture|null=null;
+  private shopSignMaterial:THREE.MeshBasicNodeMaterial|null=null;
   constructor(){
     this.contours.opacityNode=smoothstep(100,420,positionView.z.negate()).mul(-1).add(1).mul(.27);
     this.bands=new THREE.DataTexture(new Uint8Array([95,145,195,230,255]),5,1,THREE.RedFormat);
@@ -104,6 +106,26 @@ export class ArtMaterials {
     }
     return variants[this.style];
   }
+  /**
+   * One opaque atlas/material for every storefront sign. A material per sign
+   * kept each one out of the neighborhood batches: ~600 extra draws per pass.
+   * Returns the shared material and the atlas cell's v range for `label`.
+   */
+  shopSign(label:typeof SHOP_SIGN_LABELS[number]):{material:THREE.MeshBasicNodeMaterial,v0:number,v1:number}{
+    const slot=SHOP_SIGN_LABELS.indexOf(label);
+    if(slot<0)throw new Error(`Unknown shop sign: ${label}`);
+    if(!this.shopSignMaterial){
+      this.shopSignAtlas=canvasTexture(SIGN_WIDTH,SIGN_ATLAS_HEIGHT,ctx=>{
+        // Background fills the padding too, so mip levels only blend in sign paper.
+        ctx.fillStyle=SIGN_PAPER;ctx.fillRect(0,0,SIGN_WIDTH,SIGN_ATLAS_HEIGHT);
+        SHOP_SIGN_LABELS.forEach((text,slot)=>drawSign(ctx,text,SIGN_PAPER,SIGN_INK,shopSignCell(slot).top));
+      });
+      this.shopSignMaterial=new THREE.MeshBasicNodeMaterial({map:this.shopSignAtlas,side:THREE.DoubleSide});
+      this.shopSignMaterial.userData.artKey='shop-sign-atlas';
+    }
+    const{v0,v1}=shopSignCell(slot);
+    return{material:this.shopSignMaterial,v0,v1};
+  }
   setStyle(style:Style){this.style=style;}
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
   buildingBatch(material:THREE.Material):BuildingBatchSurface{
@@ -118,7 +140,7 @@ export class ArtMaterials {
     const key=material.userData.artKey as string|undefined;
     return key?this.cache.get(key)?.[style]??material:material;
   }
-  dispose(){for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.contours.dispose();}
+  dispose(){for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.shopSignMaterial?.dispose();this.shopSignAtlas?.dispose();this.shopSignMaterial=null;this.shopSignAtlas=null;this.contours.dispose();}
 
   private applyGlassSky(anime:Surface,miniature:Surface){
     // A bounded analytic sky reflection, not scene reflections or transparent
@@ -187,6 +209,18 @@ export function canvasTexture(width:number,height:number,draw:(ctx:CanvasRenderi
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;draw(canvas.getContext('2d')!);
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;return tex;
 }
-export function signTexture(text:string,background='#f2e9ce',ink='#314247'){
-  return canvasTexture(512,160,ctx=>{ctx.fillStyle=background;ctx.fillRect(0,0,512,160);ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='500 64px "Hiragino Mincho ProN", serif';ctx.fillText(text,256,85);ctx.strokeStyle='#b0a78a';ctx.lineWidth=3;ctx.strokeRect(8,8,496,144);});
+const SIGN_WIDTH=512,SIGN_HEIGHT=160,SIGN_PADDING=8,SIGN_PAPER='#f2e9ce',SIGN_INK='#314247';
+export const SHOP_SIGN_LABELS=['喫茶 青葉','珈琲','商店'] as const;
+// Cells share the paper gutters between them: 8 + 3×(160+8) = 512 rows.
+export const SIGN_ATLAS_HEIGHT=SIGN_PADDING+SHOP_SIGN_LABELS.length*(SIGN_HEIGHT+SIGN_PADDING);
+/** Canvas rows and texture v range of one atlas cell. CanvasTexture is flipped: canvas row 0 is v=1. */
+export function shopSignCell(slot:number){
+  const top=SIGN_PADDING+slot*(SIGN_HEIGHT+SIGN_PADDING),bottom=top+SIGN_HEIGHT;
+  return{top,bottom,v0:1-bottom/SIGN_ATLAS_HEIGHT,v1:1-top/SIGN_ATLAS_HEIGHT};
+}
+function drawSign(ctx:CanvasRenderingContext2D,text:string,background:string,ink:string,top=0){
+  ctx.fillStyle=background;ctx.fillRect(0,top,SIGN_WIDTH,SIGN_HEIGHT);ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='500 64px "Hiragino Mincho ProN", serif';ctx.fillText(text,256,top+85);ctx.strokeStyle='#b0a78a';ctx.lineWidth=3;ctx.strokeRect(8,top+8,496,144);
+}
+export function signTexture(text:string,background=SIGN_PAPER,ink=SIGN_INK){
+  return canvasTexture(SIGN_WIDTH,SIGN_HEIGHT,ctx=>drawSign(ctx,text,background,ink));
 }
