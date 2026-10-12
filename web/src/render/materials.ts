@@ -118,14 +118,13 @@ export class ArtMaterials {
       this.shopSignAtlas=canvasTexture(SIGN_WIDTH,SIGN_ATLAS_HEIGHT,ctx=>{
         // Background fills the padding too, so mip levels only blend in sign paper.
         ctx.fillStyle=SIGN_PAPER;ctx.fillRect(0,0,SIGN_WIDTH,SIGN_ATLAS_HEIGHT);
-        SHOP_SIGN_LABELS.forEach((text,index)=>drawSign(ctx,text,SIGN_PAPER,SIGN_INK,index*SIGN_STRIDE+SIGN_PADDING));
+        SHOP_SIGN_LABELS.forEach((text,slot)=>drawSign(ctx,text,SIGN_PAPER,SIGN_INK,shopSignCell(slot).top));
       });
       this.shopSignMaterial=new THREE.MeshBasicNodeMaterial({map:this.shopSignAtlas,side:THREE.DoubleSide});
       this.shopSignMaterial.userData.artKey='shop-sign-atlas';
     }
-    // CanvasTexture is flipped: canvas row 0 is v=1.
-    const top=slot*SIGN_STRIDE+SIGN_PADDING;
-    return{material:this.shopSignMaterial,v0:1-(top+SIGN_HEIGHT)/SIGN_ATLAS_HEIGHT,v1:1-top/SIGN_ATLAS_HEIGHT};
+    const{v0,v1}=shopSignCell(slot);
+    return{material:this.shopSignMaterial,v0,v1};
   }
   setStyle(style:Style){this.style=style;}
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
@@ -210,9 +209,15 @@ export function canvasTexture(width:number,height:number,draw:(ctx:CanvasRenderi
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;draw(canvas.getContext('2d')!);
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;return tex;
 }
-const SIGN_WIDTH=512,SIGN_HEIGHT=160,SIGN_PADDING=8,SIGN_STRIDE=SIGN_HEIGHT+SIGN_PADDING*2,SIGN_PAPER='#f2e9ce',SIGN_INK='#314247';
+const SIGN_WIDTH=512,SIGN_HEIGHT=160,SIGN_PADDING=8,SIGN_PAPER='#f2e9ce',SIGN_INK='#314247';
 export const SHOP_SIGN_LABELS=['喫茶 青葉','珈琲','商店'] as const;
-const SIGN_ATLAS_HEIGHT=512;
+// Cells share the paper gutters between them: 8 + 3×(160+8) = 512 rows.
+export const SIGN_ATLAS_HEIGHT=SIGN_PADDING+SHOP_SIGN_LABELS.length*(SIGN_HEIGHT+SIGN_PADDING);
+/** Canvas rows and texture v range of one atlas cell. CanvasTexture is flipped: canvas row 0 is v=1. */
+export function shopSignCell(slot:number){
+  const top=SIGN_PADDING+slot*(SIGN_HEIGHT+SIGN_PADDING),bottom=top+SIGN_HEIGHT;
+  return{top,bottom,v0:1-bottom/SIGN_ATLAS_HEIGHT,v1:1-top/SIGN_ATLAS_HEIGHT};
+}
 function drawSign(ctx:CanvasRenderingContext2D,text:string,background:string,ink:string,top=0){
   ctx.fillStyle=background;ctx.fillRect(0,top,SIGN_WIDTH,SIGN_HEIGHT);ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='500 64px "Hiragino Mincho ProN", serif';ctx.fillText(text,256,top+85);ctx.strokeStyle='#b0a78a';ctx.lineWidth=3;ctx.strokeRect(8,top+8,496,144);
 }

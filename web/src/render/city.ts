@@ -18,6 +18,7 @@ import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
+import { treeOcclusion } from './tree-occlusion';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
@@ -38,7 +39,6 @@ export function buildingRenderSignature(b:Building,original?:BuildingOriginalFoo
   return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
 }
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
-const NIGHT_SHADOW_DAYLIGHT=.02,NIGHT_SHADOW_INTERVAL=4;
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
 const carColors=['#fff9e9','#d4e2dc','#4b767a','#a95049','#b3bdc9','#e8c778'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
@@ -85,8 +85,6 @@ export class CityRenderer {
   private sun=new THREE.DirectionalLight('#fff1d1',3);
   private hemi=new THREE.HemisphereLight('#c8dce3','#748998',2);
   private lanternLights:Array<THREE.PointLight>=[];
-  private shadowAnchor=new THREE.Vector3(Infinity,0,0);
-  private shadowCommits=-1;
   private terrain=new THREE.Group();
   private roads=new THREE.Group();
   private station=new THREE.Group();
@@ -422,21 +420,11 @@ export class CityRenderer {
     }
   }
   private updateTrees(world:World){
-    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
-    // Bucket each occluder into every cell its widest test can reach, so each
-    // tree tests only nearby candidates. The per-pair tests are unchanged.
-    const maxCanopy=Math.max(0,...this.treePoints.map(p=>p.s*1.7+2));
-    const buildingCells=new SpatialCells<Building>(TREE_CELL),roadCells=new SpatialCells<Road>(TREE_CELL);
-    for(const b of world.buildings)buildingCells.insert(b,b.x,b.z,Math.hypot(b.width/2,b.depth/2+(b.anchor?4:0))+maxCanopy*Math.SQRT2);
-    for(const r of world.roads){const a=nodes.get(r.from),b=nodes.get(r.to);if(!a||!b||r.kind==='expressway')continue;const reach=roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);roadCells.insertBox(r,Math.min(a.x,b.x)-reach,Math.min(a.z,b.z)-reach,Math.max(a.x,b.x)+reach,Math.max(a.z,b.z)+reach);}
+    const hides=treeOcclusion(world,this.treePoints);
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
       const i=batch.indices[local];
       const p=this.treePoints[i];
-      let hidden=buildingCells.at(p.x,p.z).some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
-        return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
-      });
-      if(!hidden)hidden=roadCells.at(p.x,p.z).some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&r.kind!=='expressway'&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);});
-      if(!hidden)hidden=(world.rear_extensions??[]).slice(0,2).some(e=>{if(e.stage==='survey')return false;const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
+      const hidden=hides(p);
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
@@ -643,14 +631,6 @@ export class CityRenderer {
       shadowCamera.right-shadowCamera.left,shadowCamera.top-shadowCamera.bottom,
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
-    // Moonlit shadows are faint (~14/255) and the city is static, so at night
-    // the map refreshes every fourth frame, or at once when its view moves or
-    // a neighborhood batch changes. Daylight shadows refresh every frame.
-    const shadowAnchorMoved=!this.shadowAnchor.equals(this.sun.target.position);
-    const shadowSceneChanged=this.chunks.commits!==this.shadowCommits;
-    this.shadowAnchor.copy(this.sun.target.position);this.shadowCommits=this.chunks.commits;
-    this.sun.shadow.autoUpdate=false;
-    if(this.daylight>NIGHT_SHADOW_DAYLIGHT||shadowAnchorMoved||shadowSceneChanged||this.frame%NIGHT_SHADOW_INTERVAL===0)this.sun.shadow.needsUpdate=true;
     this.sun.intensity=.16+this.daylight*1.8;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#fff1d9'),this.daylight);
     // Soft urban bounce keeps opaque facades and lanes readable between local
     // emitters. Preserve the daytime fill and ground tint so the sun continues
@@ -691,18 +671,4 @@ export class CityRenderer {
   dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
-const TREE_CELL=24;
-/** Uniform grid of items registered in every cell their bounds overlap. */
-class SpatialCells<T>{
-  private cells=new Map<string,T[]>();
-  private static readonly empty:never[]=[];
-  constructor(private size:number){}
-  insert(item:T,x:number,z:number,radius:number){this.insertBox(item,x-radius,z-radius,x+radius,z+radius);}
-  insertBox(item:T,minX:number,minZ:number,maxX:number,maxZ:number){
-    for(let cx=Math.floor(minX/this.size);cx<=Math.floor(maxX/this.size);cx++)for(let cz=Math.floor(minZ/this.size);cz<=Math.floor(maxZ/this.size);cz++){
-      const key=`${cx}:${cz}`,cell=this.cells.get(key);if(cell)cell.push(item);else this.cells.set(key,[item]);
-    }
-  }
-  at(x:number,z:number):readonly T[]{return this.cells.get(`${Math.floor(x/this.size)}:${Math.floor(z/this.size)}`)??SpatialCells.empty;}
-}
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

@@ -63,8 +63,6 @@ export class BuildingChunks {
 
   constructor(private material:BuildingSurfaceResolver,private retire:(dispose:()=>void)=>void,private contourMaterial?:THREE.LineBasicNodeMaterial){}
 
-  /** Increments whenever a rebuilt neighborhood batch replaces the visible one. */
-  commits=0;
   get pendingCount(){return this.dirty.size+(this.active&&!this.dirty.has(this.active.key)?1:0);}
   /** True only when this exact descriptor's source is present in a visible committed chunk. */
   isSourceVisible(id:number,descriptor:RebuildableBuildingSource):boolean{
@@ -267,7 +265,7 @@ export class BuildingChunks {
     if(build.ownedResources.length)build.next.userData.buildingOwnedResources=build.ownedResources;
     const old=this.batches.get(build.key);
     if(old){old.removeFromParent();this.retire(()=>disposeGroup(old));}
-    this.root.add(build.next);this.batches.set(build.key,build.next);this.commits++;
+    this.root.add(build.next);this.batches.set(build.key,build.next);
     this.committedSources.set(build.key,new Map(build.sources.map(source=>[source.id,source.descriptor])));
     const releases=this.retired.get(build.key);
     if(releases){const pending:RetiredSource[]=[];for(const retired of releases){if(retired.afterRevision<=build.revision)retired.release();else pending.push(retired);}if(pending.length)this.retired.set(build.key,pending);else this.retired.delete(build.key);}
