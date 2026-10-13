@@ -123,6 +123,44 @@ def analyze(view, rgb, fg):
                 px=[int(x0), int(y0), int(x1), int(ground)])
 
 
+def at_scale():
+    """Show what each elevation looks like at its on-screen width. The right
+    copy is a smooth magnification of the left, so it reveals the detail that
+    survives downsampling without nearest-neighbour pixel blocks."""
+    picks = [('hy21-full-ortho--cab-side.png', 128, 'side · actual 128 px wide'),
+             ('hy21-full-ortho--cab-front.png', 64, 'front · actual 64 px wide')]
+    rows = []
+    for name, width, label in picks:
+        full = Image.open(PILOT / name).convert('RGB')
+        small = full.resize((width, max(1, round(full.height * width / full.width))), Image.LANCZOS)
+        zoom = max(2, min(6, round(260 / max(1, small.height))))
+        rows.append((small, small.resize((small.width * zoom, small.height * zoom), Image.LANCZOS), label, zoom))
+
+    pad, gap = 20, 26
+    text_h = 52
+    width = 560
+    height = pad + sum(text_h + r[1].height + gap for r in rows)
+    sheet = Image.new('RGB', (width, height), '#f4f1ea')
+    d = ImageDraw.Draw(sheet)
+    try: font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 16)
+    except OSError: font = ImageFont.load_default()
+    try: big = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
+    except OSError: big = font
+    d.text((pad, 12), 'Train pilot at miniature street scale', fill='#23324f', font=big)
+    y = pad + text_h - 10
+    for small, zoom_img, label, zoom in rows:
+        d.text((pad, y), label, fill='#3a4a5a', font=font)
+        d.text((pad, y + 20), f'right: smooth {zoom}× magnification (no extra detail)', fill='#7a8794', font=font)
+        ty = y + text_h
+        sheet.paste(small, (pad, ty))
+        d.rectangle([pad - 1, ty - 1, pad + small.width, ty + small.height], outline='#c8c2b4')
+        sheet.paste(zoom_img, (pad + small.width + gap, ty))
+        y = ty + zoom_img.height + gap
+    out = PILOT / 'at-scale.png'
+    sheet.save(out)
+    print('wrote', out.relative_to(ROOT))
+
+
 def main():
     rows = []
     for view in CONFIG['views']:
@@ -164,6 +202,8 @@ def main():
     out = PILOT / 'contact-sheet.jpg'
     sheet.save(out, quality=86)
     print('wrote', out.relative_to(ROOT))
+
+    at_scale()
 
     # Persist the raw metrics next to the ledger.
     (PILOT / 'review-metrics.json').write_text(json.dumps(
