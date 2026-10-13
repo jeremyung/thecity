@@ -21,8 +21,9 @@ Related: [rendering spec](05-rendering.md), [world growth — rail and transit](
   audit updated. `npm test` 330 passing; the one failing engine test
   (`frontier_proposal_scan_is_read_only_and_plan_road_replays`) also fails on
   the unmodified engine, so it is pre-existing.
-- Open: `scripts/benchmark-trains.mjs` frame cost, and art acceptance against
-  the concept boards. The generator sweep is in
+- Phase 5 benchmark: `scripts/benchmark-trains.mjs`; eight consists add four
+  draw calls and ~13,100 triangles. Open: art acceptance against the concept
+  boards. The generator sweep is in
   [art-workshop/train-variants/REVIEW.md](../art-workshop/train-variants/REVIEW.md).
 
 ## 1. Goal and definition of done
