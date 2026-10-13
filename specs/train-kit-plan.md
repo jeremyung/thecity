@@ -28,7 +28,7 @@ should not relitigate them without new evidence.
 
 | # | Decision | Source |
 | --- | --- | --- |
-| D1 | One commuter class first, symmetric consist `cab + intermediate… + cab`; the renderer orients cars from `direction`, so the tail is a mirrored cab. | current 3-coach layout |
+| D1 | **Class-aware from the start, one class shipped.** The manifest and runtime key by train class, but Phases 0–6 deliver only the commuter EMU. Additional classes are new source views plus a manifest entry plus engine eligibility, never a rewrite. Symmetric consist `cab + intermediate… + cab`; the renderer orients cars from `direction`, so the tail is a mirrored cab. | user review; current 3-coach layout |
 | D2 | The kit unit is a **car body** plus a traced **front end cap**. The front is a first-class source view, not approximated from the side. | pilot cleared the cab front |
 | D3 | Matting uses a **separable row+column background model** from the car-free top band. The vehicle builder's per-row test fails on a 20 m car with a visible floor and horizon. | pilot finding |
 | D4 | Roof equipment and cab presence are assigned **per consist role**, not inferred from a single generated image (the pilot's "trailer" came back with a pantograph). | pilot finding |
@@ -36,6 +36,48 @@ should not relitigate them without new evidence.
 | D6 | The **consist manifest is the single source of truth** for car lengths; the engine's rail length must agree, as `vehicleLength` does for cars. | `TRAIN_HALF_LENGTH` |
 | D7 | Share code rather than fork: extract the Python image ops from `build-vehicle-kits.py`, and generalize the TS material; keep the car kit as the regression test. | plan |
 | D8 | Local HunyuanImage-2.1 full is the default generator; `Qwen-Image-2.1` (installed) is the edit fallback, `qwen/qwen-image-3` the hosted flat-elevation fallback. | pilot decision |
+
+## 2.1 Train classes and variety
+
+"Multiple train types" mixes three independent axes. Keeping them separate is
+what makes variety cheap; conflating them is what makes it a rewrite.
+
+- **Livery / operator** — paint and decals on a shared body. No new geometry.
+  Highest visual variety per unit of work; the car kit already ships thirteen
+  invented operators this way.
+- **Class** — silhouette, dimensions, consist, front cap. Needs new source
+  views and a manifest entry.
+- **Mode / service** — corridor, route, stopping pattern, speed, platform.
+  Simulation and world growth, not art.
+
+Plausible types, against what the prototype can actually show today (one
+elevated corridor, one station, one gateway, no line or class concept):
+
+| Type | Infrastructure it needs | Asset cost | Priority |
+| --- | --- | --- | --- |
+| Commuter EMU (JR/private) | the existing elevated line | pilot done | 1 — the default |
+| Operator / livery variants | same line | canvas or tint only | 1 — bundle with the class |
+| Rapid / limited express | same corridor, fewer stops, maybe 6 cars | body + livery; same front family | 2 — when multi-station service lands |
+| Subway / metro stock | a tunnel or covered station | another commuter-like class | 3 — only once a covered line exists |
+| Shinkansen | dedicated high-speed corridor and a segregated station | large nose, ~25 m cars, new platform geometry | 4 — its own world milestone |
+| Tram / light rail | street track and overhead wire | narrow articulated car | 4 — a different mode entirely |
+| Freight | shared corridor plus a siding | container flats, no passengers | 5 — low priority |
+
+The engine currently exposes none of this. `TrainView` has no class, and the
+renderer cannot tell a Shinkansen from a local. So the class abstraction has to
+be introduced deliberately:
+
+- The manifest is keyed by class id (`classes: { commuter: … }`), and each class
+  owns its dimensions, doors-per-side, nose profile, consist and atlas entry.
+- Add a serde-defaulted `class` (and optionally `operator`) to `Train` /
+  `TrainView`, defaulting to the commuter class so existing saves and fixtures
+  still load. The renderer reads it by id the way `buses.ts` reads
+  `world.buses.find(b => b.id === id)` — `city.ts` already has `worldState` in
+  `updateActors`.
+- Within a class, livery is per-instance paint/decal on the shared body.
+- Do **not** attempt Shinkansen, subway or tram art before the world can render
+  their corridors and the simulation can schedule them; a nose with no track is
+  the worst kind of scope creep.
 
 ## 3. Phase overview
 
@@ -93,9 +135,10 @@ Offline; no runtime change.
       as prototyped in `scripts/review-train-pilot.py`), and switch the vehicle
       builder to it only if the car outputs remain identical; otherwise expose
       it as an option.
-- [ ] `art-workshop/train-kit.json` input: pixels-per-metre (start ~72 so a
-      20 m car fits the 2048 atlas), atlas size, and per consist: view source
-      paths, metric length/width/height, tumblehome, belt, window/door/roof
+- [ ] `art-workshop/train-kit.json` input, **keyed by class** so later classes
+      are additive: pixels-per-metre (start ~72 so a 20 m car fits the 2048
+      atlas), atlas size, and per class, per consist: view source paths, metric
+      length/width/height, tumblehome, belt, doors-per-side, window/door/roof
       bands, bogie centres and wheel radius, clearance, end rounding, lamp and
       headlight positions, destination-sign box, livery mode, per-role roof
       equipment.
@@ -108,7 +151,8 @@ Offline; no runtime change.
       - normalize paint to grey for tinting (or skip for baked livery);
       - bleed edges and pack a multi-view atlas;
       - write the consist manifest in metres (z forward, y up, ground y=0,
-        kerb side +x) matching `vehicle-manifest.json` conventions.
+        kerb side +x) matching `vehicle-manifest.json` conventions, under a
+        `classes` map keyed by class id.
 - [ ] Outputs: `public/art/trains/train-atlas.png`, `train-mask.png`,
       `web/src/render/train-manifest.json`,
       `validation/captures/train-kit-debug.png`.
@@ -127,8 +171,9 @@ outline, bogies, paint/lamp/glass masks, and the front cap for review.
         roof equipment (AC boxes, pantograph), and the destination-sign box;
       - keep the attribute contract (`vpart`, `lateral`, `wheel`, `tinted`),
         extending `vpart` for end cap / bogie / sign if needed;
-      - export `trainSpec`, `consistSpec`, `buildTrainGeometry(role)` and a
-        consist length helper.
+      - export `trainClass(id)`, `trainSpec(className)`, `consistSpec(className)`,
+        `buildTrainGeometry(className, role)` and a consist length helper, so the
+        runtime selects by class rather than importing one hardcoded body.
 - [ ] Material: generalize `vehicle-materials.ts` into a traced-kit factory
       (body role + manifest argument) or add `train-materials.ts` reusing
       `streamedTexture`, `wheelPosition`, the lamp/glass logic and
@@ -158,12 +203,17 @@ outline, bogies, paint/lamp/glass masks, and the front cap for review.
         snapshot's `trains` array intact.
 - [ ] Add the train to `asset-review.ts` at `buildStationFront`, and to
       `buildTraffic` if useful for review.
-- [ ] Engine agreement (D6): either no change (renderer derives length from the
-      manifest and asserts it matches `TRAIN_HALF_LENGTH`), or add serde-defaulted
-      `Train`/`TrainView` fields for consist/class and update
-      `movement_buffer` if per-car poses are wanted. Do not change service
-      behaviour. If `engine/src/lib.rs` changes, run
-      `npm run test:engine -- --release` and `npm run wasm`.
+- [ ] **Engine class identity (D1, D6).** Add a serde-defaulted `class` (and
+      `operator` if useful) to `Train` / `TrainView`, defaulting to the commuter
+      class so existing saves and fixtures load. Read it in `city.ts` by id, as
+      `buses.ts` reads `world.buses`, and pass it to `TrainFleet`. Add the class
+      to `movement_buffer` only if per-car poses are needed; otherwise the id
+      lookup is enough. Keep the renderer's consist length and
+      `TRAIN_HALF_LENGTH` in agreement (assert in a test). Do not change service
+      behaviour. Run `npm run test:engine -- --release` and `npm run wasm`.
+- [ ] **Livery variants within the class.** Reuse the per-instance paint and
+      livery-panel machinery so one class reads as several operators; only add a
+      second class when its silhouette genuinely differs.
 
 **Exit:** the traced train runs in the real city in both styles; cars and buses
 are visually and behaviourally unchanged.
@@ -255,14 +305,24 @@ python3 scripts/review-train-pilot.py
 
 ## 8. Open decisions
 
-1. **Consist length and composition.** Keep `TRAIN_HALF_LENGTH = 23.5` and three
-   cars, or move to a manifest-defined consist length? Affects whether the
-   engine needs a field.
-2. **Interior lighting fidelity.** Emissive window band only, or lit interior
+1. **Class scope for the first PR.** Commuter only, or commuter plus a few
+   operator liveries? Recommendation: both — livery variants are nearly free
+   and give the visible variety the question is really about.
+2. **Add the engine `class` field now?** Recommendation: yes, serde-defaulted to
+   the commuter class. It is a small change that avoids a second renderer
+   refactor when the next class arrives.
+3. **Consist length and composition.** Keep `TRAIN_HALF_LENGTH = 23.5` and three
+   cars, or move to a manifest-defined consist length? Affects the engine
+   agreement.
+4. **When to attempt a second physical class.** Recommendation: only with the
+   infrastructure — rapid/limited express with multi-station service, subway
+   with a covered line, Shinkansen with its own corridor and station. Each is a
+   world milestone, not an asset branch.
+5. **Interior lighting fidelity.** Emissive window band only, or lit interior
    visible through glass? Start with the band.
-3. **Pantograph.** Static raised arm on the motor car, or omit until a catenary
+6. **Pantograph.** Static raised arm on the motor car, or omit until a catenary
    exists? The corridor renders no overhead wire today.
-4. **Save compatibility.** If engine fields are added, confirm the
+7. **Save compatibility.** If engine fields are added, confirm the
    serde-default policy against the current "saves must validate and resume"
    requirement.
 
@@ -271,6 +331,8 @@ python3 scripts/review-train-pilot.py
 The Phase 6 exit gate plus this checklist:
 
 - [ ] Traced consist with a real cab face, end caps, bogies and roof equipment.
+- [ ] Class selected by id from the engine; a second class is additive, and one
+      class can carry several operator liveries.
 - [ ] Night windows, head/tail lamps, lit doorways, destination sign.
 - [ ] Correct orientation at both terminals; consistent livery.
 - [ ] Both styles and both backends; AA clean on rails and silhouettes.
