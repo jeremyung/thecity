@@ -15,8 +15,10 @@ import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '.
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2 } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { ao } from 'three/addons/tsl/display/GTAONode.js';
+import { SkyEnvironment } from './sky-environment';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -95,6 +97,9 @@ export class CityRenderer {
   private styleSwitchMetrics:StyleSwitchMetrics|undefined;
   private retiredResources:Array<()=>void>=[];
   private pipeline:THREE.RenderPipeline|null=null;
+  private occlusion:ReturnType<typeof ao>|null=null;
+  private occlusionStrength=uniform(.65);
+  private skyEnvironment:SkyEnvironment|null=null;
   private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
   private focus=uniform(300);
@@ -227,7 +232,7 @@ export class CityRenderer {
     const cloudRelief=smoothstep(-.04,.2,cloudField.add(direction.y.mul(.13)));
     const cloudPaint=mix(this.skyCloudShade,this.skyCloud,cloudRelief);
     (sky.material as THREE.MeshBasicNodeMaterial).colorNode=mix(skyBase,cloudPaint,clouds);
-    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);
+    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);this.skyEnvironment=new SkyEnvironment(sky);
     this.sunDisc=new THREE.Mesh(new THREE.SphereGeometry(15,16,8),new THREE.MeshBasicNodeMaterial({color:'#ffe5bc',fog:false}));this.scene.add(this.sunDisc);
     this.moonDisc=new THREE.Mesh(new THREE.SphereGeometry(7,16,8),new THREE.MeshBasicNodeMaterial({color:'#cbdbe2',fog:false}));this.scene.add(this.moonDisc);
     const rainPositions:number[]=[],rainPhases:number[]=[];const rainRandom=random(123);
@@ -279,7 +284,12 @@ export class CityRenderer {
   private buildPipeline(){
     this.disposePipeline();
     this.scenePass=pass(this.scene,this.camera,{samples:4});
-    const sceneColor=this.scenePass.getTextureNode('output');
+    // Ground-truth AO at half resolution, normals reconstructed from depth (no
+    // extra MRT target). Radii are metres: contact shading where buildings,
+    // kerbs and trees meet the ground, not a whole-block darkening.
+    const occlusion=this.occlusion=ao(this.scenePass.getTextureNode('depth'),null as unknown as THREE.Node,this.camera);
+    occlusion.resolutionScale=.5;occlusion.radius.value=3;occlusion.thickness.value=2.5;occlusion.distanceExponent.value=1.4;occlusion.samples.value=12;
+    const sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength)),1));
     const depth=this.scenePass.getViewZNode();
     const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
       focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
@@ -289,7 +299,7 @@ export class CityRenderer {
     this.pipeline=new THREE.RenderPipeline(this.renderer);
     this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
   }
-  private disposePipeline(){this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
+  private disposePipeline(){this.occlusion?.dispose();this.occlusion=null;this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
   async setStyle(style:Style){
     const request=++this.styleRequest;
     const previous=this.styleWarmupTail;
@@ -408,7 +418,8 @@ export class CityRenderer {
     // leave tree roots and banks floating, while biasing paving can hide details.
     const land=new THREE.MeshStandardNodeMaterial({roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const meadow=mx_noise_float(positionLocal.mul(.024)).mul(.5).add(.5);
     const scrub=mx_noise_float(positionLocal.mul(.007)).mul(.5).add(.5);
-    land.colorNode=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
+    const landBase=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
+    land.colorNode=landBase.mul(this.art.cloudShade());
     for(const side of [-1,1]){
       const shape=new THREE.Shape();const edge=side<0?-420:420;shape.moveTo(edge,-420);
       const pts=side<0?river:[...river].reverse();
@@ -420,7 +431,7 @@ export class CityRenderer {
     const visibleRiver=[{x:river[0].x,z:-1400},...river,{x:river.at(-1)!.x,z:1400}];
     this.water=new RiverWater(visibleRiver,halfWidth);this.scene.add(this.water.mesh);this.applyQuality();
     const backdropMaterial=new THREE.MeshStandardNodeMaterial({roughness:1});
-    backdropMaterial.colorNode=mix(land.colorNode!,this.outerLandscapeColor(),smoothstep(420,520,positionLocal.x.abs().max(positionLocal.z.abs())));
+    backdropMaterial.colorNode=mix(landBase,this.outerLandscapeColor(),smoothstep(420,520,positionLocal.x.abs().max(positionLocal.z.abs()))).mul(this.art.cloudShade());
     const backdrop=new THREE.Mesh(createBackdropGeometry(world.seed,river,halfWidth),backdropMaterial);
     backdrop.userData.ownedMaterial=true;backdrop.receiveShadow=true;this.terrain.add(backdrop);
     const bankKit=new Kit();
@@ -914,6 +925,18 @@ export class CityRenderer {
     // A painted moonlit fill keeps rooflines and quiet lanes readable between
     // pools of warm shop light; the sky itself can remain a deep midnight blue.
     this.hemi.color.set('#829eb9').lerp(new THREE.Color('#d8e6e7'),this.daylight);
+    // Ambient follows the live sky: warm at dusk, cool at noon, for both the
+    // toon (Anime) and standard (Miniature) paths. Standard surfaces also get
+    // a pre-filtered sky environment for reflections.
+    this.hemi.color.lerp(new THREE.Color().copy(top).lerp(low,.55),.4);
+    const environment=this.skyEnvironment?.update(this.renderer,performance.now(),[top,low,this.skyCloud.value]);
+    if(environment&&this.scene.environment!==environment)this.scene.environment=environment;
+    // The environment adds to the hemisphere fill on standard surfaces; trade
+    // some of that fill for sky-shaped ambient rather than stacking both.
+    this.scene.environmentIntensity=.1+this.daylight*.16;
+    if(this.style==='miniature')this.hemi.intensity*=.78;
+    this.art.sunDirection.value.copy(this.sun.position).sub(this.sun.target.position).normalize();
+    this.art.cloudShadow.value=.42*Math.max(0,this.daylight*2-1)*(1-dusk*.6)*(1-this.rain);
     if(this.frame%30===0){const target=this.director.target;
       const lit=this.worldState?.buildings.filter(b=>b.stage==='open'&&(b.anchor||b.kind==='shop'||b.kind==='cafe')).sort((a,b)=>Math.hypot(a.x-target.x,a.z-target.z)-Math.hypot(b.x-target.x,b.z-target.z)).slice(0,8)??[];
       for(let i=0;i<this.lanternLights.length;i++){const b=lit[i],lamp=this.lanternLights[i];lamp.userData.active=!!b;if(b)lamp.position.set(b.x+Math.sin(b.rotation)*(b.depth*.45+1.5),3.1,b.z+Math.cos(b.rotation)*(b.depth*.45+1.5));}

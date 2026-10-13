@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
+import { float, color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
@@ -15,6 +15,10 @@ export class ArtMaterials {
   readonly litHome=uniform(1);
   readonly litOffice=uniform(1);
   readonly litShop=uniform(1);
+  /** Toward the sun, world space; set each frame with the key light. */
+  readonly sunDirection=uniform(new THREE.Vector3(0,1,0));
+  /** 0 disables cloud shadows (night, overcast); ~.4 on a clear day. */
+  readonly cloudShadow=uniform(0);
   readonly palette = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
   private style:Style='anime';
   private cache = new Map<string,{anime:Surface,miniature:Surface}>();
@@ -29,6 +33,19 @@ export class ArtMaterials {
     this.contours.opacityNode=smoothstep(100,420,positionView.z.negate()).mul(-1).add(1).mul(.27);
     this.bands=new THREE.DataTexture(new Uint8Array([95,145,195,230,255]),5,1,THREE.RedFormat);
     this.bands.minFilter=THREE.NearestFilter;this.bands.magFilter=THREE.NearestFilter;this.bands.needsUpdate=true;
+  }
+  /**
+   * Drifting cloud shadows as an albedo factor on sun-facing surfaces. Faces
+   * turned from the sun keep their ambient look, which approximates removing
+   * only the direct term without a per-light cookie.
+   */
+  cloudShade(){
+    const drift=vec3(this.time.mul(3.2),0,this.time.mul(1.3));
+    const p=positionWorld.add(drift).mul(vec3(.0045,0,.0045));
+    // MaterialX noise rarely leaves ±.35; this band covers roughly 40% of the ground.
+    const cover=smoothstep(-.02,.2,mx_noise_float(p).mul(.72).add(mx_noise_float(p.mul(2.9)).mul(.28)));
+    const sunlit=normalWorld.dot(this.sunDirection).max(0).sqrt();
+    return float(1).sub(cover.mul(sunlit).mul(this.cloudShadow));
   }
   get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient',window=false):Surface {
     const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}/${window}`;
@@ -48,6 +65,7 @@ export class ArtMaterials {
         anime.colorNode=anime.colorNode.mul(sheen);miniature.colorNode=miniature.colorNode.mul(sheen);
         this.applyGlassSky(anime,miniature);
       }
+      const shade=this.cloudShade();anime.colorNode=anime.colorNode.mul(shade);miniature.colorNode=miniature.colorNode.mul(shade);
       miniature.roughnessNode=mix(roughness,Math.max(.1,roughness*.67),this.wet);
       if(hex==='#fffffe'){
         anime.vertexColors=true;miniature.vertexColors=true;
@@ -246,6 +264,7 @@ export class ArtMaterials {
       anime.colorNode=anime.colorNode.mul(sheen);miniature.colorNode=miniature.colorNode.mul(sheen);
       this.applyGlassSky(anime,miniature);
     }
+    {const shade=this.cloudShade();anime.colorNode=anime.colorNode.mul(shade);miniature.colorNode=miniature.colorNode.mul(shade);}
     miniature.roughnessNode=mix(artClass.roughness,Math.max(.1,artClass.roughness*.67),this.wet);
     if(artClass.emissive){
       const use=artClass.activity==='home'?this.litHome:artClass.activity==='office'?this.litOffice:artClass.activity==='shop'?this.litShop:1;
