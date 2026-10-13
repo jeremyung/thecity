@@ -1,212 +1,278 @@
-# Train kit plan — generated side elevations to running rail stock
+# Train kit — implementation plan (all phases)
 
-Status: proposed (branch `render/train-kit`). This mirrors the vehicle-kit work
-delivered on `render/vehicle-kit` (commit `1612c48`) and recorded in
-[rendering spec](05-rendering.md#foundation), for the trains.
+Status: Phase 1 complete. Phases 0 (partly), 2–6 pending.
+Branch: `render/train-kit`.
+Related: [rendering spec](05-rendering.md), [world growth — rail and transit](02-world-growth.md#rail-and-transit), [pilot review](../art-workshop/train-pilot/REVIEW.md).
 
-## Why
+## 1. Goal and definition of done
 
-Road traffic and the city bus are traced from generated orthographic side
-elevations and share one material, one atlas and one mask. Trains are still
-three instanced boxes with static window strips (`city.ts`), a hardcoded
-`(coach-1)*16` consist, no cab face, no lighting, no wheel motion and no
-operator identity. The camera is told to follow trains and hold station scenes
-([camera spec](06-camera.md)), so the train front is a first-class view — unlike
-cars, where the front was explicitly left approximate. The city's first
-milestone is *Last Train, First Light*; the train is the namesake subject.
+Replace the three instanced boxes that stand in for trains with a kit traced
+from generated orthographic elevations, at the same quality bar as the road
+vehicles:
 
-## Current car pipeline (the template being copied)
+> A generated commuter train runs on the existing rail corridor as a traced,
+> multi-car consist with a real cab face, lit windows, lamps and destination
+> sign, rolling bogies, and a consistent livery pointing the correct way at
+> both terminals — in both rendering styles and both backends, matching the
+> engine's length and the consist manifest, accepted against the concept boards.
+> Cars and buses behave exactly as before.
 
-Offline asset production:
+Non-goals: multi-station service, schedules, passenger logic, new rail classes,
+or map growth. Those belong to the rail/transit work in the world-growth spec.
+Engine changes are limited to what the renderer needs.
 
-| Step | File | Produces |
+## 2. Locked decisions
+
+These came from the vehicle-kit prior art and the Phase 1 pilot; later phases
+should not relitigate them without new evidence.
+
+| # | Decision | Source |
 | --- | --- | --- |
-| Approved generation config | `art-workshop/vehicle-pilot.json`, `vehicle-bus.json`, `vehicle-variants*.json`, `vehicle-liveries.json` | prompts, metric dimensions, models, cap, criteria |
-| Hosted generation | `scripts/generate-vehicle-pilot.mjs` | images + durable `ledger.json`, no auto-retry, cost from usage |
-| Local generation | `scripts/generate-vehicle-pilot-local.py` | ComfyUI HunyuanImage-2.1 images + `local-ledger.json` |
-| Build input | `art-workshop/vehicle-kit.json` | source paths, ppm, atlas size, per-body dimensions, lamp bands, wheels, roofCut/tint/paintRegion |
-| Kit builder | `scripts/build-vehicle-kits.py` | `public/art/vehicles/vehicle-atlas.png`, `vehicle-mask.png`, `web/src/render/vehicle-manifest.json`, debug overlay |
-| Review decision | `art-workshop/vehicle-pilot/REVIEW.md` | measured proportion error, cost, keep/fallback decision |
+| D1 | One commuter class first, symmetric consist `cab + intermediate… + cab`; the renderer orients cars from `direction`, so the tail is a mirrored cab. | current 3-coach layout |
+| D2 | The kit unit is a **car body** plus a traced **front end cap**. The front is a first-class source view, not approximated from the side. | pilot cleared the cab front |
+| D3 | Matting uses a **separable row+column background model** from the car-free top band. The vehicle builder's per-row test fails on a 20 m car with a visible floor and horizon. | pilot finding |
+| D4 | Roof equipment and cab presence are assigned **per consist role**, not inferred from a single generated image (the pilot's "trailer" came back with a pantograph). | pilot finding |
+| D5 | Livery is **baked into the elevation** (`tint:false`, like the bus). Promote to per-instance decals only if multiple operators are wanted. | one operator |
+| D6 | The **consist manifest is the single source of truth** for car lengths; the engine's rail length must agree, as `vehicleLength` does for cars. | `TRAIN_HALF_LENGTH` |
+| D7 | Share code rather than fork: extract the Python image ops from `build-vehicle-kits.py`, and generalize the TS material; keep the car kit as the regression test. | plan |
+| D8 | Local HunyuanImage-2.1 full is the default generator; `Qwen-Image-2.1` (installed) is the edit fallback, `qwen/qwen-image-3` the hosted flat-elevation fallback. | pilot decision |
 
-Runtime:
+## 3. Phase overview
 
-- `web/src/render/vehicle-kit.ts` — extrudes the traced outline (side panels
-  split at the belt with tumblehome, perimeter strip, wheels, roof sign, livery
-  panel). Attributes `vpart`, `lateral`, `wheel`, `tinted`.
-- `web/src/render/vehicle-materials.ts` — one `vehicleMaterial` for all bodies
-  (paint via mask R, lamps/glass via mask G/B, grille trim, night emission,
-  wheel roll/steer in `positionNode`, wetness) plus a canvas `liveryMaterial`
-  and the `streamedTexture` async loader with placeholder and disposal.
-- `web/src/render/vehicles.ts` — `VehicleFleet` instanced per body,
-  `VehicleMotion` (odometer/steer/brake), deterministic `vehicleLook`.
-- `web/src/render/buses.ts` — special case on the same kit with lit doorways
-  and a destination display.
-- `web/src/render/city.ts`, `asset-review.ts` — integration and dev viewer.
-- Engine reports body class as movement kind (1,4,5,6,7,8); `KERB_LANE`, queue
-  spacing by `vehicleLength`.
-- Evidence: `benchmark-vehicles.mjs`, `capture-vehicle-review.mjs`,
-  `capture-vehicle-city.mjs`; tests `vehicle-kit`, `vehicles`,
-  `vehicle-texture-stream`, `buses`; `assets-manifest.json`; texture audit.
+| Phase | Outcome | Depends on | Exit gate |
+| --- | --- | --- | --- |
+| 0 | Branch, baseline capture, hygiene | — | before-train capture exists |
+| 1 | Generation pilot and keep decision | 0 | **done** — `REVIEW.md` |
+| 2 | Runtime assets: atlas, mask, manifest | 1 | builder runs; debug overlay reviewed |
+| 3 | Geometry and material modules | 2 | unit tests green |
+| 4 | Fleet, city integration, engine agreement | 3 | train runs in the city; buses/cars unchanged |
+| 5 | Review scene, captures, benchmark | 4 | both styles captured; frame cost measured |
+| 6 | Tests, docs, evidence, PR | 2–5 | full check suite green; art accepted |
 
-## How trains differ (the parts that must not be copied blindly)
+Work lands as reviewable commits per phase; Phases 2–6 may ship as one PR or be
+split (2–3 offline, 4–6 runtime) if review prefers.
 
-1. **The front is the subject.** The car kit only reads a side elevation and
-   approximates fascia; the spec lists that as open. A train needs a generated
-   **front (nose)** view. The consist must have a real cab face with
-   windshield, headlights, marker lights, coupler and destination sign.
-2. **Consist, not a single body.** Cars are one instanced body. A train is a set
-   (`cab + intermediate… + cab`) placed along the route. The current renderer
-   hardcodes three coaches at −16/0/+16 m in `city.ts`, duplicating the engine's
-   `TRAIN_HALF_LENGTH = 23.5`. The consist geometry belongs in the kit manifest
-   and the engine and renderer must agree on total length, as `vehicleLength`
-   does for cars.
-3. **Bogies, not axles.** A coach rides on two bogies near its ends; the car
-   wheel detector expects exactly two single discs. The builder needs bogie
-   support and the wheel shader needs to rotate about a bogie/axle without
-   steering (trains do not steer per-axle).
-4. **Scale.** A 20 m coach at the car's 110 px/m is 2200 px, over the 2048 px
-   atlas cap. Train pixels-per-metre must be lower (start ~72), and the atlas
-   packs side + front + mask. Run `npm run audit:textures`.
-5. **Livery is integral.** A city has one rail operator; the front livery and
-   rollsign are part of the vehicle identity. Bake the livery into the elevation
-   (like the bus `tint:false` path) rather than adding per-instance decals.
-   Promote to `liveryMaterial` only if multiple operators are wanted.
-6. **Lighting roles.** Continuous interior window bands, lit doorways at
-   stations, head/tail/marker lamps, and the destination sign. The bus already
-   shows lit doorways and `signTexture`; reuse that pattern.
-7. **Two styles.** Everything must work in Anime (toon) and Miniature
-   (standard) from the same geometry and atlas, per the style contract.
+## 4. Phase detail
 
-## Non-goals
+### Phase 0 — Branch and baseline (partly done)
 
-- Multi-station service, schedules, or passenger simulation changes belong to
-  the rail/transit work in [world growth](02-world-growth.md#rail-and-transit),
-  not this asset branch. Keep engine changes to what the renderer needs.
-- Do not expand the city maps or add new rail classes beyond what the pilot
-  proves. Start with one commuter class and a symmetric consist.
-- No provider credentials in the browser; no new runtime dependency.
+- [x] Create `render/train-kit` from `main`.
+- [x] Add `.claude/` to `.gitignore` so worktrees cannot be swept into a commit.
+- [ ] Capture the current box train in `asset-review` (`buildStationFront`
+      already builds a platform, rails and sleepers), both styles, before the
+      swap. Store under `validation/captures/train-kit/` or the pilot dir.
+- [ ] Record the baseline consist constants that must be preserved:
+      `TRAIN_HALF_LENGTH = 23.5` (`engine/src/lib.rs`), coach offsets
+      `(coach-1)*16` and `RAIL_DECK` (`web/src/render/city.ts`).
 
-## Plan
+**Exit:** a checked-in "before" image and a note of the constants.
 
-### Branch and baseline
+### Phase 1 — Generation pilot (done)
 
-- Work on `render/train-kit` (created), rebased on `main`.
-- Add the train to `ArchitectureAssetReview` (`buildStationFront` already builds
-  a platform, rails and sleepers) and capture the current box train before the
-  swap, so before/after is measurable in both styles.
+- [x] `art-workshop/train-pilot.json` (views, dimensions, suffixes, criteria).
+- [x] `scripts/generate-train-pilot-local.py` (per-view sizes, local ledger).
+- [x] `scripts/review-train-pilot.py` (separable matting, metrics, contact
+      sheet, at-scale sheet).
+- [x] Four views generated locally at $0; body proportion error −0.8% to −8.9%
+      on sides, −1.6% on the front; livery/window bands consistent.
+- [x] Keep decision in `art-workshop/train-pilot/REVIEW.md`.
 
-### Phase 1 — generation pilot (offline, no runtime)
+**Exit:** met. Fallback path (edit model) documented but not needed yet.
 
-- Add `art-workshop/train-pilot.json` modeled on `vehicle-pilot.json` /
-  `vehicle-bus.json`: purpose, `capUSD`, hosted models with published
-  estimates, a common strict-orthographic prompt, per-view prompts and metric
-  dimensions, and acceptance criteria. Add a **three-view** block and
-  front-view prompt rules (exact profile, level camera, no perspective, plain
-  backdrop) plus a warning that a single view must not imply the others.
-- Subjects for the first consist: `commuter-cab-front`, `commuter-cab-side`,
-  `commuter-intermediate-side` (and a `commuter-motor` only if roof equipment
-  and pantograph are wanted now). Rear = front mirrored unless the tail differs.
-- Add `scripts/generate-train-pilot.mjs` (clone of the hosted generator, with
-  `TRAIN_CONFIG`) and `scripts/generate-train-pilot-local.py` (clone of the
-  local generator). Keep `art-workshop/train-pilot/ledger.json`,
-  `local-ledger.json`, `contact-sheet.jpg`, `REVIEW.md`.
-- Follow the settled car decision: local HunyuanImage-2.1 full with the
-  orthographic suffix as default (free seed sweeps), `qwen/qwen-image-3` as the
-  cleaner fallback, and try the installed `Qwen-Image-2.1` edit model to keep
-  the front consistent with the approved side. Record every request and cost,
-  cap at $2, no automatic retries.
-- Gate: `REVIEW.md` records per-view proportion error, front/side consistency,
-  cost and a keep/regenerate decision before any runtime work.
+### Phase 2 — Kit builder
 
-### Phase 2 — kit builder
+Offline; no runtime change.
 
-- Add `art-workshop/train-kit.json`: pixels-per-metre, atlas size, and per
-  consist: view source paths, metric length/width/height, tumblehome, belt,
-  window/door/roof equipment bands, bogie centres and wheel radius, clearance,
-  end rounding, lamp/headlight positions, livery mode.
-- Add `scripts/build-train-kits.py`. First **extract the shared image
-  operations** (`foreground`, `flood`, `dilate/erode`, `wheels`, `outline`,
-  `simplify`, `masks`, `bleed`, `box_blur`) from `build-vehicle-kits.py` into a
-  small module imported by both builders, so the car path is untouched and
-  regression-tested, rather than forking 400 lines. New work in the train
-  builder: front-view matting, front silhouette in (x, y), windshield/headlight/
-  marker/destination masks, bogie detection, multi-view atlas packing, consist
-  manifest.
-- Outputs: `public/art/trains/train-atlas.png`, `train-mask.png`,
-  `web/src/render/train-manifest.json`, `validation/captures/train-kit-debug.png`.
-- Manifest per consist: `{length, width, height, tumblehome, cars:[…]}`, and per
-  car role: side UV/outline/belt/wheels/paint/roofY, front UV/outline/lamps/
-  glass/sign, bogies. Keep the metres convention (z forward, y up, ground y=0,
-  kerb side +x) used by `vehicle-kit.ts`.
+- [ ] **Extract shared image ops.** Move `foreground`, `flood`, `dilate`,
+      `erode`, `shift`, `wheels`, `refine_wheel`, `column_outline`, `simplify`,
+      `masks`, `box_blur`, `masked_blur`, `bleed` from
+      `scripts/build-vehicle-kits.py` into e.g.
+      `scripts/vehicle_kit_image.py`, imported by the vehicle builder. Re-run
+      the car build and confirm byte-identical outputs before proceeding.
+- [ ] **Add the separable background model** to that module (`background_model`
+      as prototyped in `scripts/review-train-pilot.py`), and switch the vehicle
+      builder to it only if the car outputs remain identical; otherwise expose
+      it as an option.
+- [ ] `art-workshop/train-kit.json` input: pixels-per-metre (start ~72 so a
+      20 m car fits the 2048 atlas), atlas size, and per consist: view source
+      paths, metric length/width/height, tumblehome, belt, window/door/roof
+      bands, bogie centres and wheel radius, clearance, end rounding, lamp and
+      headlight positions, destination-sign box, livery mode, per-role roof
+      equipment.
+- [ ] `scripts/build-train-kits.py`:
+      - matte each view with the separable model;
+      - trace the side outline (reuse `column_outline` + `simplify`);
+      - detect **bogies** (two axles per end) rather than two single wheels;
+      - trace the **front silhouette** in (x, y) and the windshield, head/tail
+        lamp, marker and destination-sign masks;
+      - normalize paint to grey for tinting (or skip for baked livery);
+      - bleed edges and pack a multi-view atlas;
+      - write the consist manifest in metres (z forward, y up, ground y=0,
+        kerb side +x) matching `vehicle-manifest.json` conventions.
+- [ ] Outputs: `public/art/trains/train-atlas.png`, `train-mask.png`,
+      `web/src/render/train-manifest.json`,
+      `validation/captures/train-kit-debug.png`.
+- [ ] Respect budgets: run `npm run audit:textures`; keep the atlas within the
+      2048 side cap and the decoded-mip total within policy.
 
-### Phase 3 — runtime kit, material and fleet
+**Exit:** builder is deterministic and re-runnable; debug overlay shows correct
+outline, bogies, paint/lamp/glass masks, and the front cap for review.
 
-- Add `web/src/render/train-kit.ts`. Reuse the vehicle extrusion maths; add end
-  caps from the front outline, bogie wheel groups, roof equipment, couplers and
-  a destination sign. Keep `left`/`right` symmetry and the `vpart`/`lateral`/
-  `wheel`/`tinted` attribute contract so the shader work is shared.
-- Generalize `vehicle-materials.ts` into a traced-kit material factory (role and
-  manifest argument) or add `train-materials.ts` that reuses `streamedTexture`,
-  `wheelPosition`, the lamp/glass logic and `signTexture`. Interior window
-  emission at night, lit doorways while dwelling, head/tail/marker lamps with
-  direction, destination display.
-- Add `web/src/render/trains.ts`: `TrainFleet` instanced per consist role with
-  the same ownership/disposal discipline as `VehicleFleet`, consist placement
-  driven by `direction` (cab leading and trailing), bogie roll, and one contact
-  shadow per car or consist.
-- Replace the box train in `city.ts`: remove `trains`, `trainGlass`,
-  `trainStripe` and the train use of `wheels`; keep movement kind 2, picking and
-  follow working via `actorIds`, and keep the audio snapshot's `trains` array.
-  Remove the hardcoded −16/0/+16 loop; derive it from the manifest.
-- Integrate into `asset-review.ts` and capture both styles, day and night.
+### Phase 3 — Runtime kit and material
 
-### Phase 4 — engine touch (minimal)
+- [ ] `web/src/render/train-kit.ts`:
+      - reuse the `Builder`, ring clipping, tumblehome and end-rounding maths
+        from `vehicle-kit.ts`;
+      - add end caps from the front outline, bogie wheel groups, couplers,
+        roof equipment (AC boxes, pantograph), and the destination-sign box;
+      - keep the attribute contract (`vpart`, `lateral`, `wheel`, `tinted`),
+        extending `vpart` for end cap / bogie / sign if needed;
+      - export `trainSpec`, `consistSpec`, `buildTrainGeometry(role)` and a
+        consist length helper.
+- [ ] Material: generalize `vehicle-materials.ts` into a traced-kit factory
+      (body role + manifest argument) or add `train-materials.ts` reusing
+      `streamedTexture`, `wheelPosition`, the lamp/glass logic and
+      `signTexture`. Required behaviour:
+      - interior window band emissive at night;
+      - lit doorways while dwelling (as `buses.ts` does);
+      - head/tail/marker lamps keyed to the car's direction;
+      - destination display via `signTexture`;
+      - both styles from the same atlas.
+- [ ] Tests: `tests/train-kit.test.ts` (outward winding, triangle budget,
+      manifest size, bogie count, end caps, consist length, livery UV).
 
-- Default: no simulation change. The renderer builds the consist from the
-  manifest and uses the existing `direction`/`progress`.
-- If a consist/class or operator identity must persist, add serde-defaulted
-  fields to `Train`/`TrainView` and mirror the total length in the manifest so
-  `TRAIN_HALF_LENGTH` and the renderer agree (the cars' `vehicleLength`
-  precedent). Do not change service behavior.
-- Rebuild WASM (`npm run wasm`) after any engine edit; update engine tests.
+**Exit:** geometry and material unit tests pass; `tsc --noEmit` clean.
 
-### Phase 5 — evidence, tests, docs and art acceptance
+### Phase 4 — Fleet, city integration, engine agreement
 
-- Tests: `tests/train-kit.test.ts` (outward winding, triangle budget, manifest
-  size, bogie count, end caps, livery UV), `tests/trains.test.ts` (deterministic
-  look, consist placement and reversal, disposal), extend the stream test only
-  if the loader is shared. Keep `bus-wasm` and transit tests green.
-- Benchmarks/captures: `scripts/benchmark-trains.mjs` (0/1/3 consists, median/
-  p95/draws/triangles, hardware WebGL), `scripts/capture-train-review.mjs`,
-  `scripts/capture-train-city.mjs`. Headless Chromium has no WebGPU adapter
-  here; state that limit as the car work does.
-- Docs/manifest: add a Train checkpoint to
-  [rendering spec](05-rendering.md#foundation), a `train-kit` entry to
-  `assets-manifest.json`, and update this plan with outcomes.
-- Verify: `npm test`, `npm run test:engine -- --release`, `npm run wasm`,
-  `npm run build`, `npm run audit:textures`, `git diff --check`.
-- Art gate: compare with `concepts/04-last-train-first-light.png`,
-  `concepts/05-dense-last-train-first-light.png` and
-  `concepts/photo-references/rail-corridor-density.png`,
-  `station-crossing-bus.png` in both styles with AA on. The primary agent owns
-  art acceptance and must reject generic results even when tests pass.
+- [ ] `web/src/render/trains.ts`: `TrainFleet` instanced per consist role, with
+      the ownership/disposal discipline of `VehicleFleet`; consist placement by
+      `direction` (cab leading/trailing); bogie roll; contact shadow; stable
+      per-consist look (livery/baked paint).
+- [ ] Replace the box train in `city.ts`:
+      - remove `this.trains`, `this.trainGlass`, `this.trainStripe`, and the
+        train use of `this.wheels` (`~114–117`, `~201–207`, `~595`, `~599–600`);
+      - drive placement from the manifest, deleting the hardcoded
+        `(coach-1)*16` loop;
+      - keep movement kind 2, `actorIds` picking, follow, and the audio
+        snapshot's `trains` array intact.
+- [ ] Add the train to `asset-review.ts` at `buildStationFront`, and to
+      `buildTraffic` if useful for review.
+- [ ] Engine agreement (D6): either no change (renderer derives length from the
+      manifest and asserts it matches `TRAIN_HALF_LENGTH`), or add serde-defaulted
+      `Train`/`TrainView` fields for consist/class and update
+      `movement_buffer` if per-car poses are wanted. Do not change service
+      behaviour. If `engine/src/lib.rs` changes, run
+      `npm run test:engine -- --release` and `npm run wasm`.
 
-## Risks and open questions
+**Exit:** the traced train runs in the real city in both styles; cars and buses
+are visually and behaviourally unchanged.
+
+### Phase 5 — Review scene, captures, benchmark
+
+- [ ] `scripts/capture-train-review.mjs` (lineup on the review station, both
+      styles, day/night) and `scripts/capture-train-city.mjs` (train in the
+      living city, following it).
+- [ ] `scripts/benchmark-trains.mjs`: 0/1/3 consists, median/p95, draw calls and
+      triangles, hardware WebGL (ANGLE/OpenGL ES, as `benchmark-vehicles.mjs`).
+      State that headless Chromium exposes no WebGPU adapter here.
+- [ ] Capture the train at 128/64 px for typology and inspect AA, night
+      emission, curve/bridge running, and reverse at the far terminal.
+
+**Exit:** before/after captures and a frame-cost number suitable for the spec
+checkpoint.
+
+### Phase 6 — Tests, docs, evidence, PR
+
+- [ ] `tests/trains.test.ts` (deterministic look, consist placement and
+      reversal, disposal) and extend `tests/vehicle-texture-stream.test.ts`
+      only if the loader was changed. Keep bus/transit tests green.
+- [ ] Update `specs/05-rendering.md` with a Train checkpoint modelled on the
+      Vehicle checkpoint (geometry, atlas/mask sizes, draw/tri/frame numbers,
+      open items).
+- [ ] Add a `train-kit` runtime entry to `assets-manifest.json` (and move the
+      Phase 1 pilot images from development candidate to their final role).
+- [ ] Update this plan with outcomes and any changed decisions.
+- [ ] Verify: `npm test`, `npm run test:engine -- --release`, `npm run wasm`,
+      `npm run build`, `npm run audit:textures`, `git diff --check`.
+- [ ] Art gate: compare with `concepts/04-last-train-first-light.png`,
+      `concepts/05-dense-last-train-first-light.png` and
+      `concepts/photo-references/rail-corridor-density.png`,
+      `station-crossing-bus.png`, both styles, AA on. The primary agent owns
+      art acceptance and must reject generic results even when tests pass.
+
+**Exit:** definition of done satisfied; PR description written.
+
+## 5. File inventory
+
+New:
+
+- `art-workshop/train-kit.json`
+- `scripts/build-train-kits.py`, shared image-ops module
+- `public/art/trains/train-atlas.png`, `train-mask.png`
+- `web/src/render/train-manifest.json`
+- `web/src/render/train-kit.ts`, `train-materials.ts` (or generalized material)
+- `web/src/render/trains.ts`
+- `tests/train-kit.test.ts`, `tests/trains.test.ts`
+- `scripts/benchmark-trains.mjs`, `capture-train-review.mjs`,
+  `capture-train-city.mjs`
+
+Modified:
+
+- `scripts/build-vehicle-kits.py` (imports the extracted ops; outputs unchanged)
+- `web/src/render/vehicle-materials.ts` (generalized) and/or `vehicles.ts`
+- `web/src/render/city.ts`, `web/src/render/asset-review.ts`
+- `web/src/render/types.ts` if `World.trains` typing changes
+- `engine/src/lib.rs` only if Phase 4 needs it (+ rebuilt WASM)
+- `assets-manifest.json`, `specs/05-rendering.md`, `.gitignore`
+
+## 6. Verification commands
+
+```sh
+npm test
+npm run test:engine -- --release   # only if the engine changed
+npm run wasm                       # only if the engine changed
+npm run build
+npm run audit:textures
+git diff --check
+# offline kit rebuild
+python3 scripts/build-train-kits.py
+python3 scripts/review-train-pilot.py
+```
+
+## 7. Risks and mitigations
 
 | Risk | Mitigation |
 | --- | --- |
-| Front/side inconsistency from text-to-image | Image-edit model conditioned on the approved side; accept only if the nose reads at ~128 px on screen |
-| Coach length vs 2048 atlas cap | Lower pixels-per-metre; split per-view files if needed; measure decoded MiB |
-| Consist length disagreement with engine | Single manifest source of truth, like `vehicleLength`; assert in tests |
-| Bogie wheel shader reuse | Extend `wheel` attribute semantics; no steering on rail |
-| Livery baked vs decal | Bake for one operator; promote to `liveryMaterial` only for multiple |
-| WebGPU validation | No adapter in headless here; validate on hardware and state the gap |
-| Car regressions from shared Python ops | Extract, don't fork; keep the car kit as the regression test |
+| Front/side or role mismatch across generated views | Per-role assignment (D4); edit model fallback (D8); accept only if the nose reads at ~128 px |
+| Coach length vs 2048 atlas cap | Lower ppm (~72); split per-view files if needed; measure decoded MiB |
+| Consist length disagrees with the engine | Manifest is the single source of truth (D6); assert in tests |
+| Car regressions from shared Python ops | Extract, do not fork; confirm byte-identical car outputs before proceeding |
+| Bogie wheel shader reuse | Extend `wheel` semantics; no per-axle steering on rail |
+| `city.ts` train/picking/audio breakage | Remove only the box meshes; keep kind 2, `actorIds`, and the audio snapshot |
+| WebGPU unvalidated | No adapter in headless; validate on hardware and state the gap |
+| Visual quality | Compare against concept boards in both styles before acceptance |
 
-## Definition of done
+## 8. Open decisions
 
-A generated commuter train runs on the existing rail corridor as a traced,
-multi-car consist with a real cab face, lit windows and lamps, rolling bogies
-and a destination sign; it matches both styles, both the engine's length and the
-consist manifest, passes the checks above, and is accepted against the concept
-boards. Cars and buses behave exactly as before.
+1. **Consist length and composition.** Keep `TRAIN_HALF_LENGTH = 23.5` and three
+   cars, or move to a manifest-defined consist length? Affects whether the
+   engine needs a field.
+2. **Interior lighting fidelity.** Emissive window band only, or lit interior
+   visible through glass? Start with the band.
+3. **Pantograph.** Static raised arm on the motor car, or omit until a catenary
+   exists? The corridor renders no overhead wire today.
+4. **Save compatibility.** If engine fields are added, confirm the
+   serde-default policy against the current "saves must validate and resume"
+   requirement.
+
+## 9. Definition of done
+
+The Phase 6 exit gate plus this checklist:
+
+- [ ] Traced consist with a real cab face, end caps, bogies and roof equipment.
+- [ ] Night windows, head/tail lamps, lit doorways, destination sign.
+- [ ] Correct orientation at both terminals; consistent livery.
+- [ ] Both styles and both backends; AA clean on rails and silhouettes.
+- [ ] Length agrees with the engine; cars and buses unchanged.
+- [ ] Tests, build, texture audit and evidence committed; art accepted.
