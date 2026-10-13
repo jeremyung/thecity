@@ -8,7 +8,16 @@
       2.95,
       3.63
     ],
-    "measured_ratio": 4.556,
+    "px": [
+      92,
+      265,
+      1968,
+      676
+    ],
+    "width_px": 1877.0,
+    "height_px": 412.0,
+    "body_height_px": 374.0,
+    "ratio": 4.556,
     "body_ratio": 5.019,
     "expected": 5.51,
     "error_pct": -17.312,
@@ -16,13 +25,7 @@
     "pantograph": 1.0,
     "stripe_y": 0.443,
     "window_y": 0.658,
-    "bg_std": 2.534,
-    "px": [
-      92,
-      265,
-      1968,
-      676
-    ]
+    "bg_std": 2.534
   },
   {
     "id": "intermediate-side",
@@ -33,7 +36,16 @@
       2.95,
       3.63
     ],
-    "measured_ratio": 4.825,
+    "px": [
+      78,
+      282,
+      1978,
+      675
+    ],
+    "width_px": 1901.0,
+    "height_px": 394.0,
+    "body_height_px": 356.0,
+    "ratio": 4.825,
     "body_ratio": 5.34,
     "expected": 5.51,
     "error_pct": -12.429,
@@ -41,13 +53,7 @@
     "pantograph": 1.0,
     "stripe_y": 0.409,
     "window_y": 0.658,
-    "bg_std": 3.629,
-    "px": [
-      78,
-      282,
-      1978,
-      675
-    ]
+    "bg_std": 3.629
   },
   {
     "id": "cab-front",
@@ -57,7 +63,16 @@
       2.95,
       3.63
     ],
-    "measured_ratio": 0.799,
+    "px": [
+      83,
+      220,
+      823,
+      1146
+    ],
+    "width_px": 741.0,
+    "height_px": 927.0,
+    "body_height_px": 778.0,
+    "ratio": 0.799,
     "body_ratio": 0.952,
     "expected": 0.813,
     "error_pct": -1.639,
@@ -65,13 +80,7 @@
     "pantograph": 1.0,
     "stripe_y": 0.394,
     "window_y": 0.656,
-    "bg_std": 1.817,
-    "px": [
-      83,
-      220,
-      823,
-      1146
-    ]
+    "bg_std": 1.817
   },
   {
     "id": "motor-roof",
@@ -82,7 +91,16 @@
       2.95,
       3.63
     ],
-    "measured_ratio": 4.825,
+    "px": [
+      91,
+      280,
+      2020,
+      679
+    ],
+    "width_px": 1930.0,
+    "height_px": 400.0,
+    "body_height_px": 353.0,
+    "ratio": 4.825,
     "body_ratio": 5.467,
     "expected": 5.51,
     "error_pct": -12.426,
@@ -90,12 +108,6 @@
     "pantograph": 1.0,
     "stripe_y": 0.427,
     "window_y": 0.663,
-    "bg_std": 4.504,
-    "px": [
-      91,
-      280,
-      2020,
-      679
-    ]
+    "bg_std": 4.504
   }
 ]

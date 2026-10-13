@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "status": "approved",
+  "output": "art-workshop/train-variants",
+  "purpose": "Exploratory concept sweep of train classes other than the commuter EMU already piloted. Tests whether local HunyuanImage-2.1 can produce a credible Shinkansen nose, a flat subway front, a limited-express rake and an articulated tram. Generation only: none of these have infrastructure in the prototype yet, so this informs later milestones rather than runtime scope.",
+  "capUSD": 0,
+  "local": {
+    "model": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "seed": 3101
+  },
+  "commonPrompt": "Strict orthographic technical elevation of one single Japanese passenger train car, rendered as a photograph-quality flat texture, exact profile, camera perpendicular to the car at half its height, zero perspective, not a three-quarter view. The whole car is in sharp focus edge to edge, no depth of field, no floor and no shadow under the car, seamless uniform pale gray backdrop, soft even diffuse lighting without bright specular highlights. Realistic factory finish and fine credible details: panel seams, passenger doors with windows, window band, grab handles, roof equipment, bogies with wheels and brake discs, couplers. Generic contemporary Japanese design with no brand logos, no operator marks, no readable text and no licence or car numbers. Clean reference for texturing a miniature Tokyo street model.",
+  "sideSuffix": "Camera exactly level with the axle centre line, roof surface and tyre treads not visible, the car spans the full image width with the front end at the LEFT, all wheels resting on one horizontal baseline.",
+  "frontSuffix": "Exact head-on front elevation, camera level with the middle of the car, zero perspective, the entire front face is visible and centred, no side, no roof and no wheels visible. Symmetric left and right about the vertical centre line.",
+  "negativeBase": "perspective, three-quarter view, angled view, logo, badge, emblem, operator mark, readable text, letters, destination text, licence plate, car number, watermark, cast shadow, ground shadow, floor, reflections, people, background scenery, cropped vehicle, multiple cars, two trains, model kit, illustration, painting",
+  "views": [
+    {
+      "id": "shinkansen-side",
+      "view": "side",
+      "size": [2048, 640],
+      "role": "high-speed Shinkansen, side elevation",
+      "dimensionsM": [25.0, 3.35, 3.65],
+      "prompt": "Japanese high-speed Shinkansen car, 25 m long and 3.65 m tall, exact side elevation with a very long smooth aerodynamic pointed nose at the left tapering over several metres. Only two passenger doors on this side, set far apart, with a continuous strip of dark windows between them. Long silver-white body with a deep blue stripe running the full length and turning along the nose, a grey skirt, and a smooth roof with low aerodynamic fairings and a pantograph well. Two bogies, each with two wheels, set well inboard of the pointed nose."
+    },
+    {
+      "id": "shinkansen-front",
+      "view": "front",
+      "size": [1024, 1280],
+      "role": "high-speed Shinkansen, head-on front elevation",
+      "dimensionsM": [3.35, 3.65],
+      "prompt": "Head-on front of a Japanese high-speed Shinkansen, 3.35 m wide and 3.65 m tall. A smooth rounded aerodynamic nose centred on the vertical axis, a large curved dark windscreen with a single central wiper, a small rectangular destination display below the windscreen, two slim white headlights low at the outer corners with small red tail lamps beside them, the deep blue stripe sweeping up onto the nose, and a grey skirt with a smooth central coupler cover. No side and no roof visible."
+    },
+    {
+      "id": "subway-side",
+      "view": "side",
+      "size": [2048, 768],
+      "role": "subway / metro car, side elevation",
+      "dimensionsM": [18.0, 2.8, 3.5],
+      "prompt": "Japanese subway metro car, 18 m long and 3.5 m tall, exact side elevation, both ends flat with full-height gangway connections and no cab. Three evenly spaced double passenger doors along the body, with three large windows between them. Brushed stainless-steel body with a bright green horizontal stripe at window height and a red stripe just below it, black door frames and a dark underframe. Two bogies with two wheels each, a row of small roof-mounted ventilation and air-conditioning boxes."
+    },
+    {
+      "id": "subway-front",
+      "view": "front",
+      "size": [1024, 1280],
+      "role": "subway / metro car, head-on front elevation",
+      "dimensionsM": [2.8, 3.5],
+      "prompt": "Head-on front of a Japanese subway metro car, 2.8 m wide and 3.5 m tall. A flat vertical front with a narrow central emergency end door from floor to ceiling, a large two-pane dark windscreen above it, a single headlight pair low at each side with small red tail lamps, a green stripe and a red stripe running straight across at window height, black door and window frames, a black skirt with a central coupler, and a small roof box above. Symmetric about the vertical centre line."
+    },
+    {
+      "id": "express-side",
+      "view": "side",
+      "size": [2048, 768],
+      "role": "limited express, side elevation",
+      "dimensionsM": [21.0, 2.9, 3.6],
+      "prompt": "Japanese limited-express train car, 21 m long and 3.6 m tall, exact side elevation with a raked aerodynamic nose at the left, a driver's door behind it, then a long row of large tinted windows with only one central passenger door. Deep indigo body with a broad white lower band and a thin gold waistline stripe, a dark grey roof with low air-conditioning fairings and a pantograph well, and two bogies with two wheels each. Premium intercity proportions rather than a commuter layout."
+    },
+    {
+      "id": "express-front",
+      "view": "front",
+      "size": [1024, 1280],
+      "role": "limited express, head-on front elevation",
+      "dimensionsM": [2.9, 3.6],
+      "prompt": "Head-on front of a Japanese limited-express train car, 2.9 m wide and 3.6 m tall. A gently raked streamlined nose, a wide curved dark windscreen with two wipers, a small lit destination display above the windscreen, slim headlights low at the outer corners with red tail lamps, the deep indigo paint wrapping the nose with a white lower band and a thin gold stripe, and a dark skirt with a central coupler. Symmetric about the vertical centre line."
+    },
+    {
+      "id": "tram-side",
+      "view": "side",
+      "size": [2048, 768],
+      "role": "articulated light-rail tram, side elevation",
+      "dimensionsM": [20.0, 2.3, 3.4],
+      "prompt": "Japanese articulated low-floor tram, 20 m long and 3.4 m tall, exact side elevation with a rounded cab at the left. Three body sections joined by two black flexible concertina gangways, four double doors along the low floor, a continuous band of large windows, a single-arm pantograph raised on the roof, a pale cream body with a bright orange waist stripe and a green skirt, and two pairs of small wheels on short bogies. Streetcar proportions: narrow, low and rounded."
+    },
+    {
+      "id": "tram-front",
+      "view": "front",
+      "size": [1024, 1280],
+      "role": "articulated light-rail tram, head-on front elevation",
+      "dimensionsM": [2.3, 3.4],
+      "prompt": "Head-on front of a Japanese articulated low-floor tram, 2.3 m wide and 3.4 m tall. A rounded vertical front with a large single-pane curved windscreen, a small destination display above it, one central headlight with two smaller lamps beside it, a folded coupler low at the centre, a pale cream body with a bright orange stripe across the middle and a green skirt, and a pantograph base visible on the roof above. Narrow streetcar proportions."
+    }
+  ],
+  "criteria": [
+    "Orthographic: no visible perspective or three-quarter view; wheels share one baseline on side views.",
+    "Proportion: measured body length/height within 15% of dimensionsM on the side views.",
+    "Class reads correctly at 128 px (side) and 64 px (front).",
+    "Nose/cab: the Shinkansen and express noses are the specific risk; a generic box fails.",
+    "Flat lighting and clean matting against the plain backdrop."
+  ]
+}

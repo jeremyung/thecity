@@ -9,7 +9,7 @@ import json, os, sys, time, urllib.request, pathlib, shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONFIG = json.loads((ROOT / os.environ.get('TRAIN_CONFIG', 'art-workshop/train-pilot.json')).read_text())
-OUT = ROOT / 'art-workshop/train-pilot'
+OUT = ROOT / os.environ.get('TRAIN_OUTPUT', CONFIG.get('output', 'art-workshop/train-pilot'))
 COMFY = 'http://127.0.0.1:8188'
 COMFY_OUTPUT = pathlib.Path('/home/jung/Development/ComfyUI/output')
 
@@ -38,6 +38,7 @@ def workflow(prompt, unet, steps, cfg, sampler, seed, width, height, prefix):
 def main():
     unet, steps, cfg, sampler, tag = sys.argv[1], int(sys.argv[2]), float(sys.argv[3]), sys.argv[4], sys.argv[5]
     wanted = set(sys.argv[6:])
+    OUT.mkdir(parents=True, exist_ok=True)
     log = OUT / 'local-ledger.json'
     ledger = json.loads(log.read_text()) if log.exists() else []
     for view in CONFIG['views']:
@@ -47,7 +48,10 @@ def main():
         prompt = f"{CONFIG['commonPrompt']} {view['prompt']} {suffix}".strip()
         width, height = view.get('size', [2048, 1152])
         started = time.time()
-        pid = call('/prompt', {'prompt': workflow(prompt, unet, steps, cfg, sampler, int(os.environ.get('SEED', CONFIG['local']['seed'])), width, height, name)})['prompt_id']
+        # A unique prefix stops ComfyUI returning a fully cached 0.00 s result
+        # with no fresh image when the same view and seed are regenerated.
+        prefix = f"{name}-{int(started)}"
+        pid = call('/prompt', {'prompt': workflow(prompt, unet, steps, cfg, sampler, int(os.environ.get('SEED', CONFIG['local']['seed'])), width, height, prefix)})['prompt_id']
         while True:
             hist = call(f'/history/{pid}')
             if pid in hist: break
