@@ -52,6 +52,7 @@ function harness() {
       if (!materials.has(key)) materials.set(key, new THREE.MeshBasicMaterial({ color: tone }));
       return materials.get(key)!;
     },
+    asphalt() { return this.get('#747f7b'); },
   };
   renderer.director = { world: vi.fn() };
   renderer.buses = { setWorld: vi.fn() }; renderer.trains = { setWorld: vi.fn() };

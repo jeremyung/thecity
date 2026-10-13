@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { float, color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
+import { float, floor, fwidth, color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
@@ -226,6 +226,39 @@ export class ArtMaterials {
     let variants=this.cache.get(key);
     if(!variants){variants=create();variants.anime.userData.artKey=key;variants.miniature.userData.artKey=key;this.cache.set(key,variants);}
     return variants[this.style];
+  }
+  /** World-space puddle mask shared by the asphalt albedo and the SSR pass. */
+  static puddles(x:ReturnType<typeof float>,z:ReturnType<typeof float>){
+    return smoothstep(.1,.28,mx_noise_float(vec3(x,0,z).mul(.09)));
+  }
+  /**
+   * Road asphalt. Roads are merged into shared batches without lane UVs, so
+   * every detail is world-anchored: aggregate grain (faded once unresolved),
+   * rectangular repair patches, hairline cracks and broad wear. Rain darkens
+   * the surface and collects in puddles that the wet-weather SSR pass mirrors.
+   */
+  asphalt():Surface{
+    return this.shared('asphalt',()=>{
+      const p=vec3(positionWorld.x,0,positionWorld.z);
+      const grainP=p.mul(2.6);
+      const grainVisible=smoothstep(.4,1.4,fwidth(grainP).length()).oneMinus();
+      const grain=mx_noise_float(grainP).mul(.08).mul(grainVisible);
+      const patch=smoothstep(.2,.26,mx_noise_float(vec3(floor(p.x.div(5.5)),0,floor(p.z.div(9))).mul(.71)));
+      const crackP=p.mul(.32);
+      const crackVisible=smoothstep(.05,.2,fwidth(crackP).length()).oneMinus();
+      // Hairlines only in scattered stretches, faint: continuous isolines read as a map.
+      const crackZone=smoothstep(.15,.3,mx_noise_float(p.mul(.05)));
+      const crack=smoothstep(.012,0,mx_noise_float(crackP).abs()).mul(crackVisible).mul(crackZone).mul(.14);
+      const wear=mx_noise_float(p.mul(.028)).mul(.07);
+      const puddle=ArtMaterials.puddles(positionWorld.x,positionWorld.z).mul(this.wet);
+      const wetness=mix(float(1),float(.8),this.wet.mul(.6).add(puddle.mul(.4)));
+      const albedo=color('#747f7b').mul(grain.add(wear).add(1)).mul(mix(float(1),float(.87),patch)).mul(crack.oneMinus()).mul(wetness).mul(this.cloudShade());
+      const anime=new THREE.MeshToonNodeMaterial({color:'#747f7b',gradientMap:this.bands});
+      const miniature=new THREE.MeshStandardNodeMaterial({color:'#747f7b',roughness:.9});
+      anime.colorNode=albedo;miniature.colorNode=albedo;
+      miniature.roughnessNode=mix(mix(float(.9),float(.5),this.wet),float(.08),puddle);
+      return{anime,miniature};
+    });
   }
   private applyGlassSky(anime:Surface,miniature:Surface){
     const radiance=this.glassRadiance();

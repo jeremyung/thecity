@@ -15,9 +15,10 @@ import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '.
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4 } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
+import { ssr } from 'three/addons/tsl/display/SSRNode.js';
 import { SkyEnvironment } from './sky-environment';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
@@ -99,6 +100,8 @@ export class CityRenderer {
   private pipeline:THREE.RenderPipeline|null=null;
   private occlusion:ReturnType<typeof ao>|null=null;
   private occlusionStrength=uniform(.65);
+  private reflections:ReturnType<typeof ssr>|null=null;
+  private wetReflections=false;
   private skyEnvironment:SkyEnvironment|null=null;
   private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
@@ -284,12 +287,34 @@ export class CityRenderer {
   private buildPipeline(){
     this.disposePipeline();
     this.scenePass=pass(this.scene,this.camera,{samples:4});
+    // Wet weather adds a view-normal target and screen-space reflections;
+    // dry weather keeps the cheaper single-target pass (rebuilt on change).
+    const wet=this.wetReflections;
+    if(wet)this.scenePass.setMRT(mrt({output,normal:directionToColor(normalView)}));
     // Ground-truth AO at half resolution, normals reconstructed from depth (no
     // extra MRT target). Radii are metres: contact shading where buildings,
     // kerbs and trees meet the ground, not a whole-block darkening.
     const occlusion=this.occlusion=ao(this.scenePass.getTextureNode('depth'),null as unknown as THREE.Node,this.camera);
     occlusion.resolutionScale=.5;occlusion.radius.value=3;occlusion.thickness.value=2.5;occlusion.distanceExponent.value=1.4;occlusion.samples.value=12;
-    const sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength)),1));
+    let sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength)),1));
+    if(wet){
+      const depthTexture=this.scenePass.getTextureNode('depth'),normalTexture=this.scenePass.getTextureNode('normal');
+      const viewNormal=sample(uv=>colorToDirection(normalTexture.sample(uv)));
+      // Reflectivity is derived in the SSR pass itself: flat ground near street
+      // level, in the same world-space puddles the asphalt darkens. Camera
+      // matrices are explicit uniforms because the pass renders a screen quad.
+      const viewPosition=getViewPosition(uv(),depthTexture.r,uniform(this.camera.projectionMatrixInverse));
+      const cameraWorld=uniform(this.camera.matrixWorld);
+      const world=cameraWorld.mul(vec4(viewPosition,1)).xyz;
+      const up=cameraWorld.mul(vec4(colorToDirection(normalTexture.rgb),0)).xyz.normalize().y;
+      const reflectivity=smoothstep(.86,.97,up).mul(smoothstep(1.6,.5,world.y)).mul(ArtMaterials.puddles(world.x,world.z).mul(.55).add(.1)).mul(this.art.wet);
+      // SSR samples its colour input, so it reflects the raw pass texture.
+      const reflections=this.reflections=ssr(this.scenePass.getTextureNode('output'),depthTexture,viewNormal,reflectivity,float(.32),this.camera);
+      reflections.resolutionScale=.5;reflections.maxDistance.value=60;reflections.thickness.value=.6;reflections.quality.value=.45;
+      // SSR writes reflected colour already scaled by reflectivity with alpha 1,
+      // so add it; alpha blending would replace the street with a dark mirror.
+      sceneColor=sceneColor.add(vec4(reflections.rgb,0));
+    }
     const depth=this.scenePass.getViewZNode();
     const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
       focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
@@ -299,7 +324,7 @@ export class CityRenderer {
     this.pipeline=new THREE.RenderPipeline(this.renderer);
     this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
   }
-  private disposePipeline(){this.occlusion?.dispose();this.occlusion=null;this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
+  private disposePipeline(){this.occlusion?.dispose();this.occlusion=null;this.reflections?.dispose();this.reflections=null;this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
   async setStyle(style:Style){
     const request=++this.styleRequest;
     const previous=this.styleWarmupTail;
@@ -686,7 +711,7 @@ export class CityRenderer {
       for(const [id,arms] of junctions){
         const node=nodes.get(id)!;const points=junctionFootprint(node,arms);
         const pieces=surfaces.claim(points);
-        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.get('#747f7b'));
+        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.asphalt());
         if(rebuildCompleted)yield;
       }
     }
@@ -733,7 +758,7 @@ export class CityRenderer {
       if(end<.01)return;
       const width=roadWidth(r.kind),y=deckHeight,concrete=this.art.get('#9a9d93');
       sweepRoad(kit,curve,0,end,0,y-.35,width+.6,.5,this.art.get('#a3a69c'));
-      sweepRoad(kit,curve,0,end,0,y,width,.3,this.art.get(open?'#747f7b':'#ac9a78'));
+      sweepRoad(kit,curve,0,end,0,y,width,.3,(open?this.art.asphalt():this.art.get('#ac9a78')));
       for(const side of [-1,1])sweepRoad(kit,curve,0,end,side*(width/2+.25),y+.75,.3,1.3,this.art.get('#b8bbb2'));
       for(let distance=14;distance<end;distance+=28){const p=curve.at(distance),angle=Math.atan2(p.ux,p.uz);
         if(!expresswayPierClear(p,{x:p.x-p.ux,z:p.z-p.uz},{x:p.x+p.ux,z:p.z+p.uz},y,crossings))continue;
@@ -769,10 +794,10 @@ export class CityRenderer {
       const ramp=Math.min(12,len*.22),shape=new THREE.Shape();
       shape.moveTo(-len/2,.3);shape.lineTo(-len/2+ramp,2);shape.lineTo(len/2-ramp,2);shape.lineTo(len/2,.3);
       shape.lineTo(len/2,-.15);shape.lineTo(len/2-ramp,.8);shape.lineTo(-len/2+ramp,.8);shape.lineTo(-len/2,-.15);shape.closePath();
-      const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
+      const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,(open?this.art.asphalt():this.art.get('#ac9a78')));
     }else if(surfaces&&!rail&&!expressway){
-      this.addGroundRoadSurface(kit,surfaces.claim(groundRoadFootprint(a,b,width)),this.art.get(open?'#747f7b':'#ac9a78'));
-    }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
+      this.addGroundRoadSurface(kit,surfaces.claim(groundRoadFootprint(a,b,width)),(open?this.art.asphalt():this.art.get('#ac9a78')));
+    }else kit.box(mid.x,y,mid.z,width,.3,len,(open?this.art.asphalt():this.art.get('#ac9a78')),angle);
     if(expressway){
       if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y);
       return;
@@ -944,6 +969,9 @@ export class CityRenderer {
     const activityHour=hour%24,lightBlend=Math.min(1,dt*.8);this.art.litHome.value=THREE.MathUtils.lerp(this.art.litHome.value,activityHour>=23||activityHour<5?.32:1,lightBlend);this.art.litOffice.value=THREE.MathUtils.lerp(this.art.litOffice.value,activityHour>=7&&activityHour<20?1:.1,lightBlend);this.art.litShop.value=THREE.MathUtils.lerp(this.art.litShop.value,activityHour>=6&&activityHour<23?1:.18,lightBlend);
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
+    // Hysteresis: rebuild the pipeline only when streets clearly get or lose a sheen.
+    const wetStreets=this.wetReflections?this.art.wet.value>.03:this.art.wet.value>.08;
+    if(wetStreets!==this.wetReflections&&this.pipeline){this.wetReflections=wetStreets;this.buildPipeline();}
     this.nearbyStreetLights.update(dt,this.director.target,1-this.daylight);
     if(this.shine)this.shine.strength.value=.06+(1-this.daylight)*.2;
     this.renderer.toneMappingExposure=1;
