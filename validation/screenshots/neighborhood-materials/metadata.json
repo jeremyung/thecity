@@ -1,0 +1,41 @@
+{
+  "scope": "Held-camera diagnostic, no rendering changes",
+  "sourceSave": ".tools/riverbank-review-save.json",
+  "seed": 87231,
+  "sourceTick": 85169,
+  "captureTick": null,
+  "note": "Simulation previously advanced through recordings; no exact tick or numerical camera pose exported. Do not use as reproducible before/after implementation baseline.",
+  "camera": "Ordinary Watch pose held in Explore throughout these four captures",
+  "lensMm": 50,
+  "dof": false,
+  "viewport": [
+    1280,
+    720
+  ],
+  "quality": "high",
+  "backend": "WebGPU",
+  "paused": true,
+  "buildings": 1839,
+  "journeys": 465,
+  "works": 0,
+  "lightingPreviewHours": [
+    12,
+    16
+  ],
+  "styles": [
+    "miniature",
+    "anime"
+  ],
+  "normalQueuesBeforeCapture": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "captures": [
+    "miniature-noon.jpg",
+    "miniature-afternoon.jpg",
+    "anime-afternoon.jpg",
+    "anime-noon.jpg"
+  ]
+}

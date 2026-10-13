@@ -2664,3 +2664,997 @@ validation and remaining limits. Native release tests and production build pass;
 the web contour threshold test remains failing after an isolated rerun. The
 movement timeout from the full suite passes in isolation. This checkpoint does
 not establish final visual acceptance.
+
+
+## Contour checkpoint failure diagnosed — 2026-10-12
+
+The reproducible failure recorded at e87392b was an obsolete test timing
+expectation, not a contour edge-output mismatch. The test expected position
+attribute reads during BuildingChunks.set(), but incremental extraction now runs
+during update(). The retained regression compares exact Float32 output with the
+frozen EdgesGeometry oracle at 3.499, 3.5 and 3.501 m, plus translated near-threshold
+geometry. It now requires zero reads at registration and positive reads after
+normal update draining. No renderer code, threshold or test timeout changed.
+All 27 focused outline, incremental contour and building-chunk tests pass.
+
+Fresh default suite after correction: 595 passed, one failed across 107 files
+(51.31 s). The sole failure remains the 5-second movement test timeout in
+tests/wasm.test.ts; it passed the isolated checkpoint run. This is not a green
+default suite. No further timeout rerun or timeout-budget increase was made.
+
+## Fresh mature review and activity gap — 2026-10-12
+
+See [current fidelity review](fidelity-review-current.md). Rebuilt WASM and
+regenerated seed87231 to tick80000 from scratch after the prior mature save was
+rejected by current route validation. All1839lots/564roads realized; checkpoint
+round-trips and final80tick live/restored continuation pass. Normal browser
+import reached zero queues; saved matched50mm/HighWebGPU/DOFoff/clear14:00
+waterfront baselines in both styles. No renderer change or art acceptance.
+
+A full-day activity audit found0–486local travelers;15:00and16:00each have3,
+with population17655 and800named residents. Source confirms missing aggregate
+neighborhood demand. Primary next intervention is bounded purposeful residual
+household errands with real routes, dwell/return, accounting and replay—not
+additional roof detail or inflated traveler caps. See report for criteria.
+Corrected spec03's obsolete migration requirement to match the user's waiver.
+
+### Residual errand admission review — 2026-10-12
+
+The test-only `engine/src/neighborhood_demand.rs` prototype now passes ten native
+release tests. Root review corrected pointer-width-dependent destination hashing,
+verified rotating shortlist coverage and home fairness, and clarified reservation
+accounting. It is not connected to production scheduling; afternoon activity is
+unchanged. See `validation/fidelity-review-current.md` for exact evidence and the
+required saved outbound/dwell/return integration. Keep this as the primary
+workstream; do not infer full activity implementation from helper tests.
+
+### Integrated local errands candidate — 2026-10-12
+
+The previous test-only note is superseded: production scheduling now owns saved
+outbound/dwell/return errands, real doorway connectors and reserved participants.
+Schema5 rejects obsolete saves; 18 checked-in fixtures were explicitly normalized
+without changing other city data. Fresh WASM seed87231 reaches1839buildings and
+passes periodic save equivalence and final continuation. A full-day trace shows
+15:00 travelers3→21 and16:00 3→23; errands clear by04:00. The initial unbounded
+walking-distance experiment was rejected and replaced with a180m leg limit.
+See `fidelity-review-current.md` for evidence and remaining limits: browser motion,
+other seeds, fixed routing-expansion budgets, corridor-split deferral, and broader
+job-derived demand. Do not call this artistic or complete activity acceptance.
+
+Final verification for this candidate: native release suite **468 passed,
+0 failed,54 ignored** (46.72s). The focused physical lifecycle/corrupt-save tests
+all pass after choosing a genuinely local fixture road under the180m leg limit.
+WASM build succeeds; `npm test -- tests/wasm.test.ts` reports **4 passed,1 failed**
+with the movement-validity test hitting its unchanged5000ms timeout (57.68s total).
+That test was previously timing-sensitive, but this run is still failing evidence,
+not a green suite or proof of unchanged performance. `git diff --check` passes.
+
+### Errand verification across seeds and browser — 2026-10-12
+
+Seeds0/5 generation, periodic restore and continuation checks pass with current
+WASM. All three reviewed seeds have actual afternoon errands and empty outing
+ledgers by04:00; seed5 is not fully built at80000. Browser normal import eventually
+reaches all queues0. Paused15:41 style-paired screenshots and a20-second loading
+recording are saved under `screenshots/errand-review/` and
+`recordings/errand-review/`. The wide view remains perceptually quiet; this is not
+visual acceptance. Isolated movement test passes4.65s under unchanged5s timeout,
+with setup/growth dominating cost; earlier full-file failure remains recorded.
+Next: inspect close movement and import latency before additional activity tuning.
+
+### Goal and priority update — 2026-10-12
+
+User requested that the multidimensional learnings be incorporated into the goal.
+See [version-controlled objective](living-city-goal.md) and the final assessment in
+[current fidelity review](fidelity-review-current.md). README and spec08 now link
+the revised sequence. Earlier activity-first next steps are superseded: the next
+primary workstream is measured urban fabric and neighborhood composition, using
+a normally generated local street/crossing/waterfront and reusable rules.
+
+Full buildout is not perceived density; higher trip counts are not visible life;
+existing DOF does not establish photographic fidelity. Measure proportions before
+changing widths, preserve real destinations and deterministic behavior, and compare
+matched style/lens views and normal motion across seeds. Loading gaps and audio
+review remain acceptance work. The complete living-city scope, architecture,
+no-legacy-save policy and user artistic acceptance are retained. This document-only
+update makes no new runtime or test-suite acceptance claim.
+
+### Measured fabric baseline — 2026-10-12
+
+`urban-form-baseline.json` records three current-WASM tick80000 crops with hashes
+and method caveats. Compact projected coverage47.35–49.62% already meets its gross
+range; station coverage28.98–34.12% is low and station street union35.36–37.90% is
+high. Seed5 remains developing. This supports investigating station arterial/local
+layout rather than blanket densification. See the final section of
+`fidelity-review-current.md` for measurements, audit limitations and next action.
+No runtime changes or new test-suite claims in this diagnostic turn.
+
+Street denominator follow-through: coverage audit now intersects the building
+union with the complement of the open-street union and reports the separate
+diagnostic in `urban-form-street-adjusted.json`. Compact63% versus station47–53%
+persists after subtracting streets. Rail, river and protected areas remain in the
+denominator; no net-developable claim. Seven focused tests and TypeScript pass.
+Fabric audit shares this street calculation; gross metrics remain unchanged.
+Generator changes await station-layout visual review; do not blanket-densify.
+
+Station review now completed: the old DEV View station hid the subject behind a
+roof. New held `reviewStation(id)` fixes diagnostic framing with lens-aware fit
+and visibility/clearance checks. Current mature Anime capture and exact repeated
+capture are in `screenshots/station-fabric/`; same hash after visiting waterfront
+and returning. Ready queues0,seed87231,tick80000,14:00,50mm,DOFoff. This reveals
+dense existing station fabric with repetitive architecture and plain rail edges.
+Next inspect platform/access geometry for a bounded station-frontage/rail-edge
+improvement rather than blanket density changes. See current fidelity review for
+test results, comparison limitations and unfinished acceptance.
+
+Station canopy experiment was rejected after matched neighborhood-scale review:
+pitched roof/seams/fascia/outer railing made insufficient visible improvement.
+Both station-kit and experiment-test edits were reverted; patch and candidate
+capture remain as negative evidence. Earlier station camera fix is retained.
+See `station-canopy-rejected.patch` and current fidelity review. Next inspect
+entrance/access composition and platform visibility rather than more roof detail.
+
+Goal reconciliation: `living-city-goal.md` now includes the measured compact versus
+station fabric, rejected canopy result and `station-access-envelope-audit.json`.
+The latter found no building-envelope intersections in three seeds, but gateway
+stairs extend outside the world in all three; mesh/height clearance is unproven.
+`station-entry.ts` and its test are unintegrated candidates, not accepted behavior.
+Preserve the full living-city scope and architecture, use matched visual and motion
+evidence, and reassess priorities after the next bounded station decision.
+
+Second station-detail experiment rejected: the covered stair roof hid the readable
+steps without materially improving neighborhood identity. Root corrected floating
+columns, verified12 focused tests and the production build, captured the normally
+loaded matched scene at queues0, then removed the candidate helper/test and reverted
+station-kit integration. `station-entry-rejected.patch` and the entry candidate/
+diagnostic captures retain negative evidence. The candidate no longer exists in
+production source. After two unsuccessful attempts, stop station embellishment;
+next audit architectural family distribution and frontage in the held district
+before choosing a reusable composition improvement. See current fidelity review.
+
+Architecture reassessment completed: new reproducible
+`scripts/audit-station-architecture.mjs` / `station-architecture-mix.json` imports
+production massing and palette helpers. Six station crops across three seeds
+reconcile and repeat identically. The250m crops contain32–40 active shops/cafes,
+but all103 eligible apartment midrises share the walkup composition. Next bounded
+candidate is one coherent alternative apartment silhouette/balcony family, retaining
+authoritative floor/use/envelope/access and construction continuity, assessed in
+the held whole-neighborhood view. Counts are not projected facade area, frontage
+continuity or footfall. A separate generic tall-home doorway gap needs verification.
+No runtime behavior changed in this audit; see current fidelity review for caveats.
+
+Terrace-apartment candidate now integrated in building-massing/kit: seeded minority
+of4–11-floor apartments, rear-aligned top floor, broad front terrace, solid front
+balcony bands. Root reviewed Luna's massing and added renderer integration, narrow
+parcel/doorway/construction coverage and guard-ray checks.25 focused tests plus the
+new guard test pass; TypeScript/build pass. Matched seed87231 Anime capture shows
+visible neighborhood-scale variation; candidate retained, not artistically accepted.
+Anime/Miniature images and readiness diagnostics are in screenshots/station-fabric;
+candidate mix report records9/12/21 affected buildings across the250m crops. Other
+seeds, motion, daily lighting, DOF and closer balcony/terrace realism remain to review.
+
+Physical review corrected the terrace candidate's window-height balcony slabs:
+continuous slabs now meet storey floors and embed into walls, with closed front/end
+guards, taller door glazing, and closed top-terrace edges.22 focused tests and build
+pass; expanded physical ray assertions pass in both styles. Existing apartment
+captures predate this correction. Next perform fresh browser review before more
+variants, then continue the pending multi-seed/motion/lighting checks.
+
+Fresh corrected-family review completed on seed87231: normal import, queues0,
+generated apartment1197 detail, held station Anime/Miniature14:00 DOFoff, Anime
+lighting previews06/18/21 and21 DOFon. New `apartment-corrected-*` screenshots
+supersede earlier geometry captures. Floor/end corrections read correctly, but
+the large terrace still inherits red wall material; next add an existing-material
+horizontal walking finish before other-seed/motion checks. Lighting previews are
+not actual daily activity evidence. Browser restored to paused14:00,Anime,DOFoff.
+
+Terrace finish now corrected with existing concrete, bounded to the exposed strip
+and gated by construction completion. Geometry/material and construction tests,
+TypeScript and build pass. Normally loaded seed0/tick80000 at queues0 and reviewed
+station in both styles plus building734 detail; neutral terrace finish reads
+correctly. `apartment-seed0-*` captures record evidence. No matched before image for
+seed0; seed5 and motion still pending. Browser retained paused seed0,Miniature,14:00,
+DOFoff. See fidelity review for precise test results and remaining artistic gaps.
+
+### Goal reconciliation — 2026-10-13
+
+Updated `living-city-goal.md` to replace the superseded station-detail next step
+with the architecture audit, both rejected station experiments, the retained
+terrace-apartment candidate and its remaining review gates. The full living-city
+objective, locked concepts, architectural baseline and spec08 acceptance remain
+unchanged. The next action is developing seed5 and motion/final-geometry review,
+followed by a whole-experience priority reassessment—not another speculative asset
+or geometry batch. Distinguish lighting previews from daily behavior, stills from
+motion, scene counters from performance, and focused tests from full acceptance.
+No new visual or runtime acceptance is established by this documentation update.
+
+Third-seed still review completed via normal import: seed5/tick80000,8 active works,
+both styles,50mm,14:00,DOFoff,queues0. `apartment-seed5-*` screenshots support
+neighborhood variation but still show weak style distinction and transport/office
+repetition. Captured `recordings/apartment-seed5-activity.webm` at1x simulation;
+video is not yet visually reviewed (ffmpeg/ffprobe unavailable). Browser paused at
+15:25 after growth,Anime/DOFoff. Loading included a2553ms frame and growth a100.2ms
+rolling-window maximum; no performance acceptance. See fidelity review for details.
+
+Existing seed5 activity recording now has a seven-frame browser-decoded contact
+sheet (`apartment-seed5-motion-samples.jpg`). Train movement is visible; terrace
+silhouettes remain present at sampled times. This does not pass continuous motion,
+DOF or construction-transition acceptance. Source confirms distinct Toon/Standard
+building materials including batching; weak style distinction needs an evidenced
+art-direction comparison, not an assumed missing switch. No runtime code changed.
+
+Final neutral-terrace seed87231 captures now exist in both styles (`apartment-final-
+87231-*`). Miniature DOFon orbit recorded with paused time; seven decoded samples
+show changing occlusions without obvious missing terrace masses or large halos.
+Continuous playback remains unverified; orbit diagnostics included122.7ms maximum.
+Retain the bounded apartment family and stop embellishing it. Next compare matched
+DOFoff views to the locked concepts to choose between surface/lighting and
+frontage/ground integration, rather than adding another family automatically.
+See fidelity review for exact evidence and retained acceptance limits.
+
+Tall-home frontage defect confirmed and corrected in kit.ts: generic4+floor homes
+now use the existing centered entrance with reserved window opening.155 open homes
+in the three review snapshots were affected. Regression failed on old code;23
+focused tests and TypeScript pass. Browser verification pending. This correctness
+fix does not replace the larger architecture/ground/material concept comparison.
+
+Tall-home fix visually checked on generated home457 after normal mature import and
+queues0. Matched current-pose Anime/Miniature screenshots `tall-home-457-*` show the
+centered door clear of windows and aligned with the front step/paving. No pre-fix
+browser A/B or walking-height acceptance. Build passes with existing size warning.
+Retain the correctness fix; frontage/material identity is still a larger visual
+gap. Browser paused14:00 on home457 street frontage,Anime,DOFoff.
+
+Shop-canopy candidate corrects low-rise wall-boundary versus parcel-boundary
+confusion: the canopy now projects into the available front setback, clipped with
+4cm parcel clearance and embedded8cm into the wall. Valance/stripes follow its edge;
+doors and simulation unchanged.15 focused tests pass, including a ray regression
+that failed on old geometry. Browser appearance pending; do not mark accepted.
+
+
+### Consolidated learnings and updated goal — 2026-10-13
+
+Recorded a dimension-by-dimension synthesis in `fidelity-review-current.md` and
+reconciled `living-city-goal.md`, README and spec08. The goal retains the full
+living-city scope, locked concept fidelity, architectural baseline and acceptance
+matrix. Stale apartment/entrance next actions are replaced with current evidence.
+The primary next step is completing shop-canopy neighborhood/construction review,
+then selecting the largest frontage/ground/material gap from matched evidence.
+Controlled canopy A/B supports a modest specimen improvement, not city acceptance.
+Continuous motion, real daily cycles, audio, narrow viewports, named-hardware
+performance and gateway stair boundary correctness remain open. Documentation
+updates do not change goal execution status or claim new runtime verification.
+
+
+Canopy construction specimen review completed: Anime50% frame has no canopy;
+Anime95% finished facade has an attached canopy; Miniature renovation retains it
+with worksite rails. Three `shop-canopy-construction-*` / `shop-canopy-renovation-*`
+screenshots record the fixed architecture-viewer pose. Source confirms the existing
+0.86 final-facade threshold. These are static stages, not live growth or city-level
+acceptance. No runtime edits or new test result. Next: generated-shop neighborhood
+review under normal scheduling. Review tab retained for continuation.
+
+
+Generated shop3449 review now recorded after normal seed87231/tick80000 import and
+all queues0. Matched Anime/Miniature50mm14:00DOFoff screenshots show readable canopy
+projection and clear entrance. Retain the correction with limited evidence; no
+city pre-fix A/B or live construction acceptance. Nearby cafe3649 lower-angle
+inspection was occluded, recorded as camera/composition limitation rather than a
+pass. Repeated facade grids and a bare ground patch remain stronger neighborhood
+gaps; ownership/use of the patch is unverified. Browser retained at shop3449 in
+Miniature. See fidelity review for style-switch timings and remaining gates.
+
+
+Ground beside shop3449 traced to snapshot/source. Four west-side probes fall outside
+emitted ground, released parcels and protected polygons; shop center correctly
+belongs to block88/parcel3422. JSON with source hash and SVG plan diagnostic saved
+as `shop-3449-ground-audit.*`. Existing ground emission deliberately surfaces only
+realized sites, matching spec05. Do not treat the patch as missing paving or fill
+it without plan/corridor/access classification. Next bounded appearance diagnosis:
+material/light response at matched shop3449 pose; residual-land semantics remain
+in the urban-fabric backlog. No runtime changes or tests in this diagnostic turn.
+
+
+Daylight glazing candidate implemented: explicit ArtMaterials.window class replaces
+building pane glow, shared by source/batch shaders. Removes yellow painted-panel
+appearance in daylight while retaining activity-controlled warm night windows.
+Lamp and unfinished-window uses separated. Focused tests and final build pass;
+existing bundle warning remains. Specimen day/night both styles and fully loaded
+Miniature shop3449 day/21:00-preview captures saved as `window-*`. Candidate still
+needs production Anime and broader motion/day-cycle/seed review. Startup watchdog
+cleared itself during reload; no performance acceptance. No commit requested.
+
+Production Anime daylight check also completed after style preparation at the same
+shop3449 pose: `window-city-day-anime.jpg`. Daytime glazing is readable in this
+batched path as well. Browser retained Anime,paused14:00,DOFoff. Broader night,
+motion, construction and daily-activity validation remains open.
+
+
+Glazing preview extended at held shop3449: Anime18:00/21:00 and both styles02:00.
+Warm windows dim at late night but remain lit according to existing activity floors
+(home.32/office.1/shop.18); no complete lights-off or occupancy claim. Saved
+`window-city-dusk-anime`, `window-city-evening-anime`, and `window-city-late-night-*`
+screenshots. These are paused lighting previews, not actual overnight behavior.
+No additional material tuning. Candidate remains provisional pending other seeds,
+construction and camera-motion review. Browser restored paused14:00,Miniature.
+
+
+Glazing checked at95% construction versus open in Miniature/night: unfinished panes
+stay dark, open stage lights return. Normally loaded seed0/tick80000,waited queues0,
+framed shop2069 and captured both styles at50mm14:00DOFoff (`window-seed0-*`). One
+MiniatureDOF65px-orbit endpoint shows intact glazing; not continuous-motion proof.
+Retain candidate; developing seed5 and broader motion/day-cycle gates remain.
+Browser held seed0/shop2069,Anime,paused14:00,DOFoff. No runtime changes this turn.
+
+
+### Goal reconciliation — 2026-10-13
+
+Updated `living-city-goal.md`, README priorities and spec08 to reflect canopy and
+glazing evidence without claiming full acceptance. Recorded an eight-dimension
+assessment in `fidelity-review-current.md#updated-goal-and-gap-priorities--2026-10-13`.
+Immediate task: gateway-stair boundary correctness, then evidence-led
+frontage/ground integration. Residual green land must be classified before paving.
+Continuous motion, actual daily behavior, live construction, audio, named-hardware
+performance and user artistic review remain open. Documentation-only update;
+no new runtime changes, tests, commit or push.
+
+
+### Gateway stair candidate — 2026-10-13
+
+Source diagnosis: both terminal layouts used local stair bottom -20/top -1.
+At the boundary gateway this points beyond the world. The candidate keeps the
+platform and queue frame unchanged, but uses the inward slab edge: bottom67,
+top48, the same19m run and44 risers. Renderer tread depth now uses the absolute
+run; signed placement and rail slope support either direction. Engine entry/exit
+paths derive stair endpoints from the rendered layout rather than duplicate them.
+
+Mesh raycasts cover every tread, queue position and both slab joins in four rotated
+frames for both access directions. TypeScript and7 focused station/rail tests pass.
+An ad-hoc SAT comparison of the candidate stair rectangle against saved building
+envelopes in the existing seed87231/0/5 snapshots found no overlaps. Its x extent
+is325–344m instead of extending beyond400m. This is a proposed-footprint check,
+not a regenerated engine snapshot or rendered clearance review.
+
+The direct ground approach still needs work: a path from the terminal toward the
+stair bottom can pass underneath the low stair end. The candidate is NOT accepted
+as usable access yet. Next: route the ground approach around the stair footprint,
+check head clearance/supports, reconcile persisted access-path validation (no old
+save migration), then rebuild WASM and review normally generated cities and
+construction. Browser WASM has not been rebuilt for this candidate. Do not use the
+passing tread tests as proof of pedestrian approach clearance.
+
+Native `rail_` checks:13 passed after correcting the new test fixture to open
+rail and recompute connectivity. Existing rotated connector bounds were updated
+for inward gateway access; the new four-edge regression checks full tread bounds
+and engine entry/exit agreement with the platform layout. Earlier diagnostic
+runs failed on the obsolete range and incomplete test setup; final focused run
+passes. The full engine suite was not run.
+
+
+### Stair approach clearance and fresh WASM city — 2026-10-13
+
+Completed the candidate ground detour for both terminal frames. Pedestrians use
+local x6.9 outside the stairs and platform columns, turn onto the stair axis1.5m
+beyond its bottom, then ascend. Entry and exit reverse the same approach. The
+rail connector now has8 points; ordinary access remains capped at5. Save validation
+compares explicit rail connectors with their canonical engine path and rejects
+obsolete/perturbed geometry with a fresh-world message; no migration is added.
+
+Tests cast horizontal rays along all authored ground-approach legs at lateral
+body offsets -0.33/0/+0.33m and heights0.4/1.2/2.07m, across four terminal rotations
+and both stair directions. They find no station-kit mesh intersections. This
+covers the authored platform/stairs, not all city infrastructure or arbitrary
+remote route endpoint connections. An ad-hoc body-expanded building-envelope
+sample of the x6.9 gateway side path finds no overlap in the three prior snapshots.
+Full city approach/terrain/other-infrastructure review remains necessary.
+
+TypeScript passes,7 focused renderer tests pass, and13 native rail tests pass,
+including current-save replay midway up the stairs and rejection of a perturbed
+approach. Updated the existing stair-progress test to exercise the actual stair
+segment after adding the ground detour. Earlier run failed on its old5-height
+expectation; final focused run passes. Full suites have not been run.
+
+Rebuilt WASM successfully. Fresh seed87231 ordinary fixed-step generation reaches
+tick80000 with1839 buildings/lots and564 realized roads. All eight10k checkpoints
+restore identically and preserve movement packets; final live/restored80-tick
+continuation agrees. See `stair-review-generation.json`. Fresh review save:
+`.tools/stair-review/tick-80000.json`; snapshot `.tools/stair-review/world.json`.
+Snapshot confirms gateway bottom67/top48 and unchanged station bottom-20/top-1.
+This is engine generation, not browser scheduler or visual acceptance.
+
+Next: normal browser import, readiness capture, both-style gateway review and
+moving pedestrian clearance; then additional seeds/developing infrastructure.
+The boundary/access candidate remains under validation. No commit or push.
+
+
+### Gateway browser review and behavioral limit — 2026-10-13
+
+Reloaded rebuilt WASM and normally imported `.tools/stair-review/tick-80000.json`.
+The simulation continued briefly before pausing at day3/14:43 (1839 buildings,
+44 journeys,0 works); do not label these screenshots exact tick80000. Framed
+building1674, then widened/panned through normal camera controls. HighWebGPU,
+50mm,1280x720,DOFoff, live lighting/weather; no lighting preview. All four geometry
+queues reached0 without draining. Saved `gateway-stair-ready.jpg`, matched
+`gateway-stair-anime.jpg` and `gateway-stair-miniature.jpg` under
+`screenshots/station-fabric/`. Stairs join the platform and descend inside the
+visible rail corridor. No missing tread or gross slab disconnection is apparent.
+The ground approach remains grass with no legible entrance apron or footpath;
+this is a remaining ground-integration/fidelity gap, not a reason to pave unrelated
+residual land.
+
+Recorded20s at1x simulation in Miniature with DOFoff; paused at15:28 afterward.
+`recordings/gateway-stair-activity.webm` and seven decoded samples
+`gateway-stair-motion-samples.jpg` preserve the observation. The log reports two
+regional-gateway alightings, but samples do not demonstrate stair traversal or
+continuous-motion clearance. Source inspection (`lib.rs`, outbound alighting)
+shows an immediate transition to `working_external`; the production exit-walking
+call targets the city station. The initial statement that the recording captured
+a train arrival was too broad: arrival was confirmed by the event log, not by a
+clearly visible train in these sampled frames. Do not use this observation to
+claim visible gateway access behavior.
+
+Next moving-pedestrian clearance review must target the city station's actual
+walking-home exit. Gateway queue/geometry checks remain useful; do not add fake
+pedestrians to manufacture acceptance. Longer-term gateway transitions should be
+assessed against the living-city requirement without confusing an abstract external
+work destination with an implemented ground-level journey.
+
+Style switch diagnostics reported3288ms submit and7792ms await; a ready rolling
+frame window does not establish hardware performance. No code/test changes in this
+browser-review turn. Goal remains incomplete; additional seed/developing review,
+city-station walking clearance and the full release obligations remain open.
+
+
+### Actual city-station exit evidence — 2026-10-13
+
+Advanced the fresh seed87231 city through ordinary steps to tick83229 and found
+Emi Kato (traveler427) beginning a real walking-home rail exit. No actor, queue or
+route was injected. Saved `.tools/stair-review/station-exit.json` and its world
+snapshot; `validation/station-exit-trace.json` records488 samples through tick84203,
+when access_phase changes from0 to1. Body-expanded plan-view building-envelope
+sampling at <=0.1m along the complete eight-point path reports no overlaps. This
+is conservative building clearance, not a detailed all-object collision proof.
+
+Normally imported the held checkpoint, used View station and ordinary zoom/orbit
+to expose the stair, and waited for all four queues0. `station-exit-ready.jpg`
+records readiness. HighWebGPU,50mm,1280x720,Miniature,DOFoff,live weather/lighting.
+Recorded three consecutive20s segments at1x simulation with pauses for saving:
+`recordings/station-exit-{1,2,3}.webm`, spanning day3/17:13–18:26. No audio.
+`station-exit-motion-samples.jpg` shows twelve decoded detail samples, corrected
+for the video's pixel ratio, with passengers visibly progressing down the stairs,
+turning beyond the lower tread and walking along the outside approach. It does
+not identify Emi uniquely by appearance or prove every interpolated frame.
+`station-exit-evening.jpg` preserves the final full view.
+
+A suspected transverse obstruction is the painted edge of open local road39
+(node36 to station38), not a fence: city.ts emits a0.14m-wide,0.03m-thick edge mark
+for that road class. Do not create a fake barrier-opening task from the screenshot.
+The observed descent supports retaining the candidate with bounded confidence.
+The grass approach still lacks a readable footpath/landing; any treatment should
+follow the actual infrastructure access, not blanket-pave neighboring residuals.
+
+No runtime change in this review turn. Additional seeds/developing construction,
+both-style moving clearance, continuous playback and all spec08 gates remain open.
+Observed recording frame maxima63.3/41.2/46.1ms are not named-hardware acceptance.
+The browser is paused at18:26 in the station view. Next: additional-seed/access
+coverage, then a bounded ground treatment for the demonstrated station approach.
+
+
+### Fresh three-seed access audit and construction gate — 2026-10-13
+
+Generated fresh seeds0 and5 with rebuilt WASM through ordinary fixed steps to
+80000. Eight checkpoint save/movement equivalence checks and final80-tick replay
+pass for each. Reports: `stair-seed0-generation.json`, `stair-seed5-generation.json`.
+Seed0 reaches1730 buildings/1730 lots/530 roads. Seed5 has1999 buildings,
+2030/2062 lots and545/558 roads, so remains developing; do not label it mature.
+
+Added reproducible `scripts/audit-station-access.mjs` using restored current WASM
+platform views, not substituted candidate coordinates. `station-access-current.json`
+covers seeds87231/0/5 at ticks100,10000,80000:18 stair rectangles,0 out-of-world
+corners and0 building-envelope SAT overlaps. The earlier failing audit remains
+historical baseline. This is2D envelope evidence, not terrain/all-object clearance
+or additional-seed visual acceptance.
+
+The early-stage check exposed a presentation defect: all three tick100 saves have
+station_ready=false, station_online=false, station project stage=clearing with
+progress0.25 and rail foundation/progress0. The renderer nevertheless builds the
+full platform/stairs and enables its roof at progress>.2. `presentation_revision`
+and `VisibleInfrastructure` encode the same progress-only threshold. Project
+stage is derived from overall progress in the engine;0.25 is still clearing.
+No claim is made that passengers use this unfinished structure: service readiness
+remains separately gated.
+
+Next bounded correction: coherent station construction phases shared by rendering,
+presentation revision and visible-infrastructure support. Preserve mature geometry
+and access paths; test progression and restore while work is underway before
+adding finished approach pavement. This is within the current infrastructure
+correctness gate. Do not stack decorative changes or add compatibility migrations.
+No runtime change in this audit turn; no new browser captures. Existing station
+scene remains the handoff view. Full goal and release obligations remain open.
+
+
+### Goal and learning reconciliation — 2026-10-13
+
+Recorded the dimension-by-dimension decision matrix in
+[fidelity-review-current.md](fidelity-review-current.md#consolidated-learnings-and-goal-reconciliation--2026-10-13)
+and reconciled README, spec08 and the versioned living-city goal. The immediate
+priority is validation of the in-progress station construction-phase candidate,
+then grounded access/frontage integration. Gateway boundary evidence is retained
+with its limits; do not restart the original defect investigation or claim the
+new construction edits passed earlier checks. No runtime edits or new acceptance
+run were performed for this documentation update. Goal execution status unchanged.
+
+
+### Station construction phases implemented and checked — 2026-10-13
+
+Replaced the premature full-platform/20%-roof rule with engine-derived phases:
+site0, supports1, deck/access2, canopy3, complete4. Rendering, presentation revision,
+batch identity and visible-platform movement support share that contract. Lamps,
+furniture and station signs wait for completion; movement requires a committed
+complete platform. Mature geometry and authoritative walking paths are preserved.
+
+The first ordinary-growth regression failed because the proposed92% canopy threshold
+was skipped by the station's eight work increments (.875 ->1). Corrected the canopy
+threshold to85%, during late surfacing, without changing construction duration.
+Final native presentation tests7/7 pass; TypeScript passes; focused web tests51/51
+pass across station-kit, rail-corridor, visible-infrastructure, road-batches and
+camera-review-station. Geometry rays cover support/deck/canopy/fittings order and
+both stair directions. Existing queue/tread/body-clearance tests remain passing.
+
+Rebuilt WASM. scripts/audit-station-construction.mjs checks ordinary growth for
+seeds87231/0/5, all five phases at ticks0/200/300/350/400, exact current-save and
+one-step continuation/movement equivalence at each boundary. Report:
+station-construction-current.json (includes binary hash). Service readiness stays
+false before phase4. Native and WASM both pass phase progression; this is not a
+full cross-runtime bit-for-bit city comparison.
+
+Normal browser imports of seed87231 phases1 and3 were paused at ticks200 and350,
+06:12/06:21, live dawn lighting, HighWebGPU,50mm,1280x720,DOFoff. All four queues
+reached0 without draining. View station shows bare supports at phase1 and deck,
+stairs and canopy at phase3. Captures under screenshots/station-fabric:
+construction-supports.jpg, construction-canopy-ready.jpg and
+construction-canopy-miniature.jpg. These are different growth checkpoints, not
+matched lighting A/B or continuous construction footage. Ground approach remains
+grass. Preserve that limitation and do not blanket-pave nearby residual land.
+
+Next: complete both-style construction/moving transition review, then resume the
+bounded access/frontage treatment. Full day-cycle, audio, narrow viewport,
+named-hardware performance and user artistic acceptance remain open. No commit.
+
+The held phase3 scene was also switched to Anime and allowed to settle with all
+four queues0. construction-canopy-anime-ready.jpg and construction-canopy-anime.jpg
+record the same tick/camera/lens/lighting with DOFoff. Both styles retain the canopy,
+deck and stairs. This adds static style coverage, not continuous transition proof.
+The browser remains paused at tick350/06:21 in Anime for follow-up review.
+
+
+### Live station construction and foliage clearance — 2026-10-13
+
+Previous turn was progress: construction contract, tests and browser evidence changed
+authoritative state. This turn normally imported seed87231 tick200/phase1 paused,
+waited for all four queues0, selected View station and recorded20s in Anime at1x
+simulation/16x development, HighWebGPU,50mm,1280x720,DOFoff,live dawn lighting.
+`recordings/station-construction-anime.webm` records ordinary growth; no phase or
+actor was injected. Simulation continued after recording until manually paused
+at07:47; that time is not the recording end time.
+
+Twelve decoded samples (`screenshots/station-fabric/construction-anime-motion-samples.jpg`)
+show supports through5s, deck/stairs at6–7s, canopy at8–10s and a train at14–18s.
+This establishes the visible phase sequence in one live run, not every interpolated
+frame, passenger support or full continuous-motion acceptance. The initial recording
+start/camera change produced an observed377.3ms longest frame; it is not an isolated
+construction bottleneck diagnosis or hardware acceptance. Final ready-window values
+do not supersede that observation.
+
+The sequence exposed foliage intersecting the platform area. Tree clearance checked
+roads/buildings/ground/rear extensions but omitted platform reservations. Added
+`station-clearance.ts` with canopy-expanded station-kit and signed stair footprints;
+`updateTrees` uses it and its geometry inputs participate in cache invalidation.
+Reservations clear before deck construction, and phase-only changes do not churn
+instance matrices. This removes visual trees in reserved infrastructure only; no
+engine terrain, planting generation, route or ground ownership is altered.
+
+TypeScript and14 focused tests pass (station-kit plus tree-clearance cache/signature/
+grid). New renderer-cache regression covers forward/reverse/oblique frames, both
+stair ends, preserved nearby planting, phase stability and moved-platform invalidation.
+Normally reimported the identical seed87231 tick350/phase3 checkpoint and waited for
+all queues0. Same View station/50mm/Anime/DOFoff/live06:21 comparison saved as
+`construction-canopy-anime-clearance.jpg`; the overlapping foliage is absent while
+nearby planting remains. This is one-seed static evidence after the clearance change.
+The prior recording is the failing foliage baseline, not post-fix motion acceptance.
+
+Next: review the corrected construction sequence in Miniature, then resume the
+bounded station approach/path treatment from authoritative access geometry. Wider
+clearance, daily cycles, continuous motion, audio, performance and full spec08/user
+artistic acceptance remain open. Browser is paused at tick350/06:21 in Anime. No commit.
+
+
+### Corrected Miniature sequence and approach design audit — 2026-10-13
+
+Previous turn was progress (station foliage clearance and matched evidence).
+Normal import of seed87231 tick200, queues0, View station, HighWebGPU50mm,
+1280x720,DOFoff,Miniature,live dawn: recorded20s at1x simulation/16x development
+with foliage correction present. `recordings/station-construction-miniature.webm`
+and `screenshots/station-fabric/construction-miniature-motion-samples.jpg` preserve
+12 samples. Supports persist through5s, deck/access appears at6–7s, canopy at8s,
+and a train at14–18s. The prior foliage intersection is absent in those samples.
+This supports retaining the phase/clearance candidate and proceeding to access
+integration; it is not every-frame, passenger-clearance or full release acceptance.
+A533.7ms longest frame was observed at recording/camera startup; cause and hardware
+acceptance are unresolved. Paused later at07:35, after the recording completed.
+
+Added `scripts/audit-station-approach.mjs` and
+`validation/station-approach-candidate.json`. This is a design audit, not emitted
+paving: 1.6m-wide butt-joined strips from the terminal node to the engine approach,
+round the stair foot, ending at the first tread. Existing side offset6.9m causes
+pier overlaps for all three gateways. Candidate offset7.5m clears piers for both
+terminals in seeds87231/0/5 tick80000; all six candidates have no world-boundary,
+building-envelope, parcel, protected-polygon or supplied river-corridor overlaps.
+Seed5 is still developing. River test uses the supplied piecewise-linear horizontal
+half-width; no terrain-height or other-road/all-object clearance is claimed.
+Corner/landing geometry must be re-audited once authored; butt strips do not prove
+watertight or accessible paving joins.
+
+Next bounded implementation: expose authoritative station approach geometry/width
+in the platform contract, move the pedestrian side approach to the proven candidate
+offset, and derive paving from that same contract. Preserve current-save validation
+and mature walking behavior; no migration for incompatible old access paths.
+Stage paving with deck/access, retain a legible landing and avoid piers, road paint
+and neighboring ground. Add physical support/clearance tests and matched browser
+review with actual passengers before acceptance. No runtime change this turn.
+
+
+### Shared station approach implemented — 2026-10-13
+
+Previous turn was progress: corrected Miniature recording and candidate footprint
+audit changed the next implementation decision. Added engine-owned local ground_path
+(five street/approach/apron/foot points) and ground_width1.6 to RailPlatformView and
+TypeScript contract. Side approach is7.5m from the rail axis. Engine entry/exit paths
+now read their three ground waypoints from this same contract. Mature stair geometry
+is unchanged. Current-save validation rejects obsolete access paths; no migration.
+
+Renderer uses a single mitered extruded paving outline (0.12m thick, top at ground_y)
+in phase2 onward, joined around the stair foot. Avoids coplanar overlapping strips.
+Visible-infrastructure identity and tree-clearance signature include path/width;
+foliage clearance includes the approach corridor. The earlier butt-strip audit is
+not proof of these exact joined corners: re-audit emitted geometry before acceptance.
+
+Initial tests exposed nonindexed extrusion versus indexed Kit batching; corrected
+the new geometry to use indices. Native compile required WorldPoint PartialEq for
+the existing platform-view comparison. The rotated connector regression retained
+its independent envelope check with the new7.5m offset (previous6.9m expectation
+failed as expected). Final checks: TypeScript passes;56 focused web tests pass;
+13 native rail tests pass, including named commute save/replay and both-terminal
+rotated access. Native assertions compare engine ground entry/exit points to the
+exported ground_path. New ray tests sample pedestrian-width support along all four
+paved legs and absence before deck phase; they do not prove every corner or real
+street endpoint. Rebuilt WASM and reran the three-seed construction/save audit.
+
+Normal browser import: fresh construction checkpoint seed87231 tick350/06:21,
+Miniature,HighWebGPU,50mm,1280x720,DOFoff,live dawn,all four queues0. View station,
+then ordinary zoom/orbit exposed the landing. Captures:
+`screenshots/station-fabric/approach-miniature-wide.jpg` and
+`approach-miniature-close.jpg`. The connected landing/paving is visible beside the
+stair and road. No actual passenger traversal was captured in this early scene.
+
+Next: validate the emitted mitered footprint and actual road-endpoint/ground joins,
+then fresh mature passengers in both styles. Route endpoints can differ from the
+terminal center, so centerline support tests alone are insufficient. Old mature
+saves with active old approach paths may reject; regenerate rather than repair.
+Do not declare access or full construction accepted yet. Browser remains paused
+at06:21 in the close Miniature view. No commit/push; full goal remains active.
+
+
+## Goal learning reconciliation — 2026-10-13
+
+Documentation-only update requested by user. Updated `living-city-goal.md` and the
+persistent goal objective to distinguish implemented shared station paving from
+unverified road joins. See the final “Recorded learnings and goal reconciliation”
+section of `fidelity-review-current.md`. Production-outline audit:12 cases clear the
+checked plan envelopes. Actual passenger ground probe:24/329 uncovered centerline
+samples on the final leg; junction/sidewalk/height exclusions remain explicit.
+Road-type walking-offset correction is proposed, not implemented here. Next verify
+all endpoint/movement/building-access consumers, actual passenger-width/height
+support, fresh save/replay and both-style traversal. Preserve broader fidelity,
+behavior, audio and performance acceptance and stop station embellishment after
+this correctness gate. Existing dirty implementation remains untouched; no commit.
+
+
+### Road-type walking offset correction — 2026-10-13
+
+Previous turn was progress: recorded findings and synchronized goal. Implemented
+one pedestrian_road_offset helper for route endpoints, movement, building frontage
+segments and building-access detours. Local/lane walkers now stay0.72m inside the
+shared carriageway edge; arterial/other walkers retain0.72m outside. Vehicle lane
+positions unchanged. Regression checks cover local/lane/arterial, both route
+orientations and walking sides, physical width and endpoint agreement.
+
+Checks pass:1 expanded movement test,13 rail tests,3 access-path tests (including
+current-growth tamper rejection and replay). Rebuilt WASM. Fresh seed87231 reaches
+80000 with1839 buildings and564 roads; every10000 checkpoint matches save/movement
+and final80-tick live/restored continuation matches. Report:
+`walking-offset-87231-generation.json`. No old-save migration or fixture repair.
+
+The same ordinary Emi Kato exit starts83229, traveler427. Its street endpoint
+moves1.44m inward; origin access completes84215. See
+`station-walking-offset-exit-trace.json`. Added reproducible
+`scripts/probe-station-walking-ground.mjs`; production paving/straight-road/ground
+union covers all330 centerline samples, including polygon boundaries (1e-5m
+boundary tolerance). Previous probe found24 uncovered samples. This is not
+passenger-width, terrain-height, junction/sidewalk or continuous browser evidence.
+
+Next: audit actual body-width support and height/road-end junction transitions;
+regenerate seeds0/5 with this WASM, preserve construction/save gates, then inspect
+ordinary traversal in both styles. Do not mark access or artistic fidelity accepted.
+Goal remains active. No commit/push; prior dirty work retained.
+
+
+### Three-seed walking support and recorded descent — 2026-10-13
+
+Previous turn was progress: corrected shared-road offsets and validated actual
+seed87231 centerline support. Fresh seeds0/5 now also reach80000 with checkpoint
+save/movement equivalence and80-tick continuation. Counts remain1730/530 and
+1999/545 buildings/roads; seed5 remains developing. Their ordinary station exit
+traces are `station-walking-offset-0-exit-trace.json` and
+`station-walking-offset-5-exit-trace.json`; no actor/route injection.
+
+Extended `scripts/probe-station-walking-ground.mjs` to test lateral body edges
++/-0.33m and include production junctionFootprint and roadWidth. All three cases
+have330 supported center samples. Each has one unsupported lateral sample at the
+exact final endpoint, about0.0449m beyond the flat road cap. This persists with
+production junction footprints (a single-arm terminal adds no junction pad).
+Do not hide this by relaxing tolerance or report full passenger-width acceptance.
+Reports: `station-walking-offset[-0/-5]-ground-probe.json`. Probe remains plan-only,
+excludes arterial sidewalks and does not model complete body sweep or every object.
+
+Height source inspection: station paving is flat at0.27m, ordinary carriageway
+surfaces top at0.30m, ground-patch meshes at0.035m; default pedestrian surface is
+0.27m. The exit's explicit0.27m to negative-sentinel transition preserves the
+existing ground policy. No new cliff is suggested by these constants, but this is
+source evidence, not a complete mesh-height or contact audit. Do not count generic
+ground polygons as equal-height paving in a future height acceptance test.
+
+Re-ran ordinary three-seed station phase/current-save audit with current WASM;
+all0..4 phases retain expected boundaries.20 web tests pass across station-kit and
+visible-infrastructure. No new production geometry change this turn.
+
+Browser: normal import of seed87231 tick83229, Miniature,HighWebGPU,50mm,1280x720,
+DOFoff,live17:13, all four queues0 before recording. Saved20s recording
+`recordings/station-walking-offset-miniature.webm` and12 sampled frames in
+`screenshots/station-fabric/walking-offset-miniature-motion-samples.jpg`.
+Samples show real passengers descending and reaching the paved foot at18s; they do
+not demonstrate the complete street join or every-frame clearance. The paused still
+`walking-offset-miniature.jpg` predates confirmation of all queues0, so it is not a
+complete-city loading acceptance capture. Later pause18:31 is after recording end.
+
+Prepared `.tools/walking-offset-87231/station-ground-exit.json`, advancing the genuine exit600 ticks to83829/17:49.
+Emi remains on origin access at45m progress. Imported paused and restored the
+station View/zoom2/orbit140px camera for the next ground-join review. Normal import
+again showed temporarily missing building batches; no forced draining. Verify
+queues finish before recording. Browser tab39 retained; tab38 specimen retained.
+Next: inspect actual ground traversal and the cap edge in both styles, resolve the
+small physical connection only if needed with bounded geometry, and finish height
+support checks. Broader concept, audio, day-cycle and performance gates stay open.
+
+
+### Station road-end apron and mesh support — 2026-10-13
+
+Previous turn was progress: three-seed checks isolated the road-cap body overhang
+and retained actual descent evidence. Added a0.4m end apron only for ground roads
+at station nodes. It is a continuation of the existing road width and datum, not
+an authoritative route change. Other street ends and boundary gateways are unchanged.
+New `ground-road-footprint.ts` shares both footprint and road-surface mesh constructor
+with production city rendering and acceptance probes. Surface partitioning remains
+in place; no overlapping coplanar patch is added. No WASM rebuild needed this turn.
+
+28 tests pass (ground-road-footprint, station-kit, road-batches); TypeScript passes.
+Tests ray-check the full0.33m turning disk at both station ends, both street sides
+and cardinal/oblique axes, and preserve ordinary/gateway extents. Exact added-area
+three-seed audit clears buildings, parcels, station piers, protected/river polygons
+and world bounds: `station-road-landing-clearance.json`. Center/lateral probes now
+have0 misses for all330 samples per seed; old failing reports are preserved under
+the walking-offset names and new reports under `station-road-landing-*-probe.json`.
+
+Added `scripts/audit-station-walking-height.mjs`: actual exit ground legs, sampled
+every<=0.1m at the center and16 perimeter points of a0.33m disk, ray-cast against
+production station and ground-road mesh constructors. All5610 samples per seed
+87231/0/5 have support. Heights range0.27000001–0.44568181m; upper value is the first
+stair tread at the foot, with ordinary road0.30m. No unexpected height under the
+explicit first-tread exception. This is sampled ground-route support, not continuous
+collision clearance, all terrain, all junctions or every construction state.
+
+Browser reload after source changes reset the review to founding and briefly
+reported graphics startup taking too long. The Retry control disappeared before
+activation as startup recovered naturally; do not claim a retry fixed it. Final
+candidate imported paused from ordinary `station-ground-exit.json` tick83829/17:49,
+then View station/zoom2/orbit140px, Miniature High WebGPU50mm1280x720 DOFoff.
+Normal loading still had8 neighborhood batches at the last recorded readiness
+check. A DOM wait returned a tooling timeout, which is not evidence that rendering
+stopped. Preserve tab39 and inspect current queues, then record actual ground
+traversal in both styles before closing this correction. Do not force queues.
+No new candidate motion acceptance yet. Full living-city goal stays active.
+
+
+### Final apron Miniature traversal — 2026-10-13
+
+The earlier tooling timeout did not indicate stopped rendering. A fresh UI check
+confirmed ready/all four queues0; then recorded20s ordinary motion from the paused
+83829/17:49 checkpoint, Miniature High WebGPU50mm1280x720 DOFoff,1x simulation.
+`recordings/station-road-landing-miniature.webm` and
+`screenshots/station-fabric/road-landing-miniature-motion-samples.jpg` preserve the
+result. Twelve decoded samples show passengers on the stair-foot landing, along
+the paved side approach and joining the local street. No visible disconnect in
+these samples; preserve the distinction from every-frame or both-style acceptance.
+The later pause18:48 was after capture end. UI observed longest frame50.4ms at that
+pause, not an attributed recording-wide maximum or hardware performance acceptance.
+
+Retain the bounded apron on physical tests/three-seed mesh evidence and this
+Miniature traversal. Next finish matched Anime ground traversal, then close further
+station detailing and return to ranked neighborhood fidelity gaps. Tab39 paused
+at18:48 with details open; tab38 retained. No commit/push. Goal active.
+
+## Learning record and goal reconciliation — 2026-10-13
+
+Recorded the multidimensional reference/fidelity diagnosis in
+[fidelity-review-current.md](fidelity-review-current.md#recorded-learnings-and-next-goal--2026-10-13)
+and updated [the goal](living-city-goal.md) and README current priority.
+Matched Anime station traversal now joins Miniature evidence; retain the bounded
+station-to-street correction and stop further station detailing. Sampled motion
+and three-seed mesh support do not establish complete release acceptance.
+
+Next primary workstream: neighborhood frontage and landscape integration, starting
+with a matched baseline and diagnosis of bank/path geometry, planting visibility,
+clearance and land ownership. Sparse-looking banks are an observed perceptual gap,
+not a proven generation bug. Preserve compact fabric and existing retained changes.
+One bounded intervention at a time; reassess after two unsuccessful attempts.
+Current saves/replay, real day-cycle motion, sound, narrow views, named-hardware
+performance and user artistic acceptance remain open. This update changes documents
+only; it does not commit, push, pause or complete the active goal.
+
+### Riverbank baseline and failed placement probe — 2026-10-13
+
+No runtime edits this turn. New `scripts/audit-riverbank-planting.mjs` extracts the
+current renderer's rules and writes `validation/riverbank-planting-baseline.json`.
+Three seeds have no trees within17 m of the water edge; only13/11/11 survive in
+the17–50 m band. A proposed inner-strip tree line (82 candidates/seed) has zero
+eligible positions under current clearance plus conservative transport checks.
+Do not implement that line or bypass clearance. Inspect the bank cross-section,
+actual crown size and potential smaller planting before the next visual candidate.
+
+Matched baseline styles and metadata are in `screenshots/riverbank-planting/`.
+Ordinary export `.tools/riverbank-review-save.json`:seed87231 tick85169. Tab39 remains
+paused at noon lighting preview, Miniature, High,50mm,DOFoff; world settings open.
+No numerical camera pose export, but Hold low waterfront view was retained with
+no movement between styles. Full goal remains active and incomplete.
+
+### Bank planting implementation — 2026-10-13
+
+New `web/src/render/riverbank-planting.ts` adds small trees at2.7m bank offset to
+existing `city.ts` tree batches. Scale1.8;84candidates;76retained on each three-seed
+mature audit. Existing clearance and tree RNG remain unchanged. Added tests measure
+actual foliage/trunk envelopes;10focused tests and TypeScript pass. Both-style
+held-waterfront captures show a modest improvement at neighborhood scale.
+
+See `validation/riverbank-planting.md` for dimensions, limitations and comparisons.
+The earlier baseline audit remains historical; audit script now accepts an output
+path and defaults to riverbank-planting-current.json to avoid overwriting it.
+Next: developing/construction and crossing review plus ordinary motion for this
+candidate. No further planting variants yet. Tab39 paused,Anime,noon preview,
+DOFoff,50mm,High,allqueues0 before style change. Checkpoint remains
+`.tools/riverbank-review-save.json`. No engine/WASM edits, commit or push this turn.
+
+### Bank bridge clearance and motion — 2026-10-13
+
+Corrected bridge tree clearance in city.ts: half-width+2.5m sidewalk+scaled2.38m
+crown radius; broad phase includes the larger reach. This removes2new bank trees
+per mature seed (74remain), with all earlier outer/inland counts unchanged.
+`scripts/audit-riverbank-growth.mjs` covers41ordinary checkpoints with zero checked
+bridge/rail envelope conflicts. Original failing24case report preserved. Actual
+bridge construction saves are `.tools/walking-offset-{seed}/bridge-stage-*.json`.
+Eightfocusedtests and TypeScript pass; no engine/WASM changes.
+
+Anime20s live recording and six-frame sheet saved under recordings and
+screenshots/riverbank-planting. Only initial orbit thenhold is visible in samples;
+return drag may have occurred after capture. Tab39paused,Anime,noonpreview,
+DOFoff,50mm,High,detailsopen; sourcecheckpoint85169 has since advanced normally.
+Next reimport `.tools/riverbank-review-save.json`, restore lowwaterfront preset and
+record corrected Miniature motion after normalreadiness. Then close bounded
+plantingwork unless new failure appears. No additional variants. Goal incomplete;
+no commit/push. See riverbank-planting.md for limitations and57msrollingframeevent.
+
+### Miniature motion done; next neighborhood diagnosis — 2026-10-13
+
+Corrected Miniature bank recording and sixframes saved; both-style sampled motion
+supports retaining the bounded planting correction. Stop adding planting variants.
+No runtime edits this turn. Full release limitations remain in riverbank-planting.md.
+
+Normal Watch after capture showed dense compact fabric. Held it via Explore and
+captured DOF off/on; depth separation is clearly present. Repeated roof enclosures,
+window patterns and subdued materials remain. Next diagnose architecture/material
+hierarchy in this ordinary neighborhood before selecting one meaningful scene-scale
+change. Do not repeat density/DOF implementation or small station embellishment.
+Tab39 nowpaused Miniature,50mm,High,noonpreview,DOFon,held neighborhood from Watch,
+detailsclosed. Source85169save has advanced through the recording. No commit/push.
+
+### Goal and learnings reconciled — 2026-10-13
+
+Recorded the current eight-dimension assessment in the consolidated learning record
+in fidelity-review-current.md. Updated living-city-goal.md and README priority:
+architectural/material hierarchy is next; station and planting corrections are
+retained. Removed conflicting bank-first instructions and replaced their acceptance
+gates with neighborhood-scale architecture/material comparisons. Preserve existing
+compact density and DOF; use exact new baselines, check both styles and three seeds,
+and reassess after two unsuccessful attempts. Full spec08 and user artistic gates
+remain open. Documentation-only update; no new test or visual acceptance claimed.
+
+### Architecture distribution measured — 2026-10-13
+
+New production-helper audit/report: scripts/audit-neighborhood-architecture.mjs and
+validation/neighborhood-architecture-current.json. Three ordinary saves: 61–63%
+low-rise machiya/shop-house, 68–69% neutral palettes, all eleven wall swatches
+present. Counts are not screen-space coverage. Source confirms repeated flat-roof
+service cluster and shared 0.85 roughness for walls/roofs/concrete. Next capture an
+exact ordinary-neighborhood baseline and isolate lighting/material response before
+adding another family. No runtime edit or new browser capture this turn.
+
+### Held style/light comparison — 2026-10-13
+
+Four new held-neighborhood screenshots in screenshots/neighborhood-materials:
+Anime/Miniature, noon/16:00, paused, 50mm, High WebGPU, DOF off. No camera change
+between captures. Style distinction is clearly visible; Miniature remains darker
+and smoother at both hours. Read metadata.json for missing exact pose/tick limits.
+No runtime change. Avoid reopening ambient-fill tuning (see daylight-fill.md).
+Next establish a deterministic review pose/save before a bounded material-response
+A/B. Tab39 remains paused Anime, noon preview, DOF off, neighborhood held in Explore.
+
+### Roughness trial closed — 2026-10-13
+
+Trial rejected in both-style station neighborhood comparison. Kit restored exactly
+to pre-turn contents,15focusedtests pass. Evidence: neighborhood-material-response.md,
+rejected patch and roughness screenshots/metadata. One failed material attempt;
+stop scalar tuning and return to scene-scale architectural composition. New ordinary
+checkpoint .tools/material-review-save.json seed87231/tick86278 supports deterministic
+View station framing. Actor counters differ before export vs restore; do not claim
+exact actor frames. Tab39 reimporting that checkpoint normally after source restore,
+paused Anime,DOFoff; restore noon preview and View station after readiness. Goal active.
+
+### Office side facades: final stills, motion next — 2026-10-13
+
+Candidate in kit.ts carries office ribbons around sides only where clearance
+>=0.24m. TypeScript and15focusedtests pass. New ray test covers side glazing in both
+styles. Production-mesh audit across173/173/211offices adds43,080/39,336/46,560triangles;
+no new/worsened checked parcel overhangs. Existing30/29/64violations persist; inspect
+report IDs for separate narrow-lot fitting correctness work. Candidate patch saved.
+Final both-style stills show a modest but visible office/residential distinction.
+Next verify motion and developing-state visuals, then close this bounded change;
+do not embellish. See office-side-facades.md for limitations. Tab39paused Miniature,
+noonpreview,DOFoff,50mm,High,deterministic View station at saved86278world; queues0
+before framing/style switch. No commit/push. Goal active.
+
+### Learning record and goal synchronized — 2026-10-13
+
+User-requested documentation reconciliation: fidelity-review-current.md now has a
+current decision record; living-city-goal.md has an explicit execution order. Final
+office stills are complete; motion/developing checks remain next, followed by
+diagnosis of existing parcel overhangs and a fresh multidimensional ranking.
+Preserve compact fabric, working DOF and style distinction; stop rejected roughness
+tuning and closed station/planting embellishment. No runtime change, new acceptance,
+commit or push in this documentation update. Goal status is unchanged.
+
+### Office motion sampled in both styles — 2026-10-13
+
+Three new 20s clips and six-frame contact sheets in office-side-facades evidence.
+Miniature and corrected Anime clips include orbit; first Anime clip is held activity
+only and preserved with that limitation. Sampled facade bands stay coherent. No
+construction was active; developing/live construction remains next. Rolling frame
+maxima around80ms remain unisolated. Source unchanged; no test rerun warranted.
+Tab39 paused Anime/noon preview/DOF off/50mm/High after orbit, details open. Simulation
+has advanced beyond the86278save; reimport for exact baseline work. Goal active.
+
+### Draft PR checkpoint — 2026-10-13
+
+Fresh build and WASM rebuild pass. Full native suite:443passed/27failed/54ignored.
+Post-rebuild full web suite:606passed/11failed. Restore endpoint mismatches and an
+obsolete legacy-schema assertion remain; do not treat this checkpoint as merge-ready.
+See pr-checkpoint-2026-10-13.md and command evidence. Current source, tests, docs and
+curated reference/validation artifacts captured for review; local toolchains, caches,
+build outputs and secrets remain ignored. Existing safety stash is preserved.

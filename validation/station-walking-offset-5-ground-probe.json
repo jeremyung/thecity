@@ -1,0 +1,14 @@
+{
+  "scope": "Plan-only centerline and lateral +/-0.33m probe against production approach outline, straight ground carriageways and emitted ground polygons; includes production junction footprints; excludes arterial sidewalks and height.",
+  "count": 330,
+  "uncovered": [],
+  "bodyUncovered": [
+    {
+      "leg": 7,
+      "point": [
+        111.9222313659316,
+        -82.9253914257454
+      ]
+    }
+  ]
+}

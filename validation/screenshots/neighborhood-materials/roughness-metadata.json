@@ -1,0 +1,33 @@
+{
+  "seed": 87231,
+  "tick": 86278,
+  "weather": {
+    "kind": "clear",
+    "intensity": 0
+  },
+  "source": ".tools/material-review-save.json",
+  "saveSha256": "0f0f0921ac71cc42a02968776c7c0ac931c27b925ee4b7576cfc23eed4210ef6",
+  "framing": "View station, first station in world order; production reviewStation calculation",
+  "station": 38,
+  "position": [
+    9.789585395266613,
+    191.96530119617364,
+    56.51572754964333
+  ],
+  "target": [
+    159.3511,
+    8,
+    -82.81525
+  ],
+  "poseEvidence": "Offline production framing calculation with no-op controls update, not a browser camera readback; matched screenshots must verify composition.",
+  "lensMm": 50,
+  "viewport": [
+    1280,
+    720
+  ],
+  "quality": "high",
+  "backend": "WebGPU",
+  "lightingPreview": 12,
+  "dof": false,
+  "actorLimit": "Pre-export browser showed 465 journeys; restored snapshot showed 461. Geometry comparison only, not exact actor-frame equivalence."
+}

@@ -1,0 +1,4917 @@
+{
+  "method": "Open building centers in station-centered, world-clamped squares. Families use current production massing functions and kit envelope helpers. Palette family only; dummy neutral swatch does not affect family selection.",
+  "limitations": [
+    "Counts are not screen-space proportions, facade area or frontage continuity.",
+    "An access record does not establish visible or unobstructed access.",
+    "Shop/cafe activity is not a measurement of pedestrian footfall.",
+    "Seed5 at tick80000 remains developing; construction is excluded.",
+    "Tower and fallback categories are coarse; no new density or diversity targets are inferred."
+  ],
+  "runtimeSha256": "4d24f01f6f9ab50f15c369e4712cd896f52abcd8659ec625e5b3ace4789b204d",
+  "rows": [
+    {
+      "source": ".tools/urban-form/seed-87231.json",
+      "sha256": "004184e8caabd041a5841d0062d2db6d62a9aaef6f40b47f55187493b6de0918",
+      "seed": 87231,
+      "tick": 80000,
+      "stage": "Maturity",
+      "station": 38,
+      "crops": [
+        {
+          "sizeM": 250,
+          "bounds": [
+            34.3511,
+            -207.81525,
+            284.3511,
+            42.18475000000001
+          ],
+          "count": 143,
+          "kinds": {
+            "home": 26,
+            "apartment": 43,
+            "cafe": 23,
+            "shop": 17,
+            "office": 34
+          },
+          "floors": {
+            "1": 2,
+            "2": 20,
+            "3": 24,
+            "4": 11,
+            "5": 19,
+            "6": 21,
+            "7": 8,
+            "8": 14,
+            "9": 7,
+            "10": 6,
+            "12": 10,
+            "18": 1
+          },
+          "massingFamilies": {
+            "machiya": 9,
+            "walkup": 36,
+            "shop-house": 34,
+            "tower-apartment": 7,
+            "setback-office": 30,
+            "other-home": 17,
+            "other-cafe": 6,
+            "tower-office": 4
+          },
+          "paletteFamilies": {
+            "neutral": 88,
+            "brick": 11,
+            "sage": 7,
+            "terracotta": 6,
+            "blue-gray": 14,
+            "warm-stone": 17
+          },
+          "accessRecords": 143,
+          "activeShopCafeCount": 40,
+          "buildings": [
+            {
+              "id": 89,
+              "x": 42.500732,
+              "z": -198.47768,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 23
+            },
+            {
+              "id": 99,
+              "x": 99.923416,
+              "z": -197.49309,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 21
+            },
+            {
+              "id": 103,
+              "x": 38.49977,
+              "z": -163.14438,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 23
+            },
+            {
+              "id": 105,
+              "x": 48.274952,
+              "z": -162.62473,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 23
+            },
+            {
+              "id": 115,
+              "x": 55.44657,
+              "z": -134.97647,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 31
+            },
+            {
+              "id": 117,
+              "x": 60.044174,
+              "z": -114.663445,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 33
+            },
+            {
+              "id": 134,
+              "x": 112.41717,
+              "z": -166.58987,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 21
+            },
+            {
+              "id": 136,
+              "x": 121.674644,
+              "z": -168.79808,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 19
+            },
+            {
+              "id": 138,
+              "x": 124.263954,
+              "z": -202.88164,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 19
+            },
+            {
+              "id": 152,
+              "x": 112.3956,
+              "z": -106.4686,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 35
+            },
+            {
+              "id": 154,
+              "x": 126.58792,
+              "z": -106.4686,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 35
+            },
+            {
+              "id": 182,
+              "x": 103.33406,
+              "z": -206.14612,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 120
+            },
+            {
+              "id": 200,
+              "x": 134.21947,
+              "z": -171.76305,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 19
+            },
+            {
+              "id": 344,
+              "x": 53.890396,
+              "z": -197.1614,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 157
+            },
+            {
+              "id": 346,
+              "x": 167.99638,
+              "z": -179.64417,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 17
+            },
+            {
+              "id": 382,
+              "x": 180.77495,
+              "z": -182.55597,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 17
+            },
+            {
+              "id": 384,
+              "x": 193.18819,
+              "z": -185.38452,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 15
+            },
+            {
+              "id": 422,
+              "x": 206.57408,
+              "z": -188.43472,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 13
+            },
+            {
+              "id": 457,
+              "x": 218.65302,
+              "z": -191.1871,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 13
+            },
+            {
+              "id": 504,
+              "x": 230.32368,
+              "z": -193.84645,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 13
+            },
+            {
+              "id": 508,
+              "x": 254.16536,
+              "z": -200.78433,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 538,
+              "x": 263.74042,
+              "z": -197.24783,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "other-cafe",
+              "accessRoad": 11
+            },
+            {
+              "id": 542,
+              "x": 272.2834,
+              "z": -196.44206,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 568,
+              "x": 127.00692,
+              "z": -152.77632,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 387
+            },
+            {
+              "id": 570,
+              "x": 112.229866,
+              "z": -149.0665,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 387
+            },
+            {
+              "id": 685,
+              "x": 155.1747,
+              "z": -176.72253,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 511
+            },
+            {
+              "id": 687,
+              "x": 280.39194,
+              "z": -196.58427,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "other-cafe",
+              "accessRoad": 11
+            },
+            {
+              "id": 689,
+              "x": 140.2981,
+              "z": -156.11311,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 511
+            },
+            {
+              "id": 756,
+              "x": 108.08459,
+              "z": -124.23536,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 387
+            },
+            {
+              "id": 874,
+              "x": 139.02838,
+              "z": -104.337524,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 572
+            },
+            {
+              "id": 876,
+              "x": 121.66939,
+              "z": -125.94603,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 387
+            },
+            {
+              "id": 975,
+              "x": 223.64107,
+              "z": -176.20296,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 692
+            },
+            {
+              "id": 1131,
+              "x": 133.43156,
+              "z": -126.818985,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 572
+            },
+            {
+              "id": 1139,
+              "x": 208.98251,
+              "z": -172.68022,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 692
+            },
+            {
+              "id": 1153,
+              "x": 154.59456,
+              "z": -104.99055,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 572
+            },
+            {
+              "id": 1155,
+              "x": 194.78813,
+              "z": -169.27565,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 692
+            },
+            {
+              "id": 1157,
+              "x": 158.33678,
+              "z": -160.80493,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 511
+            },
+            {
+              "id": 1178,
+              "x": 181.99582,
+              "z": -166.19028,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 692
+            },
+            {
+              "id": 1182,
+              "x": 170.2749,
+              "z": -163.38268,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 692
+            },
+            {
+              "id": 1189,
+              "x": 150.3705,
+              "z": -126.3162,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 572
+            },
+            {
+              "id": 1195,
+              "x": 268.32355,
+              "z": -175.02296,
+              "kind": "office",
+              "floors": 12,
+              "family": "tower-office",
+              "accessRoad": 1151
+            },
+            {
+              "id": 1197,
+              "x": 162.76512,
+              "z": -129.79082,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 692
+            },
+            {
+              "id": 1201,
+              "x": 266.85928,
+              "z": -167.75418,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1151
+            },
+            {
+              "id": 1203,
+              "x": 176.37872,
+              "z": -133.20854,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 692
+            },
+            {
+              "id": 1205,
+              "x": 252.52127,
+              "z": -171.10193,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 1151
+            },
+            {
+              "id": 1207,
+              "x": 265.05713,
+              "z": -158.80814,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 956
+            },
+            {
+              "id": 1214,
+              "x": 250.95056,
+              "z": -163.30463,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 956
+            },
+            {
+              "id": 1219,
+              "x": 263.13763,
+              "z": -149.27943,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 956
+            },
+            {
+              "id": 1224,
+              "x": 249.21835,
+              "z": -154.70572,
+              "kind": "home",
+              "floors": 8,
+              "family": "other-home",
+              "accessRoad": 956
+            },
+            {
+              "id": 1226,
+              "x": 261.06433,
+              "z": -138.98709,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 956
+            },
+            {
+              "id": 1228,
+              "x": 189.77199,
+              "z": -136.57098,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 692
+            },
+            {
+              "id": 1234,
+              "x": 167.62027,
+              "z": -105.27743,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1239,
+              "x": 247.4738,
+              "z": -146.04552,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 956
+            },
+            {
+              "id": 1241,
+              "x": 245.88934,
+              "z": -138.17995,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 956
+            },
+            {
+              "id": 1243,
+              "x": 202.25581,
+              "z": -139.70508,
+              "kind": "office",
+              "floors": 12,
+              "family": "tower-office",
+              "accessRoad": 692
+            },
+            {
+              "id": 1260,
+              "x": 259.08636,
+              "z": -129.1681,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 956
+            },
+            {
+              "id": 1262,
+              "x": 214.32402,
+              "z": -142.73485,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 692
+            },
+            {
+              "id": 1272,
+              "x": 244.19008,
+              "z": -129.7445,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1274,
+              "x": 180.45741,
+              "z": -107.36173,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1284,
+              "x": 52.612423,
+              "z": -146.30453,
+              "kind": "office",
+              "floors": 4,
+              "family": "setback-office",
+              "accessRoad": 1253
+            },
+            {
+              "id": 1288,
+              "x": 227.45361,
+              "z": -150.63168,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 956
+            },
+            {
+              "id": 1297,
+              "x": 192.35727,
+              "z": -108.72373,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1303,
+              "x": 243.61685,
+              "z": -113.23838,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1311,
+              "x": 253.26639,
+              "z": -112.21853,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1314,
+              "x": 262.5813,
+              "z": -111.23405,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1327,
+              "x": 268.7581,
+              "z": -129.81929,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1294
+            },
+            {
+              "id": 1329,
+              "x": 271.24554,
+              "z": -140.2562,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1294
+            },
+            {
+              "id": 1337,
+              "x": 273.90182,
+              "z": -150.21773,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1294
+            },
+            {
+              "id": 1344,
+              "x": 276.2991,
+              "z": -160.48895,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1294
+            },
+            {
+              "id": 1346,
+              "x": 252.3609,
+              "z": -101.68625,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1306
+            },
+            {
+              "id": 1351,
+              "x": 242.91226,
+              "z": -102.1577,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1306
+            },
+            {
+              "id": 1354,
+              "x": 279.27158,
+              "z": -125.989944,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1356,
+              "x": 271.11246,
+              "z": -110.332405,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1359,
+              "x": 260.46887,
+              "z": -101.28392,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1306
+            },
+            {
+              "id": 1361,
+              "x": 278.44376,
+              "z": -169.32259,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1294
+            },
+            {
+              "id": 1363,
+              "x": 283.25778,
+              "z": -134.48744,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1294
+            },
+            {
+              "id": 1366,
+              "x": 268.1208,
+              "z": -100.93644,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 1306
+            },
+            {
+              "id": 1368,
+              "x": 205.23256,
+              "z": -110.19006,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1372,
+              "x": 277.9337,
+              "z": -109.61148,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1237
+            },
+            {
+              "id": 1410,
+              "x": 233.05144,
+              "z": -103.22937,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1384
+            },
+            {
+              "id": 1412,
+              "x": 219.17772,
+              "z": -112.80119,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1384
+            },
+            {
+              "id": 1437,
+              "x": 283.40314,
+              "z": -185.1213,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "other-cafe",
+              "accessRoad": 1415
+            },
+            {
+              "id": 1600,
+              "x": 251.23775,
+              "z": -59.579697,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1603,
+              "x": 265.4937,
+              "z": -59.579697,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1605,
+              "x": 273.62964,
+              "z": -59.579697,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1607,
+              "x": 257.78815,
+              "z": -59.579697,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1612,
+              "x": 243.78802,
+              "z": -59.579697,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1614,
+              "x": 281.5268,
+              "z": -59.579697,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1617,
+              "x": 264.74344,
+              "z": -42.590237,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1628,
+              "x": 255.70654,
+              "z": -42.590237,
+              "kind": "home",
+              "floors": 8,
+              "family": "other-home",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1630,
+              "x": 275.31805,
+              "z": -42.590237,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1635,
+              "x": 246.12146,
+              "z": -43.286396,
+              "kind": "office",
+              "floors": 12,
+              "family": "tower-office",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1652,
+              "x": 235.9774,
+              "z": -44.844666,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1470
+            },
+            {
+              "id": 1672,
+              "x": 235.26936,
+              "z": -59.579697,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1643
+            },
+            {
+              "id": 1712,
+              "x": 270.43237,
+              "z": -28.894064,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1677
+            },
+            {
+              "id": 1736,
+              "x": 280.03934,
+              "z": -27.311195,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1677
+            },
+            {
+              "id": 1754,
+              "x": 213.20808,
+              "z": -62.69593,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1444
+            },
+            {
+              "id": 1756,
+              "x": 213.92691,
+              "z": -49.000725,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1643
+            },
+            {
+              "id": 1758,
+              "x": 264.87183,
+              "z": -5.4720964,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1677
+            },
+            {
+              "id": 1760,
+              "x": 257.6046,
+              "z": -8.029329,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1677
+            },
+            {
+              "id": 1785,
+              "x": 214.31908,
+              "z": -35.14086,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1744
+            },
+            {
+              "id": 1789,
+              "x": 249.43971,
+              "z": -10.902434,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1677
+            },
+            {
+              "id": 1797,
+              "x": 214.65317,
+              "z": -22.73781,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 1744
+            },
+            {
+              "id": 1811,
+              "x": 240.43027,
+              "z": -15.225038,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1677
+            },
+            {
+              "id": 1833,
+              "x": 214.56839,
+              "z": -10.523136,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1809
+            },
+            {
+              "id": 1857,
+              "x": 190.71072,
+              "z": -10.385765,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1809
+            },
+            {
+              "id": 1861,
+              "x": 190.28186,
+              "z": -22.534178,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1880,
+              "x": 189.94797,
+              "z": -31.992136,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1889,
+              "x": 189.53622,
+              "z": -43.65486,
+              "kind": "office",
+              "floors": 18,
+              "family": "tower-office",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1897,
+              "x": 188.96405,
+              "z": -59.862732,
+              "kind": "home",
+              "floors": 7,
+              "family": "other-home",
+              "accessRoad": 1444
+            },
+            {
+              "id": 1902,
+              "x": 159.39008,
+              "z": -23.74655,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1905,
+              "x": 158.11263,
+              "z": -37.12988,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1909,
+              "x": 157.10791,
+              "z": -49.59746,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1914,
+              "x": 155.56886,
+              "z": -61.82378,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1406
+            },
+            {
+              "id": 1924,
+              "x": 126.41977,
+              "z": -51.305466,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 1648
+            },
+            {
+              "id": 1934,
+              "x": 124.81221,
+              "z": -63.457855,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1406
+            },
+            {
+              "id": 1964,
+              "x": 128.3293,
+              "z": -39.02183,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1932
+            },
+            {
+              "id": 1988,
+              "x": 130.18733,
+              "z": -27.069553,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1932
+            },
+            {
+              "id": 1995,
+              "x": 132.02277,
+              "z": -15.262529,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1932
+            },
+            {
+              "id": 2013,
+              "x": 62.72738,
+              "z": -102.695625,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1982
+            },
+            {
+              "id": 2028,
+              "x": 160.43445,
+              "z": -9.47796,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 2010
+            },
+            {
+              "id": 2066,
+              "x": 64.46474,
+              "z": -62.66828,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 1967
+            },
+            {
+              "id": 2068,
+              "x": 56.799362,
+              "z": -62.685783,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1967
+            },
+            {
+              "id": 2091,
+              "x": 73.22003,
+              "z": -62.64345,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 1967
+            },
+            {
+              "id": 2192,
+              "x": 134.53137,
+              "z": -3.365801,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 2169
+            },
+            {
+              "id": 3192,
+              "x": 65.1757,
+              "z": -50.846146,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 3159
+            },
+            {
+              "id": 3238,
+              "x": 69.865974,
+              "z": -32.300262,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 3159
+            },
+            {
+              "id": 3262,
+              "x": 69.995995,
+              "z": -19.927864,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 3228
+            },
+            {
+              "id": 3289,
+              "x": 70.62098,
+              "z": -0.36777496,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 3228
+            },
+            {
+              "id": 3291,
+              "x": 41.745728,
+              "z": -105.70288,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 3257
+            },
+            {
+              "id": 3312,
+              "x": 61.40795,
+              "z": -0.77641964,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 3228
+            },
+            {
+              "id": 3315,
+              "x": 48.633217,
+              "z": -61.29306,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 3287
+            },
+            {
+              "id": 3321,
+              "x": 39.661102,
+              "z": -113.87801,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 3257
+            },
+            {
+              "id": 3325,
+              "x": 52.111217,
+              "z": -1.1463737,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 3228
+            },
+            {
+              "id": 3372,
+              "x": 61.77492,
+              "z": -32.1952,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 3342
+            },
+            {
+              "id": 3375,
+              "x": 60.4981,
+              "z": -20.178211,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 3342
+            },
+            {
+              "id": 3389,
+              "x": 47.140312,
+              "z": 10.421964,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 3347
+            },
+            {
+              "id": 3404,
+              "x": 47.222767,
+              "z": -33.569717,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 3342
+            },
+            {
+              "id": 3478,
+              "x": 39.385628,
+              "z": -32.79176,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 3447
+            },
+            {
+              "id": 3486,
+              "x": 52.14134,
+              "z": -50.911903,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 3447
+            },
+            {
+              "id": 3584,
+              "x": 42.294647,
+              "z": -1.4782104,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3567
+            },
+            {
+              "id": 4783,
+              "x": 254.27336,
+              "z": -181.48734,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 4746
+            },
+            {
+              "id": 4858,
+              "x": 36.86953,
+              "z": -20.831005,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 4829
+            }
+          ]
+        },
+        {
+          "sizeM": 150,
+          "bounds": [
+            84.3511,
+            -157.81525,
+            234.3511,
+            -7.815249999999992
+          ],
+          "count": 43,
+          "kinds": {
+            "shop": 6,
+            "home": 5,
+            "apartment": 12,
+            "office": 12,
+            "cafe": 8
+          },
+          "floors": {
+            "2": 8,
+            "3": 6,
+            "4": 3,
+            "5": 1,
+            "6": 2,
+            "7": 5,
+            "8": 3,
+            "9": 4,
+            "10": 5,
+            "12": 5,
+            "18": 1
+          },
+          "massingFamilies": {
+            "shop-house": 13,
+            "machiya": 1,
+            "walkup": 8,
+            "setback-office": 10,
+            "tower-apartment": 4,
+            "other-home": 4,
+            "tower-office": 2,
+            "other-cafe": 1
+          },
+          "paletteFamilies": {
+            "neutral": 27,
+            "warm-stone": 6,
+            "brick": 3,
+            "blue-gray": 5,
+            "terracotta": 2
+          },
+          "accessRecords": 43,
+          "activeShopCafeCount": 14,
+          "buildings": [
+            {
+              "id": 152,
+              "x": 112.3956,
+              "z": -106.4686,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 35
+            },
+            {
+              "id": 154,
+              "x": 126.58792,
+              "z": -106.4686,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 35
+            },
+            {
+              "id": 568,
+              "x": 127.00692,
+              "z": -152.77632,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 387
+            },
+            {
+              "id": 570,
+              "x": 112.229866,
+              "z": -149.0665,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 387
+            },
+            {
+              "id": 689,
+              "x": 140.2981,
+              "z": -156.11311,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 511
+            },
+            {
+              "id": 756,
+              "x": 108.08459,
+              "z": -124.23536,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 387
+            },
+            {
+              "id": 874,
+              "x": 139.02838,
+              "z": -104.337524,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 572
+            },
+            {
+              "id": 876,
+              "x": 121.66939,
+              "z": -125.94603,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 387
+            },
+            {
+              "id": 1131,
+              "x": 133.43156,
+              "z": -126.818985,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 572
+            },
+            {
+              "id": 1153,
+              "x": 154.59456,
+              "z": -104.99055,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 572
+            },
+            {
+              "id": 1189,
+              "x": 150.3705,
+              "z": -126.3162,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 572
+            },
+            {
+              "id": 1197,
+              "x": 162.76512,
+              "z": -129.79082,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 692
+            },
+            {
+              "id": 1203,
+              "x": 176.37872,
+              "z": -133.20854,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 692
+            },
+            {
+              "id": 1228,
+              "x": 189.77199,
+              "z": -136.57098,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 692
+            },
+            {
+              "id": 1234,
+              "x": 167.62027,
+              "z": -105.27743,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1243,
+              "x": 202.25581,
+              "z": -139.70508,
+              "kind": "office",
+              "floors": 12,
+              "family": "tower-office",
+              "accessRoad": 692
+            },
+            {
+              "id": 1262,
+              "x": 214.32402,
+              "z": -142.73485,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 692
+            },
+            {
+              "id": 1274,
+              "x": 180.45741,
+              "z": -107.36173,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1288,
+              "x": 227.45361,
+              "z": -150.63168,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 956
+            },
+            {
+              "id": 1297,
+              "x": 192.35727,
+              "z": -108.72373,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1368,
+              "x": 205.23256,
+              "z": -110.19006,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1212
+            },
+            {
+              "id": 1410,
+              "x": 233.05144,
+              "z": -103.22937,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1384
+            },
+            {
+              "id": 1412,
+              "x": 219.17772,
+              "z": -112.80119,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1384
+            },
+            {
+              "id": 1754,
+              "x": 213.20808,
+              "z": -62.69593,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1444
+            },
+            {
+              "id": 1756,
+              "x": 213.92691,
+              "z": -49.000725,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1643
+            },
+            {
+              "id": 1785,
+              "x": 214.31908,
+              "z": -35.14086,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1744
+            },
+            {
+              "id": 1797,
+              "x": 214.65317,
+              "z": -22.73781,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 1744
+            },
+            {
+              "id": 1833,
+              "x": 214.56839,
+              "z": -10.523136,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1809
+            },
+            {
+              "id": 1857,
+              "x": 190.71072,
+              "z": -10.385765,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1809
+            },
+            {
+              "id": 1861,
+              "x": 190.28186,
+              "z": -22.534178,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1880,
+              "x": 189.94797,
+              "z": -31.992136,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1889,
+              "x": 189.53622,
+              "z": -43.65486,
+              "kind": "office",
+              "floors": 18,
+              "family": "tower-office",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1897,
+              "x": 188.96405,
+              "z": -59.862732,
+              "kind": "home",
+              "floors": 7,
+              "family": "other-home",
+              "accessRoad": 1444
+            },
+            {
+              "id": 1902,
+              "x": 159.39008,
+              "z": -23.74655,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1905,
+              "x": 158.11263,
+              "z": -37.12988,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1909,
+              "x": 157.10791,
+              "z": -49.59746,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1638
+            },
+            {
+              "id": 1914,
+              "x": 155.56886,
+              "z": -61.82378,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1406
+            },
+            {
+              "id": 1924,
+              "x": 126.41977,
+              "z": -51.305466,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 1648
+            },
+            {
+              "id": 1934,
+              "x": 124.81221,
+              "z": -63.457855,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1406
+            },
+            {
+              "id": 1964,
+              "x": 128.3293,
+              "z": -39.02183,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1932
+            },
+            {
+              "id": 1988,
+              "x": 130.18733,
+              "z": -27.069553,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1932
+            },
+            {
+              "id": 1995,
+              "x": 132.02277,
+              "z": -15.262529,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1932
+            },
+            {
+              "id": 2028,
+              "x": 160.43445,
+              "z": -9.47796,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 2010
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": ".tools/urban-form/seed-0.json",
+      "sha256": "61a2ac6368061a59e2b43de0d632ee8add102b5add072380f7d3af46ddf23d99",
+      "seed": 0,
+      "tick": 80000,
+      "stage": "Maturity",
+      "station": 34,
+      "crops": [
+        {
+          "sizeM": 250,
+          "bounds": [
+            7.312909999999988,
+            -210.426544,
+            257.31291,
+            39.57345599999999
+          ],
+          "count": 122,
+          "kinds": {
+            "shop": 16,
+            "home": 20,
+            "apartment": 46,
+            "cafe": 17,
+            "office": 23
+          },
+          "floors": {
+            "1": 5,
+            "2": 17,
+            "3": 16,
+            "4": 12,
+            "5": 15,
+            "6": 10,
+            "7": 9,
+            "8": 9,
+            "9": 6,
+            "10": 9,
+            "12": 6,
+            "14": 1,
+            "16": 2,
+            "21": 1,
+            "27": 1,
+            "29": 2,
+            "32": 1
+          },
+          "massingFamilies": {
+            "shop-house": 27,
+            "other-home": 13,
+            "machiya": 7,
+            "other-apartment": 1,
+            "other-cafe": 4,
+            "tower-apartment": 11,
+            "walkup": 34,
+            "setback-office": 20,
+            "tower-office": 3,
+            "other-shop": 2
+          },
+          "paletteFamilies": {
+            "neutral": 82,
+            "sage": 10,
+            "brick": 8,
+            "blue-gray": 7,
+            "terracotta": 5,
+            "warm-stone": 10
+          },
+          "accessRecords": 122,
+          "activeShopCafeCount": 33,
+          "buildings": [
+            {
+              "id": 100,
+              "x": 37.82336,
+              "z": -176.58156,
+              "kind": "shop",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 17
+            },
+            {
+              "id": 122,
+              "x": 88.56865,
+              "z": -134.11107,
+              "kind": "home",
+              "floors": 3,
+              "family": "other-home",
+              "accessRoad": 33
+            },
+            {
+              "id": 154,
+              "x": 107.21294,
+              "z": -166.23366,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 15
+            },
+            {
+              "id": 177,
+              "x": 13.114199,
+              "z": -111.35961,
+              "kind": "apartment",
+              "floors": 2,
+              "family": "other-apartment",
+              "accessRoad": 31
+            },
+            {
+              "id": 179,
+              "x": 97.30371,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 192,
+              "x": 111.24913,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 213,
+              "x": 98.394295,
+              "z": -112.754364,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 33
+            },
+            {
+              "id": 235,
+              "x": 118.45594,
+              "z": -163.13895,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 15
+            },
+            {
+              "id": 237,
+              "x": 132.71404,
+              "z": -160.59723,
+              "kind": "apartment",
+              "floors": 16,
+              "family": "tower-apartment",
+              "accessRoad": 15
+            },
+            {
+              "id": 239,
+              "x": 110.868904,
+              "z": -112.754364,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 256,
+              "x": 125.98099,
+              "z": -134.48624,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 33
+            },
+            {
+              "id": 258,
+              "x": 145.7863,
+              "z": -158.47072,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 13
+            },
+            {
+              "id": 346,
+              "x": 156.27197,
+              "z": -156.94147,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 13
+            },
+            {
+              "id": 392,
+              "x": 123.44447,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 33
+            },
+            {
+              "id": 418,
+              "x": 168.55971,
+              "z": -155.35826,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 13
+            },
+            {
+              "id": 420,
+              "x": 153.16006,
+              "z": -134.48624,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 182
+            },
+            {
+              "id": 456,
+              "x": 139.55154,
+              "z": -134.48624,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 515,
+              "x": 180.3407,
+              "z": -153.38084,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 11
+            },
+            {
+              "id": 547,
+              "x": 133.66344,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 617,
+              "x": 168.50531,
+              "z": -134.48624,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 655,
+              "x": 192.04611,
+              "z": -152.12962,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 11
+            },
+            {
+              "id": 694,
+              "x": 183.8454,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 732,
+              "x": 143.46564,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 734,
+              "x": 153.50113,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 764,
+              "x": 204.13892,
+              "z": -150.32243,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 766,
+              "x": 197.57123,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 817,
+              "x": 165.88129,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 16,
+              "family": "tower-apartment",
+              "accessRoad": 182
+            },
+            {
+              "id": 819,
+              "x": 179.93631,
+              "z": -112.754364,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 821,
+              "x": 193.04332,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 847,
+              "x": 23.265228,
+              "z": -175.84966,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 700
+            },
+            {
+              "id": 881,
+              "x": 96.584465,
+              "z": -164.22614,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 697
+            },
+            {
+              "id": 917,
+              "x": 216.04424,
+              "z": -148.81071,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 11
+            },
+            {
+              "id": 954,
+              "x": 209.99873,
+              "z": -134.48624,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 956,
+              "x": 206.67082,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 1069,
+              "x": 24.304438,
+              "z": -160.06442,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 850
+            },
+            {
+              "id": 1115,
+              "x": 220.55704,
+              "z": -134.48624,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 182
+            },
+            {
+              "id": 1123,
+              "x": 83.10066,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 14,
+              "family": "tower-office",
+              "accessRoad": 883
+            },
+            {
+              "id": 1125,
+              "x": 222.06042,
+              "z": -112.754364,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 1131,
+              "x": 231.37254,
+              "z": -134.48624,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 1135,
+              "x": 19.05704,
+              "z": -134.56384,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 850
+            },
+            {
+              "id": 1140,
+              "x": 234.94485,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 1145,
+              "x": 239.50784,
+              "z": -134.48624,
+              "kind": "home",
+              "floors": 3,
+              "family": "other-home",
+              "accessRoad": 182
+            },
+            {
+              "id": 1154,
+              "x": 223.7062,
+              "z": -180.79341,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 1156,
+              "x": 215.51321,
+              "z": -183.04857,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 1168,
+              "x": 206.1359,
+              "z": -185.62973,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 1186,
+              "x": 171.08034,
+              "z": -191.39551,
+              "kind": "shop",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 13
+            },
+            {
+              "id": 1192,
+              "x": 157.54337,
+              "z": -195.16731,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "other-cafe",
+              "accessRoad": 13
+            },
+            {
+              "id": 1212,
+              "x": 8.077078,
+              "z": -134.91745,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1164
+            },
+            {
+              "id": 1232,
+              "x": 155.03267,
+              "z": -204.3779,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1143
+            },
+            {
+              "id": 1240,
+              "x": 254.87595,
+              "z": -139.44543,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1215
+            },
+            {
+              "id": 1430,
+              "x": 99.70978,
+              "z": -64.48695,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1252
+            },
+            {
+              "id": 1440,
+              "x": 99.71357,
+              "z": -52.707783,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1444,
+              "x": 99.71766,
+              "z": -40.001873,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1446,
+              "x": 79.36258,
+              "z": -42.60032,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1210
+            },
+            {
+              "id": 1449,
+              "x": 129.52072,
+              "z": -59.964046,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1451,
+              "x": 129.52577,
+              "z": -44.2452,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1456,
+              "x": 99.72183,
+              "z": -27.022638,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1458,
+              "x": 129.52946,
+              "z": -32.749878,
+              "kind": "apartment",
+              "floors": 29,
+              "family": "tower-apartment",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1461,
+              "x": 151.37796,
+              "z": -49.96011,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1467,
+              "x": 99.725365,
+              "z": -16.033386,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1478,
+              "x": 151.3887,
+              "z": -36.980087,
+              "kind": "office",
+              "floors": 21,
+              "family": "tower-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1480,
+              "x": 99.72884,
+              "z": -5.20452,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1483,
+              "x": 129.5338,
+              "z": -19.285738,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1503,
+              "x": 151.39937,
+              "z": -24.903772,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1505,
+              "x": 151.36604,
+              "z": -63.889145,
+              "kind": "shop",
+              "floors": 4,
+              "family": "other-shop",
+              "accessRoad": 1327
+            },
+            {
+              "id": 1518,
+              "x": 129.53793,
+              "z": -6.4097786,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1528,
+              "x": 151.40854,
+              "z": -13.996061,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1531,
+              "x": 246.97083,
+              "z": -112.64584,
+              "kind": "office",
+              "floors": 12,
+              "family": "tower-office",
+              "accessRoad": 1492
+            },
+            {
+              "id": 1570,
+              "x": 183.25351,
+              "z": -64.20391,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 1475
+            },
+            {
+              "id": 1598,
+              "x": 183.27385,
+              "z": -49.144405,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1602,
+              "x": 80.42599,
+              "z": -29.175179,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1573
+            },
+            {
+              "id": 1606,
+              "x": 200.80641,
+              "z": -61.800568,
+              "kind": "shop",
+              "floors": 4,
+              "family": "other-shop",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1608,
+              "x": 81.654045,
+              "z": -13.590586,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1573
+            },
+            {
+              "id": 1615,
+              "x": 183.29472,
+              "z": -33.69157,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1620,
+              "x": 217.82396,
+              "z": -63.903687,
+              "kind": "apartment",
+              "floors": 32,
+              "family": "tower-apartment",
+              "accessRoad": 1475
+            },
+            {
+              "id": 1625,
+              "x": 200.83047,
+              "z": -43.97767,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1629,
+              "x": 218.66965,
+              "z": -49.677334,
+              "kind": "apartment",
+              "floors": 29,
+              "family": "tower-apartment",
+              "accessRoad": 1568
+            },
+            {
+              "id": 1631,
+              "x": 183.31189,
+              "z": -20.976492,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1653,
+              "x": 200.85335,
+              "z": -27.040361,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1660,
+              "x": 218.93208,
+              "z": -38.45527,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1568
+            },
+            {
+              "id": 1667,
+              "x": 183.32542,
+              "z": -10.95676,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1670,
+              "x": 200.87206,
+              "z": -13.19508,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1677,
+              "x": 219.12856,
+              "z": -26.812395,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1568
+            },
+            {
+              "id": 1680,
+              "x": 200.88902,
+              "z": -0.62785894,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1684,
+              "x": 244.39122,
+              "z": -38.98177,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 1613
+            },
+            {
+              "id": 1686,
+              "x": 219.409,
+              "z": -14.42484,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1568
+            },
+            {
+              "id": 1688,
+              "x": 248.34528,
+              "z": -58.94934,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1508
+            },
+            {
+              "id": 1690,
+              "x": 252.58614,
+              "z": -40.132874,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1613
+            },
+            {
+              "id": 1697,
+              "x": 250.14928,
+              "z": -23.773235,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1613
+            },
+            {
+              "id": 1704,
+              "x": 256.32123,
+              "z": -59.90517,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1508
+            },
+            {
+              "id": 1736,
+              "x": 183.34131,
+              "z": 0.79910135,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 1707
+            },
+            {
+              "id": 1742,
+              "x": 219.29637,
+              "z": -1.3772306,
+              "kind": "apartment",
+              "floors": 27,
+              "family": "tower-apartment",
+              "accessRoad": 1707
+            },
+            {
+              "id": 1781,
+              "x": 205.98856,
+              "z": 16.90423,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1707
+            },
+            {
+              "id": 1798,
+              "x": 151.42715,
+              "z": 0.3634243,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 1770
+            },
+            {
+              "id": 1803,
+              "x": 83.51114,
+              "z": -0.98350906,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1775
+            },
+            {
+              "id": 1819,
+              "x": 254.85493,
+              "z": -4.5173597,
+              "kind": "office",
+              "floors": 4,
+              "family": "setback-office",
+              "accessRoad": 1613
+            },
+            {
+              "id": 1838,
+              "x": 104.85287,
+              "z": 5.1386147,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1812
+            },
+            {
+              "id": 1848,
+              "x": 129.54147,
+              "z": 4.5897775,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1821
+            },
+            {
+              "id": 1887,
+              "x": 40.184505,
+              "z": -5.151608,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1851
+            },
+            {
+              "id": 1892,
+              "x": 41.043163,
+              "z": -62.057873,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1210
+            },
+            {
+              "id": 1894,
+              "x": 35.12957,
+              "z": -42.90644,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1700
+            },
+            {
+              "id": 1901,
+              "x": 36.660736,
+              "z": -18.682814,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1700
+            },
+            {
+              "id": 1908,
+              "x": 29.289042,
+              "z": -4.4468946,
+              "kind": "shop",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 1851
+            },
+            {
+              "id": 1911,
+              "x": 27.327477,
+              "z": -18.10478,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1700
+            },
+            {
+              "id": 1921,
+              "x": 28.847683,
+              "z": -62.043846,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1148
+            },
+            {
+              "id": 1924,
+              "x": 26.142933,
+              "z": -42.36686,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1700
+            },
+            {
+              "id": 1929,
+              "x": 254.27019,
+              "z": 5.6877837,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 1899
+            },
+            {
+              "id": 1931,
+              "x": 20.254822,
+              "z": -61.84423,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 1148
+            },
+            {
+              "id": 1939,
+              "x": 13.235117,
+              "z": -61.639927,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1148
+            },
+            {
+              "id": 1944,
+              "x": 18.676903,
+              "z": -41.918575,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1700
+            },
+            {
+              "id": 1975,
+              "x": 10.771254,
+              "z": -41.443897,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1700
+            },
+            {
+              "id": 1993,
+              "x": 37.40708,
+              "z": -160.02269,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 1970
+            },
+            {
+              "id": 2046,
+              "x": 18.471556,
+              "z": -17.272562,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 2018
+            },
+            {
+              "id": 2057,
+              "x": 18.351507,
+              "z": -3.7394593,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2018
+            },
+            {
+              "id": 2296,
+              "x": 168.19829,
+              "z": -199.23311,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2270
+            },
+            {
+              "id": 2313,
+              "x": 168.00461,
+              "z": -207.8871,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 2270
+            },
+            {
+              "id": 2328,
+              "x": 196.92111,
+              "z": -188.41704,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2299
+            },
+            {
+              "id": 2424,
+              "x": 224.33667,
+              "z": -194.73227,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 2398
+            },
+            {
+              "id": 2448,
+              "x": 194.49487,
+              "z": -209.30243,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2270
+            },
+            {
+              "id": 2453,
+              "x": 217.12851,
+              "z": -209.6529,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 2299
+            },
+            {
+              "id": 2465,
+              "x": 250.20047,
+              "z": -177.78282,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 2432
+            },
+            {
+              "id": 2491,
+              "x": 241.87688,
+              "z": -202.71527,
+              "kind": "home",
+              "floors": 8,
+              "family": "other-home",
+              "accessRoad": 2432
+            }
+          ]
+        },
+        {
+          "sizeM": 150,
+          "bounds": [
+            57.31290999999999,
+            -160.426544,
+            207.31291,
+            -10.426544000000007
+          ],
+          "count": 52,
+          "kinds": {
+            "home": 2,
+            "shop": 8,
+            "cafe": 8,
+            "apartment": 20,
+            "office": 14
+          },
+          "floors": {
+            "1": 1,
+            "2": 8,
+            "3": 4,
+            "4": 5,
+            "5": 5,
+            "6": 2,
+            "7": 5,
+            "8": 4,
+            "9": 5,
+            "10": 7,
+            "12": 2,
+            "14": 1,
+            "16": 1,
+            "21": 1,
+            "29": 1
+          },
+          "massingFamilies": {
+            "other-home": 2,
+            "shop-house": 12,
+            "other-cafe": 2,
+            "walkup": 16,
+            "setback-office": 12,
+            "tower-apartment": 4,
+            "tower-office": 2,
+            "other-shop": 2
+          },
+          "paletteFamilies": {
+            "neutral": 34,
+            "sage": 6,
+            "brick": 4,
+            "blue-gray": 3,
+            "terracotta": 1,
+            "warm-stone": 4
+          },
+          "accessRecords": 52,
+          "activeShopCafeCount": 16,
+          "buildings": [
+            {
+              "id": 122,
+              "x": 88.56865,
+              "z": -134.11107,
+              "kind": "home",
+              "floors": 3,
+              "family": "other-home",
+              "accessRoad": 33
+            },
+            {
+              "id": 179,
+              "x": 97.30371,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 192,
+              "x": 111.24913,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 213,
+              "x": 98.394295,
+              "z": -112.754364,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 33
+            },
+            {
+              "id": 239,
+              "x": 110.868904,
+              "z": -112.754364,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 256,
+              "x": 125.98099,
+              "z": -134.48624,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 33
+            },
+            {
+              "id": 258,
+              "x": 145.7863,
+              "z": -158.47072,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 13
+            },
+            {
+              "id": 346,
+              "x": 156.27197,
+              "z": -156.94147,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 13
+            },
+            {
+              "id": 392,
+              "x": 123.44447,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 33
+            },
+            {
+              "id": 418,
+              "x": 168.55971,
+              "z": -155.35826,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 13
+            },
+            {
+              "id": 420,
+              "x": 153.16006,
+              "z": -134.48624,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 182
+            },
+            {
+              "id": 456,
+              "x": 139.55154,
+              "z": -134.48624,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 515,
+              "x": 180.3407,
+              "z": -153.38084,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 11
+            },
+            {
+              "id": 547,
+              "x": 133.66344,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 617,
+              "x": 168.50531,
+              "z": -134.48624,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 655,
+              "x": 192.04611,
+              "z": -152.12962,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 11
+            },
+            {
+              "id": 694,
+              "x": 183.8454,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 732,
+              "x": 143.46564,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 182
+            },
+            {
+              "id": 734,
+              "x": 153.50113,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 764,
+              "x": 204.13892,
+              "z": -150.32243,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 11
+            },
+            {
+              "id": 766,
+              "x": 197.57123,
+              "z": -134.48624,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 817,
+              "x": 165.88129,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 16,
+              "family": "tower-apartment",
+              "accessRoad": 182
+            },
+            {
+              "id": 819,
+              "x": 179.93631,
+              "z": -112.754364,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 182
+            },
+            {
+              "id": 821,
+              "x": 193.04332,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 956,
+              "x": 206.67082,
+              "z": -112.754364,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 182
+            },
+            {
+              "id": 1123,
+              "x": 83.10066,
+              "z": -112.754364,
+              "kind": "office",
+              "floors": 14,
+              "family": "tower-office",
+              "accessRoad": 883
+            },
+            {
+              "id": 1430,
+              "x": 99.70978,
+              "z": -64.48695,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1252
+            },
+            {
+              "id": 1440,
+              "x": 99.71357,
+              "z": -52.707783,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1444,
+              "x": 99.71766,
+              "z": -40.001873,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1446,
+              "x": 79.36258,
+              "z": -42.60032,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1210
+            },
+            {
+              "id": 1449,
+              "x": 129.52072,
+              "z": -59.964046,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1451,
+              "x": 129.52577,
+              "z": -44.2452,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1456,
+              "x": 99.72183,
+              "z": -27.022638,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1458,
+              "x": 129.52946,
+              "z": -32.749878,
+              "kind": "apartment",
+              "floors": 29,
+              "family": "tower-apartment",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1461,
+              "x": 151.37796,
+              "z": -49.96011,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1467,
+              "x": 99.725365,
+              "z": -16.033386,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1478,
+              "x": 151.3887,
+              "z": -36.980087,
+              "kind": "office",
+              "floors": 21,
+              "family": "tower-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1483,
+              "x": 129.5338,
+              "z": -19.285738,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1273
+            },
+            {
+              "id": 1503,
+              "x": 151.39937,
+              "z": -24.903772,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1505,
+              "x": 151.36604,
+              "z": -63.889145,
+              "kind": "shop",
+              "floors": 4,
+              "family": "other-shop",
+              "accessRoad": 1327
+            },
+            {
+              "id": 1528,
+              "x": 151.40854,
+              "z": -13.996061,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1570,
+              "x": 183.25351,
+              "z": -64.20391,
+              "kind": "cafe",
+              "floors": 4,
+              "family": "other-cafe",
+              "accessRoad": 1475
+            },
+            {
+              "id": 1598,
+              "x": 183.27385,
+              "z": -49.144405,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1602,
+              "x": 80.42599,
+              "z": -29.175179,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1573
+            },
+            {
+              "id": 1606,
+              "x": 200.80641,
+              "z": -61.800568,
+              "kind": "shop",
+              "floors": 4,
+              "family": "other-shop",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1608,
+              "x": 81.654045,
+              "z": -13.590586,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1573
+            },
+            {
+              "id": 1615,
+              "x": 183.29472,
+              "z": -33.69157,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1625,
+              "x": 200.83047,
+              "z": -43.97767,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1631,
+              "x": 183.31189,
+              "z": -20.976492,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1653,
+              "x": 200.85335,
+              "z": -27.040361,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1667,
+              "x": 183.32542,
+              "z": -10.95676,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1350
+            },
+            {
+              "id": 1670,
+              "x": 200.87206,
+              "z": -13.19508,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1350
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": ".tools/urban-form/seed-5.json",
+      "sha256": "032e1dee893377bc763f3d1c5bf747fe679c834ff6bbf424e4bb2518b3f40a87",
+      "seed": 5,
+      "tick": 80000,
+      "stage": "Maturity",
+      "station": 34,
+      "crops": [
+        {
+          "sizeM": 250,
+          "bounds": [
+            -10.874700000000004,
+            -207.97029,
+            239.12529999999998,
+            42.029709999999994
+          ],
+          "count": 114,
+          "kinds": {
+            "cafe": 20,
+            "apartment": 38,
+            "home": 24,
+            "office": 20,
+            "shop": 12
+          },
+          "floors": {
+            "1": 5,
+            "2": 19,
+            "3": 18,
+            "4": 14,
+            "5": 12,
+            "6": 12,
+            "7": 7,
+            "8": 9,
+            "9": 4,
+            "10": 5,
+            "12": 5,
+            "16": 1,
+            "18": 1,
+            "21": 1,
+            "23": 1
+          },
+          "massingFamilies": {
+            "shop-house": 31,
+            "walkup": 33,
+            "machiya": 11,
+            "setback-office": 16,
+            "tower-office": 4,
+            "other-home": 13,
+            "tower-apartment": 5,
+            "other-shop": 1
+          },
+          "paletteFamilies": {
+            "neutral": 74,
+            "warm-stone": 10,
+            "brick": 11,
+            "terracotta": 6,
+            "sage": 2,
+            "blue-gray": 11
+          },
+          "accessRecords": 114,
+          "activeShopCafeCount": 32,
+          "buildings": [
+            {
+              "id": 87,
+              "x": 26.988054,
+              "z": -182.54675,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 25
+            },
+            {
+              "id": 89,
+              "x": 0.23925209,
+              "z": -142.27312,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 27
+            },
+            {
+              "id": 94,
+              "x": 11.531149,
+              "z": -139.03627,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 25
+            },
+            {
+              "id": 96,
+              "x": 38.088573,
+              "z": -180.1672,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 25
+            },
+            {
+              "id": 106,
+              "x": 22.921547,
+              "z": -135.77121,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 25
+            },
+            {
+              "id": 108,
+              "x": 34.155483,
+              "z": -132.55098,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 25
+            },
+            {
+              "id": 116,
+              "x": 46.775093,
+              "z": -128.93355,
+              "kind": "home",
+              "floors": 1,
+              "family": "machiya",
+              "accessRoad": 25
+            },
+            {
+              "id": 118,
+              "x": 49.160664,
+              "z": -176.99336,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 25
+            },
+            {
+              "id": 148,
+              "x": 93.55118,
+              "z": -124.91355,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 31
+            },
+            {
+              "id": 150,
+              "x": 90.82703,
+              "z": -107.735344,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 31
+            },
+            {
+              "id": 169,
+              "x": 103.62555,
+              "z": -163.98254,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 23
+            },
+            {
+              "id": 179,
+              "x": 104.97699,
+              "z": -129.37453,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 23
+            },
+            {
+              "id": 200,
+              "x": 104.75656,
+              "z": -108.16383,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 202,
+              "x": 119.14653,
+              "z": -130.43451,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 21
+            },
+            {
+              "id": 213,
+              "x": 165.6071,
+              "z": -172.63254,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 17
+            },
+            {
+              "id": 245,
+              "x": 131.42119,
+              "z": -131.08757,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 21
+            },
+            {
+              "id": 373,
+              "x": 186.7522,
+              "z": -135.08963,
+              "kind": "office",
+              "floors": 23,
+              "family": "tower-office",
+              "accessRoad": 15
+            },
+            {
+              "id": 635,
+              "x": 104.162186,
+              "z": -175.05595,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 407
+            },
+            {
+              "id": 702,
+              "x": 104.13875,
+              "z": -187.13258,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 407
+            },
+            {
+              "id": 762,
+              "x": 103.70145,
+              "z": -197.37932,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 407
+            },
+            {
+              "id": 1223,
+              "x": 225.91428,
+              "z": -201.83748,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 808
+            },
+            {
+              "id": 1225,
+              "x": 223.61728,
+              "z": -193.24553,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 808
+            },
+            {
+              "id": 1259,
+              "x": 170.8875,
+              "z": -178.77437,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1265,
+              "x": 221.2967,
+              "z": -185.24644,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 808
+            },
+            {
+              "id": 1269,
+              "x": 174.01431,
+              "z": -184.98813,
+              "kind": "home",
+              "floors": 5,
+              "family": "other-home",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1288,
+              "x": 177.49544,
+              "z": -191.91438,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1307,
+              "x": 181.424,
+              "z": -199.7256,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1388,
+              "x": 203.67404,
+              "z": -138.20041,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1325
+            },
+            {
+              "id": 1422,
+              "x": 207.9938,
+              "z": -201.02478,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1439,
+              "x": 203.3395,
+              "z": -191.44794,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1470,
+              "x": 199.4581,
+              "z": -183.46149,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1217
+            },
+            {
+              "id": 1473,
+              "x": 156.19966,
+              "z": -176.4948,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1447
+            },
+            {
+              "id": 1475,
+              "x": 160.85423,
+              "z": -185.38496,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1447
+            },
+            {
+              "id": 1560,
+              "x": 164.8896,
+              "z": -193.09248,
+              "kind": "office",
+              "floors": 10,
+              "family": "setback-office",
+              "accessRoad": 1519
+            },
+            {
+              "id": 1566,
+              "x": 103.30643,
+              "z": -206.63516,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 1524
+            },
+            {
+              "id": 1572,
+              "x": 169.05316,
+              "z": -201.04483,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1519
+            },
+            {
+              "id": 1632,
+              "x": 224.93991,
+              "z": -148.29807,
+              "kind": "cafe",
+              "floors": 1,
+              "family": "shop-house",
+              "accessRoad": 1325
+            },
+            {
+              "id": 1637,
+              "x": 139.40825,
+              "z": -138.71806,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 1609
+            },
+            {
+              "id": 1669,
+              "x": 228.68774,
+              "z": -133.60242,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 1312
+            },
+            {
+              "id": 1703,
+              "x": 233.12297,
+              "z": -120.09431,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 1312
+            },
+            {
+              "id": 1720,
+              "x": 119.653854,
+              "z": -203.60336,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1659
+            },
+            {
+              "id": 1722,
+              "x": 218.77321,
+              "z": -119.80738,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1325
+            },
+            {
+              "id": 1730,
+              "x": 219.01082,
+              "z": -112.35021,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1325
+            },
+            {
+              "id": 1732,
+              "x": 134.26366,
+              "z": -173.18166,
+              "kind": "apartment",
+              "floors": 9,
+              "family": "walkup",
+              "accessRoad": 1447
+            },
+            {
+              "id": 1747,
+              "x": 200.66638,
+              "z": -109.436264,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 1325
+            },
+            {
+              "id": 1761,
+              "x": 50.81037,
+              "z": -191.76613,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 1741
+            },
+            {
+              "id": 1819,
+              "x": 120.01336,
+              "z": -108.16383,
+              "kind": "office",
+              "floors": 21,
+              "family": "tower-office",
+              "accessRoad": 1784
+            },
+            {
+              "id": 1822,
+              "x": 28.711031,
+              "z": -207.85942,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 1741
+            },
+            {
+              "id": 1843,
+              "x": 186.85356,
+              "z": -108.28289,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1816
+            },
+            {
+              "id": 1866,
+              "x": 134.2731,
+              "z": -108.16383,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1609
+            },
+            {
+              "id": 1953,
+              "x": 151.75899,
+              "z": -119.82926,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1609
+            },
+            {
+              "id": 1996,
+              "x": 156.70981,
+              "z": -106.05286,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1750
+            },
+            {
+              "id": 2101,
+              "x": 220.7231,
+              "z": -101.96425,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 2081
+            },
+            {
+              "id": 2244,
+              "x": 17.838207,
+              "z": -206.42514,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2183
+            },
+            {
+              "id": 2288,
+              "x": 238.20943,
+              "z": -104.602806,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 2081
+            },
+            {
+              "id": 2307,
+              "x": 18.607279,
+              "z": -188.32968,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 2274
+            },
+            {
+              "id": 2321,
+              "x": 136.6339,
+              "z": -195.02122,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 2103
+            },
+            {
+              "id": 2504,
+              "x": -3.0450983,
+              "z": -197.81828,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 2457
+            },
+            {
+              "id": 2514,
+              "x": -1.5651479,
+              "z": -190.08746,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 2457
+            },
+            {
+              "id": 2526,
+              "x": -3.3103895,
+              "z": -207.03716,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 2478
+            },
+            {
+              "id": 2532,
+              "x": -3.2283182,
+              "z": -106.38691,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 410
+            },
+            {
+              "id": 2566,
+              "x": 7.9043465,
+              "z": -104.79949,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 410
+            },
+            {
+              "id": 2576,
+              "x": 19.09739,
+              "z": -103.41971,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 410
+            },
+            {
+              "id": 2581,
+              "x": 30.80285,
+              "z": -101.519035,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 410
+            },
+            {
+              "id": 2989,
+              "x": 220.87663,
+              "z": -43.113323,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2330
+            },
+            {
+              "id": 3008,
+              "x": 227.42601,
+              "z": -31.132998,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 2330
+            },
+            {
+              "id": 3012,
+              "x": 209.57878,
+              "z": -33.92583,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 2944
+            },
+            {
+              "id": 3023,
+              "x": 213.50214,
+              "z": -56.602985,
+              "kind": "apartment",
+              "floors": 8,
+              "family": "walkup",
+              "accessRoad": 2330
+            },
+            {
+              "id": 3035,
+              "x": 235.23407,
+              "z": -23.444387,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 2939
+            },
+            {
+              "id": 3039,
+              "x": 214.24391,
+              "z": -22.230034,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2985
+            },
+            {
+              "id": 3041,
+              "x": 188.61867,
+              "z": -54.702366,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 2944
+            },
+            {
+              "id": 3043,
+              "x": 191.82881,
+              "z": -28.866064,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 2944
+            },
+            {
+              "id": 3046,
+              "x": 38.018757,
+              "z": -64.707504,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 2852
+            },
+            {
+              "id": 3052,
+              "x": 178.99054,
+              "z": -27.786503,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3026
+            },
+            {
+              "id": 3058,
+              "x": 173.5315,
+              "z": -54.542946,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 2416
+            },
+            {
+              "id": 3066,
+              "x": 161.9112,
+              "z": -54.1728,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2416
+            },
+            {
+              "id": 3072,
+              "x": 39.61722,
+              "z": -53.192223,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3078,
+              "x": 151.88544,
+              "z": -53.735012,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2416
+            },
+            {
+              "id": 3080,
+              "x": 40.97487,
+              "z": -40.534615,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3082,
+              "x": 13.701008,
+              "z": -59.221516,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2852
+            },
+            {
+              "id": 3089,
+              "x": 166.78609,
+              "z": -26.76024,
+              "kind": "office",
+              "floors": 16,
+              "family": "tower-office",
+              "accessRoad": 3055
+            },
+            {
+              "id": 3094,
+              "x": 42.308445,
+              "z": -28.824558,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3100,
+              "x": 141.7151,
+              "z": -52.827427,
+              "kind": "shop",
+              "floors": 4,
+              "family": "other-shop",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3105,
+              "x": 149.62764,
+              "z": -25.317398,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3112,
+              "x": 43.421112,
+              "z": -18.636274,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3122,
+              "x": 14.752361,
+              "z": -43.14618,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 3092
+            },
+            {
+              "id": 3136,
+              "x": 15.522127,
+              "z": -31.376347,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3092
+            },
+            {
+              "id": 3141,
+              "x": 16.215204,
+              "z": -20.779106,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3092
+            },
+            {
+              "id": 3144,
+              "x": 118.7089,
+              "z": -34.3771,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3169,
+              "x": 117.03265,
+              "z": -49.26984,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3173,
+              "x": 120.42269,
+              "z": -18.367458,
+              "kind": "office",
+              "floors": 18,
+              "family": "tower-office",
+              "accessRoad": 3125
+            },
+            {
+              "id": 3188,
+              "x": 114.75852,
+              "z": -63.142155,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 2791
+            },
+            {
+              "id": 3400,
+              "x": 228.71558,
+              "z": 31.347223,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 3075
+            },
+            {
+              "id": 3411,
+              "x": 228.27034,
+              "z": 40.95676,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 3240
+            },
+            {
+              "id": 3438,
+              "x": 206.48532,
+              "z": 27.102114,
+              "kind": "home",
+              "floors": 6,
+              "family": "other-home",
+              "accessRoad": 3139
+            },
+            {
+              "id": 3445,
+              "x": 44.79229,
+              "z": -8.181398,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 3413
+            },
+            {
+              "id": 3451,
+              "x": 198.13118,
+              "z": 28.165462,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 3139
+            },
+            {
+              "id": 3465,
+              "x": 188.23244,
+              "z": 29.09642,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3409
+            },
+            {
+              "id": 3643,
+              "x": 167.38306,
+              "z": 29.439901,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3097
+            },
+            {
+              "id": 3659,
+              "x": 167.20833,
+              "z": 38.414486,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 3097
+            },
+            {
+              "id": 3937,
+              "x": 141.86882,
+              "z": 38.75183,
+              "kind": "shop",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 3097
+            },
+            {
+              "id": 3958,
+              "x": 126.665886,
+              "z": 35.201492,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3097
+            },
+            {
+              "id": 3961,
+              "x": 127.54313,
+              "z": 26.370586,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 3097
+            },
+            {
+              "id": 3963,
+              "x": 111.16611,
+              "z": 39.20703,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 3662
+            },
+            {
+              "id": 3965,
+              "x": 142.8206,
+              "z": 29.170807,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 3097
+            },
+            {
+              "id": 3970,
+              "x": 110.27975,
+              "z": 31.484724,
+              "kind": "apartment",
+              "floors": 10,
+              "family": "walkup",
+              "accessRoad": 3662
+            },
+            {
+              "id": 4018,
+              "x": 89.004524,
+              "z": 37.627354,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 3721
+            },
+            {
+              "id": 4036,
+              "x": 87.996124,
+              "z": 28.430937,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 3721
+            },
+            {
+              "id": 4767,
+              "x": 34.32911,
+              "z": 39.473335,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 4708
+            },
+            {
+              "id": 4795,
+              "x": 26.780983,
+              "z": 39.843483,
+              "kind": "home",
+              "floors": 8,
+              "family": "other-home",
+              "accessRoad": 4708
+            },
+            {
+              "id": 4813,
+              "x": 18.480282,
+              "z": 40.255653,
+              "kind": "home",
+              "floors": 3,
+              "family": "machiya",
+              "accessRoad": 4708
+            },
+            {
+              "id": 4838,
+              "x": 9.143795,
+              "z": 40.706257,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 4708
+            },
+            {
+              "id": 4861,
+              "x": -1.9269588,
+              "z": 41.44169,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 4708
+            },
+            {
+              "id": 4864,
+              "x": -2.655098,
+              "z": 29.686123,
+              "kind": "home",
+              "floors": 4,
+              "family": "other-home",
+              "accessRoad": 4773
+            }
+          ]
+        },
+        {
+          "sizeM": 150,
+          "bounds": [
+            39.125299999999996,
+            -157.97029,
+            189.12529999999998,
+            -7.970290000000006
+          ],
+          "count": 31,
+          "kinds": {
+            "home": 2,
+            "apartment": 10,
+            "cafe": 4,
+            "office": 11,
+            "shop": 4
+          },
+          "floors": {
+            "1": 1,
+            "2": 6,
+            "3": 2,
+            "4": 2,
+            "5": 3,
+            "6": 5,
+            "7": 3,
+            "8": 1,
+            "9": 1,
+            "12": 3,
+            "16": 1,
+            "18": 1,
+            "21": 1,
+            "23": 1
+          },
+          "massingFamilies": {
+            "machiya": 2,
+            "walkup": 7,
+            "shop-house": 7,
+            "tower-office": 4,
+            "setback-office": 7,
+            "tower-apartment": 3,
+            "other-shop": 1
+          },
+          "paletteFamilies": {
+            "neutral": 16,
+            "warm-stone": 5,
+            "brick": 5,
+            "blue-gray": 4,
+            "terracotta": 1
+          },
+          "accessRecords": 31,
+          "activeShopCafeCount": 8,
+          "buildings": [
+            {
+              "id": 116,
+              "x": 46.775093,
+              "z": -128.93355,
+              "kind": "home",
+              "floors": 1,
+              "family": "machiya",
+              "accessRoad": 25
+            },
+            {
+              "id": 148,
+              "x": 93.55118,
+              "z": -124.91355,
+              "kind": "apartment",
+              "floors": 4,
+              "family": "walkup",
+              "accessRoad": 31
+            },
+            {
+              "id": 150,
+              "x": 90.82703,
+              "z": -107.735344,
+              "kind": "apartment",
+              "floors": 5,
+              "family": "walkup",
+              "accessRoad": 31
+            },
+            {
+              "id": 179,
+              "x": 104.97699,
+              "z": -129.37453,
+              "kind": "home",
+              "floors": 2,
+              "family": "machiya",
+              "accessRoad": 23
+            },
+            {
+              "id": 200,
+              "x": 104.75656,
+              "z": -108.16383,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 33
+            },
+            {
+              "id": 202,
+              "x": 119.14653,
+              "z": -130.43451,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 21
+            },
+            {
+              "id": 245,
+              "x": 131.42119,
+              "z": -131.08757,
+              "kind": "cafe",
+              "floors": 3,
+              "family": "shop-house",
+              "accessRoad": 21
+            },
+            {
+              "id": 373,
+              "x": 186.7522,
+              "z": -135.08963,
+              "kind": "office",
+              "floors": 23,
+              "family": "tower-office",
+              "accessRoad": 15
+            },
+            {
+              "id": 1637,
+              "x": 139.40825,
+              "z": -138.71806,
+              "kind": "office",
+              "floors": 6,
+              "family": "setback-office",
+              "accessRoad": 1609
+            },
+            {
+              "id": 1819,
+              "x": 120.01336,
+              "z": -108.16383,
+              "kind": "office",
+              "floors": 21,
+              "family": "tower-office",
+              "accessRoad": 1784
+            },
+            {
+              "id": 1843,
+              "x": 186.85356,
+              "z": -108.28289,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 1816
+            },
+            {
+              "id": 1866,
+              "x": 134.2731,
+              "z": -108.16383,
+              "kind": "apartment",
+              "floors": 7,
+              "family": "walkup",
+              "accessRoad": 1609
+            },
+            {
+              "id": 1953,
+              "x": 151.75899,
+              "z": -119.82926,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 1609
+            },
+            {
+              "id": 1996,
+              "x": 156.70981,
+              "z": -106.05286,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 1750
+            },
+            {
+              "id": 3041,
+              "x": 188.61867,
+              "z": -54.702366,
+              "kind": "office",
+              "floors": 5,
+              "family": "setback-office",
+              "accessRoad": 2944
+            },
+            {
+              "id": 3052,
+              "x": 178.99054,
+              "z": -27.786503,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3026
+            },
+            {
+              "id": 3058,
+              "x": 173.5315,
+              "z": -54.542946,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 2416
+            },
+            {
+              "id": 3066,
+              "x": 161.9112,
+              "z": -54.1728,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2416
+            },
+            {
+              "id": 3072,
+              "x": 39.61722,
+              "z": -53.192223,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3078,
+              "x": 151.88544,
+              "z": -53.735012,
+              "kind": "cafe",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2416
+            },
+            {
+              "id": 3080,
+              "x": 40.97487,
+              "z": -40.534615,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3089,
+              "x": 166.78609,
+              "z": -26.76024,
+              "kind": "office",
+              "floors": 16,
+              "family": "tower-office",
+              "accessRoad": 3055
+            },
+            {
+              "id": 3094,
+              "x": 42.308445,
+              "z": -28.824558,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3100,
+              "x": 141.7151,
+              "z": -52.827427,
+              "kind": "shop",
+              "floors": 4,
+              "family": "other-shop",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3105,
+              "x": 149.62764,
+              "z": -25.317398,
+              "kind": "shop",
+              "floors": 2,
+              "family": "shop-house",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3112,
+              "x": 43.421112,
+              "z": -18.636274,
+              "kind": "office",
+              "floors": 7,
+              "family": "setback-office",
+              "accessRoad": 2765
+            },
+            {
+              "id": 3144,
+              "x": 118.7089,
+              "z": -34.3771,
+              "kind": "office",
+              "floors": 9,
+              "family": "setback-office",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3169,
+              "x": 117.03265,
+              "z": -49.26984,
+              "kind": "apartment",
+              "floors": 12,
+              "family": "tower-apartment",
+              "accessRoad": 3049
+            },
+            {
+              "id": 3173,
+              "x": 120.42269,
+              "z": -18.367458,
+              "kind": "office",
+              "floors": 18,
+              "family": "tower-office",
+              "accessRoad": 3125
+            },
+            {
+              "id": 3188,
+              "x": 114.75852,
+              "z": -63.142155,
+              "kind": "office",
+              "floors": 8,
+              "family": "setback-office",
+              "accessRoad": 2791
+            },
+            {
+              "id": 3445,
+              "x": 44.79229,
+              "z": -8.181398,
+              "kind": "apartment",
+              "floors": 6,
+              "family": "walkup",
+              "accessRoad": 3413
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

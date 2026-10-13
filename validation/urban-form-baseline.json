@@ -1,0 +1,352 @@
+{
+  "method": "Rendered coverage: production kit plan-view union (audit-rendered-coverage.mjs). Footprint is the main body box from the kit party-wall sizing (rear service volumes and roofs excluded); lot area is the parcel envelope. Road share rasterizes open street right-of-way (carriageway plus sidewalks). Compact crop: densest 250 m window on a 25 m lattice by lot area.",
+  "targets": {
+    "compact": {
+      "coverage": [
+        40,
+        50
+      ],
+      "footprintMedian": [
+        55,
+        140
+      ],
+      "footprintP90": [
+        0,
+        350
+      ],
+      "floorsMedian": [
+        2,
+        4
+      ],
+      "roadShare": [
+        18,
+        28
+      ]
+    },
+    "station": {
+      "coverage": [
+        38,
+        48
+      ],
+      "footprintMedian": [
+        100,
+        300
+      ],
+      "footprintP90": [
+        0,
+        900
+      ],
+      "floorsMedian": [
+        4,
+        7
+      ],
+      "roadShare": [
+        20,
+        30
+      ]
+    }
+  },
+  "worlds": [
+    {
+      "snapshot": ".tools/urban-form/seed-87231.json",
+      "seed": 87231,
+      "tick": 80000,
+      "buildings": 1839,
+      "crops": [
+        {
+          "name": "compact",
+          "crop": [
+            100,
+            100,
+            350,
+            350
+          ],
+          "buildings": 314,
+          "renderedCoveragePercent": 49.14,
+          "lotEnvelopeCoveragePercent": 63.62,
+          "lotAreaMedianM2": 115.1,
+          "lotAreaP90M2": 213.1,
+          "footprintMedianM2": 87,
+          "footprintP90M2": 156.9,
+          "floorsMedian": 3,
+          "roadSharePercent": 22.35,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": true
+          },
+          "openStreetKindAreaPercent": {
+            "arterial": 0.22,
+            "local": 20.66,
+            "bridge": 0,
+            "lane": 1.71
+          }
+        },
+        {
+          "name": "station",
+          "crop": [
+            34.3511,
+            -207.81525,
+            284.3511,
+            42.18475000000001
+          ],
+          "buildings": 143,
+          "renderedCoveragePercent": 32.91,
+          "lotEnvelopeCoveragePercent": 41.29,
+          "lotAreaMedianM2": 159.1,
+          "lotAreaP90M2": 312.9,
+          "footprintMedianM2": 121.9,
+          "footprintP90M2": 243.3,
+          "floorsMedian": 5,
+          "roadSharePercent": 35.82,
+          "withinTargets": {
+            "coverage": false,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": false
+          },
+          "openStreetKindAreaPercent": {
+            "arterial": 20.26,
+            "local": 17.49,
+            "bridge": 0,
+            "lane": 0.1
+          }
+        },
+        {
+          "name": "whole",
+          "crop": [
+            -400,
+            -400,
+            400,
+            400
+          ],
+          "buildings": 1839,
+          "renderedCoveragePercent": 30.87,
+          "lotEnvelopeCoveragePercent": 39.83,
+          "lotAreaMedianM2": 119.6,
+          "lotAreaP90M2": 236.9,
+          "footprintMedianM2": 89.5,
+          "footprintP90M2": 182.5,
+          "floorsMedian": 3,
+          "roadSharePercent": 29.04,
+          "openStreetKindAreaPercent": {
+            "arterial": 11.76,
+            "local": 17.31,
+            "bridge": 0.84,
+            "lane": 0.4
+          }
+        }
+      ],
+      "snapshotSha256": "004184e8caabd041a5841d0062d2db6d62a9aaef6f40b47f55187493b6de0918"
+    },
+    {
+      "snapshot": ".tools/urban-form/seed-0.json",
+      "seed": 0,
+      "tick": 80000,
+      "buildings": 1730,
+      "crops": [
+        {
+          "name": "compact",
+          "crop": [
+            125,
+            75,
+            375,
+            325
+          ],
+          "buildings": 339,
+          "renderedCoveragePercent": 49.62,
+          "lotEnvelopeCoveragePercent": 64.09,
+          "lotAreaMedianM2": 113.5,
+          "lotAreaP90M2": 179.5,
+          "footprintMedianM2": 84.6,
+          "footprintP90M2": 136.2,
+          "floorsMedian": 3,
+          "roadSharePercent": 20.9,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": true
+          },
+          "openStreetKindAreaPercent": {
+            "arterial": 0,
+            "local": 20.58,
+            "bridge": 0,
+            "lane": 0.36
+          }
+        },
+        {
+          "name": "station",
+          "crop": [
+            7.312909999999988,
+            -210.426544,
+            257.31291,
+            39.57345599999999
+          ],
+          "buildings": 122,
+          "renderedCoveragePercent": 34.12,
+          "lotEnvelopeCoveragePercent": 42.8,
+          "lotAreaMedianM2": 211.7,
+          "lotAreaP90M2": 361.3,
+          "footprintMedianM2": 159.2,
+          "footprintP90M2": 269.1,
+          "floorsMedian": 5,
+          "roadSharePercent": 35.36,
+          "withinTargets": {
+            "coverage": false,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": false
+          },
+          "openStreetKindAreaPercent": {
+            "arterial": 21.47,
+            "local": 15.88,
+            "bridge": 0,
+            "lane": 0.23
+          }
+        },
+        {
+          "name": "whole",
+          "crop": [
+            -400,
+            -400,
+            400,
+            400
+          ],
+          "buildings": 1730,
+          "renderedCoveragePercent": 29.92,
+          "lotEnvelopeCoveragePercent": 38.5,
+          "lotAreaMedianM2": 123.4,
+          "lotAreaP90M2": 241,
+          "footprintMedianM2": 92.2,
+          "footprintP90M2": 180.5,
+          "floorsMedian": 3,
+          "roadSharePercent": 28.29,
+          "openStreetKindAreaPercent": {
+            "arterial": 11.77,
+            "local": 16.37,
+            "bridge": 0.84,
+            "lane": 0.41
+          }
+        }
+      ],
+      "snapshotSha256": "61a2ac6368061a59e2b43de0d632ee8add102b5add072380f7d3af46ddf23d99"
+    },
+    {
+      "snapshot": ".tools/urban-form/seed-5.json",
+      "seed": 5,
+      "tick": 80000,
+      "buildings": 1999,
+      "crops": [
+        {
+          "name": "compact",
+          "crop": [
+            125,
+            -375,
+            375,
+            -125
+          ],
+          "buildings": 314,
+          "renderedCoveragePercent": 47.35,
+          "lotEnvelopeCoveragePercent": 60.9,
+          "lotAreaMedianM2": 112.4,
+          "lotAreaP90M2": 189.7,
+          "footprintMedianM2": 84.4,
+          "footprintP90M2": 143.9,
+          "floorsMedian": 3,
+          "roadSharePercent": 25.8,
+          "withinTargets": {
+            "coverage": true,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": true
+          },
+          "openStreetKindAreaPercent": {
+            "arterial": 8.64,
+            "local": 17.43,
+            "bridge": 0,
+            "lane": 0.85
+          }
+        },
+        {
+          "name": "station",
+          "crop": [
+            -10.874700000000004,
+            -207.97029,
+            239.12529999999998,
+            42.029709999999994
+          ],
+          "buildings": 114,
+          "renderedCoveragePercent": 28.98,
+          "lotEnvelopeCoveragePercent": 36.75,
+          "lotAreaMedianM2": 171.8,
+          "lotAreaP90M2": 343.7,
+          "footprintMedianM2": 132.7,
+          "footprintP90M2": 265.8,
+          "floorsMedian": 5,
+          "roadSharePercent": 37.9,
+          "withinTargets": {
+            "coverage": false,
+            "footprintMedian": true,
+            "footprintP90": true,
+            "floorsMedian": true,
+            "roadShare": false
+          },
+          "openStreetKindAreaPercent": {
+            "arterial": 24.06,
+            "local": 16.27,
+            "bridge": 0,
+            "lane": 0.24
+          }
+        },
+        {
+          "name": "whole",
+          "crop": [
+            -400,
+            -400,
+            400,
+            400
+          ],
+          "buildings": 1994,
+          "renderedCoveragePercent": 29.74,
+          "lotEnvelopeCoveragePercent": 38.21,
+          "lotAreaMedianM2": 108.4,
+          "lotAreaP90M2": 189.5,
+          "footprintMedianM2": 81.7,
+          "footprintP90M2": 144.2,
+          "floorsMedian": 3,
+          "roadSharePercent": 28.96,
+          "openStreetKindAreaPercent": {
+            "arterial": 11.75,
+            "local": 17.34,
+            "bridge": 0.84,
+            "lane": 0.39
+          }
+        }
+      ],
+      "snapshotSha256": "032e1dee893377bc763f3d1c5bf747fe679c834ff6bbf424e4bb2518b3f40a87"
+    }
+  ],
+  "caveats": [
+    "Tick 80000: seeds 87231 and 0 fully realized; seed 5 still developing.",
+    "Projected kit union includes all stages and cropped boundary geometry; floor/count statistics include only open buildings centered in crop.",
+    "Footprint quantiles are party-wall rectangle proxies, not final geometry footprints.",
+    "Road share is an open-street rectangle union excluding rail and expressway; bridge 18.8m matches current rendered deck.",
+    "Net-of-road coverage, net developable coverage, frontage continuity and gap measurements are not included.",
+    "Densest compact crop is selected by centered parcel-envelope sums, not actual clipped geometry union."
+  ],
+  "provenance": {
+    "wasmSha256": "6527b2f9cb146e435404482ce5567501631ec0c98d8ad4f740765f59bae0194a",
+    "scripts": {
+      "scripts/audit-masterplan-fabric.mjs": "b294dd8a1f2ff78b7369bb1f6db963df6dfdaee0ec5709b0d9ae8bb5ea1b2e7f",
+      "scripts/audit-rendered-coverage.mjs": "4fd42292a6967ecc1924b60ee75b71844523440fbd3561fd1e191aa8d23f3b13"
+    }
+  },
+  "kindBreakdownMethod": "Same 0.5m cell-center raster, union within each open street kind. Kinds overlap at junctions: do not sum percentages as total road area."
+}

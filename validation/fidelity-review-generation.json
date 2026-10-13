@@ -1,0 +1,73 @@
+{
+  "seed": 87231,
+  "developmentRate": 16,
+  "targetTick": 80000,
+  "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+  "scope": "Fresh ordinary fixed-step growth; save equivalence every 10000 ticks and 80-tick live/restored continuation at the final checkpoint. Not browser scheduling or visual acceptance.",
+  "checkpoints": [
+    {
+      "tick": 10000,
+      "buildings": 275,
+      "realizedLots": 302,
+      "plannedLots": 1839,
+      "realizedRoads": 80,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 20000,
+      "buildings": 525,
+      "realizedLots": 561,
+      "plannedLots": 1839,
+      "realizedRoads": 155,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 30000,
+      "buildings": 775,
+      "realizedLots": 812,
+      "plannedLots": 1839,
+      "realizedRoads": 223,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 40000,
+      "buildings": 1025,
+      "realizedLots": 1036,
+      "plannedLots": 1839,
+      "realizedRoads": 292,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 50000,
+      "buildings": 1255,
+      "realizedLots": 1255,
+      "plannedLots": 1839,
+      "realizedRoads": 400,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 60000,
+      "buildings": 1495,
+      "realizedLots": 1530,
+      "plannedLots": 1839,
+      "realizedRoads": 451,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 70000,
+      "buildings": 1745,
+      "realizedLots": 1779,
+      "plannedLots": 1839,
+      "realizedRoads": 522,
+      "plannedRoads": 564
+    },
+    {
+      "tick": 80000,
+      "buildings": 1839,
+      "realizedLots": 1839,
+      "plannedLots": 1839,
+      "realizedRoads": 564,
+      "plannedRoads": 564
+    }
+  ]
+}

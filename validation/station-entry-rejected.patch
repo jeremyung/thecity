@@ -1,0 +1,128 @@
+diff --git a/web/src/render/station-kit.ts b/web/src/render/station-kit.ts
+index 99ce333..e2dfff2 100644
+--- a/web/src/render/station-kit.ts
++++ b/web/src/render/station-kit.ts
+@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
+ import type { RailPlatform } from '../types';
+ import { Kit } from './kit';
+ import { PLATFORM_EDGE_X } from './rail-profile';
++import { addStationEntry } from './station-entry';
+ 
+ /** Both styles and both terminals use the engine's rail frame and access levels. */
+ export function buildStationPlatform(layout: RailPlatform, art: { get(color:string, emission?:number, lamp?:boolean):THREE.Material }, roof = true) {
+@@ -10,6 +11,7 @@ export function buildStationPlatform(layout: RailPlatform, art: { get(color:stri
+   s.box((7.8 + PLATFORM_EDGE_X) / 2, top - 1, 23.5, 7.8 - PLATFORM_EDGE_X, 2, 49, concrete);
+   s.box(PLATFORM_EDGE_X + .3, top + .08, 23.5, .45, .1, 48, art.get('#d3b962'));
+   if (roof) {
++    addStationEntry(s, layout, art);
+     s.box(5.5, top + 4, 23.5, 7, .22, 51, art.get('#546d6c'));
+     for (let z = 3; z <= 45; z += 10.5) {
+       s.cylinder(6.7, top + 1.95, z, .14, 3.9, art.get('#d1d3c5'));
+diff --git a/web/src/render/station-entry.ts b/web/src/render/station-entry.ts
+new file mode 100644
+--- /dev/null
++++ b/web/src/render/station-entry.ts
+@@ -0,0 +1,33 @@
++import * as THREE from 'three/webgpu';
++import type { RailPlatform } from '../types';
++import { Kit } from './kit';
++
++/** Adds a compact covered stair approach in the platform's engine-owned local frame. */
++export function addStationEntry(kit: Kit, layout: RailPlatform, art: { get(color: string, emission?: number, lamp?: boolean): THREE.Material }) {
++  const { stair_x: x, stair_bottom_z: bottom, stair_top_z: top, ground_y, surface_y } = layout;
++  const run = top - bottom, rise = surface_y - ground_y;
++  if (run <= 0 || rise <= 0) return;
++  const pitch = -Math.atan2(rise, run), length = Math.hypot(run, rise);
++  const roofY = (ground_y + surface_y) / 2 + 2.95;
++  const roof = new THREE.BoxGeometry(3.2, .18, length - .2);
++  roof.rotateX(pitch);
++  roof.translate(x, roofY, (bottom + top) / 2);
++  kit.add(roof, art.get('#596b67'));
++
++  // Columns bear on actual treads over the stringers, outside the clear aisle.
++  // Roof thickness is measured normal to the slope, so its vertical underside
++  // offset differs from half the box thickness.
++  for (const side of [-1, 1]) for (const t of [.1, .9]) {
++    const step = Math.min(layout.stair_steps - 1, Math.floor(t * layout.stair_steps));
++    const treadT = (step + .5) / layout.stair_steps;
++    const z = bottom + run * treadT;
++    const base = ground_y + rise * (step + 1) / layout.stair_steps;
++    const ceiling = ground_y + rise * treadT + 2.95 - .09 / Math.cos(pitch);
++    const height = ceiling - base;
++    kit.box(x + side * 1.13, base + height / 2, z, .12, height, .12, art.get('#7c8980'));
++  }
++
++  // A short route-colored entry band reads from the street without closing the stair mouth.
++  const fasciaZ = bottom + 1.2, fasciaY = ground_y + rise * (1.2 / run) + 2.85;
++  kit.box(x, fasciaY, fasciaZ, 3.2, .3, .12, art.get('#557466'));
++}
+diff --git a/tests/station-entry.test.ts b/tests/station-entry.test.ts
+new file mode 100644
+--- /dev/null
++++ b/tests/station-entry.test.ts
+@@ -0,0 +1,65 @@
++import { describe, expect, it } from 'vitest';
++import * as THREE from 'three/webgpu';
++import type { RailPlatform } from '../web/src/types';
++import { Kit, disposeGroup } from '../web/src/render/kit';
++import { addStationEntry } from '../web/src/render/station-entry';
++
++describe('covered station stair entry', () => {
++  it('keeps the stair path clear with at least 2.6 m headroom in rotated and reversed frames', () => {
++    const materials = new Map<string, THREE.MeshBasicNodeMaterial>();
++    const art = { get(color: string) { let m = materials.get(color); if (!m) { m = new THREE.MeshBasicNodeMaterial(); materials.set(color, m); } return m; } };
++    try {
++      for (const [ux, uz] of [[1, 0], [-1, 0], [.6, .8], [-.6, -.8]]) {
++        const layout: RailPlatform = { node_id: 1, x: 24, z: -31, ux, uz, surface_y: 8, stair_x: 4.05, stair_bottom_z: -20, stair_top_z: -1, ground_y: .27, stair_steps: 44 };
++        const kit = new Kit();
++        addStationEntry(kit, layout, art);
++        const group = kit.finish(); group.position.set(layout.x, 0, layout.z); group.rotation.y = Math.atan2(layout.ux, layout.uz); group.updateMatrixWorld(true);
++        const cast = (x: number, y: number, z: number, direction: THREE.Vector3) => {
++          const origin = new THREE.Vector3(x, y, z).applyMatrix4(group.matrixWorld);
++          return new THREE.Raycaster(origin, direction).intersectObject(group, true);
++        };
++        for (let i = 1; i < 20; i++) {
++          const t = i / 20, z = layout.stair_bottom_z + (layout.stair_top_z - layout.stair_bottom_z) * t;
++          const floor = layout.ground_y + (layout.surface_y - layout.ground_y) * Math.ceil(t * layout.stair_steps) / layout.stair_steps;
++          const ceiling = cast(layout.stair_x, floor, z, new THREE.Vector3(0, 1, 0))[0];
++          expect(ceiling, `covered stair sample ${i}`).toBeDefined();
++          expect(ceiling!.point.y - floor).toBeGreaterThanOrEqual(2.6);
++          const pathRay = cast(layout.stair_x, floor + 1.7, z, new THREE.Vector3(0, -1, 0));
++          expect(pathRay, `unobstructed walking path sample ${i}`).toHaveLength(0);
++          for (const offset of [-.9, .9]) {
++            const edgeCeiling = cast(layout.stair_x + offset, floor, z, new THREE.Vector3(0, 1, 0))[0];
++            expect(edgeCeiling!.point.y - floor).toBeGreaterThanOrEqual(2.6);
++          }
++        }
++        let vertices = 0;
++        group.traverse(object => {
++          if (!(object instanceof THREE.Mesh)) return;
++          const pos = object.geometry.getAttribute('position'); vertices += pos.count;
++          for (let i = 0; i < pos.count; i++) {
++            const v = new THREE.Vector3().fromBufferAttribute(pos, i);
++            expect(v.x).toBeGreaterThanOrEqual(2.44); expect(v.x).toBeLessThanOrEqual(5.66);
++            expect(v.z).toBeGreaterThanOrEqual(layout.stair_bottom_z - .01); expect(v.z).toBeLessThanOrEqual(layout.stair_top_z + .01);
++          }
++        });
++        expect(vertices).toBeLessThanOrEqual(300);
++        // Inspect each column's bottom against the independent discrete tread
++        // elevation, rather than accepting bases suspended beside the staircase.
++        group.traverse(object => {
++          if (!(object instanceof THREE.Mesh) || object.material !== materials.get('#7c8980')) return;
++          const pos = object.geometry.getAttribute('position');
++          for (let start = 0; start < pos.count; start += 24) {
++            const box = new THREE.Box3();
++            for (let i = start; i < start + 24; i++) box.expandByPoint(new THREE.Vector3().fromBufferAttribute(pos, i));
++            const z = box.getCenter(new THREE.Vector3()).z;
++            const step = Math.floor((z - layout.stair_bottom_z) / (layout.stair_top_z - layout.stair_bottom_z) * layout.stair_steps);
++            const treadY = layout.ground_y + (layout.surface_y - layout.ground_y) * (step + 1) / layout.stair_steps;
++            expect(box.min.y).toBeCloseTo(treadY, 5);
++            expect(box.min.x).toBeGreaterThanOrEqual(layout.stair_x - 1.2);
++            expect(box.max.x).toBeLessThanOrEqual(layout.stair_x + 1.2);
++          }
++        });
++        disposeGroup(group);
++      }
++    } finally { for (const material of materials.values()) material.dispose(); }
++  });
++});

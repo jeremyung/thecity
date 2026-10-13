@@ -1,0 +1,3031 @@
+{
+  "seed": 87231,
+  "tick": 83229,
+  "actor": {
+    "id": 427,
+    "name": "Emi Kato",
+    "activity": "walking_home",
+    "route": [
+      38,
+      36,
+      34,
+      386,
+      510,
+      16,
+      18
+    ],
+    "path": {
+      "points": [
+        {
+          "x": 180.2511,
+          "z": -87.31525
+        },
+        {
+          "x": 180.2511,
+          "z": -86.86525
+        },
+        {
+          "x": 158.3511,
+          "z": -86.86525
+        },
+        {
+          "x": 139.3511,
+          "z": -86.86525
+        },
+        {
+          "x": 137.8511,
+          "z": -86.86525
+        },
+        {
+          "x": 137.8511,
+          "z": -90.31525
+        },
+        {
+          "x": 157.8511,
+          "z": -90.31525
+        },
+        {
+          "x": 156.8211,
+          "z": -82.81525
+        }
+      ],
+      "surface_y": [
+        8,
+        8,
+        8,
+        0.27,
+        0.27,
+        0.27,
+        0.27,
+        -1
+      ]
+    }
+  },
+  "samples": [
+    {
+      "tick": 83229,
+      "access_phase": 0,
+      "progress": 0,
+      "active": true
+    },
+    {
+      "tick": 83231,
+      "access_phase": 0,
+      "progress": 0.15,
+      "active": true
+    },
+    {
+      "tick": 83233,
+      "access_phase": 0,
+      "progress": 0.3,
+      "active": true
+    },
+    {
+      "tick": 83235,
+      "access_phase": 0,
+      "progress": 0.45,
+      "active": true
+    },
+    {
+      "tick": 83237,
+      "access_phase": 0,
+      "progress": 0.59999996,
+      "active": true
+    },
+    {
+      "tick": 83239,
+      "access_phase": 0,
+      "progress": 0.74999994,
+      "active": true
+    },
+    {
+      "tick": 83241,
+      "access_phase": 0,
+      "progress": 0.8999999,
+      "active": true
+    },
+    {
+      "tick": 83243,
+      "access_phase": 0,
+      "progress": 1.05,
+      "active": true
+    },
+    {
+      "tick": 83245,
+      "access_phase": 0,
+      "progress": 1.2,
+      "active": true
+    },
+    {
+      "tick": 83247,
+      "access_phase": 0,
+      "progress": 1.3500001,
+      "active": true
+    },
+    {
+      "tick": 83249,
+      "access_phase": 0,
+      "progress": 1.5000002,
+      "active": true
+    },
+    {
+      "tick": 83251,
+      "access_phase": 0,
+      "progress": 1.6500003,
+      "active": true
+    },
+    {
+      "tick": 83253,
+      "access_phase": 0,
+      "progress": 1.8000004,
+      "active": true
+    },
+    {
+      "tick": 83255,
+      "access_phase": 0,
+      "progress": 1.9500005,
+      "active": true
+    },
+    {
+      "tick": 83257,
+      "access_phase": 0,
+      "progress": 2.1000006,
+      "active": true
+    },
+    {
+      "tick": 83259,
+      "access_phase": 0,
+      "progress": 2.2500007,
+      "active": true
+    },
+    {
+      "tick": 83261,
+      "access_phase": 0,
+      "progress": 2.4000008,
+      "active": true
+    },
+    {
+      "tick": 83263,
+      "access_phase": 0,
+      "progress": 2.550001,
+      "active": true
+    },
+    {
+      "tick": 83265,
+      "access_phase": 0,
+      "progress": 2.700001,
+      "active": true
+    },
+    {
+      "tick": 83267,
+      "access_phase": 0,
+      "progress": 2.850001,
+      "active": true
+    },
+    {
+      "tick": 83269,
+      "access_phase": 0,
+      "progress": 3.0000012,
+      "active": true
+    },
+    {
+      "tick": 83271,
+      "access_phase": 0,
+      "progress": 3.1500013,
+      "active": true
+    },
+    {
+      "tick": 83273,
+      "access_phase": 0,
+      "progress": 3.3000014,
+      "active": true
+    },
+    {
+      "tick": 83275,
+      "access_phase": 0,
+      "progress": 3.4500015,
+      "active": true
+    },
+    {
+      "tick": 83277,
+      "access_phase": 0,
+      "progress": 3.6000016,
+      "active": true
+    },
+    {
+      "tick": 83279,
+      "access_phase": 0,
+      "progress": 3.7500017,
+      "active": true
+    },
+    {
+      "tick": 83281,
+      "access_phase": 0,
+      "progress": 3.9000018,
+      "active": true
+    },
+    {
+      "tick": 83283,
+      "access_phase": 0,
+      "progress": 4.0500016,
+      "active": true
+    },
+    {
+      "tick": 83285,
+      "access_phase": 0,
+      "progress": 4.2000012,
+      "active": true
+    },
+    {
+      "tick": 83287,
+      "access_phase": 0,
+      "progress": 4.350001,
+      "active": true
+    },
+    {
+      "tick": 83289,
+      "access_phase": 0,
+      "progress": 4.5000005,
+      "active": true
+    },
+    {
+      "tick": 83291,
+      "access_phase": 0,
+      "progress": 4.65,
+      "active": true
+    },
+    {
+      "tick": 83293,
+      "access_phase": 0,
+      "progress": 4.7999997,
+      "active": true
+    },
+    {
+      "tick": 83295,
+      "access_phase": 0,
+      "progress": 4.9499993,
+      "active": true
+    },
+    {
+      "tick": 83297,
+      "access_phase": 0,
+      "progress": 5.099999,
+      "active": true
+    },
+    {
+      "tick": 83299,
+      "access_phase": 0,
+      "progress": 5.2499986,
+      "active": true
+    },
+    {
+      "tick": 83301,
+      "access_phase": 0,
+      "progress": 5.399998,
+      "active": true
+    },
+    {
+      "tick": 83303,
+      "access_phase": 0,
+      "progress": 5.549998,
+      "active": true
+    },
+    {
+      "tick": 83305,
+      "access_phase": 0,
+      "progress": 5.6999974,
+      "active": true
+    },
+    {
+      "tick": 83307,
+      "access_phase": 0,
+      "progress": 5.849997,
+      "active": true
+    },
+    {
+      "tick": 83309,
+      "access_phase": 0,
+      "progress": 5.9999967,
+      "active": true
+    },
+    {
+      "tick": 83311,
+      "access_phase": 0,
+      "progress": 6.1499963,
+      "active": true
+    },
+    {
+      "tick": 83313,
+      "access_phase": 0,
+      "progress": 6.299996,
+      "active": true
+    },
+    {
+      "tick": 83315,
+      "access_phase": 0,
+      "progress": 6.4499955,
+      "active": true
+    },
+    {
+      "tick": 83317,
+      "access_phase": 0,
+      "progress": 6.599995,
+      "active": true
+    },
+    {
+      "tick": 83319,
+      "access_phase": 0,
+      "progress": 6.7499948,
+      "active": true
+    },
+    {
+      "tick": 83321,
+      "access_phase": 0,
+      "progress": 6.8999944,
+      "active": true
+    },
+    {
+      "tick": 83323,
+      "access_phase": 0,
+      "progress": 7.049994,
+      "active": true
+    },
+    {
+      "tick": 83325,
+      "access_phase": 0,
+      "progress": 7.1999936,
+      "active": true
+    },
+    {
+      "tick": 83327,
+      "access_phase": 0,
+      "progress": 7.349993,
+      "active": true
+    },
+    {
+      "tick": 83329,
+      "access_phase": 0,
+      "progress": 7.499993,
+      "active": true
+    },
+    {
+      "tick": 83331,
+      "access_phase": 0,
+      "progress": 7.6499925,
+      "active": true
+    },
+    {
+      "tick": 83333,
+      "access_phase": 0,
+      "progress": 7.799992,
+      "active": true
+    },
+    {
+      "tick": 83335,
+      "access_phase": 0,
+      "progress": 7.9499917,
+      "active": true
+    },
+    {
+      "tick": 83337,
+      "access_phase": 0,
+      "progress": 8.099992,
+      "active": true
+    },
+    {
+      "tick": 83339,
+      "access_phase": 0,
+      "progress": 8.249991,
+      "active": true
+    },
+    {
+      "tick": 83341,
+      "access_phase": 0,
+      "progress": 8.399991,
+      "active": true
+    },
+    {
+      "tick": 83343,
+      "access_phase": 0,
+      "progress": 8.549991,
+      "active": true
+    },
+    {
+      "tick": 83345,
+      "access_phase": 0,
+      "progress": 8.69999,
+      "active": true
+    },
+    {
+      "tick": 83347,
+      "access_phase": 0,
+      "progress": 8.84999,
+      "active": true
+    },
+    {
+      "tick": 83349,
+      "access_phase": 0,
+      "progress": 8.9999895,
+      "active": true
+    },
+    {
+      "tick": 83351,
+      "access_phase": 0,
+      "progress": 9.149989,
+      "active": true
+    },
+    {
+      "tick": 83353,
+      "access_phase": 0,
+      "progress": 9.299989,
+      "active": true
+    },
+    {
+      "tick": 83355,
+      "access_phase": 0,
+      "progress": 9.449988,
+      "active": true
+    },
+    {
+      "tick": 83357,
+      "access_phase": 0,
+      "progress": 9.599988,
+      "active": true
+    },
+    {
+      "tick": 83359,
+      "access_phase": 0,
+      "progress": 9.749988,
+      "active": true
+    },
+    {
+      "tick": 83361,
+      "access_phase": 0,
+      "progress": 9.899987,
+      "active": true
+    },
+    {
+      "tick": 83363,
+      "access_phase": 0,
+      "progress": 10.049987,
+      "active": true
+    },
+    {
+      "tick": 83365,
+      "access_phase": 0,
+      "progress": 10.199986,
+      "active": true
+    },
+    {
+      "tick": 83367,
+      "access_phase": 0,
+      "progress": 10.349986,
+      "active": true
+    },
+    {
+      "tick": 83369,
+      "access_phase": 0,
+      "progress": 10.499986,
+      "active": true
+    },
+    {
+      "tick": 83371,
+      "access_phase": 0,
+      "progress": 10.649985,
+      "active": true
+    },
+    {
+      "tick": 83373,
+      "access_phase": 0,
+      "progress": 10.799985,
+      "active": true
+    },
+    {
+      "tick": 83375,
+      "access_phase": 0,
+      "progress": 10.949985,
+      "active": true
+    },
+    {
+      "tick": 83377,
+      "access_phase": 0,
+      "progress": 11.099984,
+      "active": true
+    },
+    {
+      "tick": 83379,
+      "access_phase": 0,
+      "progress": 11.249984,
+      "active": true
+    },
+    {
+      "tick": 83381,
+      "access_phase": 0,
+      "progress": 11.399983,
+      "active": true
+    },
+    {
+      "tick": 83383,
+      "access_phase": 0,
+      "progress": 11.549983,
+      "active": true
+    },
+    {
+      "tick": 83385,
+      "access_phase": 0,
+      "progress": 11.699983,
+      "active": true
+    },
+    {
+      "tick": 83387,
+      "access_phase": 0,
+      "progress": 11.849982,
+      "active": true
+    },
+    {
+      "tick": 83389,
+      "access_phase": 0,
+      "progress": 11.999982,
+      "active": true
+    },
+    {
+      "tick": 83391,
+      "access_phase": 0,
+      "progress": 12.1499815,
+      "active": true
+    },
+    {
+      "tick": 83393,
+      "access_phase": 0,
+      "progress": 12.299981,
+      "active": true
+    },
+    {
+      "tick": 83395,
+      "access_phase": 0,
+      "progress": 12.449981,
+      "active": true
+    },
+    {
+      "tick": 83397,
+      "access_phase": 0,
+      "progress": 12.59998,
+      "active": true
+    },
+    {
+      "tick": 83399,
+      "access_phase": 0,
+      "progress": 12.74998,
+      "active": true
+    },
+    {
+      "tick": 83401,
+      "access_phase": 0,
+      "progress": 12.89998,
+      "active": true
+    },
+    {
+      "tick": 83403,
+      "access_phase": 0,
+      "progress": 13.049979,
+      "active": true
+    },
+    {
+      "tick": 83405,
+      "access_phase": 0,
+      "progress": 13.199979,
+      "active": true
+    },
+    {
+      "tick": 83407,
+      "access_phase": 0,
+      "progress": 13.349978,
+      "active": true
+    },
+    {
+      "tick": 83409,
+      "access_phase": 0,
+      "progress": 13.499978,
+      "active": true
+    },
+    {
+      "tick": 83411,
+      "access_phase": 0,
+      "progress": 13.649978,
+      "active": true
+    },
+    {
+      "tick": 83413,
+      "access_phase": 0,
+      "progress": 13.799977,
+      "active": true
+    },
+    {
+      "tick": 83415,
+      "access_phase": 0,
+      "progress": 13.949977,
+      "active": true
+    },
+    {
+      "tick": 83417,
+      "access_phase": 0,
+      "progress": 14.099977,
+      "active": true
+    },
+    {
+      "tick": 83419,
+      "access_phase": 0,
+      "progress": 14.249976,
+      "active": true
+    },
+    {
+      "tick": 83421,
+      "access_phase": 0,
+      "progress": 14.399976,
+      "active": true
+    },
+    {
+      "tick": 83423,
+      "access_phase": 0,
+      "progress": 14.549975,
+      "active": true
+    },
+    {
+      "tick": 83425,
+      "access_phase": 0,
+      "progress": 14.699975,
+      "active": true
+    },
+    {
+      "tick": 83427,
+      "access_phase": 0,
+      "progress": 14.849975,
+      "active": true
+    },
+    {
+      "tick": 83429,
+      "access_phase": 0,
+      "progress": 14.999974,
+      "active": true
+    },
+    {
+      "tick": 83431,
+      "access_phase": 0,
+      "progress": 15.149974,
+      "active": true
+    },
+    {
+      "tick": 83433,
+      "access_phase": 0,
+      "progress": 15.2999735,
+      "active": true
+    },
+    {
+      "tick": 83435,
+      "access_phase": 0,
+      "progress": 15.449973,
+      "active": true
+    },
+    {
+      "tick": 83437,
+      "access_phase": 0,
+      "progress": 15.599973,
+      "active": true
+    },
+    {
+      "tick": 83439,
+      "access_phase": 0,
+      "progress": 15.749972,
+      "active": true
+    },
+    {
+      "tick": 83441,
+      "access_phase": 0,
+      "progress": 15.899972,
+      "active": true
+    },
+    {
+      "tick": 83443,
+      "access_phase": 0,
+      "progress": 16.049973,
+      "active": true
+    },
+    {
+      "tick": 83445,
+      "access_phase": 0,
+      "progress": 16.199974,
+      "active": true
+    },
+    {
+      "tick": 83447,
+      "access_phase": 0,
+      "progress": 16.349976,
+      "active": true
+    },
+    {
+      "tick": 83449,
+      "access_phase": 0,
+      "progress": 16.499977,
+      "active": true
+    },
+    {
+      "tick": 83451,
+      "access_phase": 0,
+      "progress": 16.649979,
+      "active": true
+    },
+    {
+      "tick": 83453,
+      "access_phase": 0,
+      "progress": 16.79998,
+      "active": true
+    },
+    {
+      "tick": 83455,
+      "access_phase": 0,
+      "progress": 16.949982,
+      "active": true
+    },
+    {
+      "tick": 83457,
+      "access_phase": 0,
+      "progress": 17.099983,
+      "active": true
+    },
+    {
+      "tick": 83459,
+      "access_phase": 0,
+      "progress": 17.249985,
+      "active": true
+    },
+    {
+      "tick": 83461,
+      "access_phase": 0,
+      "progress": 17.399986,
+      "active": true
+    },
+    {
+      "tick": 83463,
+      "access_phase": 0,
+      "progress": 17.549988,
+      "active": true
+    },
+    {
+      "tick": 83465,
+      "access_phase": 0,
+      "progress": 17.69999,
+      "active": true
+    },
+    {
+      "tick": 83467,
+      "access_phase": 0,
+      "progress": 17.84999,
+      "active": true
+    },
+    {
+      "tick": 83469,
+      "access_phase": 0,
+      "progress": 17.999992,
+      "active": true
+    },
+    {
+      "tick": 83471,
+      "access_phase": 0,
+      "progress": 18.149994,
+      "active": true
+    },
+    {
+      "tick": 83473,
+      "access_phase": 0,
+      "progress": 18.299995,
+      "active": true
+    },
+    {
+      "tick": 83475,
+      "access_phase": 0,
+      "progress": 18.449997,
+      "active": true
+    },
+    {
+      "tick": 83477,
+      "access_phase": 0,
+      "progress": 18.599998,
+      "active": true
+    },
+    {
+      "tick": 83479,
+      "access_phase": 0,
+      "progress": 18.75,
+      "active": true
+    },
+    {
+      "tick": 83481,
+      "access_phase": 0,
+      "progress": 18.900002,
+      "active": true
+    },
+    {
+      "tick": 83483,
+      "access_phase": 0,
+      "progress": 19.050003,
+      "active": true
+    },
+    {
+      "tick": 83485,
+      "access_phase": 0,
+      "progress": 19.200005,
+      "active": true
+    },
+    {
+      "tick": 83487,
+      "access_phase": 0,
+      "progress": 19.350006,
+      "active": true
+    },
+    {
+      "tick": 83489,
+      "access_phase": 0,
+      "progress": 19.500008,
+      "active": true
+    },
+    {
+      "tick": 83491,
+      "access_phase": 0,
+      "progress": 19.65001,
+      "active": true
+    },
+    {
+      "tick": 83493,
+      "access_phase": 0,
+      "progress": 19.80001,
+      "active": true
+    },
+    {
+      "tick": 83495,
+      "access_phase": 0,
+      "progress": 19.950012,
+      "active": true
+    },
+    {
+      "tick": 83497,
+      "access_phase": 0,
+      "progress": 20.100014,
+      "active": true
+    },
+    {
+      "tick": 83499,
+      "access_phase": 0,
+      "progress": 20.250015,
+      "active": true
+    },
+    {
+      "tick": 83501,
+      "access_phase": 0,
+      "progress": 20.400017,
+      "active": true
+    },
+    {
+      "tick": 83503,
+      "access_phase": 0,
+      "progress": 20.550018,
+      "active": true
+    },
+    {
+      "tick": 83505,
+      "access_phase": 0,
+      "progress": 20.70002,
+      "active": true
+    },
+    {
+      "tick": 83507,
+      "access_phase": 0,
+      "progress": 20.850021,
+      "active": true
+    },
+    {
+      "tick": 83509,
+      "access_phase": 0,
+      "progress": 21.000023,
+      "active": true
+    },
+    {
+      "tick": 83511,
+      "access_phase": 0,
+      "progress": 21.150024,
+      "active": true
+    },
+    {
+      "tick": 83513,
+      "access_phase": 0,
+      "progress": 21.300026,
+      "active": true
+    },
+    {
+      "tick": 83515,
+      "access_phase": 0,
+      "progress": 21.450027,
+      "active": true
+    },
+    {
+      "tick": 83517,
+      "access_phase": 0,
+      "progress": 21.600029,
+      "active": true
+    },
+    {
+      "tick": 83519,
+      "access_phase": 0,
+      "progress": 21.75003,
+      "active": true
+    },
+    {
+      "tick": 83521,
+      "access_phase": 0,
+      "progress": 21.900032,
+      "active": true
+    },
+    {
+      "tick": 83523,
+      "access_phase": 0,
+      "progress": 22.050034,
+      "active": true
+    },
+    {
+      "tick": 83525,
+      "access_phase": 0,
+      "progress": 22.200035,
+      "active": true
+    },
+    {
+      "tick": 83527,
+      "access_phase": 0,
+      "progress": 22.350037,
+      "active": true
+    },
+    {
+      "tick": 83529,
+      "access_phase": 0,
+      "progress": 22.500038,
+      "active": true
+    },
+    {
+      "tick": 83531,
+      "access_phase": 0,
+      "progress": 22.65004,
+      "active": true
+    },
+    {
+      "tick": 83533,
+      "access_phase": 0,
+      "progress": 22.800041,
+      "active": true
+    },
+    {
+      "tick": 83535,
+      "access_phase": 0,
+      "progress": 22.950043,
+      "active": true
+    },
+    {
+      "tick": 83537,
+      "access_phase": 0,
+      "progress": 23.100044,
+      "active": true
+    },
+    {
+      "tick": 83539,
+      "access_phase": 0,
+      "progress": 23.250046,
+      "active": true
+    },
+    {
+      "tick": 83541,
+      "access_phase": 0,
+      "progress": 23.400047,
+      "active": true
+    },
+    {
+      "tick": 83543,
+      "access_phase": 0,
+      "progress": 23.550049,
+      "active": true
+    },
+    {
+      "tick": 83545,
+      "access_phase": 0,
+      "progress": 23.70005,
+      "active": true
+    },
+    {
+      "tick": 83547,
+      "access_phase": 0,
+      "progress": 23.850052,
+      "active": true
+    },
+    {
+      "tick": 83549,
+      "access_phase": 0,
+      "progress": 24.000053,
+      "active": true
+    },
+    {
+      "tick": 83551,
+      "access_phase": 0,
+      "progress": 24.150055,
+      "active": true
+    },
+    {
+      "tick": 83553,
+      "access_phase": 0,
+      "progress": 24.300056,
+      "active": true
+    },
+    {
+      "tick": 83555,
+      "access_phase": 0,
+      "progress": 24.450058,
+      "active": true
+    },
+    {
+      "tick": 83557,
+      "access_phase": 0,
+      "progress": 24.60006,
+      "active": true
+    },
+    {
+      "tick": 83559,
+      "access_phase": 0,
+      "progress": 24.750061,
+      "active": true
+    },
+    {
+      "tick": 83561,
+      "access_phase": 0,
+      "progress": 24.900063,
+      "active": true
+    },
+    {
+      "tick": 83563,
+      "access_phase": 0,
+      "progress": 25.050064,
+      "active": true
+    },
+    {
+      "tick": 83565,
+      "access_phase": 0,
+      "progress": 25.200066,
+      "active": true
+    },
+    {
+      "tick": 83567,
+      "access_phase": 0,
+      "progress": 25.350067,
+      "active": true
+    },
+    {
+      "tick": 83569,
+      "access_phase": 0,
+      "progress": 25.500069,
+      "active": true
+    },
+    {
+      "tick": 83571,
+      "access_phase": 0,
+      "progress": 25.65007,
+      "active": true
+    },
+    {
+      "tick": 83573,
+      "access_phase": 0,
+      "progress": 25.800072,
+      "active": true
+    },
+    {
+      "tick": 83575,
+      "access_phase": 0,
+      "progress": 25.950073,
+      "active": true
+    },
+    {
+      "tick": 83577,
+      "access_phase": 0,
+      "progress": 26.100075,
+      "active": true
+    },
+    {
+      "tick": 83579,
+      "access_phase": 0,
+      "progress": 26.250076,
+      "active": true
+    },
+    {
+      "tick": 83581,
+      "access_phase": 0,
+      "progress": 26.400078,
+      "active": true
+    },
+    {
+      "tick": 83583,
+      "access_phase": 0,
+      "progress": 26.55008,
+      "active": true
+    },
+    {
+      "tick": 83585,
+      "access_phase": 0,
+      "progress": 26.70008,
+      "active": true
+    },
+    {
+      "tick": 83587,
+      "access_phase": 0,
+      "progress": 26.850082,
+      "active": true
+    },
+    {
+      "tick": 83589,
+      "access_phase": 0,
+      "progress": 27.000084,
+      "active": true
+    },
+    {
+      "tick": 83591,
+      "access_phase": 0,
+      "progress": 27.150085,
+      "active": true
+    },
+    {
+      "tick": 83593,
+      "access_phase": 0,
+      "progress": 27.300087,
+      "active": true
+    },
+    {
+      "tick": 83595,
+      "access_phase": 0,
+      "progress": 27.450089,
+      "active": true
+    },
+    {
+      "tick": 83597,
+      "access_phase": 0,
+      "progress": 27.60009,
+      "active": true
+    },
+    {
+      "tick": 83599,
+      "access_phase": 0,
+      "progress": 27.750092,
+      "active": true
+    },
+    {
+      "tick": 83601,
+      "access_phase": 0,
+      "progress": 27.900093,
+      "active": true
+    },
+    {
+      "tick": 83603,
+      "access_phase": 0,
+      "progress": 28.050095,
+      "active": true
+    },
+    {
+      "tick": 83605,
+      "access_phase": 0,
+      "progress": 28.200096,
+      "active": true
+    },
+    {
+      "tick": 83607,
+      "access_phase": 0,
+      "progress": 28.350098,
+      "active": true
+    },
+    {
+      "tick": 83609,
+      "access_phase": 0,
+      "progress": 28.5001,
+      "active": true
+    },
+    {
+      "tick": 83611,
+      "access_phase": 0,
+      "progress": 28.6501,
+      "active": true
+    },
+    {
+      "tick": 83613,
+      "access_phase": 0,
+      "progress": 28.800102,
+      "active": true
+    },
+    {
+      "tick": 83615,
+      "access_phase": 0,
+      "progress": 28.950104,
+      "active": true
+    },
+    {
+      "tick": 83617,
+      "access_phase": 0,
+      "progress": 29.100105,
+      "active": true
+    },
+    {
+      "tick": 83619,
+      "access_phase": 0,
+      "progress": 29.250107,
+      "active": true
+    },
+    {
+      "tick": 83621,
+      "access_phase": 0,
+      "progress": 29.400108,
+      "active": true
+    },
+    {
+      "tick": 83623,
+      "access_phase": 0,
+      "progress": 29.55011,
+      "active": true
+    },
+    {
+      "tick": 83625,
+      "access_phase": 0,
+      "progress": 29.700111,
+      "active": true
+    },
+    {
+      "tick": 83627,
+      "access_phase": 0,
+      "progress": 29.850113,
+      "active": true
+    },
+    {
+      "tick": 83629,
+      "access_phase": 0,
+      "progress": 30.000114,
+      "active": true
+    },
+    {
+      "tick": 83631,
+      "access_phase": 0,
+      "progress": 30.150116,
+      "active": true
+    },
+    {
+      "tick": 83633,
+      "access_phase": 0,
+      "progress": 30.300117,
+      "active": true
+    },
+    {
+      "tick": 83635,
+      "access_phase": 0,
+      "progress": 30.450119,
+      "active": true
+    },
+    {
+      "tick": 83637,
+      "access_phase": 0,
+      "progress": 30.60012,
+      "active": true
+    },
+    {
+      "tick": 83639,
+      "access_phase": 0,
+      "progress": 30.750122,
+      "active": true
+    },
+    {
+      "tick": 83641,
+      "access_phase": 0,
+      "progress": 30.900124,
+      "active": true
+    },
+    {
+      "tick": 83643,
+      "access_phase": 0,
+      "progress": 31.050125,
+      "active": true
+    },
+    {
+      "tick": 83645,
+      "access_phase": 0,
+      "progress": 31.200127,
+      "active": true
+    },
+    {
+      "tick": 83647,
+      "access_phase": 0,
+      "progress": 31.350128,
+      "active": true
+    },
+    {
+      "tick": 83649,
+      "access_phase": 0,
+      "progress": 31.50013,
+      "active": true
+    },
+    {
+      "tick": 83651,
+      "access_phase": 0,
+      "progress": 31.650131,
+      "active": true
+    },
+    {
+      "tick": 83653,
+      "access_phase": 0,
+      "progress": 31.800133,
+      "active": true
+    },
+    {
+      "tick": 83655,
+      "access_phase": 0,
+      "progress": 31.950134,
+      "active": true
+    },
+    {
+      "tick": 83657,
+      "access_phase": 0,
+      "progress": 32.100136,
+      "active": true
+    },
+    {
+      "tick": 83659,
+      "access_phase": 0,
+      "progress": 32.250137,
+      "active": true
+    },
+    {
+      "tick": 83661,
+      "access_phase": 0,
+      "progress": 32.40014,
+      "active": true
+    },
+    {
+      "tick": 83663,
+      "access_phase": 0,
+      "progress": 32.55014,
+      "active": true
+    },
+    {
+      "tick": 83665,
+      "access_phase": 0,
+      "progress": 32.70014,
+      "active": true
+    },
+    {
+      "tick": 83667,
+      "access_phase": 0,
+      "progress": 32.850143,
+      "active": true
+    },
+    {
+      "tick": 83669,
+      "access_phase": 0,
+      "progress": 33.000145,
+      "active": true
+    },
+    {
+      "tick": 83671,
+      "access_phase": 0,
+      "progress": 33.150146,
+      "active": true
+    },
+    {
+      "tick": 83673,
+      "access_phase": 0,
+      "progress": 33.300148,
+      "active": true
+    },
+    {
+      "tick": 83675,
+      "access_phase": 0,
+      "progress": 33.45015,
+      "active": true
+    },
+    {
+      "tick": 83677,
+      "access_phase": 0,
+      "progress": 33.60015,
+      "active": true
+    },
+    {
+      "tick": 83679,
+      "access_phase": 0,
+      "progress": 33.750153,
+      "active": true
+    },
+    {
+      "tick": 83681,
+      "access_phase": 0,
+      "progress": 33.900154,
+      "active": true
+    },
+    {
+      "tick": 83683,
+      "access_phase": 0,
+      "progress": 34.050156,
+      "active": true
+    },
+    {
+      "tick": 83685,
+      "access_phase": 0,
+      "progress": 34.200157,
+      "active": true
+    },
+    {
+      "tick": 83687,
+      "access_phase": 0,
+      "progress": 34.35016,
+      "active": true
+    },
+    {
+      "tick": 83689,
+      "access_phase": 0,
+      "progress": 34.50016,
+      "active": true
+    },
+    {
+      "tick": 83691,
+      "access_phase": 0,
+      "progress": 34.65016,
+      "active": true
+    },
+    {
+      "tick": 83693,
+      "access_phase": 0,
+      "progress": 34.800163,
+      "active": true
+    },
+    {
+      "tick": 83695,
+      "access_phase": 0,
+      "progress": 34.950165,
+      "active": true
+    },
+    {
+      "tick": 83697,
+      "access_phase": 0,
+      "progress": 35.100166,
+      "active": true
+    },
+    {
+      "tick": 83699,
+      "access_phase": 0,
+      "progress": 35.250168,
+      "active": true
+    },
+    {
+      "tick": 83701,
+      "access_phase": 0,
+      "progress": 35.40017,
+      "active": true
+    },
+    {
+      "tick": 83703,
+      "access_phase": 0,
+      "progress": 35.55017,
+      "active": true
+    },
+    {
+      "tick": 83705,
+      "access_phase": 0,
+      "progress": 35.700172,
+      "active": true
+    },
+    {
+      "tick": 83707,
+      "access_phase": 0,
+      "progress": 35.850174,
+      "active": true
+    },
+    {
+      "tick": 83709,
+      "access_phase": 0,
+      "progress": 36.000175,
+      "active": true
+    },
+    {
+      "tick": 83711,
+      "access_phase": 0,
+      "progress": 36.150177,
+      "active": true
+    },
+    {
+      "tick": 83713,
+      "access_phase": 0,
+      "progress": 36.30018,
+      "active": true
+    },
+    {
+      "tick": 83715,
+      "access_phase": 0,
+      "progress": 36.45018,
+      "active": true
+    },
+    {
+      "tick": 83717,
+      "access_phase": 0,
+      "progress": 36.60018,
+      "active": true
+    },
+    {
+      "tick": 83719,
+      "access_phase": 0,
+      "progress": 36.750183,
+      "active": true
+    },
+    {
+      "tick": 83721,
+      "access_phase": 0,
+      "progress": 36.900185,
+      "active": true
+    },
+    {
+      "tick": 83723,
+      "access_phase": 0,
+      "progress": 37.050186,
+      "active": true
+    },
+    {
+      "tick": 83725,
+      "access_phase": 0,
+      "progress": 37.200188,
+      "active": true
+    },
+    {
+      "tick": 83727,
+      "access_phase": 0,
+      "progress": 37.35019,
+      "active": true
+    },
+    {
+      "tick": 83729,
+      "access_phase": 0,
+      "progress": 37.50019,
+      "active": true
+    },
+    {
+      "tick": 83731,
+      "access_phase": 0,
+      "progress": 37.650192,
+      "active": true
+    },
+    {
+      "tick": 83733,
+      "access_phase": 0,
+      "progress": 37.800194,
+      "active": true
+    },
+    {
+      "tick": 83735,
+      "access_phase": 0,
+      "progress": 37.950195,
+      "active": true
+    },
+    {
+      "tick": 83737,
+      "access_phase": 0,
+      "progress": 38.100197,
+      "active": true
+    },
+    {
+      "tick": 83739,
+      "access_phase": 0,
+      "progress": 38.2502,
+      "active": true
+    },
+    {
+      "tick": 83741,
+      "access_phase": 0,
+      "progress": 38.4002,
+      "active": true
+    },
+    {
+      "tick": 83743,
+      "access_phase": 0,
+      "progress": 38.5502,
+      "active": true
+    },
+    {
+      "tick": 83745,
+      "access_phase": 0,
+      "progress": 38.700203,
+      "active": true
+    },
+    {
+      "tick": 83747,
+      "access_phase": 0,
+      "progress": 38.850204,
+      "active": true
+    },
+    {
+      "tick": 83749,
+      "access_phase": 0,
+      "progress": 39.000206,
+      "active": true
+    },
+    {
+      "tick": 83751,
+      "access_phase": 0,
+      "progress": 39.150208,
+      "active": true
+    },
+    {
+      "tick": 83753,
+      "access_phase": 0,
+      "progress": 39.30021,
+      "active": true
+    },
+    {
+      "tick": 83755,
+      "access_phase": 0,
+      "progress": 39.45021,
+      "active": true
+    },
+    {
+      "tick": 83757,
+      "access_phase": 0,
+      "progress": 39.600212,
+      "active": true
+    },
+    {
+      "tick": 83759,
+      "access_phase": 0,
+      "progress": 39.750214,
+      "active": true
+    },
+    {
+      "tick": 83761,
+      "access_phase": 0,
+      "progress": 39.900215,
+      "active": true
+    },
+    {
+      "tick": 83763,
+      "access_phase": 0,
+      "progress": 40.050217,
+      "active": true
+    },
+    {
+      "tick": 83765,
+      "access_phase": 0,
+      "progress": 40.20022,
+      "active": true
+    },
+    {
+      "tick": 83767,
+      "access_phase": 0,
+      "progress": 40.35022,
+      "active": true
+    },
+    {
+      "tick": 83769,
+      "access_phase": 0,
+      "progress": 40.50022,
+      "active": true
+    },
+    {
+      "tick": 83771,
+      "access_phase": 0,
+      "progress": 40.650223,
+      "active": true
+    },
+    {
+      "tick": 83773,
+      "access_phase": 0,
+      "progress": 40.800224,
+      "active": true
+    },
+    {
+      "tick": 83775,
+      "access_phase": 0,
+      "progress": 40.950226,
+      "active": true
+    },
+    {
+      "tick": 83777,
+      "access_phase": 0,
+      "progress": 41.100227,
+      "active": true
+    },
+    {
+      "tick": 83779,
+      "access_phase": 0,
+      "progress": 41.25023,
+      "active": true
+    },
+    {
+      "tick": 83781,
+      "access_phase": 0,
+      "progress": 41.40023,
+      "active": true
+    },
+    {
+      "tick": 83783,
+      "access_phase": 0,
+      "progress": 41.550232,
+      "active": true
+    },
+    {
+      "tick": 83785,
+      "access_phase": 0,
+      "progress": 41.700233,
+      "active": true
+    },
+    {
+      "tick": 83787,
+      "access_phase": 0,
+      "progress": 41.850235,
+      "active": true
+    },
+    {
+      "tick": 83789,
+      "access_phase": 0,
+      "progress": 42.000237,
+      "active": true
+    },
+    {
+      "tick": 83791,
+      "access_phase": 0,
+      "progress": 42.150238,
+      "active": true
+    },
+    {
+      "tick": 83793,
+      "access_phase": 0,
+      "progress": 42.30024,
+      "active": true
+    },
+    {
+      "tick": 83795,
+      "access_phase": 0,
+      "progress": 42.45024,
+      "active": true
+    },
+    {
+      "tick": 83797,
+      "access_phase": 0,
+      "progress": 42.600243,
+      "active": true
+    },
+    {
+      "tick": 83799,
+      "access_phase": 0,
+      "progress": 42.750244,
+      "active": true
+    },
+    {
+      "tick": 83801,
+      "access_phase": 0,
+      "progress": 42.900246,
+      "active": true
+    },
+    {
+      "tick": 83803,
+      "access_phase": 0,
+      "progress": 43.050247,
+      "active": true
+    },
+    {
+      "tick": 83805,
+      "access_phase": 0,
+      "progress": 43.20025,
+      "active": true
+    },
+    {
+      "tick": 83807,
+      "access_phase": 0,
+      "progress": 43.35025,
+      "active": true
+    },
+    {
+      "tick": 83809,
+      "access_phase": 0,
+      "progress": 43.50025,
+      "active": true
+    },
+    {
+      "tick": 83811,
+      "access_phase": 0,
+      "progress": 43.650253,
+      "active": true
+    },
+    {
+      "tick": 83813,
+      "access_phase": 0,
+      "progress": 43.800255,
+      "active": true
+    },
+    {
+      "tick": 83815,
+      "access_phase": 0,
+      "progress": 43.950256,
+      "active": true
+    },
+    {
+      "tick": 83817,
+      "access_phase": 0,
+      "progress": 44.100258,
+      "active": true
+    },
+    {
+      "tick": 83819,
+      "access_phase": 0,
+      "progress": 44.25026,
+      "active": true
+    },
+    {
+      "tick": 83821,
+      "access_phase": 0,
+      "progress": 44.40026,
+      "active": true
+    },
+    {
+      "tick": 83823,
+      "access_phase": 0,
+      "progress": 44.550262,
+      "active": true
+    },
+    {
+      "tick": 83825,
+      "access_phase": 0,
+      "progress": 44.700264,
+      "active": true
+    },
+    {
+      "tick": 83827,
+      "access_phase": 0,
+      "progress": 44.850266,
+      "active": true
+    },
+    {
+      "tick": 83829,
+      "access_phase": 0,
+      "progress": 45.000267,
+      "active": true
+    },
+    {
+      "tick": 83831,
+      "access_phase": 0,
+      "progress": 45.15027,
+      "active": true
+    },
+    {
+      "tick": 83833,
+      "access_phase": 0,
+      "progress": 45.30027,
+      "active": true
+    },
+    {
+      "tick": 83835,
+      "access_phase": 0,
+      "progress": 45.45027,
+      "active": true
+    },
+    {
+      "tick": 83837,
+      "access_phase": 0,
+      "progress": 45.600273,
+      "active": true
+    },
+    {
+      "tick": 83839,
+      "access_phase": 0,
+      "progress": 45.750275,
+      "active": true
+    },
+    {
+      "tick": 83841,
+      "access_phase": 0,
+      "progress": 45.900276,
+      "active": true
+    },
+    {
+      "tick": 83843,
+      "access_phase": 0,
+      "progress": 46.050278,
+      "active": true
+    },
+    {
+      "tick": 83845,
+      "access_phase": 0,
+      "progress": 46.20028,
+      "active": true
+    },
+    {
+      "tick": 83847,
+      "access_phase": 0,
+      "progress": 46.35028,
+      "active": true
+    },
+    {
+      "tick": 83849,
+      "access_phase": 0,
+      "progress": 46.500282,
+      "active": true
+    },
+    {
+      "tick": 83851,
+      "access_phase": 0,
+      "progress": 46.650284,
+      "active": true
+    },
+    {
+      "tick": 83853,
+      "access_phase": 0,
+      "progress": 46.800285,
+      "active": true
+    },
+    {
+      "tick": 83855,
+      "access_phase": 0,
+      "progress": 46.950287,
+      "active": true
+    },
+    {
+      "tick": 83857,
+      "access_phase": 0,
+      "progress": 47.10029,
+      "active": true
+    },
+    {
+      "tick": 83859,
+      "access_phase": 0,
+      "progress": 47.25029,
+      "active": true
+    },
+    {
+      "tick": 83861,
+      "access_phase": 0,
+      "progress": 47.40029,
+      "active": true
+    },
+    {
+      "tick": 83863,
+      "access_phase": 0,
+      "progress": 47.550293,
+      "active": true
+    },
+    {
+      "tick": 83865,
+      "access_phase": 0,
+      "progress": 47.700294,
+      "active": true
+    },
+    {
+      "tick": 83867,
+      "access_phase": 0,
+      "progress": 47.850296,
+      "active": true
+    },
+    {
+      "tick": 83869,
+      "access_phase": 0,
+      "progress": 48.000298,
+      "active": true
+    },
+    {
+      "tick": 83871,
+      "access_phase": 0,
+      "progress": 48.1503,
+      "active": true
+    },
+    {
+      "tick": 83873,
+      "access_phase": 0,
+      "progress": 48.3003,
+      "active": true
+    },
+    {
+      "tick": 83875,
+      "access_phase": 0,
+      "progress": 48.450302,
+      "active": true
+    },
+    {
+      "tick": 83877,
+      "access_phase": 0,
+      "progress": 48.600304,
+      "active": true
+    },
+    {
+      "tick": 83879,
+      "access_phase": 0,
+      "progress": 48.750305,
+      "active": true
+    },
+    {
+      "tick": 83881,
+      "access_phase": 0,
+      "progress": 48.900307,
+      "active": true
+    },
+    {
+      "tick": 83883,
+      "access_phase": 0,
+      "progress": 49.05031,
+      "active": true
+    },
+    {
+      "tick": 83885,
+      "access_phase": 0,
+      "progress": 49.20031,
+      "active": true
+    },
+    {
+      "tick": 83887,
+      "access_phase": 0,
+      "progress": 49.35031,
+      "active": true
+    },
+    {
+      "tick": 83889,
+      "access_phase": 0,
+      "progress": 49.500313,
+      "active": true
+    },
+    {
+      "tick": 83891,
+      "access_phase": 0,
+      "progress": 49.650314,
+      "active": true
+    },
+    {
+      "tick": 83893,
+      "access_phase": 0,
+      "progress": 49.800316,
+      "active": true
+    },
+    {
+      "tick": 83895,
+      "access_phase": 0,
+      "progress": 49.950317,
+      "active": true
+    },
+    {
+      "tick": 83897,
+      "access_phase": 0,
+      "progress": 50.10032,
+      "active": true
+    },
+    {
+      "tick": 83899,
+      "access_phase": 0,
+      "progress": 50.25032,
+      "active": true
+    },
+    {
+      "tick": 83901,
+      "access_phase": 0,
+      "progress": 50.400322,
+      "active": true
+    },
+    {
+      "tick": 83903,
+      "access_phase": 0,
+      "progress": 50.550323,
+      "active": true
+    },
+    {
+      "tick": 83905,
+      "access_phase": 0,
+      "progress": 50.700325,
+      "active": true
+    },
+    {
+      "tick": 83907,
+      "access_phase": 0,
+      "progress": 50.850327,
+      "active": true
+    },
+    {
+      "tick": 83909,
+      "access_phase": 0,
+      "progress": 51.000328,
+      "active": true
+    },
+    {
+      "tick": 83911,
+      "access_phase": 0,
+      "progress": 51.15033,
+      "active": true
+    },
+    {
+      "tick": 83913,
+      "access_phase": 0,
+      "progress": 51.30033,
+      "active": true
+    },
+    {
+      "tick": 83915,
+      "access_phase": 0,
+      "progress": 51.450333,
+      "active": true
+    },
+    {
+      "tick": 83917,
+      "access_phase": 0,
+      "progress": 51.600334,
+      "active": true
+    },
+    {
+      "tick": 83919,
+      "access_phase": 0,
+      "progress": 51.750336,
+      "active": true
+    },
+    {
+      "tick": 83921,
+      "access_phase": 0,
+      "progress": 51.900337,
+      "active": true
+    },
+    {
+      "tick": 83923,
+      "access_phase": 0,
+      "progress": 52.05034,
+      "active": true
+    },
+    {
+      "tick": 83925,
+      "access_phase": 0,
+      "progress": 52.20034,
+      "active": true
+    },
+    {
+      "tick": 83927,
+      "access_phase": 0,
+      "progress": 52.35034,
+      "active": true
+    },
+    {
+      "tick": 83929,
+      "access_phase": 0,
+      "progress": 52.500343,
+      "active": true
+    },
+    {
+      "tick": 83931,
+      "access_phase": 0,
+      "progress": 52.650345,
+      "active": true
+    },
+    {
+      "tick": 83933,
+      "access_phase": 0,
+      "progress": 52.800346,
+      "active": true
+    },
+    {
+      "tick": 83935,
+      "access_phase": 0,
+      "progress": 52.950348,
+      "active": true
+    },
+    {
+      "tick": 83937,
+      "access_phase": 0,
+      "progress": 53.10035,
+      "active": true
+    },
+    {
+      "tick": 83939,
+      "access_phase": 0,
+      "progress": 53.25035,
+      "active": true
+    },
+    {
+      "tick": 83941,
+      "access_phase": 0,
+      "progress": 53.400352,
+      "active": true
+    },
+    {
+      "tick": 83943,
+      "access_phase": 0,
+      "progress": 53.550354,
+      "active": true
+    },
+    {
+      "tick": 83945,
+      "access_phase": 0,
+      "progress": 53.700356,
+      "active": true
+    },
+    {
+      "tick": 83947,
+      "access_phase": 0,
+      "progress": 53.850357,
+      "active": true
+    },
+    {
+      "tick": 83949,
+      "access_phase": 0,
+      "progress": 54.00036,
+      "active": true
+    },
+    {
+      "tick": 83951,
+      "access_phase": 0,
+      "progress": 54.15036,
+      "active": true
+    },
+    {
+      "tick": 83953,
+      "access_phase": 0,
+      "progress": 54.30036,
+      "active": true
+    },
+    {
+      "tick": 83955,
+      "access_phase": 0,
+      "progress": 54.450363,
+      "active": true
+    },
+    {
+      "tick": 83957,
+      "access_phase": 0,
+      "progress": 54.600365,
+      "active": true
+    },
+    {
+      "tick": 83959,
+      "access_phase": 0,
+      "progress": 54.750366,
+      "active": true
+    },
+    {
+      "tick": 83961,
+      "access_phase": 0,
+      "progress": 54.900368,
+      "active": true
+    },
+    {
+      "tick": 83963,
+      "access_phase": 0,
+      "progress": 55.05037,
+      "active": true
+    },
+    {
+      "tick": 83965,
+      "access_phase": 0,
+      "progress": 55.20037,
+      "active": true
+    },
+    {
+      "tick": 83967,
+      "access_phase": 0,
+      "progress": 55.350372,
+      "active": true
+    },
+    {
+      "tick": 83969,
+      "access_phase": 0,
+      "progress": 55.500374,
+      "active": true
+    },
+    {
+      "tick": 83971,
+      "access_phase": 0,
+      "progress": 55.650375,
+      "active": true
+    },
+    {
+      "tick": 83973,
+      "access_phase": 0,
+      "progress": 55.800377,
+      "active": true
+    },
+    {
+      "tick": 83975,
+      "access_phase": 0,
+      "progress": 55.95038,
+      "active": true
+    },
+    {
+      "tick": 83977,
+      "access_phase": 0,
+      "progress": 56.10038,
+      "active": true
+    },
+    {
+      "tick": 83979,
+      "access_phase": 0,
+      "progress": 56.25038,
+      "active": true
+    },
+    {
+      "tick": 83981,
+      "access_phase": 0,
+      "progress": 56.400383,
+      "active": true
+    },
+    {
+      "tick": 83983,
+      "access_phase": 0,
+      "progress": 56.550385,
+      "active": true
+    },
+    {
+      "tick": 83985,
+      "access_phase": 0,
+      "progress": 56.700386,
+      "active": true
+    },
+    {
+      "tick": 83987,
+      "access_phase": 0,
+      "progress": 56.850388,
+      "active": true
+    },
+    {
+      "tick": 83989,
+      "access_phase": 0,
+      "progress": 57.00039,
+      "active": true
+    },
+    {
+      "tick": 83991,
+      "access_phase": 0,
+      "progress": 57.15039,
+      "active": true
+    },
+    {
+      "tick": 83993,
+      "access_phase": 0,
+      "progress": 57.300392,
+      "active": true
+    },
+    {
+      "tick": 83995,
+      "access_phase": 0,
+      "progress": 57.450394,
+      "active": true
+    },
+    {
+      "tick": 83997,
+      "access_phase": 0,
+      "progress": 57.600395,
+      "active": true
+    },
+    {
+      "tick": 83999,
+      "access_phase": 0,
+      "progress": 57.750397,
+      "active": true
+    },
+    {
+      "tick": 84001,
+      "access_phase": 0,
+      "progress": 57.9004,
+      "active": true
+    },
+    {
+      "tick": 84003,
+      "access_phase": 0,
+      "progress": 58.0504,
+      "active": true
+    },
+    {
+      "tick": 84005,
+      "access_phase": 0,
+      "progress": 58.2004,
+      "active": true
+    },
+    {
+      "tick": 84007,
+      "access_phase": 0,
+      "progress": 58.350403,
+      "active": true
+    },
+    {
+      "tick": 84009,
+      "access_phase": 0,
+      "progress": 58.500404,
+      "active": true
+    },
+    {
+      "tick": 84011,
+      "access_phase": 0,
+      "progress": 58.650406,
+      "active": true
+    },
+    {
+      "tick": 84013,
+      "access_phase": 0,
+      "progress": 58.800407,
+      "active": true
+    },
+    {
+      "tick": 84015,
+      "access_phase": 0,
+      "progress": 58.95041,
+      "active": true
+    },
+    {
+      "tick": 84017,
+      "access_phase": 0,
+      "progress": 59.10041,
+      "active": true
+    },
+    {
+      "tick": 84019,
+      "access_phase": 0,
+      "progress": 59.250412,
+      "active": true
+    },
+    {
+      "tick": 84021,
+      "access_phase": 0,
+      "progress": 59.400414,
+      "active": true
+    },
+    {
+      "tick": 84023,
+      "access_phase": 0,
+      "progress": 59.550415,
+      "active": true
+    },
+    {
+      "tick": 84025,
+      "access_phase": 0,
+      "progress": 59.700417,
+      "active": true
+    },
+    {
+      "tick": 84027,
+      "access_phase": 0,
+      "progress": 59.850418,
+      "active": true
+    },
+    {
+      "tick": 84029,
+      "access_phase": 0,
+      "progress": 60.00042,
+      "active": true
+    },
+    {
+      "tick": 84031,
+      "access_phase": 0,
+      "progress": 60.15042,
+      "active": true
+    },
+    {
+      "tick": 84033,
+      "access_phase": 0,
+      "progress": 60.300423,
+      "active": true
+    },
+    {
+      "tick": 84035,
+      "access_phase": 0,
+      "progress": 60.450424,
+      "active": true
+    },
+    {
+      "tick": 84037,
+      "access_phase": 0,
+      "progress": 60.600426,
+      "active": true
+    },
+    {
+      "tick": 84039,
+      "access_phase": 0,
+      "progress": 60.750427,
+      "active": true
+    },
+    {
+      "tick": 84041,
+      "access_phase": 0,
+      "progress": 60.90043,
+      "active": true
+    },
+    {
+      "tick": 84043,
+      "access_phase": 0,
+      "progress": 61.05043,
+      "active": true
+    },
+    {
+      "tick": 84045,
+      "access_phase": 0,
+      "progress": 61.20043,
+      "active": true
+    },
+    {
+      "tick": 84047,
+      "access_phase": 0,
+      "progress": 61.350433,
+      "active": true
+    },
+    {
+      "tick": 84049,
+      "access_phase": 0,
+      "progress": 61.500435,
+      "active": true
+    },
+    {
+      "tick": 84051,
+      "access_phase": 0,
+      "progress": 61.650436,
+      "active": true
+    },
+    {
+      "tick": 84053,
+      "access_phase": 0,
+      "progress": 61.800438,
+      "active": true
+    },
+    {
+      "tick": 84055,
+      "access_phase": 0,
+      "progress": 61.95044,
+      "active": true
+    },
+    {
+      "tick": 84057,
+      "access_phase": 0,
+      "progress": 62.10044,
+      "active": true
+    },
+    {
+      "tick": 84059,
+      "access_phase": 0,
+      "progress": 62.250443,
+      "active": true
+    },
+    {
+      "tick": 84061,
+      "access_phase": 0,
+      "progress": 62.400444,
+      "active": true
+    },
+    {
+      "tick": 84063,
+      "access_phase": 0,
+      "progress": 62.550446,
+      "active": true
+    },
+    {
+      "tick": 84065,
+      "access_phase": 0,
+      "progress": 62.700447,
+      "active": true
+    },
+    {
+      "tick": 84067,
+      "access_phase": 0,
+      "progress": 62.85045,
+      "active": true
+    },
+    {
+      "tick": 84069,
+      "access_phase": 0,
+      "progress": 63.00045,
+      "active": true
+    },
+    {
+      "tick": 84071,
+      "access_phase": 0,
+      "progress": 63.15045,
+      "active": true
+    },
+    {
+      "tick": 84073,
+      "access_phase": 0,
+      "progress": 63.300453,
+      "active": true
+    },
+    {
+      "tick": 84075,
+      "access_phase": 0,
+      "progress": 63.450455,
+      "active": true
+    },
+    {
+      "tick": 84077,
+      "access_phase": 0,
+      "progress": 63.600456,
+      "active": true
+    },
+    {
+      "tick": 84079,
+      "access_phase": 0,
+      "progress": 63.750458,
+      "active": true
+    },
+    {
+      "tick": 84081,
+      "access_phase": 0,
+      "progress": 63.90046,
+      "active": true
+    },
+    {
+      "tick": 84083,
+      "access_phase": 0,
+      "progress": 64.05046,
+      "active": true
+    },
+    {
+      "tick": 84085,
+      "access_phase": 0,
+      "progress": 64.200455,
+      "active": true
+    },
+    {
+      "tick": 84087,
+      "access_phase": 0,
+      "progress": 64.35045,
+      "active": true
+    },
+    {
+      "tick": 84089,
+      "access_phase": 0,
+      "progress": 64.50044,
+      "active": true
+    },
+    {
+      "tick": 84091,
+      "access_phase": 0,
+      "progress": 64.65044,
+      "active": true
+    },
+    {
+      "tick": 84093,
+      "access_phase": 0,
+      "progress": 64.80043,
+      "active": true
+    },
+    {
+      "tick": 84095,
+      "access_phase": 0,
+      "progress": 64.950424,
+      "active": true
+    },
+    {
+      "tick": 84097,
+      "access_phase": 0,
+      "progress": 65.10042,
+      "active": true
+    },
+    {
+      "tick": 84099,
+      "access_phase": 0,
+      "progress": 65.25041,
+      "active": true
+    },
+    {
+      "tick": 84101,
+      "access_phase": 0,
+      "progress": 65.400406,
+      "active": true
+    },
+    {
+      "tick": 84103,
+      "access_phase": 0,
+      "progress": 65.5504,
+      "active": true
+    },
+    {
+      "tick": 84105,
+      "access_phase": 0,
+      "progress": 65.70039,
+      "active": true
+    },
+    {
+      "tick": 84107,
+      "access_phase": 0,
+      "progress": 65.85039,
+      "active": true
+    },
+    {
+      "tick": 84109,
+      "access_phase": 0,
+      "progress": 66.00038,
+      "active": true
+    },
+    {
+      "tick": 84111,
+      "access_phase": 0,
+      "progress": 66.150375,
+      "active": true
+    },
+    {
+      "tick": 84113,
+      "access_phase": 0,
+      "progress": 66.30037,
+      "active": true
+    },
+    {
+      "tick": 84115,
+      "access_phase": 0,
+      "progress": 66.45036,
+      "active": true
+    },
+    {
+      "tick": 84117,
+      "access_phase": 0,
+      "progress": 66.60036,
+      "active": true
+    },
+    {
+      "tick": 84119,
+      "access_phase": 0,
+      "progress": 66.75035,
+      "active": true
+    },
+    {
+      "tick": 84121,
+      "access_phase": 0,
+      "progress": 66.900345,
+      "active": true
+    },
+    {
+      "tick": 84123,
+      "access_phase": 0,
+      "progress": 67.05034,
+      "active": true
+    },
+    {
+      "tick": 84125,
+      "access_phase": 0,
+      "progress": 67.20033,
+      "active": true
+    },
+    {
+      "tick": 84127,
+      "access_phase": 0,
+      "progress": 67.35033,
+      "active": true
+    },
+    {
+      "tick": 84129,
+      "access_phase": 0,
+      "progress": 67.50032,
+      "active": true
+    },
+    {
+      "tick": 84131,
+      "access_phase": 0,
+      "progress": 67.650314,
+      "active": true
+    },
+    {
+      "tick": 84133,
+      "access_phase": 0,
+      "progress": 67.80031,
+      "active": true
+    },
+    {
+      "tick": 84135,
+      "access_phase": 0,
+      "progress": 67.9503,
+      "active": true
+    },
+    {
+      "tick": 84137,
+      "access_phase": 0,
+      "progress": 68.100296,
+      "active": true
+    },
+    {
+      "tick": 84139,
+      "access_phase": 0,
+      "progress": 68.25029,
+      "active": true
+    },
+    {
+      "tick": 84141,
+      "access_phase": 0,
+      "progress": 68.40028,
+      "active": true
+    },
+    {
+      "tick": 84143,
+      "access_phase": 0,
+      "progress": 68.55028,
+      "active": true
+    },
+    {
+      "tick": 84145,
+      "access_phase": 0,
+      "progress": 68.70027,
+      "active": true
+    },
+    {
+      "tick": 84147,
+      "access_phase": 0,
+      "progress": 68.850266,
+      "active": true
+    },
+    {
+      "tick": 84149,
+      "access_phase": 0,
+      "progress": 69.00026,
+      "active": true
+    },
+    {
+      "tick": 84151,
+      "access_phase": 0,
+      "progress": 69.15025,
+      "active": true
+    },
+    {
+      "tick": 84153,
+      "access_phase": 0,
+      "progress": 69.30025,
+      "active": true
+    },
+    {
+      "tick": 84155,
+      "access_phase": 0,
+      "progress": 69.45024,
+      "active": true
+    },
+    {
+      "tick": 84157,
+      "access_phase": 0,
+      "progress": 69.600235,
+      "active": true
+    },
+    {
+      "tick": 84159,
+      "access_phase": 0,
+      "progress": 69.75023,
+      "active": true
+    },
+    {
+      "tick": 84161,
+      "access_phase": 0,
+      "progress": 69.90022,
+      "active": true
+    },
+    {
+      "tick": 84163,
+      "access_phase": 0,
+      "progress": 70.05022,
+      "active": true
+    },
+    {
+      "tick": 84165,
+      "access_phase": 0,
+      "progress": 70.20021,
+      "active": true
+    },
+    {
+      "tick": 84167,
+      "access_phase": 0,
+      "progress": 70.350204,
+      "active": true
+    },
+    {
+      "tick": 84169,
+      "access_phase": 0,
+      "progress": 70.5002,
+      "active": true
+    },
+    {
+      "tick": 84171,
+      "access_phase": 0,
+      "progress": 70.65019,
+      "active": true
+    },
+    {
+      "tick": 84173,
+      "access_phase": 0,
+      "progress": 70.800186,
+      "active": true
+    },
+    {
+      "tick": 84175,
+      "access_phase": 0,
+      "progress": 70.95018,
+      "active": true
+    },
+    {
+      "tick": 84177,
+      "access_phase": 0,
+      "progress": 71.100174,
+      "active": true
+    },
+    {
+      "tick": 84179,
+      "access_phase": 0,
+      "progress": 71.25017,
+      "active": true
+    },
+    {
+      "tick": 84181,
+      "access_phase": 0,
+      "progress": 71.40016,
+      "active": true
+    },
+    {
+      "tick": 84183,
+      "access_phase": 0,
+      "progress": 71.550156,
+      "active": true
+    },
+    {
+      "tick": 84185,
+      "access_phase": 0,
+      "progress": 71.70015,
+      "active": true
+    },
+    {
+      "tick": 84187,
+      "access_phase": 0,
+      "progress": 71.85014,
+      "active": true
+    },
+    {
+      "tick": 84189,
+      "access_phase": 0,
+      "progress": 72.00014,
+      "active": true
+    },
+    {
+      "tick": 84191,
+      "access_phase": 0,
+      "progress": 72.15013,
+      "active": true
+    },
+    {
+      "tick": 84193,
+      "access_phase": 0,
+      "progress": 72.300125,
+      "active": true
+    },
+    {
+      "tick": 84195,
+      "access_phase": 0,
+      "progress": 72.45012,
+      "active": true
+    },
+    {
+      "tick": 84197,
+      "access_phase": 0,
+      "progress": 72.60011,
+      "active": true
+    },
+    {
+      "tick": 84199,
+      "access_phase": 0,
+      "progress": 72.75011,
+      "active": true
+    },
+    {
+      "tick": 84201,
+      "access_phase": 0,
+      "progress": 72.9001,
+      "active": true
+    },
+    {
+      "tick": 84203,
+      "access_phase": 0,
+      "progress": 73.050095,
+      "active": true
+    },
+    {
+      "tick": 84205,
+      "access_phase": 0,
+      "progress": 73.20009,
+      "active": true
+    },
+    {
+      "tick": 84207,
+      "access_phase": 0,
+      "progress": 73.35008,
+      "active": true
+    },
+    {
+      "tick": 84209,
+      "access_phase": 0,
+      "progress": 73.50008,
+      "active": true
+    },
+    {
+      "tick": 84211,
+      "access_phase": 0,
+      "progress": 73.65007,
+      "active": true
+    },
+    {
+      "tick": 84213,
+      "access_phase": 0,
+      "progress": 73.800064,
+      "active": true
+    },
+    {
+      "tick": 84215,
+      "access_phase": 1,
+      "progress": 0,
+      "active": true
+    }
+  ],
+  "scope": "Ordinary simulation from fresh mature seed; no actor or route injection. Trace ends when actor leaves origin access."
+}

@@ -42,3 +42,12 @@ retry; its cause remains unisolated. No full hardware performance matrix is clai
 Start review with this note, README, specs 01–08, and the later dated entries in
 HANDOFF.md. Fix the reproducible contour threshold failure before treating this
 checkpoint as release-ready. No save compatibility guarantee is required.
+
+## Post-checkpoint diagnosis
+
+The contour failure was subsequently traced to an obsolete assertion requiring
+geometry reads synchronously in set(), rather than the current incremental
+update() path. Exact contour output and threshold semantics matched the frozen
+oracle. The follow-up test change preserves those output checks and asserts
+deferred extraction; 27 focused tests pass. The original checkpoint results
+above remain the record for e87392b.

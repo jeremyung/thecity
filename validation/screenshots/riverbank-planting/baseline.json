@@ -1,0 +1,24 @@
+{
+  "seed": 87231,
+  "tick": 85169,
+  "checkpoint": ".tools/riverbank-review-save.json",
+  "sha256": "352e3cb909f90bf3c5351e632e8caa3edcaa7422bd9855f4c0784c494044a6f5",
+  "camera": "Hold low waterfront view; inherited held pose, no camera movement between styles",
+  "lensMm": 50,
+  "lighting": "12:00 preview, not live noon",
+  "weatherKind": "clear",
+  "weatherIntensity": 0,
+  "dof": false,
+  "quality": "High",
+  "backend": "WebGPU",
+  "width": 1280,
+  "height": 720,
+  "simulation": "paused",
+  "growthRate": 16,
+  "styles": [
+    "anime",
+    "miniature"
+  ],
+  "readiness": "Miniature applied; all four queues zero",
+  "limitations": "Camera pose not numerically exported. No runtime visual change tested. Audit snapshots are separate earlier ordinary exit checkpoints."
+}

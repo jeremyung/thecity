@@ -1,0 +1,437 @@
+{
+  "scope": "24 ordinary saved checkpoints. Exact renderer visibility predicate. Conservative horizontal crown envelope versus bridge including sidewalks and rail deck, independent of height; does not cover every object, continuous growth or curved expressway piers.",
+  "wasmSha256": "cead54f2c1cc9e85342f27ea86cf654a840a4920548d96fc044d7fe73a0409b2",
+  "rendererSha256": "fa713538e6375e4a27d580996d98c1e6531118f1f79c5981c286ef626e5d43b6",
+  "crownRadius": 2.377194546033742,
+  "crownBottom": 1.651257038116455,
+  "crownTop": 5.144549369812012,
+  "cases": [
+    {
+      "seed": 87231,
+      "checkpoint": "phase-0",
+      "tick": 0,
+      "buildings": 1,
+      "projects": 2,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 232.41410641747942,
+      "conflicts": [],
+      "inputSha256": "a57ccc8c12217d80db46fb1af8a67da136057fc82a3b4c11ba8c56cc3415f401"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "phase-1",
+      "tick": 200,
+      "buildings": 12,
+      "projects": 14,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 232.41410641747942,
+      "conflicts": [],
+      "inputSha256": "5e398f5ac3800ec802c12280973f683f6a040d7a884cad4d6337a4dd5a12e452"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "phase-2",
+      "tick": 300,
+      "buildings": 15,
+      "projects": 17,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 232.41410641747942,
+      "conflicts": [],
+      "inputSha256": "8c9545bfc63dfccdfe63a70ab01dd503a81a36e25ce7405fb779b7f72c5c5f37"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "phase-3",
+      "tick": 350,
+      "buildings": 17,
+      "projects": 20,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 232.41410641747942,
+      "conflicts": [],
+      "inputSha256": "651977e4816ecfe9bd62e611cff0ac58f1c1f1c934ab3b2ba6da7c4228a832c8"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "phase-4",
+      "tick": 400,
+      "buildings": 22,
+      "projects": 26,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 232.41410641747942,
+      "conflicts": [],
+      "inputSha256": "2ad73a77a36f2583443ace47e5b44bf60a0ef1fba7c2be122bb934510f1f252f"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "tick-10000",
+      "tick": 10000,
+      "buildings": 275,
+      "projects": 76,
+      "generated": 84,
+      "retained": 82,
+      "bridgeMargin": null,
+      "railMargin": 10.938055453966264,
+      "conflicts": [],
+      "inputSha256": "23b82e510d1d209494eb1d18257f7f3e01fd6611c4e25d7ebb825a686b664ff1"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "tick-40000",
+      "tick": 40000,
+      "buildings": 1025,
+      "projects": 76,
+      "generated": 84,
+      "retained": 76,
+      "bridgeMargin": -0.877194546033742,
+      "railMargin": 10.938055453966264,
+      "conflicts": [
+        {
+          "tree": {
+            "x": -138.64736842105265,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 4234,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        },
+        {
+          "tree": {
+            "x": -69.24736842105263,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 4234,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        }
+      ],
+      "inputSha256": "ba566df55c688adf9465bae7ee154c4788c60ed8435622ea4e5c83c9a1adbf3e"
+    },
+    {
+      "seed": 87231,
+      "checkpoint": "tick-80000",
+      "tick": 80000,
+      "buildings": 1839,
+      "projects": 76,
+      "generated": 84,
+      "retained": 76,
+      "bridgeMargin": -0.877194546033742,
+      "railMargin": 10.938055453966264,
+      "conflicts": [
+        {
+          "tree": {
+            "x": -138.64736842105265,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 4234,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        },
+        {
+          "tree": {
+            "x": -69.24736842105263,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 4234,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        }
+      ],
+      "inputSha256": "6cba52f91a2e4c74be53e1b8156cb198f480b5e39634829acb0269bcb86abd63"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "phase-0",
+      "tick": 0,
+      "buildings": 1,
+      "projects": 2,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 214.2272443405165,
+      "conflicts": [],
+      "inputSha256": "5798d78536bd796078db02179865a5a3f7ba886812bd7c1a6ce58684405bd093"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "phase-1",
+      "tick": 200,
+      "buildings": 15,
+      "projects": 16,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 214.2272443405165,
+      "conflicts": [],
+      "inputSha256": "270ea2cf369ef7411a640360b7edbc1da10245f74e91599e841988232f7165e0"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "phase-2",
+      "tick": 300,
+      "buildings": 16,
+      "projects": 17,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 214.2272443405165,
+      "conflicts": [],
+      "inputSha256": "9ca747b38db8532e582f9fe8e45654c22fe09f3e68075c3eb8400e9191d2ea01"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "phase-3",
+      "tick": 350,
+      "buildings": 19,
+      "projects": 20,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 214.2272443405165,
+      "conflicts": [],
+      "inputSha256": "82ad8a70057919f30999878378de7656e1ae5a68737885442aa843859737d300"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "phase-4",
+      "tick": 400,
+      "buildings": 23,
+      "projects": 26,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 214.2272443405165,
+      "conflicts": [],
+      "inputSha256": "40f900d4a06229fda1caa1a218ae4fa4847f3e37ef47fd8eb13a06b8624aa0cb"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "tick-10000",
+      "tick": 10000,
+      "buildings": 279,
+      "projects": 76,
+      "generated": 84,
+      "retained": 80,
+      "bridgeMargin": 3.122805453966258,
+      "railMargin": 10.696261453966251,
+      "conflicts": [],
+      "inputSha256": "715b1a1404c9567bf1fd6bea3de61aa04a5ae63f84edef32587fea98395e09ed"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "tick-40000",
+      "tick": 40000,
+      "buildings": 1029,
+      "projects": 76,
+      "generated": 84,
+      "retained": 76,
+      "bridgeMargin": -0.877194546033742,
+      "railMargin": 10.696261453966251,
+      "conflicts": [
+        {
+          "tree": {
+            "x": -147.64736842105265,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 3672,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        },
+        {
+          "tree": {
+            "x": -78.24736842105263,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 3672,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        }
+      ],
+      "inputSha256": "11babcbdf435f596cd6d26063af4594d5e951ced179ea55a11827654a441c61a"
+    },
+    {
+      "seed": 0,
+      "checkpoint": "tick-80000",
+      "tick": 80000,
+      "buildings": 1730,
+      "projects": 76,
+      "generated": 84,
+      "retained": 76,
+      "bridgeMargin": -0.877194546033742,
+      "railMargin": 10.696261453966251,
+      "conflicts": [
+        {
+          "tree": {
+            "x": -147.64736842105265,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 3672,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        },
+        {
+          "tree": {
+            "x": -78.24736842105263,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 3672,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        }
+      ],
+      "inputSha256": "ed35d919e27f66ed800fb4958abcb8379ff6c08a9e37771d0aa1a7f19b451380"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "phase-0",
+      "tick": 0,
+      "buildings": 1,
+      "projects": 2,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 196.31228516846213,
+      "conflicts": [],
+      "inputSha256": "f76c4204e85dd323316bfcdbacd5a5bfb7c1017dd48e95e6a2662b53084496df"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "phase-1",
+      "tick": 200,
+      "buildings": 13,
+      "projects": 16,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 196.31228516846213,
+      "conflicts": [],
+      "inputSha256": "7e5d08b7846df7abadcef1285a7a1601c91e00464511b28e2919f2d34fe0c8a2"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "phase-2",
+      "tick": 300,
+      "buildings": 16,
+      "projects": 19,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 196.31228516846213,
+      "conflicts": [],
+      "inputSha256": "cc49b894b4993f7a84a94ba4469c89f4affbcb013f08032a15ee632df74ab0a4"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "phase-3",
+      "tick": 350,
+      "buildings": 17,
+      "projects": 20,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 196.31228516846213,
+      "conflicts": [],
+      "inputSha256": "af3d6f3b90b74424ba3bd373c72d098e54d67849ad13666141d2e7e1af5ae260"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "phase-4",
+      "tick": 400,
+      "buildings": 21,
+      "projects": 24,
+      "generated": 84,
+      "retained": 84,
+      "bridgeMargin": null,
+      "railMargin": 196.31228516846213,
+      "conflicts": [],
+      "inputSha256": "64b579adc4d0943baebdf99c66a3ea02e83fdcd6698bbec4713f7611e551b24b"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "tick-10000",
+      "tick": 10000,
+      "buildings": 277,
+      "projects": 76,
+      "generated": 84,
+      "retained": 82,
+      "bridgeMargin": null,
+      "railMargin": 11.093095453966264,
+      "conflicts": [],
+      "inputSha256": "9ef750635548a118e2534b8ec4cf864e4c2d2a687f43cc9385011a6114a4322d"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "tick-40000",
+      "tick": 40000,
+      "buildings": 1027,
+      "projects": 76,
+      "generated": 84,
+      "retained": 80,
+      "bridgeMargin": 3.122805453966258,
+      "railMargin": 11.093095453966264,
+      "conflicts": [],
+      "inputSha256": "1ba5e2c12689be8ab4131dd182da03a79feba69ac143c14da47cc01b325e2ad9"
+    },
+    {
+      "seed": 5,
+      "checkpoint": "tick-80000",
+      "tick": 80000,
+      "buildings": 1999,
+      "projects": 76,
+      "generated": 84,
+      "retained": 76,
+      "bridgeMargin": -0.877194546033742,
+      "railMargin": 11.093095453966264,
+      "conflicts": [
+        {
+          "tree": {
+            "x": -147.64736842105265,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 5331,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        },
+        {
+          "tree": {
+            "x": -78.24736842105263,
+            "z": 222,
+            "s": 1.8
+          },
+          "road": 5331,
+          "kind": "bridge",
+          "stage": "open",
+          "margin": -0.877194546033742
+        }
+      ],
+      "inputSha256": "059bdd4506754d214459b3cf9cd29e21a55a3a4c74caf4cad5f1620a9c8932a1"
+    }
+  ]
+}

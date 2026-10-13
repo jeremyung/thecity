@@ -1,0 +1,1720 @@
+{
+  "seed": 5,
+  "developmentRate": 16,
+  "scope": "Fresh current-format mature city, ordinary growth and travel continue for one day. Local travelers exclude train/bus passenger and external expressway counts. Instantaneous samples are not unique-trip totals or route-success rates.",
+  "samples": [
+    {
+      "tick": 80000,
+      "hour": 14,
+      "population": 18261,
+      "residents": 800,
+      "buildings": 1999,
+      "weather": "clear",
+      "localTravelers": 300,
+      "errands": {
+        "Returning": 6,
+        "Outbound": 12,
+        "Dwelling": 2
+      },
+      "byActivity": {
+        "stroll": 112,
+        "commute": 99,
+        "walking_to_station": 70,
+        "neighborhood_errand_outbound": 12,
+        "neighborhood_errand_returning": 6,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 298,
+        "1": 2
+      },
+      "residentActivity": {
+        "at_destination": 393,
+        "at_home": 105,
+        "strolling": 112,
+        "commuting": 99,
+        "working_external": 15,
+        "waiting_for_train": 6,
+        "walking_to_station": 70
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 80500,
+      "hour": 14.5,
+      "population": 18356,
+      "residents": 800,
+      "buildings": 2011,
+      "weather": "clear",
+      "localTravelers": 280,
+      "errands": {
+        "Returning": 8,
+        "Dwelling": 2,
+        "Outbound": 10
+      },
+      "byActivity": {
+        "stroll": 104,
+        "commute": 93,
+        "walking_to_station": 64,
+        "neighborhood_errand_returning": 8,
+        "neighborhood_errand_outbound": 10,
+        "delivery_return": 1
+      },
+      "byKind": {
+        "0": 279,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_destination": 407,
+        "at_home": 105,
+        "strolling": 104,
+        "commuting": 93,
+        "working_external": 15,
+        "riding_train": 11,
+        "walking_to_station": 64,
+        "waiting_for_train": 1
+      },
+      "expresswayTrips": 8
+    },
+    {
+      "tick": 81000,
+      "hour": 15,
+      "population": 18440,
+      "residents": 800,
+      "buildings": 2024,
+      "weather": "clear",
+      "localTravelers": 250,
+      "errands": {
+        "Returning": 7,
+        "Outbound": 8,
+        "Dwelling": 3
+      },
+      "byActivity": {
+        "stroll": 96,
+        "commute": 80,
+        "walking_to_station": 59,
+        "neighborhood_errand_returning": 7,
+        "neighborhood_errand_outbound": 8
+      },
+      "byKind": {
+        "0": 250
+      },
+      "residentActivity": {
+        "at_destination": 428,
+        "at_home": 105,
+        "strolling": 96,
+        "working_external": 26,
+        "commuting": 80,
+        "waiting_for_train": 6,
+        "walking_to_station": 59
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 81500,
+      "hour": 15.5,
+      "population": 18532,
+      "residents": 800,
+      "buildings": 2036,
+      "weather": "clear",
+      "localTravelers": 231,
+      "errands": {
+        "Returning": 8,
+        "Outbound": 7,
+        "Dwelling": 2
+      },
+      "byActivity": {
+        "stroll": 90,
+        "walking_to_station": 55,
+        "commute": 71,
+        "neighborhood_errand_returning": 8,
+        "neighborhood_errand_outbound": 7
+      },
+      "byKind": {
+        "0": 231
+      },
+      "residentActivity": {
+        "at_destination": 443,
+        "at_home": 105,
+        "working_external": 26,
+        "strolling": 90,
+        "commuting": 71,
+        "riding_train": 8,
+        "walking_to_station": 55,
+        "waiting_for_train": 2
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 82000,
+      "hour": 16,
+      "population": 18646,
+      "residents": 800,
+      "buildings": 2049,
+      "weather": "clear",
+      "localTravelers": 202,
+      "errands": {
+        "Returning": 6,
+        "Dwelling": 5,
+        "Outbound": 8
+      },
+      "byActivity": {
+        "stroll": 85,
+        "commute": 52,
+        "walking_to_station": 49,
+        "neighborhood_errand_outbound": 8,
+        "neighborhood_errand_returning": 6,
+        "return": 2
+      },
+      "byKind": {
+        "0": 202
+      },
+      "residentActivity": {
+        "at_destination": 465,
+        "at_home": 105,
+        "returning_home": 2,
+        "working_external": 33,
+        "strolling": 85,
+        "commuting": 52,
+        "walking_to_station": 49,
+        "waiting_for_train": 4,
+        "riding_train": 5
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 82500,
+      "hour": 16.5,
+      "population": 18805,
+      "residents": 800,
+      "buildings": 2061,
+      "weather": "clear",
+      "localTravelers": 231,
+      "errands": {
+        "Returning": 9,
+        "Dwelling": 2,
+        "Outbound": 8
+      },
+      "byActivity": {
+        "stroll": 81,
+        "commute": 39,
+        "walking_to_station": 44,
+        "neighborhood_errand_returning": 9,
+        "neighborhood_errand_outbound": 8,
+        "return": 50
+      },
+      "byKind": {
+        "0": 222,
+        "1": 9
+      },
+      "residentActivity": {
+        "at_destination": 430,
+        "waiting_for_bus": 1,
+        "at_home": 108,
+        "returning_home": 50,
+        "working_external": 40,
+        "riding_train": 4,
+        "strolling": 81,
+        "walking_to_station": 44,
+        "commuting": 39,
+        "waiting_for_train": 3
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 83000,
+      "hour": 17,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 294,
+      "errands": {
+        "Returning": 10,
+        "Outbound": 8
+      },
+      "byActivity": {
+        "commute": 32,
+        "walking_to_station": 40,
+        "stroll": 76,
+        "neighborhood_errand_returning": 10,
+        "neighborhood_errand_outbound": 8,
+        "return": 120,
+        "walking_to_bus": 2,
+        "walking_home": 5,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 267,
+        "1": 27
+      },
+      "residentActivity": {
+        "at_destination": 362,
+        "aboard_bus": 1,
+        "at_home": 115,
+        "waiting_for_bus": 1,
+        "returning_home": 122,
+        "working_external": 38,
+        "walking_home": 5,
+        "strolling": 76,
+        "walking_to_station": 40,
+        "commuting": 32,
+        "riding_train": 7,
+        "waiting_for_train": 1
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 83500,
+      "hour": 17.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 316,
+      "errands": {
+        "Returning": 8,
+        "Outbound": 7,
+        "Dwelling": 1
+      },
+      "byActivity": {
+        "commute": 28,
+        "walking_to_station": 37,
+        "stroll": 68,
+        "neighborhood_errand_returning": 8,
+        "neighborhood_errand_outbound": 7,
+        "return": 160,
+        "walking_home": 5,
+        "walking_to_bus": 2,
+        "delivery_return": 1
+      },
+      "byKind": {
+        "0": 283,
+        "1": 33
+      },
+      "residentActivity": {
+        "at_destination": 321,
+        "walking_home_from_bus": 1,
+        "at_home": 128,
+        "waiting_for_bus": 1,
+        "returning_home": 161,
+        "aboard_bus": 1,
+        "working_external": 39,
+        "riding_train": 7,
+        "walking_home": 5,
+        "walking_to_station": 37,
+        "strolling": 68,
+        "commuting": 28,
+        "waiting_for_train": 3
+      },
+      "expresswayTrips": 8
+    },
+    {
+      "tick": 84000,
+      "hour": 18,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 358,
+      "errands": {
+        "Returning": 9,
+        "Outbound": 5,
+        "Dwelling": 2
+      },
+      "byActivity": {
+        "commute": 24,
+        "walking_to_station": 33,
+        "stroll": 61,
+        "neighborhood_errand_returning": 9,
+        "neighborhood_errand_outbound": 5,
+        "return": 209,
+        "walking_home": 12,
+        "walking_to_bus": 5
+      },
+      "byKind": {
+        "0": 317,
+        "1": 41
+      },
+      "residentActivity": {
+        "at_destination": 253,
+        "aboard_bus": 3,
+        "walking_home_from_bus": 1,
+        "at_home": 153,
+        "returning_home": 213,
+        "waiting_for_bus": 1,
+        "working_external": 26,
+        "walking_home": 12,
+        "waiting_for_train": 13,
+        "riding_train": 7,
+        "strolling": 61,
+        "commuting": 24,
+        "walking_to_station": 33
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 84500,
+      "hour": 18.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 374,
+      "errands": {
+        "Returning": 10,
+        "Dwelling": 1,
+        "Outbound": 4
+      },
+      "byActivity": {
+        "walking_to_station": 30,
+        "stroll": 55,
+        "commute": 19,
+        "neighborhood_errand_outbound": 4,
+        "return": 240,
+        "neighborhood_errand_returning": 10,
+        "walking_home": 12,
+        "walking_to_bus": 4
+      },
+      "byKind": {
+        "0": 330,
+        "1": 44
+      },
+      "residentActivity": {
+        "at_destination": 201,
+        "aboard_bus": 3,
+        "at_home": 185,
+        "returning_home": 243,
+        "waiting_for_bus": 2,
+        "walking_home_from_bus": 1,
+        "riding_train": 25,
+        "walking_home": 12,
+        "working_external": 21,
+        "strolling": 55,
+        "commuting": 19,
+        "walking_to_station": 30,
+        "waiting_for_train": 3
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 85000,
+      "hour": 19,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 442,
+      "errands": {
+        "Returning": 10,
+        "Dwelling": 3,
+        "Outbound": 5
+      },
+      "byActivity": {
+        "walking_to_station": 26,
+        "stroll": 49,
+        "commute": 16,
+        "return": 293,
+        "neighborhood_errand_returning": 10,
+        "walking_home": 37,
+        "walking_to_bus": 5,
+        "neighborhood_errand_outbound": 5,
+        "night_shift": 1
+      },
+      "byKind": {
+        "0": 400,
+        "1": 42
+      },
+      "residentActivity": {
+        "at_destination": 120,
+        "walking_home_from_bus": 3,
+        "at_home": 218,
+        "waiting_for_bus": 5,
+        "returning_home": 295,
+        "aboard_bus": 2,
+        "walking_home": 37,
+        "working_external": 16,
+        "strolling": 49,
+        "walking_to_station": 26,
+        "commuting": 17,
+        "waiting_for_train": 5,
+        "riding_train": 7
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 85500,
+      "hour": 19.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 436,
+      "errands": {
+        "Returning": 8,
+        "Outbound": 6
+      },
+      "byActivity": {
+        "walking_to_station": 22,
+        "stroll": 43,
+        "commute": 13,
+        "return": 297,
+        "walking_home": 37,
+        "neighborhood_errand_returning": 8,
+        "neighborhood_errand_outbound": 6,
+        "walking_to_bus": 6,
+        "night_shift": 4
+      },
+      "byKind": {
+        "0": 403,
+        "1": 33
+      },
+      "residentActivity": {
+        "at_destination": 82,
+        "at_home": 257,
+        "aboard_bus": 3,
+        "returning_home": 302,
+        "waiting_for_bus": 4,
+        "walking_home_from_bus": 1,
+        "walking_home": 37,
+        "working_external": 12,
+        "waiting_for_train": 14,
+        "strolling": 43,
+        "commuting": 17,
+        "riding_train": 6,
+        "walking_to_station": 22
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 86000,
+      "hour": 20,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 496,
+      "errands": {
+        "Returning": 5,
+        "Outbound": 7
+      },
+      "byActivity": {
+        "walking_to_station": 19,
+        "stroll": 38,
+        "commute": 7,
+        "return": 360,
+        "walking_home": 43,
+        "neighborhood_errand_outbound": 7,
+        "neighborhood_errand_returning": 5,
+        "walking_to_bus": 4,
+        "night_shift": 13
+      },
+      "byKind": {
+        "0": 462,
+        "1": 34
+      },
+      "residentActivity": {
+        "waiting_for_bus": 3,
+        "at_home": 278,
+        "walking_home_from_bus": 3,
+        "returning_home": 361,
+        "commuting": 20,
+        "aboard_bus": 6,
+        "walking_home": 43,
+        "waiting_for_train": 23,
+        "strolling": 38,
+        "riding_train": 6,
+        "walking_to_station": 19
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 86500,
+      "hour": 20.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 455,
+      "errands": {
+        "Returning": 4,
+        "Outbound": 7
+      },
+      "byActivity": {
+        "stroll": 30,
+        "walking_to_station": 14,
+        "commute": 6,
+        "return": 330,
+        "walking_home": 43,
+        "neighborhood_errand_outbound": 7,
+        "neighborhood_errand_returning": 4,
+        "walking_to_bus": 3,
+        "night_shift": 17,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 430,
+        "1": 25
+      },
+      "residentActivity": {
+        "waiting_for_bus": 4,
+        "at_home": 311,
+        "walking_home_from_bus": 4,
+        "commuting": 23,
+        "returning_home": 329,
+        "aboard_bus": 5,
+        "walking_home": 43,
+        "riding_train": 28,
+        "strolling": 30,
+        "waiting_for_train": 6,
+        "walking_to_station": 14,
+        "at_destination": 3
+      },
+      "expresswayTrips": 8
+    },
+    {
+      "tick": 87000,
+      "hour": 21,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 433,
+      "errands": {
+        "Returning": 4,
+        "Dwelling": 3,
+        "Outbound": 4
+      },
+      "byActivity": {
+        "stroll": 23,
+        "walking_to_station": 11,
+        "commute": 5,
+        "return": 294,
+        "walking_home": 70,
+        "neighborhood_errand_outbound": 4,
+        "neighborhood_errand_returning": 4,
+        "night_shift": 20,
+        "delivery_return": 1,
+        "walking_to_bus": 1
+      },
+      "byKind": {
+        "0": 418,
+        "1": 15
+      },
+      "residentActivity": {
+        "aboard_bus": 4,
+        "at_home": 358,
+        "commuting": 26,
+        "returning_home": 288,
+        "walking_home_from_bus": 6,
+        "waiting_for_bus": 3,
+        "walking_home": 70,
+        "strolling": 23,
+        "riding_train": 6,
+        "waiting_for_train": 3,
+        "walking_to_station": 11,
+        "at_destination": 2
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 87500,
+      "hour": 21.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 389,
+      "errands": {
+        "Returning": 6,
+        "Dwelling": 2,
+        "Outbound": 3
+      },
+      "byActivity": {
+        "stroll": 18,
+        "walking_to_station": 7,
+        "return": 266,
+        "walking_home": 66,
+        "neighborhood_errand_outbound": 3,
+        "neighborhood_errand_returning": 6,
+        "night_shift": 21,
+        "walking_to_bus": 2
+      },
+      "byKind": {
+        "0": 386,
+        "1": 3
+      },
+      "residentActivity": {
+        "walking_home_from_bus": 8,
+        "at_home": 397,
+        "commuting": 23,
+        "at_destination": 7,
+        "returning_home": 258,
+        "aboard_bus": 3,
+        "walking_home": 66,
+        "strolling": 18,
+        "waiting_for_train": 6,
+        "riding_train": 7,
+        "walking_to_station": 7
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 88000,
+      "hour": 22,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 369,
+      "errands": {
+        "Returning": 5,
+        "Dwelling": 1,
+        "Outbound": 2
+      },
+      "byActivity": {
+        "stroll": 11,
+        "walking_to_station": 5,
+        "return": 247,
+        "walking_home": 64,
+        "neighborhood_errand_outbound": 2,
+        "neighborhood_errand_returning": 5,
+        "night_shift": 33,
+        "walking_to_bus": 2
+      },
+      "byKind": {
+        "0": 367,
+        "1": 2
+      },
+      "residentActivity": {
+        "walking_home_from_bus": 6,
+        "at_home": 414,
+        "commuting": 35,
+        "at_destination": 9,
+        "returning_home": 241,
+        "walking_home": 64,
+        "strolling": 11,
+        "riding_train": 6,
+        "waiting_for_train": 9,
+        "walking_to_station": 5
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 88500,
+      "hour": 22.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 349,
+      "errands": {
+        "Returning": 6,
+        "Dwelling": 1
+      },
+      "byActivity": {
+        "stroll": 6,
+        "walking_to_station": 1,
+        "return": 227,
+        "walking_home": 76,
+        "night_shift": 31,
+        "walking_to_bus": 2,
+        "neighborhood_errand_returning": 6
+      },
+      "byKind": {
+        "0": 348,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_home": 440,
+        "commuting": 33,
+        "at_destination": 11,
+        "returning_home": 224,
+        "walking_home_from_bus": 3,
+        "walking_home": 76,
+        "strolling": 6,
+        "riding_train": 6,
+        "walking_to_station": 1
+      },
+      "expresswayTrips": 7
+    },
+    {
+      "tick": 89000,
+      "hour": 23,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 314,
+      "errands": {
+        "Returning": 7
+      },
+      "byActivity": {
+        "stroll": 1,
+        "return": 205,
+        "walking_home": 73,
+        "night_shift": 27,
+        "neighborhood_errand_returning": 7,
+        "walking_to_bus": 1
+      },
+      "byKind": {
+        "0": 314
+      },
+      "residentActivity": {
+        "at_home": 470,
+        "commuting": 28,
+        "at_destination": 16,
+        "returning_home": 202,
+        "walking_home_from_bus": 3,
+        "walking_home": 73,
+        "waiting_for_train": 7,
+        "strolling": 1
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 89500,
+      "hour": 23.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 284,
+      "errands": {
+        "Returning": 5
+      },
+      "byActivity": {
+        "return": 182,
+        "walking_home": 71,
+        "night_shift": 26,
+        "neighborhood_errand_returning": 5
+      },
+      "byKind": {
+        "0": 284
+      },
+      "residentActivity": {
+        "at_home": 497,
+        "waiting_for_bus": 1,
+        "at_destination": 17,
+        "returning_home": 182,
+        "commuting": 26,
+        "walking_home": 71,
+        "waiting_for_train": 5,
+        "riding_train": 1
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 90000,
+      "hour": 0,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 256,
+      "errands": {
+        "Returning": 5
+      },
+      "byActivity": {
+        "return": 159,
+        "walking_home": 69,
+        "night_shift": 22,
+        "neighborhood_errand_returning": 5,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 255,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_home": 522,
+        "aboard_bus": 1,
+        "at_destination": 21,
+        "returning_home": 159,
+        "commuting": 22,
+        "walking_home": 69,
+        "riding_train": 6
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 90500,
+      "hour": 0.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 239,
+      "errands": {
+        "Returning": 4
+      },
+      "byActivity": {
+        "return": 140,
+        "walking_home": 74,
+        "night_shift": 20,
+        "neighborhood_errand_returning": 4,
+        "delivery_return": 1
+      },
+      "byKind": {
+        "0": 238,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_home": 542,
+        "at_destination": 24,
+        "returning_home": 140,
+        "commuting": 20,
+        "walking_home": 74
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 91000,
+      "hour": 1,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 209,
+      "errands": {
+        "Returning": 2
+      },
+      "byActivity": {
+        "return": 125,
+        "walking_home": 67,
+        "night_shift": 15,
+        "neighborhood_errand_returning": 2
+      },
+      "byKind": {
+        "0": 209
+      },
+      "residentActivity": {
+        "at_home": 564,
+        "at_destination": 29,
+        "commuting": 15,
+        "returning_home": 125,
+        "walking_home": 67
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 91500,
+      "hour": 1.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 186,
+      "errands": {},
+      "byActivity": {
+        "return": 113,
+        "walking_home": 63,
+        "night_shift": 10
+      },
+      "byKind": {
+        "0": 186
+      },
+      "residentActivity": {
+        "at_home": 580,
+        "at_destination": 34,
+        "commuting": 10,
+        "returning_home": 113,
+        "walking_home": 63
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 92000,
+      "hour": 2,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 168,
+      "errands": {},
+      "byActivity": {
+        "return": 103,
+        "walking_home": 59,
+        "night_shift": 6
+      },
+      "byKind": {
+        "0": 168
+      },
+      "residentActivity": {
+        "at_home": 594,
+        "at_destination": 38,
+        "commuting": 6,
+        "returning_home": 103,
+        "walking_home": 59
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 92500,
+      "hour": 2.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 159,
+      "errands": {},
+      "byActivity": {
+        "return": 99,
+        "walking_home": 55,
+        "night_shift": 5
+      },
+      "byKind": {
+        "0": 159
+      },
+      "residentActivity": {
+        "at_home": 602,
+        "at_destination": 39,
+        "commuting": 5,
+        "returning_home": 99,
+        "walking_home": 55
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 93000,
+      "hour": 3,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 145,
+      "errands": {},
+      "byActivity": {
+        "return": 89,
+        "walking_home": 52,
+        "night_shift": 4
+      },
+      "byKind": {
+        "0": 145
+      },
+      "residentActivity": {
+        "at_home": 615,
+        "at_destination": 40,
+        "commuting": 4,
+        "returning_home": 89,
+        "walking_home": 52
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 93500,
+      "hour": 3.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 135,
+      "errands": {},
+      "byActivity": {
+        "return": 84,
+        "walking_home": 49,
+        "night_shift": 1,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 134,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_home": 627,
+        "at_destination": 39,
+        "returning_home": 84,
+        "walking_home": 49,
+        "commuting": 1
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 94000,
+      "hour": 4,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 132,
+      "errands": {},
+      "byActivity": {
+        "return": 88,
+        "walking_home": 43,
+        "delivery_return": 1
+      },
+      "byKind": {
+        "0": 130,
+        "1": 2
+      },
+      "residentActivity": {
+        "at_home": 637,
+        "at_destination": 32,
+        "returning_home": 88,
+        "walking_home": 43
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 94500,
+      "hour": 4.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 125,
+      "errands": {},
+      "byActivity": {
+        "return": 86,
+        "walking_home": 39
+      },
+      "byKind": {
+        "0": 123,
+        "1": 2
+      },
+      "residentActivity": {
+        "at_home": 646,
+        "at_destination": 29,
+        "returning_home": 86,
+        "walking_home": 39
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 95000,
+      "hour": 5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 117,
+      "errands": {},
+      "byActivity": {
+        "return": 87,
+        "walking_home": 30
+      },
+      "byKind": {
+        "0": 115,
+        "1": 2
+      },
+      "residentActivity": {
+        "at_home": 663,
+        "returning_home": 87,
+        "at_destination": 20,
+        "walking_home": 30
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 95500,
+      "hour": 5.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "clear",
+      "localTravelers": 107,
+      "errands": {},
+      "byActivity": {
+        "return": 79,
+        "walking_home": 28
+      },
+      "byKind": {
+        "0": 105,
+        "1": 2
+      },
+      "residentActivity": {
+        "at_home": 679,
+        "at_destination": 14,
+        "returning_home": 79,
+        "walking_home": 28
+      },
+      "expresswayTrips": 4
+    },
+    {
+      "tick": 96000,
+      "hour": 6,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 104,
+      "errands": {},
+      "byActivity": {
+        "return": 81,
+        "walking_home": 23
+      },
+      "byKind": {
+        "0": 103,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_home": 695,
+        "aboard_bus": 1,
+        "returning_home": 81,
+        "walking_home": 23
+      },
+      "expresswayTrips": 5
+    },
+    {
+      "tick": 96500,
+      "hour": 6.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 89,
+      "errands": {},
+      "byActivity": {
+        "return": 72,
+        "walking_home": 17
+      },
+      "byKind": {
+        "0": 88,
+        "1": 1
+      },
+      "residentActivity": {
+        "at_home": 710,
+        "aboard_bus": 1,
+        "returning_home": 72,
+        "walking_home": 17
+      },
+      "expresswayTrips": 7
+    },
+    {
+      "tick": 97000,
+      "hour": 7,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 83,
+      "errands": {},
+      "byActivity": {
+        "return": 65,
+        "walking_home": 15,
+        "delivery": 1,
+        "stroll": 2
+      },
+      "byKind": {
+        "0": 81,
+        "1": 2
+      },
+      "residentActivity": {
+        "at_home": 718,
+        "walking_home_from_bus": 1,
+        "strolling": 2,
+        "returning_home": 64,
+        "walking_home": 15
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 97500,
+      "hour": 7.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 164,
+      "errands": {},
+      "byActivity": {
+        "return": 52,
+        "walking_home": 12,
+        "stroll": 43,
+        "delivery_return": 1,
+        "walking_to_station": 17,
+        "walking_to_bus": 2,
+        "commute": 37
+      },
+      "byKind": {
+        "0": 145,
+        "1": 19
+      },
+      "residentActivity": {
+        "at_home": 633,
+        "commuting": 39,
+        "strolling": 43,
+        "at_destination": 3,
+        "waiting_for_bus": 1,
+        "returning_home": 52,
+        "walking_to_station": 17,
+        "walking_home": 12
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 98000,
+      "hour": 8,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 302,
+      "errands": {},
+      "byActivity": {
+        "return": 30,
+        "walking_home": 6,
+        "stroll": 117,
+        "walking_to_station": 41,
+        "walking_to_bus": 5,
+        "commute": 103
+      },
+      "byKind": {
+        "0": 259,
+        "1": 43
+      },
+      "residentActivity": {
+        "at_home": 486,
+        "commuting": 108,
+        "at_destination": 11,
+        "strolling": 117,
+        "waiting_for_bus": 1,
+        "returning_home": 30,
+        "walking_to_station": 41,
+        "walking_home": 6
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 98500,
+      "hour": 8.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 398,
+      "errands": {},
+      "byActivity": {
+        "return": 21,
+        "walking_home": 2,
+        "stroll": 164,
+        "walking_to_station": 59,
+        "walking_to_bus": 11,
+        "commute": 141
+      },
+      "byKind": {
+        "0": 344,
+        "1": 54
+      },
+      "residentActivity": {
+        "commuting": 152,
+        "waiting_for_bus": 2,
+        "at_home": 367,
+        "at_destination": 32,
+        "strolling": 164,
+        "aboard_bus": 1,
+        "walking_to_station": 59,
+        "returning_home": 21,
+        "walking_home": 2
+      },
+      "expresswayTrips": 8
+    },
+    {
+      "tick": 99000,
+      "hour": 9,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 522,
+      "errands": {},
+      "byActivity": {
+        "return": 15,
+        "stroll": 219,
+        "walking_to_station": 80,
+        "commute": 197,
+        "walking_to_bus": 11
+      },
+      "byKind": {
+        "0": 450,
+        "1": 72
+      },
+      "residentActivity": {
+        "waiting_for_bus": 4,
+        "commuting": 207,
+        "at_home": 212,
+        "at_destination": 57,
+        "strolling": 219,
+        "aboard_bus": 4,
+        "walking_to_work_from_bus": 1,
+        "waiting_for_train": 1,
+        "walking_to_station": 80,
+        "returning_home": 15
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 99500,
+      "hour": 9.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 577,
+      "errands": {},
+      "byActivity": {
+        "return": 12,
+        "stroll": 242,
+        "walking_to_station": 87,
+        "commute": 226,
+        "walking_to_bus": 10
+      },
+      "byKind": {
+        "0": 506,
+        "1": 71
+      },
+      "residentActivity": {
+        "waiting_for_bus": 5,
+        "at_home": 109,
+        "commuting": 234,
+        "at_destination": 105,
+        "strolling": 242,
+        "aboard_bus": 3,
+        "walking_to_work_from_bus": 2,
+        "waiting_for_train": 1,
+        "walking_to_station": 87,
+        "returning_home": 12
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 100000,
+      "hour": 10,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 557,
+      "errands": {
+        "Outbound": 9
+      },
+      "byActivity": {
+        "return": 9,
+        "stroll": 225,
+        "walking_to_station": 90,
+        "commute": 216,
+        "walking_to_bus": 7,
+        "neighborhood_errand_outbound": 9,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 497,
+        "1": 60
+      },
+      "residentActivity": {
+        "aboard_bus": 8,
+        "at_home": 96,
+        "commuting": 221,
+        "at_destination": 147,
+        "strolling": 225,
+        "walking_to_work_from_bus": 2,
+        "riding_train": 1,
+        "walking_to_station": 90,
+        "waiting_for_bus": 1,
+        "returning_home": 9
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 100500,
+      "hour": 10.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 513,
+      "errands": {
+        "Outbound": 12
+      },
+      "byActivity": {
+        "return": 6,
+        "stroll": 200,
+        "walking_to_station": 90,
+        "commute": 203,
+        "walking_to_bus": 1,
+        "neighborhood_errand_outbound": 12,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 465,
+        "1": 48
+      },
+      "residentActivity": {
+        "at_destination": 193,
+        "at_home": 99,
+        "commuting": 201,
+        "strolling": 200,
+        "waiting_for_bus": 7,
+        "walking_to_work_from_bus": 3,
+        "working_external": 1,
+        "walking_to_station": 90,
+        "returning_home": 6
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 101000,
+      "hour": 11,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 467,
+      "errands": {
+        "Dwelling": 3,
+        "Outbound": 9
+      },
+      "byActivity": {
+        "return": 3,
+        "stroll": 184,
+        "walking_to_station": 90,
+        "commute": 180,
+        "neighborhood_errand_outbound": 9,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 429,
+        "1": 38
+      },
+      "residentActivity": {
+        "at_destination": 232,
+        "at_home": 102,
+        "waiting_for_bus": 6,
+        "strolling": 184,
+        "walking_to_work_from_bus": 1,
+        "aboard_bus": 2,
+        "commuting": 179,
+        "working_external": 1,
+        "walking_to_station": 90,
+        "returning_home": 3
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 101500,
+      "hour": 11.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 431,
+      "errands": {
+        "Returning": 3,
+        "Outbound": 7,
+        "Dwelling": 2
+      },
+      "byActivity": {
+        "stroll": 170,
+        "walking_to_station": 87,
+        "commute": 163,
+        "neighborhood_errand_outbound": 7,
+        "delivery": 1,
+        "neighborhood_errand_returning": 3
+      },
+      "byKind": {
+        "0": 399,
+        "1": 32
+      },
+      "residentActivity": {
+        "at_destination": 265,
+        "at_home": 105,
+        "waiting_for_bus": 1,
+        "strolling": 170,
+        "aboard_bus": 5,
+        "walking_to_work_from_bus": 2,
+        "commuting": 161,
+        "working_external": 1,
+        "walking_to_station": 87,
+        "riding_train": 3
+      },
+      "expresswayTrips": 8
+    },
+    {
+      "tick": 102000,
+      "hour": 12,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 401,
+      "errands": {
+        "Outbound": 4,
+        "Dwelling": 2,
+        "Returning": 5
+      },
+      "byActivity": {
+        "stroll": 158,
+        "walking_to_station": 85,
+        "commute": 148,
+        "neighborhood_errand_outbound": 4,
+        "delivery": 1,
+        "neighborhood_errand_returning": 5
+      },
+      "byKind": {
+        "0": 374,
+        "1": 27
+      },
+      "residentActivity": {
+        "at_destination": 292,
+        "at_home": 105,
+        "waiting_for_bus": 1,
+        "aboard_bus": 5,
+        "strolling": 158,
+        "commuting": 148,
+        "working_external": 4,
+        "walking_to_station": 85,
+        "waiting_for_train": 2
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 102500,
+      "hour": 12.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 382,
+      "errands": {
+        "Outbound": 9,
+        "Returning": 5,
+        "Dwelling": 1
+      },
+      "byActivity": {
+        "stroll": 146,
+        "walking_to_station": 81,
+        "commute": 140,
+        "neighborhood_errand_outbound": 9,
+        "delivery": 1,
+        "neighborhood_errand_returning": 5
+      },
+      "byKind": {
+        "0": 361,
+        "1": 21
+      },
+      "residentActivity": {
+        "at_destination": 317,
+        "at_home": 105,
+        "aboard_bus": 1,
+        "walking_to_work_from_bus": 5,
+        "strolling": 146,
+        "commuting": 135,
+        "working_external": 4,
+        "walking_to_station": 81,
+        "riding_train": 6
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 103000,
+      "hour": 13,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 348,
+      "errands": {
+        "Dwelling": 3,
+        "Returning": 5,
+        "Outbound": 10
+      },
+      "byActivity": {
+        "stroll": 135,
+        "commute": 120,
+        "walking_to_station": 77,
+        "delivery": 1,
+        "neighborhood_errand_returning": 5,
+        "neighborhood_errand_outbound": 10
+      },
+      "byKind": {
+        "0": 337,
+        "1": 11
+      },
+      "residentActivity": {
+        "at_destination": 349,
+        "at_home": 105,
+        "walking_to_work_from_bus": 3,
+        "strolling": 135,
+        "commuting": 117,
+        "working_external": 10,
+        "walking_to_station": 77,
+        "waiting_for_train": 4
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 103500,
+      "hour": 13.5,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 326,
+      "errands": {
+        "Returning": 7,
+        "Outbound": 8,
+        "Dwelling": 2
+      },
+      "byActivity": {
+        "stroll": 127,
+        "commute": 108,
+        "walking_to_station": 75,
+        "neighborhood_errand_returning": 7,
+        "neighborhood_errand_outbound": 8,
+        "delivery_return": 1
+      },
+      "byKind": {
+        "0": 319,
+        "1": 7
+      },
+      "residentActivity": {
+        "at_destination": 369,
+        "at_home": 105,
+        "strolling": 127,
+        "commuting": 108,
+        "working_external": 10,
+        "waiting_for_train": 1,
+        "riding_train": 5,
+        "walking_to_station": 75
+      },
+      "expresswayTrips": 9
+    },
+    {
+      "tick": 104000,
+      "hour": 14,
+      "population": 18850,
+      "residents": 800,
+      "buildings": 2062,
+      "weather": "overcast",
+      "localTravelers": 297,
+      "errands": {
+        "Returning": 7,
+        "Outbound": 6,
+        "Dwelling": 2
+      },
+      "byActivity": {
+        "stroll": 113,
+        "commute": 99,
+        "walking_to_station": 70,
+        "neighborhood_errand_returning": 7,
+        "neighborhood_errand_outbound": 6,
+        "delivery_return": 1,
+        "delivery": 1
+      },
+      "byKind": {
+        "0": 294,
+        "1": 3
+      },
+      "residentActivity": {
+        "at_destination": 392,
+        "at_home": 105,
+        "strolling": 113,
+        "commuting": 99,
+        "working_external": 15,
+        "waiting_for_train": 6,
+        "walking_to_station": 70
+      },
+      "expresswayTrips": 9
+    }
+  ]
+}

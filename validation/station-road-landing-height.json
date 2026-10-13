@@ -1,0 +1,29 @@
+{
+  "scope": "Ground legs of actual saved exits, centers and 16 perimeter points on a 0.33m body disk every <=0.1m. Production station/road constructors, no generic ground patches; flat roads only, not a whole-city collision audit.",
+  "cases": [
+    {
+      "seed": 87231,
+      "samples": 5610,
+      "minHeight": 0.27000001072883606,
+      "maxHeight": 0.4456818103790283,
+      "missing": [],
+      "unexpectedHeight": []
+    },
+    {
+      "seed": 0,
+      "samples": 5610,
+      "minHeight": 0.27000001072883606,
+      "maxHeight": 0.4456818103790283,
+      "missing": [],
+      "unexpectedHeight": []
+    },
+    {
+      "seed": 5,
+      "samples": 5610,
+      "minHeight": 0.27000001072883606,
+      "maxHeight": 0.4456818103790283,
+      "missing": [],
+      "unexpectedHeight": []
+    }
+  ]
+}

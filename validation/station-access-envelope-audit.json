@@ -1,0 +1,101 @@
+{
+  "method": "2D separating-axis tests of platform/stair rectangles against saved rotated building envelopes; conservative plan-view overlap, not rendered geometry or height clearance. Gateway boundary checks included; seed5 is developing.",
+  "results": [
+    {
+      "seed": 87231,
+      "tick": 80000,
+      "node": 38,
+      "kind": "station",
+      "shapes": {
+        "stairs": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        },
+        "platform": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        }
+      }
+    },
+    {
+      "seed": 87231,
+      "tick": 80000,
+      "node": 85,
+      "kind": "rail_gateway",
+      "shapes": {
+        "stairs": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": true
+        },
+        "platform": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        }
+      }
+    },
+    {
+      "seed": 0,
+      "tick": 80000,
+      "node": 34,
+      "kind": "station",
+      "shapes": {
+        "stairs": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        },
+        "platform": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        }
+      }
+    },
+    {
+      "seed": 0,
+      "tick": 80000,
+      "node": 90,
+      "kind": "rail_gateway",
+      "shapes": {
+        "stairs": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": true
+        },
+        "platform": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        }
+      }
+    },
+    {
+      "seed": 5,
+      "tick": 80000,
+      "node": 34,
+      "kind": "station",
+      "shapes": {
+        "stairs": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        },
+        "platform": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        }
+      }
+    },
+    {
+      "seed": 5,
+      "tick": 80000,
+      "node": 72,
+      "kind": "rail_gateway",
+      "shapes": {
+        "stairs": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": true
+        },
+        "platform": {
+          "buildingEnvelopeOverlaps": [],
+          "outsideWorld": false
+        }
+      }
+    }
+  ]
+}

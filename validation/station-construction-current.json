@@ -1,0 +1,156 @@
+{
+  "wasmSha256": "cead54f2c1cc9e85342f27ea86cf654a840a4920548d96fc044d7fe73a0409b2",
+  "method": "Unmodified ordinary growth; current-save and one-step replay at each phase. No browser or performance acceptance.",
+  "seeds": [
+    {
+      "seed": 87231,
+      "phases": [
+        {
+          "phase": 0,
+          "tick": 0,
+          "progress": 0,
+          "stage": "platform",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g101:0:0:0"
+        },
+        {
+          "phase": 1,
+          "tick": 200,
+          "progress": 0.5,
+          "stage": "structure",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g117:1:0:0"
+        },
+        {
+          "phase": 2,
+          "tick": 300,
+          "progress": 0.75,
+          "stage": "surface",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g127:2:0:0"
+        },
+        {
+          "phase": 3,
+          "tick": 350,
+          "progress": 0.875,
+          "stage": "surface",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g148:3:0:0"
+        },
+        {
+          "phase": 4,
+          "tick": 400,
+          "progress": 1,
+          "stage": "finishing",
+          "ready": true,
+          "online": true,
+          "presentationRevision": "g157:4:1:1"
+        }
+      ]
+    },
+    {
+      "seed": 0,
+      "phases": [
+        {
+          "phase": 0,
+          "tick": 0,
+          "progress": 0,
+          "stage": "platform",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g105:0:0:0"
+        },
+        {
+          "phase": 1,
+          "tick": 200,
+          "progress": 0.5,
+          "stage": "structure",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g124:1:0:0"
+        },
+        {
+          "phase": 2,
+          "tick": 300,
+          "progress": 0.75,
+          "stage": "surface",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g131:2:0:0"
+        },
+        {
+          "phase": 3,
+          "tick": 350,
+          "progress": 0.875,
+          "stage": "surface",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g137:3:0:0"
+        },
+        {
+          "phase": 4,
+          "tick": 400,
+          "progress": 1,
+          "stage": "finishing",
+          "ready": true,
+          "online": true,
+          "presentationRevision": "g148:4:1:1"
+        }
+      ]
+    },
+    {
+      "seed": 5,
+      "phases": [
+        {
+          "phase": 0,
+          "tick": 0,
+          "progress": 0,
+          "stage": "platform",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g85:0:0:0"
+        },
+        {
+          "phase": 1,
+          "tick": 200,
+          "progress": 0.5,
+          "stage": "structure",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g107:1:0:0"
+        },
+        {
+          "phase": 2,
+          "tick": 300,
+          "progress": 0.75,
+          "stage": "surface",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g153:2:0:0"
+        },
+        {
+          "phase": 3,
+          "tick": 350,
+          "progress": 0.875,
+          "stage": "surface",
+          "ready": false,
+          "online": false,
+          "presentationRevision": "g155:3:0:0"
+        },
+        {
+          "phase": 4,
+          "tick": 400,
+          "progress": 1,
+          "stage": "finishing",
+          "ready": true,
+          "online": true,
+          "presentationRevision": "g162:4:1:1"
+        }
+      ]
+    }
+  ]
+}

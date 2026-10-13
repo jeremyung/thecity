@@ -1,0 +1,450 @@
+{
+  "method": "Proposed 1.6m route strip, butt joins; 2D footprint audit of mature/developing checkpoints. No paving implementation, terrain-height/road overlap or full collision proof; river check uses supplied piecewise-linear horizontal half-width.",
+  "wasmSha256": "90e07e1dae26c7d555f1ac00733e3486b4a413b9dcd42510916f86fbdf2e9224",
+  "cases": [
+    {
+      "seed": 87231,
+      "node": 38,
+      "terminal": "station",
+      "side": 6.9,
+      "width": 1.6,
+      "points": [
+        [
+          159.3511,
+          -82.81525
+        ],
+        [
+          157.8511,
+          -89.71525000000001
+        ],
+        [
+          137.8511,
+          -89.71525000000001
+        ],
+        [
+          137.8511,
+          -86.86525
+        ],
+        [
+          139.3511,
+          -86.86525
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-review/tick-80000.json",
+      "inputSha256": "d1c6a528c514500a98413e5cdeff72576831b6415f3469a49e66eb67a747c591"
+    },
+    {
+      "seed": 87231,
+      "node": 38,
+      "terminal": "station",
+      "side": 7.5,
+      "width": 1.6,
+      "points": [
+        [
+          159.3511,
+          -82.81525
+        ],
+        [
+          157.8511,
+          -90.31525
+        ],
+        [
+          137.8511,
+          -90.31525
+        ],
+        [
+          137.8511,
+          -86.86525
+        ],
+        [
+          139.3511,
+          -86.86525
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-review/tick-80000.json",
+      "inputSha256": "d1c6a528c514500a98413e5cdeff72576831b6415f3469a49e66eb67a747c591"
+    },
+    {
+      "seed": 87231,
+      "node": 85,
+      "terminal": "gateway",
+      "side": 6.9,
+      "width": 1.6,
+      "points": [
+        [
+          392,
+          -82.81525
+        ],
+        [
+          393.5,
+          -75.91525
+        ],
+        [
+          323.5,
+          -75.91525
+        ],
+        [
+          323.5,
+          -78.76525000000001
+        ],
+        [
+          325,
+          -78.76525000000001
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": true,
+      "input": ".tools/stair-review/tick-80000.json",
+      "inputSha256": "d1c6a528c514500a98413e5cdeff72576831b6415f3469a49e66eb67a747c591"
+    },
+    {
+      "seed": 87231,
+      "node": 85,
+      "terminal": "gateway",
+      "side": 7.5,
+      "width": 1.6,
+      "points": [
+        [
+          392,
+          -82.81525
+        ],
+        [
+          393.5,
+          -75.31525
+        ],
+        [
+          323.5,
+          -75.31525
+        ],
+        [
+          323.5,
+          -78.76525000000001
+        ],
+        [
+          325,
+          -78.76525000000001
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-review/tick-80000.json",
+      "inputSha256": "d1c6a528c514500a98413e5cdeff72576831b6415f3469a49e66eb67a747c591"
+    },
+    {
+      "seed": 0,
+      "node": 34,
+      "terminal": "station",
+      "side": 6.9,
+      "width": 1.6,
+      "points": [
+        [
+          132.31291,
+          -85.426544
+        ],
+        [
+          130.81291,
+          -92.32654400000001
+        ],
+        [
+          110.81290999999999,
+          -92.32654400000001
+        ],
+        [
+          110.81290999999999,
+          -89.476544
+        ],
+        [
+          112.31290999999999,
+          -89.476544
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-seed0/tick-80000.json",
+      "inputSha256": "c460180a6c9fa16cd5065eb9d66926239abc6518d89d0795d1fa371ae89f4cf7"
+    },
+    {
+      "seed": 0,
+      "node": 34,
+      "terminal": "station",
+      "side": 7.5,
+      "width": 1.6,
+      "points": [
+        [
+          132.31291,
+          -85.426544
+        ],
+        [
+          130.81291,
+          -92.926544
+        ],
+        [
+          110.81290999999999,
+          -92.926544
+        ],
+        [
+          110.81290999999999,
+          -89.476544
+        ],
+        [
+          112.31290999999999,
+          -89.476544
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-seed0/tick-80000.json",
+      "inputSha256": "c460180a6c9fa16cd5065eb9d66926239abc6518d89d0795d1fa371ae89f4cf7"
+    },
+    {
+      "seed": 0,
+      "node": 90,
+      "terminal": "gateway",
+      "side": 6.9,
+      "width": 1.6,
+      "points": [
+        [
+          392,
+          -85.426544
+        ],
+        [
+          393.5,
+          -78.526544
+        ],
+        [
+          323.5,
+          -78.526544
+        ],
+        [
+          323.5,
+          -81.37654400000001
+        ],
+        [
+          325,
+          -81.37654400000001
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": true,
+      "input": ".tools/stair-seed0/tick-80000.json",
+      "inputSha256": "c460180a6c9fa16cd5065eb9d66926239abc6518d89d0795d1fa371ae89f4cf7"
+    },
+    {
+      "seed": 0,
+      "node": 90,
+      "terminal": "gateway",
+      "side": 7.5,
+      "width": 1.6,
+      "points": [
+        [
+          392,
+          -85.426544
+        ],
+        [
+          393.5,
+          -77.926544
+        ],
+        [
+          323.5,
+          -77.926544
+        ],
+        [
+          323.5,
+          -81.37654400000001
+        ],
+        [
+          325,
+          -81.37654400000001
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-seed0/tick-80000.json",
+      "inputSha256": "c460180a6c9fa16cd5065eb9d66926239abc6518d89d0795d1fa371ae89f4cf7"
+    },
+    {
+      "seed": 5,
+      "node": 34,
+      "terminal": "station",
+      "side": 6.9,
+      "width": 1.6,
+      "points": [
+        [
+          114.1253,
+          -82.97029
+        ],
+        [
+          112.6253,
+          -89.87029000000001
+        ],
+        [
+          92.6253,
+          -89.87029000000001
+        ],
+        [
+          92.6253,
+          -87.02029
+        ],
+        [
+          94.1253,
+          -87.02029
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-seed5/tick-80000.json",
+      "inputSha256": "17511d5590ae1a172511712e568c745f9dd8a42b873e199c5336789f8125e3ca"
+    },
+    {
+      "seed": 5,
+      "node": 34,
+      "terminal": "station",
+      "side": 7.5,
+      "width": 1.6,
+      "points": [
+        [
+          114.1253,
+          -82.97029
+        ],
+        [
+          112.6253,
+          -90.47029
+        ],
+        [
+          92.6253,
+          -90.47029
+        ],
+        [
+          92.6253,
+          -87.02029
+        ],
+        [
+          94.1253,
+          -87.02029
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-seed5/tick-80000.json",
+      "inputSha256": "17511d5590ae1a172511712e568c745f9dd8a42b873e199c5336789f8125e3ca"
+    },
+    {
+      "seed": 5,
+      "node": 72,
+      "terminal": "gateway",
+      "side": 6.9,
+      "width": 1.6,
+      "points": [
+        [
+          392,
+          -82.97029
+        ],
+        [
+          393.5,
+          -76.07029
+        ],
+        [
+          323.5,
+          -76.07029
+        ],
+        [
+          323.5,
+          -78.92029000000001
+        ],
+        [
+          325,
+          -78.92029000000001
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": true,
+      "input": ".tools/stair-seed5/tick-80000.json",
+      "inputSha256": "17511d5590ae1a172511712e568c745f9dd8a42b873e199c5336789f8125e3ca"
+    },
+    {
+      "seed": 5,
+      "node": 72,
+      "terminal": "gateway",
+      "side": 7.5,
+      "width": 1.6,
+      "points": [
+        [
+          392,
+          -82.97029
+        ],
+        [
+          393.5,
+          -75.47029
+        ],
+        [
+          323.5,
+          -75.47029
+        ],
+        [
+          323.5,
+          -78.92029000000001
+        ],
+        [
+          325,
+          -78.92029000000001
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "riverOverlaps": 0,
+      "protectedOverlaps": 0,
+      "pierOverlaps": false,
+      "input": ".tools/stair-seed5/tick-80000.json",
+      "inputSha256": "17511d5590ae1a172511712e568c745f9dd8a42b873e199c5336789f8125e3ca"
+    }
+  ]
+}

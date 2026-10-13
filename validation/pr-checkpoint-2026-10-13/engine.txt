@@ -1,0 +1,171 @@
+failures:
+
+---- access_capture::tests::capture_matches_mature_frozen_projection_oracle stdout ----
+
+thread 'access_capture::tests::capture_matches_mature_frozen_projection_oracle' (4606151) panicked at src/access_capture.rs:388:10:
+mature save restores: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_capture::tests::pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation stdout ----
+
+thread 'access_capture::tests::pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation' (4606153) panicked at src/access_capture.rs:284:10:
+mature save restores: "traveler 185 origin connector does not meet its route endpoint"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- access_live_engine::tests::exhausted_face_sweep_survives_save_and_selects_another_interior stdout ----
+
+thread 'access_live_engine::tests::exhausted_face_sweep_survives_save_and_selects_another_interior' (4606178) panicked at src/access_live_engine.rs:214:53:
+called `Result::unwrap()` on an `Err` value: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_live_engine::tests::legacy_preflight_restart_preserves_mature_city_and_is_deterministic stdout ----
+
+thread 'access_live_engine::tests::legacy_preflight_restart_preserves_mature_city_and_is_deterministic' (4606180) panicked at src/access_live_engine.rs:366:53:
+called `Result::unwrap()` on an `Err` value: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_live_engine::tests::mature_live_job_admits_known_route_and_resumes_with_moving_actors stdout ----
+
+thread 'access_live_engine::tests::mature_live_job_admits_known_route_and_resumes_with_moving_actors' (4606181) panicked at src/access_live_engine.rs:273:62:
+called `Result::unwrap()` on an `Err` value: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_live_engine::tests::shared_capture_start_preserves_live_checkpoint_and_continuation stdout ----
+
+thread 'access_live_engine::tests::shared_capture_start_preserves_live_checkpoint_and_continuation' (4606183) panicked at src/access_live_engine.rs:127:56:
+called `Result::unwrap()` on an `Err` value: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_live_engine::tests::exhausted_history_is_bounded_and_invalid_saves_are_rejected stdout ----
+
+thread 'access_live_engine::tests::exhausted_history_is_bounded_and_invalid_saves_are_rejected' (4606179) panicked at src/access_live_engine.rs:263:53:
+called `Result::unwrap()` on an `Err` value: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_live_engine::tests::real_steps_resume_deterministically_across_geometry_churn stdout ----
+
+thread 'access_live_engine::tests::real_steps_resume_deterministically_across_geometry_churn' (4606182) panicked at src/access_live_engine.rs:326:62:
+called `Result::unwrap()` on an `Err` value: "traveler 185 origin connector does not meet its route endpoint"
+
+---- access_proposal_capture::tests::initial_and_mature_capture_match_the_existing_geometry_projection stdout ----
+
+thread 'access_proposal_capture::tests::initial_and_mature_capture_match_the_existing_geometry_projection' (4606192) panicked at src/access_proposal_capture.rs:210:10:
+mature fixture restores: "traveler 185 origin connector does not meet its route endpoint"
+
+---- compact_frontage_diagnostic::compact_frontage_width_comparison_at_crop_host stdout ----
+
+thread 'compact_frontage_diagnostic::compact_frontage_width_comparison_at_crop_host' (4606226) panicked at src/compact_frontage_diagnostic.rs:406:52:
+mature diagnostic save restores: "traveler 185 origin connector does not meet its route endpoint"
+
+---- district_density_integration_tests::mature_district_measurements_conserve_capacity_without_mutating_worlds stdout ----
+
+thread 'district_density_integration_tests::mature_district_measurements_conserve_capacity_without_mutating_worlds' (4606252) panicked at src/district_density_integration_tests.rs:11:52:
+mature fixture restores: "traveler 624 origin connector does not meet its route endpoint"
+
+---- face_access_exact_tests::explicit_angled_access_candidate_uses_branch_frontage_and_restores stdout ----
+
+thread 'face_access_exact_tests::explicit_angled_access_candidate_uses_branch_frontage_and_restores' (4606266) panicked at src/face_access_exact_tests.rs:348:45:
+mature checkpoint restores: "traveler 185 origin connector does not meet its route endpoint"
+
+---- face_access_exact_tests::geometry_valid_noncanonical_interior_access_plan_restores_and_completes stdout ----
+
+thread 'face_access_exact_tests::geometry_valid_noncanonical_interior_access_plan_restores_and_completes' (4606267) panicked at src/face_access_exact_tests.rs:253:49:
+mature checkpoint restores: "traveler 185 origin connector does not meet its route endpoint"
+
+---- road_faces::tests::mature_connected_ordinary_road_graph_reports_unsupported_crossing stdout ----
+
+thread 'road_faces::tests::mature_connected_ordinary_road_graph_reports_unsupported_crossing' (4606448) panicked at src/road_faces.rs:761:10:
+saved mature world restores: "traveler 902 origin connector does not meet its route endpoint"
+
+---- road_opening_access_experiment::explicit_host_window_matches_legacy_wrapper_geometry_and_order stdout ----
+
+thread 'road_opening_access_experiment::explicit_host_window_matches_legacy_wrapper_geometry_and_order' (4606454) panicked at src/road_opening_access_experiment.rs:212:6:
+mature save restores: "traveler 351 origin connector does not meet its route endpoint"
+
+---- road_opening_access_experiment::road_opening_access_noop_keeps_global_planner_state_unchanged stdout ----
+
+thread 'road_opening_access_experiment::road_opening_access_noop_keeps_global_planner_state_unchanged' (4606461) panicked at src/road_opening_access_experiment.rs:845:6:
+mature save restores: "traveler 351 origin connector does not meet its route endpoint"
+
+---- tests::admitted_interior_branch_with_exact_clearance_restores_without_radial_rejection stdout ----
+
+thread 'tests::admitted_interior_branch_with_exact_clearance_restores_without_radial_rejection' (4606501) panicked at src/lib.rs:15093:50:
+recorded organic branch restores: "traveler 542 origin connector does not meet its route endpoint"
+
+---- tests::compact_infill_continuation_restores_with_exact_legacy_road_clearance stdout ----
+
+thread 'tests::compact_infill_continuation_restores_with_exact_legacy_road_clearance' (4606516) panicked at src/lib.rs:15188:10:
+oriented infill fixture restores before continuation: "traveler 626 origin connector does not meet its route endpoint"
+
+---- tests::frontage_scan_skips_unfinished_road_without_opening_it_and_replays stdout ----
+
+thread 'tests::frontage_scan_skips_unfinished_road_without_opening_it_and_replays' (4606537) panicked at src/lib.rs:17375:10:
+mature fixture restores: "traveler 1003 origin connector does not meet its route endpoint"
+
+---- tests::interior_access_plan_is_visible_reserved_atomic_and_replayable stdout ----
+
+thread 'tests::interior_access_plan_is_visible_reserved_atomic_and_replayable' (4606546) panicked at src/lib.rs:21692:10:
+mature public city fixture restores: "traveler 351 origin connector does not meet its route endpoint"
+
+---- tests::interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged stdout ----
+
+thread 'tests::interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged' (4606547) panicked at src/lib.rs:21952:10:
+mature public city fixture restores: "traveler 351 origin connector does not meet its route endpoint"
+
+---- tests::mature_city_grows_a_beneficial_road_beyond_old_open_road_stop stdout ----
+
+thread 'tests::mature_city_grows_a_beneficial_road_beyond_old_open_road_stop' (4606556) panicked at src/lib.rs:15225:10:
+mature public city fixture should restore: "traveler 351 origin connector does not meet its route endpoint"
+
+---- tests::mature_connected_bridgehead_grows_occupied_far_bank_neighborhood stdout ----
+
+thread 'tests::mature_connected_bridgehead_grows_occupied_far_bank_neighborhood' (4606557) panicked at src/lib.rs:15738:10:
+checked-in public mature city fixture should restore: "traveler 706 origin connector does not meet its route endpoint"
+
+---- tests::progressive_gap_infill_admits_compact_frontage_with_access_and_replay stdout ----
+
+thread 'tests::progressive_gap_infill_admits_compact_frontage_with_access_and_replay' (4606582) panicked at src/lib.rs:17226:10:
+mature fixture restores: "traveler 1003 origin connector does not meet its route endpoint"
+
+---- tests::frontier_proposal_scan_is_read_only_and_plan_road_replays stdout ----
+
+thread 'tests::frontier_proposal_scan_is_read_only_and_plan_road_replays' (4606538) panicked at src/lib.rs:22075:10:
+mature public city fixture restores: "traveler 351 origin connector does not meet its route endpoint"
+
+---- tests::seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves stdout ----
+
+thread 'tests::seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves' (4606649) panicked at src/lib.rs:14273:10:
+historical queue fixture should restore with compatible defaults: "traveler 813 origin connector does not meet its route endpoint"
+
+---- tests::shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes stdout ----
+
+thread 'tests::shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes' (4606655) panicked at src/lib.rs:16784:10:
+mature fixture restores: "traveler 351 origin connector does not meet its route endpoint"
+
+
+failures:
+    access_capture::tests::capture_matches_mature_frozen_projection_oracle
+    access_capture::tests::pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation
+    access_live_engine::tests::exhausted_face_sweep_survives_save_and_selects_another_interior
+    access_live_engine::tests::exhausted_history_is_bounded_and_invalid_saves_are_rejected
+    access_live_engine::tests::legacy_preflight_restart_preserves_mature_city_and_is_deterministic
+    access_live_engine::tests::mature_live_job_admits_known_route_and_resumes_with_moving_actors
+    access_live_engine::tests::real_steps_resume_deterministically_across_geometry_churn
+    access_live_engine::tests::shared_capture_start_preserves_live_checkpoint_and_continuation
+    access_proposal_capture::tests::initial_and_mature_capture_match_the_existing_geometry_projection
+    compact_frontage_diagnostic::compact_frontage_width_comparison_at_crop_host
+    district_density_integration_tests::mature_district_measurements_conserve_capacity_without_mutating_worlds
+    face_access_exact_tests::explicit_angled_access_candidate_uses_branch_frontage_and_restores
+    face_access_exact_tests::geometry_valid_noncanonical_interior_access_plan_restores_and_completes
+    road_faces::tests::mature_connected_ordinary_road_graph_reports_unsupported_crossing
+    road_opening_access_experiment::explicit_host_window_matches_legacy_wrapper_geometry_and_order
+    road_opening_access_experiment::road_opening_access_noop_keeps_global_planner_state_unchanged
+    tests::admitted_interior_branch_with_exact_clearance_restores_without_radial_rejection
+    tests::compact_infill_continuation_restores_with_exact_legacy_road_clearance
+    tests::frontage_scan_skips_unfinished_road_without_opening_it_and_replays
+    tests::frontier_proposal_scan_is_read_only_and_plan_road_replays
+    tests::interior_access_plan_is_visible_reserved_atomic_and_replayable
+    tests::interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged
+    tests::mature_city_grows_a_beneficial_road_beyond_old_open_road_stop
+    tests::mature_connected_bridgehead_grows_occupied_far_bank_neighborhood
+    tests::progressive_gap_infill_admits_compact_frontage_with_access_and_replay
+    tests::seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves
+    tests::shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes
+
+test result: FAILED. 443 passed; 27 failed; 54 ignored; 0 measured; 0 filtered out; finished in 42.52s
+
+error: test failed, to rerun pass `--lib`

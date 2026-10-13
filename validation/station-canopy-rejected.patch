@@ -1,0 +1,93 @@
+diff --git a/tests/station-kit.test.ts b/tests/station-kit.test.ts
+index 5b43eeb..5d8dd4c 100644
+--- a/tests/station-kit.test.ts
++++ b/tests/station-kit.test.ts
+@@ -7,6 +7,37 @@ import { pedestrianSurface } from '../web/src/movement';
+ import { PLATFORM_EDGE_X } from '../web/src/render/rail-profile';
+ 
+ describe('rail platform physical support', () => {
++  it('gives the shared station canopy a bounded twin-pitch roof', () => {
++    const materials = new Map<string, THREE.MeshBasicNodeMaterial>();
++    const art = { get(color: string) { let m=materials.get(color); if(!m){m=new THREE.MeshBasicNodeMaterial();materials.set(color,m);}return m; } };
++    const layout: RailPlatform = {node_id:1,x:0,z:0,ux:0,uz:1,surface_y:8,stair_x:4.05,stair_bottom_z:-20,stair_top_z:-1,ground_y:.27,stair_steps:44};
++    const group=buildStationPlatform(layout,art);group.updateMatrixWorld(true);
++    try {
++      const roof = group.children.find(child => (child as THREE.Mesh).material === materials.get('#546d6c')) as THREE.Mesh;
++      expect(roof).toBeDefined();
++      roof.geometry.computeBoundingBox();
++      const bounds=roof.geometry.boundingBox!;
++      expect(bounds.min.x).toBeGreaterThan(1.9);
++      expect(bounds.min.x).toBeLessThan(2.1);
++      expect(bounds.max.x).toBeGreaterThan(8.9);
++      expect(bounds.max.x).toBeLessThan(9.1);
++      expect(bounds.min.z).toBeCloseTo(-2, 4);
++      expect(bounds.max.z).toBeCloseTo(49, 4);
++      expect(bounds.max.y).toBeGreaterThan(layout.surface_y + 4.1);
++
++      const roofHeight=(x:number) => {
++        const ray=new THREE.Raycaster(new THREE.Vector3(x,20,23.5),new THREE.Vector3(0,-1,0));
++        return ray.intersectObject(roof)[0]?.point.y;
++      };
++      expect(roofHeight(5.5)).toBeGreaterThan(roofHeight(3.7)!);
++      expect(roofHeight(5.5)).toBeGreaterThan(roofHeight(7.3)!);
++      expect(roofHeight(3.7)).toBeCloseTo(roofHeight(7.3)!, 2);
++    } finally {
++      disposeGroup(group);
++      for(const m of materials.values())m.dispose();
++    }
++  });
++
+   it('supports every queue slot in rotated and reversed terminal frames', () => {
+     const materials = new Map<string, THREE.MeshBasicNodeMaterial>();
+     const art = { get(color: string) { let m=materials.get(color); if(!m){m=new THREE.MeshBasicNodeMaterial();materials.set(color,m);}return m; } };
+diff --git a/web/src/render/station-kit.ts b/web/src/render/station-kit.ts
+index 99ce333..e039212 100644
+--- a/web/src/render/station-kit.ts
++++ b/web/src/render/station-kit.ts
+@@ -10,10 +10,43 @@ export function buildStationPlatform(layout: RailPlatform, art: { get(color:stri
+   s.box((7.8 + PLATFORM_EDGE_X) / 2, top - 1, 23.5, 7.8 - PLATFORM_EDGE_X, 2, 49, concrete);
+   s.box(PLATFORM_EDGE_X + .3, top + .08, 23.5, .45, .1, 48, art.get('#d3b962'));
+   if (roof) {
+-    s.box(5.5, top + 4, 23.5, 7, .22, 51, art.get('#546d6c'));
++    // A shallow twin-pitch canopy gives the long station a readable roofline
++    // from overhead. Preserve the previous canopy span over the platform;
++    // all low-level furniture remains outside the passenger queue and aisle.
++    const roofMetal = art.get('#546d6c');
++    const roofSeam = art.get('#71817d');
++    const routeGreen = art.get('#527366');
++    const pitch = Math.atan2(.62, 3.5);
++    const panelLength = Math.hypot(3.5, .62);
++    for (const side of [-1, 1]) {
++      const centerX = 5.5 + side * 1.75;
++      const angle = side === -1 ? pitch : -pitch;
++      const panel = new THREE.BoxGeometry(panelLength, .18, 51);
++      panel.rotateZ(angle);
++      panel.translate(centerX, top + 3.91, 23.5);
++      s.add(panel, roofMetal);
++      for (const offset of [-1.15, 0, 1.15]) {
++        const seam = new THREE.BoxGeometry(.035, .025, 49.8);
++        seam.rotateZ(angle);
++        seam.translate(centerX + offset, top + 3.91 + Math.tan(angle) * offset + .105, 23.5);
++        s.add(seam, roofSeam);
++      }
++    }
++    // Eave fascias carry one continuous muted route stripe along both sides.
++    for (const x of [2, 9]) {
++      s.box(x, top + 3.54, 23.5, .14, .3, 51, metal);
++      s.box(x, top + 3.54, 23.5, .155, .085, 50.8, routeGreen);
++    }
++    // Low outer platform guard protects the open side while leaving the stair
++    // landing and the entire boarding edge clear.
++    s.box(7.58, top + .66, 23.5, .08, .1, 46.5, metal);
++    s.box(7.58, top + 1.02, 23.5, .08, .1, 46.5, metal);
++    for (let z = 1; z <= 46; z += 5) s.box(7.58, top + .54, z, .07, 1.08, .07, metal);
+     for (let z = 3; z <= 45; z += 10.5) {
+-      s.cylinder(6.7, top + 1.95, z, .14, 3.9, art.get('#d1d3c5'));
+-      s.box(5.4, top + 3.55, z, 3.8, .12, .12, metal);
++      for (const x of [2.35, 7.28]) {
++        const height = 4.22 - Math.abs(x - 5.5) * Math.tan(pitch) - .09 / Math.cos(pitch);
++        s.box(x, top + height / 2, z, .16, height, .16, art.get('#d1d3c5'));
++      }
+       s.box(4.7, top + 3.7, z, 1.7, .08, .3, art.get('#ffdda5', .5, true));
+     }
+   }

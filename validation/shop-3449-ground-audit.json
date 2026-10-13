@@ -1,0 +1,119 @@
+{
+  "source": ".tools/urban-form/seed-87231.json",
+  "sha256": "004184e8caabd041a5841d0062d2db6d62a9aaef6f40b47f55187493b6de0918",
+  "seed": 87231,
+  "tick": 80000,
+  "buildingId": 3449,
+  "note": "Diagnostic probes west of shop3449, plus shop center control. Straight centerline distances only; not road-surface, clearance or land-ownership classification. No future unreleased plan cells available in snapshot.",
+  "samples": [
+    {
+      "point": [
+        3,
+        -33
+      ],
+      "groundBlocks": [],
+      "parcelIds": [],
+      "protected": false,
+      "nearestRoadCenterlines": [
+        {
+          "id": 4901,
+          "kind": "local",
+          "distanceM": 5.069
+        },
+        {
+          "id": 3397,
+          "kind": "local",
+          "distanceM": 8.752
+        }
+      ]
+    },
+    {
+      "point": [
+        5,
+        -33
+      ],
+      "groundBlocks": [],
+      "parcelIds": [],
+      "protected": false,
+      "nearestRoadCenterlines": [
+        {
+          "id": 4901,
+          "kind": "local",
+          "distanceM": 6.959
+        },
+        {
+          "id": 3397,
+          "kind": "local",
+          "distanceM": 8.742
+        }
+      ]
+    },
+    {
+      "point": [
+        3,
+        -30
+      ],
+      "groundBlocks": [],
+      "parcelIds": [],
+      "protected": false,
+      "nearestRoadCenterlines": [
+        {
+          "id": 4901,
+          "kind": "local",
+          "distanceM": 6.053
+        },
+        {
+          "id": 3397,
+          "kind": "local",
+          "distanceM": 11.752
+        }
+      ]
+    },
+    {
+      "point": [
+        5,
+        -30
+      ],
+      "groundBlocks": [],
+      "parcelIds": [],
+      "protected": false,
+      "nearestRoadCenterlines": [
+        {
+          "id": 4901,
+          "kind": "local",
+          "distanceM": 7.943
+        },
+        {
+          "id": 3397,
+          "kind": "local",
+          "distanceM": 11.742
+        }
+      ]
+    },
+    {
+      "point": [
+        12.084708,
+        -33.199673
+      ],
+      "groundBlocks": [
+        88
+      ],
+      "parcelIds": [
+        3422
+      ],
+      "protected": false,
+      "nearestRoadCenterlines": [
+        {
+          "id": 3397,
+          "kind": "local",
+          "distanceM": 8.507
+        },
+        {
+          "id": 4901,
+          "kind": "local",
+          "distanceM": 13.586
+        }
+      ]
+    }
+  ]
+}

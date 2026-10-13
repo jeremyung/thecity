@@ -1,0 +1,89 @@
+{
+  "scope": "Exact additional station end apron only, checked against 2D building/parcel/station-pier/protected/river envelopes and world bounds.",
+  "cases": [
+    {
+      "seed": 87231,
+      "road": 39,
+      "cap": [
+        [
+          156.1011,
+          -82.41525
+        ],
+        [
+          162.6011,
+          -82.41525
+        ],
+        [
+          162.6011,
+          -82.81525
+        ],
+        [
+          156.1011,
+          -82.81525
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "pierOverlaps": [],
+      "protectedOverlap": false,
+      "riverOverlap": false
+    },
+    {
+      "seed": 0,
+      "road": 35,
+      "cap": [
+        [
+          129.06291,
+          -85.026544
+        ],
+        [
+          135.56291,
+          -85.026544
+        ],
+        [
+          135.56291,
+          -85.426544
+        ],
+        [
+          129.06291,
+          -85.426544
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "pierOverlaps": [],
+      "protectedOverlap": false,
+      "riverOverlap": false
+    },
+    {
+      "seed": 5,
+      "road": 35,
+      "cap": [
+        [
+          110.8753,
+          -82.57029
+        ],
+        [
+          117.3753,
+          -82.57029
+        ],
+        [
+          117.3753,
+          -82.97029
+        ],
+        [
+          110.8753,
+          -82.97029
+        ]
+      ],
+      "outsideWorld": false,
+      "buildingOverlaps": [],
+      "parcelOverlaps": [],
+      "pierOverlaps": [],
+      "protectedOverlap": false,
+      "riverOverlap": false
+    }
+  ]
+}

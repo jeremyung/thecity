@@ -1,0 +1,15 @@
+--- a/web/src/render/kit.ts
++++ b/web/src/render/kit.ts
+@@ -111,9 +111,9 @@
+   const isApartment = b.kind === 'apartment';
+   const lightUsage = b.kind === 'office' ? 'office' : (isHome || isApartment) ? 'home' : isShop ? 'shop' : 'ambient';
+   const facadePalette=buildingPalette(b,art.palette);
+-  const wall = art.get(facadePalette.wall);
+-  const concrete = art.get('#aaa99e'), paleConcrete = art.get('#c3b9a5');
+-  const roof = art.get(['#48575a', '#59676a', '#555d60', '#625d55'][pick(seed >>> 3, 4)]);
++  const wall = art.get(facadePalette.wall, .68);
++  const concrete = art.get('#aaa99e', .96), paleConcrete = art.get('#c3b9a5', .8);
++  const roof = art.get(['#48575a', '#59676a', '#555d60', '#625d55'][pick(seed >>> 3, 4)], .68);
+   const roofTile = art.get('#78817a'), trim = art.get(facadePalette.trim);
+   const wood = art.get(['#644e3e', '#755d49', '#56483d'][pick(seed >>> 5, 3)]);
+   const dark = art.get('#344346'), iron = art.get('#536164', .62);
