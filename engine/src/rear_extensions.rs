@@ -262,7 +262,8 @@ impl Engine {
     }
 
     fn rear_extension_building_eligible(&self, building: &super::Building) -> bool {
-        if building.stage != "open"
+        if self.errand_references_building(building.id)
+            || building.stage != "open"
             || building.anchor
             || building.floors == 0
             || building.floors > 8
@@ -1050,30 +1051,13 @@ mod tests {
     }
 
     #[test]
-    fn extension_schema_migrates_legacy_saves_without_plans() {
+    fn extension_schema_rejects_legacy_activity_saves() {
         let engine = Engine::new_legacy(13);
         for old_version in [2, 3] {
             let mut value: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
             value["activity_schema_version"] = serde_json::json!(old_version);
-            value
-                .as_object_mut()
-                .unwrap()
-                .remove("building_original_footprints");
-            if old_version == 2 {
-                value
-                    .as_object_mut()
-                    .unwrap()
-                    .remove("pending_rear_extensions");
-                value
-                    .as_object_mut()
-                    .unwrap()
-                    .remove("rear_extension_cursor");
-            }
-            let restored = Engine::restore_json(&value.to_string()).unwrap();
-            assert!(restored.state.pending_rear_extensions.is_empty());
-            assert_eq!(restored.state.rear_extension_cursor, 0);
-            assert!(restored.state.building_original_footprints.is_empty());
-            assert_eq!(restored.state.activity_schema_version, 4);
+            let error = Engine::restore_json(&value.to_string()).err().expect("legacy activity saves are rejected");
+            assert!(error.contains("unsupported business activity schema"), "{error}");
         }
     }
 

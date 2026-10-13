@@ -11,7 +11,7 @@ export interface BuildingMass {
 }
 
 export interface MidriseMassing {
-  family: 'walkup' | 'setback-office';
+  family: 'walkup' | 'terrace-apartment' | 'setback-office';
   masses: BuildingMass[];
 }
 
@@ -40,6 +40,29 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
   const seed = b.appearance_seed >>> 0;
   const side = (seed & 1) === 0 ? -1 : 1;
   if (b.kind === 'apartment') {
+    // A seeded minority uses a broad front terrace. Keep the lower body as a
+    // single full-width, full-depth slab so its street entrance stays centered;
+    // the top floor pulls back from +Z while remaining aligned to the rear.
+    if ((seed >>> 5) % 3 === 1) {
+      const terraceDepthRatio = 0.58 + ((seed >>> 3) % 9) * 0.01;
+      const terraceDepth = d * terraceDepthRatio;
+      return {
+        family: 'terrace-apartment',
+        masses: [
+          { x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors: b.floors - 1, role: 'main' },
+          {
+            x: 0,
+            z: -d / 2 + terraceDepth / 2,
+            width: w,
+            depth: terraceDepth,
+            baseFloor: b.floors - 1,
+            floors: 1,
+            role: 'main',
+          },
+        ],
+      };
+    }
+
     const coreRatio = 0.20 + ((seed >>> 2) % 5) * 0.01;
     const coreWidth = w * coreRatio;
     const mainWidth = w - coreWidth;

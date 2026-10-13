@@ -8,6 +8,10 @@ export interface RailPlatform extends Point {
   node_id: number; ux: number; uz: number; surface_y: number;
   stair_x: number; stair_bottom_z: number; stair_top_z: number;
   ground_y: number; stair_steps: number;
+  /** 0 site, 1 supports, 2 deck/access, 3 canopy, 4 complete. */
+  construction_phase: number;
+  /** Engine-owned centerline in the terminal local frame, street to stair foot. */
+  ground_path: readonly Point[]; ground_width: number;
 }
 export interface Road { id: number; from: number; to: number; kind: string; stage: string; progress: number; connected: boolean; length: number; lanes: number }
 export interface Parcel extends Point { id: number; width: number; depth: number; rotation?: number; access_node: number; suitability: number; protected: boolean; reservation: number | null }

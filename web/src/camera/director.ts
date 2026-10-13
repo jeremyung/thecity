@@ -508,6 +508,49 @@ export class CameraDirector {
     return true;
   }
 
+  /** Set a deterministic, held Explore pose that frames a station neighborhood. */
+  reviewStation(id: number): boolean {
+    const station = this.currentWorld?.nodes.find(candidate => candidate.id === id && candidate.kind === 'station');
+    if (this.disposed || !station || Math.abs(station.x) > WORLD_LIMIT || Math.abs(station.z) > WORLD_LIMIT) return false;
+    const platform = this.currentWorld?.rail_platforms?.find(candidate => candidate.node_id === id);
+    const target = new THREE.Vector3(platform?.x ?? station.x, platform?.surface_y ?? RAIL_HEAD_Y, platform?.z ?? station.z);
+    const radius = 55;
+    const distance = Math.max(65, this.fitSphereDistance(radius, 1.2));
+    const shot = chooseBuildingFollowPosition(target, radius, distance, this.cameraObstacles);
+    const position = new THREE.Vector3(shot.position.x, shot.position.y, shot.position.z);
+    if (!shot.visible || position.distanceTo(target) < this.controls.minDistance || position.distanceTo(target) > this.controls.maxDistance
+      || position.y < target.y + MIN_HEIGHT) return false;
+    if (cameraPathClearance(this.cameraPoint(position), this.cameraPoint(position), this.cameraObstacles,
+      { terrainY: 0, safetyMarginM: 1.5 }).collides) return false;
+
+    const damping = this.controls.enableDamping;
+    this.controls.enableDamping = false;
+    this.controls.update();
+    this.currentMode = "explore";
+    this.skylineTransition = null;
+    this.automaticRoute = null;
+    this.settledAutomaticPose = null;
+    this.followId = null;
+    this.followPositionValid = false;
+    this.followFocusValid = false;
+    this.followMovementPresent = false;
+    this.selectedAnchor = null;
+    this.revealSeconds = 0;
+    this.holdSeconds = 0;
+    this.controls.target.copy(target);
+    this.camera.position.copy(position);
+    this.controls.update();
+    this.camera.lookAt(target);
+    this.camera.updateMatrixWorld(true);
+    this.desiredPosition.copy(position);
+    this.desiredTarget.copy(target);
+    this.lastClearManualPosition.copy(position);
+    this.lastClearManualTarget.copy(target);
+    this.controls.enableDamping = damping;
+    this.onModeChange?.("explore");
+    return true;
+  }
+
   /** Copy only the selected subject's tuple [id,x,z,heading,kind,surfaceY]. */
   setPositions(data: Float32Array, withheld: ReadonlySet<number> = new Set()): void {
     this.withheldMovement = withheld;

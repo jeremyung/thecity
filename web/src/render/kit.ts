@@ -118,7 +118,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   const wood = art.get(['#644e3e', '#755d49', '#56483d'][pick(seed >>> 5, 3)]);
   const dark = art.get('#344346'), iron = art.get('#536164', .62);
   const glass = art.get('#55757a', .25), lightGlass = art.get('#94a7a0', .3);
-  const glow = art.get('#e9aa58', .42, true, lightUsage), lantern = art.get('#ffbd62', .5, true, lightUsage);
+  const glow = art.window(lightUsage), lantern = art.get('#ffbd62', .5, true, lightUsage);
   const green = art.get(b.anchor ? '#426c5c' : ['#527366', '#a4654f', '#526c76'][pick(seed >>> 7, 3)]);
   const ivory = art.get('#eee1c1'), scaffold = art.get('#8c8070', .72), caution = art.get('#d6b25e');
   const isOpen = b.stage === 'open';
@@ -309,7 +309,10 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
     } else if (isHome && floors <= 2) {
       renderHouseFacade(kit, b, art, { w, d, base, top, floor, wood, dark, glass, lightGlass, trim, glow, iron, green, ivory, concrete });
     } else {
-      const compactUrbanEntry = floors >= 2 && floors <= 3 && (isApartment || b.kind === 'office');
+      // Tall homes reach this generic facade too; their authoritative front
+      // access must terminate at a visible door, not a continuous window row.
+      const compactUrbanEntry = (floors >= 2 && floors <= 3 && (isApartment || b.kind === 'office'))
+        || (isHome && floors >= 4);
       renderUrbanFacade(kit, b, art, {
         w, d, base, top, floor, floors, entryX: compactUrbanEntry ? 0 : undefined,
         parcelD: compactUrbanEntry ? b.depth : undefined,
@@ -405,7 +408,7 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
         const core=layout.masses.find(candidate=>candidate.role==='core');
         const omitSideWindows=core&&layout.family==='walkup'?(core.x>mass.x?1:-1):undefined;
         const entryX=mass.baseFloor===0&&Math.abs(mass.x)<=mass.width/2?-mass.x:undefined;
-        renderUrbanFacade(kit,b,art,{w:mass.width,d:mass.depth,base:massBase,top:massTop,floor,floors:mass.floors,baseFloor:mass.baseFloor,omitSideWindows,entryX,parcelD:b.depth,massOffsetZ:mass.z,parcelW:b.width,massOffsetX:mass.x,wood,dark,glass,lightGlass,trim,glow,iron,concrete,paleConcrete,isApartment:b.kind==='apartment'});
+        renderUrbanFacade(kit,b,art,{w:mass.width,d:mass.depth,base:massBase,top:massTop,floor,floors:mass.floors,baseFloor:mass.baseFloor,balconyStyle:layout.family==='terrace-apartment'?'continuous':undefined,omitSideWindows,entryX,parcelD:b.depth,massOffsetZ:mass.z,parcelW:b.width,massOffsetX:mass.x,wood,dark,glass,lightGlass,trim,glow,iron,concrete,paleConcrete,isApartment:b.kind==='apartment'});
         // Only the podium/main facade owns the building entrance. Upper office
         // tiers use their global floor index and never repeat a ground trim.
         if(mass.baseFloor===0){
@@ -424,6 +427,20 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
     if(lower.baseFloor+lower.floors!==upper.baseFloor || lower.baseFloor+lower.floors>installedThrough || upper.baseFloor+upper.floors>installedThrough)continue;
     const y=base+upper.baseFloor*floor-.045;
     const plate=.12, overlap=.08;
+    if(layout.family==='terrace-apartment'){
+      const front=lower.z+lower.depth/2-.06;
+      const rear=upper.z+upper.depth/2;
+      const width=lower.width-.12;
+      // Thin walking finish covers only the exposed strip, rests on the lower
+      // mass, and avoids inheriting its vertical facade material.
+      kit.box(lower.x,base+upper.baseFloor*floor+.025,(front+rear)/2,width,.05,front-rear,concrete);
+      const guardY=base+upper.baseFloor*floor+.55;
+      kit.box(lower.x,guardY,front,width,1.1,.12,paleConcrete);
+      for(const side of [-1,1]){
+        kit.box(lower.x+side*(width/2-.06),guardY,(front+rear)/2,.12,1.1,front-rear,paleConcrete);
+      }
+      continue;
+    }
     kit.withOffset(lower.x,0,lower.z,()=>{
       for(const side of [-1,1]){
         kit.box(0,y,side*(lower.depth/2-plate/2),lower.width,plate,plate,concrete);
@@ -432,6 +449,9 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
       // Seeded slim rails stop short at the family corners, retaining a quiet
       // terrace line rather than outlining another full box.
       for(const side of [-1,1]){
+        const lowerEdge=lower.z+side*lower.depth/2;
+        const upperEdge=upper.z+side*upper.depth/2;
+        if(side*(lowerEdge-upperEdge)<.25)continue;
         const z=side*(lower.depth/2-overlap);
         kit.box(0,y+.42,z,lower.width*.72,.055,.055,iron);
         for(const x of [-lower.width*.36,0,lower.width*.36])kit.box(x,y+.22,z,.045,.42,.045,iron);
@@ -606,7 +626,7 @@ function renderLowriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:LowriseMas
       renderHouseFacade(kit,b,art,{w:frontage.width,d:frontage.depth,base,top,floor,wood,dark,glass,lightGlass,trim,glow,iron,green,ivory:art.get('#eee1c1'),concrete,entrySide:1,quietSides:layout.quietSides,frontOnly:true,centerEntry:true,lowriseDetail:true,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x)});
       if(isModernHomeVariant(b))renderModernHomeRearWindows(kit,frontage,{base,floor,dark,lightGlass,trim,concrete});
     }else{
-      renderShopFront(kit,b,art,{w:frontage.width,d:frontage.depth,top,base,wood,dark,glass,trim,glow,green,ivory:art.get('#eee1c1'),lantern,concrete,quietSides:layout.quietSides,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x),centerDoor:true});
+      renderShopFront(kit,b,art,{w:frontage.width,d:frontage.depth,top,base,wood,dark,glass,trim,glow,green,ivory:art.get('#eee1c1'),lantern,concrete,quietSides:layout.quietSides,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x),canopyBoundary:b.depth/2-frontage.z-.04,centerDoor:true});
     }
   });
   renderLowriseRoof(kit,frontage,top,roof,roofTile,trim,iron,dark,seed,b.width,b.depth);
@@ -711,7 +731,7 @@ function renderLowriseConstruction(kit:Kit,b:Building,art:ArtMaterials,layout:Lo
   // Keep a low work scaffold and grounded supplies visible, but do not stack a
   // second partial shell or activate commercial lighting before the building opens.
   if(amount>=.86){
-    renderLowriseOpen(kit,b,art,layout,{w,d,base,top,floor,wall,roof,roofTile,trim,wood,dark,glass,lightGlass,iron,green,concrete,paleConcrete,glow:art.get('#e9aa58',.42),lantern:art.get('#ffbd62',.5),seed:b.appearance_seed>>>0});
+    renderLowriseOpen(kit,b,art,layout,{w,d,base,top,floor,wall,roof,roofTile,trim,wood,dark,glass,lightGlass,iron,green,concrete,paleConcrete,glow:glass,lantern:art.get('#ffbd62',.5),seed:b.appearance_seed>>>0});
     renderLowriseWorksite(kit,layout,{base,floor,builtFloors,parcelW:m.parcelW,parcelD:m.parcelD,wood,paleConcrete,caution,scaffold});
     return;
   }
@@ -807,7 +827,7 @@ function renderShopDisplay(
 
 function renderShopFront(
   kit: Kit, b: Building, art: ArtMaterials,
-  m: { w: number; d: number; top: number; base: number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; trim: THREE.Material; glow: THREE.Material; green: THREE.Material; ivory: THREE.Material; lantern: THREE.Material; concrete: THREE.Material; quietSides?:Array<-1|1>; frontBoundary?:number; frontWidthBoundary?:number; sideBoundary?:number; centerDoor?:boolean },
+  m: { w: number; d: number; top: number; base: number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; trim: THREE.Material; glow: THREE.Material; green: THREE.Material; ivory: THREE.Material; lantern: THREE.Material; concrete: THREE.Material; quietSides?:Array<-1|1>; frontBoundary?:number; frontWidthBoundary?:number; sideBoundary?:number; canopyBoundary?:number; centerDoor?:boolean },
 ) {
   const { w, d, top, base, wood, dark, glass, trim, glow, green, ivory, lantern, concrete } = m;
   renderSideElevation(kit,b,{w,d,base,dark,glass,trim,wood,concrete,quietSides:m.quietSides,sideBoundary:m.sideBoundary});
@@ -860,14 +880,20 @@ function renderShopFront(
   kit.box(0, shopTop + .28, frontZ(.22,.32), w * .98, .46, .32, wood);
   const canopyY = Math.min(3.7, top - .18);
   const canopyW = Math.min(isCafe ? w * .84 : w + .62,m.frontWidthBoundary===undefined?Infinity:2*m.frontWidthBoundary-.08);
-  const canopyD = m.frontBoundary===undefined ? (isCafe ? .98 : 1.35) : Math.min(isCafe ? .98 : 1.35,Math.max(.6,d*.3));
-  const canopyZ = m.frontBoundary===undefined ? d / 2 + (isCafe ? .53 : .72) : m.frontBoundary-canopyD/2;
+  // Low-rise frontBoundary is the wall, not the parcel edge. Use the real
+  // remaining frontage for an exposed canopy, with a shallow wall embed.
+  const projecting=m.canopyBoundary!==undefined&&m.frontBoundary!==undefined;
+  const canopyD = projecting ? Math.min(isCafe ? .98 : 1.35,m.canopyBoundary!-m.frontBoundary!+.08)
+    : m.frontBoundary===undefined ? (isCafe ? .98 : 1.35) : Math.min(isCafe ? .98 : 1.35,Math.max(.6,d*.3));
+  const canopyZ = projecting ? m.frontBoundary!-.08+canopyD/2
+    : m.frontBoundary===undefined ? d / 2 + (isCafe ? .53 : .72) : m.frontBoundary-canopyD/2;
+  const valanceZ=projecting ? canopyZ+canopyD/2-.065 : frontZ(canopyZ+canopyD/2-front,.12);
   kit.box(0, canopyY, canopyZ, canopyW, .2, canopyD, green);
-  kit.box(0, canopyY - .19, frontZ(canopyZ + canopyD/2-front,.12), canopyW, .24, .12, green);
+  kit.box(0, canopyY - .19, valanceZ, canopyW, .24, .12, green);
   const stripe = art.get(isCafe ? '#e4d5b7' : '#ead6af');
   const stripeW = Math.max(.42, canopyW / (isCafe ? 11 : 9));
   for (let x = -canopyW / 2 + stripeW/2; x <= canopyW / 2 - stripeW/2; x += stripeW * 2) {
-    kit.box(x, canopyY - .18, frontZ(canopyZ + canopyD/2-front+.02,.125), stripeW, .23, .125, stripe);
+    kit.box(x, canopyY - .18, projecting?valanceZ+.003:frontZ(canopyZ + canopyD/2-front+.02,.125), stripeW, .23, .125, stripe);
   }
   for (const x of [-canopyW / 2 + .2, canopyW / 2 - .2]) {
     kit.box(x, canopyY - .9, frontZ(canopyZ + canopyD * .18-front,.07), .07, 1.45, .07, wood);
@@ -887,7 +913,7 @@ function renderShopFront(
   kit.box(-w / 2 + .43, shopTop + .45, frontZ(.48,.28), .42, .68, .28, dark);
   kit.box(-w / 2 + .43, shopTop + .45, frontZ(.64,.06), .27, .48, .06, lantern);
   kit.box(w / 2 - .38, shopTop + .45, frontZ(.43,.24), .26, .72, .24, wood);
-  kit.box(w / 2 - .38, shopTop + .45, frontZ(.57,.055), .12, .48, .055, glow);
+  kit.box(w / 2 - .38, shopTop + .45, frontZ(.57,.055), .12, .48, .055, lantern);
   // Wall-mounted lanterns flank the entry under the eaves.
   for (const x of [-w / 2 + .44, w / 2 - .44]) {
     kit.box(x, shopTop + .95, frontZ(.22,.13), .13, .5, .13, dark);
@@ -1103,7 +1129,7 @@ function renderLowriseHouseWindow(
 
 function renderUrbanFacade(
   kit: Kit, b: Building, _art: ArtMaterials,
-  m: { w: number; d: number; base: number; top: number; floor: number; floors: number; baseFloor?: number; omitSideWindows?:1|-1; entryX?:number; parcelD?:number; massOffsetZ?:number; parcelW?:number; massOffsetX?:number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; lightGlass: THREE.Material; trim: THREE.Material; glow: THREE.Material; iron: THREE.Material; concrete: THREE.Material; paleConcrete: THREE.Material; isApartment: boolean },
+  m: { w: number; d: number; base: number; top: number; floor: number; floors: number; baseFloor?: number; balconyStyle?: 'continuous'; omitSideWindows?:1|-1; entryX?:number; parcelD?:number; massOffsetZ?:number; parcelW?:number; massOffsetX?:number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; lightGlass: THREE.Material; trim: THREE.Material; glow: THREE.Material; iron: THREE.Material; concrete: THREE.Material; paleConcrete: THREE.Material; isApartment: boolean },
 ) {
   const { w, d, base, floor, floors, wood, dark, glass, lightGlass, trim, glow, iron, concrete, paleConcrete, isApartment } = m;
   const baseFloor = m.baseFloor ?? 0;
@@ -1139,11 +1165,14 @@ function renderUrbanFacade(
           const lit = ((Math.floor(x * 3) + f * 7 + seedInt(b.appearance_seed)) % 6 + 6) % 6 < (isApartment ? 3 : 2);
           const ww = isApartment ? Math.min(spacing - .5, 1.85) : Math.min(spacing - .55, 2.35);
           if(doorOpening&&x+ww/2>m.entryX!-.62&&x-ww/2<m.entryX!+.62)continue;
-          kit.box(x, y, z, ww + .22, 1.75, .13, dark);
-          kit.box(x, y, z + side * .08, ww, 1.51, .04, lit ? glow : (f % 3 === 0 ? lightGlass : glass));
-          kit.box(x, y, z + side * .15, .065, 1.52, .045, trim);
-          kit.box(x, y, z + side * .15, ww, .065, .045, trim);
-          if (isApartment && ((f + pick(b.appearance_seed, 2)) % 2 === 0)) {
+          const balconyDoor = m.balconyStyle === 'continuous' && side === 1 && baseFloor + f > 0;
+          const openingY = balconyDoor ? base + f * floor + 1.30 : y;
+          const openingH = balconyDoor ? 2.22 : 1.51;
+          kit.box(x, openingY, z, ww + .22, openingH + .24, .13, dark);
+          kit.box(x, openingY, z + side * .08, ww, openingH, .04, lit ? glow : (f % 3 === 0 ? lightGlass : glass));
+          kit.box(x, openingY, z + side * .15, .065, openingH, .045, trim);
+          if (!balconyDoor) kit.box(x, y, z + side * .15, ww, .065, .045, trim);
+          if (isApartment && m.balconyStyle !== 'continuous' && (f + pick(b.appearance_seed, 2)) % 2 === 0) {
             // Fit the projection to this facade's actual parcel clearance;
             // broad plots retain deep balconies instead of using the narrow kit.
             const clearance=m.parcelD===undefined?Infinity:m.parcelD/2-side*(m.massOffsetZ??0)-d/2;
@@ -1161,6 +1190,20 @@ function renderUrbanFacade(
           }
         }
       }
+      if (m.balconyStyle === 'continuous' && side === 1 && baseFloor + f > 0) {
+        // One floor-level slab and closed guard, not overlapping window-sized
+        // boxes. The slab embeds into the wall and stays inside the parcel.
+        const front = Math.min(d / 2 + .92, (m.parcelD ?? d + 2) / 2 - (m.massOffsetZ ?? 0) - .08);
+        const back = d / 2 - .04, depth = front - back, width = w - .24;
+        const slabY = base + f * floor + .08;
+        kit.box(0, slabY, (front + back) / 2, width, .13, depth, concrete);
+        const guardY = slabY + .065 + .535;
+        kit.box(0, guardY, front - .05, width, 1.07, .1, paleConcrete);
+        kit.box(0, guardY + .535, front - .05, width, .055, .12, iron);
+        for (const end of [-1, 1]) {
+          kit.box(end * (width / 2 - .05), guardY, (front + back) / 2, .1, 1.07, depth, paleConcrete);
+        }
+      }
       // Continuous lintels, sills, and floor bands lend the narrow facade a built rhythm.
       if(!doorOpening&&b.kind!=='office')kit.box(0, y - 1.02, z + side * .08, w + .18, .14, .2, paleConcrete);
       kit.box(0, base + (f + 1) * floor - .12, z + side * .08, w + .28, .18, .22, trim);
@@ -1176,6 +1219,22 @@ function renderUrbanFacade(
       const sideClearance=m.parcelW===undefined?Infinity:Math.max(0,m.parcelW/2-(side*(m.massOffsetX??0)+w/2));
       const sideOffset=Math.min(.08,Math.max(0,sideClearance-.1));
       const x = side * (w / 2 + sideOffset), y = base + f * floor + 1.95;
+      if (b.kind === 'office' && sideClearance >= .24) {
+        // Carry the office's ribbon glazing around its side elevations instead
+        // of reverting to residential punched windows. Keep every projection
+        // inside the same parcel clearance used by the original side windows.
+        const bandD = d * .84;
+        const pane = (baseFloor + f + pick(seedInt(b.appearance_seed), 3)) % 4 === 0 ? lightGlass : glass;
+        kit.box(x, y, 0, .13, 2.02, bandD, dark);
+        kit.box(x + side * .08, y + .04, 0, .04, 1.78, bandD - .08, pane);
+        const mullions = Math.max(1, Math.floor(bandD / 1.65));
+        for (let i = 0; i <= mullions; i++) {
+          const z = -bandD / 2 + bandD * i / mullions;
+          kit.box(x + side * .13, y + .04, z, .045, 1.8, .055, trim);
+        }
+        kit.box(x + side * .11, y - 1.05, 0, .16, .2, bandD, paleConcrete);
+        continue;
+      }
       for (let z = -d / 2 + 1.3; z < d / 2 - .6; z += 3.1) {
         kit.box(x, y, z, .13, 1.6, 1.5, dark);
         kit.box(x + side * .08, y, z, .04, 1.38, 1.28, glass);

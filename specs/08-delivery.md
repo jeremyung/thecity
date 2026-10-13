@@ -105,6 +105,41 @@ Use the seeded master plan for new worlds. The next acceptance milestone is a be
 
 Backward save compatibility is not required (user decision, 2026-10-11). Do not build migration infrastructure for obsolete saves. Reject incompatible formats explicitly and offer a fresh world; do not silently reinterpret them. Current-format save validation and live-versus-restored continuation remain mandatory.
 
+## Current work selection — 2026-10-12
+
+The [updated goal](../validation/living-city-goal.md) and
+[multidimensional review](../validation/fidelity-review-current.md#multidimensional-gap-assessment--2026-10-12)
+set urban fabric and neighborhood composition as the next primary workstream.
+This supersedes activity-first sequencing in earlier checkpoint notes without
+removing outstanding behavioral, audio, correctness or performance requirements.
+
+Start with measured footprint coverage, street share, block/parcel sizes, setbacks,
+frontage and height distribution using existing fabric targets. Distinguish gross
+and net developable coverage and overlapping corridor areas. Qualitative overhead
+maps without a scale/legend do not establish surveyed terrain or precise targets.
+Roads dominating a view do not by themselves justify reducing road widths.
+
+Improve one normally generated local street/crossing/waterfront neighborhood with
+reusable rules. Compare fixed world/camera/time/effect settings in both styles,
+with DOF off and on; review ordinary motion and at least three seeds. Architecture,
+frontage, landscape and material improvements must support the structural result.
+Do not substitute hand-staged scenery, cosmetic crowds, extra towers, texture
+batches or stronger blur for coherent density and readable composition. Retain all
+release gates below, including founding/developing/mature daily cycles, audio and
+normal loading/growth performance. Reassess after two unsuccessful interventions.
+
+### Evidence reconciliation — 2026-10-13
+
+The [updated gap priorities](../validation/fidelity-review-current.md#updated-goal-and-gap-priorities--2026-10-13)
+retain successful compact fabric and the bounded apartment, entrance, canopy and
+glazing improvements with their evidence limits. The gateway-stair correction now
+has three-seed plan-view evidence; full physical and motion acceptance remains open.
+Validate the in-progress shared station construction phases before accepting affected
+infrastructure, then choose the next access/frontage intervention from matched
+neighborhood evidence. See the [consolidated learnings](../validation/fidelity-review-current.md#consolidated-learnings-and-goal-reconciliation--2026-10-13).
+Specimen A/B, lighting previews, sampled motion and focused tests do not establish
+the complete release gates below.
+
 ## Release criterion
 
 ### Visual quality is a release gate

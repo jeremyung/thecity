@@ -4,6 +4,20 @@
   "developmentRate": 60,
   "engineVersion": "0.1.0",
   "wasmSha256": "3ced97d68e3385af2c4804c924fd391da66ee5ed177fe27d14d941857beaffa5",
-  "saveSha256": "d7b2ad07817a70c5be178046b2acdb102a1fad67a97441cc9bc60b7af42be94c",
-  "purpose": "Preserve resident 46 waiting for reverse bus before neighborhood planner changes; generated through public CityEngine API."
+  "saveSha256": "5cf7bcb171b0dfa989158059bcfd67559049347cb50f849c725b0915a1da6d8e",
+  "purpose": "Preserve resident 46 waiting for reverse bus before neighborhood planner changes; generated through public CityEngine API.",
+  "schemaNormalization": {
+    "previousActivitySchemaVersion": null,
+    "activitySchemaVersion": 5,
+    "neighborhoodErrands": {
+      "cursor": {
+        "home_index": 0,
+        "destination_index": 0,
+        "destination_round": 0
+      },
+      "outings": []
+    },
+    "geometryActorsAndOtherStatePreserved": true,
+    "purposeNote": "The historical queue scenario is retained as a current-format test fixture; this static schema normalization is not runtime save migration."
+  }
 }

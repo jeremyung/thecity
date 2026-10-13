@@ -135,6 +135,7 @@ impl Engine {
                 .building_original_footprints
                 .iter()
                 .any(|entry| entry.building_id == building.id)
+            || self.errand_references_building(building.id)
             || self.state.residents.iter().any(|resident| {
                 resident.home_building == building.id || resident.work_building == Some(building.id)
             })
@@ -524,7 +525,7 @@ impl Engine {
         if !valid {
             return Err("height-redevelopment plan, host, parcel, and project disagree".into());
         }
-        if self.state.residents.iter().any(|resident| {
+        if self.errand_references_building(building.id) || self.state.residents.iter().any(|resident| {
             resident.home_building == building.id || resident.work_building == Some(building.id)
         }) || self.state.travelers.iter().any(|traveler| {
             traveler.origin_building == Some(building.id)

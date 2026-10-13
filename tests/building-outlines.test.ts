@@ -41,7 +41,7 @@ function optimizedOutlines(group:THREE.Group, refreshBounds=true){
   chunks.root.traverse(object=>{if(object instanceof THREE.LineSegments)result=new Float32Array(object.geometry.getAttribute('position').array as Float32Array);});
   for(const restoreGetAttribute of restore)restoreGetAttribute();
   chunks.clear();ink.dispose();
-  return{expected:source,actual:result,positionReadsAtSet};
+  return{expected:source,actual:result,positionReadsAtSet,positionReadsAfterDrain:positionReads};
 }
 
 function slenderBox(length:number,thickness=.01){
@@ -55,16 +55,20 @@ function dispose(group:THREE.Group,geometry:THREE.BufferGeometry,material:THREE.
 describe('conservative contour outline rejection',()=>{
   it('preserves the existing strict 3.5 m edge threshold just below, at and above it',()=>{
     for(const length of [3.499,3.5,3.501]){
-      const fixture=slenderBox(length),{expected,actual,positionReadsAtSet}=optimizedOutlines(fixture.group);
+      const fixture=slenderBox(length),{expected,actual,positionReadsAtSet,positionReadsAfterDrain}=optimizedOutlines(fixture.group);
       expect(Array.from(actual),`length ${length}`).toEqual(Array.from(expected));
-      if(length<3.5){expect(actual).toHaveLength(0);expect(positionReadsAtSet).toBe(0);}
-      else{expect(actual.length).toBeGreaterThan(0);expect(positionReadsAtSet).toBeGreaterThan(0);}
+      // Registration must remain cheap; contour extraction runs in update().
+      expect(positionReadsAtSet).toBe(0);
+      expect(positionReadsAfterDrain).toBeGreaterThan(0);
+      if(length<3.5)expect(actual).toHaveLength(0);
+      else expect(actual.length).toBeGreaterThan(0);
       dispose(fixture.group,fixture.geometry,fixture.material);
     }
     const translated=slenderBox(3.4999);translated.group.position.x=300;
-    const {expected,actual,positionReadsAtSet}=optimizedOutlines(translated.group);
+    const {expected,actual,positionReadsAtSet,positionReadsAfterDrain}=optimizedOutlines(translated.group);
     expect(Array.from(actual)).toEqual(Array.from(expected));
-    expect(positionReadsAtSet).toBeGreaterThan(0); // Float32 endpoint rounding makes the near-threshold reject uncertain.
+    expect(positionReadsAtSet).toBe(0);
+    expect(positionReadsAfterDrain).toBeGreaterThan(0); // Near-threshold extraction still runs after registration.
     dispose(translated.group,translated.geometry,translated.material);
   });
 

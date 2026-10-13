@@ -2,6 +2,13 @@
 
 The camera reveals growth while preserving the close, miniature scale that makes ordinary activity enjoyable. Manual exploration always takes priority.
 
+Developer station review (2026-10-12): View station uses a deterministic held
+Explore pose centered on the station platform, fitted to a55m neighborhood radius
+with the selected lens and checked against building occlusion. It no longer uses
+the close entity-follow path. Missing or infeasible stations leave the camera
+unchanged. This diagnostic view does not replace ordinary Watch/Follow direction
+or establish artistic acceptance. See validation/fidelity-review-current.md.
+
 ## Camera modes
 
 Observe holds or slowly moves through a scene. Explore gives direct control. Follow tracks a selected subject with a stable offset. Overview frames the developed footprint. Lighting preview retains the existing mode while changing only lighting.

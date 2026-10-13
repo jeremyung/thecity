@@ -162,8 +162,8 @@ describe('commuter rail corridor geometry', () => {
     const materials = new Map<string, THREE.Material>();
     const art = { get(color: string) { let material = materials.get(color); if (!material) { material = new THREE.MeshBasicNodeMaterial(); materials.set(color, material); } return material; } };
     const terminals: RailPlatform[] = [
-      { node_id: 1, x: 0, z: 0, ux: 0, uz: 1, surface_y: 8, stair_x: 4.05, stair_bottom_z: -20, stair_top_z: -1, ground_y: .27, stair_steps: 44 },
-      { node_id: 2, x: 0, z: 200, ux: 0, uz: -1, surface_y: 8, stair_x: 4.05, stair_bottom_z: -20, stair_top_z: -1, ground_y: .27, stair_steps: 44 },
+      { node_id: 1, x: 0, z: 0, ux: 0, uz: 1, surface_y: 8, stair_x: 4.05, stair_bottom_z: -20, stair_top_z: -1, ground_y: .27, stair_steps: 44, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4 },
+      { node_id: 2, x: 0, z: 200, ux: 0, uz: -1, surface_y: 8, stair_x: 4.05, stair_bottom_z: -20, stair_top_z: -1, ground_y: .27, stair_steps: 44, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4 },
     ];
     try {
       for (const [a, b] of [

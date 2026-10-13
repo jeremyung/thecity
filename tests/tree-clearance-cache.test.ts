@@ -52,6 +52,29 @@ function hiddenAt(mesh: THREE.InstancedMesh, index: number) {
 afterEach(() => vi.restoreAllMocks());
 
 describe('tree clearance cache', () => {
+  it('clears station reservations in rotated frames and invalidates moved geometry', () => {
+    for (const [ux, uz] of [[1,0], [-1,0], [.6,.8]]) {
+      for (const gateway of [false,true]) {
+        const platform = {node_id:1,x:30,z:-10,ux,uz,surface_y:8,stair_x:4.05,
+          stair_bottom_z:gateway?67:-20,stair_top_z:gateway?48:-1,
+          ground_y:.27,stair_steps:44, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:gateway?68.5:-21.5},{x:4.05,z:gateway?68.5:-21.5},{x:4.05,z:gateway?67:-20}], ground_width: 1.6,construction_phase:0};
+        const point = (x:number,z:number) => ({x:30+uz*x+ux*z,z:-10-ux*x+uz*z,s:1});
+        const { renderer, trees } = harness([point(8,24),point(4.05,gateway?60:-12),point(25,24)]);
+        CityRenderer.prototype['updateTrees'].call(renderer, world({rail_platforms:[platform]}));
+        expect(hiddenAt(trees,0)).toBe(true);
+        expect(hiddenAt(trees,1)).toBe(true);
+        expect(hiddenAt(trees,2)).toBe(false);
+        const version=trees.instanceMatrix.version;
+        CityRenderer.prototype['updateTrees'].call(renderer, world({rail_platforms:[{...platform,construction_phase:4}]}));
+        expect(trees.instanceMatrix.version).toBe(version);
+        CityRenderer.prototype['updateTrees'].call(renderer, world({rail_platforms:[{...platform,x:400}]}));
+        expect(trees.instanceMatrix.version).toBeGreaterThan(version);
+        expect(hiddenAt(trees,0)).toBe(false);
+        expect(hiddenAt(trees,1)).toBe(false);
+      }
+    }
+  });
+
   it('skips matrix uploads and bounds work when clearance inputs are unchanged', () => {
     const { renderer, trees, trunks } = harness();
     CityRenderer.prototype['updateTrees'].call(renderer, world({ buildings: [building(0, 0)] }));

@@ -9,6 +9,7 @@ const DEFAULT_CELL_SIZE = 0.5;
 const DEFAULT_BLOCK_SIZE = 100;
 const DEFAULT_MAX_GRID_CELLS = 4_000_000;
 const PROJECTED_Y_THRESHOLD = 1;
+const OPEN_STREET_WIDTHS = { arterial: 21, local: 6.5, bridge: 18.8, lane: 4 };
 
 /**
  * Bounded plan-view coverage raster. Coverage is a union of projected kit
@@ -110,6 +111,7 @@ export function markLocalTriangle(grid, vertices, placement, channel = 'mask', y
 function createChannels(bounds, cellSize, maxCells) {
   const grid = createCoverageGrid(bounds, cellSize, maxCells);
   grid.envelopeMask = new Uint8Array(grid.mask.length);
+  grid.streetMask = new Uint8Array(grid.mask.length);
   return grid;
 }
 
@@ -161,6 +163,21 @@ function markNominalEnvelope(grid, building) {
   const points = [[-width / 2, -depth / 2], [width / 2, -depth / 2], [width / 2, depth / 2], [-width / 2, depth / 2]]
     .map(([x, z]) => [building.x + c * x + s * z, building.z - s * x + c * z]);
   markProjectedPolygon(grid, points, 'envelopeMask');
+}
+
+function markOpenStreet(grid, road, nodesById) {
+  const width = OPEN_STREET_WIDTHS[road.kind];
+  if (road.stage !== 'open' || !width) return;
+  const from = nodesById.get(road.from), to = nodesById.get(road.to);
+  if (!from || !to || ![from.x, from.z, to.x, to.z].every(Number.isFinite)) return;
+  const dx = to.x - from.x, dz = to.z - from.z;
+  const length = Math.hypot(dx, dz);
+  if (length <= 1e-9) return;
+  const half = width / 2, nx = -dz / length * half, nz = dx / length * half;
+  markProjectedPolygon(grid, [
+    [from.x + nx, from.z + nz], [to.x + nx, to.z + nz],
+    [to.x - nx, to.z - nz], [from.x - nx, from.z - nz],
+  ], 'streetMask');
 }
 
 function geometryTriangles(mesh, placement, grid) {
@@ -226,9 +243,20 @@ export function auditRenderedCoverage(snapshot, kit, { cellSize = DEFAULT_CELL_S
       kit.dispose(group);
     }
   }
+  const nodesById = new Map((Array.isArray(snapshot.nodes) ? snapshot.nodes : []).map(node => [node.id, node]));
+  for (const road of Array.isArray(snapshot.roads) ? snapshot.roads : []) markOpenStreet(grid, road, nodesById);
   const domainArea = (bounds.max_x - bounds.min_x) * (bounds.max_z - bounds.min_z);
   const projectedArea = gridArea(grid, grid.mask);
   const nominalArea = gridArea(grid, grid.envelopeMask);
+  const openStreetArea = gridArea(grid, grid.streetMask);
+  const netBuildingMask = new Uint8Array(grid.mask.length);
+  const netDomainMask = new Uint8Array(grid.mask.length);
+  for (let i = 0; i < grid.mask.length; i++) {
+    netBuildingMask[i] = grid.mask[i] && !grid.streetMask[i] ? 1 : 0;
+    netDomainMask[i] = grid.streetMask[i] ? 0 : 1;
+  }
+  const netDomainArea = gridArea(grid, netDomainMask);
+  const netBuildingArea = gridArea(grid, netBuildingMask);
   return {
     methodology: {
       label: cropBounds ? 'projected kit geometry above 1m within cropped bounds' : 'projected kit geometry above 1m',
@@ -239,12 +267,14 @@ export function auditRenderedCoverage(snapshot, kit, { cellSize = DEFAULT_CELL_S
         : 'full world bounds, including river, protected land, and undevelopable areas',
       yCriterion: 'clip production kit triangles at building-local y=1m before projection',
       limitations: 'Visual plan-view union of authored kit surfaces; includes roof/eaves/props above 1m. It is not a legal footprint, parcel coverage, floor area, or net developable-land ratio. Raster coverage is cell-center sampled and may miss features narrower than the cell size.',
+      streetSubtraction: 'Diagnostic-only open-street-adjusted coverage: subtracts rasterized open arterial/local/bridge/lane rectangles from the same configured coverage grid. River, protected land, rail and expressway remain in the denominator; this is not net developable land.',
     },
     source: { seed: snapshot.seed, tick: snapshot.tick, engineVersion: snapshot.engine_version },
     cropBounds: cropBounds ? { ...cropBounds } : null,
     grid: { columns: grid.columns, rows: grid.rows, maxCells: grid.maxCells, blockSizeM: blockSize },
     buildings: { snapshotCount: snapshot.buildings.length, renderedCount: renderedBuildingCount },
     domain: { areaM2: domainArea, projectedKitGeometryAreaM2: projectedArea, projectedKitGeometryPercent: projectedArea / domainArea * 100, nominalParcelEnvelopeUnionM2: nominalArea, nominalParcelEnvelopeUnionPercent: nominalArea / domainArea * 100, projectedVsEnvelopePercent: nominalArea > 0 ? projectedArea / nominalArea * 100 : null },
+    openStreetAdjustedDiagnostic: { cellSizeM: cellSize, openStreetAreaM2: openStreetArea, netDomainAreaM2: netDomainArea, netProjectedKitGeometryAreaM2: netBuildingArea, netProjectedKitGeometryPercent: netDomainArea > 0 ? netBuildingArea / netDomainArea * 100 : null, excludedKinds: ['rail', 'expressway'] },
     cells: coverageCells(grid, blockSize),
   };
 }

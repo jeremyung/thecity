@@ -40,7 +40,7 @@ describe('VisibleInfrastructure', () => {
 
   it('waits for every road and platform dependency before presenting movement', () => {
     const world = minimalWorld({
-      rail_platforms: [{ node_id: 30, x: 40, z: 5, ux: 1, uz: 0, surface_y: 4, stair_x: 44, stair_bottom_z: 5, stair_top_z: 5, ground_y: 0, stair_steps: 8 }],
+      rail_platforms: [{ node_id: 30, x: 40, z: 5, ux: 1, uz: 0, surface_y: 4, stair_x: 44, stair_bottom_z: 5, stair_top_z: 5, ground_y: 0, stair_steps: 8, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4 }],
     });
     const gate = new VisibleInfrastructure();
     gate.request(world);
@@ -91,7 +91,7 @@ describe('VisibleInfrastructure', () => {
   });
 
   it('waits for changed platform geometry even when its node ID is reused', () => {
-    const platform = { node_id: 30, x: 40, z: 5, ux: 1, uz: 0, surface_y: 4, stair_x: 44, stair_bottom_z: 5, stair_top_z: 5, ground_y: 0, stair_steps: 8 };
+    const platform = { node_id: 30, x: 40, z: 5, ux: 1, uz: 0, surface_y: 4, stair_x: 44, stair_bottom_z: 5, stair_top_z: 5, ground_y: 0, stair_steps: 8, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4 };
     const initial = minimalWorld({ rail_platforms: [platform] });
     const gate = new VisibleInfrastructure();
     gate.request(initial);
@@ -106,25 +106,17 @@ describe('VisibleInfrastructure', () => {
     expect(gate.canPresentMovement(support)).toBe(true);
   });
 
-  it('tracks the station platform visual phase at the renderer threshold', () => {
-    const platform = { node_id: 30, x: 40, z: 5, ux: 1, uz: 0, surface_y: 4, stair_x: 44, stair_bottom_z: 5, stair_top_z: 5, ground_y: 0, stair_steps: 8 };
-    const stationProject = { id: 50, kind: 'station', from: 1, to: 2, parcel_id: null, stage: 'platform', progress: 0.1, reason: '', duration: 1, started_tick: 0 };
-    const initial = minimalWorld({ rail_platforms: [platform], projects: [stationProject] });
+  it('requires a committed complete platform, including after a phase regression', () => {
+    const platform = { node_id: 30, x: 40, z: 5, ux: 1, uz: 0, surface_y: 8, stair_x: 4.05, stair_bottom_z: -20, stair_top_z: -1, ground_y: .27, stair_steps: 44, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4 };
     const gate = new VisibleInfrastructure();
     const support = { resolved: true, roads: [], platforms: [30] };
-    gate.request(initial);
-    gate.commit(gate.capture(initial));
-    expect(gate.canPresentMovement(support)).toBe(true);
-
-    const samePhase = minimalWorld({ rail_platforms: [platform], projects: [{ ...stationProject, progress: 0.2 }] });
-    gate.request(samePhase);
-    expect(gate.canPresentMovement(support)).toBe(true);
-
-    const crossedThreshold = minimalWorld({ rail_platforms: [platform], projects: [{ ...stationProject, progress: 0.21 }] });
-    gate.request(crossedThreshold);
-    expect(gate.canPresentMovement(support)).toBe(false);
-    gate.commit(gate.capture(crossedThreshold));
-    expect(gate.canPresentMovement(support)).toBe(true);
+    for (const construction_phase of [0, 1, 2, 3, 4, 2, 4]) {
+      const next = minimalWorld({ rail_platforms: [{ ...platform, construction_phase }] });
+      gate.request(next);
+      expect(gate.canPresentMovement(support)).toBe(false);
+      gate.commit(gate.capture(next));
+      expect(gate.canPresentMovement(support)).toBe(construction_phase === 4);
+    }
   });
 
   it('rejects unresolved and empty support and ignores unrelated infrastructure changes', () => {

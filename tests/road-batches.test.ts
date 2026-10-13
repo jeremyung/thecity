@@ -95,7 +95,7 @@ function firstGroundHit(group: THREE.Object3D, x: number, z: number) {
 
 const platform = {
   node_id: 1, x: 0, z: 0, ux: 0, uz: 1, surface_y: 8,
-  stair_x: 10, stair_bottom_z: -18, stair_top_z: 0, ground_y: 0, stair_steps: 12,
+  stair_x: 10, stair_bottom_z: -18, stair_top_z: 0, ground_y: 0, stair_steps: 12, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4,
 };
 
 describe('road batch retention', () => {
@@ -456,7 +456,7 @@ describe('road batch retention', () => {
       ['deck height', snapshot => ({ ...snapshot, road_decks: [{ road_id: 20, deck_height: 11, controls: [[-20, 0], [20, 0]] }] })],
       ['deck controls', snapshot => ({ ...snapshot, road_decks: [{ road_id: 20, deck_height: 10, controls: [[-20, 8], [20, 0]] }] })],
       ['platform surface', snapshot => ({ ...snapshot, rail_platforms: [{ ...platform, surface_y: 9 }] })],
-      ['platform stairs', snapshot => ({ ...snapshot, rail_platforms: [{ ...platform, stair_steps: 13 }] })],
+      ['platform stairs', snapshot => ({ ...snapshot, rail_platforms: [{ ...platform, stair_steps: 13, ground_path: [{x:0,z:0},{x:7.5,z:-1.5},{x:7.5,z:-21.5},{x:4.05,z:-21.5},{x:4.05,z:-20}], ground_width: 1.6, construction_phase: 4 }] })],
       ['river points', snapshot => ({ ...snapshot, terrain: { ...snapshot.terrain, river: [{ x: 2, z: -500 }, { x: 0, z: 500 }] } })],
       ['river width', snapshot => ({ ...snapshot, terrain: { ...snapshot.terrain, river_half_width: 35 } })],
     ];
@@ -508,18 +508,20 @@ describe('road batch retention', () => {
     expect(renderer.roads).not.toBe(afterTopology);
   });
 
-  it('rebuilds the station batch when its canopy threshold changes', () => {
+  it('rebuilds only when the authoritative station phase changes', () => {
     const renderer = harness();
     const base = world({
-      rail_platforms: [platform],
-      projects: [{ id: 90, kind: 'station', from: 1, to: 2, parcel_id: null, stage: 'building', progress: .2, reason: '', duration: 1, started_tick: 0 }],
+      rail_platforms: [{ ...platform, construction_phase: 2 }],
+      projects: [{ id: 90, kind: 'station', from: 1, to: 2, parcel_id: null, stage: 'surface', progress: .8, reason: '', duration: 1, started_tick: 0 }],
     });
     submit(renderer, base);
     const rooflessStation = renderer.station;
     expect(rooflessStation.children[0]).toBeDefined();
     const rooflessVertices = vertexCount(rooflessStation);
 
-    submit(renderer, { ...base, tick: 2, projects: base.projects.map(p => ({ ...p, progress: .21 })) });
+    submit(renderer, { ...base, tick: 2, projects: base.projects.map(p => ({ ...p, progress: .84 })) });
+    expect(renderer.station).toBe(rooflessStation);
+    submit(renderer, { ...base, tick: 3, rail_platforms: [{ ...platform, construction_phase: 3 }] });
 
     expect(renderer.station).not.toBe(rooflessStation);
     expect(renderer.station.children[0]).toBeDefined();

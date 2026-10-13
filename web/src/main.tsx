@@ -214,7 +214,7 @@ function CityExperience(){
       onReviewMature={import.meta.env.DEV?()=>void reviewMature():undefined} onSave={()=>void save()} onExport={()=>void exportCity()} onImport={file=>void importCity(file)} onResume={()=>void resume()} onNewWorld={seed=>void newWorld(seed)}
       onReviewSkyline={import.meta.env.DEV?()=>{if(!runtime.current?.renderer.director.reviewSkyline())notice('This city has no completed tall-building scene yet.');}:undefined}
       onReviewBuilding={import.meta.env.DEV?id=>{if(!runtime.current?.renderer.director.reviewBuilding(id))notice('This building is not available to frame.');}:undefined}
-      onReviewStation={import.meta.env.DEV?()=>{const station=currentWorld.current?.nodes.find(n=>n.kind==='station');if(station)runtime.current?.renderer.director.follow(station.id);}:undefined}
+      onReviewStation={import.meta.env.DEV?()=>{const station=currentWorld.current?.nodes.find(n=>n.kind==='station');if(!station||!runtime.current?.renderer.director.reviewStation(station.id))notice('This station is not available to frame.');}:undefined}
       onReviewWaterReflection={import.meta.env.DEV?()=>runtime.current?.renderer.toggleWaterReflectionForReview()??false:undefined}
       onReviewStreetLights={import.meta.env.DEV?()=>runtime.current?.renderer.toggleStreetLightsForReview()??false:undefined}
       onReviewWaterfront={import.meta.env.DEV?(preset='overhead')=>{if(!runtime.current?.renderer.director.reviewWaterfront(preset))notice('This city has no river view yet.');}:undefined}

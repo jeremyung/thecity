@@ -100,6 +100,37 @@ describe('footprint-bounded midrise massing', () => {
     expectSupported(result.masses);
   });
 
+  it('gives a seeded minority a full-width body with a rear-aligned front terrace', () => {
+    let terraceCount = 0;
+    const seedCount = 96;
+    for (let seed = 0; seed < seedCount; seed++) {
+      const floors = 7;
+      const result = midriseMassing(building({ floors, appearance_seed: seed }), 18, 14)!;
+      expect(midriseMassing(building({ floors, appearance_seed: seed }), 18, 14)).toEqual(result);
+      if ((seed >>> 5) % 3 !== 1) {
+        expect(result.family).toBe('walkup');
+        continue;
+      }
+
+      terraceCount++;
+      expect(result.family).toBe('terrace-apartment');
+      expect(result.masses).toHaveLength(2);
+      const [body, top] = result.masses;
+      expect(body).toMatchObject({ x: 0, z: 0, width: 18, depth: 14, baseFloor: 0, floors: 6, role: 'main' });
+      expect(body.x - body.width / 2).toBeLessThanOrEqual(0);
+      expect(body.x + body.width / 2).toBeGreaterThanOrEqual(0);
+      expect(body.z + body.depth / 2).toBe(14 / 2);
+      expect(top).toMatchObject({ x: 0, width: 18, baseFloor: 6, floors: 1, role: 'main' });
+      expect(top.depth / body.depth).toBeGreaterThanOrEqual(.58);
+      expect(top.depth / body.depth).toBeLessThanOrEqual(.66);
+      expect(top.z - top.depth / 2).toBeCloseTo(-14 / 2, 10); // Back stays aligned.
+      expect(top.z + top.depth / 2).toBeLessThan(body.z + body.depth / 2); // Front has a broad terrace.
+      expectInsideEnvelope(result.masses, 18, 14);
+      expectSupported(result.masses);
+    }
+    expect(terraceCount).toBe(seedCount / 3);
+  });
+
   it('composes offices with a full-footprint podium, off-center shaft, and further-setback crown', () => {
     for (const floors of [4, 5, 8, 11]) {
       const result = midriseMassing(building({ kind: 'office', floors }), 22, 16)!;

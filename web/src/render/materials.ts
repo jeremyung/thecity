@@ -4,7 +4,7 @@ import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
 type Surface=THREE.MeshStandardNodeMaterial|THREE.MeshToonNodeMaterial;
-type BuildingArtClass={key:string,roughness:number,emissive:boolean,painted:boolean,activity:'home'|'office'|'shop'|'ambient'};
+type BuildingArtClass={key:string,roughness:number,emissive:boolean,painted:boolean,activity:'home'|'office'|'shop'|'ambient',window:boolean};
 type BuildingSurfaceVariants={anime:Surface,miniature:Surface};
 
 export class ArtMaterials {
@@ -30,8 +30,8 @@ export class ArtMaterials {
     this.bands=new THREE.DataTexture(new Uint8Array([95,145,195,230,255]),5,1,THREE.RedFormat);
     this.bands.minFilter=THREE.NearestFilter;this.bands.magFilter=THREE.NearestFilter;this.bands.needsUpdate=true;
   }
-  get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient'):Surface {
-    const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}`;
+  get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient',window=false):Surface {
+    const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}/${window}`;
     let variants=this.cache.get(key);
     if(!variants){
       const anime=new THREE.MeshToonNodeMaterial({color:hex,gradientMap:this.bands});
@@ -70,12 +70,27 @@ export class ArtMaterials {
       }
       for(const mat of [anime,miniature]){
         mat.userData.artKey=key;
-        mat.userData.artBuildingClass={key:`${roughness}/${emissive}/${emissive?activity:'ambient'}/${painted}`,roughness,emissive,painted,activity} satisfies BuildingArtClass;
+        mat.userData.artBuildingClass={key:`${roughness}/${emissive}/${emissive?activity:'ambient'}/${painted}/${window}`,roughness,emissive,painted,activity,window} satisfies BuildingArtClass;
         if(emissive){const use=activity==='home'?this.litHome:activity==='office'?this.litOffice:activity==='shop'?this.litShop:1;const emission=color(hex).mul(this.night.mul(1.4).add(.12)).mul(use);(mat as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;}
       }
+      if(window)this.applyWindowResponse(anime,miniature,vec3(color(hex)),activity);
       variants={anime,miniature};this.cache.set(key,variants);
     }
     return variants[this.style];
+  }
+  /** Illuminated panes retain glazing in daylight; lanterns/signs keep their pigment. */
+  window(activity:'home'|'office'|'shop'|'ambient'):Surface {
+    return this.get('#e9aa58',.42,true,activity,true);
+  }
+  private applyWindowResponse(anime:Surface,miniature:Surface,warm:ReturnType<typeof vec3>,activity:BuildingArtClass['activity']){
+    const use=activity==='home'?this.litHome:activity==='office'?this.litOffice:activity==='shop'?this.litShop:1;
+    const interior=this.night.mul(use);
+    const pane=mix(color('#55757a'),warm,interior);
+    anime.colorNode=pane;miniature.colorNode=pane;
+    const emission=warm.mul(this.night.mul(1.4).add(.02)).mul(use);
+    const sky=this.glassRadiance().mul(this.night.oneMinus());
+    (anime as unknown as {emissiveNode:typeof emission}).emissiveNode=emission.add(sky.mul(.55));
+    (miniature as unknown as {emissiveNode:typeof emission}).emissiveNode=emission.add(sky);
   }
   /** One atlas/material pair for every vertical tenant sign, shared across chunks. */
   tenantSign():Surface {
@@ -237,6 +252,12 @@ export class ArtMaterials {
       const emission=vertexColor().mul(this.night.mul(1.4).add(.12)).mul(use);
       (anime as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;
       (miniature as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;
+    }
+    if(artClass.window){
+      // The window expression consumes the warm vertex tint explicitly. Disable
+      // NodeMaterial's automatic multiplication to avoid tinting blue glass gold.
+      anime.vertexColors=false;miniature.vertexColors=false;
+      this.applyWindowResponse(anime,miniature,vec3(vertexColor().rgb),artClass.activity);
     }
     anime.userData.artBuildingClass=artClass;miniature.userData.artBuildingClass=artClass;anime.userData.artBatchMaterial=true;miniature.userData.artBatchMaterial=true;
     variants={anime,miniature};this.buildingCache.set(artClass.key,variants);return variants;

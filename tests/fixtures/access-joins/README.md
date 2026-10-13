@@ -24,3 +24,13 @@ Existing topology, construction, queue, density and replay assertions remain.
 These derived fixtures establish regression coverage, not new visual or growth
 measurements of the original historical runs. They are test assets and are not
 part of the browser runtime asset pack.
+
+Current-format fixture normalization (2026-10-12): each world-state fixture now
+uses `activity_schema_version` 5 and an empty `neighborhood_errands` ledger
+with zeroed raw scan cursors. This is static test-fixture preparation, not a
+runtime migration path. `manifest.json` records each fixture's prior activity
+schema and updated SHA-256; the schema change was checked by removing the new
+ledger and restoring/removing the activity-version field, then comparing the
+remaining parsed JSON to the previous fixture. Geometry, actors, ordering, and
+all other saved fields are unchanged. The seed-5 bus queue fixture has the same
+normalization and its provenance record points to the updated fixture hash.

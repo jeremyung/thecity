@@ -1,8 +1,11 @@
+import { riverbankTreePoints } from './riverbank-planting';
+import { groundRoadFootprint, groundRoadSurfaceGeometry } from './ground-road-footprint';
 import { RoadSurfacePartition } from './road-surface-partition';
 import { roadMarkingTrims, type MarkingTrim } from './road-markings';
 import { NearbyStreetLights } from './nearby-street-lights';
 import { junctionFootprint, type JunctionArm } from './road-junction';
 import { MovementPresentation } from './movement-presentation';
+import { overlapsStation } from './station-clearance';
 import { treeClearanceSignature } from './tree-clearance-signature';
 import { createTreeClearanceGrid } from './tree-clearance-grid';
 import type { MovementSupport } from '../movement-support';
@@ -438,6 +441,7 @@ export class CityRenderer {
     // A line of blossoms along the river creates a recognizable foreground rhythm.
     for(let z=-330;z<350;z+=24)positions.push({x:this.riverX(river,z)+halfWidth+17,z,s:2.6});
     for(let i=0;i<360;i++){const z=rng()*800-400,side=rng()>.5?1:-1;positions.push({x:this.riverX(river,z)+side*(halfWidth+21+rng()*28),z,s:1.8+rng()*2.5});}
+    positions.push(...riverbankTreePoints(river,halfWidth));
     this.treePoints=positions;this.treeClearanceKey='';
     // Small overlapping leaf masses give a broken canopy silhouette at both
     // observation distances, rather than a row of identical smooth spheres.
@@ -473,7 +477,7 @@ export class CityRenderer {
     const nodes=new Map(world.nodes.map(n=>[n.id,n]));
     const onPaving=createPavedGroundTest(world.ground??[]);
     const maxCanopy=Math.max(0,...this.treePoints.map(p=>p.s*1.7+2));
-    const candidatesAt=createTreeClearanceGrid(world.buildings,world.roads,(world.rear_extensions??[]).slice(0,2),world.nodes,maxCanopy,kind=>roadWidth(kind)/2+(kind==='lane'?1.5:3.5));
+    const candidatesAt=createTreeClearanceGrid(world.buildings,world.roads,(world.rear_extensions??[]).slice(0,2),world.nodes,maxCanopy,kind=>roadWidth(kind)/2+(kind==='bridge'?2.5+maxCanopy:kind==='lane'?1.5:3.5));
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
       const i=batch.indices[local];
       const p=this.treePoints[i];
@@ -481,7 +485,8 @@ export class CityRenderer {
       let hidden=onPaving(p)||candidates.buildings.some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
         return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
       });
-      if(!hidden)hidden=candidates.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);});
+      if(!hidden)hidden=candidates.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='bridge'?2.5+2.38*p.s/1.8:r.kind==='lane'?1.5:3.5);});
+      if(!hidden)hidden=(world.rail_platforms??[]).some(platform=>overlapsStation(p,p.s*1.7+2,platform));
       if(!hidden)hidden=candidates.rearExtensions.some(e=>{const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
@@ -645,11 +650,12 @@ export class CityRenderer {
       for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
       lighting.data=prepareStreetLighting(world);
       if(rebuildCompleted)yield;
-      const stationProject=world.projects.find(p=>p.kind==='station');
       for(const layout of world.rail_platforms??[]){
-        const platform=buildStationPlatform(layout,this.art,(stationProject?.progress??1)>.2);
+        const platform=buildStationPlatform(layout,this.art);
+        if(layout.construction_phase===4){
         const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
         const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,layout.surface_y+2.6,24);platform.add(board);
+        }
         station.add(platform);
         yield;
       }
@@ -657,20 +663,12 @@ export class CityRenderer {
     }finally{constructionKit.dispose();}
   }
 
-  private groundRoadPolygon(a:Point,b:Point,width:number):Point[]{
-    const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);if(length<1e-6)return [];
-    const nx=-dz/length*width/2,nz=dx/length*width/2;
-    return [{x:a.x+nx,z:a.z+nz},{x:b.x+nx,z:b.z+nz},{x:b.x-nx,z:b.z-nz},{x:a.x-nx,z:a.z-nz}];
-  }
   private addGroundRoadSurface(kit:Kit,pieces:Point[][],material:THREE.Material){
     for(const points of pieces){
-      const shape=new THREE.Shape(points.map(p=>new THREE.Vector2(p.x,-p.z)));
-      const geometry=new THREE.ExtrudeGeometry(shape,{depth:.3,bevelEnabled:false,steps:1});
-      geometry.setIndex(Array.from({length:geometry.getAttribute('position').count},(_,i)=>i));
-      geometry.rotateX(-Math.PI/2);kit.add(geometry,material);
+      kit.add(groundRoadSurfaceGeometry(points), material);
     }
   }
-  private roadKit(kit:Kit,a:Point,b:Point,r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[],curve?:RoadCurve,platforms=this.worldState?.rail_platforms,markingTrim:MarkingTrim={start:0,end:0},surfaces?:RoadSurfacePartition){
+  private roadKit(kit:Kit,a:Point & {kind?:string},b:Point & {kind?:string},r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[],curve?:RoadCurve,platforms=this.worldState?.rail_platforms,markingTrim:MarkingTrim={start:0,end:0},surfaces?:RoadSurfacePartition){
     if(r.kind==='expressway'&&curve){
       const open=r.stage==='open',end=curve.length*(open?1:THREE.MathUtils.clamp((r.progress-.12)/.88,0,1));
       if(!open)for(let distance=0;distance<curve.length;distance+=18){const p=curve.at(distance);for(const side of [-1,1])kit.box(p.x+p.uz*side*5,.7,p.z-p.ux*side*5,.12,1.4,.12,this.art.get('#b79b73'));}
@@ -715,7 +713,7 @@ export class CityRenderer {
       shape.lineTo(len/2,-.15);shape.lineTo(len/2-ramp,.8);shape.lineTo(-len/2+ramp,.8);shape.lineTo(-len/2,-.15);shape.closePath();
       const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
     }else if(surfaces&&!rail&&!expressway){
-      this.addGroundRoadSurface(kit,surfaces.claim(this.groundRoadPolygon(a,b,width)),this.art.get(open?'#747f7b':'#ac9a78'));
+      this.addGroundRoadSurface(kit,surfaces.claim(groundRoadFootprint(a,b,width)),this.art.get(open?'#747f7b':'#ac9a78'));
     }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
     if(expressway){
       if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y);

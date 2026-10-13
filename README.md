@@ -25,7 +25,26 @@ The build script uses `.tools/cargo` and `.tools/rustup` when a local `.tools/ca
 
 The next milestone is the existing 800 m city: visual fidelity, normal loading and growth, and measured browser performance in both rendering styles. Larger maps and imports follow that acceptance gate. See [delivery priorities](specs/08-delivery.md#immediate-milestone-after-the-master-plan-review-2026-10-11). Backward save compatibility is not required; current saves must validate and resume correctly.
 
+The [updated living-city goal](validation/living-city-goal.md) incorporates the
+[multidimensional fidelity assessment](validation/fidelity-review-current.md#multidimensional-gap-assessment--2026-10-12).
+The bounded station-to-street correction is retained on three-seed support audits
+and sampled passenger traversal in both styles. Further station detailing stops.
+The bounded bank planting correction is also retained. The next primary decision
+is neighborhood architectural and material hierarchy: inspect repeated roof/facade
+families and lighting response, then evaluate one reusable scene-scale correction. Preserve successful compact fabric and the bounded
+apartment, entrance, canopy and glazing changes with their validation limits.
+See the [latest learning record and priorities](validation/fidelity-review-current.md#consolidated-learning-record-and-priorities--2026-10-13)
+for the evidence, remaining gaps and stop conditions.
+Full lot counts, more travelers, extra textures or stronger blur alone do not
+establish fidelity.
+
 Open arterial sidewalks now rebuild incrementally and join around junctions. Frequent growth updates coalesce behind the active build to avoid repeated cancellation, with a short presentation delay. Developing-city checks cover both styles; continuous growth, fallback rendering and remaining road-surface seams are still under review. See [sidewalk validation](validation/sidewalk-junctions.md#live-staged-integration--2026-10-12). Ground junction heights and open-local markings are corrected; width-aware rounded junction footprints and connected arterial sidewalk corners are implemented, and intersection paint now clears adjoining carriageways. Full-city motion is still under review. See [surface checks](validation/ground-surface-artifacts.md#ground-junction-datum-and-open-local-streets--2026-10-12).
+
+Aggregate neighborhood errands now have saved outbound, visit and return phases,
+with local walking routes and household accounting. This is a candidate activity
+improvement under validation; see [daily activity evidence](validation/fidelity-review-current.md).
+Activity schema 5 rejects earlier saves; start a fresh world when importing an
+obsolete checkpoint.
 
 ## Checks
 

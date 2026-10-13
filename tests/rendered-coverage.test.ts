@@ -156,4 +156,64 @@ describe('projected kit coverage raster', () => {
     expect(report.methodology.domainDenominator).toMatch(/cropped world bounds/);
     expect(() => auditRenderedCoverage(snapshot, kit, { cropBounds: { min_x: -1, min_z: 2, max_x: 6, max_z: 6 } })).toThrow(/wholly inside/);
   });
+
+  it('reports road-subtracted diagnostic coverage by raster union without changing gross coverage', () => {
+    const snapshot = {
+      bounds: { min_x: 0, max_x: 20, min_z: 0, max_z: 20 },
+      nodes: [{ id: 1, x: 2, z: 10 }, { id: 2, x: 18, z: 10 }],
+      roads: [
+        { id: 1, from: 1, to: 2, kind: 'local', stage: 'open' },
+        { id: 2, from: 1, to: 2, kind: 'local', stage: 'open' },
+        { id: 3, from: 1, to: 2, kind: 'rail', stage: 'open' },
+      ],
+      buildings: [{ id: 1, x: 10, z: 10, width: 8, depth: 8 }],
+    };
+    const vertices = [
+      [-4, 2, -4], [4, 2, -4], [4, 2, 4],
+      [-4, 2, -4], [4, 2, 4], [-4, 2, 4],
+    ];
+    const position = {
+      count: vertices.length, itemSize: 3,
+      getX: (i: number) => vertices[i][0],
+      getY: (i: number) => vertices[i][1],
+      getZ: (i: number) => vertices[i][2],
+    };
+    const report = auditRenderedCoverage(snapshot, {
+      create: () => {
+        const mesh = {
+          isMesh: true,
+          geometry: { index: null, getAttribute: () => position },
+          matrixWorld: { elements: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 10, 1] },
+          updateMatrixWorld() {},
+        };
+        return { position: { set() {} }, rotation: { y: 0 }, updateMatrixWorld() {}, traverse(callback: (object: typeof mesh) => void) { callback(mesh); } };
+      },
+      dispose() {},
+    }, { cellSize: 0.5 });
+
+    expect(report.domain.projectedKitGeometryAreaM2).toBe(64);
+    expect(report.openStreetAdjustedDiagnostic.openStreetAreaM2).toBe(16 * 6.5);
+    expect(report.openStreetAdjustedDiagnostic.netDomainAreaM2).toBe(400 - 16 * 6.5);
+    expect(report.openStreetAdjustedDiagnostic.netProjectedKitGeometryAreaM2).toBe(12);
+    expect(report.openStreetAdjustedDiagnostic.netProjectedKitGeometryPercent).toBeCloseTo(12 / 296 * 100);
+    expect(report.openStreetAdjustedDiagnostic.excludedKinds).toEqual(['rail', 'expressway']);
+  });
+
+  it('handles absent road data and returns null when open streets consume the whole denominator', () => {
+    const bounds = { min_x: 0, max_x: 2, min_z: 0, max_z: 2 };
+    const emptyKit = { create: () => ({ traverse() {} }), dispose() {} };
+    const withoutRoadData = auditRenderedCoverage({ bounds, buildings: [] }, emptyKit);
+    expect(withoutRoadData.openStreetAdjustedDiagnostic.openStreetAreaM2).toBe(0);
+    expect(withoutRoadData.openStreetAdjustedDiagnostic.netDomainAreaM2).toBe(4);
+    expect(withoutRoadData.openStreetAdjustedDiagnostic.netProjectedKitGeometryPercent).toBe(0);
+
+    const fullyCovered = auditRenderedCoverage({
+      bounds,
+      buildings: [],
+      nodes: [{ id: 1, x: -1, z: 1 }, { id: 2, x: 3, z: 1 }],
+      roads: [{ from: 1, to: 2, kind: 'local', stage: 'open' }],
+    }, emptyKit);
+    expect(fullyCovered.openStreetAdjustedDiagnostic.netDomainAreaM2).toBe(0);
+    expect(fullyCovered.openStreetAdjustedDiagnostic.netProjectedKitGeometryPercent).toBeNull();
+  });
 });

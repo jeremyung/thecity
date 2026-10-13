@@ -3,7 +3,7 @@
     "source": "validation/generalized-access-pending-save.json",
     "fixture": "tests/fixtures/access-joins/generalized-access-pending-save.json",
     "sourceSha256": "37e00c1ed96f26a631ef576b87acf902053da01a705f81c697cc7d84dc2f802e",
-    "fixtureSha256": "22e9b2eab75c755a474a5695f4481ff88aba6ddd8424778d56cd2f11fa3ec5ad",
+    "fixtureSha256": "5340ce159fc4e96e015a0dbdf180564046bff39def650356a5ad3a572d154bd9",
     "edits": [
       {
         "actor": 185,
@@ -6882,13 +6882,26 @@
           "z": 41.881591410948545
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/mature-world.json",
     "fixture": "tests/fixtures/access-joins/mature-world.json",
     "sourceSha256": "444a871f447cadd35bd3a0c6af03a36382f2848d1c655b0aa88d23afc77b982b",
-    "fixtureSha256": "a42e968d011147a1b474b765491fb488ce3cd550726d3c954423b4c6d4621e13",
+    "fixtureSha256": "94e1581f0232c6b5e7201981c7daecc155f56a062ddb48719bd0489728bbc10e",
     "edits": [
       {
         "actor": 937,
@@ -14248,13 +14261,26 @@
           "z": -6.141791010018384
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": null,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/mature-world.activity-baseline.json",
     "fixture": "tests/fixtures/access-joins/mature-world.activity-baseline.json",
     "sourceSha256": "3857f91a1323e4468dbd36f06285b5bff37dff550e7b24a5cd8e635b220a14c9",
-    "fixtureSha256": "b88658f353aa2ccced96ea3e554c41bc98b2b300cc646798f00c485533fea364",
+    "fixtureSha256": "ac1ceaa44e16f9d7c42344f5a2b816e5a1ee1349aa0c11968c4eca9870a6d954",
     "edits": [
       {
         "actor": 504,
@@ -20171,13 +20197,26 @@
           "z": 113.38039171679526
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/early-reservation-wasm-87231-save.json",
     "fixture": "tests/fixtures/access-joins/early-reservation-wasm-87231-save.json",
     "sourceSha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
-    "fixtureSha256": "402935365902a5606b6a3da40461d83e52b59ec3d5c283a72afd6ae78217db05",
+    "fixtureSha256": "585aaf60d333730863326dc8aa617a09a1b89497061b664c7f9ff403a48f5553",
     "edits": [
       {
         "actor": 185,
@@ -27056,13 +27095,26 @@
           "z": 41.881591410948545
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/spine-experiment-browser-review-save.json",
     "fixture": "tests/fixtures/access-joins/spine-experiment-browser-review-save.json",
     "sourceSha256": "c3b273bdbfb693683b4fbce4eb974cf25021bc8faa0834025f7f39e5dcaef646",
-    "fixtureSha256": "5d47580658cb476df8c4361a9c7e6142b574900299bf8bc8be02359df6b6ef25",
+    "fixtureSha256": "a0d359bced943e1668ec25fd2da257af98419197b80ef979b2dc50d2c94b1fd0",
     "edits": [
       {
         "actor": 902,
@@ -38023,13 +38075,26 @@
           "z": 45.96212571580055
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/interior-access-verified-87231.json.project-3736.pending.json",
     "fixture": "tests/fixtures/access-joins/interior-access-verified-87231.json.project-3736.pending.json",
     "sourceSha256": "b7c1581eb7b4997e238e105a517ae28efda4e78b947f1705b8b3096bcd6130b2",
-    "fixtureSha256": "ecd0957a52b75c2032ccb8c7d492a7570919f9c61c223edc02c6d6dfe2f15dcf",
+    "fixtureSha256": "324bce444b28c304954f8ea604e95e01f359eb004b1197e2e7dfd8a18687ded9",
     "edits": [
       {
         "actor": 542,
@@ -39981,13 +40046,26 @@
           "z": 41.715101758464066
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/infill-oriented-continued.json",
     "fixture": "tests/fixtures/access-joins/infill-oriented-continued.json",
     "sourceSha256": "5a81d296e8e8606236d872aa48d530527dd82a6c6a6e7408a6b28121a9047b27",
-    "fixtureSha256": "ab703919d53aeb7a6291dd311883648c1671c45c990cf6bb180309688dd4ebad",
+    "fixtureSha256": "e0c0e66726608292cae384b1afd262f72844f82d3b07650bd1cb8481dd5d839e",
     "edits": [
       {
         "actor": 626,
@@ -43590,13 +43668,26 @@
           "z": 288.84645216779944
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/mature-world.bounded-selection.json",
     "fixture": "tests/fixtures/access-joins/mature-world.bounded-selection.json",
     "sourceSha256": "874c69263362c7bbd5ed8bd8fd44f4bcda6df254515e0c09a05100efe23aa82b",
-    "fixtureSha256": "8121a049840c43194e1c98194aa0d9cd7801ec8ccfb9efdabcdb25c3257dedc3",
+    "fixtureSha256": "a5ff86acef6c2ce57e707a56ba418b15151b6b1cf82ebff050b2c1ea08a88002",
     "edits": [
       {
         "actor": 351,
@@ -50085,13 +50176,26 @@
           "z": 43.65
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/mature-world.multiblock-candidate.json",
     "fixture": "tests/fixtures/access-joins/mature-world.multiblock-candidate.json",
     "sourceSha256": "30bb6679ae5c0579d033b5ac23d040e3a387cc54de73e8235a324eb172bd4fe4",
-    "fixtureSha256": "b02cd8950c52db4ec54a778029c88a688aac2cd740e96aef0dd241e421a89eab",
+    "fixtureSha256": "d628bb3493741f14ebc4c0f56789f35d5a6112cc105e4ecc8c564bd8ad1ff6b5",
     "edits": [
       {
         "actor": 706,
@@ -56216,13 +56320,26 @@
           "z": 144.51978876663074
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/spine-ranking-seed-87231-by-sites-false.json",
     "fixture": "tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json",
     "sourceSha256": "4d03ed81247fb835129bd5090c815937f3da14d9b29dfb3788221eb9c3233239",
-    "fixtureSha256": "93471fd07d4eb68ca5930c465a8e2a3afd1f2376ff2c27d5e6ae25dd8e3ceffa",
+    "fixtureSha256": "e31b4132c7bee0abb45e2cf4221a293e91c271e04d7cfaaeba2317db0cca32d3",
     "edits": [
       {
         "actor": 351,
@@ -63023,13 +63140,26 @@
           "z": 45.96212571580055
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/spine-ranking-seed-0-by-sites-false.json",
     "fixture": "tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json",
     "sourceSha256": "e75dc8abd65f94cd0e4f472a4e275081607f54a590fa46ae240e4f40dafb9938",
-    "fixtureSha256": "4b87e6039c2ae23b1d5f604c396f091e72bffd2dd74aa44c9dec19f1c956a265",
+    "fixtureSha256": "19996714e89d7e5aa7f7f0d7a29a8f430ccf22ce24b0c13d6a6137999bd7e025",
     "edits": [
       {
         "actor": 1005,
@@ -69440,13 +69570,26 @@
           "z": -259.44403
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/mature-world.cache-candidate.json",
     "fixture": "tests/fixtures/access-joins/mature-world.cache-candidate.json",
     "sourceSha256": "1d9270e02b0ec4c725c651d6d66d20141a6b08b870d73440559ce3c515ccf6f2",
-    "fixtureSha256": "570c8f7ecd9dbad91e7d17af5a6f4216dfde3862c4fbb1d1f28d61a9058f762e",
+    "fixtureSha256": "7da81ca5a1e21bb18e641bfba9d0b94700a65c43a783badbd3bd5b142f8b50d6",
     "edits": [
       {
         "actor": 1003,
@@ -75805,13 +75948,26 @@
           "z": 49.80507877708801
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/mature-world.ranked-blocks.json",
     "fixture": "tests/fixtures/access-joins/mature-world.ranked-blocks.json",
     "sourceSha256": "2c4c31f68ee06b24fcc8554dcd145f54e5aef26b65375a6ff26e7b86f9c7e2ea",
-    "fixtureSha256": "5088bc12fc38c3542e1e26651ba2170ad42eeb3f95b8207e87e9fe5d428867ff",
+    "fixtureSha256": "7d85e394a2283897a777e0ea3c1f94ca961688baf2b2b8b9f35d4bf21902e8e4",
     "edits": [
       {
         "actor": 351,
@@ -82612,13 +82768,26 @@
           "z": 45.96212577708801
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/ranked-blocks-seed0.json",
     "fixture": "tests/fixtures/access-joins/ranked-blocks-seed0.json",
     "sourceSha256": "0e2fee630cffb3f8389e12efc7551bd51bb906953dcfd5e38b274840e257ba84",
-    "fixtureSha256": "d581a3b2d9ae2011b2476969db2d0f5099657c3aac6ce41449989d631665eed7",
+    "fixtureSha256": "901094b7312d34c2bee7ab2e408a571fa8e5e720ed3e31d6ad21ed2325039560",
     "edits": [
       {
         "actor": 1005,
@@ -89029,13 +89198,26 @@
           "z": -259.44403
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/founder-topology-wasm-87231-save.json",
     "fixture": "tests/fixtures/access-joins/founder-topology-wasm-87231-save.json",
     "sourceSha256": "76fc2c21d24f93052696fe54455057ca0f67fd3c4c52cbeb3e1dd0e9aac72012",
-    "fixtureSha256": "04d2b1ca5c6162c6258305aa8e5885c1f8fa3d16fa10658e713359b43dfc9558",
+    "fixtureSha256": "ba0e9a6cf682a626e45f1bb5d14dc104f27ae35c680e520a7b068de66cdf887b",
     "edits": [
       {
         "actor": 185,
@@ -95922,13 +96104,26 @@
           "z": -158.51447
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/interior-access-verified-87231.json.final.json",
     "fixture": "tests/fixtures/access-joins/interior-access-verified-87231.json.final.json",
     "sourceSha256": "a2a52d3ec7504a6fba4f573afff26d96dbab501a821535e17b8599eaa4c32942",
-    "fixtureSha256": "1dadea8d37265239dad141500cd44d5f210eda22ff6d767b39a8b919e717dc99",
+    "fixtureSha256": "1b20d77400a2ebe13e6f796ae784350df10cda8099ccb59d9bf4ea6ba578422a",
     "edits": [
       {
         "actor": 624,
@@ -96268,13 +96463,26 @@
           "z": 230.76894
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   },
   {
     "source": "validation/interior-access-verified-seed0.json.final.json",
     "fixture": "tests/fixtures/access-joins/interior-access-verified-seed0.json.final.json",
     "sourceSha256": "05d92a60a489348718c39a08e36b14581881064f3dd3b5c718e1115b125dc95c",
-    "fixtureSha256": "d750dd7aef83131c949d630892c097366fab3f993f4827784b4ba17484cb251e",
+    "fixtureSha256": "3f8db914159230f9372a20b1410ac7d351125e28aa67e17c08ba5a68dfc99045",
     "edits": [
       {
         "actor": 880,
@@ -97056,6 +97264,19 @@
           "z": 79.87274
         }
       }
-    ]
+    ],
+    "schemaNormalization": {
+      "previousActivitySchemaVersion": 1,
+      "activitySchemaVersion": 5,
+      "neighborhoodErrands": {
+        "cursor": {
+          "home_index": 0,
+          "destination_index": 0,
+          "destination_round": 0
+        },
+        "outings": []
+      },
+      "geometryActorsAndOtherStatePreserved": true
+    }
   }
 ]

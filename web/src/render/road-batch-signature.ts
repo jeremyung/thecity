@@ -10,7 +10,6 @@ export function roadBatchSignatures(world: World) {
     world.roads.map(r => [r.id, r.from, r.to, r.kind, r.stage === 'open', r.connected, r.lanes]),
     world.road_decks ?? [], world.rail_platforms ?? [],
     world.terrain.river, world.terrain.river_half_width ?? 32,
-    (world.projects.find(p => p.kind === 'station')?.progress ?? 1) > .2,
   ]);
   // Retain the existing twelve-step construction display cadence. Completed
   // roads ignore progress; open status is captured in the completed key above.

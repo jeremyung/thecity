@@ -16,13 +16,11 @@ export function roadGeometryIdentities(world: World): Map<number, string> {
 
 /** Rail platform IDs in movement packets are the supporting platform node IDs. */
 export function platformGeometryIdentities(world: World): Map<number, string> {
-  // The station kit changes its stair geometry at this same construction
-  // threshold; movement support must wait for that presentation phase too.
-  const stationPlatformReady = (world.projects.find(project => project.kind === 'station')?.progress ?? 1) > .2;
-  return new Map((world.rail_platforms ?? []).map(platform => [platform.node_id, JSON.stringify([
+  // Only complete platforms can support service, even if unfinished deck exists.
+  return new Map((world.rail_platforms ?? []).filter(platform => platform.construction_phase === 4).map(platform => [platform.node_id, JSON.stringify([
     platform.x, platform.z, platform.ux, platform.uz, platform.surface_y,
     platform.stair_x, platform.stair_bottom_z, platform.stair_top_z,
-    platform.ground_y, platform.stair_steps, stationPlatformReady,
+    platform.ground_y, platform.stair_steps, platform.construction_phase, platform.ground_path, platform.ground_width,
   ])]));
 }
 

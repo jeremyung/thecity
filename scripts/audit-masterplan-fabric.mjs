@@ -11,14 +11,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createCoverageGrid, markProjectedPolygon } from './audit-rendered-coverage.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CROP = 250;
-// Matches web/src/render/road-elevation.ts roadWidth(); only arterials and
-// bridges carry sidewalks.
-const ROAD_RIGHT_OF_WAY = { arterial: 16 + 5, local: 6.5, bridge: 16 + 2.8, lane: 4 };
-
 // Mirrors partyWallBodyWidth/partyWallBodyDepth in web/src/render/kit.ts.
 function bodyFootprint(b) {
   const lowrise = b.floors < 4 && ['home', 'shop', 'cafe'].includes(b.kind);
@@ -63,30 +58,12 @@ function stationCrop(world) {
   return [x0, z0, x0 + CROP, z0 + CROP];
 }
 
-function roadShare(world, crop) {
-  const grid = createCoverageGrid({ min_x: crop[0], min_z: crop[1], max_x: crop[2], max_z: crop[3] }, 0.5);
-  const nodes = new Map(world.nodes.map(n => [n.id, n]));
-  for (const road of world.roads) {
-    const width = ROAD_RIGHT_OF_WAY[road.kind];
-    if (!width || road.stage !== 'open') continue;
-    const a = nodes.get(road.from), b = nodes.get(road.to);
-    if (!a || !b) continue;
-    const dx = b.x - a.x, dz = b.z - a.z, len = Math.hypot(dx, dz);
-    if (len < 0.01) continue;
-    const nx = -dz / len * width / 2, nz = dx / len * width / 2;
-    markProjectedPolygon(grid, [[a.x + nx, a.z + nz], [b.x + nx, b.z + nz], [b.x - nx, b.z - nz], [a.x - nx, a.z - nz]]);
-  }
-  let marked = 0;
-  for (const cell of grid.mask) marked += cell ? 1 : 0;
-  return (100 * marked) / grid.mask.length;
-}
-
 function renderedCoverage(snapshotPath, crop) {
   const dir = mkdtempSync(join(tmpdir(), 'fabric-'));
   try {
     const output = join(dir, 'coverage.json');
     execFileSync(process.execPath, [join(root, 'scripts/audit-rendered-coverage.mjs'), '--snapshot', snapshotPath, '--crop', crop.join(','), '--output', output], { stdio: ['ignore', 'ignore', 'inherit'] });
-    return JSON.parse(readFileSync(output, 'utf8')).domain;
+    return JSON.parse(readFileSync(output, 'utf8'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -98,7 +75,8 @@ function within(value, [lo, hi]) {
 
 function auditCrop(snapshotPath, world, name, crop) {
   const buildings = world.buildings.filter(b => b.stage === 'open' && inside(b, crop));
-  const domain = renderedCoverage(snapshotPath, crop);
+  const coverage = renderedCoverage(snapshotPath, crop);
+  const domain = coverage.domain;
   const lots = buildings.map(b => b.width * b.depth);
   const bodies = buildings.map(bodyFootprint);
   const result = {
@@ -107,12 +85,13 @@ function auditCrop(snapshotPath, world, name, crop) {
     buildings: buildings.length,
     renderedCoveragePercent: +domain.projectedKitGeometryPercent.toFixed(2),
     lotEnvelopeCoveragePercent: +domain.nominalParcelEnvelopeUnionPercent.toFixed(2),
+    openStreetAdjustedDiagnostic: coverage.openStreetAdjustedDiagnostic,
     lotAreaMedianM2: +quantile(lots, 0.5)?.toFixed(1),
     lotAreaP90M2: +quantile(lots, 0.9)?.toFixed(1),
     footprintMedianM2: +quantile(bodies, 0.5)?.toFixed(1),
     footprintP90M2: +quantile(bodies, 0.9)?.toFixed(1),
     floorsMedian: quantile(buildings.map(b => b.floors), 0.5),
-    roadSharePercent: +roadShare(world, crop).toFixed(2),
+    roadSharePercent: +(100 * coverage.openStreetAdjustedDiagnostic.openStreetAreaM2 / domain.areaM2).toFixed(2),
   };
   const target = targets[name];
   if (target) {
@@ -141,6 +120,12 @@ if (!inputs.length) {
 
 const report = {
   method: 'Rendered coverage: production kit plan-view union (audit-rendered-coverage.mjs). Footprint is the main body box from the kit party-wall sizing (rear service volumes and roofs excluded); lot area is the parcel envelope. Road share rasterizes open street right-of-way (carriageway plus sidewalks). Compact crop: densest 250 m window on a 25 m lattice by lot area.',
+  limitations: [
+    'Projected coverage includes all snapshot building stages clipped to crop; count/floor/size statistics use open buildings centered in crop.',
+    'Compact crop selected by centered parcel-envelope area, not maximum clipped rendered union.',
+    'Footprint quantiles are initial party-wall rectangle proxies before lowrise massing; not exact final footprints.',
+    'Street subtraction is not net developable land: river, protected land, rail and expressway remain in denominator.',
+  ],
   targets,
   worlds: [],
 };

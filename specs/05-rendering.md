@@ -195,6 +195,12 @@ Existing materials and common geometry preserve style switching. See
 [geometry and visual evidence](../validation/core-facade.md); broader architectural
 fidelity remains open.
 
+Tall-home frontage checkpoint (2026-10-13): generic homes of four or more
+floors now receive the shared centered entrance and a reserved ground-window
+opening. Focused geometry regressions cover open and renovating presentation in
+both styles; browser appearance remains under review. Authoritative use and access
+are unchanged. See the current fidelity review for scope and limitations.
+
 ## Style contract
 
 A style receives surface category, base colors, normals, depth, world coordinates, lighting, wetness, and shared water state. It owns surface response, edge treatment, atmosphere, color grading, focus defaults, and required render passes.
@@ -288,6 +294,14 @@ views and 27 architecture tests support the local change; full-city motion,
 loading cost and night fidelity remain acceptance work. See
 [roof validation](../validation/ceramic-roof.md).
 
+
+Apartment family candidate (2026-10-12): a seeded minority of4–11-floor apartments
+now uses a broad front terrace and solid front balcony bands, alongside existing
+side-core walkups. Shared massing carries the same authoritative floors and parcel
+through construction and renovation. Focused geometry checks and one matched
+neighborhood comparison support further review; multi-seed motion/lighting checks
+and artistic acceptance remain open. See `validation/fidelity-review-current.md`
+and `validation/station-architecture-candidate.json` for evidence and limitations.
 
 ### Commuter rail fidelity checkpoint — 2026-10-11
 
@@ -410,3 +424,86 @@ prior diagnostic. Render CPU maximum was 43.3 ms; complete animation CPU maximum
 49.2 ms. This supports retaining persistent instance identities, but does not
 establish GPU, both-style, long-run or smooth-growth acceptance. See
 [measurement scope](../validation/backend-growth-attribution.md#persistent-lighting-matched-growth-trace--2026-10-12).
+
+
+### Illuminated glazing candidate — 2026-10-13
+
+Illuminated panes now have an explicit material class, separate from lamps/signs.
+Daylight uses blue-gray glazing plus the existing analytic sky response; night
+and activity uniforms reveal warm interiors. Source kits and neighborhood batches
+share the response, and unfinished low-rise windows use unlit glass. No new texture
+assets or geometry are introduced. Focused regressions/build and bounded browser
+checks support the candidate; full daily-cycle, motion and artistic acceptance
+remain open. See validation/fidelity-review-current.md for evidence and limits.
+
+
+### Rail access boundary candidate — 2026-10-13
+
+The gateway staircase uses the inward platform end so the full run remains inside
+the finite world. Engine rail access paths share those stair endpoints and approach
+around the lower tread, rather than crossing beneath it. Renderer treads support
+either signed run. Retain finite bounds, body clearance, queue support and usable
+ground connections through rotation and construction. Focused mesh/native tests
+and fresh WASM replay support the candidate; normal browser motion and multi-seed
+infrastructure acceptance remain open. See `validation/fidelity-review-current.md`.
+
+
+### Station construction phase candidate — 2026-10-13
+
+Engine platform views supply one construction phase shared by geometry, batch
+identity and presentation revision: site below48%, supports48–73%, deck/access
+73–85%, canopy85–100%, complete at100%. The85% threshold permits the normal
+8-work-step station to show its canopy at87.5% before completion; a92% threshold
+skipped that phase. Finished lamps, furnishings and signs appear only at completion.
+Visible movement requires the completed platform identity to be committed. Preserve
+service readiness as an independent simulation condition. No save migration is
+introduced: the phase is derived from the current station project.
+
+Focused geometry and scheduler tests, ordinary native/WASM growth and current-save
+replay support the candidate. Browser support/canopy snapshots are limited static
+evidence; continuous construction transitions and full release acceptance remain
+open. See validation/station-construction-current.json and the current fidelity log.
+
+
+Station foliage clearance candidate (2026-10-13): reserve the platform/canopy and
+both signed stair footprints in tree clearance, expanded by the existing tree-canopy
+margin. Include station geometry in clearance cache identity, excluding phase-only
+changes. Ordinary growth must not erect platform meshes through retained foliage.
+Focused tests and a matched seed87231 canopy-stage view support the correction;
+post-fix live-motion and broader visual acceptance remain open.
+
+
+Station approach candidate (2026-10-13): the engine platform contract now carries
+local ground_path and ground_width. Both pedestrian approach waypoints and renderer
+paving derive from these points. The1.6m strip uses a7.5m side offset to clear piers,
+with a joined outline and ground-level stair landing. Paving appears with phase2
+(deck/access); earlier phases retain site/support geometry only. Movement identity
+and tree-clearance cache include the approach contract. This is a bounded candidate:
+full road-endpoint support, mature passenger traversal, exact corner/land ownership
+audits and wider visual acceptance remain required. No save migration is provided.
+
+
+### Station road-end support — 2026-10-13
+
+Ground streets terminating at a station node include a0.4m end apron so pedestrians
+can turn at the authoritative node with their full body width on paving. Ordinary
+ends and boundary gateways keep their prior extent. The production footprint and
+road mesh constructor are shared with support audits; the apron remains inside
+the existing road-surface partition to avoid coplanar overlaps. This changes
+rendered support, not route lengths or simulation timing. See
+`validation/station-road-landing-height.json` and the current fidelity log.
+
+Riverbank planting candidate (2026-10-13): small trees are seeded inside the existing
+unpaved bank strip, with crown bounds checked against water and the promenade
+railing. Existing development and transport clearance remains authoritative for
+visibility; no road width or routing changes. Three-seed retention and focused
+mesh-envelope tests pass; motion/construction and full visual acceptance remain
+open. See [planting evidence](../validation/riverbank-planting.md).
+
+
+Office side-elevation candidate (2026-10-13): side walls with sufficient parcel
+clearance now carry the office ribbon-glazing treatment used at the front, making
+use visible from more neighborhood viewpoints. Both-style held stills and focused
+geometry/cladding tests support further review; motion and developing-state visual
+acceptance remain open. The three-seed mesh audit also records pre-existing narrow
+parcel overhangs; no full containment claim. See [candidate evidence](../validation/office-side-facades.md).

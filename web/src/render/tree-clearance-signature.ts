@@ -15,5 +15,8 @@ export function treeClearanceSignature(world: World): string {
   const rearExtensions = (world.rear_extensions ?? []).slice(0, 2).filter(extension => extension.stage !== 'survey').map(extension => [
     extension.x, extension.z, extension.rotation, extension.width, extension.depth,
   ]);
-  return JSON.stringify([ground, buildings, roads, rearExtensions]);
+  const platforms = (world.rail_platforms ?? []).map(p => [
+    p.x, p.z, p.ux, p.uz, p.stair_x, p.stair_bottom_z, p.stair_top_z, p.ground_path, p.ground_width,
+  ]);
+  return JSON.stringify([ground, buildings, roads, rearExtensions, platforms]);
 }

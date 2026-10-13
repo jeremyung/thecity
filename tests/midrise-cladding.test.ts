@@ -30,6 +30,26 @@ function boxesFor(root: THREE.Object3D, material: THREE.Material) {
 }
 
 describe('midrise construction facade continuity', () => {
+  it('installs the terrace finish only with the completed upper tier',()=>{
+    const art=new ArtMaterials();
+    try {
+      const terraceY=.58+7*3.25;
+      for(const [stage,progress,complete] of [['structure',.77,false],['surface',.92,true],['open',1,true]] as const){
+        const group=buildingKit(midrise('apartment',stage,progress,12,14,8,32),art);
+        group.updateMatrixWorld(true);
+        const hit=new THREE.Raycaster(new THREE.Vector3(0,terraceY+.5,4),new THREE.Vector3(0,-1,0)).intersectObject(group,true)[0];
+        expect(hit).toBeDefined();
+        if(complete){
+          expect(hit.point.y).toBeCloseTo(terraceY+.05,5);
+          expect((hit.object as THREE.Mesh).material).toBe(art.get('#aaa99e'));
+        }else{
+          expect(hit.point.y).toBeLessThan(terraceY);
+        }
+        disposeGroup(group);
+      }
+    }finally{art.dispose();}
+  });
+
   it('installs authored glazing progressively and matches open glazing at full finish', () => {
     const art = new ArtMaterials();
     for (const style of ['anime', 'miniature'] as Style[]) {
@@ -38,11 +58,12 @@ describe('midrise construction facade continuity', () => {
       const lightGlass = art.get('#94a7a0', .3);
       for (const [kind, width, depth, seed] of [
         ['apartment', 24, 19, 9812], // walk-up family
+        ['apartment', 24, 19, 32], ['apartment', 8, 10, 32], // terrace family
         ['office', 24, 19, 9812], // stepped office family
         ['office', 24, 19, 27], // slab office family
         ['apartment', 10, 10, 9812], ['office', 8, 12, 27], // narrow parcels
       ] as const) {
-        const glow = art.get('#e9aa58', .42, true, kind === 'office' ? 'office' : 'home');
+        const glow = art.window(kind === 'office' ? 'office' : 'home');
         const panes = (group: THREE.Object3D) => [glass, lightGlass, glow].flatMap(material => boxesFor(group, material)).sort();
         const partial = buildingKit(midrise(kind, 'structure', .77, width, depth, 8, seed), art);
         const finished = buildingKit(midrise(kind, 'surface', .92, width, depth, 8, seed), art);

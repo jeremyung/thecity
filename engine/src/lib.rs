@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+mod neighborhood_demand;
+mod neighborhood_errands;
+
 #[cfg(test)]
 mod presentation_revision_tests;
 
@@ -106,7 +109,7 @@ mod transit_recovery;
 mod transit_access_tests;
 
 const SCHEMA_VERSION: u32 = 1;
-const ACTIVITY_SCHEMA_VERSION: u8 = 4;
+const ACTIVITY_SCHEMA_VERSION: u8 = 5;
 const ENGINE_VERSION: &str = "0.1.0";
 const MIN: f32 = -400.0;
 const MAX: f32 = 400.0;
@@ -571,7 +574,7 @@ fn vehicle_gap(lead: u8, follower: u8) -> f32 {
         .max(VEHICLE_MIN_GAP)
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 struct WorldPoint {
     x: f32,
     z: f32,
@@ -899,6 +902,7 @@ struct WorldState {
     buildings: Vec<Building>,
     projects: Vec<Project>,
     travelers: Vec<Traveler>,
+    neighborhood_errands: neighborhood_errands::ErrandState,
     #[serde(default)]
     expressway_traffic: expressway_traffic::TrafficState,
     #[serde(default)]
@@ -1196,6 +1200,17 @@ fn road_width(kind: &str) -> f32 {
         _ => 9.0,
     }
 }
+/// Shared streets carry walkers inside the painted edge; arterials use the
+/// raised sidewalk outside the carriageway. All access and movement consumers
+/// must use this same offset so their route endpoints meet.
+fn pedestrian_road_offset(kind: &str) -> f32 {
+    let half_width = road_width(kind) * 0.5;
+    if matches!(kind, "local" | "lane") {
+        half_width - 0.72
+    } else {
+        half_width + 0.72
+    }
+}
 fn in_protected_land(x: f32, z: f32) -> bool {
     (-350.0..=-260.0).contains(&x) && (-350.0..=-270.0).contains(&z)
 }
@@ -1268,13 +1283,12 @@ impl Engine {
     /// Keep u64 generations as text across the JS boundary. On exhaustion the
     /// tick forces a fresh structural snapshot for each movement publication.
     pub fn presentation_revision(&self) -> String {
-        let platform_built = self.state.projects.iter().find(|p| p.kind == "station")
-            .map_or(true, |p| p.progress > 0.2);
+        let platform_phase = self.station_construction_phase();
         let generation = match self.access_geometry_revision_token() {
             Some(value) => format!("g{value}"),
             None => format!("t{}", self.state.tick),
         };
-        format!("{generation}:{}:{}:{}", platform_built as u8,
+        format!("{generation}:{}:{}:{}", platform_phase,
             self.state.station_ready as u8, self.state.station_online as u8)
     }
 
@@ -1317,6 +1331,7 @@ impl Engine {
                 buildings: vec![],
                 projects: vec![],
                 travelers: vec![],
+                neighborhood_errands: neighborhood_errands::ErrandState::default(),
                 expressway_traffic: expressway_traffic::TrafficState::default(),
                 residents: vec![],
                 trains: vec![],
@@ -1731,7 +1746,7 @@ impl Engine {
             return None;
         };
         let length = distance(a, b).max(1.0);
-        let width = self
+        let walking_offset = self
             .state
             .roads
             .iter()
@@ -1741,14 +1756,14 @@ impl Engine {
                     && ((road.from == edge.0 && road.to == edge.1)
                         || (road.from == edge.1 && road.to == edge.0))
             })
-            .map(|road| road_width(&road.kind))
-            .unwrap_or(9.0);
+            .map(|road| pedestrian_road_offset(&road.kind))
+            .unwrap_or_else(|| pedestrian_road_offset("unknown"));
         let lateral = if kind == 1 {
             KERB_LANE
         } else if traveler_id % 2 == 0 {
-            width * 0.5 + 0.72
+            walking_offset
         } else {
-            -(width * 0.5 + 0.72)
+            -walking_offset
         };
         let nx = -(b.z - a.z) / length;
         let nz = (b.x - a.x) / length;
@@ -1796,8 +1811,7 @@ impl Engine {
             x: a.x + dx * along,
             z: a.z + dz * along,
         };
-        let width = road_width(&road.kind);
-        let sidewalk = width * 0.5 + 0.72;
+        let sidewalk = pedestrian_road_offset(&road.kind);
         let frontage_side = frontage.side as f32;
         let frontage_walk = segment[1];
         let access_node = if from_building {
@@ -1874,8 +1888,7 @@ impl Engine {
             x: a.x + dx * along,
             z: a.z + dz * along,
         };
-        let width = road_width(&road.kind);
-        let sidewalk = width * 0.5 + 0.72;
+        let sidewalk = pedestrian_road_offset(&road.kind);
         let side = frontage.side as f32;
         let frontage_walk = WorldPoint {
             x: center.x + nx * side * sidewalk,
@@ -2497,6 +2510,9 @@ impl Engine {
             self.ensure_bus_service();
             self.schedule_residents(day);
             self.schedule_deliveries();
+        }
+        if self.state.tick % 10 == 0 {
+            self.schedule_neighborhood_errands();
         }
         self.advance_travelers();
         self.advance_expressway_traffic();
@@ -7704,6 +7720,7 @@ impl Engine {
             .iter()
             .filter(|b| {
                 !b.anchor
+                    && !self.errand_references_building(b.id)
                     && site_vacant(b)
                     && b.vacant_days > 5
                     && !self
@@ -7799,6 +7816,7 @@ impl Engine {
                         .any(|plan| plan.building_id == building.id)
                     && day.saturating_sub(building.built_day) >= 30
                     && !referenced.contains(&building.id)
+                    && !self.errand_references_building(building.id)
                     && active_by_kind.get(&building.kind).copied().unwrap_or(0) > 1
             })
             .map(|building| building.id)
@@ -7891,7 +7909,8 @@ impl Engine {
             .sum();
         for (home_id, occupancy, home_node) in homes {
             let current = *current_by_home.get(&home_id).unwrap_or(&0);
-            for ordinal in current..occupancy {
+            let available = occupancy.saturating_sub(self.aggregate_participants_at_home(home_id) as u16);
+            for ordinal in current..available {
                 if self.state.residents.len() >= MAX_RESIDENTS {
                     return;
                 }
@@ -9419,6 +9438,9 @@ impl Engine {
             .retain(|t| !arrived_ids.contains(&t.id));
         let mut return_vehicles = Vec::new();
         for arrived in arrivals {
+            if self.handle_neighborhood_errand_arrival(&arrived) {
+                continue;
+            }
             if arrived.resident != 0 {
                 if let Some(resident) = self
                     .state
@@ -10786,13 +10808,15 @@ impl Engine {
                 && r.kind != "rail"
                 && ((r.from == from && r.to == to) || (r.from == to && r.to == from))
         });
-        let width = road.map(|r| road_width(&r.kind)).unwrap_or(9.0);
+        let walking_offset = road
+            .map(|r| pedestrian_road_offset(&r.kind))
+            .unwrap_or_else(|| pedestrian_road_offset("unknown"));
         let lateral = if traveler.kind == 1 {
             KERB_LANE
         } else if traveler.id % 2 == 0 {
-            width * 0.5 + 0.72
+            walking_offset
         } else {
-            -(width * 0.5 + 0.72)
+            -walking_offset
         };
         let nx = -dz / len;
         let nz = dx / len;
@@ -11161,28 +11185,9 @@ impl Engine {
                 state.schema_version
             ));
         }
-        if state.activity_schema_version > ACTIVITY_SCHEMA_VERSION {
-            return Err(format!(
-                "unsupported business activity schema {}",
-                state.activity_schema_version
-            ));
+        if state.activity_schema_version != ACTIVITY_SCHEMA_VERSION {
+            return Err(format!("unsupported business activity schema {}; start a fresh world", state.activity_schema_version));
         }
-        if state.activity_schema_version == 0 {
-            for building in &mut state.buildings {
-                building.business_active = false;
-                if is_commercial_kind(&building.kind) {
-                    building.occupancy = 0;
-                    building.vacant_days = 0;
-                    if building.stage == "open" {
-                        building.business_active = true;
-                    }
-                }
-            }
-        }
-        // Schema 4 adds durable original building footprints after rear
-        // extensions. Older saves default the metadata to empty; older
-        // binaries reject schema 4 rather than silently losing render data.
-        state.activity_schema_version = ACTIVITY_SCHEMA_VERSION;
         // Validate frozen checkpoint shapes and timeline before replaying any
         // saved prefix to reconstruct derived accumulator state.
         state.district_controller.validate(state.tick)?;
@@ -11279,6 +11284,7 @@ impl Engine {
     pub fn validate(&self) -> Result<(), String> {
         self.validate_access_route_joins()?;
         self.validate_expressway_traffic()?;
+        self.validate_neighborhood_errands()?;
         self.validate_masterplan_progress()?;
         access_live_engine::validate_face_history(&self.state.exhausted_access_faces)?;
         if self.state.access_geometry_revision_exhausted
@@ -12066,7 +12072,25 @@ impl Engine {
                         traveler.id
                     ));
                 }
-                if !(2..=5).contains(&path.points.len())
+                if path_requires_rail_surface && !path.surface_y.is_empty() {
+                    let matches = path.points.first().zip(path.points.last()).is_some_and(|(&from, &to)| {
+                        [true, false].into_iter().any(|at_station| {
+                            let expected = if traveler.activity == "walking_to_station" {
+                                self.platform_entry_path_from_position(from, to, at_station, traveler.id)
+                            } else {
+                                self.platform_exit_path_from_position(from, to, at_station)
+                            };
+                            expected.is_some_and(|expected| expected.surface_y == path.surface_y
+                                && expected.points.len() == path.points.len()
+                                && expected.points.iter().zip(&path.points)
+                                    .all(|(a,b)| a.x == b.x && a.z == b.z))
+                        })
+                    });
+                    if !matches {
+                        return Err(format!("traveler {} has obsolete or invalid rail access geometry; start a fresh world", traveler.id));
+                    }
+                }
+                if !(2..=if path_requires_rail_surface { 8 } else { 5 }).contains(&path.points.len())
                     || (!path.surface_y.is_empty()
                         && (path.surface_y.len() != path.points.len()
                             || path.surface_y.iter().any(|height| {
@@ -16358,13 +16382,17 @@ mod tests {
             .destination_access
             .clone()
             .expect("station trip needs a platform entry connector");
-        assert_eq!(entry.surface_y, vec![-1.0, 0.27, 8.0, 8.0, 8.0]);
+        assert_eq!(entry.surface_y, vec![-1.0, 0.27, 0.27, 0.27, 0.27, 8.0, 8.0, 8.0]);
+        let mut corrupt: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
+        let actor = corrupt["travelers"].as_array_mut().unwrap().iter_mut()
+            .find(|t| t["id"].as_u64() == Some(first_id as u64)).unwrap();
+        let x = actor["destination_access"]["points"][1]["x"].as_f64().unwrap();
+        actor["destination_access"]["points"][1]["x"] = serde_json::json!(x + 0.25);
+        assert!(Engine::restore_json(&corrupt.to_string()).err().unwrap().contains("rail access geometry"));
         let mut mid_access = Engine::restore_json(&engine.save_json()).unwrap();
-        let stair_progress = (entry.points[1].x - entry.points[0].x)
-            .hypot(entry.points[1].z - entry.points[0].z)
-            + (entry.points[2].x - entry.points[1].x)
-                .hypot(entry.points[2].z - entry.points[1].z)
-                * 0.5;
+        let stair_progress = entry.points[..5].windows(2)
+            .map(|p| (p[1].x-p[0].x).hypot(p[1].z-p[0].z)).sum::<f32>()
+            + (entry.points[5].x-entry.points[4].x).hypot(entry.points[5].z-entry.points[4].z)*0.5;
         let traveler = mid_access
             .state
             .travelers
@@ -16530,9 +16558,9 @@ mod tests {
                 let exit = engine
                     .platform_exit_path(&route, at_station, 95, 900_001)
                     .unwrap();
-                assert_eq!(path.points.len(), 5);
-                assert_eq!(exit.points.len(), 5);
-                assert!((path.points[4].x - queue.x).hypot(path.points[4].z - queue.z) < 0.01);
+                assert_eq!(path.points.len(), 8);
+                assert_eq!(exit.points.len(), 8);
+                assert!((path.points[7].x - queue.x).hypot(path.points[7].z - queue.z) < 0.01);
                 assert!((exit.points[0].x - queue.x).hypot(exit.points[0].z - queue.z) < 0.01);
                 let axis = engine.rail_axis().unwrap();
                 let (ux, uz) = if at_station {
@@ -16542,15 +16570,15 @@ mod tests {
                 };
                 let terminal_point = engine.node(terminal).unwrap();
                 let (nx, nz) = (uz, -ux);
-                for p in path.points.iter().skip(1).chain(exit.points.iter().take(4)) {
+                for p in path.points.iter().skip(1).chain(exit.points.iter().take(7)) {
                     let lx = (p.x - terminal_point.x) * nx + (p.z - terminal_point.z) * nz;
                     let lz = (p.x - terminal_point.x) * ux + (p.z - terminal_point.z) * uz;
                     assert!(
-                        (-20.01..=48.01).contains(&lz),
+                        (if at_station { -21.51..=48.01 } else { -1.51..=68.51 }).contains(&lz),
                         "rotated connector point local z={lz}"
                     );
                     assert!(
-                        (3.39..=4.61).contains(&lx),
+                        (3.39..=7.51).contains(&lx),
                         "rotated connector point local x={lx}"
                     );
                 }
@@ -19637,55 +19665,68 @@ mod tests {
 
     #[test]
     fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
-        let mut engine = Engine::new_legacy(81);
-        let road = engine
-            .state
-            .roads
-            .iter()
-            .find(|road| road.kind != "rail" && road.stage == "open")
-            .expect("founding road is open");
-        let (from, to) = (road.from, road.to);
-        let arterial = road.kind == "arterial";
-        let a = engine.node(from).unwrap().clone();
-        let b = engine.node(to).unwrap().clone();
-        let len = distance(&a, &b);
-        let route = vec![from, to];
-        for (id, kind) in [(700_001, 1), (700_002, 0)] {
-            engine.state.travelers.push(Traveler {
-                id,
-                kind,
-                route: route.clone(),
-                route_lengths: vec![len],
-                edge_index: 0,
-                edge_progress: len * 0.5,
-                speed: 1.0,
-                destination: to,
-                activity: "test".into(),
-                resident: 0,
-                name: "Test traveler".into(),
-                origin_building: None,
-                destination_building: None,
-                wait_ticks: 0,
-                origin_access: None,
-                destination_access: None,
-                access_phase: 1,
-                access_progress: 0.0,
-            });
+        for (road_kind, expected_offset, surface_edge) in [
+            ("local", 2.53, 3.25),
+            ("lane", 1.28, 2.0),
+            ("arterial", 8.72, 10.5),
+        ] {
+            for reverse in [false, true] {
+                let mut engine = Engine::new_legacy(81);
+                let road = engine
+                    .state
+                    .roads
+                    .iter_mut()
+                    .find(|road| road.kind != "rail" && road.stage == "open")
+                    .expect("founding road is open");
+                road.kind = road_kind.into();
+                let (from, to) = if reverse { (road.to, road.from) } else { (road.from, road.to) };
+                let a = engine.node(from).unwrap().clone();
+                let b = engine.node(to).unwrap().clone();
+                let len = distance(&a, &b);
+                let route = vec![from, to];
+                for (id, kind) in [(700_001, 1), (700_002, 0), (700_003, 0)] {
+                    engine.state.travelers.push(Traveler {
+                        id,
+                        kind,
+                        route: route.clone(),
+                        route_lengths: vec![len],
+                        edge_index: 0,
+                        edge_progress: len * 0.5,
+                        speed: 1.0,
+                        destination: to,
+                        activity: "test".into(),
+                        resident: 0,
+                        name: "Test traveler".into(),
+                        origin_building: None,
+                        destination_building: None,
+                        wait_ticks: 0,
+                        origin_access: None,
+                        destination_access: None,
+                        access_phase: 1,
+                        access_progress: 0.0,
+                    });
+                }
+                let movement = engine.movement_buffer();
+                let center_x = a.x + (b.x - a.x) * 0.5;
+                let center_z = a.z + (b.z - a.z) * 0.5;
+                let nx = -(b.z - a.z) / len;
+                let nz = (b.x - a.x) / len;
+                let car = &movement[1..6];
+                assert!((car[0] - center_x - nx * KERB_LANE).abs() < 0.001);
+                assert!((car[1] - center_z - nz * KERB_LANE).abs() < 0.001);
+                for (id, index, sign) in [(700_002, 7, 1.0), (700_003, 13, -1.0)] {
+                    let pedestrian = &movement[index..index + 5];
+                    assert!((pedestrian[0] - center_x - nx * expected_offset * sign).abs() < 0.001);
+                    assert!((pedestrian[1] - center_z - nz * expected_offset * sign).abs() < 0.001);
+                    assert!(expected_offset + 0.33 < surface_edge, "whole pedestrian fits surface");
+                    for (at_start, node) in [(true, &a), (false, &b)] {
+                        let endpoint = engine.route_endpoint_position(&route, at_start, id, 0).unwrap();
+                        assert!((endpoint.x - node.x - nx * expected_offset * sign).abs() < 0.001);
+                        assert!((endpoint.z - node.z - nz * expected_offset * sign).abs() < 0.001);
+                    }
+                }
+            }
         }
-        let movement = engine.movement_buffer();
-        let center_x = a.x + (b.x - a.x) * 0.5;
-        let center_z = a.z + (b.z - a.z) * 0.5;
-        let nx = -(b.z - a.z) / len;
-        let nz = (b.x - a.x) / len;
-        let car = &movement[1..6];
-        let pedestrian = &movement[7..12];
-        assert!((car[0] - center_x - nx * KERB_LANE).abs() < 0.001);
-        assert!((car[1] - center_z - nz * KERB_LANE).abs() < 0.001);
-        let road_width = road_width(if arterial { "arterial" } else { "local" });
-        let sidewalk_offset = road_width * 0.5 + 0.72;
-        let sign = if 700_002 % 2 == 0 { 1.0 } else { -1.0 };
-        assert!((pedestrian[0] - center_x - nx * sidewalk_offset * sign).abs() < 0.001);
-        assert!((pedestrian[1] - center_z - nz * sidewalk_offset * sign).abs() < 0.001);
     }
 
     #[test]
@@ -20032,148 +20073,18 @@ mod tests {
     }
 
     #[test]
-    fn legacy_business_activity_migration_preserves_housing_and_pending_work() {
-        let mut engine = Engine::new_legacy(604);
-        let cafe_id = engine.add_building(
-            engine.state.parcels[2].id,
-            "cafe",
-            2,
-            "open",
-            1.0,
-            12,
-            "Legacy Cafe",
-            false,
-            Vec::new(),
-        );
-        let office_id = engine.add_building(
-            engine.state.parcels[3].id,
-            "office",
-            3,
-            "renovation",
-            0.4,
-            18,
-            "Legacy Office",
-            false,
-            vec!["renovation underway".into()],
-        );
-        let office_parcel_id = engine
-            .state
-            .buildings
-            .iter()
-            .find(|building| building.id == office_id)
-            .unwrap()
-            .parcel_id;
-        engine
-            .state
-            .parcels
-            .iter_mut()
-            .find(|parcel| parcel.id == office_parcel_id)
-            .unwrap()
-            .reservation = Some(office_id);
-        let renovation_project_id = engine.id();
-        engine.state.projects.push(Project {
-            id: renovation_project_id,
-            kind: "building".into(),
-            from: None,
-            to: None,
-            parcel_id: Some(office_parcel_id),
-            stage: "structure".into(),
-            progress: 0.4,
-            reason: "Keep the pending tenant renovation".into(),
-            duration: 4.0,
-            started_tick: 0,
-        });
-        let home_id = engine.add_building(
-            engine.state.parcels[1].id,
-            "home",
-            2,
-            "open",
-            1.0,
-            6,
-            "Legacy Home",
-            false,
-            Vec::new(),
-        );
-        for building in &mut engine.state.buildings {
-            if building.id == cafe_id {
-                building.occupancy = 9;
-                building.vacant_days = 23;
-            } else if building.id == office_id {
-                building.occupancy = 11;
-                building.vacant_days = 41;
-            } else if building.id == home_id {
-                building.occupancy = 3;
-                building.vacant_days = 2;
-            }
+    fn incompatible_activity_saves_are_rejected_without_migration() {
+        let engine = Engine::new_legacy(604);
+        let current = engine.save_json();
+        assert_eq!(Engine::restore_json(&current).unwrap().save_json(), current);
+        for version in [0, ACTIVITY_SCHEMA_VERSION - 1, ACTIVITY_SCHEMA_VERSION + 1] {
+            let mut save: serde_json::Value = serde_json::from_str(&current).unwrap();
+            save["activity_schema_version"] = serde_json::json!(version);
+            assert!(Engine::restore_json(&save.to_string()).is_err());
         }
-        let expected_rng = engine.state.rng_growth;
-        let expected_tick = engine.state.tick;
-        let expected_next_id = engine.state.next_id;
-        let expected_events = engine.state.events.clone();
-        let expected_projects = engine.state.projects.clone();
-        let mut legacy: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
-        let object = legacy.as_object_mut().unwrap();
-        object.remove("activity_schema_version");
-        for building in object.get_mut("buildings").unwrap().as_array_mut().unwrap() {
-            building.as_object_mut().unwrap().remove("business_active");
-        }
-
-        let migrated = Engine::restore_json(&legacy.to_string()).unwrap();
-        assert_eq!(
-            migrated.state.activity_schema_version,
-            ACTIVITY_SCHEMA_VERSION
-        );
-        assert_eq!(migrated.state.rng_growth, expected_rng);
-        assert_eq!(migrated.state.tick, expected_tick);
-        assert_eq!(migrated.state.next_id, expected_next_id);
-        assert_eq!(
-            serde_json::to_value(&migrated.state.events).unwrap(),
-            serde_json::to_value(&expected_events).unwrap()
-        );
-        assert_eq!(
-            serde_json::to_value(&migrated.state.projects).unwrap(),
-            serde_json::to_value(&expected_projects).unwrap()
-        );
-        let founder = migrated.state.buildings.iter().find(|b| b.anchor).unwrap();
-        assert_eq!(founder.occupancy, 0);
-        assert!(founder.business_active);
-        assert_eq!(founder.vacant_days, 0);
-        let cafe = migrated
-            .state
-            .buildings
-            .iter()
-            .find(|b| b.id == cafe_id)
-            .unwrap();
-        assert_eq!(cafe.occupancy, 0);
-        assert!(cafe.business_active);
-        assert_eq!(cafe.vacant_days, 0);
-        let office = migrated
-            .state
-            .buildings
-            .iter()
-            .find(|b| b.id == office_id)
-            .unwrap();
-        assert_eq!(office.occupancy, 0);
-        assert!(!office.business_active);
-        assert_eq!(office.vacant_days, 0);
-        let home = migrated
-            .state
-            .buildings
-            .iter()
-            .find(|b| b.id == home_id)
-            .unwrap();
-        assert_eq!(home.occupancy, 3);
-        assert_eq!(home.vacant_days, 2);
-        assert!(!home.business_active);
-        migrated.validate().unwrap();
-
-        let current_save = migrated.save_json();
-        assert_eq!(
-            Engine::restore_json(&current_save).unwrap().save_json(),
-            current_save
-        );
-        legacy["activity_schema_version"] = serde_json::json!(ACTIVITY_SCHEMA_VERSION + 1);
-        assert!(Engine::restore_json(&legacy.to_string()).is_err());
+        let mut missing: serde_json::Value = serde_json::from_str(&current).unwrap();
+        missing.as_object_mut().unwrap().remove("neighborhood_errands");
+        assert!(Engine::restore_json(&missing.to_string()).is_err());
     }
 
     #[test]
