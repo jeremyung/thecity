@@ -38,6 +38,16 @@ describe('distant skyline backdrop', () => {
       expect(Math.abs(tower.x - riverX)).toBeGreaterThan(200);
     }
     expect(Math.max(...all.map((tower) => tower.height))).toBeGreaterThan(160);
-    expect(all.length).toBe(6 * 48);
+    expect(all.length).toBeGreaterThan(6 * 48 * 0.35);
+    expect(all.length).toBeLessThanOrEqual(6 * 48);
+  });
+});
+
+describe('distant skyline spacing', () => {
+  it('never overlaps tower footprints, which would z-fight at 2 km', () => {
+    const all = towers(87231);
+    for (let i = 0; i < all.length; i += 1) for (let j = i + 1; j < all.length; j += 1) {
+      expect(Math.hypot(all[i].x - all[j].x, all[i].z - all[j].z)).toBeGreaterThan(10);
+    }
   });
 });

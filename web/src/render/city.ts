@@ -21,6 +21,8 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { ssr } from 'three/addons/tsl/display/SSRNode.js';
 import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
 import { SkyEnvironment } from './sky-environment';
+import { skyRadiance } from './sky-scattering';
+import { backdropForestMatrices } from './backdrop-forest';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -309,7 +311,10 @@ export class CityRenderer {
     // kerbs and trees meet the ground, not a whole-block darkening.
     const occlusion=this.occlusion=ao(this.scenePass.getTextureNode('depth'),null as unknown as THREE.Node,this.camera);
     occlusion.resolutionScale=.5;occlusion.radius.value=3;occlusion.thickness.value=2.5;occlusion.distanceExponent.value=1.4;occlusion.samples.value=12;
-    let sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength)),1));
+    // Fade AO beyond ~700 m: depth-reconstructed normals lose precision there
+    // and band across the hills, skyline and mountain ring.
+    const aoReach=smoothstep(1300,700,this.scenePass.getViewZNode().negate());
+    let sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength.mul(aoReach))),1));
     if(wet){
       const depthTexture=this.scenePass.getTextureNode('depth'),normalTexture=this.scenePass.getTextureNode('normal');
       const viewNormal=sample(uv=>colorToDirection(normalTexture.sample(uv)));
@@ -481,6 +486,15 @@ export class CityRenderer {
     backdropMaterial.colorNode=mix(landBase,this.outerLandscapeColor(),smoothstep(420,520,positionLocal.x.abs().max(positionLocal.z.abs()))).mul(this.art.cloudShade());
     const backdrop=new THREE.Mesh(createBackdropGeometry(world.seed,river,halfWidth),backdropMaterial);
     backdrop.userData.ownedMaterial=true;backdrop.receiveShadow=true;this.terrain.add(backdrop);
+    // Low-poly crowns give the wooded hills a broken silhouette; haze softens
+    // them with distance. One instanced draw, no shadows (outside the frustum).
+    const forest=backdropForestMatrices(backdrop.geometry,world.seed);
+    if(forest.length){
+      const crowns=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),this.art.get('#e9eee5',.95),forest.length);
+      const tones=['#4a6347','#58704c','#3f5843','#66784f'].map(c=>new THREE.Color(c));
+      forest.forEach((matrix,i)=>{crowns.setMatrixAt(i,matrix);crowns.setColorAt(i,tones[i%tones.length]);});
+      crowns.instanceMatrix.needsUpdate=true;crowns.computeBoundingSphere();this.terrain.add(crowns);
+    }
     const bankKit=new Kit();
     // Sweep the same X-offset boundary used by land and water. Shared bend
     // stations keep the wall and path continuous without overlapping boxes.
@@ -942,6 +956,17 @@ export class CityRenderer {
     this.daylight=THREE.MathUtils.lerp(this.daylight,day,Math.min(1,dt*3));
     const top=new THREE.Color('#659bbd').lerp(new THREE.Color('#9aa5bd'),dusk*.5).lerp(new THREE.Color('#11253e'),1-this.daylight);
     const low=new THREE.Color('#d5ded3').lerp(new THREE.Color('#efb185'),dusk).lerp(new THREE.Color('#334860'),1-this.daylight);
+    // Steer the painted gradient toward Preetham scattering for this sun:
+    // deeper zenith and a warm sunward horizon at low sun. Painted colours
+    // still own night, dusk mood and the clouds; scattering only leads by day.
+    const solar=new THREE.Vector3(Math.cos(angle),Math.max(-.05,Math.sin(angle)),-.45).normalize();
+    const lead=this.daylight*.42;
+    if(lead>.01){
+      const zenith=skyRadiance(solar,new THREE.Vector3(0,1,0));
+      const toward=new THREE.Vector3(solar.x,0,solar.z).normalize().setY(.04);
+      const horizon=skyRadiance(solar,toward).lerp(skyRadiance(solar,toward.clone().set(-toward.x,.04,-toward.z)),.65);
+      top.lerp(zenith,lead);low.lerp(horizon,lead*.85);
+    }
     this.skyHigh.value.copy(top);this.skyLow.value.copy(low);this.skyCloudShade.value.set('#8ba5bc').lerp(new THREE.Color('#9c829b'),dusk*.7).lerp(new THREE.Color('#283c58'),1-this.daylight);this.hillColor.value.set('#577773').lerp(new THREE.Color('#747386'),dusk*.55).lerp(new THREE.Color('#20384a'),1-this.daylight);this.skyCloud.value.set('#fff3dc').lerp(new THREE.Color('#d29e91'),dusk*.5).lerp(new THREE.Color('#45526a'),1-this.daylight);
     this.skylineColor.value.set('#8193a1').lerp(new THREE.Color('#8a7f93'),dusk*.6).lerp(new THREE.Color('#1c2a3c'),1-this.daylight);this.skylineNight.value=1-this.daylight;
     // Haze matches the horizon so hills, skyline and mountains recede into the

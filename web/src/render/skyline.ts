@@ -60,6 +60,9 @@ export function createSkylineGeometry(seed: number, river: ReadonlyArray<Skyline
     indices.push(base + 4, base + 6, base + 5, base + 4, base + 7, base + 6);
   };
 
+  // At 2 km the depth buffer resolves only ~0.5 m, so overlapping towers
+  // z-fight into stripes. Keep footprints apart (bounding circles).
+  const placed: Array<{ x: number; z: number; r: number }> = [];
   const start = random() * Math.PI * 2;
   for (let cluster = 0; cluster < CLUSTERS; cluster += 1) {
     const centre = start + cluster * Math.PI * 2 / CLUSTERS + (random() - 0.5) * 0.7;
@@ -76,13 +79,19 @@ export function createSkylineGeometry(seed: number, river: ReadonlyArray<Skyline
       // cluster straddling the valley still frames it rather than vanishing.
       const riverX = riverXAt(river, z);
       if (riverX !== null && Math.abs(x - riverX) < RIVER_CLEARANCE) {
-        x = riverX + Math.sign(x - riverX || 1) * (RIVER_CLEARANCE + random() * 120);
+        // Spread displaced towers over a wide band (and drop half of them):
+        // stacking them on one line made coplanar walls z-fight as a stripe.
+        if (random() < 0.5) continue;
+        x = riverX + Math.sign(x - riverX || 1) * (RIVER_CLEARANCE + random() * 520);
       }
       // Taller towers gather at each cluster's centre, as around a terminal.
       const core = 1 - Math.abs(offset);
       const height = 30 + peak * core * core * (0.45 + random() * 0.55) + random() * 22;
-      const width = 14 + random() * 22;
-      box(x, z, width, width * (0.6 + random() * 0.6), height, angle + (random() - 0.5) * 0.5);
+      const width = 14 + random() * 22, depth = width * (0.6 + random() * 0.6);
+      const r = Math.hypot(width, depth) / 2 + 1;
+      if (placed.some((p) => Math.hypot(p.x - x, p.z - z) < p.r + r)) continue;
+      placed.push({ x, z, r });
+      box(x, z, width, depth, height, angle + (random() - 0.5) * 0.5);
     }
   }
 
