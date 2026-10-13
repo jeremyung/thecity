@@ -1,0 +1,37 @@
+{
+  "scope": "Node CPU diagnostic, not browser scheduling",
+  "results": [
+    {
+      "quota": 1,
+      "calls": 209187,
+      "updates": 209187,
+      "maxMs": 1.5344159999999931,
+      "p95Ms": 0.0003749999999911324,
+      "exactBaselineMatch": true,
+      "polygons": 1192
+    },
+    {
+      "quota": 128,
+      "calls": 209187,
+      "updates": 1635,
+      "maxMs": 1.7340000000000089,
+      "p95Ms": 0.052082999999981894,
+      "exactBaselineMatch": true,
+      "polygons": 1192
+    },
+    {
+      "quota": 2048,
+      "calls": 209187,
+      "updates": 103,
+      "maxMs": 0.6058750000000259,
+      "p95Ms": 0.48620800000000486,
+      "exactBaselineMatch": true,
+      "polygons": 1192
+    }
+  ],
+  "hardware": "Apple M2 Max",
+  "fixture": ".tools/fidelity-review/mature-layered-87231.snapshot.json",
+  "baselinePolygonSha256": "539cefc297bad1f39c20ffd1ab98d697f65474a855a3dbd006ac28cde870671c",
+  "fixtureSha256": "6d460f129e3183a14a454953b610bb7f811e906e577bc878fee2e1dac74d9967",
+  "note": "Quotas measured in listed order in one Node process; JIT/GC affects timings. Initial map/sort and final result collection remain synchronous."
+}

@@ -1,0 +1,60 @@
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+ ❯ tests/road-batches.test.ts (20 tests | 3 failed | 17 skipped) 57ms
+     × keeps a local edge stripe visible where local and arterial roads meet 34ms
+     × does not render construction cones on an open local road 12ms
+     × keeps local and lane road surfaces level through a ground-level bend 10ms
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 17 skipped (20)
+   Start at  05:34:21
+   Duration  527ms (transform 291ms, setup 0ms, import 382ms, tests 57ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/road-batches.test.ts > road batch retention > keeps a local edge stripe visible where local and arterial roads meet
+AssertionError: expected '747f7b' to be 'dedaca' // Object.is equality
+
+Expected: "dedaca"
+Received: "747f7b"
+
+ ❯ tests/road-batches.test.ts:122:43
+    120|     expect(stripe).toBeDefined();
+    121|     const material = (stripe!.object as THREE.Mesh).material as THREE.…
+    122|     expect(material.color.getHexString()).toBe('dedaca');
+       |                                           ^
+    123|     expect(stripe!.point.y).toBeGreaterThan(.3);
+    124|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/road-batches.test.ts > road batch retention > does not render construction cones on an open local road
+AssertionError: expected 'c17d4f' to be '747f7b' // Object.is equality
+
+Expected: "747f7b"
+Received: "c17d4f"
+
+ ❯ tests/road-batches.test.ts:143:101
+    141|     const edge = firstGroundHit(renderer.roads, 3.1, 24);
+    142|     expect(edge).toBeDefined();
+    143|     expect(((edge!.object as THREE.Mesh).material as THREE.MeshBasicMa…
+       |                                                                                                     ^
+    144|     expect(edge!.point.y).toBeCloseTo(.3, 5);
+    145|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/road-batches.test.ts > road batch retention > keeps local and lane road surfaces level through a ground-level bend
+AssertionError: expected 0.27000001072883606 to be close to 0.3, received difference is 0.02999998927116393, but expected 0.000005
+ ❯ tests/road-batches.test.ts:168:34
+    166|     expect(laneSurface).toBeDefined();
+    167|     expect(localSurface!.point.y).toBeCloseTo(.3, 5);
+    168|     expect(laneSurface!.point.y).toBeCloseTo(.3, 5);
+       |                                  ^
+    169|   });
+    170|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+

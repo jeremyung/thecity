@@ -1,0 +1,25 @@
+{
+  "seed": 87231,
+  "nativeTick": 168000,
+  "nativeWasmTrainViews": "equal",
+  "openTick": 168000,
+  "train": {
+    "id": 207,
+    "route": [
+      38,
+      85
+    ],
+    "progress": 23.5,
+    "direction": 1,
+    "dwelling": true,
+    "door_open_fraction": 1,
+    "door_terminal": 38,
+    "passengers": 0,
+    "capacity": 48,
+    "station_waiting": 0,
+    "gateway_waiting": 0
+  },
+  "replayTicks": 200,
+  "saveMovementAndDoorReplay": "equal",
+  "compactDoorStreamReplay": "equal"
+}

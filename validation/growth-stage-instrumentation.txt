@@ -1,0 +1,33 @@
+Temporary measurement instrumentation removed from city.ts after capture.
+
+  // Opt-in, bounded development diagnostic; never changes scheduling or drains jobs.
+  private stageProfileCounts={world:0,frame:0};
+  private beginStageProfile(kind:'world'|'frame'){
+    if(!import.meta.env.DEV||!new URLSearchParams(window.location.search).has('stageprofile'))return null;
+    const counts=this.stageProfileCounts;
+    if(counts[kind]>=120)return null;
+    const start=performance.now();let last=start;
+    const stages:Record<string,number>={};
+    return {
+      mark:(name:string)=>{const now=performance.now();stages[name]=now-last;last=now;},
+      finish:(tick:number)=>{const total=performance.now()-start;if(kind==='world'||total>25){counts[kind]++;console.log('city-stage-profile '+JSON.stringify({kind,tick,totalMs:total,stages}));}},
+    };
+  }
+
+Call sites (original order):
+    const profile=this.beginStageProfile('world');
+    profile?.mark('terrain-reset');
+    profile?.mark('transit-access');
+    profile?.mark('roads');
+    profile?.mark('sidewalk-input');
+    profile?.mark('ground');
+    profile?.mark('building-inputs');
+    profile?.mark('trees');
+    profile?.finish(world.tick);
+    const profile=this.beginStageProfile('frame');
+    profile?.mark('building-kits');
+    profile?.mark('chunks');
+    profile?.mark('sidewalk-step');
+    profile?.mark('scene-update');
+    profile?.mark('render-submit');
+    profile?.finish(this.worldTick);

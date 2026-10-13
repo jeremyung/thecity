@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 #[cfg(test)]
+mod presentation_revision_tests;
+
+#[cfg(test)]
 mod access_bend_diagnostic;
 mod access_candidates;
 mod access_capture;
@@ -48,11 +51,16 @@ mod face_target_viability;
 mod frontage;
 mod frontier;
 mod geometry;
+mod height_redevelopment;
+#[cfg(test)]
+mod height_redevelopment_tests;
 #[cfg(test)]
 mod initial_depth_diagnostic;
 mod interior_access;
 mod masterplan;
 mod masterplan_growth;
+#[cfg(test)]
+mod skyline_allocation_diagnostic;
 #[cfg(test)]
 mod masterplan_replay_tests;
 mod masterplan_validation;
@@ -69,6 +77,12 @@ mod rail_platform;
 #[cfg(test)]
 mod rear_extension_diagnostic;
 mod rear_extensions;
+mod road_curve;
+mod expressway_traffic;
+mod movement_support;
+mod access_path_validation;
+#[cfg(test)]
+mod access_path_validation_tests;
 mod road_face_bridges;
 mod road_face_preflight;
 mod road_face_topology;
@@ -88,6 +102,8 @@ mod spine_ranking_experiment_tests;
 #[cfg(test)]
 mod spine_replay_tests;
 mod transit_recovery;
+#[cfg(test)]
+mod transit_access_tests;
 
 const SCHEMA_VERSION: u32 = 1;
 const ACTIVITY_SCHEMA_VERSION: u8 = 4;
@@ -136,6 +152,8 @@ const MAX_ROUTE_NODES: usize = 128;
 const MAX_RESIDENTS: usize = 800;
 const MAX_ACTIVE_DELIVERIES: usize = 8;
 const RAIL_TRAIN_CAPACITY: usize = 48;
+// Match the renderer presentation bound; ordinary service currently uses one trainset.
+const MAX_PRESENTED_TRAINS: usize = 8;
 const RAIL_QUEUE_CAPACITY: usize = 96;
 const BUS_CAPACITY: usize = 24;
 const BUS_QUEUE_CAPACITY: usize = 48;
@@ -148,6 +166,9 @@ const BUS_RETRY_TICKS: u64 = 2_000;
 // Three symmetric coaches sit at -16m, 0m, and +16m from the train's
 // movement-buffer position. Keep an extra 7.5m of rail under each end.
 const TRAIN_HALF_LENGTH: f32 = 23.5;
+const TRAIN_STATION_DWELL_TICKS: u16 = 220;
+const TRAIN_GATEWAY_DWELL_TICKS: u16 = 180;
+const TRAIN_DOOR_PHASE_TICKS: u16 = 20;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Point {
@@ -327,6 +348,7 @@ pub struct BuildingOriginalFootprint {
 pub struct RoadDeckView {
     pub road_id: u32,
     pub deck_height: f32,
+    pub controls: [[f32; 2]; 2],
 }
 
 pub use rail_platform::RailPlatformView;
@@ -341,6 +363,8 @@ pub struct Snapshot {
     pub minute_of_day: f32,
     pub development_rate: u32,
     pub revision: u64,
+    /// Exact presentation generation; only meaningful within the worker epoch.
+    pub presentation_revision: String,
     pub stage: String,
     pub weather: Weather,
     pub bounds: Bounds,
@@ -418,6 +442,8 @@ pub struct TrainView {
     pub progress: f32,
     pub direction: i8,
     pub dwelling: bool,
+    pub door_open_fraction: f32,
+    pub door_terminal: Option<u32>,
     pub passengers: u16,
     pub capacity: u16,
     pub station_waiting: u16,
@@ -786,6 +812,31 @@ struct Train {
     passengers: Vec<u32>,
 }
 
+fn train_door_state(train: &Train, rail_length: f32) -> (Option<u32>, f32) {
+    let at_station = train.distance <= TRAIN_HALF_LENGTH + 0.01;
+    let at_gateway = train.distance >= rail_length - TRAIN_HALF_LENGTH - 0.01;
+    let terminal = if train.dwell_ticks > 0 && at_station {
+        train.route.first().copied()
+    } else if train.dwell_ticks > 0 && at_gateway {
+        train.route.last().copied()
+    } else {
+        None
+    };
+    let total = if at_station {
+        TRAIN_STATION_DWELL_TICKS
+    } else {
+        TRAIN_GATEWAY_DWELL_TICKS
+    };
+    let fraction = if train.dwell_ticks > 0 && (at_station || at_gateway) {
+        ((total.saturating_sub(train.dwell_ticks) as f32 / TRAIN_DOOR_PHASE_TICKS as f32)
+            .clamp(0.0, 1.0))
+        .min((train.dwell_ticks as f32 / TRAIN_DOOR_PHASE_TICKS as f32).clamp(0.0, 1.0))
+    } else {
+        0.0
+    };
+    (terminal, fraction)
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct BusLine {
     id: u32,
@@ -849,6 +900,8 @@ struct WorldState {
     projects: Vec<Project>,
     travelers: Vec<Traveler>,
     #[serde(default)]
+    expressway_traffic: expressway_traffic::TrafficState,
+    #[serde(default)]
     residents: Vec<Resident>,
     trains: Vec<Train>,
     #[serde(default)]
@@ -883,6 +936,10 @@ struct WorldState {
     rear_extension_cursor: usize,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     building_original_footprints: Vec<BuildingOriginalFootprint>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    height_redevelopment: Option<height_redevelopment::HeightRedevelopment>,
+    #[serde(default)]
+    height_redevelopment_cursor: usize,
     #[serde(default)]
     interior_access_cursor: usize,
     #[serde(default)]
@@ -928,6 +985,8 @@ pub struct Engine {
     state: WorldState,
     /// Regenerated master plan for `state.masterplan`; never serialized.
     plan: Option<std::sync::Arc<masterplan_growth::PlanRuntime>>,
+    /// Bounded station-core renewal index derived from the regenerated plan.
+    height_redevelopment_lots: Vec<usize>,
     planned_progress: Vec<f32>,
     wait_scratch: Vec<u16>,
     lane_order: Vec<usize>,
@@ -1204,6 +1263,21 @@ impl Engine {
             .then_some(self.state.access_geometry_revision)
     }
 
+    /// Roads/nodes change through the access generation. Platform construction
+    /// and service readiness are independent, so include their discrete phases.
+    /// Keep u64 generations as text across the JS boundary. On exhaustion the
+    /// tick forces a fresh structural snapshot for each movement publication.
+    pub fn presentation_revision(&self) -> String {
+        let platform_built = self.state.projects.iter().find(|p| p.kind == "station")
+            .map_or(true, |p| p.progress > 0.2);
+        let generation = match self.access_geometry_revision_token() {
+            Some(value) => format!("g{value}"),
+            None => format!("t{}", self.state.tick),
+        };
+        format!("{generation}:{}:{}:{}", platform_built as u8,
+            self.state.station_ready as u8, self.state.station_online as u8)
+    }
+
     /// New world grown from the seeded master plan.
     pub fn new(seed: u32) -> Self {
         Self::construct(seed, true)
@@ -1219,6 +1293,7 @@ impl Engine {
         let seed64 = (seed as u64).wrapping_add(0x9e3779b97f4a7c15).max(1);
         let mut engine = Self {
             plan: None,
+            height_redevelopment_lots: Vec::new(),
             state: WorldState {
                 schema_version: SCHEMA_VERSION,
                 activity_schema_version: ACTIVITY_SCHEMA_VERSION,
@@ -1242,6 +1317,7 @@ impl Engine {
                 buildings: vec![],
                 projects: vec![],
                 travelers: vec![],
+                expressway_traffic: expressway_traffic::TrafficState::default(),
                 residents: vec![],
                 trains: vec![],
                 bus_line: None,
@@ -1262,6 +1338,8 @@ impl Engine {
                 pending_rear_extensions: Vec::new(),
                 rear_extension_cursor: 0,
                 building_original_footprints: Vec::new(),
+                height_redevelopment: None,
+                height_redevelopment_cursor: 0,
                 interior_access_cursor: 0,
                 next_face_access_tick: 0,
                 exhausted_access_faces: Vec::new(),
@@ -1335,6 +1413,7 @@ impl Engine {
         } else {
             engine.initialize_world();
         }
+        engine.refresh_height_redevelopment_lots();
         engine
     }
 
@@ -2420,6 +2499,7 @@ impl Engine {
             self.schedule_deliveries();
         }
         self.advance_travelers();
+        self.advance_expressway_traffic();
         self.advance_trains();
         self.advance_buses();
         self.advance_pending_alights();
@@ -2614,6 +2694,7 @@ impl Engine {
         for (project_id, stage, progress) in spine_road_progress {
             self.sync_neighborhood_spine_project(project_id, &stage, progress);
         }
+        self.advance_height_redevelopment();
         self.sync_masterplan_road_projects();
         for id in completed {
             self.complete_project(id);
@@ -2630,6 +2711,9 @@ impl Engine {
             .is_some_and(|plan| plan.project_id == id)
         {
             self.complete_interior_access_project(id);
+            return;
+        }
+        if self.complete_height_redevelopment(id) {
             return;
         }
         if p.kind == "extension" {
@@ -7610,6 +7694,9 @@ impl Engine {
             return;
         }
         self.state.last_renewal_day = day;
+        if self.try_start_height_redevelopment() {
+            return;
+        }
         self.try_close_business_for_turnover(day);
         let candidates: Vec<u32> = self
             .state
@@ -8236,6 +8323,15 @@ impl Engine {
     }
 
     fn bus_queue_position(&self, node_id: u32, direction: i8, slot: u16) -> Option<WorldPoint> {
+        self.bus_queue_position_with_edge(node_id, direction, slot).map(|(point, _)| point)
+    }
+
+    fn bus_queue_position_with_edge(
+        &self,
+        node_id: u32,
+        direction: i8,
+        slot: u16,
+    ) -> Option<(WorldPoint, [u32; 2])> {
         let node = self.node(node_id)?;
         let line = self.state.bus_line.as_ref()?;
         let route_index = line
@@ -8258,10 +8354,10 @@ impl Engine {
         let other = self.node(other_id)?;
         let length = distance(node, other).max(1.0);
         let along = 3.0 + slot as f32 * 1.25;
-        Some(WorldPoint {
+        Some((WorldPoint {
             x: node.x + (other.x - node.x) / length * along - (other.z - node.z) / length * BUS_STOP_KERB,
             z: node.z + (other.z - node.z) / length * along + (other.x - node.x) / length * BUS_STOP_KERB,
-        })
+        }, [node_id, other_id]))
     }
 
     fn bus_stop_views(&self, line: &BusLine) -> Vec<BusStopView> {
@@ -8398,7 +8494,7 @@ impl Engine {
         traveler.origin_access =
             self.building_access_path(origin_building, &traveler.route, true, id, 0);
         if let Some(queue_position) = origin_queue {
-            let end = self.route_endpoint_position(&traveler.route, true, id, 0);
+            let end = self.route_endpoint_position(&traveler.route, false, id, 0);
             if let Some(start) = end {
                 traveler.destination_access = Some(AccessPath {
                     points: vec![start, queue_position],
@@ -9402,10 +9498,9 @@ impl Engine {
                 returning.destination_building = None;
                 returning.activity = "delivery_return".into();
                 returning.wait_ticks = 0;
-                returning.origin_access = arrived
-                    .destination_access
-                    .as_ref()
-                    .map(AccessPath::reversed);
+                returning.origin_access = returning.origin_building.and_then(|building| {
+                    self.building_access_path(building, &returning.route, true, returning.id, returning.kind)
+                });
                 returning.destination_access = None;
                 returning.access_phase = if returning.origin_access.is_some() {
                     0
@@ -9914,7 +10009,7 @@ impl Engine {
                 self.bus_queue_position(stop, self.state.buses[bus_index].direction, slot)
             {
                 if let Some(endpoint) =
-                    self.route_endpoint_position(&traveler.route, false, resident.id, 0)
+                    self.route_endpoint_position(&traveler.route, true, resident.id, 0)
                 {
                     traveler.origin_access = Some(AccessPath {
                         points: vec![queue, endpoint],
@@ -9996,11 +10091,12 @@ impl Engine {
                 distance: TRAIN_HALF_LENGTH,
                 speed: 18.0,
                 direction: 1,
-                dwell_ticks: 100,
+                dwell_ticks: TRAIN_STATION_DWELL_TICKS,
                 passengers: Vec::new(),
             });
         }
         let mut stops = Vec::new();
+        let mut opened_terminals = Vec::new();
         let quiet = self.rail_service_quiet();
         let station_queue_empty = self.rail_waiting_count(true) == 0;
         for train in &mut self.state.trains {
@@ -10008,16 +10104,26 @@ impl Engine {
                 train.route = route.clone();
                 train.distance = TRAIN_HALF_LENGTH;
                 train.direction = 1;
-                train.dwell_ticks = 100;
+                train.dwell_ticks = TRAIN_STATION_DWELL_TICKS;
                 train.passengers.clear();
             }
             let at_station = train.direction >= 0 && train.distance <= TRAIN_HALF_LENGTH + 0.01;
             if quiet && at_station && train.passengers.is_empty() && station_queue_empty {
-                train.dwell_ticks = 1;
+                train.dwell_ticks = TRAIN_STATION_DWELL_TICKS;
                 continue;
             }
             if train.dwell_ticks > 0 {
                 train.dwell_ticks -= 1;
+                let at_station = train.direction >= 0
+                    && train.distance <= TRAIN_HALF_LENGTH + 0.01;
+                let dwell_total = if at_station {
+                    TRAIN_STATION_DWELL_TICKS
+                } else {
+                    TRAIN_GATEWAY_DWELL_TICKS
+                };
+                if train.dwell_ticks == dwell_total - TRAIN_DOOR_PHASE_TICKS {
+                    opened_terminals.push((train.id, at_station));
+                }
                 continue;
             }
             let step = train.speed / TICKS_PER_SECOND as f32;
@@ -10027,12 +10133,11 @@ impl Engine {
                 if train.distance >= far_terminal {
                     train.distance = far_terminal;
                     train.direction = -1;
-                    train.dwell_ticks = 180;
+                    train.dwell_ticks = TRAIN_GATEWAY_DWELL_TICKS;
                     stops.push((
                         train.id,
                         "TrainGatewayStop",
                         "The regional shuttle pauses at its outer terminus",
-                        false,
                     ));
                 }
             } else {
@@ -10040,18 +10145,19 @@ impl Engine {
                 if train.distance <= TRAIN_HALF_LENGTH {
                     train.distance = TRAIN_HALF_LENGTH;
                     train.direction = 1;
-                    train.dwell_ticks = 220;
+                    train.dwell_ticks = TRAIN_STATION_DWELL_TICKS;
                     stops.push((
                         train.id,
                         "TrainStationStop",
                         "The shuttle pauses at the neighborhood platform",
-                        true,
                     ));
                 }
             }
         }
-        for (id, kind, description, at_station) in stops {
+        for (id, kind, description) in stops {
             self.record(kind, id, description.into());
+        }
+        for (id, at_station) in opened_terminals {
             self.handle_train_terminal(id, at_station, station, gateway);
         }
         let train_ids: Vec<u32> = self.state.trains.iter().map(|train| train.id).collect();
@@ -10270,12 +10376,7 @@ impl Engine {
         else {
             return;
         };
-        if dwell_ticks == 0 || passenger_count >= RAIL_TRAIN_CAPACITY {
-            return;
-        }
-        if self.state.tick % 4 != 0 {
-            return;
-        }
+        let at_station = direction >= 0 && distance <= TRAIN_HALF_LENGTH + 0.01;
         let rail_length = self
             .state
             .roads
@@ -10283,6 +10384,22 @@ impl Engine {
             .find(|road| road.kind == "rail" && road.stage == "open" && road.connected)
             .map(|road| road.length)
             .unwrap_or(0.0);
+        let at_gateway = direction < 0 && distance >= rail_length - TRAIN_HALF_LENGTH - 0.01;
+        let total_dwell = if at_station {
+            TRAIN_STATION_DWELL_TICKS
+        } else {
+            TRAIN_GATEWAY_DWELL_TICKS
+        };
+        if (!at_station && !at_gateway)
+            || dwell_ticks < TRAIN_DOOR_PHASE_TICKS
+            || dwell_ticks > total_dwell - TRAIN_DOOR_PHASE_TICKS
+            || passenger_count >= RAIL_TRAIN_CAPACITY
+        {
+            return;
+        }
+        if self.state.tick % 3 != 0 {
+            return;
+        }
         let (queue_state, riding_state) = if direction >= 0 && distance <= TRAIN_HALF_LENGTH + 0.01
         {
             ("waiting_station", "riding_outbound")
@@ -10361,12 +10478,19 @@ impl Engine {
         self.state.tick
     }
     pub fn movement_buffer(&self) -> Vec<f32> {
+        self.movement_rows(false).into_iter().flat_map(|row| [row.actor_id as f32, row.x, row.z, row.heading, row.kind as f32, row.surface_y]).collect()
+    }
+    /// Versioned movement poses and their same-traversal infrastructure support.
+    pub fn movement_packet(&self) -> Vec<u32> {
+        movement_support::Row::encode(&self.movement_rows(true))
+    }
+    fn movement_rows(&self, include_support: bool) -> Vec<movement_support::Row> {
         let mut out = Vec::with_capacity(
-            (self.state.travelers.len()
-                + self.state.pending_alight_ids.len()
+            self.state.travelers.len()
+                + self.state.expressway_traffic.trips.len()
                 + self.state.trains.len()
-                + self.state.buses.len())
-                * 6,
+                + self.state.buses.len()
+                + self.state.residents.len(),
         );
         let station = self.station_node();
         for t in &self.state.travelers {
@@ -10384,14 +10508,14 @@ impl Engine {
                 if let Some((point, heading, surface_y)) =
                     path.and_then(|path| path.sample_surface(t.access_progress))
                 {
-                    out.extend_from_slice(&[
-                        t.id as f32,
-                        point.x,
-                        point.z,
-                        heading,
-                        Self::vehicle_body(t, station) as f32,
-                        surface_y,
-                    ]);
+                    let support = if include_support {
+                        path.and_then(|path| self.access_movement_support(t, path))
+                    } else { None };
+                    let resolved = support.is_some();
+                    let (road_ids, platform_node_ids) = support.unwrap_or_default();
+                    out.push(movement_support::Row { actor_id: t.id, x: point.x, z: point.z, heading,
+                        kind: Self::vehicle_body(t, station) as u32, surface_y,
+                        resolved, road_ids, platform_node_ids });
                 }
                 continue;
             }
@@ -10413,14 +10537,11 @@ impl Engine {
             let lateral = self.road_lateral_offset(t, a.id, b.id, dx, dz, len);
             x += lateral.0;
             z += lateral.1;
-            out.extend_from_slice(&[
-                t.id as f32,
-                x,
-                z,
-                (b.z - a.z).atan2(b.x - a.x),
-                Self::vehicle_body(t, station) as f32,
-                -1.0,
-            ]);
+            let heading = (b.z - a.z).atan2(b.x - a.x);
+            let road_ids = if include_support { self.state.roads.iter().find(|r| r.stage == "open" && r.connected && r.kind != "rail" && ((r.from == a.id && r.to == b.id) || (r.from == b.id && r.to == a.id))).map(|r| vec![r.id]).unwrap_or_default() } else { Vec::new() };
+            out.push(movement_support::Row { actor_id: t.id, x, z, heading,
+                kind: Self::vehicle_body(t, station) as u32, surface_y: -1.0,
+                resolved: road_ids.len() == 1, road_ids, platform_node_ids: Vec::new() });
         }
         if let Some((station, gateway)) = self.rail_terminals() {
             for (at_station, node_id) in [(true, station), (false, gateway)] {
@@ -10449,14 +10570,9 @@ impl Engine {
                             x: node.x,
                             z: node.z,
                         });
-                    out.extend_from_slice(&[
-                        resident.id as f32,
-                        position.x,
-                        position.z,
-                        0.0,
-                        0.0,
-                        8.0,
-                    ]);
+                    let rail_ids: Vec<u32> = if include_support { self.platform_support_road(node_id).into_iter().collect() } else { Vec::new() };
+                    out.push(movement_support::Row { actor_id: resident.id, x: position.x, z: position.z, heading: 0.0, kind: 0, surface_y: 8.0,
+                        resolved: rail_ids.len() == 1, road_ids: rail_ids, platform_node_ids: vec![node_id] });
                 }
             }
         }
@@ -10475,10 +10591,14 @@ impl Engine {
                 continue;
             };
             let direction = self.bus_trip_direction(resident).unwrap_or(1);
-            let Some(position) = self.bus_queue_position(stop, direction, slot) else {
+            let Some((position, edge)) = self.bus_queue_position_with_edge(stop, direction, slot) else {
                 continue;
             };
-            out.extend_from_slice(&[resident.id as f32, position.x, position.z, 0.0, 0.0, -1.0]);
+            let road_ids: Vec<u32> = if include_support { self.state.roads.iter()
+                .find(|r| r.stage == "open" && r.connected && r.kind != "rail"
+                    && ((r.from == edge[0] && r.to == edge[1]) || (r.from == edge[1] && r.to == edge[0])))
+                .map(|r| r.id).into_iter().collect() } else { Vec::new() };
+            out.push(movement_support::Row { actor_id: resident.id, x: position.x, z: position.z, heading: 0.0, kind: 0, surface_y: -1.0, resolved: road_ids.len() == 1, road_ids, platform_node_ids: Vec::new() });
         }
         let mut pending_alights: Vec<&Resident> = self
             .state
@@ -10491,13 +10611,7 @@ impl Engine {
             let Some(pending) = &resident.pending_alight else {
                 continue;
             };
-            out.extend_from_slice(&[
-                resident.id as f32,
-                pending.wait_position.x,
-                pending.wait_position.z,
-                0.0,
-                0.0,
-                if pending.transfer_after_route == "walking_home"
+            let surface_y = if pending.transfer_after_route == "walking_home"
                     && self.rail_terminals().is_some_and(|(station, gateway)| {
                         pending.stop_node == station || pending.stop_node == gateway
                     })
@@ -10505,8 +10619,10 @@ impl Engine {
                     8.0
                 } else {
                     -1.0
-                },
-            ]);
+                };
+            let rail_ids: Vec<u32> = if include_support { self.platform_support_road(pending.stop_node).into_iter().collect() } else { Vec::new() };
+            let resolved = surface_y == 8.0 && rail_ids.len() == 1;
+            out.push(movement_support::Row { actor_id: resident.id, x: pending.wait_position.x, z: pending.wait_position.z, heading: 0.0, kind: 0, surface_y, resolved, road_ids: rail_ids, platform_node_ids: if resolved { vec![pending.stop_node] } else { Vec::new() } });
         }
         for t in &self.state.trains {
             if t.route.len() < 2 {
@@ -10528,17 +10644,49 @@ impl Engine {
             };
             let x = a.x + (b.x - a.x) * f;
             let z = a.z + (b.z - a.z) * f;
-            out.extend_from_slice(&[t.id as f32, x, z, heading, 2.0, -1.0]);
+            let road_ids: Vec<u32> = if include_support { t.route.windows(2).filter_map(|edge| self.state.roads.iter()
+                .find(|r| r.kind == "rail" && r.stage == "open" && r.connected && ((r.from == edge[0] && r.to == edge[1]) || (r.from == edge[1] && r.to == edge[0])))
+                .map(|r| r.id)).collect() } else { Vec::new() };
+            out.push(movement_support::Row { actor_id: t.id, x, z, heading, kind: 2, surface_y: -1.0, resolved: road_ids.len() == t.route.len() - 1, road_ids, platform_node_ids: Vec::new() });
         }
         if let Some(line) = &self.state.bus_line {
             for bus in &self.state.buses {
-                let Some((x, z, heading)) = self.bus_pose(line, bus) else {
+                let Some(((x, z, heading), edge)) = self.bus_pose_with_edge(line, bus) else {
                     continue;
                 };
-                out.extend_from_slice(&[bus.id as f32, x, z, heading, 3.0, -1.0]);
+                let road_ids: Vec<u32> = if include_support { self.state.roads.iter()
+                    .find(|r| r.stage == "open" && r.connected && r.kind != "rail" && ((r.from == edge[0] && r.to == edge[1]) || (r.from == edge[1] && r.to == edge[0])))
+                    .map(|r| r.id).into_iter().collect() } else { Vec::new() };
+                out.push(movement_support::Row { actor_id: bus.id, x, z, heading, kind: 3, surface_y: -1.0, resolved: road_ids.len() == 1, road_ids, platform_node_ids: Vec::new() });
             }
         }
+        // Expressway route provenance uses plan-road indices; it is resolved in
+        // the dedicated helper where the same sampled pose is emitted.
+        self.append_expressway_movement_rows(&mut out, include_support);
         out
+    }
+
+    /// Compact authoritative train-door presentation sampled at the same tick
+    /// as movement_buffer. Tuples are [train_id, terminal_id or -1, fraction].
+    pub fn train_doors(&self) -> Vec<f32> {
+        let rail_length = self.rail_length_for_doors();
+        let mut out = Vec::with_capacity(self.state.trains.len().min(MAX_PRESENTED_TRAINS) * 3);
+        for train in self.state.trains.iter().take(MAX_PRESENTED_TRAINS) {
+            let (terminal, fraction) = train_door_state(train, rail_length);
+            out.extend_from_slice(&[
+                train.id as f32,
+                terminal.map(|id| id as f32).unwrap_or(-1.0),
+                fraction,
+            ]);
+        }
+        out
+    }
+
+    fn rail_length_for_doors(&self) -> f32 {
+        self.state.roads.iter()
+            .find(|road| road.kind == "rail" && road.stage == "open" && road.connected)
+            .map(|road| road.length)
+            .unwrap_or(0.0)
     }
 
     fn bus_trip_direction(&self, resident: &Resident) -> Option<i8> {
@@ -10590,6 +10738,12 @@ impl Engine {
     }
 
     fn bus_pose(&self, line: &BusLine, bus: &Bus) -> Option<(f32, f32, f32)> {
+        self.bus_pose_with_edge(line, bus).map(|(pose, _)| pose)
+    }
+
+    // Return provenance from the exact direction-sensitive edge selection used
+    // for the pose, including the tolerance at shared junctions.
+    fn bus_pose_with_edge(&self, line: &BusLine, bus: &Bus) -> Option<((f32, f32, f32), [u32; 2])> {
         let lengths = self.route_lengths(&line.route);
         let mut offset = 0.0;
         for (index, length) in lengths.iter().copied().enumerate() {
@@ -10608,11 +10762,11 @@ impl Engine {
                 }
                 let nx = -heading.sin();
                 let nz = heading.cos();
-                return Some((
+                return Some(((
                     a.x + (b.x - a.x) * f + nx * KERB_LANE,
                     a.z + (b.z - a.z) * f + nz * KERB_LANE,
                     heading,
-                ));
+                ), [a.id, b.id]));
             }
             offset += length;
         }
@@ -10645,6 +10799,7 @@ impl Engine {
         (nx * lateral, nz * lateral)
     }
     pub fn inspect_json(&self, id: u32) -> String {
+        if let Some(value) = self.inspect_expressway_trip(id) { return value.to_string(); }
         let value = if let Some(b) = self.state.buildings.iter().find(|b| b.id == id) {
             serde_json::json!({"entityType":"building","id":b.id,"name":b.name,"kind":b.kind,"stage":b.stage,"occupancy":b.occupancy,"capacity":b.capacity,"history":b.history})
         } else if let Some(r) = self.state.roads.iter().find(|r| r.id == id) {
@@ -10806,6 +10961,7 @@ impl Engine {
             "Metropolis"
         };
         let river = self.river_points();
+        let rail_length = self.rail_length_for_doors();
         Snapshot {
             schema_version: SCHEMA_VERSION,
             engine_version: ENGINE_VERSION.into(),
@@ -10815,6 +10971,7 @@ impl Engine {
             minute_of_day: minute,
             development_rate: self.state.development_rate,
             revision: self.state.revision,
+            presentation_revision: self.presentation_revision(),
             stage: stage.into(),
             weather: Weather {
                 kind: self.state.weather_kind.clone(),
@@ -10876,6 +11033,8 @@ impl Engine {
                     progress: t.distance,
                     direction: t.direction,
                     dwelling: t.dwell_ticks > 0,
+                    door_open_fraction: train_door_state(t, rail_length).1,
+                    door_terminal: train_door_state(t, rail_length).0,
                     passengers: t.passengers.len() as u16,
                     capacity: RAIL_TRAIN_CAPACITY as u16,
                     station_waiting: self.rail_waiting_count(true) as u16,
@@ -10941,6 +11100,7 @@ impl Engine {
             stats: Stats {
                 population: self.state.population,
                 active_travelers: (self.state.travelers.len()
+                + self.state.expressway_traffic.trips.len()
                     + self.state.pending_alight_ids.len()
                     + self.rail_waiting_count(true)
                     + self.rail_waiting_count(false)
@@ -11049,6 +11209,7 @@ impl Engine {
         let mut engine = Self {
             state,
             plan: None,
+            height_redevelopment_lots: Vec::new(),
             live_access,
             planned_progress: Vec::new(),
             wait_scratch: Vec::new(),
@@ -11099,6 +11260,7 @@ impl Engine {
             road_opening_access_branch: None,
         };
         engine.load_masterplan()?;
+        engine.refresh_height_redevelopment_lots();
         // Validate the serialized active plan before canonicalizing a
         // completed one; malformed empty plans must not disappear through
         // vacuous all() checks during migration.
@@ -11115,6 +11277,8 @@ impl Engine {
         Ok(engine)
     }
     pub fn validate(&self) -> Result<(), String> {
+        self.validate_access_route_joins()?;
+        self.validate_expressway_traffic()?;
         self.validate_masterplan_progress()?;
         access_live_engine::validate_face_history(&self.state.exhausted_access_faces)?;
         if self.state.access_geometry_revision_exhausted
@@ -11153,6 +11317,7 @@ impl Engine {
         }
         self.validate_rear_extensions()?;
         self.validate_building_original_footprints()?;
+        self.validate_height_redevelopment()?;
         if let Some(plan) = &self.state.pending_interior_access {
             if self.state.neighborhood_plan.is_some() {
                 return Err("neighborhood and interior access plans cannot overlap".into());
@@ -12125,6 +12290,14 @@ impl Engine {
                                 && project.id == plan.project_id
                                 && project.progress < 1.0
                         })
+                }) && !self.state.height_redevelopment.as_ref().is_some_and(|plan| {
+                    plan.building_id == building_id
+                        && plan.parcel_id == p.id
+                        && self.state.projects.iter().any(|project| {
+                            project.id == plan.project_id
+                                && project.kind == "redevelopment"
+                                && project.progress < 1.0
+                        })
                 }) {
                     return Err(format!(
                         "parcel {} has no active construction project",
@@ -12167,9 +12340,20 @@ mod wasm {
         pub fn snapshot(&self) -> String {
             self.inner.snapshot_json()
         }
+        pub fn presentation_revision(&self) -> String {
+            self.inner.presentation_revision()
+        }
         #[wasm_bindgen(js_name=movements)]
         pub fn movements(&self) -> Vec<f32> {
             self.inner.movement_buffer()
+        }
+        #[wasm_bindgen(js_name=movement_packet)]
+        pub fn movement_packet(&self) -> Vec<u32> {
+            self.inner.movement_packet()
+        }
+        #[wasm_bindgen(js_name=train_doors)]
+        pub fn train_doors(&self) -> Vec<f32> {
+            self.inner.train_doors()
         }
         #[wasm_bindgen(js_name=inspect)]
         pub fn inspect(&self, id: u32) -> String {
@@ -14880,7 +15064,7 @@ mod tests {
         // growth timing, so keep the exact-clearance regression tied to the
         // concrete admitted corridor instead of a seed's incidental schedule.
         let saved = include_str!(
-            "../../validation/interior-access-verified-87231.json.project-3736.pending.json"
+            "../../tests/fixtures/access-joins/interior-access-verified-87231.json.project-3736.pending.json"
         );
         let engine = Engine::restore_json(saved).expect("recorded organic branch restores");
         let plan = engine
@@ -14975,7 +15159,7 @@ mod tests {
     #[test]
     fn compact_infill_continuation_restores_with_exact_legacy_road_clearance() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/infill-oriented-continued.json"
+            "../../tests/fixtures/access-joins/infill-oriented-continued.json"
         ))
         .expect("oriented infill fixture restores before continuation");
         let start_tick = engine.state.tick;
@@ -15012,7 +15196,7 @@ mod tests {
     #[test]
     fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/mature-world.bounded-selection.json"
+            "../../tests/fixtures/access-joins/mature-world.bounded-selection.json"
         ))
         .expect("mature public city fixture should restore");
         let initial_next_id = engine.state.next_id;
@@ -15525,7 +15709,7 @@ mod tests {
     #[test]
     fn mature_connected_bridgehead_grows_occupied_far_bank_neighborhood() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/mature-world.multiblock-candidate.json"
+            "../../tests/fixtures/access-joins/mature-world.multiblock-candidate.json"
         ))
         .expect("checked-in public mature city fixture should restore");
         let bridge = engine
@@ -15646,13 +15830,157 @@ mod tests {
     }
 
     #[test]
+    fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
+        let (mut engine, station, gateway) = rail_test_engine(85);
+        let resident_id = add_rail_test_resident(&mut engine, gateway);
+        {
+            let resident = engine
+                .state
+                .residents
+                .iter_mut()
+                .find(|resident| resident.id == resident_id)
+                .unwrap();
+            resident.transfer = "waiting_station".into();
+            resident.activity = "waiting_for_train".into();
+        }
+        let train_id = engine.id();
+        engine.state.trains.push(Train {
+            id: train_id,
+            route: vec![station, gateway],
+            distance: TRAIN_HALF_LENGTH,
+            speed: 8.0,
+            direction: 1,
+            dwell_ticks: TRAIN_STATION_DWELL_TICKS,
+            passengers: Vec::new(),
+        });
+        assert_eq!(engine.snapshot().trains[0].door_open_fraction, 0.0);
+        for _ in 0..19 {
+            engine.state.tick += 1;
+            engine.advance_trains();
+        }
+        assert_eq!(engine.state.trains[0].dwell_ticks, 201);
+        assert!(engine.state.trains[0].passengers.is_empty());
+        assert!((engine.snapshot().trains[0].door_open_fraction - 0.95).abs() < 0.001);
+
+        engine.state.tick = 0;
+        engine.advance_trains();
+        assert_eq!(engine.state.trains[0].dwell_ticks, 200);
+        assert_eq!(engine.state.trains[0].passengers, vec![resident_id]);
+        assert_eq!(engine.snapshot().trains[0].door_open_fraction, 1.0);
+        assert_eq!(engine.snapshot().trains[0].door_terminal, Some(station));
+
+        let resident = engine
+            .state
+            .residents
+            .iter_mut()
+            .find(|resident| resident.id == resident_id)
+            .unwrap();
+        resident.transfer = "riding_inbound".into();
+        resident.train_id = Some(train_id);
+        engine.state.trains[0].dwell_ticks = 201;
+        engine.state.tick = 1;
+        assert_eq!(engine.state.trains[0].passengers, vec![resident_id]);
+        assert_eq!(engine.snapshot().trains[0].door_open_fraction, 0.95);
+        assert!(!engine.state.events.iter().any(|event| {
+            event.kind == "TrainPassengerAlighted" && event.tick == engine.state.tick
+        }));
+        engine.advance_trains();
+        assert_eq!(engine.state.trains[0].dwell_ticks, 200);
+        assert!(engine.state.trains[0].passengers.is_empty());
+        assert!(engine.state.events.iter().any(|event| {
+            event.kind == "TrainPassengerAlighted" && event.tick == engine.state.tick
+        }));
+
+        engine.state.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
+        engine.state.tick = 23_000;
+        engine.state.trains[0].passengers.push(resident_id);
+        let resident = engine
+            .state
+            .residents
+            .iter_mut()
+            .find(|resident| resident.id == resident_id)
+            .unwrap();
+        resident.transfer = "riding_outbound".into();
+        resident.train_id = Some(train_id);
+        let save = engine.save_json();
+        let mut resumed = Engine::restore_json(&save).unwrap();
+        assert_eq!(engine.snapshot().trains[0].door_open_fraction, 1.0);
+        let station_distance = engine.state.trains[0].distance;
+        for _ in 0..TRAIN_DOOR_PHASE_TICKS - 1 {
+            engine.state.tick += 1;
+            resumed.state.tick += 1;
+            engine.advance_trains();
+            resumed.advance_trains();
+            assert_eq!(engine.state.trains[0].distance, station_distance);
+            assert!(engine.snapshot().trains[0].door_open_fraction > 0.0);
+            assert_eq!(engine.save_json(), resumed.save_json());
+        }
+        engine.state.tick += 1;
+        resumed.state.tick += 1;
+        engine.advance_trains();
+        resumed.advance_trains();
+        assert_eq!(engine.snapshot().trains[0].door_open_fraction, 0.0);
+        assert_eq!(engine.state.trains[0].distance, station_distance);
+        assert_eq!(engine.save_json(), resumed.save_json());
+
+        engine.state.tick += 1;
+        resumed.state.tick += 1;
+        engine.advance_trains();
+        resumed.advance_trains();
+        assert!(engine.state.trains[0].distance > station_distance);
+        assert_eq!(engine.save_json(), resumed.save_json());
+        assert_eq!(engine.state.trains[0].id, train_id);
+    }
+
+    #[test]
+    fn train_door_buffer_matches_snapshot_metadata_and_is_bounded() {
+        let (mut engine, station, gateway) = rail_test_engine(86);
+        let train_id = engine.id();
+        engine.state.trains.push(Train {
+            id: train_id,
+            route: vec![station, gateway],
+            distance: TRAIN_HALF_LENGTH,
+            speed: 8.0,
+            direction: 1,
+            dwell_ticks: TRAIN_STATION_DWELL_TICKS,
+            passengers: Vec::new(),
+        });
+        let assert_matches_snapshot = |engine: &Engine| {
+            let doors = engine.train_doors();
+            let snapshot = engine.snapshot();
+            assert_eq!(doors.len(), snapshot.trains.len().min(MAX_PRESENTED_TRAINS) * 3);
+            for (index, train) in snapshot.trains.iter().take(MAX_PRESENTED_TRAINS).enumerate() {
+                assert_eq!(doors[index * 3], train.id as f32);
+                assert_eq!(doors[index * 3 + 1], train.door_terminal.map(|id| id as f32).unwrap_or(-1.0));
+                assert_eq!(doors[index * 3 + 2], train.door_open_fraction);
+            }
+        };
+        assert_matches_snapshot(&engine);
+        let mut restored = Engine::restore_json(&engine.save_json()).unwrap();
+        for _ in 0..TRAIN_STATION_DWELL_TICKS + 5 {
+            engine.step(1);
+            restored.step(1);
+            assert_matches_snapshot(&engine);
+            assert_eq!(engine.train_doors(), restored.train_doors());
+        }
+        engine.state.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
+        assert_matches_snapshot(&engine);
+        let mut restored = Engine::restore_json(&engine.save_json()).unwrap();
+        assert_matches_snapshot(&restored);
+        engine.state.trains[0].dwell_ticks = 0;
+        restored.state.trains[0].dwell_ticks = 0;
+        assert_matches_snapshot(&engine);
+        assert_matches_snapshot(&restored);
+    }
+
+    #[test]
     fn rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn() {
         let (mut engine, station, gateway) = rail_test_engine(84);
         engine.state.tick = 19_500; // 01:30 city time
         engine.advance_trains();
         let train = &engine.state.trains[0];
         assert_eq!(train.distance, TRAIN_HALF_LENGTH);
-        assert_eq!(train.dwell_ticks, 1);
+        assert_eq!(train.dwell_ticks, TRAIN_STATION_DWELL_TICKS);
 
         let resident_id = add_rail_test_resident(&mut engine, gateway);
         engine.schedule_residents(0);
@@ -15698,8 +16026,8 @@ mod tests {
             resident.activity = "waiting_for_train".into();
         }
         engine.advance_trains();
-        engine.state.trains[0].dwell_ticks = 500;
-        for _ in 0..200 {
+        engine.state.trains[0].dwell_ticks = TRAIN_STATION_DWELL_TICKS;
+        for _ in 0..208 {
             engine.state.tick += 1;
             engine.advance_trains();
         }
@@ -16423,7 +16751,7 @@ mod tests {
     #[test]
     fn shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes() {
         let engine = Engine::restore_json(include_str!(
-            "../../validation/spine-ranking-seed-87231-by-sites-false.json"
+            "../../tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json"
         ))
         .expect("mature fixture restores");
         let context = engine.collision_context();
@@ -16522,11 +16850,11 @@ mod tests {
         let fixtures = [
             (
                 0_u32,
-                include_str!("../../validation/spine-ranking-seed-0-by-sites-false.json"),
+                include_str!("../../tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json"),
             ),
             (
                 87_231_u32,
-                include_str!("../../validation/spine-ranking-seed-87231-by-sites-false.json"),
+                include_str!("../../tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json"),
             ),
         ];
         for (seed, save) in fixtures {
@@ -16665,11 +16993,11 @@ mod tests {
         let fixtures = [
             (
                 0_u32,
-                include_str!("../../validation/spine-ranking-seed-0-by-sites-false.json"),
+                include_str!("../../tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json"),
             ),
             (
                 87_231_u32,
-                include_str!("../../validation/spine-ranking-seed-87231-by-sites-false.json"),
+                include_str!("../../tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json"),
             ),
         ];
         let mut worlds = Vec::new();
@@ -16865,7 +17193,7 @@ mod tests {
     #[test]
     fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/mature-world.cache-candidate.json"
+            "../../tests/fixtures/access-joins/mature-world.cache-candidate.json"
         ))
         .expect("mature fixture restores");
         let context = engine.collision_context();
@@ -17014,7 +17342,7 @@ mod tests {
     #[test]
     fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/mature-world.cache-candidate.json"
+            "../../tests/fixtures/access-joins/mature-world.cache-candidate.json"
         ))
         .expect("mature fixture restores");
         let collision_context = engine.collision_context();
@@ -19072,6 +19400,7 @@ mod tests {
         let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
         let driveway = AccessPath {
             points: vec![WorldPoint { x: 250.0, z: 80.0 }, WorldPoint { x: 250.0, z: 50.0 }],
+            surface_y: Vec::new(),
         };
         // Two residents of one building leave by car on the same tick.
         for id in [900_001, 900_002] {
@@ -19108,7 +19437,7 @@ mod tests {
             }
             // Whatever is drawn never overlaps: the waiting car is not emitted.
             let movement = engine.movement_buffer();
-            let at = |id: u32| movement.chunks(5).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]));
+            let at = |id: u32| movement.chunks(6).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]));
             if let (Some(a), Some(b)) = (at(900_001), at(900_002)) {
                 assert!((a.0 - b.0).hypot(a.1 - b.1) >= VEHICLE_MIN_GAP - 1e-3);
             }
@@ -19128,10 +19457,12 @@ mod tests {
             .find(|road| road.kind != "rail" && road.stage == "open")
             .expect("founding road is open");
         let (from, to) = (road.from, road.to);
-        let end = engine.node(to).unwrap().clone();
-        let len = distance(engine.node(from).unwrap(), &end);
+        let end = engine.route_endpoint_position(&[from, to], false, 910_001, 1)
+            .expect("arrival route endpoint");
+        let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
         let driveway = AccessPath {
-            points: vec![WorldPoint { x: end.x, z: end.z }, WorldPoint { x: end.x + 30.0, z: end.z }],
+            points: vec![end, WorldPoint { x: end.x + 30.0, z: end.z }],
+            surface_y: Vec::new(),
         };
         let car = |id, access_phase, edge_progress: f32| Traveler {
             id,
@@ -19162,7 +19493,7 @@ mod tests {
     }
 
     fn movement_of(engine: &Engine, id: u32) -> Option<(f32, f32)> {
-        engine.movement_buffer().chunks(5).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]))
+        engine.movement_buffer().chunks(6).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]))
     }
 
     #[test]
@@ -19286,7 +19617,7 @@ mod tests {
         let movement = engine.movement_buffer();
         let mut delivery = std::collections::BTreeSet::new();
         let mut private = std::collections::BTreeSet::new();
-        for chunk in movement.chunks(5) {
+        for chunk in movement.chunks(6) {
             let id = chunk[0] as u32;
             if !ids.contains(&id) {
                 continue;
@@ -20698,11 +21029,11 @@ mod tests {
         for (name, json) in [
             (
                 "seed87231",
-                include_str!("../../validation/mature-world.ranked-blocks.json"),
+                include_str!("../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"),
             ),
             (
                 "seed0",
-                include_str!("../../validation/ranked-blocks-seed0.json"),
+                include_str!("../../tests/fixtures/access-joins/ranked-blocks-seed0.json"),
             ),
         ] {
             let engine = Engine::restore_json(json).expect("public save should restore natively");
@@ -20780,11 +21111,11 @@ mod tests {
         for (name, json) in [
             (
                 "seed87231",
-                include_str!("../../validation/mature-world.ranked-blocks.json"),
+                include_str!("../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"),
             ),
             (
                 "seed0",
-                include_str!("../../validation/ranked-blocks-seed0.json"),
+                include_str!("../../tests/fixtures/access-joins/ranked-blocks-seed0.json"),
             ),
         ] {
             let engine = Engine::restore_json(json).expect("public save should restore natively");
@@ -20961,10 +21292,11 @@ mod tests {
                 access_progress: if access_phase == 0 { 2.75 } else { 0.0 },
             };
             if access_phase == 0 {
+                let join = engine.route_endpoint_position(&traveler.route, true, traveler.id, traveler.kind).unwrap();
                 traveler.origin_access = Some(AccessPath {
                     points: vec![
-                        WorldPoint { x: 250.0, z: 66.0 },
-                        WorldPoint { x: 250.0, z: 50.0 },
+                        WorldPoint { x: join.x, z: join.z + 16.0 },
+                        join,
                     ],
                     surface_y: Vec::new(),
                 });
@@ -21294,25 +21626,25 @@ mod tests {
         let cases = [
             (
                 "seed87231-host2517",
-                include_str!("../../validation/mature-world.ranked-blocks.json"),
+                include_str!("../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"),
                 2_517,
                 0.5,
             ),
             (
                 "seed0-host1739",
-                include_str!("../../validation/ranked-blocks-seed0.json"),
+                include_str!("../../tests/fixtures/access-joins/ranked-blocks-seed0.json"),
                 1_739,
                 0.75,
             ),
             (
                 "seed0-host1729",
-                include_str!("../../validation/ranked-blocks-seed0.json"),
+                include_str!("../../tests/fixtures/access-joins/ranked-blocks-seed0.json"),
                 1_729,
                 0.75,
             ),
             (
                 "seed0-host2970",
-                include_str!("../../validation/ranked-blocks-seed0.json"),
+                include_str!("../../tests/fixtures/access-joins/ranked-blocks-seed0.json"),
                 2_970,
                 0.75,
             ),
@@ -21444,7 +21776,7 @@ mod tests {
     #[test]
     fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/mature-world.ranked-blocks.json"
+            "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
         ))
         .expect("mature public city fixture restores");
         assert!(engine.state.neighborhood_plan.is_none());
@@ -21704,7 +22036,7 @@ mod tests {
     #[test]
     fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         let mut engine = Engine::restore_json(include_str!(
-            "../../validation/mature-world.ranked-blocks.json"
+            "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
         ))
         .expect("mature public city fixture restores");
         engine.state.demand = 1.2;
@@ -21749,7 +22081,7 @@ mod tests {
         );
 
         let mut planner = Engine::restore_json(include_str!(
-            "../../validation/mature-world.ranked-blocks.json"
+            "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
         ))
         .expect("mature public city fixture restores");
         planner.state.demand = 1.2;
@@ -21827,7 +22159,7 @@ mod tests {
         assert_eq!(scan.allow_access_fallback, repeated.allow_access_fallback);
 
         let mut exhausted = Engine::restore_json(include_str!(
-            "../../validation/mature-world.ranked-blocks.json"
+            "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
         ))
         .expect("mature public city fixture restores");
         exhausted.state.demand = 1.2;

@@ -1,0 +1,2731 @@
+{
+  "status": "First-three tower candidate rejected and reverted: early-growth pacing regression. Candidate entries are experimental evidence, not current runtime behavior.",
+  "runs": {
+    "baseline": {
+      "seed": 87231,
+      "developmentRate": 16,
+      "requestedTicks": 76000,
+      "elapsedMs": 6538.311667,
+      "scope": "Node WASM normal growth; snapshots every 2000 ticks. First observations are upper bounds, not exact event ticks. No browser performance claim.",
+      "stationFirstObserved": 2000,
+      "samples": [
+        {
+          "tick": 0,
+          "buildings": 1,
+          "stationOnline": false,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 44,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 2000,
+          "buildings": 75,
+          "stationOnline": true,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 107,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 4000,
+          "buildings": 125,
+          "stationOnline": true,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 168,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 6000,
+          "buildings": 175,
+          "stationOnline": true,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 240,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 8000,
+          "buildings": 225,
+          "stationOnline": true,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 263,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 10000,
+          "buildings": 275,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [
+            {
+              "id": 1843,
+              "parcel": 1636,
+              "x": 189.53622,
+              "z": -43.65486,
+              "floors": 18,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 302,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 12000,
+          "buildings": 325,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 354,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 14000,
+          "buildings": 375,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 411,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 16000,
+          "buildings": 425,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 467,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 18000,
+          "buildings": 475,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 523,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 20000,
+          "buildings": 525,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 561,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 22000,
+          "buildings": 575,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 614,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 24000,
+          "buildings": 625,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 663,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 26000,
+          "buildings": 675,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 709,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 28000,
+          "buildings": 725,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 751,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 30000,
+          "buildings": 775,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 812,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 32000,
+          "buildings": 825,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 863,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 34000,
+          "buildings": 875,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 920,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 36000,
+          "buildings": 925,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 960,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 38000,
+          "buildings": 975,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 999,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 40000,
+          "buildings": 1025,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1036,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 42000,
+          "buildings": 1074,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1076,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 44000,
+          "buildings": 1124,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1151,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 46000,
+          "buildings": 1174,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1210,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 48000,
+          "buildings": 1224,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1228,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 50000,
+          "buildings": 1255,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1255,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 52000,
+          "buildings": 1295,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1326,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 54000,
+          "buildings": 1345,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1380,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 56000,
+          "buildings": 1395,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1426,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 58000,
+          "buildings": 1445,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1479,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 60000,
+          "buildings": 1495,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1530,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 62000,
+          "buildings": 1545,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1584,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 64000,
+          "buildings": 1595,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1621,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 66000,
+          "buildings": 1645,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1674,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 68000,
+          "buildings": 1695,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1728,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 70000,
+          "buildings": 1745,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1779,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 72000,
+          "buildings": 1795,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1813,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 74000,
+          "buildings": 1831,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1839,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 76000,
+          "buildings": 1839,
+          "stationOnline": true,
+          "towers": 1,
+          "firstObserved": [],
+          "realizedLots": 1839,
+          "plannedLots": 1839
+        }
+      ],
+      "histogram": {
+        "1": 40,
+        "2": 665,
+        "3": 618,
+        "4": 132,
+        "5": 168,
+        "6": 116,
+        "7": 27,
+        "8": 35,
+        "9": 7,
+        "10": 14,
+        "12": 16,
+        "18": 1
+      },
+      "finalTowers": [
+        {
+          "id": 1843,
+          "parcel_id": 1636,
+          "x": 189.53622,
+          "z": -43.65486,
+          "rotation": -1.5355082,
+          "width": 13.64189,
+          "depth": 27.209856,
+          "floors": 18,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 90,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Riverside House",
+          "appearance_seed": 3110260541,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        }
+      ],
+      "replayTicks": 200,
+      "replayEquivalent": true
+    },
+    "candidate": {
+      "seed": 87231,
+      "developmentRate": 16,
+      "requestedTicks": 76000,
+      "elapsedMs": 10735.764583,
+      "scope": "Node WASM normal growth; snapshots every 2000 ticks. First observations are upper bounds, not exact event ticks. No browser performance claim.",
+      "stationFirstObserved": 2000,
+      "samples": [
+        {
+          "tick": 0,
+          "buildings": 1,
+          "stationOnline": false,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 44,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 2000,
+          "buildings": 75,
+          "stationOnline": true,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 107,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 4000,
+          "buildings": 125,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [
+            {
+              "id": 1197,
+              "parcel": 924,
+              "x": 162.76512,
+              "z": -129.79082,
+              "floors": 24,
+              "stage": "open"
+            },
+            {
+              "id": 1203,
+              "parcel": 925,
+              "x": 176.37872,
+              "z": -133.20854,
+              "floors": 26,
+              "stage": "open"
+            },
+            {
+              "id": 1228,
+              "parcel": 926,
+              "x": 189.77199,
+              "z": -136.57098,
+              "floors": 32,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 168,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 6000,
+          "buildings": 175,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [],
+          "realizedLots": 240,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 8000,
+          "buildings": 225,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [],
+          "realizedLots": 263,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 10000,
+          "buildings": 275,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [
+            {
+              "id": 1843,
+              "parcel": 1636,
+              "x": 189.53622,
+              "z": -43.65486,
+              "floors": 18,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 302,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 12000,
+          "buildings": 325,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 354,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 14000,
+          "buildings": 375,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 411,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 16000,
+          "buildings": 425,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 467,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 18000,
+          "buildings": 475,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 523,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 20000,
+          "buildings": 525,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 561,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 22000,
+          "buildings": 575,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 614,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 24000,
+          "buildings": 625,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 663,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 26000,
+          "buildings": 675,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 709,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 28000,
+          "buildings": 725,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 751,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 30000,
+          "buildings": 775,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 812,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 32000,
+          "buildings": 825,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 863,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 34000,
+          "buildings": 875,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 920,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 36000,
+          "buildings": 925,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 960,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 38000,
+          "buildings": 975,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 999,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 40000,
+          "buildings": 1025,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1036,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 42000,
+          "buildings": 1074,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1076,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 44000,
+          "buildings": 1124,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1151,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 46000,
+          "buildings": 1174,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1210,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 48000,
+          "buildings": 1224,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1228,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 50000,
+          "buildings": 1255,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1255,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 52000,
+          "buildings": 1295,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1326,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 54000,
+          "buildings": 1345,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1380,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 56000,
+          "buildings": 1395,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1426,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 58000,
+          "buildings": 1445,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1479,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 60000,
+          "buildings": 1495,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1530,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 62000,
+          "buildings": 1545,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1584,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 64000,
+          "buildings": 1595,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1621,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 66000,
+          "buildings": 1645,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1674,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 68000,
+          "buildings": 1695,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1728,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 70000,
+          "buildings": 1745,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1779,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 72000,
+          "buildings": 1795,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1813,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 74000,
+          "buildings": 1831,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1839,
+          "plannedLots": 1839
+        },
+        {
+          "tick": 76000,
+          "buildings": 1839,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1839,
+          "plannedLots": 1839
+        }
+      ],
+      "histogram": {
+        "1": 40,
+        "2": 665,
+        "3": 618,
+        "4": 131,
+        "5": 169,
+        "6": 117,
+        "7": 27,
+        "8": 34,
+        "9": 5,
+        "10": 14,
+        "12": 15,
+        "18": 1,
+        "24": 1,
+        "26": 1,
+        "32": 1
+      },
+      "finalTowers": [
+        {
+          "id": 1197,
+          "parcel_id": 924,
+          "x": 162.76512,
+          "z": -129.79082,
+          "rotation": -2.8956225,
+          "width": 15.210668,
+          "depth": 30.092894,
+          "floors": 24,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 120,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Apartments",
+          "appearance_seed": 2345138643,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 1203,
+          "parcel_id": 925,
+          "x": 176.37872,
+          "z": -133.20854,
+          "rotation": -2.8956225,
+          "width": 12.861415,
+          "depth": 30.092897,
+          "floors": 26,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 130,
+          "occupancy": 130,
+          "built_day": 0,
+          "name": "Station Apartments",
+          "appearance_seed": 2441855292,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        },
+        {
+          "id": 1228,
+          "parcel_id": 926,
+          "x": 189.77199,
+          "z": -136.57098,
+          "rotation": -2.8956225,
+          "width": 14.756353,
+          "depth": 30.092896,
+          "floors": 32,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 160,
+          "occupancy": 160,
+          "built_day": 0,
+          "name": "Riverside House",
+          "appearance_seed": 3698056069,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        },
+        {
+          "id": 1843,
+          "parcel_id": 1636,
+          "x": 189.53622,
+          "z": -43.65486,
+          "rotation": -1.5355082,
+          "width": 13.64189,
+          "depth": 27.209856,
+          "floors": 18,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 90,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Riverside House",
+          "appearance_seed": 3110260541,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        }
+      ],
+      "replayTicks": 200,
+      "replayEquivalent": true
+    },
+    "candidate-0": {
+      "seed": 0,
+      "developmentRate": 16,
+      "requestedTicks": 76000,
+      "elapsedMs": 7732.441541,
+      "scope": "Node WASM normal growth; snapshots every 2000 ticks. First observations are upper bounds, not exact event ticks. No browser performance claim.",
+      "stationFirstObserved": 2000,
+      "samples": [
+        {
+          "tick": 0,
+          "buildings": 1,
+          "stationOnline": false,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 53,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 2000,
+          "buildings": 79,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [
+            {
+              "id": 235,
+              "parcel": 61,
+              "x": 118.45594,
+              "z": -163.13895,
+              "floors": 20,
+              "stage": "open"
+            },
+            {
+              "id": 237,
+              "parcel": 62,
+              "x": 132.71404,
+              "z": -160.59723,
+              "floors": 19,
+              "stage": "open"
+            },
+            {
+              "id": 239,
+              "parcel": 87,
+              "x": 110.868904,
+              "z": -112.754364,
+              "floors": 31,
+              "stage": "open"
+            },
+            {
+              "id": 750,
+              "parcel": 274,
+              "x": 165.88129,
+              "z": -112.754364,
+              "floors": 32,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 103,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 4000,
+          "buildings": 129,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 176,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 6000,
+          "buildings": 179,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 215,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 8000,
+          "buildings": 229,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 267,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 10000,
+          "buildings": 279,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 312,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 12000,
+          "buildings": 329,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 352,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 14000,
+          "buildings": 379,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 411,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 16000,
+          "buildings": 429,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 464,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 18000,
+          "buildings": 479,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 512,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 20000,
+          "buildings": 529,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 582,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 22000,
+          "buildings": 579,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 626,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 24000,
+          "buildings": 629,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 665,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 26000,
+          "buildings": 679,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 712,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 28000,
+          "buildings": 729,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 759,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 30000,
+          "buildings": 779,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 810,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 32000,
+          "buildings": 829,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 887,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 34000,
+          "buildings": 879,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 929,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 36000,
+          "buildings": 929,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 973,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 38000,
+          "buildings": 979,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1024,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 40000,
+          "buildings": 1029,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1063,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 42000,
+          "buildings": 1079,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1100,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 44000,
+          "buildings": 1129,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1134,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 46000,
+          "buildings": 1150,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1150,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 48000,
+          "buildings": 1166,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1166,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 50000,
+          "buildings": 1197,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1226,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 52000,
+          "buildings": 1247,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1292,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 54000,
+          "buildings": 1297,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1330,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 56000,
+          "buildings": 1347,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1386,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 58000,
+          "buildings": 1397,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1435,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 60000,
+          "buildings": 1447,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1475,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 62000,
+          "buildings": 1497,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1548,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 64000,
+          "buildings": 1547,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1580,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 66000,
+          "buildings": 1597,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1601,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 68000,
+          "buildings": 1647,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1688,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 70000,
+          "buildings": 1697,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1722,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 72000,
+          "buildings": 1730,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1730,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 74000,
+          "buildings": 1730,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1730,
+          "plannedLots": 1730
+        },
+        {
+          "tick": 76000,
+          "buildings": 1730,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 1730,
+          "plannedLots": 1730
+        }
+      ],
+      "histogram": {
+        "1": 48,
+        "2": 649,
+        "3": 550,
+        "4": 111,
+        "5": 164,
+        "6": 118,
+        "7": 27,
+        "8": 27,
+        "9": 7,
+        "10": 13,
+        "12": 12,
+        "19": 1,
+        "20": 1,
+        "31": 1,
+        "32": 1
+      },
+      "finalTowers": [
+        {
+          "id": 235,
+          "parcel_id": 61,
+          "x": 118.45594,
+          "z": -163.13895,
+          "rotation": 2.8729885,
+          "width": 13.371281,
+          "depth": 32,
+          "floors": 20,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 100,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Apartments",
+          "appearance_seed": 326968808,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 237,
+          "parcel_id": 62,
+          "x": 132.71404,
+          "z": -160.59723,
+          "rotation": 2.8729885,
+          "width": 15.471433,
+          "depth": 29.333334,
+          "floors": 19,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 95,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Platform Cafe",
+          "appearance_seed": 2535782553,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 239,
+          "parcel_id": 87,
+          "x": 110.868904,
+          "z": -112.754364,
+          "rotation": 0,
+          "width": 15.123336,
+          "depth": 25.45564,
+          "floors": 31,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 155,
+          "occupancy": 155,
+          "built_day": 0,
+          "name": "Platform Cafe",
+          "appearance_seed": 3440478596,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        },
+        {
+          "id": 750,
+          "parcel_id": 274,
+          "x": 165.88129,
+          "z": -112.754364,
+          "rotation": 0,
+          "width": 13.883559,
+          "depth": 25.45564,
+          "floors": 32,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 160,
+          "occupancy": 160,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 3327605525,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        }
+      ],
+      "replayTicks": 200,
+      "replayEquivalent": true
+    },
+    "candidate-5": {
+      "seed": 5,
+      "developmentRate": 16,
+      "requestedTicks": 76000,
+      "elapsedMs": 6009.360667,
+      "scope": "Node WASM normal growth; snapshots every 2000 ticks. First observations are upper bounds, not exact event ticks. No browser performance claim.",
+      "stationFirstObserved": 2000,
+      "samples": [
+        {
+          "tick": 0,
+          "buildings": 1,
+          "stationOnline": false,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 35,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 2000,
+          "buildings": 77,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [
+            {
+              "id": 200,
+              "parcel": 70,
+              "x": 104.75656,
+              "z": -108.16383,
+              "floors": 26,
+              "stage": "open"
+            },
+            {
+              "id": 202,
+              "parcel": 51,
+              "x": 119.14653,
+              "z": -130.43451,
+              "floors": 31,
+              "stage": "open"
+            },
+            {
+              "id": 389,
+              "parcel": 49,
+              "x": 186.7522,
+              "z": -135.08963,
+              "floors": 17,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 136,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 4000,
+          "buildings": 127,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [],
+          "realizedLots": 166,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 6000,
+          "buildings": 177,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [],
+          "realizedLots": 221,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 8000,
+          "buildings": 227,
+          "stationOnline": true,
+          "towers": 3,
+          "firstObserved": [],
+          "realizedLots": 263,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 10000,
+          "buildings": 277,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [
+            {
+              "id": 1782,
+              "parcel": 1770,
+              "x": 120.01336,
+              "z": -108.16383,
+              "floors": 21,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 311,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 12000,
+          "buildings": 327,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 361,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 14000,
+          "buildings": 377,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 403,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 16000,
+          "buildings": 427,
+          "stationOnline": true,
+          "towers": 5,
+          "firstObserved": [
+            {
+              "id": 2349,
+              "parcel": 646,
+              "x": -40.42965,
+              "z": -110.82412,
+              "floors": 20,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 458,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 18000,
+          "buildings": 477,
+          "stationOnline": true,
+          "towers": 5,
+          "firstObserved": [],
+          "realizedLots": 508,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 20000,
+          "buildings": 527,
+          "stationOnline": true,
+          "towers": 5,
+          "firstObserved": [],
+          "realizedLots": 551,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 22000,
+          "buildings": 577,
+          "stationOnline": true,
+          "towers": 6,
+          "firstObserved": [
+            {
+              "id": 3004,
+              "parcel": 2999,
+              "x": 166.78609,
+              "z": -26.76024,
+              "floors": 16,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 606,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 24000,
+          "buildings": 627,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [
+            {
+              "id": 3088,
+              "parcel": 3083,
+              "x": 120.42269,
+              "z": -18.367458,
+              "floors": 18,
+              "stage": "open"
+            },
+            {
+              "id": 3188,
+              "parcel": 3030,
+              "x": -16.2362,
+              "z": -21.262419,
+              "floors": 22,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 666,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 26000,
+          "buildings": 677,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 722,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 28000,
+          "buildings": 727,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 761,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 30000,
+          "buildings": 777,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 815,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 32000,
+          "buildings": 827,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 859,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 34000,
+          "buildings": 877,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 916,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 36000,
+          "buildings": 927,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 976,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 38000,
+          "buildings": 977,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1013,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 40000,
+          "buildings": 1027,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1063,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 42000,
+          "buildings": 1077,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1138,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 44000,
+          "buildings": 1127,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1165,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 46000,
+          "buildings": 1177,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1196,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 48000,
+          "buildings": 1227,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1274,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 50000,
+          "buildings": 1277,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1314,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 52000,
+          "buildings": 1327,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1354,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 54000,
+          "buildings": 1366,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1366,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 56000,
+          "buildings": 1399,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1420,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 58000,
+          "buildings": 1449,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1482,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 60000,
+          "buildings": 1499,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1538,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 62000,
+          "buildings": 1549,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1587,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 64000,
+          "buildings": 1599,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1634,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 66000,
+          "buildings": 1649,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1679,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 68000,
+          "buildings": 1699,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1737,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 70000,
+          "buildings": 1749,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1815,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 72000,
+          "buildings": 1799,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1849,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 74000,
+          "buildings": 1849,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1879,
+          "plannedLots": 2062
+        },
+        {
+          "tick": 76000,
+          "buildings": 1899,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1945,
+          "plannedLots": 2062
+        }
+      ],
+      "histogram": {
+        "1": 37,
+        "2": 731,
+        "3": 644,
+        "4": 116,
+        "5": 173,
+        "6": 110,
+        "7": 29,
+        "8": 23,
+        "9": 4,
+        "10": 14,
+        "12": 10,
+        "16": 1,
+        "17": 1,
+        "18": 1,
+        "20": 1,
+        "21": 1,
+        "22": 1,
+        "26": 1,
+        "31": 1
+      },
+      "finalTowers": [
+        {
+          "id": 200,
+          "parcel_id": 70,
+          "x": 104.75656,
+          "z": -108.16383,
+          "rotation": 0,
+          "width": 14.946594,
+          "depth": 21.187088,
+          "floors": 26,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 130,
+          "occupancy": 130,
+          "built_day": 0,
+          "name": "Platform Cafe",
+          "appearance_seed": 3547448362,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        },
+        {
+          "id": 202,
+          "parcel_id": 51,
+          "x": 119.14653,
+          "z": -130.43451,
+          "rotation": -3.0002763,
+          "width": 15.203888,
+          "depth": 20.029644,
+          "floors": 31,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 155,
+          "occupancy": 155,
+          "built_day": 0,
+          "name": "Platform Cafe",
+          "appearance_seed": 214479531,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        },
+        {
+          "id": 389,
+          "parcel_id": 49,
+          "x": 186.7522,
+          "z": -135.08963,
+          "rotation": -3.0002763,
+          "width": 15.78646,
+          "depth": 29.856262,
+          "floors": 17,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 85,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Kiosk",
+          "appearance_seed": 174167393,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 1782,
+          "parcel_id": 1770,
+          "x": 120.01336,
+          "z": -108.16383,
+          "rotation": 0,
+          "width": 15.567,
+          "depth": 21.187086,
+          "floors": 21,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 105,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Apartments",
+          "appearance_seed": 4172784531,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 2349,
+          "parcel_id": 646,
+          "x": -40.42965,
+          "z": -110.82412,
+          "rotation": 0,
+          "width": 14.90734,
+          "depth": 26.507658,
+          "floors": 20,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 100,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Machiya House",
+          "appearance_seed": 2313424614,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 3004,
+          "parcel_id": 2999,
+          "x": 166.78609,
+          "z": -26.76024,
+          "rotation": 0.08389202,
+          "width": 14.332306,
+          "depth": 25.463463,
+          "floors": 16,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 80,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Platform Cafe",
+          "appearance_seed": 1492363793,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 3088,
+          "parcel_id": 3083,
+          "x": 120.42269,
+          "z": -18.367458,
+          "rotation": 0.083891995,
+          "width": 26.104256,
+          "depth": 16.506845,
+          "floors": 18,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 90,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 636578863,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 3188,
+          "parcel_id": 3030,
+          "x": -16.2362,
+          "z": -21.262419,
+          "rotation": 1.636105,
+          "width": 15.994215,
+          "depth": 25.25673,
+          "floors": 22,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 110,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Railway Apartments",
+          "appearance_seed": 516523507,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        }
+      ],
+      "replayTicks": 200,
+      "replayEquivalent": true
+    },
+    "candidate-77": {
+      "seed": 77,
+      "developmentRate": 16,
+      "requestedTicks": 76000,
+      "elapsedMs": 7512.453333,
+      "scope": "Node WASM normal growth; snapshots every 2000 ticks. First observations are upper bounds, not exact event ticks. No browser performance claim.",
+      "stationFirstObserved": 2000,
+      "samples": [
+        {
+          "tick": 0,
+          "buildings": 1,
+          "stationOnline": false,
+          "towers": 0,
+          "firstObserved": [],
+          "realizedLots": 34,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 2000,
+          "buildings": 74,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [
+            {
+              "id": 192,
+              "parcel": 48,
+              "x": 200.27106,
+              "z": -137.58713,
+              "floors": 22,
+              "stage": "open"
+            },
+            {
+              "id": 328,
+              "parcel": 249,
+              "x": 16.631695,
+              "z": -157.7293,
+              "floors": 28,
+              "stage": "open"
+            },
+            {
+              "id": 355,
+              "parcel": 253,
+              "x": -8.632408,
+              "z": -130.675,
+              "floors": 23,
+              "stage": "open"
+            },
+            {
+              "id": 359,
+              "parcel": 250,
+              "x": 14.953513,
+              "z": -125.228905,
+              "floors": 21,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 111,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 4000,
+          "buildings": 124,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 159,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 6000,
+          "buildings": 174,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 206,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 8000,
+          "buildings": 224,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 272,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 10000,
+          "buildings": 274,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 323,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 12000,
+          "buildings": 324,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 358,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 14000,
+          "buildings": 374,
+          "stationOnline": true,
+          "towers": 4,
+          "firstObserved": [],
+          "realizedLots": 407,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 16000,
+          "buildings": 424,
+          "stationOnline": true,
+          "towers": 6,
+          "firstObserved": [
+            {
+              "id": 2274,
+              "parcel": 1993,
+              "x": 171.69106,
+              "z": -59.063484,
+              "floors": 23,
+              "stage": "open"
+            },
+            {
+              "id": 2278,
+              "parcel": 2048,
+              "x": 192.10132,
+              "z": -40.579475,
+              "floors": 17,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 456,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 18000,
+          "buildings": 474,
+          "stationOnline": true,
+          "towers": 6,
+          "firstObserved": [],
+          "realizedLots": 498,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 20000,
+          "buildings": 524,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [
+            {
+              "id": 2701,
+              "parcel": 2142,
+              "x": 42.787144,
+              "z": -66.9054,
+              "floors": 18,
+              "stage": "open"
+            },
+            {
+              "id": 2741,
+              "parcel": 2141,
+              "x": 40.514515,
+              "z": -42.386078,
+              "floors": 31,
+              "stage": "open"
+            }
+          ],
+          "realizedLots": 565,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 22000,
+          "buildings": 574,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 645,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 24000,
+          "buildings": 624,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 663,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 26000,
+          "buildings": 674,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 711,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 28000,
+          "buildings": 724,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 757,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 30000,
+          "buildings": 774,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 809,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 32000,
+          "buildings": 824,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 857,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 34000,
+          "buildings": 874,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 881,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 36000,
+          "buildings": 921,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 928,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 38000,
+          "buildings": 971,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1009,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 40000,
+          "buildings": 1021,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1048,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 42000,
+          "buildings": 1071,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1103,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 44000,
+          "buildings": 1121,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1127,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 46000,
+          "buildings": 1155,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1201,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 48000,
+          "buildings": 1203,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1203,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 50000,
+          "buildings": 1225,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1238,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 52000,
+          "buildings": 1275,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1318,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 54000,
+          "buildings": 1325,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1355,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 56000,
+          "buildings": 1375,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1403,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 58000,
+          "buildings": 1425,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1454,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 60000,
+          "buildings": 1475,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1483,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 62000,
+          "buildings": 1525,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1588,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 64000,
+          "buildings": 1575,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1604,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 66000,
+          "buildings": 1625,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1679,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 68000,
+          "buildings": 1675,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1704,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 70000,
+          "buildings": 1725,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1761,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 72000,
+          "buildings": 1775,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1804,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 74000,
+          "buildings": 1815,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1815,
+          "plannedLots": 1826
+        },
+        {
+          "tick": 76000,
+          "buildings": 1826,
+          "stationOnline": true,
+          "towers": 8,
+          "firstObserved": [],
+          "realizedLots": 1826,
+          "plannedLots": 1826
+        }
+      ],
+      "histogram": {
+        "1": 37,
+        "2": 684,
+        "3": 628,
+        "4": 108,
+        "5": 165,
+        "6": 114,
+        "7": 21,
+        "8": 32,
+        "9": 5,
+        "10": 12,
+        "12": 12,
+        "17": 1,
+        "18": 1,
+        "21": 1,
+        "22": 1,
+        "23": 2,
+        "28": 1,
+        "31": 1
+      },
+      "finalTowers": [
+        {
+          "id": 192,
+          "parcel_id": 48,
+          "x": 200.27106,
+          "z": -137.58713,
+          "rotation": 2.9753993,
+          "width": 15.546336,
+          "depth": 21.1199,
+          "floors": 22,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 110,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 47654435,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 328,
+          "parcel_id": 249,
+          "x": 16.631695,
+          "z": -157.7293,
+          "rotation": -1.6262227,
+          "width": 29.803345,
+          "depth": 13.830138,
+          "floors": 28,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 140,
+          "occupancy": 140,
+          "built_day": 0,
+          "name": "Machiya House",
+          "appearance_seed": 3752306462,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        },
+        {
+          "id": 355,
+          "parcel_id": 253,
+          "x": -8.632408,
+          "z": -130.675,
+          "rotation": 1.5153699,
+          "width": 14.808828,
+          "depth": 19.222965,
+          "floors": 23,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 115,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Kissa Komorebi",
+          "appearance_seed": 4289041827,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 359,
+          "parcel_id": 250,
+          "x": 14.953513,
+          "z": -125.228905,
+          "rotation": -1.6262227,
+          "width": 33.753304,
+          "depth": 14.079848,
+          "floors": 21,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 105,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Kissa Komorebi",
+          "appearance_seed": 3070460643,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 2274,
+          "parcel_id": 1993,
+          "x": 171.69106,
+          "z": -59.063484,
+          "rotation": -1.6062442,
+          "width": 15.122101,
+          "depth": 19.237375,
+          "floors": 23,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 115,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 4095351994,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 2278,
+          "parcel_id": 2048,
+          "x": 192.10132,
+          "z": -40.579475,
+          "rotation": 1.5397387,
+          "width": 23.102745,
+          "depth": 21.105175,
+          "floors": 17,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 85,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 938871651,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 2701,
+          "parcel_id": 2142,
+          "x": 42.787144,
+          "z": -66.9054,
+          "rotation": 1.4934,
+          "width": 22.884169,
+          "depth": 12.3538475,
+          "floors": 18,
+          "kind": "office",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 90,
+          "occupancy": 0,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 2613008808,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": true
+        },
+        {
+          "id": 2741,
+          "parcel_id": 2141,
+          "x": 40.514515,
+          "z": -42.386078,
+          "rotation": 1.4934,
+          "width": 24.334427,
+          "depth": 13.09388,
+          "floors": 31,
+          "kind": "apartment",
+          "stage": "open",
+          "progress": 1,
+          "capacity": 155,
+          "occupancy": 155,
+          "built_day": 0,
+          "name": "Station Office",
+          "appearance_seed": 3561056313,
+          "history": [
+            "Reserved after sustained neighborhood demand on day 0"
+          ],
+          "anchor": false,
+          "vacant_days": 0,
+          "business_active": false
+        }
+      ],
+      "replayTicks": 200,
+      "replayEquivalent": true
+    }
+  }
+}

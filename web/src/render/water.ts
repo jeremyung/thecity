@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { color, mix, uniform, positionWorld, positionLocal, vec3, sin, reflector, texture, uv, smoothstep, mx_noise_float, transformNormalToView, fwidth } from 'three/tsl';
+import { color, mix, uniform, positionWorld, positionLocal, vec2, vec3, sin, reflector, texture, uv, smoothstep, mx_noise_float, transformNormalToView, fwidth } from 'three/tsl';
 import type { Point, Style } from '../types';
 
 export class RiverWater {
@@ -14,6 +14,8 @@ export class RiverWater {
   private ripple:THREE.DataTexture;
   private reflection:ReturnType<typeof reflector>;
   private elapsed=0;
+  private surface:THREE.MeshStandardNodeMaterial;
+  private reflectionReview:THREE.MeshBasicNodeMaterial|null=null;
   private random=123456789;
   constructor(points:Point[],halfWidth=32) {
     const vertices:number[]=[],uvs:number[]=[],indices:number[]=[];
@@ -29,7 +31,7 @@ export class RiverWater {
     }
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.setIndex(indices);geo.computeVertexNormals();
     this.ripple=new THREE.DataTexture(this.pixels,64,64,THREE.RGBAFormat,THREE.FloatType);this.ripple.minFilter=THREE.LinearFilter;this.ripple.magFilter=THREE.LinearFilter;this.ripple.needsUpdate=true;
-    const mat=new THREE.MeshStandardNodeMaterial({roughness:.25,metalness:0,side:THREE.DoubleSide});
+    const mat=this.surface=new THREE.MeshStandardNodeMaterial({roughness:.25,metalness:0,side:THREE.DoubleSide});
     const t=this.time,w=positionWorld;
     const reflection=this.reflection=reflector({resolutionScale:.35,bounces:false,samples:0});
     // River coordinates follow each seeded bend. World-X sampling clamped most
@@ -40,13 +42,18 @@ export class RiverWater {
     const phaseX=w.x.mul(2.8).add(w.z.mul(1.1)).sub(t.mul(1.2));
     const phaseZ=w.z.mul(3.4).sub(w.x.mul(.8)).sub(t.mul(.9));
     // MSAA resolves polygon edges, not undersampled procedural highlights.
-    // Integrate each fine wave over its screen footprint so distant ripples
-    // become surface roughness instead of a shimmering interference pattern.
+    // Attenuate fine detail as its screen footprint grows, transferring
+    // unresolved variation to roughness rather than distant shimmer.
     const footprintX=fwidth(phaseX),footprintZ=fwidth(phaseZ);
     const resolvedX=footprintX.mul(footprintX).mul(-.5).exp();
     const resolvedZ=footprintZ.mul(footprintZ).mul(-.5).exp();
-    const smallX=sin(phaseX).mul(.035).mul(resolvedX);
-    const smallZ=sin(phaseZ).mul(.028).mul(resolvedZ);
+    // Independent two-dimensional detail breaks the coherent river-wide sine
+    // bands. Both phase footprints attenuate the lower-frequency field;
+    // motion is continuous advection, never frame randomness.
+    const fineFlow=vec2(phaseX,phaseZ).mul(.35);
+    const fineResolved=resolvedX.mul(resolvedZ);
+    const smallX=mx_noise_float(fineFlow).mul(.055).mul(fineResolved);
+    const smallZ=mx_noise_float(fineFlow.add(vec2(19.7,43.1))).mul(.045).mul(fineResolved);
     // Broad slopes vary across both axes: a single axial sine made the dusk
     // sun reflect as regularly spaced bright bars across the entire river.
     // Continuous drifting noise breaks that alignment without frame-random
@@ -65,6 +72,16 @@ export class RiverWater {
     this.mesh=new THREE.Mesh(geo,mat);this.mesh.receiveShadow=true;
     reflection.target.rotation.x=-Math.PI/2;reflection.target.position.y=-.7;this.mesh.add(reflection.target);
   }
+  /** Development probe: inspect reflected radiance before surface lighting. */
+  toggleReflectionForReview():boolean {
+    if(this.mesh.material!==this.surface){this.mesh.material=this.surface;return false;}
+    if(!this.reflectionReview){
+      this.reflectionReview=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});
+      this.reflectionReview.colorNode=this.reflection.rgb;
+      this.reflectionReview.positionNode=this.surface.positionNode;
+    }
+    this.mesh.material=this.reflectionReview;return true;
+  }
   setReflectionScale(scale:number){this.reflection.reflector.resolutionScale=THREE.MathUtils.clamp(scale,.15,.5);}
   update(dt:number,t:number,rain:number,style:Style,night:number){
     this.time.value=t;this.style.value=style==='miniature'?1:0;this.night.value=night;
@@ -78,5 +95,5 @@ export class RiverWater {
     }
     const tmp=this.previous;this.previous=this.grid;this.grid=this.next;this.next=tmp;this.ripple.needsUpdate=true;
   }
-  dispose(){this.reflection.dispose();this.mesh.geometry.dispose();(this.mesh.material as THREE.Material).dispose();this.ripple.dispose();this.mesh.removeFromParent();}
+  dispose(){this.reflection.dispose();this.mesh.geometry.dispose();this.surface.dispose();this.reflectionReview?.dispose();this.ripple.dispose();this.mesh.removeFromParent();}
 }

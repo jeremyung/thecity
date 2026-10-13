@@ -1,0 +1,19 @@
+{
+  "hardware": "Apple M2 Max",
+  "node": "v26.7.0",
+  "seed": 87231,
+  "tick": 27925,
+  "buildings": 723,
+  "eligibleForProbe": 717,
+  "rounds": 30,
+  "cold": {
+    "p50Ms": 5.624042000000031,
+    "p95Ms": 5.932957999999985
+  },
+  "warmIncludingSnapshotClones": {
+    "p50Ms": 0.16537499999998317,
+    "p95Ms": 0.1825420000000122
+  },
+  "parity": "exact cluster object values in all rounds",
+  "scope": "Node CPU cluster-only; open buildings without access filtering; not full setWorld or browser performance"
+}

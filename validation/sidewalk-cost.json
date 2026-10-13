@@ -1,0 +1,19 @@
+{
+  "scope": "Node CPU only, not browser frame cost",
+  "hardware": "Apple M2 Max",
+  "fixture": "mature-layered-87231.snapshot.json",
+  "seed": 87231,
+  "tick": 160000,
+  "roads": 564,
+  "arterials": 89,
+  "polygons": 2371,
+  "triangles": 28596,
+  "batches": 1,
+  "samplesMs": [
+    105.78016699999995,
+    110.180834,
+    96.25945899999999,
+    106.10279200000002,
+    95.58175000000006
+  ]
+}

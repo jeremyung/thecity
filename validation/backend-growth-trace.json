@@ -1,0 +1,272 @@
+[
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":41.5,\"renderMs\":7.699999988079071,\"frameInterval\":14.299999982118607,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.9000000059604645,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791}},\"pending\":4}",
+    "timestamp": "2026-10-13T00:15:41.171Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":39,\"renderMs\":8.200000017881393,\"frameInterval\":15,\"parts\":{\"beginPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.3999999761581421,\"count\":53,\"max\":0.19999998807907104},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:15:42.128Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":59,\"renderMs\":7.899999976158142,\"frameInterval\":10.199999988079071,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.4000000059604645,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:15:42.443Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":46.80000001192093,\"renderMs\":9.200000017881393,\"frameInterval\":59.30000001192093,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.20000001788139343,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.09999999403953552}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:15:42.490Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":197.80000001192093,\"renderMs\":186.69999998807907,\"frameInterval\":10.599999994039536,\"parts\":{\"beginPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":1.0999999940395355,\"count\":44,\"max\":0.20000001788139343},\"attributeUpdate\":{\"ms\":0.7000000178813934,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791},\"pipeline\":{\"ms\":0.4000000059604645,\"count\":4,\"max\":0.10000002384185791}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:15:42.767Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":38.30000001192093,\"renderMs\":8.900000005960464,\"frameInterval\":13.300000011920929,\"parts\":{\"beginPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5999999642372131,\"count\":53,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791}},\"pending\":6}",
+    "timestamp": "2026-10-13T00:15:42.902Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":78.7000000178814,\"renderMs\":77.7000000178814,\"frameInterval\":12.699999988079071,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":2,\"count\":44,\"max\":0.5},\"pipeline\":{\"ms\":0.19999998807907104,\"count\":3,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.3999999761581421,\"count\":53,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":6}",
+    "timestamp": "2026-10-13T00:15:47.659Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":388.09999999403954,\"renderMs\":387.5,\"frameInterval\":9.900000005960464,\"parts\":{\"beginPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791},\"attributeCreate\":{\"ms\":7.700000047683716,\"count\":72,\"max\":1.2999999821186066},\"attributeUpdate\":{\"ms\":0.7000000178813934,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"pipeline\":{\"ms\":0.5999999642372131,\"count\":10,\"max\":0.19999998807907104}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:15:59.746Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9250,\"cost\":43,\"renderMs\":9.700000017881393,\"frameInterval\":10.599999994039536,\"parts\":{\"beginPass\":{\"ms\":0.20000004768371582,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.6000000238418579,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552}},\"pending\":4}",
+    "timestamp": "2026-10-13T00:16:12.521Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9300,\"cost\":34.900000005960464,\"renderMs\":32.60000002384186,\"frameInterval\":21.099999994039536,\"parts\":{\"beginPass\":{\"ms\":0.4000000059604645,\"count\":25,\"max\":0.19999998807907104},\"attributeUpdate\":{\"ms\":0.6000000238418579,\"count\":52,\"max\":0.20000001788139343},\"finishPass\":{\"ms\":0.7999999821186066,\"count\":25,\"max\":0.699999988079071}},\"pending\":0}",
+    "timestamp": "2026-10-13T00:16:50.385Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9300,\"cost\":221.40000000596046,\"renderMs\":220.19999998807907,\"frameInterval\":12.299999982118607,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":4.700000077486038,\"count\":106,\"max\":1.9000000059604645},\"attributeUpdate\":{\"ms\":0.40000003576278687,\"count\":52,\"max\":0.19999998807907104},\"finishPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"pipeline\":{\"ms\":0.6000000238418579,\"count\":10,\"max\":0.20000001788139343}},\"pending\":0}",
+    "timestamp": "2026-10-13T00:16:50.646Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9320,\"cost\":199,\"renderMs\":198.09999999403954,\"frameInterval\":13.299999982118607,\"parts\":{\"beginPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":1,\"count\":106,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.6000000238418579,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0},\"pipeline\":{\"ms\":0.4999999701976776,\"count\":10,\"max\":0.09999999403953552}},\"pending\":0}",
+    "timestamp": "2026-10-13T00:16:51.503Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9351,\"cost\":203.59999999403954,\"renderMs\":195.5,\"frameInterval\":11.299999982118607,\"parts\":{\"beginPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"attributeCreate\":{\"ms\":0.7999999821186066,\"count\":106,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.8000000417232513,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"pipeline\":{\"ms\":0.5999999642372131,\"count\":10,\"max\":0.19999998807907104}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:16:53.029Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9360,\"cost\":208.59999999403954,\"renderMs\":206.19999998807907,\"frameInterval\":16.200000017881393,\"parts\":{\"beginPass\":{\"ms\":0,\"count\":25,\"max\":0},\"attributeCreate\":{\"ms\":0.9000000059604645,\"count\":106,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.3999999761581421,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0},\"pipeline\":{\"ms\":0.4000000059604645,\"count\":10,\"max\":0.20000001788139343}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:16:53.503Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9360,\"cost\":48.900000005960464,\"renderMs\":9.199999988079071,\"frameInterval\":14.399999976158142,\"parts\":{\"beginPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.19999998807907104,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:16:54.139Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9360,\"cost\":42.400000005960464,\"renderMs\":8.5,\"frameInterval\":17.799999982118607,\"parts\":{\"beginPass\":{\"ms\":0.40000003576278687,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:16:54.298Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9360,\"cost\":40.5,\"renderMs\":8.899999976158142,\"frameInterval\":10,\"parts\":{\"beginPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.5999999940395355,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:16:54.648Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9400,\"cost\":201.40000000596046,\"renderMs\":199.90000000596046,\"frameInterval\":8.800000011920929,\"parts\":{\"beginPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791},\"attributeCreate\":{\"ms\":0.5999999940395355,\"count\":106,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.6000000238418579,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"pipeline\":{\"ms\":0.6000000536441803,\"count\":10,\"max\":0.20000001788139343}},\"pending\":7}",
+    "timestamp": "2026-10-13T00:16:55.462Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9400,\"cost\":43.69999998807907,\"renderMs\":8.199999988079071,\"frameInterval\":11.300000011920929,\"parts\":{\"beginPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.4999999701976776,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:16:57.069Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9440,\"cost\":38.5,\"renderMs\":8.600000023841858,\"frameInterval\":17.200000017881393,\"parts\":{\"beginPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.4000000059604645,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.09999999403953552}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:16:57.231Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9450,\"cost\":39,\"renderMs\":8,\"frameInterval\":11.699999988079071,\"parts\":{\"beginPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.6999999582767487,\"count\":52,\"max\":0.19999998807907104},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0}},\"pending\":6}",
+    "timestamp": "2026-10-13T00:16:57.632Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9450,\"cost\":189.90000000596046,\"renderMs\":188.5,\"frameInterval\":13.099999994039536,\"parts\":{\"beginPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":0.6999999582767487,\"count\":106,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.29999998211860657,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.09999999403953552},\"pipeline\":{\"ms\":0.3999999761581421,\"count\":10,\"max\":0.09999999403953552}},\"pending\":4}",
+    "timestamp": "2026-10-13T00:16:57.960Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9480,\"cost\":194,\"renderMs\":186.80000001192093,\"frameInterval\":17.700000017881393,\"parts\":{\"beginPass\":{\"ms\":0.5999999940395355,\"count\":25,\"max\":0.10000002384185791},\"attributeCreate\":{\"ms\":0.5,\"count\":106,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5000000298023224,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.10000002384185791,\"count\":25,\"max\":0.10000002384185791},\"pipeline\":{\"ms\":0.5999999642372131,\"count\":10,\"max\":0.09999999403953552}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:16:59.473Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9480,\"cost\":39.599999994039536,\"renderMs\":9.300000011920929,\"frameInterval\":9.300000011920929,\"parts\":{\"beginPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.4999999701976776,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:00.045Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9480,\"cost\":52.400000005960464,\"renderMs\":8.199999988079071,\"frameInterval\":17.599999994039536,\"parts\":{\"beginPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.19999998807907104},\"attributeUpdate\":{\"ms\":0.7000000178813934,\"count\":52,\"max\":0.20000001788139343},\"finishPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:00.200Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9480,\"cost\":37.400000005960464,\"renderMs\":7.699999988079071,\"frameInterval\":12,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.3999999761581421,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:00.580Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9600,\"cost\":208,\"renderMs\":205.89999997615814,\"frameInterval\":10.399999976158142,\"parts\":{\"beginPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":0.7000000178813934,\"count\":115,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"pipeline\":{\"ms\":0.4999999701976776,\"count\":10,\"max\":0.09999999403953552}},\"pending\":3}",
+    "timestamp": "2026-10-13T00:17:05.405Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9650,\"cost\":216.80000001192093,\"renderMs\":202.09999999403954,\"frameInterval\":10.899999976158142,\"parts\":{\"beginPass\":{\"ms\":0.4000000059604645,\"count\":25,\"max\":0.10000002384185791},\"attributeCreate\":{\"ms\":0.800000011920929,\"count\":109,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.29999998211860657,\"count\":52,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"pipeline\":{\"ms\":0.5999999940395355,\"count\":10,\"max\":0.10000002384185791}},\"pending\":8}",
+    "timestamp": "2026-10-13T00:17:07.991Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9650,\"cost\":43,\"renderMs\":9.5,\"frameInterval\":12.699999988079071,\"parts\":{\"beginPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:08.990Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9680,\"cost\":41.30000001192093,\"renderMs\":8.200000017881393,\"frameInterval\":22.19999998807907,\"parts\":{\"beginPass\":{\"ms\":0.3999999761581421,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.4000000059604645,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:09.184Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9680,\"cost\":195.5,\"renderMs\":191.30000001192093,\"frameInterval\":9.900000005960464,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":0.5999999940395355,\"count\":110,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.800000011920929,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0},\"pipeline\":{\"ms\":0.4999999701976776,\"count\":10,\"max\":0.09999999403953552}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:09.442Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9680,\"cost\":41.099999994039536,\"renderMs\":9.099999994039536,\"frameInterval\":12.5,\"parts\":{\"beginPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.699999988079071,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.3999999761581421,\"count\":25,\"max\":0.09999999403953552}},\"pending\":1}",
+    "timestamp": "2026-10-13T00:17:09.753Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9720,\"cost\":41.900000005960464,\"renderMs\":9,\"frameInterval\":11,\"parts\":{\"beginPass\":{\"ms\":0,\"count\":25,\"max\":0},\"attributeUpdate\":{\"ms\":0.6000000238418579,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:17:12.185Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9720,\"cost\":36.19999998807907,\"renderMs\":7.5,\"frameInterval\":17.900000005960464,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.7000000178813934,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.19999998807907104,\"count\":25,\"max\":0.09999999403953552}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:17:12.333Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9720,\"cost\":40.900000005960464,\"renderMs\":9.400000005960464,\"frameInterval\":9.300000011920929,\"parts\":{\"beginPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.6000000238418579,\"count\":52,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:17:12.678Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9800,\"cost\":195,\"renderMs\":189.89999997615814,\"frameInterval\":9.199999988079071,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":0.5000000298023224,\"count\":115,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5000000298023224,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0},\"pipeline\":{\"ms\":0.4999999701976776,\"count\":10,\"max\":0.09999999403953552}},\"pending\":11}",
+    "timestamp": "2026-10-13T00:17:15.483Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9800,\"cost\":39.099999994039536,\"renderMs\":9.199999988079071,\"frameInterval\":9.599999994039536,\"parts\":{\"beginPass\":{\"ms\":0.29999998211860657,\"count\":25,\"max\":0.19999998807907104},\"attributeUpdate\":{\"ms\":0.5999999940395355,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.3999999761581421,\"count\":25,\"max\":0.09999999403953552}},\"pending\":9}",
+    "timestamp": "2026-10-13T00:17:15.903Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9850,\"cost\":202.7000000178814,\"renderMs\":200.5,\"frameInterval\":11.799999982118607,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeCreate\":{\"ms\":0.800000011920929,\"count\":132,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.5,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0},\"pipeline\":{\"ms\":0.5,\"count\":10,\"max\":0.20000001788139343}},\"pending\":12}",
+    "timestamp": "2026-10-13T00:17:17.969Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9850,\"cost\":31.799999982118607,\"renderMs\":9.699999988079071,\"frameInterval\":9.400000005960464,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.3999999761581421,\"count\":53,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":11}",
+    "timestamp": "2026-10-13T00:17:18.185Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9880,\"cost\":41.099999994039536,\"renderMs\":8.799999982118607,\"frameInterval\":21.099999994039536,\"parts\":{\"beginPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.30000001192092896,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0}},\"pending\":3}",
+    "timestamp": "2026-10-13T00:17:19.295Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9880,\"cost\":194.39999997615814,\"renderMs\":191.39999997615814,\"frameInterval\":12.300000011920929,\"parts\":{\"beginPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"attributeCreate\":{\"ms\":0.5999999642372131,\"count\":112,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.4000000059604645,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0},\"pipeline\":{\"ms\":0.4999999701976776,\"count\":10,\"max\":0.09999999403953552}},\"pending\":3}",
+    "timestamp": "2026-10-13T00:17:19.532Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9920,\"cost\":30.69999998807907,\"renderMs\":8.599999994039536,\"frameInterval\":10.900000005960464,\"parts\":{\"beginPass\":{\"ms\":0,\"count\":25,\"max\":0},\"attributeUpdate\":{\"ms\":0.40000003576278687,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0,\"count\":25,\"max\":0}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:17:22.001Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":9920,\"cost\":42,\"renderMs\":8.700000017881393,\"frameInterval\":17.600000023841858,\"parts\":{\"beginPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.30000001192092896,\"count\":53,\"max\":0.10000002384185791},\"finishPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552}},\"pending\":2}",
+    "timestamp": "2026-10-13T00:17:22.371Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":10000,\"cost\":42.19999998807907,\"renderMs\":8.299999982118607,\"frameInterval\":11.200000017881393,\"parts\":{\"beginPass\":{\"ms\":0.09999999403953552,\"count\":25,\"max\":0.09999999403953552},\"attributeUpdate\":{\"ms\":0.29999998211860657,\"count\":53,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.30000001192092896,\"count\":25,\"max\":0.10000002384185791}},\"pending\":5}",
+    "timestamp": "2026-10-13T00:17:25.211Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  },
+  {
+    "level": "log",
+    "message": "backend-growth-trace {\"tick\":10000,\"cost\":195.40000000596046,\"renderMs\":191.2000000178814,\"frameInterval\":10.099999994039536,\"parts\":{\"beginPass\":{\"ms\":0,\"count\":25,\"max\":0},\"attributeCreate\":{\"ms\":0.5000000596046448,\"count\":110,\"max\":0.10000002384185791},\"attributeUpdate\":{\"ms\":0.4999999701976776,\"count\":53,\"max\":0.09999999403953552},\"finishPass\":{\"ms\":0.20000001788139343,\"count\":25,\"max\":0.10000002384185791},\"pipeline\":{\"ms\":0.5000000298023224,\"count\":10,\"max\":0.10000002384185791}},\"pending\":4}",
+    "timestamp": "2026-10-13T00:17:25.473Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791850484207"
+  }
+]

@@ -1,0 +1,1442 @@
+[
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":-1,\"totalMs\":1190.7999999970198,\"stages\":{\"building-kits\":0.09999999403953552,\"chunks\":0,\"sidewalk-step\":0,\"scene-update\":2.1000000089406967,\"render-submit\":1188.5999999940395}}",
+    "timestamp": "2026-10-12T07:49:37.985Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":0,\"totalMs\":72.5,\"stages\":{\"terrain-reset\":51.70000000298023,\"transit-access\":1.199999988079071,\"roads\":17.5,\"sidewalk-input\":0.20000000298023224,\"ground\":0.29999999701976776,\"building-inputs\":0,\"trees\":1.6000000089406967}}",
+    "timestamp": "2026-10-12T07:49:38.059Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":0,\"totalMs\":1194.4000000059605,\"stages\":{\"building-kits\":33.5,\"chunks\":3.4000000059604645,\"sidewalk-step\":3.3999999910593033,\"scene-update\":0.4000000059604645,\"render-submit\":1153.7000000029802}}",
+    "timestamp": "2026-10-12T07:49:39.257Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":40,\"totalMs\":3.9000000059604645,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.29999999701976776,\"roads\":0.10000000894069672,\"sidewalk-input\":0.09999999403953552,\"ground\":0.4000000059604645,\"building-inputs\":0.09999999403953552,\"trees\":2.9000000059604645}}",
+    "timestamp": "2026-10-12T07:49:39.341Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":40,\"totalMs\":328,\"stages\":{\"building-kits\":2.5,\"chunks\":1.7999999970197678,\"sidewalk-step\":1.2000000029802322,\"scene-update\":0.7999999970197678,\"render-submit\":321.70000000298023}}",
+    "timestamp": "2026-10-12T07:49:39.664Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":40,\"totalMs\":58.20000000298023,\"stages\":{\"building-kits\":3.2000000029802322,\"chunks\":1.4000000059604645,\"sidewalk-step\":1,\"scene-update\":0.29999999701976776,\"render-submit\":52.29999999701977}}",
+    "timestamp": "2026-10-12T07:49:39.771Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":40,\"totalMs\":48.599999994039536,\"stages\":{\"building-kits\":0,\"chunks\":0,\"sidewalk-step\":0.29999999701976776,\"scene-update\":0,\"render-submit\":48.29999999701977}}",
+    "timestamp": "2026-10-12T07:49:39.990Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":80,\"totalMs\":2.7000000029802322,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.10000000894069672,\"roads\":0.09999999403953552,\"sidewalk-input\":0,\"ground\":0.4000000059604645,\"building-inputs\":0,\"trees\":2.0999999940395355}}",
+    "timestamp": "2026-10-12T07:49:40.820Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":120,\"totalMs\":2.3999999910593033,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.29999999701976776,\"roads\":0,\"sidewalk-input\":0,\"ground\":0.20000000298023224,\"building-inputs\":0.09999999403953552,\"trees\":1.7999999970197678}}",
+    "timestamp": "2026-10-12T07:49:42.802Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":160,\"totalMs\":13.799999997019768,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.20000000298023224,\"roads\":11.599999994039536,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0,\"trees\":2}}",
+    "timestamp": "2026-10-12T07:49:44.790Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":160,\"totalMs\":141.5,\"stages\":{\"building-kits\":0.10000000894069672,\"chunks\":0,\"sidewalk-step\":1.7000000029802322,\"scene-update\":0.09999999403953552,\"render-submit\":139.59999999403954}}",
+    "timestamp": "2026-10-12T07:49:44.932Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":200,\"totalMs\":12,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.10000000894069672,\"roads\":9.899999991059303,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0,\"trees\":2}}",
+    "timestamp": "2026-10-12T07:49:46.820Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":200,\"totalMs\":150.19999998807907,\"stages\":{\"building-kits\":3.199999988079071,\"chunks\":3.300000011920929,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":143.59999999403954}}",
+    "timestamp": "2026-10-12T07:49:46.970Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":241,\"totalMs\":1.9000000059604645,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.10000000894069672,\"roads\":0,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0,\"trees\":1.7999999970197678}}",
+    "timestamp": "2026-10-12T07:49:48.826Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":280,\"totalMs\":2.0999999940395355,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.09999999403953552,\"roads\":0,\"sidewalk-input\":0.10000000894069672,\"ground\":0,\"building-inputs\":0,\"trees\":1.8999999910593033}}",
+    "timestamp": "2026-10-12T07:49:50.809Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":320,\"totalMs\":1.8999999910593033,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.09999999403953552,\"roads\":0,\"sidewalk-input\":0.10000000894069672,\"ground\":0,\"building-inputs\":0,\"trees\":1.699999988079071}}",
+    "timestamp": "2026-10-12T07:49:52.806Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":361,\"totalMs\":2.2999999970197678,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.09999999403953552,\"roads\":0,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0,\"trees\":2.2000000029802322}}",
+    "timestamp": "2026-10-12T07:49:54.823Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":400,\"totalMs\":13.799999997019768,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.20000000298023224,\"roads\":11.299999997019768,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0.09999999403953552,\"trees\":2.2000000029802322}}",
+    "timestamp": "2026-10-12T07:49:56.827Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":400,\"totalMs\":156.09999999403954,\"stages\":{\"building-kits\":9.099999994039536,\"chunks\":3.4000000059604645,\"sidewalk-step\":0,\"scene-update\":0,\"render-submit\":143.59999999403954}}",
+    "timestamp": "2026-10-12T07:49:56.984Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":400,\"totalMs\":67.6000000089407,\"stages\":{\"building-kits\":3.7000000029802322,\"chunks\":0.9000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":62.900000005960464}}",
+    "timestamp": "2026-10-12T07:49:57.067Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":440,\"totalMs\":2.4000000059604645,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.20000000298023224,\"roads\":0,\"sidewalk-input\":0.09999999403953552,\"ground\":0,\"building-inputs\":0,\"trees\":2.1000000089406967}}",
+    "timestamp": "2026-10-12T07:49:58.781Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":481,\"totalMs\":2.0999999940395355,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.09999999403953552,\"roads\":0,\"sidewalk-input\":0.10000000894069672,\"ground\":0,\"building-inputs\":0,\"trees\":1.8999999910593033}}",
+    "timestamp": "2026-10-12T07:50:00.825Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":520,\"totalMs\":1.8999999910593033,\"stages\":{\"terrain-reset\":0,\"transit-access\":0,\"roads\":0.09999999403953552,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0,\"trees\":1.7999999970197678}}",
+    "timestamp": "2026-10-12T07:50:02.796Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":560,\"totalMs\":1.8999999910593033,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.09999999403953552,\"roads\":0,\"sidewalk-input\":0,\"ground\":0,\"building-inputs\":0,\"trees\":1.7999999970197678}}",
+    "timestamp": "2026-10-12T07:50:04.796Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":600,\"totalMs\":13.099999994039536,\"stages\":{\"terrain-reset\":0,\"transit-access\":0.5999999940395355,\"roads\":10.599999994039536,\"sidewalk-input\":0.10000000894069672,\"ground\":0.09999999403953552,\"building-inputs\":0,\"trees\":1.7000000029802322}}",
+    "timestamp": "2026-10-12T07:50:06.790Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":600,\"totalMs\":190.8999999910593,\"stages\":{\"building-kits\":6.899999991059303,\"chunks\":3,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":180.8999999910593}}",
+    "timestamp": "2026-10-12T07:50:06.981Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":600,\"totalMs\":68.19999998807907,\"stages\":{\"building-kits\":6.399999991059303,\"chunks\":0.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":60.8999999910593}}",
+    "timestamp": "2026-10-12T07:50:07.072Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":18918,\"totalMs\":172.59999999403954,\"stages\":{\"terrain-reset\":48.900000005960464,\"transit-access\":17.899999991059303,\"roads\":71.40000000596046,\"sidewalk-input\":0.09999999403953552,\"ground\":3.1000000089406967,\"building-inputs\":0.5,\"trees\":30.69999998807907}}",
+    "timestamp": "2026-10-12T07:50:32.192Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":1409.2999999970198,\"stages\":{\"building-kits\":20.099999994039536,\"chunks\":0.10000000894069672,\"sidewalk-step\":1.5,\"scene-update\":0.29999999701976776,\"render-submit\":1387.2999999970198}}",
+    "timestamp": "2026-10-12T07:50:33.603Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.30000001192093,\"stages\":{\"building-kits\":9.900000005960464,\"chunks\":0.7000000029802322,\"sidewalk-step\":0.7000000029802322,\"scene-update\":0.3999999910593033,\"render-submit\":16.600000008940697}}",
+    "timestamp": "2026-10-12T07:50:33.834Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.30000001192093,\"stages\":{\"building-kits\":23.900000005960464,\"chunks\":1.2999999970197678,\"sidewalk-step\":0.6000000089406967,\"scene-update\":0.09999999403953552,\"render-submit\":4.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:34.039Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.099999994039536,\"stages\":{\"building-kits\":28.19999998807907,\"chunks\":0.6000000089406967,\"sidewalk-step\":0.5,\"scene-update\":0.09999999403953552,\"render-submit\":4.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:34.090Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":33.29999999701977,\"stages\":{\"building-kits\":27.099999994039536,\"chunks\":0.7000000029802322,\"sidewalk-step\":0.5,\"scene-update\":0.20000000298023224,\"render-submit\":4.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:34.125Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.099999994039536,\"stages\":{\"building-kits\":27.799999997019768,\"chunks\":1.2000000029802322,\"sidewalk-step\":0.3999999910593033,\"scene-update\":0.20000000298023224,\"render-submit\":4.5}}",
+    "timestamp": "2026-10-12T07:50:34.162Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":27.299999997019768,\"stages\":{\"building-kits\":20.900000005960464,\"chunks\":0.8999999910593033,\"sidewalk-step\":0.4000000059604645,\"scene-update\":0.20000000298023224,\"render-submit\":4.899999991059303}}",
+    "timestamp": "2026-10-12T07:50:34.195Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.200000002980232,\"stages\":{\"building-kits\":24.200000002980232,\"chunks\":0.7000000029802322,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.20000000298023224,\"render-submit\":3.8999999910593033}}",
+    "timestamp": "2026-10-12T07:50:34.225Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.099999994039536,\"stages\":{\"building-kits\":23.099999994039536,\"chunks\":1,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.20000000298023224,\"render-submit\":4.5999999940395355}}",
+    "timestamp": "2026-10-12T07:50:34.277Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":40.70000000298023,\"stages\":{\"building-kits\":33.20000000298023,\"chunks\":1.6000000089406967,\"sidewalk-step\":0.5,\"scene-update\":0.19999998807907104,\"render-submit\":5.200000002980232}}",
+    "timestamp": "2026-10-12T07:50:34.345Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.599999994039536,\"stages\":{\"building-kits\":23.700000002980232,\"chunks\":0.3999999910593033,\"sidewalk-step\":0.30000001192092896,\"scene-update\":0.19999998807907104,\"render-submit\":4}}",
+    "timestamp": "2026-10-12T07:50:34.416Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.100000008940697,\"stages\":{\"building-kits\":22.799999997019768,\"chunks\":0.7000000029802322,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.09999999403953552,\"render-submit\":4.300000011920929}}",
+    "timestamp": "2026-10-12T07:50:34.527Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":35.79999999701977,\"stages\":{\"building-kits\":29,\"chunks\":1.2999999970197678,\"sidewalk-step\":0.30000001192092896,\"scene-update\":0.09999999403953552,\"render-submit\":5.0999999940395355}}",
+    "timestamp": "2026-10-12T07:50:34.666Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.200000002980232,\"stages\":{\"building-kits\":18.700000002980232,\"chunks\":1.2999999970197678,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.09999999403953552,\"render-submit\":4.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:34.695Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26.899999991059303,\"stages\":{\"building-kits\":22,\"chunks\":0.5,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.19999998807907104,\"render-submit\":4}}",
+    "timestamp": "2026-10-12T07:50:34.723Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.799999997019768,\"stages\":{\"building-kits\":18,\"chunks\":2.2999999970197678,\"sidewalk-step\":0.29999999701976776,\"scene-update\":0.20000000298023224,\"render-submit\":5}}",
+    "timestamp": "2026-10-12T07:50:34.780Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":31.599999994039536,\"stages\":{\"building-kits\":24.200000002980232,\"chunks\":2.2999999970197678,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.19999998807907104,\"render-submit\":4.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:34.812Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.600000008940697,\"stages\":{\"building-kits\":25,\"chunks\":0.20000000298023224,\"sidewalk-step\":0.29999999701976776,\"scene-update\":0.10000000894069672,\"render-submit\":5}}",
+    "timestamp": "2026-10-12T07:50:34.843Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.29999999701977,\"stages\":{\"building-kits\":27.19999998807907,\"chunks\":1.800000011920929,\"sidewalk-step\":0.19999998807907104,\"scene-update\":0.20000000298023224,\"render-submit\":4.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:34.964Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":31.299999997019768,\"stages\":{\"building-kits\":25.700000002980232,\"chunks\":0.29999999701976776,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.19999998807907104,\"render-submit\":4.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:34.996Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26.600000008940697,\"stages\":{\"building-kits\":20.799999997019768,\"chunks\":0.6000000089406967,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.19999998807907104,\"render-submit\":4.800000011920929}}",
+    "timestamp": "2026-10-12T07:50:35.073Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26.599999994039536,\"stages\":{\"building-kits\":21.599999994039536,\"chunks\":0.5,\"sidewalk-step\":0.20000000298023224,\"scene-update\":0.20000000298023224,\"render-submit\":4.0999999940395355}}",
+    "timestamp": "2026-10-12T07:50:35.106Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":143.5,\"stages\":{\"building-kits\":138.59999999403954,\"chunks\":0.30000001192092896,\"sidewalk-step\":0.09999999403953552,\"scene-update\":0.09999999403953552,\"render-submit\":4.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:35.256Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":59.70000000298023,\"stages\":{\"building-kits\":53.70000000298023,\"chunks\":0.29999999701976776,\"sidewalk-step\":0.29999999701976776,\"scene-update\":0.10000000894069672,\"render-submit\":5.299999997019768}}",
+    "timestamp": "2026-10-12T07:50:35.335Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":35.099999994039536,\"stages\":{\"building-kits\":29.700000002980232,\"chunks\":0.5999999940395355,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":4.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:35.391Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.299999997019768,\"stages\":{\"building-kits\":21.700000002980232,\"chunks\":0.4000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":7.0999999940395355}}",
+    "timestamp": "2026-10-12T07:50:35.423Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.400000005960464,\"stages\":{\"building-kits\":17.799999997019768,\"chunks\":2.2000000029802322,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.200000002980232}}",
+    "timestamp": "2026-10-12T07:50:35.450Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":54.6000000089407,\"stages\":{\"building-kits\":46.6000000089407,\"chunks\":2.3999999910593033,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:35.524Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.799999997019768,\"stages\":{\"building-kits\":21.099999994039536,\"chunks\":2.9000000059604645,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":6.5999999940395355}}",
+    "timestamp": "2026-10-12T07:50:35.817Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":27.299999997019768,\"stages\":{\"building-kits\":18.200000002980232,\"chunks\":3,\"sidewalk-step\":0,\"scene-update\":0.19999998807907104,\"render-submit\":5.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:35.845Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":27.599999994039536,\"stages\":{\"building-kits\":19.799999997019768,\"chunks\":1.8999999910593033,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:35.927Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":31.5,\"stages\":{\"building-kits\":22.400000005960464,\"chunks\":3.0999999940395355,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:35.978Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":59.5,\"stages\":{\"building-kits\":51.8999999910593,\"chunks\":2.1000000089406967,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":5.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:36.089Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.900000005960464,\"stages\":{\"building-kits\":16.600000008940697,\"chunks\":2.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":6.299999997019768}}",
+    "timestamp": "2026-10-12T07:50:36.145Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":64.09999999403954,\"stages\":{\"building-kits\":56,\"chunks\":2.699999988079071,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.200000002980232}}",
+    "timestamp": "2026-10-12T07:50:36.210Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.099999994039536,\"stages\":{\"building-kits\":20.599999994039536,\"chunks\":2.2000000029802322,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.199999988079071}}",
+    "timestamp": "2026-10-12T07:50:36.241Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":27.099999994039536,\"stages\":{\"building-kits\":18.399999991059303,\"chunks\":3.1000000089406967,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":5.5}}",
+    "timestamp": "2026-10-12T07:50:36.301Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":31.900000005960464,\"stages\":{\"building-kits\":23.200000002980232,\"chunks\":3.0999999940395355,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:36.337Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":48.29999999701977,\"stages\":{\"building-kits\":39.29999999701977,\"chunks\":3.1000000089406967,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":5.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:36.411Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.69999998807907,\"stages\":{\"building-kits\":19.599999994039536,\"chunks\":3.2999999970197678,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.699999988079071}}",
+    "timestamp": "2026-10-12T07:50:36.441Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":44.70000000298023,\"stages\":{\"building-kits\":35.70000000298023,\"chunks\":3.2999999970197678,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":5.600000008940697}}",
+    "timestamp": "2026-10-12T07:50:36.562Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.700000002980232,\"stages\":{\"building-kits\":16.5,\"chunks\":5,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":7.100000008940697}}",
+    "timestamp": "2026-10-12T07:50:36.618Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":38.79999999701977,\"stages\":{\"building-kits\":26,\"chunks\":5.199999988079071,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":7.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:36.684Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":49.1000000089407,\"stages\":{\"building-kits\":39.20000000298023,\"chunks\":3.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:36.734Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.899999991059303,\"stages\":{\"building-kits\":21.700000002980232,\"chunks\":3.5,\"sidewalk-step\":0,\"scene-update\":0.19999998807907104,\"render-submit\":5.5}}",
+    "timestamp": "2026-10-12T07:50:36.794Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":45.400000005960464,\"stages\":{\"building-kits\":39.5,\"chunks\":0.29999999701976776,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.5}}",
+    "timestamp": "2026-10-12T07:50:37.153Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.099999994039536,\"stages\":{\"building-kits\":23.799999997019768,\"chunks\":0.29999999701976776,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":4.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:37.201Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":33.80000001192093,\"stages\":{\"building-kits\":28,\"chunks\":0.30000001192092896,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":5.4000000059604645}}",
+    "timestamp": "2026-10-12T07:50:37.253Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.399999991059303,\"stages\":{\"building-kits\":20,\"chunks\":0.09999999403953552,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.0999999940395355}}",
+    "timestamp": "2026-10-12T07:50:37.294Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26,\"stages\":{\"building-kits\":20.899999991059303,\"chunks\":0.30000001192092896,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":4.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:37.343Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.8999999910593,\"stages\":{\"building-kits\":29.19999998807907,\"chunks\":0.5,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.0999999940395355}}",
+    "timestamp": "2026-10-12T07:50:37.405Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":27.299999997019768,\"stages\":{\"building-kits\":20.900000005960464,\"chunks\":0.3999999910593033,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.899999991059303}}",
+    "timestamp": "2026-10-12T07:50:37.456Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":152.79999999701977,\"stages\":{\"building-kits\":145.29999999701977,\"chunks\":0.5,\"sidewalk-step\":0,\"scene-update\":0.29999999701976776,\"render-submit\":6.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:37.696Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":39.79999999701977,\"stages\":{\"building-kits\":20.399999991059303,\"chunks\":0.30000001192092896,\"sidewalk-step\":0,\"scene-update\":0.19999998807907104,\"render-submit\":18.900000005960464}}",
+    "timestamp": "2026-10-12T07:50:37.806Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":27.69999998807907,\"stages\":{\"building-kits\":17.899999991059303,\"chunks\":3.5,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":6.0999999940395355}}",
+    "timestamp": "2026-10-12T07:50:37.835Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28,\"stages\":{\"building-kits\":18.399999991059303,\"chunks\":3.4000000059604645,\"sidewalk-step\":0,\"scene-update\":0.29999999701976776,\"render-submit\":5.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:38.005Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":138.29999999701977,\"stages\":{\"building-kits\":129.5,\"chunks\":2.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:38.215Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26.100000008940697,\"stages\":{\"building-kits\":17.600000008940697,\"chunks\":2.0999999940395355,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":6.300000011920929}}",
+    "timestamp": "2026-10-12T07:50:38.302Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":54,\"stages\":{\"building-kits\":44.79999999701977,\"chunks\":3.0999999940395355,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":5.9000000059604645}}",
+    "timestamp": "2026-10-12T07:50:38.697Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.700000002980232,\"stages\":{\"building-kits\":16.80000001192093,\"chunks\":3,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":5.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:38.723Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26.400000005960464,\"stages\":{\"building-kits\":17.700000002980232,\"chunks\":2.8999999910593033,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:38.753Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":25.799999997019768,\"stages\":{\"building-kits\":17.099999994039536,\"chunks\":2,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":6.5}}",
+    "timestamp": "2026-10-12T07:50:39.470Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":35.099999994039536,\"stages\":{\"building-kits\":28.700000002980232,\"chunks\":0.5999999940395355,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":5.699999988079071}}",
+    "timestamp": "2026-10-12T07:50:39.525Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":26.5,\"stages\":{\"building-kits\":17.200000002980232,\"chunks\":2.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":6.299999997019768}}",
+    "timestamp": "2026-10-12T07:50:39.599Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.30000001192093,\"stages\":{\"building-kits\":0,\"chunks\":0.20000000298023224,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":29}}",
+    "timestamp": "2026-10-12T07:50:41.031Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":75.29999999701977,\"stages\":{\"building-kits\":0,\"chunks\":0.09999999403953552,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":75}}",
+    "timestamp": "2026-10-12T07:50:41.107Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":32.6000000089407,\"stages\":{\"building-kits\":0,\"chunks\":0.20000000298023224,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":32.20000000298023}}",
+    "timestamp": "2026-10-12T07:50:41.140Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.200000002980232,\"stages\":{\"building-kits\":0,\"chunks\":0.20000000298023224,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":27.900000005960464}}",
+    "timestamp": "2026-10-12T07:50:41.272Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":31.899999991059303,\"stages\":{\"building-kits\":0,\"chunks\":0.7000000029802322,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":31.099999994039536}}",
+    "timestamp": "2026-10-12T07:50:41.304Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":32.20000000298023,\"stages\":{\"building-kits\":0,\"chunks\":0.5,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":31.599999994039536}}",
+    "timestamp": "2026-10-12T07:50:41.337Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":50.79999999701977,\"stages\":{\"building-kits\":0,\"chunks\":0.5,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":50.20000000298023}}",
+    "timestamp": "2026-10-12T07:50:41.902Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":133.5,\"stages\":{\"building-kits\":0,\"chunks\":0.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":132.5}}",
+    "timestamp": "2026-10-12T07:50:42.036Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.700000002980232,\"stages\":{\"building-kits\":0,\"chunks\":0.6000000089406967,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":28.899999991059303}}",
+    "timestamp": "2026-10-12T07:50:42.224Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":54,\"stages\":{\"building-kits\":0,\"chunks\":1.1000000089406967,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":52.79999999701977}}",
+    "timestamp": "2026-10-12T07:50:42.278Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.099999994039536,\"stages\":{\"building-kits\":0,\"chunks\":1.2000000029802322,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":32.79999999701977}}",
+    "timestamp": "2026-10-12T07:50:42.312Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.900000005960464,\"stages\":{\"building-kits\":0,\"chunks\":0.7000000029802322,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":30}}",
+    "timestamp": "2026-10-12T07:50:42.456Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":89.70000000298023,\"stages\":{\"building-kits\":0,\"chunks\":1,\"sidewalk-step\":0,\"scene-update\":0,\"render-submit\":88.70000000298023}}",
+    "timestamp": "2026-10-12T07:50:42.674Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.900000005960464,\"stages\":{\"building-kits\":0,\"chunks\":0.5,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":29.200000002980232}}",
+    "timestamp": "2026-10-12T07:50:42.746Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.599999994039536,\"stages\":{\"building-kits\":0,\"chunks\":0.8999999910593033,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":29.599999994039536}}",
+    "timestamp": "2026-10-12T07:50:42.807Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.299999997019768,\"stages\":{\"building-kits\":0,\"chunks\":1,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":27.200000002980232}}",
+    "timestamp": "2026-10-12T07:50:42.930Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.799999997019768,\"stages\":{\"building-kits\":0,\"chunks\":0.9000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":27.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:42.997Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.400000005960464,\"stages\":{\"building-kits\":0,\"chunks\":0.7000000029802322,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":29.5}}",
+    "timestamp": "2026-10-12T07:50:43.120Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":58.8999999910593,\"stages\":{\"building-kits\":0,\"chunks\":0.09999999403953552,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":58.599999994039536}}",
+    "timestamp": "2026-10-12T07:50:43.734Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":63.79999999701977,\"stages\":{\"building-kits\":0,\"chunks\":0.20000000298023224,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":63.3999999910593}}",
+    "timestamp": "2026-10-12T07:50:43.798Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":32.6000000089407,\"stages\":{\"building-kits\":0,\"chunks\":0.20000000298023224,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":32.30000001192093}}",
+    "timestamp": "2026-10-12T07:50:43.852Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.599999994039536,\"stages\":{\"building-kits\":0,\"chunks\":0.3999999910593033,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":34}}",
+    "timestamp": "2026-10-12T07:50:43.903Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":33.20000000298023,\"stages\":{\"building-kits\":0,\"chunks\":0.20000000298023224,\"sidewalk-step\":0,\"scene-update\":0.29999999701976776,\"render-submit\":32.70000000298023}}",
+    "timestamp": "2026-10-12T07:50:43.936Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":31.899999991059303,\"stages\":{\"building-kits\":0,\"chunks\":0.19999998807907104,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":31.599999994039536}}",
+    "timestamp": "2026-10-12T07:50:43.972Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.19999998807907,\"stages\":{\"building-kits\":0,\"chunks\":0.3999999910593033,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":28.599999994039536}}",
+    "timestamp": "2026-10-12T07:50:44.003Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.200000002980232,\"stages\":{\"building-kits\":0,\"chunks\":0.29999999701976776,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":29.700000002980232}}",
+    "timestamp": "2026-10-12T07:50:44.034Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.29999999701977,\"stages\":{\"building-kits\":0,\"chunks\":0.5999999940395355,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":33.5}}",
+    "timestamp": "2026-10-12T07:50:44.068Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":125.59999999403954,\"stages\":{\"building-kits\":0,\"chunks\":2.5999999940395355,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":122.79999999701977}}",
+    "timestamp": "2026-10-12T07:50:44.194Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":146.20000000298023,\"stages\":{\"building-kits\":0,\"chunks\":2.2000000029802322,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":143.8999999910593}}",
+    "timestamp": "2026-10-12T07:50:44.344Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34,\"stages\":{\"building-kits\":0,\"chunks\":2.9000000059604645,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":30.899999991059303}}",
+    "timestamp": "2026-10-12T07:50:44.568Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":144.29999999701977,\"stages\":{\"building-kits\":0,\"chunks\":2,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":142.20000000298023}}",
+    "timestamp": "2026-10-12T07:50:44.716Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.5,\"stages\":{\"building-kits\":0,\"chunks\":1.1000000089406967,\"sidewalk-step\":0,\"scene-update\":0.19999998807907104,\"render-submit\":33.20000000298023}}",
+    "timestamp": "2026-10-12T07:50:44.751Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":35.5,\"stages\":{\"building-kits\":0,\"chunks\":0.29999999701976776,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":35}}",
+    "timestamp": "2026-10-12T07:50:44.798Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":63.70000000298023,\"stages\":{\"building-kits\":0,\"chunks\":2.2999999970197678,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":61.29999999701977}}",
+    "timestamp": "2026-10-12T07:50:44.862Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":224.20000000298023,\"stages\":{\"building-kits\":0,\"chunks\":2.2000000029802322,\"sidewalk-step\":0,\"scene-update\":0.29999999701976776,\"render-submit\":221.70000000298023}}",
+    "timestamp": "2026-10-12T07:50:45.090Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":34.79999999701977,\"stages\":{\"building-kits\":0,\"chunks\":2.4000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":32.29999999701977}}",
+    "timestamp": "2026-10-12T07:50:45.150Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":159,\"stages\":{\"building-kits\":0,\"chunks\":0.9000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":158}}",
+    "timestamp": "2026-10-12T07:50:45.309Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":80.5,\"stages\":{\"building-kits\":0,\"chunks\":1.7999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":78.5}}",
+    "timestamp": "2026-10-12T07:50:45.390Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":36.5,\"stages\":{\"building-kits\":0,\"chunks\":1.8999999910593033,\"sidewalk-step\":0,\"scene-update\":0.10000000894069672,\"render-submit\":34.5}}",
+    "timestamp": "2026-10-12T07:50:45.427Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":60,\"stages\":{\"building-kits\":0,\"chunks\":1.3999999910593033,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":58.400000005960464}}",
+    "timestamp": "2026-10-12T07:50:45.573Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.399999991059303,\"stages\":{\"building-kits\":0,\"chunks\":1.0999999940395355,\"sidewalk-step\":0,\"scene-update\":0,\"render-submit\":27.299999997019768}}",
+    "timestamp": "2026-10-12T07:50:45.754Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":36,\"stages\":{\"building-kits\":0,\"chunks\":1.2999999970197678,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":34.5}}",
+    "timestamp": "2026-10-12T07:50:46.244Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":29.900000005960464,\"stages\":{\"building-kits\":0,\"chunks\":0.9000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":28.900000005960464}}",
+    "timestamp": "2026-10-12T07:50:46.325Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":28.299999997019768,\"stages\":{\"building-kits\":0,\"chunks\":0.4000000059604645,\"sidewalk-step\":0,\"scene-update\":0.09999999403953552,\"render-submit\":27.799999997019768}}",
+    "timestamp": "2026-10-12T07:50:46.717Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"frame\",\"tick\":18918,\"totalMs\":30.599999994039536,\"stages\":{\"building-kits\":0,\"chunks\":0.29999999701976776,\"sidewalk-step\":0,\"scene-update\":0.20000000298023224,\"render-submit\":30.099999994039536}}",
+    "timestamp": "2026-10-12T07:50:46.790Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":18926,\"totalMs\":52.3999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":11.799999997019768,\"roads\":0,\"sidewalk-input\":0.09999999403953552,\"ground\":2.9000000059604645,\"building-inputs\":0.7000000029802322,\"trees\":36.8999999910593}}",
+    "timestamp": "2026-10-12T07:51:30.940Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":18998,\"totalMs\":144.79999999701977,\"stages\":{\"terrain-reset\":0.10000000894069672,\"transit-access\":27.399999991059303,\"roads\":86.90000000596046,\"sidewalk-input\":0.09999999403953552,\"ground\":2.2999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":27.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:31.556Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19070,\"totalMs\":84.1000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":13.299999997019768,\"roads\":48.1000000089407,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5,\"building-inputs\":0.29999999701976776,\"trees\":20.80000001192093}}",
+    "timestamp": "2026-10-12T07:51:32.002Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19142,\"totalMs\":88.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":15,\"roads\":49.20000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.4000000059604645,\"building-inputs\":0.29999999701976776,\"trees\":22.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:32.544Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19214,\"totalMs\":95.29999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.5,\"roads\":52.099999994039536,\"sidewalk-input\":0,\"ground\":4.700000002980232,\"building-inputs\":0.4000000059604645,\"trees\":22.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:33.059Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19286,\"totalMs\":80.79999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":6.100000008940697,\"roads\":52.099999994039536,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5,\"building-inputs\":0.30000001192092896,\"trees\":20.69999998807907}}",
+    "timestamp": "2026-10-12T07:51:33.561Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19358,\"totalMs\":89.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":13.900000005960464,\"roads\":52.5,\"sidewalk-input\":0.20000000298023224,\"ground\":1.3999999910593033,\"building-inputs\":0.4000000059604645,\"trees\":21.299999997019768}}",
+    "timestamp": "2026-10-12T07:51:34.072Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19430,\"totalMs\":80.30000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":6.600000008940697,\"roads\":52.70000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.7000000029802322,\"building-inputs\":0.29999999701976776,\"trees\":18.900000005960464}}",
+    "timestamp": "2026-10-12T07:51:34.581Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19502,\"totalMs\":86.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.100000008940697,\"roads\":49.5,\"sidewalk-input\":0.09999999403953552,\"ground\":1.4000000059604645,\"building-inputs\":0.20000000298023224,\"trees\":20.19999998807907}}",
+    "timestamp": "2026-10-12T07:51:35.080Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19574,\"totalMs\":89.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":15,\"roads\":50,\"sidewalk-input\":0.09999999403953552,\"ground\":1.6000000089406967,\"building-inputs\":0.20000000298023224,\"trees\":23}}",
+    "timestamp": "2026-10-12T07:51:35.614Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19646,\"totalMs\":107.3999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":17.099999994039536,\"roads\":59.099999994039536,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7999999970197678,\"building-inputs\":0.29999999701976776,\"trees\":29}}",
+    "timestamp": "2026-10-12T07:51:36.159Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19718,\"totalMs\":118.1000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.799999997019768,\"roads\":64.80000001192093,\"sidewalk-input\":0.09999999403953552,\"ground\":2.0999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":31.900000005960464}}",
+    "timestamp": "2026-10-12T07:51:36.657Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19790,\"totalMs\":90.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.599999994039536,\"roads\":48.900000005960464,\"sidewalk-input\":0.09999999403953552,\"ground\":4.200000002980232,\"building-inputs\":0.20000000298023224,\"trees\":21.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:37.149Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19862,\"totalMs\":104.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":16.400000005960464,\"roads\":62.5,\"sidewalk-input\":0,\"ground\":1.7999999970197678,\"building-inputs\":0.29999999701976776,\"trees\":23.200000002980232}}",
+    "timestamp": "2026-10-12T07:51:37.687Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":19934,\"totalMs\":88.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.199999988079071,\"roads\":50.5,\"sidewalk-input\":0.10000000894069672,\"ground\":1.5,\"building-inputs\":0.20000000298023224,\"trees\":20.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:38.196Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20006,\"totalMs\":94.3999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":16.399999991059303,\"roads\":54.80000001192093,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5999999940395355,\"building-inputs\":0.30000001192092896,\"trees\":21.19999998807907}}",
+    "timestamp": "2026-10-12T07:51:38.734Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20078,\"totalMs\":90.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.900000005960464,\"roads\":52.3999999910593,\"sidewalk-input\":0.10000000894069672,\"ground\":1.5,\"building-inputs\":0.20000000298023224,\"trees\":20.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:39.257Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20150,\"totalMs\":88,\"stages\":{\"terrain-reset\":0,\"transit-access\":14.299999997019768,\"roads\":52.20000000298023,\"sidewalk-input\":0,\"ground\":1.5,\"building-inputs\":0.29999999701976776,\"trees\":19.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:39.762Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20222,\"totalMs\":82.1000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":7.799999997019768,\"roads\":51.900000005960464,\"sidewalk-input\":0,\"ground\":1.5999999940395355,\"building-inputs\":0.30000001192092896,\"trees\":20.5}}",
+    "timestamp": "2026-10-12T07:51:40.270Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20294,\"totalMs\":86,\"stages\":{\"terrain-reset\":0,\"transit-access\":8.399999991059303,\"roads\":53.80000001192093,\"sidewalk-input\":0.19999998807907104,\"ground\":1.9000000059604645,\"building-inputs\":0.4000000059604645,\"trees\":21.299999997019768}}",
+    "timestamp": "2026-10-12T07:51:40.794Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20366,\"totalMs\":93.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.700000002980232,\"roads\":53.70000000298023,\"sidewalk-input\":0,\"ground\":1.3999999910593033,\"building-inputs\":0.29999999701976776,\"trees\":22}}",
+    "timestamp": "2026-10-12T07:51:41.325Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20438,\"totalMs\":94.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":7.5,\"roads\":60.79999999701977,\"sidewalk-input\":0.10000000894069672,\"ground\":1.8999999910593033,\"building-inputs\":0.29999999701976776,\"trees\":23.5}}",
+    "timestamp": "2026-10-12T07:51:41.845Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20510,\"totalMs\":88.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":14.399999991059303,\"roads\":53.400000005960464,\"sidewalk-input\":0.09999999403953552,\"ground\":1.4000000059604645,\"building-inputs\":0.20000000298023224,\"trees\":19.200000002980232}}",
+    "timestamp": "2026-10-12T07:51:42.369Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20582,\"totalMs\":87.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":14.100000008940697,\"roads\":51.79999999701977,\"sidewalk-input\":0.09999999403953552,\"ground\":1.6000000089406967,\"building-inputs\":0.29999999701976776,\"trees\":19.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:42.886Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20654,\"totalMs\":91.69999998807907,\"stages\":{\"terrain-reset\":0,\"transit-access\":16.099999994039536,\"roads\":53.79999999701977,\"sidewalk-input\":0.10000000894069672,\"ground\":1.3999999910593033,\"building-inputs\":0.29999999701976776,\"trees\":20}}",
+    "timestamp": "2026-10-12T07:51:43.420Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20726,\"totalMs\":83,\"stages\":{\"terrain-reset\":0,\"transit-access\":8.5,\"roads\":51.8999999910593,\"sidewalk-input\":0.10000000894069672,\"ground\":1.5999999940395355,\"building-inputs\":0.29999999701976776,\"trees\":20.600000008940697}}",
+    "timestamp": "2026-10-12T07:51:43.940Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20798,\"totalMs\":82.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":7.4000000059604645,\"roads\":53.3999999910593,\"sidewalk-input\":0,\"ground\":1.5,\"building-inputs\":0.30000001192092896,\"trees\":19.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:44.434Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20870,\"totalMs\":96.69999998807907,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.699999988079071,\"roads\":56.900000005960464,\"sidewalk-input\":0,\"ground\":1.7999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":21.899999991059303}}",
+    "timestamp": "2026-10-12T07:51:44.964Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":20942,\"totalMs\":94,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.400000005960464,\"roads\":55.5,\"sidewalk-input\":0.09999999403953552,\"ground\":1.4000000059604645,\"building-inputs\":0.29999999701976776,\"trees\":21.299999997019768}}",
+    "timestamp": "2026-10-12T07:51:45.479Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21014,\"totalMs\":95.1000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":17.5,\"roads\":54.400000005960464,\"sidewalk-input\":0,\"ground\":1.5999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":21.200000002980232}}",
+    "timestamp": "2026-10-12T07:51:46.023Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21086,\"totalMs\":93.80000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":16.200000002980232,\"roads\":52.79999999701977,\"sidewalk-input\":0.10000000894069672,\"ground\":3.8999999910593033,\"building-inputs\":0.20000000298023224,\"trees\":20.600000008940697}}",
+    "timestamp": "2026-10-12T07:51:46.538Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21158,\"totalMs\":96.8999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":16.799999997019768,\"roads\":57.29999999701977,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.20000000298023224,\"trees\":20.899999991059303}}",
+    "timestamp": "2026-10-12T07:51:47.080Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21230,\"totalMs\":95.40000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":16.200000002980232,\"roads\":55.20000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5999999940395355,\"building-inputs\":0.30000001192092896,\"trees\":22}}",
+    "timestamp": "2026-10-12T07:51:47.597Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21302,\"totalMs\":95.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":16,\"roads\":56.19999998807907,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.29999999701976776,\"trees\":20.900000005960464}}",
+    "timestamp": "2026-10-12T07:51:48.115Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21374,\"totalMs\":101.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.099999994039536,\"roads\":57.80000001192093,\"sidewalk-input\":0.09999999403953552,\"ground\":1.7000000029802322,\"building-inputs\":0.5,\"trees\":21.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:48.646Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21446,\"totalMs\":88.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":8.700000002980232,\"roads\":56.1000000089407,\"sidewalk-input\":0.09999999403953552,\"ground\":1.7999999970197678,\"building-inputs\":0.29999999701976776,\"trees\":21.200000002980232}}",
+    "timestamp": "2026-10-12T07:51:49.141Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21518,\"totalMs\":118.1000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.200000002980232,\"roads\":68.5,\"sidewalk-input\":0.10000000894069672,\"ground\":2,\"building-inputs\":0.5,\"trees\":27.799999997019768}}",
+    "timestamp": "2026-10-12T07:51:49.692Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21590,\"totalMs\":150.19999998807907,\"stages\":{\"terrain-reset\":0,\"transit-access\":25.5,\"roads\":88.29999999701977,\"sidewalk-input\":0.09999999403953552,\"ground\":2.6000000089406967,\"building-inputs\":0.3999999910593033,\"trees\":33.29999999701977}}",
+    "timestamp": "2026-10-12T07:51:50.241Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21662,\"totalMs\":120.40000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.599999994039536,\"roads\":69.5,\"sidewalk-input\":0.10000000894069672,\"ground\":2,\"building-inputs\":0.5,\"trees\":27.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:50.726Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21734,\"totalMs\":97.79999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":15.899999991059303,\"roads\":57.1000000089407,\"sidewalk-input\":0.09999999403953552,\"ground\":1.6000000089406967,\"building-inputs\":0.3999999910593033,\"trees\":22.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:51.218Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21806,\"totalMs\":98,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.400000005960464,\"roads\":55.79999999701977,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7999999970197678,\"building-inputs\":0.3999999910593033,\"trees\":21.5}}",
+    "timestamp": "2026-10-12T07:51:51.724Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21878,\"totalMs\":96.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":17.099999994039536,\"roads\":55.400000005960464,\"sidewalk-input\":0.09999999403953552,\"ground\":1.7000000029802322,\"building-inputs\":0.4000000059604645,\"trees\":21.799999997019768}}",
+    "timestamp": "2026-10-12T07:51:52.242Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":21950,\"totalMs\":99.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":17.200000002980232,\"roads\":57.599999994039536,\"sidewalk-input\":0,\"ground\":1.6000000089406967,\"building-inputs\":0.3999999910593033,\"trees\":22.400000005960464}}",
+    "timestamp": "2026-10-12T07:51:52.772Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22022,\"totalMs\":95.59999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":9.799999997019768,\"roads\":60.29999999701977,\"sidewalk-input\":0,\"ground\":3.5999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":21.5}}",
+    "timestamp": "2026-10-12T07:51:53.265Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22094,\"totalMs\":104.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.799999997019768,\"roads\":60.5,\"sidewalk-input\":0.10000000894069672,\"ground\":1.5999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":22.69999998807907}}",
+    "timestamp": "2026-10-12T07:51:53.791Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22166,\"totalMs\":132.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.299999997019768,\"roads\":76.8999999910593,\"sidewalk-input\":0.10000000894069672,\"ground\":2.0999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":31.700000002980232}}",
+    "timestamp": "2026-10-12T07:51:54.342Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22238,\"totalMs\":103.30000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":17.30000001192093,\"roads\":61,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5999999940395355,\"building-inputs\":0.30000001192092896,\"trees\":23}}",
+    "timestamp": "2026-10-12T07:51:54.820Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22310,\"totalMs\":104.59999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.299999997019768,\"roads\":60.20000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5,\"building-inputs\":0.4000000059604645,\"trees\":23.099999994039536}}",
+    "timestamp": "2026-10-12T07:51:55.332Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22382,\"totalMs\":96.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":8.399999991059303,\"roads\":63.5,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7000000029802322,\"building-inputs\":0.3999999910593033,\"trees\":22.600000008940697}}",
+    "timestamp": "2026-10-12T07:51:55.835Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22454,\"totalMs\":101.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":17.200000002980232,\"roads\":60.6000000089407,\"sidewalk-input\":0.19999998807907104,\"ground\":1.5,\"building-inputs\":0.30000001192092896,\"trees\":21.69999998807907}}",
+    "timestamp": "2026-10-12T07:51:56.358Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22526,\"totalMs\":101,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.599999994039536,\"roads\":57.900000005960464,\"sidewalk-input\":0.09999999403953552,\"ground\":3.1000000089406967,\"building-inputs\":0.29999999701976776,\"trees\":21}}",
+    "timestamp": "2026-10-12T07:51:56.880Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22598,\"totalMs\":93.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":8.299999997019768,\"roads\":60.20000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5,\"building-inputs\":0.4000000059604645,\"trees\":22.599999994039536}}",
+    "timestamp": "2026-10-12T07:51:57.403Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22670,\"totalMs\":103.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.400000005960464,\"roads\":61.8999999910593,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.4000000059604645,\"trees\":21.5}}",
+    "timestamp": "2026-10-12T07:51:57.908Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22742,\"totalMs\":109.79999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.299999997019768,\"roads\":64.79999999701977,\"sidewalk-input\":0.09999999403953552,\"ground\":2.300000011920929,\"building-inputs\":2.0999999940395355,\"trees\":22.200000002980232}}",
+    "timestamp": "2026-10-12T07:51:58.429Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22814,\"totalMs\":109.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.799999997019768,\"roads\":64,\"sidewalk-input\":0.10000000894069672,\"ground\":2,\"building-inputs\":0.3999999910593033,\"trees\":23.400000005960464}}",
+    "timestamp": "2026-10-12T07:51:58.951Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22886,\"totalMs\":96.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":8.799999997019768,\"roads\":64.29999999701977,\"sidewalk-input\":0,\"ground\":1.6000000089406967,\"building-inputs\":0.3999999910593033,\"trees\":21.80000001192093}}",
+    "timestamp": "2026-10-12T07:51:59.464Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":22958,\"totalMs\":110.40000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.80000001192093,\"roads\":64.79999999701977,\"sidewalk-input\":0.20000000298023224,\"ground\":1.699999988079071,\"building-inputs\":0.5,\"trees\":23.400000005960464}}",
+    "timestamp": "2026-10-12T07:52:00.012Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23030,\"totalMs\":107.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.299999997019768,\"roads\":64.40000000596046,\"sidewalk-input\":0,\"ground\":3.2999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":21.5}}",
+    "timestamp": "2026-10-12T07:52:00.530Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23102,\"totalMs\":106.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.599999994039536,\"roads\":63.29999999701977,\"sidewalk-input\":0.10000000894069672,\"ground\":1.5999999940395355,\"building-inputs\":0.29999999701976776,\"trees\":22.600000008940697}}",
+    "timestamp": "2026-10-12T07:52:01.064Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23174,\"totalMs\":107.1000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":20,\"roads\":63.1000000089407,\"sidewalk-input\":0,\"ground\":1.699999988079071,\"building-inputs\":0.30000001192092896,\"trees\":22}}",
+    "timestamp": "2026-10-12T07:52:01.580Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23246,\"totalMs\":105.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.200000002980232,\"roads\":62.70000000298023,\"sidewalk-input\":0.20000000298023224,\"ground\":1.7999999970197678,\"building-inputs\":0.29999999701976776,\"trees\":21.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:02.104Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23318,\"totalMs\":106.59999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.399999991059303,\"roads\":61.79999999701977,\"sidewalk-input\":0,\"ground\":1.800000011920929,\"building-inputs\":0.29999999701976776,\"trees\":23.299999997019768}}",
+    "timestamp": "2026-10-12T07:52:02.619Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23390,\"totalMs\":106.29999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":11.899999991059303,\"roads\":67.20000000298023,\"sidewalk-input\":0,\"ground\":2.2999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":24.5}}",
+    "timestamp": "2026-10-12T07:52:03.150Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23462,\"totalMs\":109.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.400000005960464,\"roads\":64.29999999701977,\"sidewalk-input\":0.10000000894069672,\"ground\":1.699999988079071,\"building-inputs\":0.30000001192092896,\"trees\":23.69999998807907}}",
+    "timestamp": "2026-10-12T07:52:03.666Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23534,\"totalMs\":108.79999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":18,\"roads\":63.70000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":3.2000000029802322,\"building-inputs\":0.4000000059604645,\"trees\":23.399999991059303}}",
+    "timestamp": "2026-10-12T07:52:04.176Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23606,\"totalMs\":107.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.200000002980232,\"roads\":63.19999998807907,\"sidewalk-input\":0.10000000894069672,\"ground\":3.2999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":22}}",
+    "timestamp": "2026-10-12T07:52:04.705Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23678,\"totalMs\":109.8999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.5,\"roads\":64.3999999910593,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7999999970197678,\"building-inputs\":0.3999999910593033,\"trees\":23.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:05.233Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23750,\"totalMs\":111.70000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":19,\"roads\":65.6000000089407,\"sidewalk-input\":0,\"ground\":3.2999999970197678,\"building-inputs\":0.5,\"trees\":23.299999997019768}}",
+    "timestamp": "2026-10-12T07:52:05.728Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23822,\"totalMs\":99.40000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":10.299999997019768,\"roads\":64.20000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5,\"building-inputs\":0.4000000059604645,\"trees\":22.900000005960464}}",
+    "timestamp": "2026-10-12T07:52:06.256Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23894,\"totalMs\":107.19999998807907,\"stages\":{\"terrain-reset\":0,\"transit-access\":19.099999994039536,\"roads\":63.70000000298023,\"sidewalk-input\":0,\"ground\":1.5999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":22.399999991059303}}",
+    "timestamp": "2026-10-12T07:52:06.774Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":23966,\"totalMs\":109.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.100000008940697,\"roads\":64,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":22.299999997019768}}",
+    "timestamp": "2026-10-12T07:52:07.287Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24038,\"totalMs\":109.6000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.200000002980232,\"roads\":64,\"sidewalk-input\":0.20000000298023224,\"ground\":1.5,\"building-inputs\":0.5,\"trees\":23.200000002980232}}",
+    "timestamp": "2026-10-12T07:52:07.801Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24110,\"totalMs\":117.30000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":22.700000002980232,\"roads\":66.5,\"sidewalk-input\":0.10000000894069672,\"ground\":3.699999988079071,\"building-inputs\":0.5,\"trees\":23.80000001192093}}",
+    "timestamp": "2026-10-12T07:52:08.330Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24182,\"totalMs\":112.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.5,\"roads\":65.90000000596046,\"sidewalk-input\":0.09999999403953552,\"ground\":1.7000000029802322,\"building-inputs\":0.29999999701976776,\"trees\":23.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:08.849Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24254,\"totalMs\":108.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.200000002980232,\"roads\":64,\"sidewalk-input\":0,\"ground\":1.5999999940395355,\"building-inputs\":0.29999999701976776,\"trees\":22.400000005960464}}",
+    "timestamp": "2026-10-12T07:52:09.356Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24326,\"totalMs\":110.6000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.30000001192093,\"roads\":65.29999999701977,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.3999999910593033,\"trees\":22.900000005960464}}",
+    "timestamp": "2026-10-12T07:52:09.880Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24398,\"totalMs\":113.6000000089407,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.400000005960464,\"roads\":66.59999999403954,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.4000000059604645,\"trees\":24.5}}",
+    "timestamp": "2026-10-12T07:52:10.392Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24470,\"totalMs\":112.29999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.200000002980232,\"roads\":65.29999999701977,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.3999999910593033,\"trees\":23.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:10.913Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24542,\"totalMs\":115.80000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.100000008940697,\"roads\":67.29999999701977,\"sidewalk-input\":0.09999999403953552,\"ground\":1.5,\"building-inputs\":0.4000000059604645,\"trees\":25.400000005960464}}",
+    "timestamp": "2026-10-12T07:52:11.430Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24614,\"totalMs\":112.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.700000002980232,\"roads\":65.29999999701977,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.4000000059604645,\"trees\":24.099999994039536}}",
+    "timestamp": "2026-10-12T07:52:11.954Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24686,\"totalMs\":109.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":18.899999991059303,\"roads\":64,\"sidewalk-input\":0.10000000894069672,\"ground\":2.699999988079071,\"building-inputs\":0.4000000059604645,\"trees\":23.400000005960464}}",
+    "timestamp": "2026-10-12T07:52:12.460Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24758,\"totalMs\":46.900000005960464,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.200000002980232,\"roads\":0,\"sidewalk-input\":0.09999999403953552,\"ground\":1.800000011920929,\"building-inputs\":0.29999999701976776,\"trees\":23.5}}",
+    "timestamp": "2026-10-12T07:52:12.905Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24830,\"totalMs\":110.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":21,\"roads\":64.80000001192093,\"sidewalk-input\":0,\"ground\":1.7999999970197678,\"building-inputs\":0.5,\"trees\":22.799999997019768}}",
+    "timestamp": "2026-10-12T07:52:13.483Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24902,\"totalMs\":106.29999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":10.700000002980232,\"roads\":68,\"sidewalk-input\":0.20000000298023224,\"ground\":2,\"building-inputs\":0.5,\"trees\":24.899999991059303}}",
+    "timestamp": "2026-10-12T07:52:14.008Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":24974,\"totalMs\":48.5,\"stages\":{\"terrain-reset\":0,\"transit-access\":22.19999998807907,\"roads\":0,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7000000029802322,\"building-inputs\":0.3999999910593033,\"trees\":24.100000008940697}}",
+    "timestamp": "2026-10-12T07:52:14.462Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25046,\"totalMs\":113.30000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.5,\"roads\":64.5,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":25}}",
+    "timestamp": "2026-10-12T07:52:15.044Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25118,\"totalMs\":47.3999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.700000002980232,\"roads\":0,\"sidewalk-input\":0,\"ground\":1.699999988079071,\"building-inputs\":0.5,\"trees\":23.5}}",
+    "timestamp": "2026-10-12T07:52:15.485Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25190,\"totalMs\":110.90000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.700000002980232,\"roads\":64.70000000298023,\"sidewalk-input\":0.09999999403953552,\"ground\":1.7000000029802322,\"building-inputs\":0.5,\"trees\":22.200000002980232}}",
+    "timestamp": "2026-10-12T07:52:16.080Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25262,\"totalMs\":110.19999998807907,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.19999998807907,\"roads\":63.5,\"sidewalk-input\":0.10000000894069672,\"ground\":2.8999999910593033,\"building-inputs\":0.6000000089406967,\"trees\":22.899999991059303}}",
+    "timestamp": "2026-10-12T07:52:16.582Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25334,\"totalMs\":114.09999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.899999991059303,\"roads\":65.40000000596046,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.3999999910593033,\"trees\":24.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:17.103Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25406,\"totalMs\":109.30000001192093,\"stages\":{\"terrain-reset\":0,\"transit-access\":20.400000005960464,\"roads\":62,\"sidewalk-input\":0.09999999403953552,\"ground\":1.9000000059604645,\"building-inputs\":0.29999999701976776,\"trees\":24.600000008940697}}",
+    "timestamp": "2026-10-12T07:52:17.629Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25478,\"totalMs\":112.8999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.599999994039536,\"roads\":64.40000000596046,\"sidewalk-input\":0.20000000298023224,\"ground\":1.5999999940395355,\"building-inputs\":0.4000000059604645,\"trees\":24.69999998807907}}",
+    "timestamp": "2026-10-12T07:52:18.172Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25550,\"totalMs\":114.79999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":22.799999997019768,\"roads\":64.29999999701977,\"sidewalk-input\":0,\"ground\":1.7999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":25.5}}",
+    "timestamp": "2026-10-12T07:52:18.684Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25622,\"totalMs\":101,\"stages\":{\"terrain-reset\":0,\"transit-access\":10.299999997019768,\"roads\":64.3999999910593,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7000000029802322,\"building-inputs\":0.3999999910593033,\"trees\":24.100000008940697}}",
+    "timestamp": "2026-10-12T07:52:19.197Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25694,\"totalMs\":110.40000000596046,\"stages\":{\"terrain-reset\":0,\"transit-access\":21.799999997019768,\"roads\":63.6000000089407,\"sidewalk-input\":0.09999999403953552,\"ground\":1.6000000089406967,\"building-inputs\":0.29999999701976776,\"trees\":23}}",
+    "timestamp": "2026-10-12T07:52:19.696Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25774,\"totalMs\":54,\"stages\":{\"terrain-reset\":0,\"transit-access\":25.5,\"roads\":0,\"sidewalk-input\":0,\"ground\":2.199999988079071,\"building-inputs\":0.4000000059604645,\"trees\":25.900000005960464}}",
+    "timestamp": "2026-10-12T07:52:20.202Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25846,\"totalMs\":36.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":10.5,\"roads\":0,\"sidewalk-input\":0.09999999403953552,\"ground\":1.9000000059604645,\"building-inputs\":0.5,\"trees\":23.200000002980232}}",
+    "timestamp": "2026-10-12T07:52:20.710Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25918,\"totalMs\":47.3999999910593,\"stages\":{\"terrain-reset\":0,\"transit-access\":22.599999994039536,\"roads\":0.09999999403953552,\"sidewalk-input\":0,\"ground\":1.6000000089406967,\"building-inputs\":0.3999999910593033,\"trees\":22.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:21.256Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":25990,\"totalMs\":106.79999999701977,\"stages\":{\"terrain-reset\":0,\"transit-access\":13.199999988079071,\"roads\":66.20000000298023,\"sidewalk-input\":0.10000000894069672,\"ground\":2,\"building-inputs\":0.5,\"trees\":24.69999998807907}}",
+    "timestamp": "2026-10-12T07:52:21.831Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":26062,\"totalMs\":116.20000000298023,\"stages\":{\"terrain-reset\":0,\"transit-access\":23.299999997019768,\"roads\":65.40000000596046,\"sidewalk-input\":0.09999999403953552,\"ground\":1.800000011920929,\"building-inputs\":0.5,\"trees\":25.099999994039536}}",
+    "timestamp": "2026-10-12T07:52:22.355Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":26134,\"totalMs\":116,\"stages\":{\"terrain-reset\":0,\"transit-access\":22.299999997019768,\"roads\":66.5,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7999999970197678,\"building-inputs\":0.4000000059604645,\"trees\":24.899999991059303}}",
+    "timestamp": "2026-10-12T07:52:22.878Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":26206,\"totalMs\":118.59999999403954,\"stages\":{\"terrain-reset\":0,\"transit-access\":23.5,\"roads\":67.19999998807907,\"sidewalk-input\":0.10000000894069672,\"ground\":1.7999999970197678,\"building-inputs\":0.5,\"trees\":25.5}}",
+    "timestamp": "2026-10-12T07:52:23.405Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  },
+  {
+    "level": "log",
+    "message": "city-stage-profile {\"kind\":\"world\",\"tick\":26278,\"totalMs\":106,\"stages\":{\"terrain-reset\":0,\"transit-access\":11.200000002980232,\"roads\":66,\"sidewalk-input\":0,\"ground\":1.7000000029802322,\"building-inputs\":0.29999999701976776,\"trees\":26.700000002980232}}",
+    "timestamp": "2026-10-12T07:52:23.913Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791791345293"
+  }
+]

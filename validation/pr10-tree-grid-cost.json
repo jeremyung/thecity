@@ -1,0 +1,29 @@
+{
+  "scope": "Node CPU actual updateTrees; cache forced invalid per run to measure structural rebuild, synthetic 1024 tree sites; no browser performance claim",
+  "cpu": "Apple M2 Max",
+  "node": "v26.7.0",
+  "seed": 87231,
+  "ticks": [
+    27925,
+    28325,
+    28725,
+    29125
+  ],
+  "buildings": [
+    723,
+    733,
+    743,
+    753
+  ],
+  "parity": "exact trunk/tree matrices and bounding spheres for all four real growth snapshots",
+  "before": {
+    "count": 20,
+    "p50Ms": 25.482124999999996,
+    "p95Ms": 29.41104100000001
+  },
+  "after": {
+    "count": 20,
+    "p50Ms": 8.037874999999985,
+    "p95Ms": 10.201125000000047
+  }
+}

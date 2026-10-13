@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8"><title>Ground junction surface review</title>
+<style>body{background:#202a2a;color:#eee;font:16px system-ui;margin:20px}main{display:flex;gap:12px}canvas{width:560px;height:440px}p{max-width:1120px}</style>
+<h1>Ground junction surface review</h1>
+<p>Production road builder and art materials. Synthetic local/arterial junction, 50 mm lens, DOF off, 4× MSAA. Diagnostic lighting; no water or city scheduling. Check continuous asphalt, visible local edge stripes and absence of construction cones.</p>
+<main><section><h2>Last Train, First Light</h2><canvas id="anime"></canvas></section><section><h2>Little Tokyo</h2><canvas id="miniature"></canvas></section></main><output id="status">Initializing…</output>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { CityRenderer } from '/web/src/render/city.ts';
+import { Kit } from '/web/src/render/kit.ts';
+import { addArterialSidewalks } from '/web/src/render/sidewalk-kit.ts';
+import { ArtMaterials } from '/web/src/render/materials.ts';
+const world={nodes:[{id:1,x:0,z:0,kind:'street'},{id:2,x:0,z:60,kind:'street'},{id:3,x:60,z:0,kind:'street'}],roads:[{id:10,from:1,to:2,kind:'local',stage:'open',progress:1,connected:true,length:60,lanes:1},{id:11,from:1,to:3,kind:'arterial',stage:'open',progress:1,connected:true,length:60,lanes:2}],projects:[],terrain:{river:[{x:1000,z:-500},{x:1000,z:500}]}};
+const detailed=new URLSearchParams(location.search).has('oblique');
+if(detailed){
+ world.nodes[2].z=-15;
+ world.nodes.push({id:4,x:-60,z:15,kind:'street'});
+ world.roads.push({...world.roads[1],id:12,to:4});
+ document.querySelector('p').textContent='Production road and sidewalk builders. Oblique T-junction, 50 mm lens, DOF off, 4× MSAA. Synthetic geometry; diagnostic lighting, no water or city scheduling.';
+}
+for(const style of ['anime','miniature']){
+ const renderer=new THREE.WebGPURenderer({canvas:document.getElementById(style),antialias:true,samples:4,forceWebGL:new URLSearchParams(location.search).has('webgl')});
+ renderer.setPixelRatio(1);renderer.setSize(560,440,false);await renderer.init();
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#61795b');
+ const art=new ArtMaterials();art.setStyle(style);
+ const builder=Object.create(CityRenderer.prototype);builder.art=art;builder.riverHalfWidth=32;builder.worldState=world;
+ const kit=new Kit(),construction=new THREE.Group();
+ for(const step of builder.populateRoads(world,true,kit,new Kit(),construction,new THREE.Group(),new THREE.Group())){}
+ if(detailed)addArterialSidewalks(kit,world,art);
+ scene.add(kit.finish(),construction);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardNodeMaterial({color:'#61795b',roughness:1}));ground.rotation.x=-Math.PI/2;scene.add(ground);
+ scene.add(new THREE.HemisphereLight(0xffffff,0x888888,2));const sun=new THREE.DirectionalLight(0xffedcf,2);sun.position.set(-30,60,20);scene.add(sun);
+ const camera=new THREE.PerspectiveCamera(2*Math.atan(24/100)*180/Math.PI,560/440,.5,3500);camera.position.set(-32,52,56);camera.lookAt(5,0,10);
+ await renderer.renderAsync(scene,camera);
+ document.getElementById('status').textContent=`Rendered · ${renderer.backend.constructor.name} · camera (-32,52,56), target (5,0,10)`;
+}
+</script>

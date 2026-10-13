@@ -1,0 +1,302 @@
+[
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9300,\"cost\":217.69999998807907,\"frameInterval\":12.5,\"parts\":{\"buildings\":0,\"sidewalks\":0,\"roads\":0.7999999821186066,\"actors\":0.30000001192092896,\"camera\":0,\"lighting-water\":0,\"render\":216.59999999403954},\"pending\":0}",
+    "timestamp": "2026-10-12T23:15:41.185Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9320,\"cost\":225.09999999403954,\"frameInterval\":10.599999994039536,\"parts\":{\"buildings\":0.09999999403953552,\"sidewalks\":0,\"roads\":0.30000001192092896,\"actors\":0.19999998807907104,\"camera\":0.10000002384185791,\"lighting-water\":0,\"render\":224.39999997615814},\"pending\":0}",
+    "timestamp": "2026-10-12T23:15:42.167Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9351,\"cost\":226.19999998807907,\"frameInterval\":13.300000011920929,\"parts\":{\"buildings\":4.5999999940395355,\"sidewalks\":0,\"roads\":0.4000000059604645,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":221},\"pending\":5}",
+    "timestamp": "2026-10-12T23:15:43.725Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9360,\"cost\":225.7999999821186,\"frameInterval\":14.100000023841858,\"parts\":{\"buildings\":0.699999988079071,\"sidewalks\":0,\"roads\":0.5,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":224.2999999821186},\"pending\":5}",
+    "timestamp": "2026-10-12T23:15:44.230Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9360,\"cost\":42.20000001788139,\"frameInterval\":12.5,\"parts\":{\"buildings\":32.30000001192093,\"sidewalks\":0,\"roads\":0,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":9.700000017881393},\"pending\":2}",
+    "timestamp": "2026-10-12T23:15:44.888Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9360,\"cost\":37.5,\"frameInterval\":16,\"parts\":{\"buildings\":28.599999994039536,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":8.700000017881393},\"pending\":2}",
+    "timestamp": "2026-10-12T23:15:45.031Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9360,\"cost\":41.79999998211861,\"frameInterval\":11.900000005960464,\"parts\":{\"buildings\":32.900000005960464,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":8.599999994039536},\"pending\":2}",
+    "timestamp": "2026-10-12T23:15:45.404Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9401,\"cost\":227.59999999403954,\"frameInterval\":10.300000011920929,\"parts\":{\"buildings\":0.5999999940395355,\"sidewalks\":0,\"roads\":0.5,\"actors\":0.30000001192092896,\"camera\":0,\"lighting-water\":0,\"render\":226.19999998807907},\"pending\":7}",
+    "timestamp": "2026-10-12T23:15:46.236Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9440,\"cost\":44.099999994039536,\"frameInterval\":11.599999994039536,\"parts\":{\"buildings\":35.19999998807907,\"sidewalks\":0,\"roads\":0,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0,\"render\":8.699999988079071},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:47.994Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9440,\"cost\":38,\"frameInterval\":17.80000001192093,\"parts\":{\"buildings\":29.19999998807907,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":8.600000023841858},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:48.144Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9450,\"cost\":216.40000000596046,\"frameInterval\":10.400000005960464,\"parts\":{\"buildings\":2.5999999940395355,\"sidewalks\":0,\"roads\":0.4000000059604645,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":213.09999999403954},\"pending\":4}",
+    "timestamp": "2026-10-12T23:15:48.738Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9450,\"cost\":38.19999998807907,\"frameInterval\":13.099999994039536,\"parts\":{\"buildings\":29.30000001192093,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":8.599999994039536},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:48.944Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9480,\"cost\":228.59999999403954,\"frameInterval\":10.800000011920929,\"parts\":{\"buildings\":0.09999999403953552,\"sidewalks\":0,\"roads\":1,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":227.30000001192093},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:50.167Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9480,\"cost\":44.5,\"frameInterval\":12,\"parts\":{\"buildings\":35.099999994039536,\"sidewalks\":0,\"roads\":0,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0,\"render\":9.199999988079071},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:51.249Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9480,\"cost\":39.400000005960464,\"frameInterval\":17.900000005960464,\"parts\":{\"buildings\":30.30000001192093,\"sidewalks\":0,\"roads\":0,\"actors\":0.29999998211860657,\"camera\":0,\"lighting-water\":0,\"render\":8.800000011920929},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:51.401Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9520,\"cost\":37.79999998211861,\"frameInterval\":20.100000023841858,\"parts\":{\"buildings\":28.799999982118607,\"sidewalks\":0,\"roads\":0,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":8.799999982118607},\"pending\":6}",
+    "timestamp": "2026-10-12T23:15:51.817Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9601,\"cost\":227.19999998807907,\"frameInterval\":10.900000005960464,\"parts\":{\"buildings\":1,\"sidewalks\":0,\"roads\":1.800000011920929,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0,\"render\":224.2999999821186},\"pending\":3}",
+    "timestamp": "2026-10-12T23:15:56.221Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9601,\"cost\":41.10000002384186,\"frameInterval\":8.899999976158142,\"parts\":{\"buildings\":0,\"sidewalks\":0,\"roads\":0,\"actors\":0.10000002384185791,\"camera\":0.09999999403953552,\"lighting-water\":0,\"render\":40.900000005960464},\"pending\":0}",
+    "timestamp": "2026-10-12T23:15:56.948Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9650,\"cost\":227.89999997615814,\"frameInterval\":17.80000001192093,\"parts\":{\"buildings\":12.199999988079071,\"sidewalks\":0,\"roads\":0.4000000059604645,\"actors\":0.09999999403953552,\"camera\":0.09999999403953552,\"lighting-water\":0,\"render\":215.09999999403954},\"pending\":8}",
+    "timestamp": "2026-10-12T23:15:58.719Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9650,\"cost\":43.69999998807907,\"frameInterval\":12.100000023841858,\"parts\":{\"buildings\":33.29999998211861,\"sidewalks\":0.09999999403953552,\"roads\":0,\"actors\":0.10000002384185791,\"camera\":0.09999999403953552,\"lighting-water\":0,\"render\":10.099999994039536},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:59.762Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9680,\"cost\":42.400000005960464,\"frameInterval\":20.400000005960464,\"parts\":{\"buildings\":30.599999994039536,\"sidewalks\":0.20000001788139343,\"roads\":2.199999988079071,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":9.099999994039536},\"pending\":1}",
+    "timestamp": "2026-10-12T23:15:59.970Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9680,\"cost\":229.69999998807907,\"frameInterval\":13.400000005960464,\"parts\":{\"buildings\":2.199999988079071,\"sidewalks\":0,\"roads\":0.5,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":226.69999998807907},\"pending\":1}",
+    "timestamp": "2026-10-12T23:16:00.295Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9680,\"cost\":37.599999994039536,\"frameInterval\":11.700000017881393,\"parts\":{\"buildings\":28.5,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":8.900000005960464},\"pending\":1}",
+    "timestamp": "2026-10-12T23:16:00.608Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9720,\"cost\":42.19999998807907,\"frameInterval\":11.900000005960464,\"parts\":{\"buildings\":33.099999994039536,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0.10000002384185791,\"lighting-water\":0,\"render\":8.799999982118607},\"pending\":2}",
+    "timestamp": "2026-10-12T23:16:03.208Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9720,\"cost\":40.30000001192093,\"frameInterval\":16.299999982118607,\"parts\":{\"buildings\":30.5,\"sidewalks\":0,\"roads\":0,\"actors\":0.30000001192092896,\"camera\":0,\"lighting-water\":0,\"render\":9.5},\"pending\":2}",
+    "timestamp": "2026-10-12T23:16:03.361Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9720,\"cost\":39,\"frameInterval\":14.300000011920929,\"parts\":{\"buildings\":29.299999982118607,\"sidewalks\":0,\"roads\":0,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":9.400000005960464},\"pending\":2}",
+    "timestamp": "2026-10-12T23:16:03.747Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9800,\"cost\":31.099999994039536,\"frameInterval\":12,\"parts\":{\"buildings\":18.69999998807907,\"sidewalks\":0.4000000059604645,\"roads\":2.5,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0,\"render\":9.299999982118607},\"pending\":11}",
+    "timestamp": "2026-10-12T23:16:05.939Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9800,\"cost\":235.10000002384186,\"frameInterval\":12.599999994039536,\"parts\":{\"buildings\":18.700000017881393,\"sidewalks\":0.29999998211860657,\"roads\":0.800000011920929,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":215.10000002384186},\"pending\":11}",
+    "timestamp": "2026-10-12T23:16:06.240Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9800,\"cost\":36.400000005960464,\"frameInterval\":9.400000005960464,\"parts\":{\"buildings\":27.5,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":8.700000017881393},\"pending\":6}",
+    "timestamp": "2026-10-12T23:16:07.486Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9850,\"cost\":219.19999998807907,\"frameInterval\":11.700000017881393,\"parts\":{\"buildings\":2.0999999940395355,\"sidewalks\":0,\"roads\":0.699999988079071,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":216.19999998807907},\"pending\":11}",
+    "timestamp": "2026-10-12T23:16:08.688Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9880,\"cost\":43.400000005960464,\"frameInterval\":13.599999994039536,\"parts\":{\"buildings\":28.599999994039536,\"sidewalks\":1.300000011920929,\"roads\":2.5,\"actors\":0.30000001192092896,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":10.599999994039536},\"pending\":3}",
+    "timestamp": "2026-10-12T23:16:09.850Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9880,\"cost\":33.19999998807907,\"frameInterval\":15,\"parts\":{\"buildings\":21,\"sidewalks\":0.4000000059604645,\"roads\":2.199999988079071,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":9.299999982118607},\"pending\":3}",
+    "timestamp": "2026-10-12T23:16:09.914Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9880,\"cost\":232.5,\"frameInterval\":16.700000017881393,\"parts\":{\"buildings\":5.5999999940395355,\"sidewalks\":0,\"roads\":0.9000000059604645,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":225.7000000178814},\"pending\":3}",
+    "timestamp": "2026-10-12T23:16:10.328Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9880,\"cost\":30.30000001192093,\"frameInterval\":12.399999976158142,\"parts\":{\"buildings\":20.30000001192093,\"sidewalks\":0,\"roads\":0,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":9.800000011920929},\"pending\":3}",
+    "timestamp": "2026-10-12T23:16:10.551Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9900,\"cost\":38.39999997615814,\"frameInterval\":9.400000005960464,\"parts\":{\"buildings\":28.69999998807907,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0.10000002384185791,\"lighting-water\":0,\"render\":9.399999976158142},\"pending\":5}",
+    "timestamp": "2026-10-12T23:16:11.092Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":9960,\"cost\":39.30000001192093,\"frameInterval\":17.899999976158142,\"parts\":{\"buildings\":29.80000001192093,\"sidewalks\":0,\"roads\":0,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0,\"render\":9.400000005960464},\"pending\":1}",
+    "timestamp": "2026-10-12T23:16:14.800Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10001,\"cost\":221.69999998807907,\"frameInterval\":11,\"parts\":{\"buildings\":0.19999998807907104,\"sidewalks\":0,\"roads\":1.699999988079071,\"actors\":0.10000002384185791,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":219.59999999403954},\"pending\":4}",
+    "timestamp": "2026-10-12T23:16:16.208Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10040,\"cost\":220.80000001192093,\"frameInterval\":11.5,\"parts\":{\"buildings\":0,\"sidewalks\":0,\"roads\":1,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":219.5},\"pending\":0}",
+    "timestamp": "2026-10-12T23:16:18.157Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10100,\"cost\":217,\"frameInterval\":11.5,\"parts\":{\"buildings\":2.5,\"sidewalks\":0,\"roads\":0.5,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":213.69999998807907},\"pending\":6}",
+    "timestamp": "2026-10-12T23:16:21.207Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10120,\"cost\":215,\"frameInterval\":11,\"parts\":{\"buildings\":0.20000001788139343,\"sidewalks\":0,\"roads\":0.5,\"actors\":0.09999999403953552,\"camera\":0.09999999403953552,\"lighting-water\":0,\"render\":214.09999999403954},\"pending\":1}",
+    "timestamp": "2026-10-12T23:16:22.163Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10160,\"cost\":41,\"frameInterval\":16.5,\"parts\":{\"buildings\":31.400000005960464,\"sidewalks\":0,\"roads\":0,\"actors\":0.30000001192092896,\"camera\":0,\"lighting-water\":0,\"render\":9.299999982118607},\"pending\":1}",
+    "timestamp": "2026-10-12T23:16:24.694Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10200,\"cost\":49,\"frameInterval\":25.099999994039536,\"parts\":{\"buildings\":5.300000011920929,\"sidewalks\":0,\"roads\":0,\"actors\":0.5,\"camera\":0,\"lighting-water\":0,\"render\":43.19999998807907},\"pending\":4}",
+    "timestamp": "2026-10-12T23:16:25.778Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10200,\"cost\":140.7000000178814,\"frameInterval\":10,\"parts\":{\"buildings\":0.4000000059604645,\"sidewalks\":0,\"roads\":0,\"actors\":0.09999999403953552,\"camera\":0,\"lighting-water\":0.10000002384185791,\"render\":140.09999999403954},\"pending\":9}",
+    "timestamp": "2026-10-12T23:16:26.552Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10240,\"cost\":38.19999998807907,\"frameInterval\":17.099999994039536,\"parts\":{\"buildings\":28.299999982118607,\"sidewalks\":0,\"roads\":0,\"actors\":0.30000001192092896,\"camera\":0,\"lighting-water\":0,\"render\":9.599999994039536},\"pending\":2}",
+    "timestamp": "2026-10-12T23:16:27.922Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10300,\"cost\":221.10000002384186,\"frameInterval\":12,\"parts\":{\"buildings\":8,\"sidewalks\":0,\"roads\":0.5,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":212.30000001192093},\"pending\":7}",
+    "timestamp": "2026-10-12T23:16:31.269Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10300,\"cost\":43.5,\"frameInterval\":9.900000005960464,\"parts\":{\"buildings\":33.5,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0.09999999403953552,\"lighting-water\":0,\"render\":9.700000017881393},\"pending\":7}",
+    "timestamp": "2026-10-12T23:16:31.562Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10320,\"cost\":226.2000000178814,\"frameInterval\":21,\"parts\":{\"buildings\":4.0999999940395355,\"sidewalks\":0,\"roads\":0.4000000059604645,\"actors\":0.20000001788139343,\"camera\":0,\"lighting-water\":0,\"render\":221.5},\"pending\":2}",
+    "timestamp": "2026-10-12T23:16:32.250Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10350,\"cost\":252.59999999403954,\"frameInterval\":13.099999994039536,\"parts\":{\"buildings\":0.09999999403953552,\"sidewalks\":0,\"roads\":0.5999999940395355,\"actors\":0.10000002384185791,\"camera\":0,\"lighting-water\":0.09999999403953552,\"render\":251.69999998807907},\"pending\":4}",
+    "timestamp": "2026-10-12T23:16:33.737Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10360,\"cost\":218.30000001192093,\"frameInterval\":18.599999994039536,\"parts\":{\"buildings\":5.0999999940395355,\"sidewalks\":0,\"roads\":0.4000000059604645,\"actors\":0.20000001788139343,\"camera\":0.09999999403953552,\"lighting-water\":0,\"render\":212.40000000596046},\"pending\":4}",
+    "timestamp": "2026-10-12T23:16:34.207Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  },
+  {
+    "level": "log",
+    "message": "contour-growth-trace {\"tick\":10360,\"cost\":40.19999998807907,\"frameInterval\":15.800000011920929,\"parts\":{\"buildings\":31,\"sidewalks\":0,\"roads\":0,\"actors\":0.19999998807907104,\"camera\":0,\"lighting-water\":0,\"render\":9},\"pending\":1}",
+    "timestamp": "2026-10-12T23:16:35.259Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791846764510"
+  }
+]

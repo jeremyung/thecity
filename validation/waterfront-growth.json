@@ -1,0 +1,712 @@
+{
+  "scope": "Current WASM normal growth from saved checkpoint; waterfront band uses center distance within100m of X-offset water edge, not footprint coverage. No browser performance claim.",
+  "results": [
+    {
+      "tick": 27925,
+      "buildings": 723,
+      "roads": 209,
+      "realizedLots": 750,
+      "plannedLots": 1839,
+      "realizedRoads": 209,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 0,
+          "open": 0,
+          "nearMidpoint": 0,
+          "zRange": null
+        },
+        "east": {
+          "count": 54,
+          "open": 51,
+          "nearMidpoint": 33,
+          "zRange": [
+            -208.87036,
+            285.0292
+          ]
+        }
+      }
+    },
+    {
+      "tick": 29925,
+      "buildings": 773,
+      "roads": 223,
+      "realizedLots": 810,
+      "plannedLots": 1839,
+      "realizedRoads": 223,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 0,
+          "open": 0,
+          "nearMidpoint": 0,
+          "zRange": null
+        },
+        "east": {
+          "count": 71,
+          "open": 70,
+          "nearMidpoint": 47,
+          "zRange": [
+            -208.87036,
+            285.0292
+          ]
+        }
+      }
+    },
+    {
+      "tick": 31925,
+      "buildings": 823,
+      "roads": 237,
+      "realizedLots": 863,
+      "plannedLots": 1839,
+      "realizedRoads": 237,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 0,
+          "open": 0,
+          "nearMidpoint": 0,
+          "zRange": null
+        },
+        "east": {
+          "count": 95,
+          "open": 92,
+          "nearMidpoint": 48,
+          "zRange": [
+            -208.87036,
+            285.0292
+          ]
+        }
+      }
+    },
+    {
+      "tick": 33925,
+      "buildings": 873,
+      "roads": 249,
+      "realizedLots": 920,
+      "plannedLots": 1839,
+      "realizedRoads": 249,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 0,
+          "open": 0,
+          "nearMidpoint": 0,
+          "zRange": null
+        },
+        "east": {
+          "count": 113,
+          "open": 109,
+          "nearMidpoint": 52,
+          "zRange": [
+            -371.67294,
+            285.0292
+          ]
+        }
+      }
+    },
+    {
+      "tick": 35925,
+      "buildings": 923,
+      "roads": 255,
+      "realizedLots": 960,
+      "plannedLots": 1839,
+      "realizedRoads": 255,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 0,
+          "open": 0,
+          "nearMidpoint": 0,
+          "zRange": null
+        },
+        "east": {
+          "count": 137,
+          "open": 135,
+          "nearMidpoint": 56,
+          "zRange": [
+            -371.67294,
+            337.84338
+          ]
+        }
+      }
+    },
+    {
+      "tick": 37925,
+      "buildings": 973,
+      "roads": 269,
+      "realizedLots": 997,
+      "plannedLots": 1839,
+      "realizedRoads": 269,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 0,
+          "open": 0,
+          "nearMidpoint": 0,
+          "zRange": null
+        },
+        "east": {
+          "count": 147,
+          "open": 146,
+          "nearMidpoint": 56,
+          "zRange": [
+            -371.67294,
+            363.88214
+          ]
+        }
+      }
+    },
+    {
+      "tick": 39925,
+      "buildings": 1023,
+      "roads": 291,
+      "realizedLots": 1033,
+      "plannedLots": 1839,
+      "realizedRoads": 291,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 11,
+          "open": 10,
+          "nearMidpoint": 0,
+          "zRange": [
+            217.51045,
+            323.7286
+          ]
+        },
+        "east": {
+          "count": 160,
+          "open": 160,
+          "nearMidpoint": 57,
+          "zRange": [
+            -371.67294,
+            367.6584
+          ]
+        }
+      }
+    },
+    {
+      "tick": 41925,
+      "buildings": 1072,
+      "roads": 315,
+      "realizedLots": 1073,
+      "plannedLots": 1839,
+      "realizedRoads": 315,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 15,
+          "open": 15,
+          "nearMidpoint": 0,
+          "zRange": [
+            217.51045,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 174,
+          "open": 173,
+          "nearMidpoint": 58,
+          "zRange": [
+            -371.67294,
+            372.76007
+          ]
+        }
+      }
+    },
+    {
+      "tick": 43925,
+      "buildings": 1122,
+      "roads": 330,
+      "realizedLots": 1150,
+      "plannedLots": 1839,
+      "realizedRoads": 330,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 15,
+          "open": 15,
+          "nearMidpoint": 0,
+          "zRange": [
+            217.51045,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 194,
+          "open": 188,
+          "nearMidpoint": 58,
+          "zRange": [
+            -371.67294,
+            372.76007
+          ]
+        }
+      }
+    },
+    {
+      "tick": 45925,
+      "buildings": 1172,
+      "roads": 351,
+      "realizedLots": 1208,
+      "plannedLots": 1839,
+      "realizedRoads": 351,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 15,
+          "open": 15,
+          "nearMidpoint": 0,
+          "zRange": [
+            217.51045,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 207,
+          "open": 207,
+          "nearMidpoint": 58,
+          "zRange": [
+            -374.85995,
+            372.76007
+          ]
+        }
+      }
+    },
+    {
+      "tick": 47925,
+      "buildings": 1222,
+      "roads": 374,
+      "realizedLots": 1227,
+      "plannedLots": 1839,
+      "realizedRoads": 374,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 15,
+          "open": 15,
+          "nearMidpoint": 0,
+          "zRange": [
+            217.51045,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 215,
+          "open": 215,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            372.76007
+          ]
+        }
+      }
+    },
+    {
+      "tick": 49925,
+      "buildings": 1255,
+      "roads": 399,
+      "realizedLots": 1255,
+      "plannedLots": 1839,
+      "realizedRoads": 399,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 23,
+          "open": 21,
+          "nearMidpoint": 0,
+          "zRange": [
+            116.90202,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 51925,
+      "buildings": 1293,
+      "roads": 419,
+      "realizedLots": 1326,
+      "plannedLots": 1839,
+      "realizedRoads": 419,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 56,
+          "open": 53,
+          "nearMidpoint": 11,
+          "zRange": [
+            44.14201,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 53925,
+      "buildings": 1343,
+      "roads": 426,
+      "realizedLots": 1380,
+      "plannedLots": 1839,
+      "realizedRoads": 426,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 73,
+          "open": 70,
+          "nearMidpoint": 15,
+          "zRange": [
+            44.14201,
+            363.4123
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 55925,
+      "buildings": 1393,
+      "roads": 438,
+      "realizedLots": 1425,
+      "plannedLots": 1839,
+      "realizedRoads": 438,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 76,
+          "open": 75,
+          "nearMidpoint": 15,
+          "zRange": [
+            44.14201,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 57925,
+      "buildings": 1443,
+      "roads": 442,
+      "realizedLots": 1479,
+      "plannedLots": 1839,
+      "realizedRoads": 442,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 77,
+          "open": 77,
+          "nearMidpoint": 15,
+          "zRange": [
+            44.14201,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 59925,
+      "buildings": 1493,
+      "roads": 451,
+      "realizedLots": 1523,
+      "plannedLots": 1839,
+      "realizedRoads": 451,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 80,
+          "open": 80,
+          "nearMidpoint": 18,
+          "zRange": [
+            -5.3375473,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 61925,
+      "buildings": 1543,
+      "roads": 459,
+      "realizedLots": 1572,
+      "plannedLots": 1839,
+      "realizedRoads": 459,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 89,
+          "open": 88,
+          "nearMidpoint": 27,
+          "zRange": [
+            -55.36722,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 63925,
+      "buildings": 1593,
+      "roads": 478,
+      "realizedLots": 1620,
+      "plannedLots": 1839,
+      "realizedRoads": 478,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 95,
+          "open": 95,
+          "nearMidpoint": 33,
+          "zRange": [
+            -55.36722,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 65925,
+      "buildings": 1643,
+      "roads": 494,
+      "realizedLots": 1673,
+      "plannedLots": 1839,
+      "realizedRoads": 494,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 101,
+          "open": 99,
+          "nearMidpoint": 33,
+          "zRange": [
+            -130.29623,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 67925,
+      "buildings": 1693,
+      "roads": 505,
+      "realizedLots": 1728,
+      "plannedLots": 1839,
+      "realizedRoads": 505,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 105,
+          "open": 105,
+          "nearMidpoint": 33,
+          "zRange": [
+            -184.16727,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 69925,
+      "buildings": 1743,
+      "roads": 521,
+      "realizedLots": 1774,
+      "plannedLots": 1839,
+      "realizedRoads": 521,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 132,
+          "open": 129,
+          "nearMidpoint": 33,
+          "zRange": [
+            -270.72238,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 71925,
+      "buildings": 1793,
+      "roads": 540,
+      "realizedLots": 1813,
+      "plannedLots": 1839,
+      "realizedRoads": 540,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 162,
+          "open": 157,
+          "nearMidpoint": 33,
+          "zRange": [
+            -323.42688,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 73925,
+      "buildings": 1829,
+      "roads": 563,
+      "realizedLots": 1829,
+      "plannedLots": 1839,
+      "realizedRoads": 563,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 193,
+          "open": 193,
+          "nearMidpoint": 33,
+          "zRange": [
+            -374.8203,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    },
+    {
+      "tick": 75925,
+      "buildings": 1839,
+      "roads": 564,
+      "realizedLots": 1839,
+      "plannedLots": 1839,
+      "realizedRoads": 564,
+      "plannedRoads": 564,
+      "waterfront": {
+        "west": {
+          "count": 193,
+          "open": 193,
+          "nearMidpoint": 33,
+          "zRange": [
+            -374.8203,
+            373.6953
+          ]
+        },
+        "east": {
+          "count": 216,
+          "open": 216,
+          "nearMidpoint": 59,
+          "zRange": [
+            -374.85995,
+            373.6392
+          ]
+        }
+      }
+    }
+  ]
+}

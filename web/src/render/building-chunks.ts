@@ -1,16 +1,19 @@
 import * as THREE from 'three/webgpu';
+import { IncrementalBuildingContours } from './incremental-building-contours';
 import { IncrementalGeometryMerge } from './incremental-geometry-merge';
 import { IncrementalGeometryTransform } from './incremental-geometry-transform';
 
 export type BuildingBatchSurface = { material: THREE.Material; color?: THREE.Color };
 type BuildingSurfaceResolver = (material: THREE.Material) => THREE.Material | BuildingBatchSurface;
 export interface RebuildableBuildingSource { createGroup():THREE.Group; disposeGroup(group:THREE.Group):void }
-type Source = { id:number; key:string; contours:Float32Array; descriptor:RebuildableBuildingSource|null; pendingGroup:THREE.Group|null; legacyGroup:THREE.Group|null; leases:number; retired:boolean; released:boolean };
+type Source = { id:number; key:string; contours:Float32Array|null; descriptor:RebuildableBuildingSource|null; pendingGroup:THREE.Group|null; legacyGroup:THREE.Group|null; leases:number; retired:boolean; released:boolean };
 type MeshInput = { id: number; mesh: THREE.Mesh|null; matrix: THREE.Matrix4; vertices: number };
 type PreparedPart = { geometry: THREE.BufferGeometry; id: number; shadow: boolean; triangles: number };
 type MaterialJob = { material: THREE.Material; parts: PreparedPart[]; merger: IncrementalGeometryMerge | null };
 type TransformJob = { input:MeshInput; transform:IncrementalGeometryTransform; material:THREE.Material; shadow:boolean; triangles:number };
 type RetiredSource = { afterRevision: number; release: () => void };
+type ContourSource = { id:number; values:Float32Array };
+type ContourSpan = { id:number; start:number; end:number };
 type Build = {
   key: string;
   revision: number;
@@ -25,7 +28,8 @@ type Build = {
   jobs: MaterialJob[] | null;
   jobCursor: number;
   next: THREE.Group;
-  contourSources: Float32Array[];
+  contourSources: ContourSource[];
+  contourSpans: ContourSpan[];
   contourSourceCursor: number;
   contourOffset: number;
   contourOutput: Float32Array;
@@ -33,6 +37,8 @@ type Build = {
   contourMin: THREE.Vector3;
   contourMax: THREE.Vector3;
   contoursDone: boolean;
+  contoursInitialized:boolean;
+  contourBuilder:IncrementalBuildingContours|null;
   ownedResources:Array<THREE.Material|THREE.Texture>;
   ownedResourceSet:Set<THREE.Material|THREE.Texture>;
 };
@@ -61,27 +67,75 @@ export class BuildingChunks {
   private active:Build|null=null;
   private contoursVisible=true;
 
-  constructor(private material:BuildingSurfaceResolver,private retire:(dispose:()=>void)=>void,private contourMaterial?:THREE.LineBasicNodeMaterial){}
+  constructor(private material:BuildingSurfaceResolver,private retire:(dispose:()=>void)=>void,private contourMaterial?:THREE.LineBasicNodeMaterial,private keySelector?:(id:number,group:THREE.Group)=>string,private canCommit?:(sources:ReadonlyMap<number,RebuildableBuildingSource|null>,previous:ReadonlyMap<number,RebuildableBuildingSource|null>)=>boolean){}
 
   get pendingCount(){return this.dirty.size+(this.active&&!this.dirty.has(this.active.key)?1:0);}
   /** True only when this exact descriptor's source is present in a visible committed chunk. */
   isSourceVisible(id:number,descriptor:RebuildableBuildingSource):boolean{
-    for(const sources of this.committedSources.values())if(sources.get(id)===descriptor)return true;
+    for(const [key,sources] of this.committedSources)if(sources.get(id)===descriptor&&this.batches.get(key)?.visible!==false)return true;
     return false;
   }
+  hasVisibleSource(id:number):boolean{for(const [key,sources] of this.committedSources)if(sources.has(id)&&this.batches.get(key)?.visible!==false)return true;return false;}
+  hasCommittedSource(id:number,descriptor?:RebuildableBuildingSource):boolean{for(const sources of this.committedSources.values())if(sources.has(id)&&(descriptor===undefined||sources.get(id)===descriptor))return true;return false;}
+  /** Retire one committed source in place when its exact buffer work fits existing per-update quotas. */
+  tryRetireCommittedSource(id:number):boolean{
+    const batches:Array<{key:string;group:THREE.Group}> = [];
+    for(const [key,sources] of this.committedSources)if(sources.has(id)){const group=this.batches.get(key);if(group)batches.push({key,group});}
+    if(!batches.length)return true;
+    let indexWork=0,contourWork=0,unsupported=false;
+    const meshSpans:Array<{mesh:THREE.Mesh;spans:Array<{first:number;end:number;id:number}>;target:Array<{first:number;end:number}>}> = [];
+    const lineSpans:Array<{line:THREE.LineSegments;spans:ContourSpan[];target:ContourSpan[]}> = [];
+    for(const {group} of batches)group.traverse(object=>{
+      if(object instanceof THREE.Mesh){
+        const spans=object.userData.buildingSpans as Array<{first:number;end:number;id:number}>|undefined;
+        const target=(spans??[]).filter(span=>span.id===id);
+        if(!target.length)return;
+        const index=object.geometry.index;
+        if(!index?.isBufferAttribute||!spans||target.some(span=>!Number.isInteger(span.first)||!Number.isInteger(span.end)||span.first<0||span.end<span.first||span.end*3>index.count)){unsupported=true;return;}
+        indexWork+=target.reduce((sum,span)=>sum+(span.end-span.first)*3,0);
+        meshSpans.push({mesh:object,spans,target});
+      }else if(object instanceof THREE.LineSegments){
+        const spans=object.userData.buildingContourSpans as ContourSpan[]|undefined;
+        const target=(spans??[]).filter(span=>span.id===id);
+        if(!target.length)return;
+        const position=object.geometry.getAttribute('position');
+        if(!position?.isBufferAttribute||!spans||target.some(span=>!Number.isInteger(span.start)||!Number.isInteger(span.end)||span.start<0||span.end<span.start||span.end>position.count*3||(span.start%6)!==0||(span.end%6)!==0)){unsupported=true;return;}
+        contourWork+=target.reduce((sum,span)=>sum+span.end-span.start,0);
+        lineSpans.push({line:object,spans,target});
+      }
+    });
+    if(unsupported||indexWork>MAX_INDICES_PER_UPDATE||contourWork>MAX_CONTOUR_FLOATS_PER_UPDATE)return false;
+    for(const {mesh,spans,target}of meshSpans){
+      const index=mesh.geometry.index!;
+      // Preserve pending ranges if another retirement occurs before a draw.
+      for(const span of target){for(let face=span.first;face<span.end;face++){const offset=face*3,value=index.getX(offset);index.setX(offset,value);index.setX(offset+1,value);index.setX(offset+2,value);}index.addUpdateRange(span.first*3,(span.end-span.first)*3);}
+      index.needsUpdate=true;
+      mesh.userData.buildingSpans=spans.filter(span=>span.id!==id);
+    }
+    for(const {line,spans,target}of lineSpans){
+      const position=line.geometry.getAttribute('position') as THREE.BufferAttribute;
+      // Renderer upload clears accumulated update ranges.
+      for(const span of target){for(let offset=span.start;offset<span.end;offset+=6){position.setXYZ(offset/3+1,position.getX(offset/3),position.getY(offset/3),position.getZ(offset/3));}position.addUpdateRange(span.start,span.end-span.start);}
+      position.needsUpdate=true;
+      line.userData.buildingContourSpans=spans.filter(span=>span.id!==id);
+    }
+    for(const {key}of batches)this.committedSources.get(key)?.delete(id);
+    return true;
+  }
+  setBuildingVisible(id:number,visible:boolean){if(!this.keySelector)throw new Error('Visibility gating requires isolated building batches');const source=this.sources.get(id);if(source){const batch=this.batches.get(source.key);if(batch)batch.visible=visible;return;}for(const [key,sources]of this.committedSources)if(sources.has(id)){const batch=this.batches.get(key);if(batch)batch.visible=visible;}}
   setContoursVisible(visible:boolean){this.contoursVisible=visible;this.root.traverse(o=>{if(o instanceof THREE.LineSegments)o.visible=visible;});if(this.active)this.active.next.traverse(o=>{if(o instanceof THREE.LineSegments)o.visible=visible;});}
-  private key(group:THREE.Group){return buildingChunkKey(group.position.x,group.position.z);}
+  private key(id:number,group:THREE.Group){return this.keySelector?.(id,group)??buildingChunkKey(group.position.x,group.position.z);}
   private markDirty(key:string){if(!this.dirty.has(key))this.dirtySince.set(key,this.updateSequence);this.dirty.add(key);this.revisions.set(key,(this.revisions.get(key)??0)+1);}
 
   set(id:number,group:THREE.Group,sourceOrRelease?:RebuildableBuildingSource|(()=>void)){
-    const old=this.sources.get(id),key=this.key(group);
+    const old=this.sources.get(id),key=this.key(id,group);
     if(old){
       this.markDirty(old.key);
       if(typeof sourceOrRelease==='function')this.queueRetirement(old.key,this.revisions.get(old.key)??0,sourceOrRelease);
       this.retireSource(old);
     }
     const descriptor=typeof sourceOrRelease==='function'?null:sourceOrRelease??null;
-    this.sources.set(id,{id,key,contours:this.outlines(group),descriptor,pendingGroup:descriptor?group:null,legacyGroup:descriptor?null:group,leases:0,retired:false,released:false});
+    this.sources.set(id,{id,key,contours:this.contourMaterial?null:new Float32Array(0),descriptor,pendingGroup:descriptor?group:null,legacyGroup:descriptor?null:group,leases:0,retired:false,released:false});
     this.markDirty(key);
   }
 
@@ -93,18 +147,6 @@ export class BuildingChunks {
   }
 
   private queueRetirement(key:string,afterRevision:number,release:()=>void){const list=this.retired.get(key)??[];list.push({afterRevision,release});this.retired.set(key,list);}
-
-  private outlines(group:THREE.Group){
-    if(!this.contourMaterial)return new Float32Array(0);
-    const values:number[]=[];group.updateMatrixWorld(true);
-    group.traverse(o=>{if(!(o instanceof THREE.Mesh))return;if(maxWorldBoundsDiagonalBelow(o.geometry,o.matrixWorld,MIN_CONTOUR_EDGE_LENGTH_SQ))return;const edges=new THREE.EdgesGeometry(o.geometry,42);edges.applyMatrix4(o.matrixWorld);const points=edges.getAttribute('position');
-      for(let i=0;i<points.count;i+=2){const dx=points.getX(i+1)-points.getX(i),dy=points.getY(i+1)-points.getY(i),dz=points.getZ(i+1)-points.getZ(i);
-        // Major roof and facade breaks only: tiny fittings stay unoutlined.
-        if(dx*dx+dy*dy+dz*dz<MIN_CONTOUR_EDGE_LENGTH_SQ)continue;
-        for(let j=0;j<2;j++)values.push(points.getX(i+j),points.getY(i+j),points.getZ(i+j));
-      }edges.dispose();
-    });return new Float32Array(values);
-  }
 
   remove(id:number,release?:()=>void){const old=this.sources.get(id);if(!old){release?.();return;}this.sources.delete(id);this.markDirty(old.key);if(release)this.queueRetirement(old.key,this.revisions.get(old.key)??0,release);this.retireSource(old);}
 
@@ -125,27 +167,34 @@ export class BuildingChunks {
       this.copyContours(build,MAX_CONTOUR_FLOATS_PER_UPDATE);
       if(build.sourceCursor>=build.sources.length&&build.currentGroup===null&&build.transform===null&&build.jobs===null)this.createJobs(build);
       if(build.jobs){this.advanceMergers(build,MAX_VERTICES_PER_UPDATE,MAX_INDICES_PER_UPDATE);}
-      if(this.ready(build))this.commit(build);
+      if(this.ready(build)){
+        const permitted=!this.canCommit||this.canCommit(new Map(build.sources.map(source=>[source.id,source.descriptor])),this.committedSources.get(build.key)??new Map());
+        if(permitted)this.commit(build);
+        else if(this.revisions.get(build.key)!==build.revision){
+          // A superseded removal must not hold the only build slot while the
+          // newer source needed to make that handoff safe waits behind it.
+          this.cancelBuild();this.markDirty(build.key);
+        }
+      }
     }catch(error){this.cancelBuild();this.markDirty(build.key);throw error;}
   }
 
   private beginBuild(key:string){
-    const sources:Source[]=[],contourSources:Float32Array[]=[];
+    const sources:Source[]=[],contourSources:ContourSource[]=[],contourSpans:ContourSpan[]=[];
     for(const source of this.sources.values()){
       if(source.key!==key)continue;
       source.leases++;sources.push(source);
-      if(source.contours.length)contourSources.push(source.contours);
+
     }
-    const contourLength=contourSources.reduce((sum,values)=>sum+values.length,0);
     this.active={key,revision:this.revisions.get(key)??0,sources,sourceCursor:0,currentSource:null,currentGroup:null,groupMeshes:[],groupMeshCursor:0,transform:null,grouped:new Map(),jobs:null,jobCursor:0,
-      next:Object.assign(new THREE.Group(),{name:`Neighborhood ${key}`}),contourSources,contourSourceCursor:0,contourOffset:0,
-      contourOutput:new Float32Array(contourLength),contourCursor:0,contourMin:new THREE.Vector3(Infinity,Infinity,Infinity),
-      contourMax:new THREE.Vector3(-Infinity,-Infinity,-Infinity),contoursDone:contourLength===0,ownedResources:[],ownedResourceSet:new Set()};
+      next:Object.assign(new THREE.Group(),{name:`Neighborhood ${key}`}),contourSources,contourSpans,contourSourceCursor:0,contourOffset:0,
+      contourOutput:new Float32Array(0),contourCursor:0,contourMin:new THREE.Vector3(Infinity,Infinity,Infinity),
+      contourMax:new THREE.Vector3(-Infinity,-Infinity,-Infinity),contoursDone:false,contoursInitialized:false,contourBuilder:null,ownedResources:[],ownedResourceSet:new Set()};
     this.dirty.delete(key);this.dirtySince.delete(key);
   }
 
   private prepareMeshes(build:Build){
-    let verticesLeft=MAX_PREPARED_VERTICES_PER_UPDATE,indicesLeft=MAX_INDICES_PER_UPDATE,started=0,regenerated=0;
+    let verticesLeft=MAX_PREPARED_VERTICES_PER_UPDATE,indicesLeft=MAX_INDICES_PER_UPDATE,started=0,regenerated=0,contourWorkLeft=2_000;
     while((build.transform!==null||build.currentGroup!==null||build.sourceCursor<build.sources.length)&&started<MAX_PREPARED_MESHES_PER_UPDATE){
       if(!build.currentGroup){
         const source=build.sources[build.sourceCursor];
@@ -159,6 +208,15 @@ export class BuildingChunks {
         build.currentSource=source;build.currentGroup=group;build.groupMeshCursor=0;build.groupMeshes=[];
         group.updateMatrixWorld(true);
         group.traverse(object=>{if(object instanceof THREE.Mesh)build.groupMeshes.push({id:source.id,mesh:object,matrix:object.matrixWorld.clone(),vertices:object.geometry.getAttribute('position').count});});
+      }
+      if(build.currentSource!.contours===null){
+        if(contourWorkLeft<=0)break;
+        build.contourBuilder??=new IncrementalBuildingContours(build.currentGroup!,MIN_CONTOUR_EDGE_LENGTH_SQ);
+        const complete=build.contourBuilder.step(contourWorkLeft);
+        contourWorkLeft-=build.contourBuilder.processedWork;
+        if(!complete)break;
+        build.currentSource!.contours=build.contourBuilder.result!;
+        build.contourBuilder.dispose();build.contourBuilder=null;
       }
       if(build.groupMeshCursor>=build.groupMeshes.length){this.finishCurrentGroup(build);continue;}
       if(!build.transform){
@@ -235,9 +293,21 @@ export class BuildingChunks {
 
   private copyContours(build:Build,floatQuota:number){
     if(build.contoursDone)return;
+    if(!build.contoursInitialized){
+      if(build.sourceCursor<build.sources.length||build.currentGroup!==null)return;
+      let length=0;
+      for(const source of build.sources){
+        const values=source.contours!;
+        if(!values.length)continue;
+        build.contourSources.push({id:source.id,values});
+        build.contourSpans.push({id:source.id,start:length,end:length+values.length});length+=values.length;
+      }
+      build.contourOutput=new Float32Array(length);build.contoursInitialized=true;
+      if(!length){build.contoursDone=true;return;}
+    }
     let remaining=floatQuota;
     while(remaining>0&&build.contourSourceCursor<build.contourSources.length){
-      const source=build.contourSources[build.contourSourceCursor],count=Math.min(remaining,source.length-build.contourOffset);
+      const source=build.contourSources[build.contourSourceCursor].values,count=Math.min(remaining,source.length-build.contourOffset);
       build.contourOutput.set(source.subarray(build.contourOffset,build.contourOffset+count),build.contourCursor);
       const vertexStart=build.contourOffset/3,vertexEnd=(build.contourOffset+count)/3;
       for(let i=vertexStart;i<vertexEnd;i++){const offset=i*3,x=source[offset],y=source[offset+1],z=source[offset+2];
@@ -252,7 +322,7 @@ export class BuildingChunks {
     const center=build.contourMin.clone().add(build.contourMax).multiplyScalar(.5);
     geometry.boundingBox=new THREE.Box3(build.contourMin.clone(),build.contourMax.clone());
     geometry.boundingSphere=new THREE.Sphere(center,build.contourMax.clone().sub(build.contourMin).length()*.5);
-    const lines=new THREE.LineSegments(geometry,this.contourMaterial!);lines.visible=this.contoursVisible;lines.raycast=()=>{};build.next.add(lines);
+    const lines=new THREE.LineSegments(geometry,this.contourMaterial!);lines.visible=this.contoursVisible;lines.raycast=()=>{};lines.userData.buildingContourSpans=build.contourSpans;build.next.add(lines);
   }
 
   private ready(build:Build){return build.sourceCursor>=build.sources.length&&build.currentGroup===null&&build.transform===null&&build.jobs!==null&&build.jobCursor>=build.jobs.length&&build.contoursDone;}
@@ -265,8 +335,9 @@ export class BuildingChunks {
     if(build.ownedResources.length)build.next.userData.buildingOwnedResources=build.ownedResources;
     const old=this.batches.get(build.key);
     if(old){old.removeFromParent();this.retire(()=>disposeGroup(old));}
-    this.root.add(build.next);this.batches.set(build.key,build.next);
-    this.committedSources.set(build.key,new Map(build.sources.map(source=>[source.id,source.descriptor])));
+    const committed=new Map(build.sources.map(source=>[source.id,source.descriptor]));
+    if(committed.size){if(this.keySelector)build.next.visible=old?.visible??false;this.root.add(build.next);this.batches.set(build.key,build.next);this.committedSources.set(build.key,committed);}
+    else{this.batches.delete(build.key);this.committedSources.delete(build.key);this.retire(()=>disposeGroup(build.next));}
     const releases=this.retired.get(build.key);
     if(releases){const pending:RetiredSource[]=[];for(const retired of releases){if(retired.afterRevision<=build.revision)retired.release();else pending.push(retired);}if(pending.length)this.retired.set(build.key,pending);else this.retired.delete(build.key);}
     this.releaseBuildSources(build);this.active=null;
@@ -274,6 +345,7 @@ export class BuildingChunks {
 
   private cancelBuild(){
     const build=this.active;if(!build)return;
+    build.contourBuilder?.dispose();
     build.transform?.transform.dispose();
     if(build.currentGroup&&build.currentSource?.descriptor)build.currentSource.descriptor.disposeGroup(build.currentGroup);
     for(const job of build.jobs??[]){if(job.merger&&!job.merger.done)job.merger.dispose();for(const part of job.parts)part.geometry.dispose();}
@@ -303,24 +375,3 @@ function disposeGroup(group:THREE.Group){
   if(resources){delete group.userData.buildingOwnedResources;disposeOwnedResources(resources);}
 }
 function disposeOwnedResources(resources:readonly(THREE.Material|THREE.Texture)[]){for(const resource of resources)resource.dispose();}
-
-function maxWorldBoundsDiagonalBelow(geometry:THREE.BufferGeometry,matrix:THREE.Matrix4,thresholdSq:number){
-  if(geometry.morphAttributes.position?.length)return false;
-  // Positions can change without invalidating Three's cached bounding box.
-  geometry.computeBoundingBox();
-  const local=geometry.boundingBox;
-  if(!local||local.isEmpty()||!finitePoint(local.min)||!finitePoint(local.max))return false;
-  // Transform a copy: EdgesGeometry is still evaluated against the untouched
-  // local geometry and its cached bounds remain in local coordinates.
-  const world=local.clone().applyMatrix4(matrix);
-  if(world.isEmpty()||!finitePoint(world.min)||!finitePoint(world.max))return false;
-  // EdgesGeometry writes transformed endpoints to Float32 attributes before
-  // the legacy length test. Account for endpoint rounding at large world
-  // coordinates; an uncertain near-threshold bound must take the exact path.
-  const maxAbs=Math.max(Math.abs(world.min.x),Math.abs(world.min.y),Math.abs(world.min.z),Math.abs(world.max.x),Math.abs(world.max.y),Math.abs(world.max.z));
-  const roundingMargin=maxAbs*2*1.1920928955078125e-7;
-  const dx=world.max.x-world.min.x+roundingMargin,dy=world.max.y-world.min.y+roundingMargin,dz=world.max.z-world.min.z+roundingMargin;
-  return Number.isFinite(dx)&&Number.isFinite(dy)&&Number.isFinite(dz)&&dx*dx+dy*dy+dz*dz<thresholdSq;
-}
-
-function finitePoint(point:THREE.Vector3){return Number.isFinite(point.x)&&Number.isFinite(point.y)&&Number.isFinite(point.z);}

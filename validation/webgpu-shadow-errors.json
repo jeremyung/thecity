@@ -1,0 +1,62 @@
+[
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.241Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.285Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.317Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.349Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.384Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.424Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.467Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.514Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.560Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  },
+  {
+    "level": "error",
+    "message": "THREE.Destroyed texture [Texture \"ShadowDepthTexture\"] used in a submit.\n - While calling [Queue].Submit([[CommandBuffer from CommandEncoder \"renderContext_4\"]])\n",
+    "timestamp": "2026-10-12T05:14:19.599Z",
+    "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b"
+  }
+]

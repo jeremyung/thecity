@@ -50,6 +50,23 @@ function drain(chunks: BuildingChunks, pendingKeys?: ReadonlySet<string>, maxUpd
 afterEach(() => vi.restoreAllMocks());
 
 describe("BuildingChunks", () => {
+  it("defers contour vertex reads until updates and safely cancels a leased source", () => {
+    const material=new THREE.MeshBasicMaterial(),ink=new THREE.LineBasicNodeMaterial();
+    const chunks=new BuildingChunks(m=>m,release=>release(),ink);
+    const {group,geometry}=largeIndexedBuilding(material,0);
+    const read=vi.spyOn(geometry.getAttribute('position'),'getX');
+    const dispose=vi.fn((g:THREE.Group)=>{g.traverse(o=>{if(o instanceof THREE.Mesh)o.geometry.dispose();});});
+    chunks.set(901,group,{createGroup:()=>{throw Error('unexpected regeneration');},disposeGroup:dispose});
+    expect(read).not.toHaveBeenCalled();
+    chunks.update();
+    expect(read).toHaveBeenCalledTimes(2000);
+    expect(chunks.root.children).toHaveLength(0);
+    expect(dispose).not.toHaveBeenCalled();
+    chunks.clear();expect(dispose).toHaveBeenCalledTimes(1);
+    chunks.clear();expect(dispose).toHaveBeenCalledTimes(1);
+    material.dispose();ink.dispose();
+  });
+
   it("reports only exact descriptors represented by committed chunks across replacement, moves, and clear", () => {
     const material = new THREE.MeshBasicMaterial();
     const chunks = new BuildingChunks((surface) => surface, (dispose) => dispose());

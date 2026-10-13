@@ -1,18 +1,21 @@
 import type { Material } from 'three/webgpu';
 import { Kit } from './kit';
 import type { Point } from '../types';
+import { bezierRoad, sweepRoad, type RoadCurve } from './road-curve';
 import { EXPRESSWAY_DECK, roadWidth } from './road-elevation';
 
 /** Deck-local furniture for completed expressways; no ground-road junction furniture. */
 export function addExpresswayFurniture(kit: Kit, a: Point, b: Point, materials: {
   paint: Material; concrete: Material; metal: Material; lamp: Material;
-}, deckHeight=EXPRESSWAY_DECK) {
-  const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
+}, deckHeight=EXPRESSWAY_DECK, curve?:RoadCurve) {
+  const dx=b.x-a.x,dz=b.z-a.z;
+  const path=curve??bezierRoad(a,{x:a.x+dx/3,z:a.z+dz/3},{x:b.x-dx/3,z:b.z-dz/3},b),length=path.length;
   if(length<1)return;
-  const angle=Math.atan2(dx,dz),width=roadWidth('expressway'),surface=deckHeight+.15;
-  const box=(across:number,along:number,height:number,w:number,h:number,d:number,material:Material)=>
-    kit.box(a.x+dx*along/length+Math.cos(angle)*across,surface+height,
-      a.z+dz*along/length-Math.sin(angle)*across,w,h,d,material,angle);
+  const width=roadWidth('expressway'),surface=deckHeight+.15;
+  const box=(across:number,along:number,height:number,w:number,h:number,d:number,material:Material)=>{
+    if(d>.5)sweepRoad(kit,path,along-d/2,along+d/2,across,surface+height,w,h,material);
+    else {const p=path.at(along);kit.box(p.x+p.uz*across,surface+height,p.z-p.ux*across,w,h,d,material,Math.atan2(p.ux,p.uz));}
+  };
   // Two lanes in each direction, with shoulders and a narrow central barrier.
   box(0,length/2,.38,.65,.76,length,materials.concrete);
   for(const side of [-1,1]){

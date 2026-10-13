@@ -18,6 +18,7 @@ function snapshot(engine: CityEngine) {
 function savedState(engine: CityEngine) {
   return JSON.parse(engine.save()) as {
     next_id: number;
+    expressway_traffic: { trips: Array<{id:number;lane:number;direction:number;progress:number}> };
     nodes: Array<{ id: number; x: number; z: number; kind: string }>;
     roads: Array<{ id: number; from: number; to: number; kind: string; stage: string; connected: boolean; lanes: number }>;
     parcels: Array<{ id: number; access_node: number; protected: boolean; reservation: number | null }>;
@@ -181,6 +182,14 @@ describe('compiled city engine', () => {
         expect(z).toBeCloseTo(marker!.z+Math.sin(marker!.heading)*offset,3);
         continue;
       }
+      if(kind===1&&!travelers.has(id)){
+        const trip=state.expressway_traffic.trips.find(trip=>trip.id===id);
+        expect(trip).toBeDefined();
+        expect([0,1]).toContain(trip!.lane);expect([-1,1]).toContain(trip!.direction);
+        expect(world.road_decks?.some(deck=>Math.abs(deck.deck_height+.15-surfaceY)<.001)).toBe(true);
+        // Full cubic lane/height and live replay checked in expressway-wasm.test.
+        continue;
+      }
       const isTrain = kind === 2;
       const actor = isTrain ? trains.get(id) : travelers.get(id);
       expect(actor).toBeDefined();
@@ -308,7 +317,7 @@ describe('compiled city engine', () => {
     expect(counts.events).toBeLessThanOrEqual(10_000);
     expect(state.population).toBeLessThanOrEqual(30_000);
     const queuedResidents = state.residents.filter((resident) => resident.transfer === 'waiting_station' || resident.transfer === 'waiting_gateway' || resident.transfer === 'waiting_bus').length;
-    expect(world.stats.active_travelers).toBe(state.travelers.length + queuedResidents);
+    expect(world.stats.active_travelers).toBe(state.travelers.length + queuedResidents + state.expressway_traffic.trips.length);
 
     const restored = CityEngine.restore(engine.save());
     engines.push(restored);

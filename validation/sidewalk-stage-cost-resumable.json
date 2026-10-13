@@ -1,0 +1,46 @@
+{
+  "scope": "Node CPU only, not browser frame cost",
+  "hardware": "Apple M2 Max",
+  "fixture": ".tools/fidelity-review/mature-layered-87231.snapshot.json",
+  "seed": 87231,
+  "tick": 160000,
+  "roads": 564,
+  "arterials": 89,
+  "polygons": 1192,
+  "triangles": 14360,
+  "batches": 1,
+  "samplesMs": [
+    38.6105,
+    30.425833999999952,
+    27.27437500000002,
+    30.766875000000027,
+    38.055542
+  ],
+  "stages": [
+    {
+      "polygonsMs": 24.26320800000002,
+      "geometryMs": 13.504999999999995,
+      "mergeMs": 0.8422919999999863
+    },
+    {
+      "polygonsMs": 18.579416999999978,
+      "geometryMs": 11.20916699999998,
+      "mergeMs": 0.6372499999999945
+    },
+    {
+      "polygonsMs": 15.723957999999982,
+      "geometryMs": 10.809416999999996,
+      "mergeMs": 0.7410000000000423
+    },
+    {
+      "polygonsMs": 19.09725000000003,
+      "geometryMs": 10.993875000000003,
+      "mergeMs": 0.6757499999999936
+    },
+    {
+      "polygonsMs": 25.67704199999997,
+      "geometryMs": 11.662291000000039,
+      "mergeMs": 0.7162089999999921
+    }
+  ]
+}

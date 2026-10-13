@@ -1,0 +1,60 @@
+import * as THREE from 'three/webgpu';
+
+// Temporary development diagnostic. Logs allocations/disposals, never per-frame.
+let installed=false;
+export function installShadowTrace(){
+  if(installed)return;installed=true;
+  const proto=THREE.ShadowNode.prototype as any;
+  const original=proto.setupRenderTarget;
+  let events=0;
+  const log=(kind:string,data:unknown)=>{if(events++<100)console.info('SHADOW_TRACE',kind,JSON.stringify(data));};
+  proto.setupRenderTarget=function(shadow:any,builder:any){
+    const result=original.call(this,shadow,builder);
+    const {shadowMap:target,depthTexture:depth}=result;
+    const ids={node:this.id,light:this.light.id,target:target.uuid,depth:depth.id};
+    depth.name=`ShadowDepthTexture-${depth.id}`;
+    log('create',{...ids,width:target.width,scene:builder.scene?.uuid});
+    const resize=target.setSize;
+    target.setSize=function(w:number,h:number,d:number){
+      if(w!==this.width||h!==this.height)log('resize',{...ids,from:this.width,to:w,stack:new Error().stack});
+      return resize.call(this,w,h,d);
+    };
+    target.addEventListener('dispose',()=>log('target-dispose',{...ids,stack:new Error().stack}));
+    depth.addEventListener('dispose',()=>log('depth-dispose',ids));
+    return result;
+  };
+}
+
+export function traceShadowBindings(renderer:THREE.WebGPURenderer){
+  const backend=renderer.backend as any;
+  if(!backend.bindingUtils)return;
+  const groups=new WeakMap<object,Array<{id:number;gpu:object}>>(),dead=new WeakSet<object>();
+  const create=backend.bindingUtils.createBindGroup;
+  backend.bindingUtils.createBindGroup=function(group:any,...args:any[]){
+    const gpu=create.call(this,group,...args);
+    const entries=group.bindings.filter((b:any)=>b.isSampledTexture&&b.texture?.name.startsWith('ShadowDepthTexture'))
+      .map((b:any)=>({id:b.texture.id,gpu:backend.get(b.texture).texture}));
+    if(entries.length)groups.set(gpu,entries);
+    return gpu;
+  };
+  const destroy=backend.destroyTexture;
+  backend.destroyTexture=function(texture:any,...args:any[]){
+    if(texture.name.startsWith('ShadowDepthTexture')){
+      const gpu=backend.get(texture).texture;
+      if(gpu)dead.add(gpu);
+      console.info('SHADOW_TRACE gpu-destroy',texture.id,texture.version);
+    }
+    return destroy.call(this,texture,...args);
+  };
+  const draw=backend.draw;let stale=0;
+  backend.draw=function(object:any,...args:any[]){
+    if(stale<4)for(const group of object.getBindings()){
+      const entries=groups.get(backend.get(group).group);
+      if(entries?.some(e=>dead.has(e.gpu))){
+        stale++;
+        console.info('SHADOW_TRACE stale-draw',JSON.stringify({object:object.object.name,material:object.material.type,camera:object.camera.id,scene:object.scene.uuid,depths:entries.map(e=>e.id),bindings:group.bindings.filter((b:any)=>b.isSampledTexture&&b.texture?.name.startsWith('ShadowDepthTexture')).map((b:any)=>({id:b.texture.id,version:b.version,textureVersion:b.texture.version,generation:b.generation}))}));
+      }
+    }
+    return draw.call(this,object,...args);
+  };
+}

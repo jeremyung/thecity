@@ -1,0 +1,51 @@
+--- city.ts
++++ instrumented-city.ts
+@@ -262,6 +262,7 @@
+       setPhase:phase=>{this.renderer.domElement.dataset.graphicsPhase=phase;},
+       onError:error=>this.onError?.(error),
+     });
++    this.installBackendTrace();
+     this.renderer.setAnimationLoop(()=>startup.runFrame(()=>this.animate()));
+     this.renderer.domElement.dataset.graphicsPhase='loop-started';
+     await startup.promise;
+@@ -775,10 +776,28 @@
+     for(const [id,{building}] of this.objectQueue)if(this.infrastructure().canPresentBuilding(id))pendingChunks.add(buildingChunkKey(building.x,building.z));
+     this.chunks.update(pendingChunks);
+   }
++  private backendTrace:Record<string,{ms:number;count:number;max:number}>={};
++  private backendTraceCount=0;
++  private installBackendTrace(){
++    const backend=this.renderer.backend as any;
++    const wrap=(owner:any,name:string,key:string)=>{
++      if(typeof owner?.[name]!=="function")return;
++      const original=owner[name],trace=this;
++      owner[name]=function(...args:any[]){
++        const start=performance.now();
++        try{return original.apply(this,args);}
++        finally{const ms=performance.now()-start;const row=trace.backendTrace[key]??={ms:0,count:0,max:0};row.ms+=ms;row.count++;row.max=Math.max(row.max,ms);}
++      };
++    };
++    wrap(backend,'createRenderPipeline','pipeline');
++    wrap(backend.attributeUtils,'createAttribute','attributeCreate');
++    wrap(backend.attributeUtils,'updateAttribute','attributeUpdate');
++    wrap(backend,'beginRender','beginPass');wrap(backend,'finishRender','finishPass');
++  }
+   private animate(){
+     if(this.disposed)return;
+     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
+-    const begin=performance.now();
++    const begin=performance.now();this.backendTrace={};
+     const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
+     this.updateBuildingBatches();
+     this.sidewalks.update();
+@@ -797,8 +816,9 @@
+     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
+     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
+     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
+-    this.pipeline?.render();
++    const renderStart=performance.now();this.pipeline?.render();const renderMs=performance.now()-renderStart;
+     const cost=performance.now()-begin;
++    if(this.worldTick>=9250&&this.worldTick<10300&&cost>30&&this.backendTraceCount++<80)console.log('backend-growth-trace '+JSON.stringify({tick:this.worldTick,cost,renderMs,frameInterval,parts:this.backendTrace,pending:this.chunks.pendingCount}));
+     if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
+     this.frame++;
+     this.frameTiming.record(now,cost,timingPhase,!document.hidden);

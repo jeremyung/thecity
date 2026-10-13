@@ -1,0 +1,95 @@
+{
+  "generatedAt": "2026-10-12T11:24:59.634Z",
+  "scope": "CPU-only diagnostic of actual WASM packet generation and bundled TypeScript presentation logic.",
+  "limits": [
+    "No worker scheduling or message-transfer cost measured.",
+    "No GPU, renderer, style compilation, camera, or infrastructure commit delay measured; requested worlds commit immediately in this harness.",
+    "No heap or retained-memory claim measured."
+  ],
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "node": "v26.7.0",
+    "cpu": "Apple M2 Max",
+    "logicalCpuCount": 12
+  },
+  "wasm": {
+    "path": "public/wasm/city_engine_bg.wasm",
+    "sha256": "5a58ba40f206ece3002268b293dccee2dd85b63663908dd75ac43646dca0b1e0"
+  },
+  "scenario": {
+    "seed": 87231,
+    "developmentRate": 16,
+    "warmupTicks": 12000,
+    "movementPublications": 300,
+    "ticksPerPublication": 8,
+    "renderSamplesPerPublication": 3,
+    "ordinarySnapshotCadencePublications": 10,
+    "publicationReasons": {
+      "presentationRevision": 93,
+      "periodicSnapshot": 0,
+      "both": 0,
+      "none": 207
+    },
+    "actors": {
+      "finalDecodedRows": 250,
+      "maximumObserved": 322,
+      "meanObserved": 285.79
+    },
+    "maximumPacketBytes": 13244,
+    "finalTick": 14400,
+    "finalSnapshotTick": 14400,
+    "finalBuildings": 385,
+    "finalRoads": 121,
+    "finalPresentationRevision": "g1815:1:1:1"
+  },
+  "phaseCosts": {
+    "getter": {
+      "samples": 301,
+      "p50Ms": 0.00242,
+      "p95Ms": 0.01092,
+      "maxMs": 0.06938
+    },
+    "packetGeneration": {
+      "samples": 300,
+      "p50Ms": 0.06104,
+      "p95Ms": 0.09154,
+      "maxMs": 0.81933
+    },
+    "decode": {
+      "samples": 300,
+      "p50Ms": 0.11421,
+      "p95Ms": 0.16121,
+      "maxMs": 0.33987
+    },
+    "receive": {
+      "samples": 300,
+      "p50Ms": 0.04067,
+      "p95Ms": 0.06754,
+      "maxMs": 0.49004
+    },
+    "sample": {
+      "samples": 900,
+      "p50Ms": 0.15254,
+      "p95Ms": 0.384,
+      "maxMs": 1.15013
+    },
+    "snapshotParse": {
+      "samples": 94,
+      "p50Ms": 3.9475,
+      "p95Ms": 4.8795,
+      "maxMs": 6.36717
+    },
+    "infrastructureUpdate": {
+      "samples": 93,
+      "p50Ms": 0.11254,
+      "p95Ms": 0.16017,
+      "maxMs": 0.23813
+    }
+  },
+  "assertions": {
+    "snapshotGetterTokensMatched": true,
+    "decodedAndPresentedPosesFinite": true
+  },
+  "checkpoint": ".tools/movement-support/presentation-cost-save.json"
+}

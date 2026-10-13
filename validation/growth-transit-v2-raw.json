@@ -1,0 +1,242 @@
+[
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22041,\"spans\":{\"director\":20.200000002980232,\"bus\":0,\"train\":0,\"access\":0.29999999701976776,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:54.522Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22057,\"spans\":{\"director\":19.400000005960464,\"bus\":0,\"train\":0,\"access\":9.200000002980232,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:54.648Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22081,\"spans\":{\"director\":19.099999994039536,\"bus\":0,\"train\":0.10000000894069672,\"access\":0.09999999403953552,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:54.811Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22105,\"spans\":{\"director\":20.799999997019768,\"bus\":0,\"train\":0,\"access\":8.300000011920929,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:55.006Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22121,\"spans\":{\"director\":20.5,\"bus\":0,\"train\":0.09999999403953552,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:55.100Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22153,\"spans\":{\"director\":19.19999998807907,\"bus\":0,\"train\":0,\"access\":9.400000005960464,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:55.341Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22161,\"spans\":{\"director\":19.5,\"bus\":0,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:55.398Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22201,\"spans\":{\"director\":19.400000005960464,\"bus\":0.09999999403953552,\"train\":0.10000000894069672,\"access\":9.799999997019768,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:55.674Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22241,\"spans\":{\"director\":20.099999994039536,\"bus\":0,\"train\":0,\"access\":0.29999999701976776,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:55.950Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22281,\"spans\":{\"director\":19.299999997019768,\"bus\":0,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:56.243Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22305,\"spans\":{\"director\":18.299999997019768,\"bus\":0,\"train\":0.10000000894069672,\"access\":10.899999991059303,\"extensions\":0.10000000894069672}}",
+    "timestamp": "2026-10-12T11:52:56.412Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22321,\"spans\":{\"director\":20.599999994039536,\"bus\":0,\"train\":0,\"access\":0.29999999701976776,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:56.641Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22353,\"spans\":{\"director\":19.899999991059303,\"bus\":0.10000000894069672,\"train\":0,\"access\":10.299999997019768,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:56.766Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22361,\"spans\":{\"director\":20.700000002980232,\"bus\":0,\"train\":0.09999999403953552,\"access\":0.10000000894069672,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:56.813Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22401,\"spans\":{\"director\":18.19999998807907,\"bus\":0,\"train\":0,\"access\":9.200000002980232,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:57.104Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22441,\"spans\":{\"director\":22.5,\"bus\":0,\"train\":0,\"access\":0.09999999403953552,\"extensions\":0.10000000894069672}}",
+    "timestamp": "2026-10-12T11:52:57.387Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22481,\"spans\":{\"director\":19.69999998807907,\"bus\":0,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:57.798Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22505,\"spans\":{\"director\":20.5,\"bus\":0,\"train\":0,\"access\":9.300000011920929,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:57.887Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22521,\"spans\":{\"director\":20.900000005960464,\"bus\":0.09999999403953552,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:57.973Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22553,\"spans\":{\"director\":19.799999997019768,\"bus\":0,\"train\":0,\"access\":9.700000002980232,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:58.219Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22561,\"spans\":{\"director\":20.600000008940697,\"bus\":0,\"train\":0,\"access\":0.19999998807907104,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:58.282Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22601,\"spans\":{\"director\":20.5,\"bus\":0.09999999403953552,\"train\":0,\"access\":12.400000005960464,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:58.558Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22641,\"spans\":{\"director\":20.299999997019768,\"bus\":0,\"train\":0,\"access\":0.29999999701976776,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:58.864Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22657,\"spans\":{\"director\":20.19999998807907,\"bus\":0,\"train\":0.10000000894069672,\"access\":9.899999991059303,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:58.956Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22681,\"spans\":{\"director\":20.299999997019768,\"bus\":0,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:59.104Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22705,\"spans\":{\"director\":19.799999997019768,\"bus\":0,\"train\":0,\"access\":10.200000002980232,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:59.292Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22721,\"spans\":{\"director\":20.600000008940697,\"bus\":0,\"train\":0,\"access\":0.29999999701976776,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:59.395Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22753,\"spans\":{\"director\":20.599999994039536,\"bus\":0,\"train\":0.09999999403953552,\"access\":9.600000008940697,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:59.618Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22761,\"spans\":{\"director\":21.400000005960464,\"bus\":0.09999999403953552,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:52:59.678Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22801,\"spans\":{\"director\":20.600000008940697,\"bus\":0.09999999403953552,\"train\":0,\"access\":9.200000002980232,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:00.009Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22841,\"spans\":{\"director\":20.299999997019768,\"bus\":0,\"train\":0.09999999403953552,\"access\":0.10000000894069672,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:00.234Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22857,\"spans\":{\"director\":20.69999998807907,\"bus\":0.10000000894069672,\"train\":0,\"access\":8.799999997019768,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:00.361Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22881,\"spans\":{\"director\":18.900000005960464,\"bus\":0.09999999403953552,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:00.521Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22905,\"spans\":{\"director\":22.100000008940697,\"bus\":0,\"train\":0,\"access\":9.299999997019768,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:00.714Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22921,\"spans\":{\"director\":21.5,\"bus\":0,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:00.809Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":22961,\"spans\":{\"director\":19.899999991059303,\"bus\":0.10000000894069672,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:01.122Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":23001,\"spans\":{\"director\":20.899999991059303,\"bus\":0,\"train\":0,\"access\":9.900000005960464,\"extensions\":0.09999999403953552}}",
+    "timestamp": "2026-10-12T11:53:01.400Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":23041,\"spans\":{\"director\":21.600000008940697,\"bus\":0,\"train\":0,\"access\":0.29999999701976776,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:01.682Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":23081,\"spans\":{\"director\":20.600000008940697,\"bus\":0.09999999403953552,\"train\":0,\"access\":0.20000000298023224,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:01.978Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  },
+  {
+    "level": "log",
+    "message": "growth-transit-trace {\"tick\":23105,\"spans\":{\"director\":21.5,\"bus\":0,\"train\":0,\"access\":12,\"extensions\":0}}",
+    "timestamp": "2026-10-12T11:53:02.314Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791805893265"
+  }
+]

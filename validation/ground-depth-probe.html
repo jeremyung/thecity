@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ground depth isolation</title>
+<style>body{margin:20px;background:#202a2a;color:#eee;font:16px system-ui}main{display:flex;gap:12px}canvas{width:560px;height:440px}label{display:block;margin:12px 0}p{max-width:1000px}</style>
+<h1>Ground depth isolation</h1>
+<p>Actual ground surface builder and art materials; terrain y=0, paving y=.035, near=.5, far=3500, 50 mm lens, 4× MSAA. Shadows, water and post-processing omitted to isolate depth. Left: no offset. Right: current terrain offset (2,2). Synthetic witness, not the user's saved city.</p>
+<label>Distance <select id="distance"><option>150</option><option>400</option><option selected>1000</option><option>1400</option></select> m</label>
+<label>Style <select id="style"><option value="anime">Anime</option><option value="miniature">Miniature</option></select></label>
+<main><section><h2>No terrain bias</h2><canvas id="before"></canvas></section><section><h2>Current terrain bias</h2><canvas id="after"></canvas></section></main>
+<output id="status">Initializing…</output>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { buildGroundSurfaces } from '/web/src/render/ground-surfaces.ts';
+import { ArtMaterials } from '/web/src/render/materials.ts';
+const forceWebGL=new URLSearchParams(location.search).has('webgl');
+const entries=[];
+for(const [id,bias] of [['before',false],['after',true]]){
+ const renderer=new THREE.WebGPURenderer({canvas:document.getElementById(id),antialias:true,samples:4,forceWebGL});
+ renderer.setSize(560,440,false);renderer.setPixelRatio(1);await renderer.init();
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#61795b');
+ const camera=new THREE.PerspectiveCamera(2*Math.atan(24/(2*50))*180/Math.PI,560/440,.5,3500);
+ const art=new ArtMaterials();
+ const land=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800),new THREE.MeshStandardNodeMaterial({color:'#61795b',roughness:1,polygonOffset:bias,polygonOffsetFactor:2,polygonOffsetUnits:2}));
+ land.rotation.x=-Math.PI/2;scene.add(land,new THREE.HemisphereLight(0xffffff,0x888888,3));
+ const ground=buildGroundSurfaces([{block:0,points:[[-140,-140],[110,-140],[110,-70],[140,-70],[140,140],[-140,140]]}],art);scene.add(ground);
+ entries.push({renderer,scene,camera,art,ground});
+}
+async function render(){
+ const distance=Number(document.getElementById('distance').value),style=document.getElementById('style').value;
+ for(const e of entries){
+  e.camera.position.set(distance*.3,distance*.8,distance*Math.sqrt(.27));e.camera.lookAt(0,0,0);
+  e.art.setStyle(style);e.ground.traverse(o=>{if(o.isMesh&&o.material.userData.artKey)o.material=e.art.variant(o.material,style);});
+  await e.renderer.renderAsync(e.scene,e.camera);
+ }
+ document.getElementById('status').textContent=`Rendered ${distance} m · ${style} · ${entries[0].renderer.backend.constructor.name}`;
+}
+document.getElementById('distance').addEventListener('change',render);document.getElementById('style').addEventListener('change',render);await render();
+</script>

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "gate": "building_access points to exactly one open connected road; referenced road endpoints exist",
+  "settings": {
+    "seeds": [
+      0,
+      1,
+      87231
+    ],
+    "horizonTicks": 12000,
+    "sampleEveryTicks": 200,
+    "developmentRate": 16,
+    "startingState": "new CityEngine(seed), development rate set before advancing",
+    "fixture": ".tools/fidelity-review/road-staging-live-growth.json"
+  },
+  "inputs": {
+    "wasmSha256": "79da28178bb8227e8d2905eae87d88c6a21a5c3bc92c84778626ce2a5b6d48b8",
+    "fixture": {
+      "path": ".tools/fidelity-review/road-staging-live-growth.json",
+      "sha256": "01d1b6d6d239feb2e284adcac2588215eb0e55ea9553dd8a33aa95da39503ef1",
+      "tick": 27769,
+      "seed": 87231,
+      "stage": "Maturity",
+      "buildings": 664,
+      "accessEntries": 664
+    }
+  },
+  "runs": [
+    {
+      "seed": 0,
+      "startTick": 0,
+      "finalTick": 12000,
+      "developmentRate": 16,
+      "sampledEveryTicks": 200,
+      "sampleCount": 61,
+      "finalBuildings": 329,
+      "finalAccessEntries": 329
+    },
+    {
+      "seed": 1,
+      "startTick": 0,
+      "finalTick": 12000,
+      "developmentRate": 16,
+      "sampledEveryTicks": 200,
+      "sampleCount": 61,
+      "finalBuildings": 324,
+      "finalAccessEntries": 324
+    },
+    {
+      "seed": 87231,
+      "startTick": 0,
+      "finalTick": 12000,
+      "developmentRate": 16,
+      "sampledEveryTicks": 200,
+      "sampleCount": 61,
+      "finalBuildings": 325,
+      "finalAccessEntries": 325
+    }
+  ],
+  "counts": {
+    "checks": 32604,
+    "buildingObservations": 32604,
+    "endpointChecks": 65208,
+    "failures": 0
+  },
+  "missingWitnesses": [],
+  "passed": true
+}

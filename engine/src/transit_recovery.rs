@@ -209,7 +209,7 @@ impl Engine {
                 access_phase: 1,
                 access_progress: 0.0,
             };
-            let endpoint = self.route_endpoint_position(&traveler.route, false, resident_id, 0);
+            let endpoint = self.route_endpoint_position(&traveler.route, true, resident_id, 0);
             if let Some(endpoint) = endpoint {
                 if (pending.wait_position.x - endpoint.x)
                     .hypot(pending.wait_position.z - endpoint.z)

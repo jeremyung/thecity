@@ -1,0 +1,57 @@
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+ ❯ tests/lowrise-kit.test.ts (11 tests | 1 failed) 11068ms
+     × uses the same frontage and rear-wing positions through open, construction and renovation stages 6724ms
+ ❯ tests/tower-kit.test.ts (6 tests | 1 failed) 23016ms
+     × keeps tall profiles within parcel bounds and floor-count roof height 20889ms
+ ❯ tests/wasm.test.ts (5 tests | 1 failed) 62270ms
+     × keeps movement IDs, routes, positions, and headings valid against the saved graph 6508ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/lowrise-kit.test.ts > integrated low-rise families > uses the same frontage and rear-wing positions through open, construction and renovation stages
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/lowrise-kit.test.ts:175:3
+    173|   });
+    174|
+    175|   it('uses the same frontage and rear-wing positions through open, con…
+       |   ^
+    176|     const art=new ArtMaterials();
+    177|     for(const kind of ['home','shop'] as const)for(const [width,depth]…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/tower-kit.test.ts > tower building kit > keeps tall profiles within parcel bounds and floor-count roof height
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/tower-kit.test.ts:57:3
+     55|
+     56| describe('tower building kit', () => {
+     57|   it('keeps tall profiles within parcel bounds and floor-count roof he…
+       |   ^
+     58|     const art = new ArtMaterials();
+     59|     for (const floors of [12, 20, 45]) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/wasm.test.ts > compiled city engine > keeps movement IDs, routes, positions, and headings valid against the saved graph
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/wasm.test.ts:129:3
+    127|   }, 30_000);
+    128|
+    129|   it('keeps movement IDs, routes, positions, and headings valid agains…
+       |   ^
+    130|     const engine = makeEngine(5);
+    131|     engine.set_development_rate(60);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed | 55 passed (58)
+      Tests  3 failed | 296 passed (299)
+   Start at  15:54:52
+   Duration  62.49s (transform 2.02s, setup 0ms, import 6.03s, tests 205.28s, environment 5ms)
+

@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { color, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
+import { color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
@@ -21,6 +21,7 @@ export class ArtMaterials {
   private buildingCache = new Map<string,BuildingSurfaceVariants>();
   private bands:THREE.DataTexture;
   private tenantAtlas:THREE.CanvasTexture|null=null;
+  private storefrontAtlas:THREE.CanvasTexture|null=null;
   private leafMask:THREE.CanvasTexture|null=null;
   private shopSignAtlas:THREE.CanvasTexture|null=null;
   private shopSignMaterial:THREE.MeshBasicNodeMaterial|null=null;
@@ -106,6 +107,43 @@ export class ArtMaterials {
     }
     return variants[this.style];
   }
+  /** Four quiet window notices share one atlas across all storefronts and styles. */
+  storefrontPoster():Surface {
+    const key='storefront-poster-atlas';let variants=this.cache.get(key);
+    if(!variants){
+      this.storefrontAtlas=canvasTexture(512,512,ctx=>{
+        const headings=['珈琲','喫茶','新入荷','お知らせ'];
+        const details=['自家焙煎','モーニング','季節の品','ご案内'];
+        for(let slot=0;slot<4;slot++){
+          const x=(slot%2)*256,y=Math.floor(slot/2)*256;
+          ctx.fillStyle=['#e4d5af','#d8ddd0','#d6c8a7','#e5dcc8'][slot];ctx.fillRect(x,y,256,256);
+          ctx.fillStyle=slot===2?'#8e4437':'#354b46';ctx.fillRect(x+18,y+18,220,7);
+          ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 38px "Hiragino Mincho ProN",serif';ctx.fillText(headings[slot],x+128,y+62);
+          ctx.font='22px "Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText(details[slot],x+128,y+108);
+          if(slot<2){
+            ctx.fillStyle='#826650';ctx.beginPath();ctx.ellipse(x+120,y+161,35,17,0,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle='#f1e5c9';ctx.fillRect(x+85,y+157,70,30);
+            ctx.strokeStyle='#f1e5c9';ctx.lineWidth=7;ctx.strokeRect(x+154,y+161,18,15);
+            ctx.fillStyle='#354b46';ctx.font='19px serif';ctx.fillText(slot===0?'COFFEE':'モーニング',x+128,y+224);
+          }else{
+            for(let row=0;row<4;row++)ctx.fillRect(x+44,y+145+row*18,168-(row%2)*30,3);
+            ctx.font='18px serif';ctx.fillText(slot===2?'暮らしの道具':'店内禁煙',x+128,y+230);
+          }
+        }
+      });
+      const anime=new THREE.MeshToonNodeMaterial({map:this.storefrontAtlas,gradientMap:this.bands});
+      const miniature=new THREE.MeshStandardNodeMaterial({map:this.storefrontAtlas,roughness:.9});
+      for(const material of [anime,miniature]){
+        material.userData.artKey=key;
+        // Same diffuse expression as NodeMaterial's default, explicitly live:
+        // r183's static observer misses shadow texture replacement on otherwise
+        // unchanged atlas materials shared by many objects and render passes.
+        material.colorNode=materialColor as unknown as NonNullable<Surface['colorNode']>;
+      }
+      variants={anime,miniature};this.cache.set(key,variants);
+    }
+    return variants[this.style];
+  }
   /**
    * One opaque atlas/material for every storefront sign. A material per sign
    * kept each one out of the neighborhood batches: ~600 extra draws per pass.
@@ -143,7 +181,7 @@ export class ArtMaterials {
     const key=material.userData.artKey as string|undefined;
     return key?this.cache.get(key)?.[style]??material:material;
   }
-  dispose(){this.disposers.splice(0).forEach(release=>release());for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.shopSignMaterial?.dispose();this.shopSignAtlas?.dispose();this.shopSignMaterial=null;this.shopSignAtlas=null;this.contours.dispose();}
+  dispose(){this.disposers.splice(0).forEach(release=>release());for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.storefrontAtlas?.dispose();this.shopSignMaterial?.dispose();this.shopSignAtlas?.dispose();this.shopSignMaterial=null;this.shopSignAtlas=null;this.contours.dispose();}
 
   /** Toon ramp shared by every Anime surface. */
   get toonRamp(){return this.bands;}

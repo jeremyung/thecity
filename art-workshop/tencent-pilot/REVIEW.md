@@ -31,3 +31,35 @@ Root compared the same facade/camera in Anime daylight, Miniature daylight, Mini
 ## Review-path correction
 
 The candidate facade path previously replaced Anime colorNode with raw triplanar base colour, dropping its painterly pigment treatment. It now multiplies candidate base colour by the same `paintedSurfaceTint()` used by painted Anime surfaces. Miniature retains the sampled base colour. Earlier paired captures remain evidence of the earlier path, not a fair final comparison of the corrected styles. Build verification is in `validation/candidate-style-preservation-build.txt`; refreshed visual comparison is pending. The decision to withhold live-city promotion remains in force.
+
+## Corrected shader recheck — 2026-10-11
+
+Revisited the concrete specimen after the Anime pigment-preservation fix using
+`/?review=architecture&material=concrete` without forcing WebGL. Fixed Inspect shop
+camera at 1280×720, open construction stage, no DOF; candidate on/off in both
+styles and Miniature night. Captures: `validation/screenshots/texture-recheck/`.
+The route requests WebGPU with fallback; no backend diagnostic was collected, so
+these captures do not establish a backend-specific acceptance claim. No console
+errors were observed. This static specimen has no simulation seed/tick.
+
+The corrected Anime path preserves its surface treatment. Concrete adds restrained
+grain but does not materially improve facade composition or the clean, sparse
+shopfront impression. Night illumination remains separate; this simplified rig
+is not a full city day-cycle comparison. Keep the map outside living-city use.
+This closes the pending corrected-shader specimen review, not street-scale or
+full lighting acceptance. No generation calls or additional spending occurred.
+
+Next asset hypothesis: a shared street-detail atlas may add readable commercial
+character where another generic wall map would add only grain. Before generation,
+identify exact existing-kit surfaces, UV/instancing constraints and a baseline
+street camera; preserve authored Japanese lettering and separate emission. Cap
+a first experiment at one 1024-square atlas (about 5.33 MiB RGBA8 with mips per
+resident copy), then accept only on visible gain in both styles and live lighting.
+Do not generate a broad library or unique maps per building.
+
+Refreshed `validation/texture-budget.json` now includes both public development
+candidates: 9.329 MiB estimated source RGBA8 mip storage, excluding clones, canvas
+textures and render targets. The 1254-square plaster still exceeds the proposed
+1024 tile side limit. Neither candidate is runtime-listed; these figures are not
+measured city GPU memory. The concrete review can have a wall and facade copy
+(about 2.67 MiB together).

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "source": "public CityEngine WASM API; normal seeded development and project stepping",
+  "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+  "seed": 0,
+  "developmentRate": 16,
+  "target": {
+    "id": 1350,
+    "parcelId": 42,
+    "kind": "apartment",
+    "floors": 10,
+    "appearanceSeed": 2247724461,
+    "anchor": false,
+    "stage": "surface",
+    "progress": 0.868262,
+    "geometry": {
+      "x": 271.70978,
+      "z": -180.42914,
+      "width": 8.4549885,
+      "depth": 18.321718,
+      "rotation": 0.11383927,
+      "parcel": {
+        "id": 42,
+        "x": 271.70978,
+        "z": -180.42914,
+        "width": 8.4549885,
+        "depth": 18.321718,
+        "rotation": 0.11383927,
+        "access_node": 6,
+        "suitability": 0.88,
+        "protected": false,
+        "reservation": 1350
+      }
+    }
+  },
+  "before": {
+    "tick": 4200,
+    "worldStage": "TransitCity",
+    "buildingCount": 134,
+    "project": {
+      "id": 1351,
+      "kind": "building",
+      "from": null,
+      "to": null,
+      "parcel_id": 42,
+      "stage": "surface",
+      "progress": 0.868262,
+      "reason": "Railway Apartments is built to meet nearby demand",
+      "duration": 4.6069045,
+      "started_tick": 4040
+    },
+    "snapshotSha256": "25720bd4b4ec04ff2463efc107bf4555f012187d397e3eb3ea4ebbc4d570b93a",
+    "saveSha256": "a84f1dd8726e3b1513b00501b13d72e0df866800b72fc5159038e90f1f5d4f18"
+  },
+  "after": {
+    "tick": 4250,
+    "worldStage": "TransitCity",
+    "buildingCount": 135,
+    "targetStage": "open",
+    "targetProgress": 1,
+    "stepsToOpen": 50,
+    "snapshotSha256": "330de2052c3f8946ef33389f4cc3c78a52f8e5b40d8a4861cf30ba8743ad235a",
+    "saveSha256": "43ba42a9530559a5f071abaa7bdbe02610e0254ba9d4b6ef95b1e963bce504c9"
+  },
+  "continuation": {
+    "originalLiveSavedBeforeRestore": true,
+    "canonicalPreOpeningRestore": true,
+    "originalVsRestoredEqualAtEveryStep": true,
+    "comparedTicks": 50,
+    "equalAtOpening": true
+  },
+  "scope": "Compact developing-city browser-review fixture. The snapshots show the same naturally admitted non-anchor midrise immediately before opening and at its first observed open state."
+}

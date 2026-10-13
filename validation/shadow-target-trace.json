@@ -1,0 +1,116 @@
+[
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE create {\"node\":14153,\"light\":16,\"depth\":64,\"width\":2048,\"scene\":\"b61d1449-9a55-4332-8a07-c46c6d9b704b\"}",
+    "timestamp": "2026-10-12T05:41:19.977Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE create {\"node\":12201,\"light\":16,\"depth\":59,\"width\":2048,\"scene\":\"4a8f016b-a511-4f80-83c5-336f684ad439\"}",
+    "timestamp": "2026-10-12T05:41:22.215Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE resize {\"node\":12201,\"light\":16,\"depth\":59,\"from\":2048,\"to\":1024,\"stack\":\"Error\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts:20:106)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\\n    at WebGPURenderer._renderObjectDirect (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29960:19)\\n    at WebGPURenderer.renderObject (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29915:12)\\n    at WebGPURenderer._renderObjects (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29793:12)\\n    at WebGPURenderer._renderScene (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:28818:64)\"}",
+    "timestamp": "2026-10-12T05:42:08.577Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE target-dispose {\"node\":12201,\"light\":16,\"depth\":59,\"stack\":\"Error\\n    at RenderTarget.<anonymous> (http://127.0.0.1:5173/web/src/render/shadow-trace.ts:23:85)\\n    at RenderTarget.dispatchEvent (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:407:18)\\n    at RenderTarget.dispose (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4976:10)\\n    at RenderTarget.setSize (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4925:12)\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts:21:21)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\"}",
+    "timestamp": "2026-10-12T05:42:08.578Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE create {\"node\":8870,\"light\":16,\"depth\":58,\"width\":1024,\"scene\":\"1643e188-9a0b-4cd0-9cab-889b80b36cc5\"}",
+    "timestamp": "2026-10-12T05:44:28.589Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE create {\"node\":8870,\"light\":16,\"depth\":58,\"width\":1024,\"scene\":\"1d8325b6-1796-4019-b06d-18127325dc24\"}",
+    "timestamp": "2026-10-12T05:44:49.828Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE resize {\"node\":8870,\"light\":16,\"depth\":58,\"from\":1024,\"to\":2048,\"stack\":\"Error\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:20:106)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\\n    at WebGPURenderer._renderObjectDirect (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29960:19)\\n    at WebGPURenderer.renderObject (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29915:12)\\n    at WebGPURenderer._renderObjects (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29793:12)\\n    at WebGPURenderer._renderScene (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:28818:64)\"}",
+    "timestamp": "2026-10-12T05:45:32.574Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE target-dispose {\"node\":8870,\"light\":16,\"depth\":58,\"stack\":\"Error\\n    at RenderTarget.<anonymous> (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:23:85)\\n    at RenderTarget.dispatchEvent (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:407:18)\\n    at RenderTarget.dispose (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4976:10)\\n    at RenderTarget.setSize (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4925:12)\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:21:21)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\"}",
+    "timestamp": "2026-10-12T05:45:32.574Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE gpu-destroy 58 2",
+    "timestamp": "2026-10-12T05:45:32.574Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE resize {\"node\":8870,\"light\":16,\"depth\":58,\"from\":2048,\"to\":1024,\"stack\":\"Error\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:20:106)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\\n    at WebGPURenderer._renderObjectDirect (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29960:19)\\n    at WebGPURenderer.renderObject (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29915:12)\\n    at WebGPURenderer._renderObjects (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29793:12)\\n    at WebGPURenderer._renderScene (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:28818:64)\"}",
+    "timestamp": "2026-10-12T05:47:34.299Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE target-dispose {\"node\":8870,\"light\":16,\"depth\":58,\"stack\":\"Error\\n    at RenderTarget.<anonymous> (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:23:85)\\n    at RenderTarget.dispatchEvent (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:407:18)\\n    at RenderTarget.dispose (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4976:10)\\n    at RenderTarget.setSize (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4925:12)\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:21:21)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\"}",
+    "timestamp": "2026-10-12T05:47:34.299Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE gpu-destroy 58 4",
+    "timestamp": "2026-10-12T05:47:34.300Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE stale-draw {\"object\":\"\",\"material\":\"MeshStandardNodeMaterial\",\"camera\":281,\"scene\":\"1d8325b6-1796-4019-b06d-18127325dc24\",\"depths\":[58],\"bindings\":[{\"id\":58,\"version\":4,\"textureVersion\":6,\"generation\":4}]}",
+    "timestamp": "2026-10-12T05:48:11.771Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE stale-draw {\"object\":\"\",\"material\":\"MeshStandardNodeMaterial\",\"camera\":281,\"scene\":\"1d8325b6-1796-4019-b06d-18127325dc24\",\"depths\":[58],\"bindings\":[{\"id\":58,\"version\":4,\"textureVersion\":6,\"generation\":4}]}",
+    "timestamp": "2026-10-12T05:48:11.778Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE stale-draw {\"object\":\"\",\"material\":\"MeshStandardNodeMaterial\",\"camera\":281,\"scene\":\"1d8325b6-1796-4019-b06d-18127325dc24\",\"depths\":[58],\"bindings\":[{\"id\":58,\"version\":4,\"textureVersion\":6,\"generation\":4}]}",
+    "timestamp": "2026-10-12T05:48:11.787Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE stale-draw {\"object\":\"\",\"material\":\"MeshStandardNodeMaterial\",\"camera\":281,\"scene\":\"1d8325b6-1796-4019-b06d-18127325dc24\",\"depths\":[58],\"bindings\":[{\"id\":58,\"version\":4,\"textureVersion\":6,\"generation\":4}]}",
+    "timestamp": "2026-10-12T05:48:11.794Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE resize {\"node\":8870,\"light\":16,\"depth\":58,\"from\":1024,\"to\":2048,\"stack\":\"Error\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:20:106)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\\n    at WebGPURenderer._renderObjectDirect (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29960:19)\\n    at WebGPURenderer.renderObject (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29915:12)\\n    at WebGPURenderer._renderObjects (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:29793:12)\\n    at WebGPURenderer._renderScene (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:28818:64)\"}",
+    "timestamp": "2026-10-12T05:50:34.757Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE target-dispose {\"node\":8870,\"light\":16,\"depth\":58,\"stack\":\"Error\\n    at RenderTarget.<anonymous> (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:23:85)\\n    at RenderTarget.dispatchEvent (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:407:18)\\n    at RenderTarget.dispose (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4976:10)\\n    at RenderTarget.setSize (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-H2TYGQAY.js?v=188cbc9b:4925:12)\\n    at target.setSize (http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287:21:21)\\n    at ShadowNode.renderShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20519:15)\\n    at ShadowNode.updateShadow (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20548:10)\\n    at ShadowNode.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:20620:12)\\n    at NodeFrame.updateBeforeNode (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:25660:18)\\n    at NodeManager.updateBefore (http://127.0.0.1:5173/node_modules/.vite/deps/chunk-25TV67T5.js?v=188cbc9b:26641:48)\"}",
+    "timestamp": "2026-10-12T05:50:34.758Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  },
+  {
+    "level": "info",
+    "message": "SHADOW_TRACE gpu-destroy 58 6",
+    "timestamp": "2026-10-12T05:50:34.758Z",
+    "url": "http://127.0.0.1:5173/web/src/render/shadow-trace.ts?t=1791783868287"
+  }
+]

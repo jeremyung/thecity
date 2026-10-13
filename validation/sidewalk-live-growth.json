@@ -1,0 +1,38 @@
+{
+  "fixture": ".tools/fidelity-review/sidewalk-live-growth.json",
+  "sha256": "a668d78842d5afbdc87c49244c9a216c45fc84b694fa78772f66efadb35c0f0e",
+  "seed": 87231,
+  "tick": 18918,
+  "buildings": 442,
+  "roads": 155,
+  "developmentRate": 16,
+  "weatherKind": "clear",
+  "weatherIntensity": 0.0,
+  "browser": "Codex IAB WebGPUBackend",
+  "hardware": "Apple M2 Max",
+  "viewport": [
+    1099,
+    1071
+  ],
+  "style": "miniature",
+  "lensMm": 50,
+  "dof": false,
+  "quality": "high",
+  "requestedSpeed": 8,
+  "initialTick": 3066,
+  "initialBuildings": 38,
+  "runningObservedFrameP95Ms": [
+    197.3,
+    241.9
+  ],
+  "runningObservedCpuP95Ms": [
+    187.0,
+    192.3
+  ],
+  "settledFrameP95Ms": 20.6,
+  "settledCpuP95Ms": 10.2,
+  "settledPendingBuildings": 0,
+  "settledPendingChunks": 0,
+  "settledPendingSidewalks": 0,
+  "note": "UI sampled rolling windows, not continuous recording or isolated sidewalk timings. Final appearance capture uses09:00 lighting preview; final simulation clock00:55. Export through normal UI."
+}

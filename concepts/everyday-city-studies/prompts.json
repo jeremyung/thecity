@@ -1,0 +1,113 @@
+{
+  "sources": [
+    "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-25055e77-5f86-499f-b3ab-6a95d2df410d.png",
+    "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-8e588582-3647-415e-826c-e21ca86ca1e4.png",
+    "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-701c03fd-59a3-4b36-b59b-e0ac29aa3996.png",
+    "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-9be5f130-faaf-4e7e-807d-e714c52c54ce.png",
+    "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-e072eafd-636e-4a23-bb63-7019bb067f45.png"
+  ],
+  "scenes": [
+    [
+      "commercial-street",
+      "Busy narrow commercial street; preserve trucks, pedestrian scale, layered signs, awnings, utility poles, tightly packed multistory facades and golden daylight."
+    ],
+    [
+      "canal-working-boats",
+      "Portrait canal view; preserve green tugboats and blue-tarp barge, directional wakes, lush steep retaining banks, right-side rail platform and distant arched bridge, golden daylight."
+    ],
+    [
+      "night-intersection",
+      "Oblique overhead nighttime intersection; preserve road topology, zebra crossings, lane arrows, taxis and bus, dark rooftops and selective pools of shop lighting."
+    ],
+    [
+      "market-deliveries",
+      "Oblique market service yard; preserve crowded box trucks with varied cab colors, motorized carts and workers, loading spaces, striped crossings and warm daylight."
+    ],
+    [
+      "neighborhood-shop",
+      "Close worn neighborhood shopfront; preserve timber glazed doors, open doorway, partly raised shutter, yellow crates, basket bicycles, pipes, meters, AC units and vending machine; golden daylight."
+    ]
+  ],
+  "jobs": [
+    {
+      "name": "commercial-street-last-train-first-light",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Busy narrow commercial street; preserve trucks, pedestrian scale, layered signs, awnings, utility poles, tightly packed multistory facades and golden daylight. Original anime environmental background painting matching image 2: fine restrained ink contours, nuanced painted pigment, luminous atmospheric light, exquisite believable architectural detail and delicate tiny figures. Clearly hand-painted, quietly cinematic indie lo-fi mood. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-25055e77-5f86-499f-b3ab-6a95d2df410d.png",
+        "/Users/jung/Development/thecity/concepts/04-last-train-first-light.png"
+      ]
+    },
+    {
+      "name": "commercial-street-little-tokyo",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Busy narrow commercial street; preserve trucks, pedestrian scale, layered signs, awnings, utility poles, tightly packed multistory facades and golden daylight. Photographic architectural miniature matching image 2: finely crafted realistic model materials, lifelike fine detail, warm natural lighting, subtle macro tilt-shift selective focus. Scale comes from optics; no chunky plastic toy proportions. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-25055e77-5f86-499f-b3ab-6a95d2df410d.png",
+        "/Users/jung/Development/thecity/concepts/01-little-tokyo.png"
+      ]
+    },
+    {
+      "name": "canal-working-boats-last-train-first-light",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Portrait canal view; preserve green tugboats and blue-tarp barge, directional wakes, lush steep retaining banks, right-side rail platform and distant arched bridge, golden daylight. Original anime environmental background painting matching image 2: fine restrained ink contours, nuanced painted pigment, luminous atmospheric light, exquisite believable architectural detail and delicate tiny figures. Clearly hand-painted, quietly cinematic indie lo-fi mood. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-8e588582-3647-415e-826c-e21ca86ca1e4.png",
+        "/Users/jung/Development/thecity/concepts/04-last-train-first-light.png"
+      ]
+    },
+    {
+      "name": "canal-working-boats-little-tokyo",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Portrait canal view; preserve green tugboats and blue-tarp barge, directional wakes, lush steep retaining banks, right-side rail platform and distant arched bridge, golden daylight. Photographic architectural miniature matching image 2: finely crafted realistic model materials, lifelike fine detail, warm natural lighting, subtle macro tilt-shift selective focus. Scale comes from optics; no chunky plastic toy proportions. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-8e588582-3647-415e-826c-e21ca86ca1e4.png",
+        "/Users/jung/Development/thecity/concepts/01-little-tokyo.png"
+      ]
+    },
+    {
+      "name": "night-intersection-last-train-first-light",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Oblique overhead nighttime intersection; preserve road topology, zebra crossings, lane arrows, taxis and bus, dark rooftops and selective pools of shop lighting. Original anime environmental background painting matching image 2: fine restrained ink contours, nuanced painted pigment, luminous atmospheric light, exquisite believable architectural detail and delicate tiny figures. Clearly hand-painted, quietly cinematic indie lo-fi mood. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-701c03fd-59a3-4b36-b59b-e0ac29aa3996.png",
+        "/Users/jung/Development/thecity/concepts/04-last-train-first-light.png"
+      ]
+    },
+    {
+      "name": "night-intersection-little-tokyo",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Oblique overhead nighttime intersection; preserve road topology, zebra crossings, lane arrows, taxis and bus, dark rooftops and selective pools of shop lighting. Photographic architectural miniature matching image 2: finely crafted realistic model materials, lifelike fine detail, warm natural lighting, subtle macro tilt-shift selective focus. Scale comes from optics; no chunky plastic toy proportions. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-701c03fd-59a3-4b36-b59b-e0ac29aa3996.png",
+        "/Users/jung/Development/thecity/concepts/01-little-tokyo.png"
+      ]
+    },
+    {
+      "name": "market-deliveries-last-train-first-light",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Oblique market service yard; preserve crowded box trucks with varied cab colors, motorized carts and workers, loading spaces, striped crossings and warm daylight. Original anime environmental background painting matching image 2: fine restrained ink contours, nuanced painted pigment, luminous atmospheric light, exquisite believable architectural detail and delicate tiny figures. Clearly hand-painted, quietly cinematic indie lo-fi mood. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-9be5f130-faaf-4e7e-807d-e714c52c54ce.png",
+        "/Users/jung/Development/thecity/concepts/04-last-train-first-light.png"
+      ]
+    },
+    {
+      "name": "market-deliveries-little-tokyo",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Oblique market service yard; preserve crowded box trucks with varied cab colors, motorized carts and workers, loading spaces, striped crossings and warm daylight. Photographic architectural miniature matching image 2: finely crafted realistic model materials, lifelike fine detail, warm natural lighting, subtle macro tilt-shift selective focus. Scale comes from optics; no chunky plastic toy proportions. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-9be5f130-faaf-4e7e-807d-e714c52c54ce.png",
+        "/Users/jung/Development/thecity/concepts/01-little-tokyo.png"
+      ]
+    },
+    {
+      "name": "neighborhood-shop-last-train-first-light",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Close worn neighborhood shopfront; preserve timber glazed doors, open doorway, partly raised shutter, yellow crates, basket bicycles, pipes, meters, AC units and vending machine; golden daylight. Original anime environmental background painting matching image 2: fine restrained ink contours, nuanced painted pigment, luminous atmospheric light, exquisite believable architectural detail and delicate tiny figures. Clearly hand-painted, quietly cinematic indie lo-fi mood. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-e072eafd-636e-4a23-bb63-7019bb067f45.png",
+        "/Users/jung/Development/thecity/concepts/04-last-train-first-light.png"
+      ]
+    },
+    {
+      "name": "neighborhood-shop-little-tokyo",
+      "prompt": "Use case: style-transfer. Asset type: living-city art-direction reference study. Image 1 is the subject/composition reference. Image 2 is ONLY the rendering-style reference, not its scene or multi-panel layout. Produce ONE full-frame artwork. Close worn neighborhood shopfront; preserve timber glazed doors, open doorway, partly raised shutter, yellow crates, basket bicycles, pipes, meters, AC units and vending machine; golden daylight. Photographic architectural miniature matching image 2: finely crafted realistic model materials, lifelike fine detail, warm natural lighting, subtle macro tilt-shift selective focus. Scale comes from optics; no chunky plastic toy proportions. Keep the source viewpoint, aspect ratio, urban proportions and activity. Central subject crisp, selective depth softness at edges; preserve readable material distinctions. Change rendering treatment, not scene identity. Do not add landmarks, titles, panel borders, UI or watermarks. Signage may be simplified; do not invent prominent slogans. Beauty and coherent realism at every scale.",
+      "referenced_image_paths": [
+        "/var/folders/_c/z0zwd5gx6719y6gkckd5fn2w0000gn/T/codex-clipboard-e072eafd-636e-4a23-bb63-7019bb067f45.png",
+        "/Users/jung/Development/thecity/concepts/01-little-tokyo.png"
+      ]
+    }
+  ]
+}

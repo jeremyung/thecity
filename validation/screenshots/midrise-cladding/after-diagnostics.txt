@@ -1,0 +1,4 @@
+Browser tab: 22, Title: "Last Train, First Light · The City", URL: "http://127.0.0.1:5173/".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~					184 text 120 fps  ·  CPU  6.8  ms  ·  WebGPUBackend ready  ·  120  frames · frame p95  9.2  ms · CPU p95  8.2  ms · longest frame  11.8  ms 429  draws ·  3,616,923  triangles ·  34  textures ·  215  shapes 0  buildings queued ·  0  neighborhood batches queued ·  0  sidewalk rebuilds queued ·  0  road rebuilds queued Last style switch to  anime :  112 / 112  shader samples · prepare  1  ms · submit  1543  ms (largest  38  ms) · await  4075  ms · apply  0  ms ·  applied Render quality
+The focused UI element is 205 link Description: Download WebM recording, URL: blob:http://127.0.0.1:5173/dcd70a1f-6f1f-4166-868a-6585753d3706

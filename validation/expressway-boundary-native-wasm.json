@@ -1,0 +1,8 @@
+{
+  "seed": 1234,
+  "tick": 30000,
+  "roads": 16,
+  "minSampledRadius": 23.337985015553706,
+  "nativeWasmControls": "equal",
+  "replayTicks": 800
+}

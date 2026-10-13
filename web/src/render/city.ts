@@ -1,3 +1,12 @@
+import { RoadSurfacePartition } from './road-surface-partition';
+import { roadMarkingTrims, type MarkingTrim } from './road-markings';
+import { NearbyStreetLights } from './nearby-street-lights';
+import { junctionFootprint, type JunctionArm } from './road-junction';
+import { MovementPresentation } from './movement-presentation';
+import { treeClearanceSignature } from './tree-clearance-signature';
+import { createTreeClearanceGrid } from './tree-clearance-grid';
+import type { MovementSupport } from '../movement-support';
+import { VisibleInfrastructure, type InfrastructureCommit } from './visible-infrastructure';
 import { buildStationPlatform } from './station-kit';
 import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '../movement';
 import { snapShadowAnchor } from './shadow-anchor';
@@ -10,21 +19,32 @@ import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ArtMaterials, signTexture } from './materials';
 import { Kit, disposeGroup } from './kit';
+import { StagedKit } from './staged-kit';
 import { RiverWater } from './water';
-import { BuildingChunks, buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
+import { createRiverbankGeometry } from './riverbank';
+import { buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
 import { Umbrellas } from './umbrellas';
 import { CityBuses } from './buses';
 import { isRoadVehicle, ROAD_SURFACE_Y, VehicleFleet } from './vehicles';
+import { CityTrains } from './trains';
+import { addRailCorridor } from './rail-corridor';
+import { RAIL_CENTER_OFFSET, RAIL_HEAD_WIDTH } from './rail-profile';
 import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
+import { ConstructionBatches } from './construction-batches';
 import { buildExtendedBuilding } from './extended-building';
-import { buildStreetLighting } from './street-lighting';
+import { prepareStreetLighting, PersistentStreetLighting, type StreetLightingData } from './street-lighting';
+import { bezierRoad, sweepRoad, type RoadCurve } from './road-curve';
 import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
-import { treeOcclusion } from './tree-occlusion';
-import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, expresswayPierClear, type CrossingDeck, type BridgeSpan } from './road-elevation';
+import { createPavedGroundTest } from './paved-ground';
+import { buildGroundSurfaces } from './ground-surfaces';
+import { CitySidewalks } from './sidewalks';
+import { roadBatchSignatures } from './road-batch-signature';
+import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, vehicleSurfacePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, expresswayPierClear, type CrossingDeck, type BridgeSpan } from './road-elevation';
 import { RenderQualityController } from './quality';
+import { FrameTiming, type FrameTimingSnapshot } from './frame-timing';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
 import { CameraDirector } from '../camera/director';
 import { dampFocusDepth, focusDepthFromViewZ } from '../camera/focus';
@@ -34,13 +54,16 @@ import { resolveAudioEventContext } from '../audio/event-context';
 import type { World, Style, Point, Road, Building, BuildingOriginalFootprint } from '../types';
 
 export interface StyleSwitchMetrics { target:Style; samples:number; compiledSamples:number; maxSubmitMs:number; prepareMs:number; submitMs:number; waitMs:number; applyMs:number; outcome:'compiling'|'applied'|'superseded'|'failed' }
-export interface RenderMetrics { styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number }
+export interface RenderMetrics { timing?:FrameTimingSnapshot; styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number; pendingSidewalks:number; pendingRoads:number }
 /** Fields that affect a building's rendered group. Home occupancy is binary
  * because only the seeded window-light subset depends on whether anyone lives there. */
 export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint):string {
   const homeOccupancy=(b.kind==='home'||(original&&b.kind==='apartment'))?(b.occupancy>0?'occupied':'vacant'):'-';
   const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
-  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
+  const stagedTower=b.floors>=12&&(b.kind==='office'||b.kind==='apartment')&&b.stage!=='open'&&b.stage!=='renovation'&&b.stage!=='demolition';
+  const towerPhase=`${Math.ceil(b.floors*Math.max(0,Math.min(1,(b.progress-.12)/.57)))}:${Math.ceil(b.floors*Math.max(0,Math.min(1,(b.progress-.69)/.23)))}`;
+  const phase=stagedTower?towerPhase:b.stage==='demolition'?`${Math.ceil(b.floors*(1-Math.max(0,Math.min(1,b.progress))))}:${b.progress>0}`:Math.floor(b.progress*5);
+  return `${b.stage}:${b.floors}:${phase}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
 }
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
@@ -88,10 +111,22 @@ export class CityRenderer {
   private sun=new THREE.DirectionalLight('#fff1d1',3);
   private hemi=new THREE.HemisphereLight('#c8dce3','#748998',2);
   private lanternLights:Array<THREE.PointLight>=[];
+  private nearbyStreetLights=new NearbyStreetLights();
+  private streetLighting:PersistentStreetLighting|undefined;
   private terrain=new THREE.Group();
   private roads=new THREE.Group();
+  private constructionRoads=new THREE.Group();
+  private completedRoadSignature='';
+  private completedRoadSurfaces:RoadSurfacePartition|null=null;
+  private roadBuild:{kit:StagedKit;construction:THREE.Group;station:THREE.Group;lighting:{data:StreetLightingData|null};signature:string;surfaces:RoadSurfacePartition;identities:InfrastructureCommit;world:World;preparation:Generator<void,void,unknown>|null}|null=null;
+  private visibleInfrastructure?:VisibleInfrastructure;
+  private infrastructure(){return this.visibleInfrastructure??=new VisibleInfrastructure();}
+  private queuedRoadWorld:{world:World;signature:string}|null=null;
+  private get pendingRoads(){return Number(Boolean(this.roadBuild||this.queuedRoadWorld));}
+
   private station=new THREE.Group();
-  private chunks=new BuildingChunks(m=>this.art.buildingBatch(m),dispose=>this.retire(dispose),this.art.contours);
+  private sidewalks=new CitySidewalks(()=>this.art.get('#b4b8a6'),dispose=>this.retire(dispose));
+  private chunks=new ConstructionBatches(m=>this.art.buildingBatch(m),dispose=>this.retire(dispose),this.art.contours);
   private buildings=new Map<number,{source:RebuildableBuildingSource,signature:string}>();
   private water:RiverWater|null=null;
   private riverHalfWidth=32;
@@ -113,11 +148,11 @@ export class CityRenderer {
   private pedestrians:THREE.InstancedMesh;
   private heads:THREE.InstancedMesh;
   private fleet=new VehicleFleet(this.art);
-  private lastActorFrame=0;
-  private trains:THREE.InstancedMesh;
-  private trainGlass:THREE.InstancedMesh;
-  private trainStripe:THREE.InstancedMesh;
-  private wheels:THREE.InstancedMesh;
+  private trains=new CityTrains(this.art);
+  private committedRoadWorld:World|null=null;
+  private movementPresentation=new MovementPresentation();
+  private actorSampleAt=0;
+  private treeClearanceKey='';
   private previous=new Map<number,{x:number,z:number,h:number,k:number,y:number}>();
   private current=new Map<number,{x:number,z:number,h:number,k:number,y:number}>();
   private received=performance.now();
@@ -130,8 +165,12 @@ export class CityRenderer {
   private frame=0;
   private disposed=false;
   private lastFrame=0;
-  private frames:number[]=[];
+  private frameTiming=new FrameTiming();
+  private lastMetricsAt=0;
+  private onVisibility=()=>{this.frameTiming.record(performance.now(),0,'loading',false);this.lastFrame=0;};
   private roadSignature='';
+  private groundSignature='';
+  private ground=new THREE.Group();
   private terrainSeed=-1;
   private resize:ResizeObserver;
   private pointerStart={x:0,y:0};
@@ -142,7 +181,6 @@ export class CityRenderer {
   private focusEnabled=true;
   private quality:'high'|'balanced'='high';
   private qualityController=new RenderQualityController();
-  private roadGroups=new Map<string,THREE.Group>();
   private actorIds=new Map<THREE.Object3D,number[]>();
   private worldTick=-1;
   private waterTime=0;
@@ -151,6 +189,7 @@ export class CityRenderer {
   private rainLines:THREE.LineSegments;
   private objectQueue=new Map<number,{building:Building,signature:string,source:RebuildableBuildingSource}>();
   constructor(readonly element:HTMLElement,forceWebGL=false){
+    document.addEventListener('visibilitychange',this.onVisibility);
     this.renderer=new THREE.WebGPURenderer({antialias:true,samples:4,forceWebGL,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.6));
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -158,12 +197,13 @@ export class CityRenderer {
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
     this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
-    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
+    this.scene.add(this.terrain,this.roads,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
     this.scene.add(this.sun.target);
     for(let i=0;i<8;i++){const light=new THREE.PointLight('#ffd6a0',0,22,2);this.lanternLights.push(light);this.scene.add(light);}
+    this.scene.add(this.nearbyStreetLights.root);
     const sky=new THREE.Mesh(new THREE.SphereGeometry(1800,32,20),new THREE.MeshBasicNodeMaterial({side:THREE.BackSide,depthWrite:false}));
     const direction=positionLocal.normalize();
     const skyBase=mix(this.skyLow,this.skyHigh,smoothstep(-.05,.75,direction.y));
@@ -201,13 +241,6 @@ export class CityRenderer {
     this.scene.add(this.rainLines);
     this.pedestrians=this.instances(new THREE.CapsuleGeometry(.33,.9,3,5),this.art.get('#e7e5d9'),2000);
     this.heads=this.instances(new THREE.SphereGeometry(.28,6,4),this.art.get('#dfbe97'),2000);
-    this.trains=this.instances(new THREE.BoxGeometry(3.1,2.8,15),this.art.get('#c8d2cd',.4),30);
-    const trainWindows=new Kit();for(const side of [-1,1])for(let z=-5.5;z<=5.5;z+=2.2)trainWindows.box(side*1.57,0,z,.06,1.12,1.6,this.art.get('#526e77',.3));
-    const windowGroup=trainWindows.finish(false),windowMesh=windowGroup.children[0] as THREE.Mesh;
-    this.trainGlass=this.instances(windowMesh.geometry,this.art.get('#526e77',.3),30);
-    this.trainStripe=this.instances(new THREE.BoxGeometry(3.14,.3,15.1),this.art.get('#bd8054'),30);
-    const wheelParts=new Kit();for(const side of [-1,1])for(const z of [-4.5,4.5])wheelParts.box(side*.9,0,z,.4,.65,.8,this.art.get('#35484b'));
-    const wheelGroup=wheelParts.finish(false);this.wheels=this.instances((wheelGroup.children[0] as THREE.Mesh).geometry,this.art.get('#35484b'),30);
     this.highlight=new THREE.Mesh(new THREE.RingGeometry(8,8.2,64),new THREE.MeshBasicNodeMaterial({color:'#f2d79b',side:THREE.DoubleSide}));this.highlight.rotation.x=-Math.PI/2;this.highlight.visible=false;this.scene.add(this.highlight);
     this.resize=new ResizeObserver(()=>this.setSize());this.resize.observe(element);
     this.renderer.domElement.addEventListener('pointerdown',this.pointerDown);
@@ -278,11 +311,13 @@ export class CityRenderer {
   }
   private applyStyle(style:Style){
     this.style=style;this.art.setStyle(style);this.chunks.setContoursVisible(style==='anime');this.scene.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(m=>this.art.variant(m)):this.art.variant(o.material);});
-    this.opticalScale.value=style==='miniature'?.01:.04;this.bokeh.value=style==='miniature'?8:4;
+    this.opticalScale.value=style==='miniature'?.01:.04;this.bokeh.value=style==='miniature'?16:4;
   }
   private retire(dispose:()=>void){if(this.pendingCompiles)this.retiredResources.push(dispose);else dispose();}
   private retireGroup(group:THREE.Group){group.removeFromParent();this.retire(()=>disposeGroup(group));}
   setPreview(hour:number|null){this.preview=hour;}
+  toggleWaterReflectionForReview(){return this.water?.toggleReflectionForReview()??false;}
+  toggleStreetLightsForReview(){return this.nearbyStreetLights.enabled=!this.nearbyStreetLights.enabled;}
   setLens(id:LensPresetId,takeManualControl=true){this.director.setLens(id,takeManualControl);const lens=LENS_PRESETS[id];this.lensFocalM.value=lens.focalLengthMm/1000;this.lensFNumber.value=lens.fNumber;}
   setFocus(value:boolean){this.focusEnabled=value;this.dofEnabled.value=value?1:0;}
   setQuality(quality:'high'|'balanced'){this.quality=quality;this.qualityController.setProfile(quality);this.applyQuality();}
@@ -301,10 +336,20 @@ export class CityRenderer {
   setWorld(world:World,replaced=false){
     this.worldState=world;this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
-    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
-    const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
-    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|')+JSON.stringify(world.road_decks??[])+JSON.stringify(world.rail_platforms??[]);
-    if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
+    this.infrastructure().request(world);
+    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.trains.setWorld({...world,nodes:this.committedRoadWorld?.nodes??[],rail_platforms:this.committedRoadWorld?.rail_platforms??[]});this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
+
+    const signatures=roadBatchSignatures(world);
+    const signature=signatures.completed+signatures.construction;
+    if(signature!==this.roadSignature){this.rebuildRoads(world,signatures.completed);this.roadSignature=signature;}
+    this.sidewalks.setWorld(world);
+    const groundSignature=JSON.stringify(world.ground??[]);
+    if(groundSignature!==this.groundSignature){
+      this.groundSignature=groundSignature;
+      this.retireGroup(this.ground);
+      this.ground=buildGroundSurfaces(world.ground??[],this.art);
+      this.scene.add(this.ground);
+    }
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
@@ -325,24 +370,34 @@ export class CityRenderer {
     }
     this.updateTrees(world);
   }
-  setMovement(data:Float32Array,tick:number,minute:number){
-    this.previous=this.current;this.current=new Map();
-    for(let i=0;i+MOVEMENT_STRIDE<=data.length;i+=MOVEMENT_STRIDE)this.current.set(data[i],{x:data[i+1],z:data[i+2],h:data[i+3],k:data[i+4],y:data[i+5]});
-    const now=performance.now();this.interval=Math.max(20,Math.min(250,now-this.received));this.received=now;this.motionDelta=Math.max(.05,(tick-this.motionTick)*.05);this.motionTick=tick;this.hour=minute/60;
-    this.director.setPositions(data);
+  setMovement(data:Float32Array,tick:number,minute:number,trainDoors:Float32Array,support:ReadonlyMap<number,MovementSupport>){
+    this.trains.setMovement(trainDoors);
+    const now=performance.now();this.interval=Math.max(20,Math.min(250,now-this.received));this.received=now;this.motionTick=tick;this.hour=minute/60;
+    this.movementPresentation.receive(data,support,this.interval);
   }
+
   private resetWorld(){
+    this.frameTiming=new FrameTiming();this.lastMetricsAt=0;
+    this.retireGroup(this.ground);this.ground=new THREE.Group();this.scene.add(this.ground);this.groundSignature='';
     this.focusResetPending=true;
-    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
+    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trains.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
+    this.sidewalks.reset();
+    this.cancelRoadBuild();
+    this.infrastructure().reset();
+    this.nearbyStreetLights?.reset();this.streetLighting?.reset();
     this.buildings.clear();
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry;this.retire(()=>{near?.dispose();far?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
     this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);
-    const oldWater=this.water;oldWater?.mesh.removeFromParent();this.retire(()=>oldWater?.dispose());this.water=null;this.waterTime=0;this.motionTick=0;this.motionDelta=.05;this.received=performance.now();this.current.clear();this.previous.clear();this.objectQueue.clear();this.roadSignature='';this.selected=null;this.treePoints=[];
+    this.retireGroup(this.constructionRoads);this.constructionRoads=new THREE.Group();this.scene.add(this.constructionRoads);this.completedRoadSignature='';this.completedRoadSurfaces=null;
+    const oldWater=this.water;oldWater?.mesh.removeFromParent();this.retire(()=>oldWater?.dispose());this.water=null;this.waterTime=0;this.motionTick=0;this.motionDelta=.05;this.received=performance.now();this.current.clear();this.previous.clear();this.movementPresentation?.reset();this.actorSampleAt=0;this.committedRoadWorld=null;this.objectQueue.clear();this.roadSignature='';this.selected=null;this.treePoints=[];
   }
   private buildTerrain(world:World){
     const river=world.terrain.river;const halfWidth=this.riverHalfWidth=world.terrain.river_half_width??32;
-    const land=new THREE.MeshStandardNodeMaterial({roughness:1});const meadow=mx_noise_float(positionLocal.mul(.024)).mul(.5).add(.5);
+    // Natural land is the underlay for near-coplanar block/parcel paving.
+    // Bias only its depth away from the camera: moving the actual surface would
+    // leave tree roots and banks floating, while biasing paving can hide details.
+    const land=new THREE.MeshStandardNodeMaterial({roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const meadow=mx_noise_float(positionLocal.mul(.024)).mul(.5).add(.5);
     const scrub=mx_noise_float(positionLocal.mul(.007)).mul(.5).add(.5);
     land.colorNode=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
     for(const side of [-1,1]){
@@ -362,15 +417,13 @@ export class CityRenderer {
     const backdrop=new THREE.Mesh(createBackdropGeometry(world.seed,river,halfWidth),backdropMaterial);
     backdrop.userData.ownedMaterial=true;backdrop.receiveShadow=true;this.terrain.add(backdrop);
     const bankKit=new Kit();
-    for(let i=0;i<river.length-1;i++){
-      const a=river[i],b=river[i+1],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),angle=Math.atan2(dx,dz);
-      for(const side of [-1,1]){
-        bankKit.box((a.x+b.x)/2+side*(halfWidth+2),-.45,(a.z+b.z)/2,3,.9,len,this.art.get('#9b9e8b'),angle);
-        bankKit.box((a.x+b.x)/2+side*(halfWidth+8),.04,(a.z+b.z)/2,5,.12,len,this.art.get('#c2c2a6'),angle);
-      }
+    // Sweep the same X-offset boundary used by land and water. Shared bend
+    // stations keep the wall and path continuous without overlapping boxes.
+    for(const side of [-1,1] as const){
+      bankKit.add(createRiverbankGeometry(river,halfWidth,side,0,1.4,-1.3,.04),this.art.get('#9b9e8b'));
+      bankKit.add(createRiverbankGeometry(river,halfWidth,side,0,1.6,.04,.18),this.art.get('#b0b2a0'));
+      bankKit.add(createRiverbankGeometry(river,halfWidth,side,5.5,10.5,-.02,.1),this.art.get('#c2c2a6'));
     }
-    // Low irregular stone shoulders break the ruler-straight bank edge.
-    for(let z=-395;z<400;z+=4.5)for(const side of [-1,1]){const stone=new THREE.IcosahedronGeometry(1,0),scale=1.2+(Math.sin(z*7+world.seed)*.5+.5)*1.5;stone.scale(scale,.65,scale*.8);stone.rotateY(z);stone.translate(this.riverX(river,z)+side*halfWidth,-.2,z);bankKit.add(stone,this.art.get(z%9<4.5?'#8c9b8b':'#b0b2a0'));}
     this.terrain.add(bankKit.finish(false));
     const rng=random(world.seed+937);
     const positions:Array<{x:number,z:number,s:number}>=[];
@@ -385,7 +438,7 @@ export class CityRenderer {
     // A line of blossoms along the river creates a recognizable foreground rhythm.
     for(let z=-330;z<350;z+=24)positions.push({x:this.riverX(river,z)+halfWidth+17,z,s:2.6});
     for(let i=0;i<360;i++){const z=rng()*800-400,side=rng()>.5?1:-1;positions.push({x:this.riverX(river,z)+side*(halfWidth+21+rng()*28),z,s:1.8+rng()*2.5});}
-    this.treePoints=positions;
+    this.treePoints=positions;this.treeClearanceKey='';
     // Small overlapping leaf masses give a broken canopy silhouette at both
     // observation distances, rather than a row of identical smooth spheres.
     const foliage=createFoliageGeometry('near');
@@ -415,72 +468,224 @@ export class CityRenderer {
     }
   }
   private updateTrees(world:World){
-    const hides=treeOcclusion(world,this.treePoints);
+    const clearanceKey=treeClearanceSignature(world);
+    if(clearanceKey===this.treeClearanceKey)return;
+    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
+    const onPaving=createPavedGroundTest(world.ground??[]);
+    const maxCanopy=Math.max(0,...this.treePoints.map(p=>p.s*1.7+2));
+    const candidatesAt=createTreeClearanceGrid(world.buildings,world.roads,(world.rear_extensions??[]).slice(0,2),world.nodes,maxCanopy,kind=>roadWidth(kind)/2+(kind==='lane'?1.5:3.5));
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
       const i=batch.indices[local];
       const p=this.treePoints[i];
-      const hidden=hides(p);
+      const candidates=candidatesAt(p);
+      let hidden=onPaving(p)||candidates.buildings.some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
+        return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
+      });
+      if(!hidden)hidden=candidates.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='lane'?1.5:3.5);});
+      if(!hidden)hidden=candidates.rearExtensions.some(e=>{const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
       dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
+    this.treeClearanceKey=clearanceKey;
   }
   private updateTreeDetail(){
     if(!this.treeNearGeometry||!this.treeFarGeometry)return;
     for(const batch of this.treeBatches){const distance=this.camera.position.distanceTo(batch.center),far=batch.far?distance>280:distance>330;if(far!==batch.far){batch.far=far;batch.trees.geometry=far?this.treeFarGeometry:this.treeNearGeometry;batch.trees.computeBoundingSphere();}}
   }
-  private rebuildRoads(world:World){
-    this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);this.roadGroups.clear();
-    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
-    const kit=new Kit();
-    // Continuous pedestrian-scale river railings. Reserve openings for real
-    // bridges, including construction, and rebuild when infrastructure changes.
-    const bankMetal=this.art.get('#73827b',.66);
-    for(const side of [-1,1])for(let z=-390;z<390;z+=6){
-      const a={x:this.riverX(world.terrain.river,z)+side*(this.riverHalfWidth+5.4),z};
-      const b={x:this.riverX(world.terrain.river,z+6)+side*(this.riverHalfWidth+5.4),z:z+6};
-      const middle={x:(a.x+b.x)/2,z:z+3};
-      const opening=world.roads.some(road=>{if(road.kind!=='bridge')return false;const from=nodes.get(road.from),to=nodes.get(road.to);return from&&to&&distanceToSegment(middle,from,to)<10;});
-      if(opening)continue;
-      const length=Math.hypot(b.x-a.x,6),angle=Math.atan2(b.x-a.x,6);
-      kit.box(a.x,.73,a.z,.08,1.46,.08,bankMetal);
-      for(const y of [.64,1.28])kit.box(middle.x,y,middle.z,.055,.065,length,bankMetal,angle);
+  private rebuildRoads(world:World,completedSignature=roadBatchSignatures(world).completed){
+    const copy=structuredClone({nodes:world.nodes,roads:world.roads,projects:world.projects,
+      road_decks:world.road_decks,rail_platforms:world.rail_platforms,terrain:world.terrain});
+    world={...world,...copy};
+    if(this.roadBuild||this.queuedRoadWorld){
+      // Keep one active coherent build and one latest input. Restarting an
+      // active job on every snapshot can prevent it from ever becoming visible.
+      this.queuedRoadWorld={world,signature:completedSignature};
+      return;
     }
-    // Developed master-plan blocks are paved urban ground (concrete, gravel and
-    // service yards) rather than lawn; parcel paving and buildings sit above.
-    const groundTones=['#a7a59a','#9d9c92','#aaa69a','#a19f95'];
-    for(const patch of world.ground??[]){
-      if(patch.points.length<3)continue;
-      const shape=new THREE.Shape(patch.points.map(([x,z])=>new THREE.Vector2(x,-z)));
-      const geometry=new THREE.ShapeGeometry(shape);geometry.rotateX(-Math.PI/2);geometry.translate(0,.035,0);
-      kit.add(geometry,this.art.get(groundTones[patch.block%groundTones.length]));
+    this.prepareRoads(world,completedSignature);
+  }
+  private cancelRoadBuild(){
+    if(this.roadBuild){const job=this.roadBuild;job.preparation?.return();job.kit.dispose();disposeGroup(job.construction);disposeGroup(job.station);}
+    this.roadBuild=null;this.queuedRoadWorld=null;
+  }
+  private updateRoads(){
+    if(!this.roadBuild){
+      if(this.queuedRoadWorld){
+        const next=this.queuedRoadWorld;this.queuedRoadWorld=null;
+        try{this.prepareRoads(next.world,next.signature);}
+        catch(error){this.roadSignature='';throw error;}
+      }
+      return;
+    }
+    const job=this.roadBuild;let built:THREE.Group|null=null;
+    try{
+      if(job.preparation){
+        const deadline=performance.now()+2;
+        for(let units=0;units<128;units++){
+          if(job.preparation.next().done){job.preparation=null;break;}
+          if(performance.now()>=deadline)break;
+        }
+        return;
+      }
+      const deadline=performance.now()+2;
+      let complete=false;
+      // Allow cheap slices to share a frame, but never drain a whole job here.
+      // A single primitive/merge slice may exceed this soft time budget.
+      for(let slices=0;slices<8;slices++){
+        if(job.kit.step()){complete=true;break;}
+        if(performance.now()>=deadline)break;
+      }
+      if(!complete)return;
+      built=job.kit.takeGroup()!;
+      const roads=new THREE.Group();roads.add(built);
+      // Detached candidates miss scene-wide style traversal during preparation.
+      for(const group of [roads,job.construction,job.station])group.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(m=>this.art.variant(m)):this.art.variant(o.material);});
+      this.retireGroup(this.roads);this.retireGroup(this.constructionRoads);this.retireGroup(this.station);
+      this.roads=roads;this.constructionRoads=job.construction;this.station=job.station;
+      this.scene.add(this.roads,this.constructionRoads,this.station);
+      if(job.lighting.data){
+        if(!this.streetLighting){this.streetLighting=new PersistentStreetLighting(this.art);this.scene.add(this.streetLighting.root);}
+        this.streetLighting.commit(job.lighting.data);
+        this.nearbyStreetLights?.setSources(job.lighting.data.sources);
+      }
+      this.infrastructure().commit(job.identities);
+    const bridgeNodes=new Map(job.world.nodes.map(n=>[n.id,n]));this.bridgeSpans=job.world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
+      this.committedRoadWorld=job.world;
+      this.trains.setWorld({...this.worldState??job.world,nodes:job.world.nodes,rail_platforms:job.world.rail_platforms});
+      this.completedRoadSignature=job.signature;this.completedRoadSurfaces=job.surfaces;this.roadBuild=null;
+    }catch(error){if(built)disposeGroup(built);this.cancelRoadBuild();this.roadSignature='';throw error;}
+  }
+  private prepareRoads(world:World,completedSignature:string){
+    const kit=new StagedKit(),constructionKit=new Kit();
+    const construction=new THREE.Group(),station=new THREE.Group(),lighting:{data:StreetLightingData|null}={data:null};
+    const rebuildCompleted=completedSignature!==this.completedRoadSignature;
+    const surfaces=rebuildCompleted?new RoadSurfacePartition():(this.completedRoadSurfaces??new RoadSurfacePartition());
+    const preparation=this.populateRoads(world,rebuildCompleted,kit,constructionKit,construction,station,lighting,surfaces);
+    if(rebuildCompleted){
+      this.roadBuild={kit,construction,station,lighting,signature:completedSignature,surfaces,identities:this.infrastructure().capture(world),world,preparation};
+    }else{
+      try{
+        // Construction-only refreshes contain no preparation yields.
+        preparation.next();
+        kit.dispose();this.retireGroup(this.constructionRoads);
+        this.constructionRoads=construction;this.scene.add(construction);
+      }catch(error){kit.dispose();disposeGroup(construction);disposeGroup(station);throw error;}
+    }
+  }
+  private *populateRoads(world:World,rebuildCompleted:boolean,kit:StagedKit,constructionKit:Kit,
+    construction:THREE.Group,station:THREE.Group,lighting:{data:StreetLightingData|null},surfaces:RoadSurfacePartition):Generator<void,void,unknown>{
+    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
+    try{
+    if(rebuildCompleted){
+      // Continuous pedestrian-scale river railings. Reserve openings for real
+      // bridges, including construction, and rebuild when infrastructure changes.
+      const bankMetal=this.art.get('#73827b',.66);
+      for(const side of [-1,1])for(let z=-390;z<390;z+=6){
+        const a={x:this.riverX(world.terrain.river,z)+side*(this.riverHalfWidth+5.4),z};
+        const b={x:this.riverX(world.terrain.river,z+6)+side*(this.riverHalfWidth+5.4),z:z+6};
+        const middle={x:(a.x+b.x)/2,z:z+3};
+        const opening=world.roads.some(road=>{if(road.kind!=='bridge')return false;const from=nodes.get(road.from),to=nodes.get(road.to);return from&&to&&distanceToSegment(middle,from,to)<10;});
+        if(opening)continue;
+        const length=Math.hypot(b.x-a.x,6),angle=Math.atan2(b.x-a.x,6);
+        kit.box(a.x,.73,a.z,.08,1.46,.08,bankMetal);
+        for(const y of [.64,1.28])kit.box(middle.x,y,middle.z,.055,.065,length,bankMetal,angle);
+        yield;
+      }
     }
     const deckHeights=new Map((world.road_decks??[]).map(d=>[d.road_id,d.deck_height]));
     const crossings:CrossingDeck[]=world.roads.flatMap(road=>{
       const a=nodes.get(road.from),b=nodes.get(road.to);
       return a&&b?[{a,b,width:roadWidth(road.kind),height:road.kind==='expressway'?(deckHeights.get(road.id)??EXPRESSWAY_DECK):road.kind==='rail'?1+RAIL_DECK:0}]:[];
     });
-    for(const road of world.roads){const a=nodes.get(road.from),b=nodes.get(road.to);if(a&&b)this.roadKit(kit,a,b,road,deckHeights.get(road.id),crossings);}
-    const junctions=new Map<number,{count:number,radius:number}>();
-    for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'&&r.kind!=='expressway'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,roadWidth(road.kind)/2+.3);junctions.set(id,entry);}
-    for(const [id,junction]of junctions){const node=nodes.get(id);if(node&&junction.count>1)kit.cylinder(node.x,.33,node.z,junction.radius,.07,this.art.get('#747f7b'),24);}
+    const curves=new Map<number,RoadCurve>();
+    const deckById=new Map((world.road_decks??[]).map(d=>[d.road_id,d]));
+    for(const road of world.roads){
+      const a=nodes.get(road.from),b=nodes.get(road.to),deck=deckById.get(road.id);
+      if(a&&b&&deck){const [c,d]=deck.controls;curves.set(road.id,bezierRoad(a,{x:c[0],z:c[1]},{x:d[0],z:d[1]},b));}
+    }
+    const markingTrims=rebuildCompleted?roadMarkingTrims(world):new Map<number,MarkingTrim>();
+    // Existing pavement owns its footprint before construction claims the remainder.
+    // Stable ordering also removes coplanar overlap between neighboring open roads.
+    const orderedRoads=[...world.roads].sort((a,b)=>a.id-b.id);
+    if(rebuildCompleted)for(const road of orderedRoads){
+      if(road.stage!=='open')continue;
+      const a=nodes.get(road.from),b=nodes.get(road.to);if(!a||!b)continue;
+      if(rebuildCompleted)this.roadKit(kit,a,b,road,deckHeights.get(road.id),crossings,curves.get(road.id),world.rail_platforms,markingTrims.get(road.id),surfaces);
+      if(rebuildCompleted)yield;
+    }
+    if(rebuildCompleted){
+      const junctions=new Map<number,JunctionArm[]>();
+      for(const road of world.roads){
+        if(road.stage!=='open'||road.kind==='rail'||road.kind==='bridge'||road.kind==='expressway')continue;
+        const a=nodes.get(road.from),b=nodes.get(road.to);if(!a||!b)continue;
+        for(const [node,end] of [[a,b],[b,a]]){const arms=junctions.get(node.id)??[];arms.push({end,width:roadWidth(road.kind)});junctions.set(node.id,arms);}
+      }
+      for(const [id,arms] of junctions){
+        const node=nodes.get(id)!;const points=junctionFootprint(node,arms);
+        const pieces=surfaces.claim(points);
+        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.get('#747f7b'));
+        if(rebuildCompleted)yield;
+      }
+    }
+    const constructionSurfaces=surfaces.fork();
+    for(const road of orderedRoads){
+      if(road.stage==='open')continue;
+      const a=nodes.get(road.from),b=nodes.get(road.to);
+      if(a&&b)this.roadKit(constructionKit,a,b,road,deckHeights.get(road.id),crossings,curves.get(road.id),world.rail_platforms,undefined,constructionSurfaces);
+      if(rebuildCompleted)yield;
+    }
     for(const project of world.projects.filter(p=>p.kind==='road'&&p.progress<1)){
       const a=nodes.get(project.from!),b=nodes.get(project.to!);if(!a||!b)continue;
       if(world.roads.some(r=>r.from===a.id&&r.to===b.id&&r.stage!=='open'))continue;
-      this.roadKit(kit,a,b,{id:project.id,from:a.id,to:b.id,kind:world.roads.find(r=>(r.from===a.id&&r.to===b.id)||(r.from===b.id&&r.to===a.id))?.kind??(Math.abs(a.x-b.x)>100?'bridge':'local'),stage:project.stage,progress:project.progress,connected:false,length:Math.hypot(a.x-b.x,a.z-b.z),lanes:1});
+      this.roadKit(constructionKit,a,b,{id:project.id,from:a.id,to:b.id,kind:world.roads.find(r=>(r.from===a.id&&r.to===b.id)||(r.from===b.id&&r.to===a.id))?.kind??(Math.abs(a.x-b.x)>100?'bridge':'local'),stage:project.stage,progress:project.progress,connected:false,length:Math.hypot(a.x-b.x,a.z-b.z),lanes:1},undefined,[],undefined,world.rail_platforms,undefined,constructionSurfaces);
     }
-    for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
-    this.roads.add(kit.finish(),buildStreetLighting(world,this.art));
-    this.retireGroup(this.station);this.station=new THREE.Group();this.scene.add(this.station);
-    const stationProject=world.projects.find(p=>p.kind==='station');
-    for(const layout of world.rail_platforms??[]){
-      const platform=buildStationPlatform(layout,this.art,(stationProject?.progress??1)>.2);
-      const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
-      const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,layout.surface_y+2.6,24);platform.add(board);
-      this.station.add(platform);
+    construction.add(constructionKit.finish());
+    if(rebuildCompleted)yield;
+    if(rebuildCompleted){
+      for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
+      lighting.data=prepareStreetLighting(world);
+      if(rebuildCompleted)yield;
+      const stationProject=world.projects.find(p=>p.kind==='station');
+      for(const layout of world.rail_platforms??[]){
+        const platform=buildStationPlatform(layout,this.art,(stationProject?.progress??1)>.2);
+        const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
+        const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,layout.surface_y+2.6,24);platform.add(board);
+        station.add(platform);
+        yield;
+      }
     }
+    }finally{constructionKit.dispose();}
   }
 
-  private roadKit(kit:Kit,a:Point,b:Point,r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[]){
+  private groundRoadPolygon(a:Point,b:Point,width:number):Point[]{
+    const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);if(length<1e-6)return [];
+    const nx=-dz/length*width/2,nz=dx/length*width/2;
+    return [{x:a.x+nx,z:a.z+nz},{x:b.x+nx,z:b.z+nz},{x:b.x-nx,z:b.z-nz},{x:a.x-nx,z:a.z-nz}];
+  }
+  private addGroundRoadSurface(kit:Kit,pieces:Point[][],material:THREE.Material){
+    for(const points of pieces){
+      const shape=new THREE.Shape(points.map(p=>new THREE.Vector2(p.x,-p.z)));
+      const geometry=new THREE.ExtrudeGeometry(shape,{depth:.3,bevelEnabled:false,steps:1});
+      geometry.setIndex(Array.from({length:geometry.getAttribute('position').count},(_,i)=>i));
+      geometry.rotateX(-Math.PI/2);kit.add(geometry,material);
+    }
+  }
+  private roadKit(kit:Kit,a:Point,b:Point,r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[],curve?:RoadCurve,platforms=this.worldState?.rail_platforms,markingTrim:MarkingTrim={start:0,end:0},surfaces?:RoadSurfacePartition){
+    if(r.kind==='expressway'&&curve){
+      const open=r.stage==='open',end=curve.length*(open?1:THREE.MathUtils.clamp((r.progress-.12)/.88,0,1));
+      if(!open)for(let distance=0;distance<curve.length;distance+=18){const p=curve.at(distance);for(const side of [-1,1])kit.box(p.x+p.uz*side*5,.7,p.z-p.ux*side*5,.12,1.4,.12,this.art.get('#b79b73'));}
+      if(end<.01)return;
+      const width=roadWidth(r.kind),y=deckHeight,concrete=this.art.get('#9a9d93');
+      sweepRoad(kit,curve,0,end,0,y-.35,width+.6,.5,this.art.get('#a3a69c'));
+      sweepRoad(kit,curve,0,end,0,y,width,.3,this.art.get(open?'#747f7b':'#ac9a78'));
+      for(const side of [-1,1])sweepRoad(kit,curve,0,end,side*(width/2+.25),y+.75,.3,1.3,this.art.get('#b8bbb2'));
+      for(let distance=14;distance<end;distance+=28){const p=curve.at(distance),angle=Math.atan2(p.ux,p.uz);
+        if(!expresswayPierClear(p,{x:p.x-p.ux,z:p.z-p.uz},{x:p.x+p.ux,z:p.z+p.uz},y,crossings))continue;
+        kit.box(p.x,y/2,p.z,2.2,y,2.2,concrete,angle);kit.box(p.x,y-.55,p.z,width+1.2,.7,1.4,concrete,angle);
+      }
+      if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete,metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y,curve);
+      return;
+    }
     if(r.stage!=='open'){
       const fullDx=b.x-a.x,fullDz=b.z-a.z,fullLength=Math.hypot(fullDx,fullDz),bearing=Math.atan2(fullDx,fullDz);
       // Survey stakes show the reserved corridor before any usable deck exists.
@@ -491,7 +696,7 @@ export class CityRenderer {
     }
     const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),angle=Math.atan2(dx,dz),mid={x:(a.x+b.x)/2,z:(a.z+b.z)/2},rail=r.kind==='rail',open=r.stage==='open',bridge=r.kind==='bridge';
     const expressway=r.kind==='expressway',lane=r.kind==='lane';
-    const width=roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?deckHeight:lane?.12:.15;
+    const width=roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?deckHeight:.15;
     if(rail||expressway){
       // Viaduct piers: single columns under the expressway, paired under rail.
       const spacing=expressway?28:22,pierColor=this.art.get('#9a9d93');
@@ -509,18 +714,22 @@ export class CityRenderer {
       shape.moveTo(-len/2,.3);shape.lineTo(-len/2+ramp,2);shape.lineTo(len/2-ramp,2);shape.lineTo(len/2,.3);
       shape.lineTo(len/2,-.15);shape.lineTo(len/2-ramp,.8);shape.lineTo(-len/2+ramp,.8);shape.lineTo(-len/2,-.15);shape.closePath();
       const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
+    }else if(surfaces&&!rail&&!expressway){
+      this.addGroundRoadSurface(kit,surfaces.claim(this.groundRoadPolygon(a,b,width)),this.art.get(open?'#747f7b':'#ac9a78'));
     }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
     if(expressway){
       if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y);
       return;
     }
     if(rail){
-      for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*1.35,y+.45,mid.z-Math.sin(angle)*side*1.35,.14,.17,len,this.art.get('#a3aca7',.4),angle);
-      for(let distance=0;distance<len;distance+=2.5){const t=distance/len;kit.box(a.x+dx*t,y+.29,a.z+dz*t,5,.15,.4,this.art.get('#6d6457'),angle);}
+      if(open)addRailCorridor(kit,a,b,this.art,platforms);
+      for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*RAIL_CENTER_OFFSET,y+.45,mid.z-Math.sin(angle)*side*RAIL_CENTER_OFFSET,RAIL_HEAD_WIDTH,.17,len,this.art.get('#a3aca7',.4),angle);
+      for(let distance=0;distance<len;distance+=.75){const t=distance/len;kit.box(a.x+dx*t,y+.29,a.z+dz*t,2.2,.15,.24,this.art.get('#6d6457'),angle);}
     }else if(lane){
       // Lanes are shared-surface roji: no center line and no raised sidewalk.
     }else{
-      if(open&&(bridge||r.kind==='arterial')){for(let distance=8;distance<len-4;distance+=12){
+      if(open){if(bridge||r.kind==='arterial')for(let distance=8;distance<len-4;distance+=12){
+        if(!bridge&&(distance-2<markingTrim.start||distance+2>len-markingTrim.end))continue;
         if(bridge){
           // Split painted marks at ramp creases so neither end floats or sinks.
           const ramp=Math.min(12,len*.22),cuts=[distance-2,...[ramp,len-ramp].filter(v=>v>distance-2&&v<distance+2),distance+2];
@@ -531,10 +740,16 @@ export class CityRenderer {
           // Four-lane arterials: dashed lane dividers between the two lanes each way.
           if(r.kind==='arterial')for(const side of [-1,1])kit.box(a.x+dx*t+Math.cos(angle)*side*width/4,y+.19,a.z+dz*t-Math.sin(angle)*side*width/4,.14,.03,2.4,this.art.get('#dedaca'),angle);}
       }
-      // Arterials keep raised sidewalks; local streets are shared surfaces with
-      // painted edge lines, as on Tokyo residential streets.
-      if(!bridge&&r.kind==='arterial')for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),y+.15,mid.z-Math.sin(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),ARTERIAL_SIDEWALK,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
-      else if(!bridge&&open)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2-.45),y+.16,mid.z-Math.sin(angle)*side*(width/2-.45),.14,.03,Math.max(1,len-width),this.art.get('#dedaca'),angle);
+      // Open arterial sidewalks are committed separately by CitySidewalks.
+      // Local streets retain painted edges on their shared surface.
+      if(!bridge&&r.kind==='arterial'&&!open)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),y+.15,mid.z-Math.sin(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),ARTERIAL_SIDEWALK,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
+      else if(!bridge&&open&&r.kind!=='arterial'){
+        const start=Math.max(width/2,markingTrim.start),end=Math.min(len-width/2,len-markingTrim.end);
+        if(end>start)for(const side of [-1,1]){
+          const t=(start+end)/(2*len);
+          kit.box(a.x+dx*t+Math.cos(angle)*side*(width/2-.45),y+.16,a.z+dz*t-Math.sin(angle)*side*(width/2-.45),.14,.03,end-start,this.art.get('#dedaca'),angle);
+        }
+      }
       }else{
         for(let distance=0;distance<len;distance+=12){const t=distance/len,x=a.x+dx*t,z=a.z+dz*t;kit.cylinder(x+width/2,y+.55,z,.25,.8,this.art.get('#c17d4f'),5);}
       }
@@ -547,53 +762,75 @@ export class CityRenderer {
         }
         for(const t of [.28,.55,.76])kit.box(a.x+dx*t,-1,a.z+dz*t,width*.8,5,2,this.art.get('#a2aa9e'));
       }
-      if(open&&len>25){for(let distance=12;distance<len-8;distance+=44){const t=distance/len,x=a.x+dx*t+Math.cos(angle)*(width/2+1.5),z=a.z+dz*t-Math.sin(angle)*(width/2+1.5);const baseY=bridge?bridgeDeckHeight(distance,len):0;kit.cylinder(x,baseY+3.5,z,.1,7,this.art.get('#53696a'),6);kit.box(x-.7,baseY+7,z,1.8,.2,.5,this.art.get('#ead5a3',.5,true));}}
+      // Ordinary streets use buildStreetLighting's shared fixtures and pools.
+      // Retain this separate bridge kit until its sloped deck has a light model.
+      if(open&&bridge&&len>25){for(let distance=12;distance<len-8;distance+=44){const t=distance/len,x=a.x+dx*t+Math.cos(angle)*(width/2+1.5),z=a.z+dz*t-Math.sin(angle)*(width/2+1.5);const baseY=bridgeDeckHeight(distance,len);kit.cylinder(x,baseY+3.5,z,.1,7,this.art.get('#53696a'),6);kit.box(x-.7,baseY+7,z,1.8,.2,.5,this.art.get('#ead5a3',.5,true));}}
     }
+  }
+  private updateBuildingBatches(){
+    let builtCount=0;
+    for(const [id,item] of this.objectQueue){
+      if(!this.infrastructure().canPresentBuilding(id))continue;
+      if(builtCount++>=2)break;
+      this.objectQueue.delete(id);
+      const group=item.source.createGroup();
+      this.chunks.set(id,group,item.source,item.building.stage!=='open');this.buildings.set(id,{source:item.source,signature:item.signature});
+    }
+    const pendingChunks=new Set<string>();
+    for(const [id,{building}] of this.objectQueue)if(this.infrastructure().canPresentBuilding(id))pendingChunks.add(buildingChunkKey(building.x,building.z));
+    this.chunks.update(pendingChunks);
   }
   private animate(){
     if(this.disposed)return;
     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
     const begin=performance.now();
-    for(let i=0;i<2&&this.objectQueue.size;i++){
-      const [id,item]=this.objectQueue.entries().next().value!;this.objectQueue.delete(id);
-      const group=item.source.createGroup();
-      this.chunks.set(id,group,item.source);this.buildings.set(id,{source:item.source,signature:item.signature});
-    }
-    const pendingChunks=new Set<string>();
-    for(const {building} of this.objectQueue.values())pendingChunks.add(buildingChunkKey(building.x,building.z));
-    this.chunks.update(pendingChunks);
+    const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
+    this.updateBuildingBatches();
+    this.sidewalks.update();
+    this.updateRoads();
     if(this.worldState)this.rearExtensions.flushCompleted(this.worldState);
+    this.updateActors(now);
     this.director.update(dt,now/1000);
     const activeLens=LENS_PRESETS[this.director.lens];
     this.lensFocalM.value=activeLens.focalLengthMm/1000;this.lensFNumber.value=activeLens.fNumber;
     this.updateTreeDetail();
-    this.updateActors(now);
     this.updateLight(dt);
     const alpha=Math.min(1,(now-this.received)/this.interval);const time=Math.max(0,(this.motionTick-1+alpha)*.05);const waterDt=Math.max(0,Math.min(.1,time-this.waterTime));this.water?.update(waterDt,time,this.rain,this.style,1-this.daylight);this.umbrellas.update(this.umbrellaTuples.subarray(0,this.umbrellaCount*MOVEMENT_STRIDE),this.rain,time);this.art.time.value=time;this.waterTime=time;this.lastTick=this.motionTick;this.rainTime.value=time;this.rainLines.visible=this.rain>.1;this.rainOpacity.value=.035+this.rain*.13;this.rainLines.position.set(this.director.target.x,0,this.director.target.z);
     this.camera.updateMatrixWorld();
-    this.focusTargetView.copy(this.director.controls.target).applyMatrix4(this.camera.matrixWorldInverse);
+    this.focusTargetView.copy(this.director.focusTarget).applyMatrix4(this.camera.matrixWorldInverse);
     const focusTarget=focusDepthFromViewZ(this.focusTargetView.z,this.camera.near,this.camera.far);
     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
     this.pipeline?.render();
     const cost=performance.now()-begin;
-    if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.pendingCompiles===0)!==null)this.applyQuality();
-    this.frames.push(frameInterval);if(this.frames.length>120)this.frames.shift();
-    if(this.frame++%90===0&&this.onMetrics){const avg=this.frames.reduce((a,b)=>a+b,0)/this.frames.length;this.onMetrics({fps:1000/avg,frameMs:cost,calls:this.renderer.info.render.drawCalls,triangles:this.renderer.info.render.triangles,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,backend:this.renderer.backend.constructor.name,styleSwitch:this.styleSwitchMetrics?{...this.styleSwitchMetrics}:undefined,pendingBuildings:this.objectQueue.size,pendingChunks:this.chunks.pendingCount});}
+    if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
+    this.frame++;
+    this.frameTiming.record(now,cost,timingPhase,!document.hidden);
+    if(now-this.lastMetricsAt>=1000&&this.onMetrics){this.lastMetricsAt=now;const timing=this.frameTiming.snapshot();this.onMetrics({timing,fps:timing.fps,frameMs:cost,calls:this.renderer.info.render.drawCalls,triangles:this.renderer.info.render.triangles,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,backend:this.renderer.backend.constructor.name,styleSwitch:this.styleSwitchMetrics?{...this.styleSwitchMetrics}:undefined,pendingBuildings:this.objectQueue.size,pendingChunks:this.chunks.pendingCount,pendingSidewalks:this.sidewalks.pendingCount,pendingRoads:this.pendingRoads});}
   }
   private updateActors(now:number){
-    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;const dt=this.lastActorFrame?Math.min(.1,(now-this.lastActorFrame)/1000):1/60;this.lastActorFrame=now;this.buses.begin(now);this.fleet.begin();const pedIds:number[]=[],trainIds:number[]=[];
-    for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=THREE.MathUtils.lerp(old.x,current.x,t),z=THREE.MathUtils.lerp(old.z,current.z,t);let h=current.h;const dh=Math.atan2(Math.sin(current.h-old.h),Math.cos(current.h-old.h));h=Math.PI/2-(old.h+dh*t);const lift=current.k===0?THREE.MathUtils.lerp(pedestrianSurface(old.y,bridgeLift(old,this.bridgeSpans)),pedestrianSurface(current.y,bridgeLift(current,this.bridgeSpans)),t)-PEDESTRIAN_GROUND_SURFACE:current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
-      if(current.k===0&&ped<2000){const offset=ped*MOVEMENT_STRIDE;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;this.umbrellaTuples[offset+5]=lift;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
-      else if(isRoadVehicle(current.k)){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,dt);}
-      else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+ROAD_SURFACE_Y,vehicle.pitch);}
-      else if(current.k===2&&train<24){for(let coach=0;coach<3;coach++){dummy.position.set(x-Math.sin(h)*(coach-1)*16,2.75+RAIL_DECK,z-Math.cos(h)*(coach-1)*16);dummy.rotation.set(0,h,0);dummy.scale.setScalar(1);dummy.updateMatrix();this.trains.setMatrixAt(train,dummy.matrix);dummy.position.y=3.05+RAIL_DECK;dummy.updateMatrix();this.trainGlass.setMatrixAt(train,dummy.matrix);dummy.position.y=2.35+RAIL_DECK;dummy.updateMatrix();this.trainStripe.setMatrixAt(train,dummy.matrix);dummy.position.y=1.1+RAIL_DECK;dummy.updateMatrix();this.wheels.setMatrixAt(train,dummy.matrix);trainIds[train]=id;train++;}}
+    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;this.buses.begin(now);this.trains.begin();this.fleet.begin();const pedIds:number[]=[];
+    this.previous=this.current;this.current=this.movementPresentation.sample(now,this.infrastructure());
+    this.motionDelta=this.actorSampleAt?Math.max(.001,(now-this.actorSampleAt)/1000):.05;this.actorSampleAt=now;
+    const cameraPositions:number[]=[];
+    for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=current.x,z=current.z,h=Math.PI/2-current.h;
+      const lift=current.k===0?pedestrianSurface(current.y,bridgeLift(current,this.bridgeSpans))-PEDESTRIAN_GROUND_SURFACE:current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
+      let surfaceY=current.y;
+
+      if(current.k===0&&ped<2000){surfaceY=lift+PEDESTRIAN_GROUND_SURFACE;const offset=ped*MOVEMENT_STRIDE;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;this.umbrellaTuples[offset+5]=lift;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
+      else if(isRoadVehicle(current.k)){const vehicle=vehicleSurfacePose({x,z},h,2.7,this.bridgeSpans,current.y);surfaceY=vehicle.lift+ROAD_SURFACE_Y;this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,this.motionDelta);}
+      else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);surfaceY=vehicle.lift+ROAD_SURFACE_Y;this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+ROAD_SURFACE_Y,vehicle.pitch);}
+      else if(current.k===2&&train<8)this.trains.set(train++,id,x,z,h,t);
+      else {this.current.delete(id);continue;}
+      cameraPositions.push(id,x,z,current.h,current.k,surfaceY);
     }
+    this.director.setPositions(new Float32Array(cameraPositions),this.movementPresentation.withheld(this.current));
     this.umbrellaCount=ped;
+    this.trains.finish(train);for(const batch of [...this.trains.batches,this.trains.lamps,this.trains.doors])for(const mesh of batch.meshes)this.actorIds.set(mesh,batch.ids);
     this.buses.finish(bus);for(const mesh of this.buses.meshes)this.actorIds.set(mesh,this.buses.ids);
-    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);this.actorIds.set(this.trains,trainIds);this.actorIds.set(this.trainGlass,trainIds);
-    for(const [mesh,count]of [[this.pedestrians,ped],[this.heads,ped],[this.trains,train],[this.trainGlass,train],[this.trainStripe,train],[this.wheels,train]] as const){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}
+    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);
+    for(const mesh of [this.pedestrians,this.heads]){mesh.count=ped;mesh.instanceMatrix.needsUpdate=true;}
     if(this.pedestrians.instanceColor)this.pedestrians.instanceColor.needsUpdate=true;
   }
   private updateLight(dt:number){
@@ -621,9 +858,9 @@ export class CityRenderer {
     this.sun.position.add(this.sun.target.position);
     this.sun.intensity=.16+this.daylight*1.8;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#fff1d9'),this.daylight);
     // Soft urban bounce keeps opaque facades and lanes readable between local
-    // emitters. Preserve the daytime fill and ground tint so the sun continues
-    // to describe building orientation without flattening daytime massing.
-    this.hemi.intensity=1.05-this.daylight*.55;
+    // emitters. The visible sky is not an environment light: retain enough
+    // daytime fill to read shaded facades while the sun describes orientation.
+    this.hemi.intensity=1.05-this.daylight*.05;
     this.hemi.groundColor.set('#a0a09a').lerp(new THREE.Color('#748998'),this.daylight);
     // A painted moonlit fill keeps rooflines and quiet lanes readable between
     // pools of warm shop light; the sky itself can remain a deep midnight blue.
@@ -635,6 +872,7 @@ export class CityRenderer {
     const activityHour=hour%24,lightBlend=Math.min(1,dt*.8);this.art.litHome.value=THREE.MathUtils.lerp(this.art.litHome.value,activityHour>=23||activityHour<5?.32:1,lightBlend);this.art.litOffice.value=THREE.MathUtils.lerp(this.art.litOffice.value,activityHour>=7&&activityHour<20?1:.1,lightBlend);this.art.litShop.value=THREE.MathUtils.lerp(this.art.litShop.value,activityHour>=6&&activityHour<23?1:.18,lightBlend);
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
+    this.nearbyStreetLights.update(dt,this.director.target,1-this.daylight);
     if(this.shine)this.shine.strength.value=.06+(1-this.daylight)*.2;
     this.renderer.toneMappingExposure=1;
   }
@@ -654,9 +892,9 @@ export class CityRenderer {
   private pointerUp=(e:PointerEvent)=>{
     if(Math.hypot(e.clientX-this.pointerStart.x,e.clientY-this.pointerStart.y)>4)return;
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
-    const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);if(!hits.length)return;const hit=hits[0],building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
+    const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);const hit=hits.find(candidate=>{for(let object:THREE.Object3D|null=candidate.object;object;object=object.parent)if(!object.visible)return false;return true;});if(!hit)return;const building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.retire(()=>this.fleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

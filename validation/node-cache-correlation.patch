@@ -1,0 +1,34 @@
+--- city.ts
++++ instrumented-city.ts
+@@ -262,6 +262,7 @@
+       setPhase:phase=>{this.renderer.domElement.dataset.graphicsPhase=phase;},
+       onError:error=>this.onError?.(error),
+     });
++    this.installCacheTrace();
+     this.renderer.setAnimationLoop(()=>startup.runFrame(()=>this.animate()));
+     this.renderer.domElement.dataset.graphicsPhase='loop-started';
+     await startup.promise;
+@@ -774,6 +775,23 @@
+     const pendingChunks=new Set<string>();
+     for(const [id,{building}] of this.objectQueue)if(this.infrastructure().canPresentBuilding(id))pendingChunks.add(buildingChunkKey(building.x,building.z));
+     this.chunks.update(pendingChunks);
++  }
++  private installCacheTrace(){
++    const nodes=(this.renderer as any)._nodes, trace=this;
++    const deleted=new Map<number,{frame:number;tick:number}>();let records=0;
++    const originalDelete=nodes.delete,originalGet=nodes.getForRender;
++    const active=()=>trace.worldTick>9250&&trace.worldTick<9650;
++    nodes.delete=function(object:any){
++      if(active()&&object.isRenderObject){const state=this.get(object).nodeBuilderState;
++        if(state?.usedTimes===1){if(deleted.size>=512)deleted.clear();deleted.set(object.initialCacheKey,{frame:trace.frame,tick:trace.worldTick});}}
++      return originalDelete.call(this,object);
++    };
++    nodes.getForRender=function(object:any){
++      const missing=!this.nodeBuilderCache.has(object.initialCacheKey),start=performance.now();
++      const result=originalGet.call(this,object),ms=performance.now()-start;
++      if(active()&&missing&&records++<120)console.log('node-cache-correlation '+JSON.stringify({tick:trace.worldTick,frame:trace.frame,key:object.initialCacheKey,material:object.material.type,ms,deleted:deleted.get(object.initialCacheKey)??null}));
++      return result;
++    };
+   }
+   private animate(){
+     if(this.disposed)return;

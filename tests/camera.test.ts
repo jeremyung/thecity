@@ -98,6 +98,78 @@ beforeEach(() => {
 });
 
 describe("CameraDirector", () => {
+  it('frames a followed building as a volume and grows the frame after redevelopment', () => {
+    const camera = new THREE.PerspectiveCamera(42, .7, .1, 2000);
+    const director = new CameraDirector(camera, makeElement());
+    const world = makeWorld();
+    const building = { ...makeBuilding(41, 100, 20), anchor:false, kind:'office', floors:6, stage:'demolition', progress:.5 };
+    world.buildings = [building];
+    director.world(world);
+    director.follow(41);
+    const state = director as unknown as { desiredTarget: THREE.Vector3; desiredPosition: THREE.Vector3 };
+    const originalDistance = state.desiredPosition.distanceTo(state.desiredTarget);
+    expect(state.desiredTarget.x).toBe(100);
+    expect(state.desiredTarget.z).toBe(20);
+    expect(state.desiredTarget.y).toBeGreaterThan(9);
+    world.buildings = [{ ...building, floors:18, stage:'structure' }];
+    world.revision++;
+    director.world(world);
+    director.update(.1,1);
+    expect(state.desiredTarget.y).toBeGreaterThan(29);
+    expect(director.focusTarget.y).toBeCloseTo(state.desiredTarget.y);
+    expect(state.desiredPosition.distanceTo(state.desiredTarget)).toBeGreaterThan(originalDistance);
+    director.dispose();
+  });
+
+  it("focuses a followed train at its center instead of the look-ahead target", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, .1, 2_000), makeElement());
+    director.world(makeWorld());
+    director.follow(500);
+    const state = director as unknown as { desiredTarget: THREE.Vector3 };
+    expect(state.desiredTarget.x).toBeCloseTo(25);
+    expect(director.focusTarget.x).toBeCloseTo(15);
+    expect(director.focusTarget.y).toBeCloseTo(8.735);
+    director.dispose();
+  });
+
+  it("focuses movement followers at their published subject point and holds it during loss grace", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, .1, 2_000), makeElement());
+    director.world(makeWorld());
+    director.follow(812);
+    director.setPositions(new Float32Array([812, 30, 18, 0, 1, 11.15]));
+    director.update(.1, .1);
+    const state = director as unknown as { desiredTarget: THREE.Vector3 };
+    expect(state.desiredTarget.x).toBeCloseTo(36);
+    expect(director.focusTarget.x).toBeCloseTo(30);
+    expect(director.focusTarget.y).toBeCloseTo(11.15);
+    expect(director.focusTarget.z).toBeCloseTo(18);
+
+    director.setPositions(new Float32Array());
+    for (let i = 0; i < 10; i++) director.update(.1, .2 + i * .1);
+    expect(director.focusTarget.x).toBeCloseTo(30);
+    expect(director.focusTarget.y).toBeCloseTo(11.15);
+    expect(director.focusTarget.z).toBeCloseTo(18);
+
+    // Manual input ends Follow immediately, so focus returns to the live camera target.
+    orbitMocks.instances.at(-1)?.start();
+    expect(director.focusTarget).toBe(director.target);
+    director.dispose();
+  });
+
+  it("uses the published bus position for bus look-ahead focus", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, .1, 2_000), makeElement());
+    director.world(makeWorld());
+    director.follow(813);
+    director.setPositions(new Float32Array([813, 48, -22, Math.PI / 2, 3, 2.4]));
+    director.update(.1, .1);
+    const state = director as unknown as { desiredTarget: THREE.Vector3 };
+    expect(state.desiredTarget.z).toBeCloseTo(-14);
+    expect(director.focusTarget.x).toBeCloseTo(48);
+    expect(director.focusTarget.y).toBeCloseTo(2.4);
+    expect(director.focusTarget.z).toBeCloseTo(-22);
+    director.dispose();
+  });
+
   it("starts at the intended scene and keeps a bounded set of real anchors", () => {
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 2_000);
     const director = new CameraDirector(camera, makeElement());
@@ -110,6 +182,109 @@ describe("CameraDirector", () => {
     const anchors = (director as unknown as { anchors: unknown[] }).anchors;
     expect(anchors.length).toBeLessThanOrEqual(32);
     expect(anchors.length).toBeGreaterThan(1);
+    director.dispose();
+  });
+
+  it("frames a neighborhood's real street interior around a blocker and holds the shot under Explore", () => {
+    const world = makeWorld();
+    world.terrain.river = [];
+    world.nodes = [
+      { id: 3, x: 0, z: 0, kind: "street" },
+      { id: 4, x: 0, z: 120, kind: "street" },
+    ];
+    world.roads = [{ id: 20, from: 3, to: 4, kind: "local", stage: "open", progress: 1, connected: true, length: 120, lanes: 1 }];
+    const localHomes = [makeBuilding(101, 20, 50), makeBuilding(102, 24, 60), makeBuilding(103, 22, 70)]
+      .map(building => ({ ...building, anchor: false }));
+    const blocker = { ...makeBuilding(104, 15, 82), anchor: false, floors: 16, width: 24, depth: 18 };
+    blocker.stage = "structure";
+    world.buildings = [...localHomes, blocker];
+    world.parcels = localHomes.map(building => ({
+      id: building.parcel_id, x: building.x, z: building.z, width: building.width, depth: building.depth,
+      access_node: 3, suitability: 1, protected: false, reservation: null,
+    }));
+
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, .1, 2_000), makeElement());
+    director.world(world);
+    const state = director as unknown as { selectedAnchor: { id: string; label: string } | null; desiredPosition: THREE.Vector3 };
+    expect(state.selectedAnchor?.id).toBe("district:0:0");
+    expect(state.selectedAnchor?.label).toBe("Neighborhood street");
+    // The target is the midpoint of the open local road, not the homes' (22,60) centroid.
+    expect(director.target.x).toBeCloseTo(0);
+    expect(director.target.z).toBeCloseTo(60);
+    expect(director.target.distanceTo(new THREE.Vector3(22, 0, 60))).toBeGreaterThan(20);
+
+    const obstacleSet = world.buildings.map(building => ({
+      center: { x: building.x, z: building.z }, rotation: building.rotation,
+      width: building.width + 2, depth: building.depth + 2, minY: 0, maxY: .58 + building.floors * 3.25 + 4.05,
+    }));
+    const preferredCamera = director.target.clone().add(new THREE.Vector3(.65, .28, .7).normalize()
+      .multiplyScalar(state.desiredPosition.distanceTo(director.target)));
+    expect(state.desiredPosition.distanceTo(preferredCamera)).toBeGreaterThan(5);
+    expect(cameraPathClearance(state.desiredPosition, state.desiredPosition, obstacleSet,
+      { terrainY: 0, safetyMarginM: 1.5 }).collides).toBe(false);
+    expect(cameraPathClearance({ x: director.target.x, y: Math.max(director.target.y, 1), z: director.target.z },
+      state.desiredPosition, obstacleSet, { terrainY: 0, safetyMarginM: .3 }).collides).toBe(false);
+
+    const heldCamera = state.desiredPosition.clone();
+    const heldTarget = director.target.clone();
+    for (let frame = 0; frame < 12; frame++) director.update(1 / 60, frame / 60);
+    const next = { ...world, tick: 1, revision: 1 };
+    director.world(next);
+    for (let frame = 0; frame < 12; frame++) director.update(1 / 60, 1 + frame / 60);
+    expect(state.desiredPosition.distanceTo(heldCamera)).toBeLessThan(.001);
+    expect(director.target.distanceTo(heldTarget)).toBeLessThan(.001);
+
+    orbitMocks.instances.at(-1)?.start();
+    expect(director.mode).toBe("explore");
+    expect(director.camera.position.distanceTo(heldCamera)).toBeLessThan(.001);
+    expect(director.target.distanceTo(heldTarget)).toBeLessThan(.001);
+    director.update(.1, 2);
+    expect(director.camera.position.distanceTo(heldCamera)).toBeLessThan(.001);
+    expect(director.target.distanceTo(heldTarget)).toBeLessThan(.001);
+    director.dispose();
+  });
+
+  it("leaves a closed street shot and preserves the user's camera in Explore", () => {
+    const world = makeWorld();
+    world.terrain.river = [];
+    world.nodes = [
+      { id: 3, x: 0, z: 0, kind: "street" },
+      { id: 4, x: 0, z: 120, kind: "street" },
+    ];
+    world.roads = [{ id: 20, from: 3, to: 4, kind: "local", stage: "open", progress: 1, connected: true, length: 120, lanes: 1 }];
+    const localHomes = [makeBuilding(101, 20, 50), makeBuilding(102, 24, 60), makeBuilding(103, 22, 70)]
+      .map(building => ({ ...building, anchor: false }));
+    world.buildings = localHomes;
+    world.parcels = localHomes.map(building => ({
+      id: building.parcel_id, x: building.x, z: building.z, width: building.width, depth: building.depth,
+      access_node: 3, suitability: 1, protected: false, reservation: null,
+    }));
+
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, .1, 2_000), makeElement());
+    director.world(world);
+    const state = director as unknown as { selectedAnchor: { id: string } | null; desiredTarget: THREE.Vector3 };
+    expect(state.selectedAnchor?.id).toBe("district:0:0");
+    expect(director.target.x).toBeCloseTo(0);
+    expect(director.target.z).toBeCloseTo(60);
+
+    const closed = { ...world, tick: 1, revision: 1,
+      roads: world.roads.map(road => ({ ...road, stage: "closed" })) };
+    director.world(closed);
+    // There is no replacement street candidate, so the fallback is the surviving district itself.
+    expect(state.desiredTarget.x).toBeCloseTo(22);
+    expect(state.desiredTarget.z).toBeCloseTo(60);
+    for (let frame = 0; frame < 150; frame++) director.update(.1, frame * .1);
+    expect(director.target.distanceTo(new THREE.Vector3(0, 1, 60))).toBeGreaterThan(5);
+
+    orbitMocks.instances.at(-1)?.start();
+    expect(director.mode).toBe("explore");
+    const manualPosition = director.camera.position.clone();
+    const manualTarget = director.target.clone();
+    const later = { ...closed, tick: 2, revision: 2 };
+    director.world(later);
+    for (let frame = 0; frame < 30; frame++) director.update(.1, 20 + frame * .1);
+    expect(director.camera.position.distanceTo(manualPosition)).toBeLessThan(.001);
+    expect(director.target.distanceTo(manualTarget)).toBeLessThan(.001);
     director.dispose();
   });
 
@@ -167,6 +342,102 @@ describe("CameraDirector", () => {
     expect(camera.fov).toBeCloseTo(verticalFovDegrees(50), 10);
     expect(camera.position.distanceTo(position)).toBe(0);
     director.dispose();
+  });
+
+  it("sets the same held waterfront review pose after different camera histories", () => {
+    const world = makeWorld();
+    world.terrain.river = [{ x: 0, z: 0 }, { x: 20, z: 0 }, { x: 20, z: 40 }];
+    const create = () => new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    const first = create();
+    const second = create();
+    first.world(world);
+    second.world(world);
+    second.setLens("detail");
+    second.setMode("overview");
+    second.update(1, 3);
+
+    expect(first.reviewWaterfront()).toBe(true);
+    expect(second.reviewWaterfront()).toBe(true);
+    expect(first.target.toArray()).toEqual([20, 0, 10]);
+    expect(first.camera.position.toArray()).toEqual([130, 145, 190]);
+    expect(second.camera.position.distanceTo(first.camera.position)).toBeLessThan(1e-8);
+    expect(second.target.distanceTo(first.target)).toBeLessThan(1e-8);
+    expect(second.lens).toBe("detail");
+    expect(first.mode).toBe("explore");
+    expect(first.label).toBe("Explore");
+
+    const pose = first.camera.position.clone();
+    const target = first.target.clone();
+    for (let i = 0; i < 20; i++) first.update(0.1, i * 0.1);
+    expect(first.camera.position.distanceTo(pose)).toBeLessThan(1e-8);
+    expect(first.target.distanceTo(target)).toBeLessThan(1e-8);
+    first.dispose();
+    second.dispose();
+  });
+
+  it("sets and holds the repeatable low waterfront pose without changing the lens", () => {
+    const world = makeWorld();
+    world.terrain.river = [{ x: 0, z: 0 }, { x: 20, z: 0 }, { x: 20, z: 40 }];
+    const create = () => new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    const first = create();
+    const second = create();
+    first.world(world);
+    second.world(world);
+    first.setMode("overview");
+    first.update(0.7, 2);
+    second.setLens("detail");
+    second.setMode("watch");
+    second.update(1.3, 4);
+
+    expect(first.reviewWaterfront("low")).toBe(true);
+    expect(second.reviewWaterfront("low")).toBe(true);
+    expect(first.target.toArray()).toEqual([20, 0, 10]);
+    expect(first.camera.position.toArray()).toEqual([150, 55, 225]);
+    expect(second.camera.position.distanceTo(first.camera.position)).toBeLessThan(1e-8);
+    expect(second.target.distanceTo(first.target)).toBeLessThan(1e-8);
+    expect(second.lens).toBe("detail");
+    const pose = first.camera.position.clone();
+    for (let i = 0; i < 20; i++) first.update(0.1, i * 0.1);
+    expect(first.camera.position.distanceTo(pose)).toBeLessThan(1e-8);
+    first.dispose();
+    second.dispose();
+  });
+
+  it.each([["overhead", 130, 145, 180], ["low", 150, 55, 215]] as const)("recovers the %s waterfront camera above an obstructing building", (preset, x, y, z) => {
+    const world = makeWorld();
+    world.terrain.river = [{ x: 0, z: 0 }, { x: 40, z: 0 }];
+    const tower = makeBuilding(90, x, z);
+    tower.anchor = false;
+    tower.floors = 60;
+    tower.kind = "office";
+    world.buildings = [tower];
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    director.world(world);
+    // A final ordinary controls update must not undo the guarded recovery.
+    orbitMocks.instances.at(-1)!.bendOnUpdate = camera => {
+      if (director.controls.maxDistance < 1_200) camera.position.y = 0;
+    };
+    expect(director.reviewWaterfront(preset)).toBe(true);
+    expect(director.camera.position.y).toBeGreaterThan(y);
+    expect(cameraPathClearance(
+      director.camera.position,
+      director.camera.position,
+      (director as unknown as { cameraObstacles: Parameters<typeof cameraPathClearance>[2] }).cameraObstacles,
+      { terrainY: 0, safetyMarginM: 1.5 },
+    ).collides).toBe(false);
+    director.dispose();
+  });
+
+  it("rejects waterfront review without a usable river or after disposal", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    expect(director.reviewWaterfront()).toBe(false);
+    const world = makeWorld();
+    world.terrain.river = [{ x: 1, z: 1 }, { x: 1, z: 1 }];
+    director.world(world);
+    expect(director.reviewWaterfront()).toBe(false);
+    world.terrain.river = [{ x: 1, z: 1 }, { x: 2, z: 1 }];
+    director.dispose();
+    expect(director.reviewWaterfront()).toBe(false);
   });
 
   it("opens the actual seed 87231 WASM world directly on a readable founding shop", () => {
@@ -630,6 +901,54 @@ describe("CameraDirector", () => {
     director.dispose();
   });
 
+  it("returns Watch toward the city after a regional car disappears through the follow grace period", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    const world = makeWorld();
+    world.buildings = [makeBuilding(10, 20, 12)];
+    director.world(world);
+    // ID 812 exists only in movement publications; the structural train 500
+    // remains present and cannot provide a fallback for this regional car.
+    director.setMode("explore");
+    director.follow(812);
+    director.setPositions(new Float32Array([812, 320, 280, 0, 1, 11.15]));
+    director.update(0.1, 0.1);
+
+    director.setPositions(new Float32Array());
+    const state = director as unknown as { followId: number | null; desiredTarget: THREE.Vector3 };
+    const heldTarget = state.desiredTarget.clone();
+    // Exercise more than one second of the grace period with nonzero steps.
+    for (let i = 0; i < 15; i++) director.update(0.1, 0.2 + i * 0.1);
+    expect(state.desiredTarget.distanceTo(heldTarget)).toBeLessThan(0.001);
+
+    // Continue past the four-second grace and let the eased Watch return finish.
+    for (let i = 0; i < 85; i++) director.update(0.1, 1.7 + i * 0.1);
+
+    expect(state.followId).toBeNull();
+    expect(director.mode).toBe("watch");
+    expect(Math.hypot(director.target.x - 20, director.target.z - 12)).toBeLessThan(250);
+    director.dispose();
+  });
+
+  it("resumes a moving follow when the subject reappears within its grace period", () => {
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
+    director.world(makeWorld());
+    director.setMode("explore");
+    director.follow(812);
+    director.setPositions(new Float32Array([812, 30, 18, 0, 1, 11.15]));
+    director.update(0.1, 0.1);
+    director.setPositions(new Float32Array());
+    for (let i = 0; i < 15; i++) director.update(0.1, 0.2 + i * 0.1);
+
+    director.setPositions(new Float32Array([812, 76, -24, Math.PI / 2, 1, 11.15]));
+    director.update(0.1, 1.7);
+
+    const state = director as unknown as { followId: number | null; followPosition: THREE.Vector3 };
+    expect(state.followId).toBe(812);
+    expect(state.followPosition.x).toBe(76);
+    expect(state.followPosition.z).toBe(-24);
+    director.dispose();
+  });
+
   it("does not snap to the founder when the viewer took manual control before the first snapshot", () => {
     const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, 0.1, 2_000), makeElement());
     const cameraBeforeWorld = director.camera.position.clone();
@@ -778,7 +1097,7 @@ describe("CameraDirector", () => {
 
   it("fits the actual mature skyline roof and footprint corners across wide and narrow viewports", () => {
     const wasm = readFileSync(new URL("../public/wasm/city_engine_bg.wasm", import.meta.url));
-    const save = readFileSync(new URL("../validation/mature-world.json", import.meta.url), "utf8");
+    const save = readFileSync(new URL("./fixtures/access-joins/mature-world.json", import.meta.url), "utf8");
     initSync({ module: wasm });
     const engine = CityEngine.restore(save);
     try {
@@ -994,6 +1313,19 @@ describe("CameraDirector", () => {
     expect(centers[1]).toBeCloseTo(15, 5);
   });
 
+  it("settles train follow on a visible view beyond a foreground tower", () => {
+    vi.stubGlobal("window", { matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }) });
+    const camera=new THREE.PerspectiveCamera(39,16/9,.1,2000),director=new CameraDirector(camera,makeElement());
+    const world=makeWorld();world.buildings=[{...makeBuilding(900,25,50),width:60,depth:24,floors:20}];
+    director.world(world);director.follow(500);director.update(.1,0);
+    const state=director as unknown as {cameraObstacles: Parameters<typeof cameraPathClearance>[2]};
+    for(const x of [-5,15,35]) expect(cameraPathClearance({x,y:8.735,z:0},camera.position,state.cameraObstacles,{safetyMarginM:0}).collides).toBe(false);
+    const settled=camera.position.clone();
+    for(let i=0;i<50;i++)director.update(.1,i*.1);
+    expect(camera.position.distanceTo(settled)).toBeLessThan(.01);
+    director.dispose();
+  });
+
   it("frames the full train closely from the same side through a reversal", () => {
     vi.stubGlobal("window", { matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }) });
     const camera=new THREE.PerspectiveCamera(39,817/753,.1,2000),director=new CameraDirector(camera,makeElement());
@@ -1001,7 +1333,8 @@ describe("CameraDirector", () => {
     director.setPositions(new Float32Array([500,15,0,0,2,-1]));director.update(.1,0);
     const firstSide=camera.position.clone().sub(director.target).normalize();
     expect(camera.position.distanceTo(director.target)).toBeLessThan(190);
-    camera.updateMatrixWorld(true);
+    // The lightweight controls mock does not aim the camera like real OrbitControls.
+    camera.lookAt(director.target);camera.updateMatrixWorld(true);
     for(const x of [-8.5,38.5]){const screen=new THREE.Vector3(x,3,0).project(camera);expect(Math.abs(screen.x)).toBeLessThan(.9);expect(Math.abs(screen.y)).toBeLessThan(.9);}
     director.setPositions(new Float32Array([500,15,0,Math.PI,2,-1]));director.update(.1,.1);
     const reversedSide=camera.position.clone().sub(director.target).normalize();

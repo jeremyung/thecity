@@ -2,7 +2,7 @@ export interface Point { x: number; z: number }
 /** Fixed door-to-sidewalk segment shared with pedestrian routing. */
 export interface BuildingAccess { building_id: number; road_id: number; points: readonly [Point, Point] }
 export interface WorldNode extends Point { id: number; kind: string }
-export interface RoadDeck { road_id: number; deck_height: number }
+export interface RoadDeck { road_id: number; deck_height: number; controls: [[number,number],[number,number]] }
 /** Engine-owned rail terminal frame; +X=(uz,-ux), +Z=(ux,uz). */
 export interface RailPlatform extends Point {
   node_id: number; ux: number; uz: number; surface_y: number;
@@ -27,6 +27,8 @@ export interface BusView { id: number; line_id: number; progress: number; direct
 export interface BusLineView { id: number; name?: string; stops: number[]; route: number[]; active: boolean; stop_positions?: { node_id: number; x: number; z: number; heading: number; direction: 1 | -1 }[] }
 export interface World {
   schema_version: number; engine_version: string; seed: number; tick: number; day: number; minute_of_day: number; development_rate: number; revision: number; stage: string;
+  /** Required on engine snapshots; optional for isolated rendering fixtures. */
+  presentation_revision?: string;
   bounds: { min_x: number; max_x: number; min_z: number; max_z: number };
   road_decks?: RoadDeck[];
   rail_platforms?: RailPlatform[];
@@ -37,14 +39,14 @@ export interface World {
   rear_extensions?: RearExtensionView[];
   building_original_footprints?: BuildingOriginalFootprint[];
   residents?: {id:number;name:string;home_building:number;work_building:number|null;activity:string;transfer?:string;train_id?:number|null;bus_id?:number|null;bus_origin_stop?:number|null;bus_destination_stop?:number|null;bus_stop_node?:number|null;location_node?:number|null}[];
-  trains: { id: number; route: number[]; progress: number; direction?:number; dwelling?:boolean;passengers?:number;capacity?:number;station_waiting?:number;gateway_waiting?:number }[]; events: WorldEvent[];
+  trains: { id: number; route: number[]; progress: number; direction?:number; dwelling?:boolean;door_open_fraction?:number;door_terminal?:number|null;passengers?:number;capacity?:number;station_waiting?:number;gateway_waiting?:number }[]; events: WorldEvent[];
   buses?: BusView[]; bus_lines?: BusLineView[];
   building_access?: BuildingAccess[];
   stats: { population: number; active_travelers: number; buildings: number; active_projects: number };
 }
 export type Style = 'anime' | 'miniature';
 export interface Metrics { tickMs: number; memoryBytes: number; backlog: number; tick: number; achievableSpeed: number; droppedWallMs: number }
-export const WORKER_PROTOCOL_VERSION = 2 as const;
+export const WORKER_PROTOCOL_VERSION = 5 as const;
 export type WorkerInput =
   | { type: 'init'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; seed: number; save?: string }
   | { type: 'control'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; sequence: number; paused?: boolean; hidden?: boolean; speed?: number; development?: number }
@@ -54,7 +56,7 @@ export type WorkerInput =
   | { type: 'resync'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number };
 export type WorkerOutput =
   | { type: 'world'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; world: World }
-  | { type: 'movement'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; tick: number; count: number; buffer: ArrayBuffer; minute: number; day: number }
+  | { type: 'movement'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; tick: number; wordCount: number; buffer: ArrayBuffer; trainDoors: Float32Array; presentationRevision: string; minute: number; day: number }
   | { type: 'metrics'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; metrics: Metrics }
   | { type: 'save'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; request: number; data: string }
   | { type: 'inspect'; protocolVersion: typeof WORKER_PROTOCOL_VERSION; epoch: number; request: number; data: unknown }

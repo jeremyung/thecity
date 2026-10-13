@@ -133,6 +133,7 @@ pub(crate) struct PlanRoad {
     pub(crate) b: usize,
     pub(crate) kind: RoadKind,
     pub(crate) deck_height: f32,
+pub(crate) curve: Option<[P; 2]>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -160,7 +161,9 @@ pub(crate) struct MasterPlan {
     pub(crate) nodes: Vec<PlanNode>,
     pub(crate) roads: Vec<PlanRoad>,
     pub(crate) lots: Vec<PlanLot>,
-    /// Buildable (inset) block outline per block id; paved once developed.
+    /// Clipped partition polygon per accepted lot, retained for progressive ground.
+    pub(crate) lot_ground: Vec<Vec<P>>,
+    /// Buildable (inset) block outline per block id.
     pub(crate) blocks: Vec<Vec<P>>,
     pub(crate) gateway: usize,
     pub(crate) station: usize,
@@ -249,6 +252,7 @@ type Poly = Vec<(P, Option<usize>)>;
 
 struct PendingLot {
     lot: PlanLot,
+    ground: Vec<P>,
     front_mid: P,
     line: usize,
 }
@@ -274,7 +278,9 @@ impl Builder {
     }
     fn road(&mut self, a: usize, b: usize, kind: RoadKind) -> usize {
         let deck_height = if kind == RoadKind::Expressway { 11.0 } else { 0.0 };
-        self.roads.push(PlanRoad { a, b, kind, deck_height });
+        self.roads.push(PlanRoad { a, b, kind, deck_height ,
+            curve: None,
+        });
         self.roads.len() - 1
     }
     fn line(&mut self, a: usize, b: usize, kind: RoadKind) -> usize {
@@ -294,7 +300,8 @@ impl Builder {
         id
     }
     fn line_param(&self, line: usize, p: P) -> f32 {
-        let (a, b) = (self.nodes[self.lines[line].a].p, self.nodes[self.lines[line].b].p);
+        let (a, b) = (self.nodes[self.lines[line].a].p, self.nodes[self.lines[line].b].p,
+        );
         let d = b.sub(a);
         p.sub(a).dot(d) / d.dot(d)
     }
@@ -506,7 +513,8 @@ fn obb(poly: &Poly) -> (P, P, P, f32, f32) {
         }
         let u = d.unit();
         let v = P::new(-u.z, u.x);
-        let (mut u0, mut u1, mut v0, mut v1) = (f32::INFINITY, f32::NEG_INFINITY, f32::INFINITY, f32::NEG_INFINITY);
+        let (mut u0, mut u1, mut v0, mut v1) = (f32::INFINITY, f32::NEG_INFINITY, f32::INFINITY, f32::NEG_INFINITY,
+        );
         for (p, _) in poly {
             let (pu, pv) = (p.dot(u), p.dot(v));
             u0 = u0.min(pu);
@@ -601,7 +609,8 @@ fn inscribed_rect_frame(poly: &Poly, a: P, u: P, v: P, max_depth: f32) -> Option
     let mut best: Option<(f32, f32, f32, f32)> = None;
     for step in 1..=24 {
         let d = deepest * step as f32 / 24.0;
-        let Some(back) = slice((d - 0.02).max(0.02)) else { continue };
+        let Some(back) = slice((d - 0.02).max(0.02)) else { continue ;
+        };
         let lo = front.0.max(back.0);
         let hi = front.1.min(back.1);
         let w = hi - lo;
@@ -620,7 +629,8 @@ fn inscribed_rect_frame(poly: &Poly, a: P, u: P, v: P, max_depth: f32) -> Option
 fn extent(poly: &Poly, axis: P) -> (f32, f32) {
     poly.iter()
         .map(|p| p.0.dot(axis))
-        .fold((f32::INFINITY, f32::NEG_INFINITY), |(lo, hi), x| (lo.min(x), hi.max(x)))
+        .fold((f32::INFINITY, f32::NEG_INFINITY), |(lo, hi), x| {
+            (lo.min(x), hi.max(x))})
 }
 
 /// Direction and length of the longest street-facing edge.
@@ -712,7 +722,8 @@ fn partition_block(
         }
         let n_row = row.len();
         let Some((row_edge, row_line)) = (0..n_row)
-            .filter_map(|i| row[i].1.map(|line| (i, line, row[(i + 1) % n_row].0.sub(row[i].0).len())))
+            .filter_map(|i| {
+                row[i].1.map(|line| (i, line, row[(i + 1) % n_row].0.sub(row[i].0).len()))})
             .max_by(|x, y| x.2.total_cmp(&y.2))
             .filter(|x| x.2 >= 6.0)
             .map(|(i, line, _)| (i, line))
@@ -750,6 +761,7 @@ fn partition_block(
                     };
                     let front_mid = row_a.add(ru.scale(center.sub(row_a).dot(ru)));
                     out.push(PendingLot {
+                        ground: lot.iter().map(|v| v.0).collect(),
                         lot: PlanLot {
                             x: center.x,
                             z: center.z,
@@ -776,7 +788,8 @@ fn partition_block(
             }
             let n = lot.len();
             let Some((edge, line)) = (0..n)
-                .filter_map(|i| lot[i].1.map(|line| (i, line, lot[(i + 1) % n].0.sub(lot[i].0).len())))
+                .filter_map(|i| {
+                    lot[i].1.map(|line| (i, line, lot[(i + 1) % n].0.sub(lot[i].0).len()))})
                 .filter(|(_, _, len)| *len >= 4.0)
                 .max_by(|x, y| x.2.total_cmp(&y.2))
                 .map(|(i, line, _)| (i, line))
@@ -790,6 +803,7 @@ fn partition_block(
             let along = lot[(edge + 1) % n].0.sub(a).unit();
             let front_mid = a.add(along.scale(center.sub(a).dot(along)));
             out.push(PendingLot {
+                ground: lot.iter().map(|v| v.0).collect(),
                 lot: PlanLot {
                     x: center.x,
                     z: center.z,
@@ -861,7 +875,8 @@ fn roji(b: &mut Builder, inner: &Poly, rng: &mut Rng) -> Option<(usize, usize)> 
         return None;
     }
     let start = b.split(line, street_point);
-    let end = b.node(foot.add(v.scale(exit * rng.range(0.55, 0.7))), NodeKind::Junction);
+    let end = b.node(foot.add(v.scale(exit * rng.range(0.55, 0.7))), NodeKind::Junction,
+    );
     Some((start, end))
 }
 
@@ -984,11 +999,17 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
 
     // Rows: outer ring, every river bend (so river-following columns stay
     // straight between rows), and the rail corridor's two frontage streets.
-    let mut rows: Vec<(f32, LatticeLine)> = vec![(-l, LatticeLine { kind: LineKind::Ring })];
+    let mut rows: Vec<(f32, LatticeLine)> = vec![(-l, LatticeLine { kind: LineKind::Ring ,
+        },
+    )];
     for p in &river[1..4] {
-        rows.push((p.z, LatticeLine { kind: LineKind::Collector }));
+        rows.push((p.z, LatticeLine { kind: LineKind::Collector ,
+            },
+        ));
     }
-    rows.push((l, LatticeLine { kind: LineKind::Ring }));
+    rows.push((l, LatticeLine { kind: LineKind::Ring ,
+        },
+    ));
     rows.sort_by(|a, b| a.0.total_cmp(&b.0));
     let (band_lo, band_hi) = rows
         .windows(2)
@@ -997,8 +1018,12 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
         .max_by(|x, y| ((x.1 - x.0) - x.0.abs() * 0.1).total_cmp(&((y.1 - y.0) - y.0.abs() * 0.1)))
         .unwrap_or((20.0, 210.0));
     let rail_z = (band_lo + band_hi) * 0.5 + rng.range(-12.0, 12.0);
-    rows.push((rail_z - RAIL_BAND_HALF, LatticeLine { kind: LineKind::RailFrontage }));
-    rows.push((rail_z + RAIL_BAND_HALF, LatticeLine { kind: LineKind::RailFrontage }));
+    rows.push((rail_z - RAIL_BAND_HALF, LatticeLine { kind: LineKind::RailFrontage ,
+        },
+    ));
+    rows.push((rail_z + RAIL_BAND_HALF, LatticeLine { kind: LineKind::RailFrontage ,
+        },
+    ));
     rows.sort_by(|a, b| a.0.total_cmp(&b.0));
     // Two arterial rows: the gateway row south of the rail corridor and the
     // row north of it that carries the expressway.
@@ -1014,7 +1039,9 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
         }
     };
     promote(&mut rows, &|z| (z - rail_z + 60.0).abs());
-    promote(&mut rows, &|z| if z > rail_z { z - rail_z } else { f32::INFINITY });
+    promote(&mut rows, &|z| {
+        if z > rail_z { z - rail_z } else { f32::INFINITY }
+    });
 
     let west_mid = 0.5 + rng.range(-0.08, 0.08);
     let east_a = 1.0 / 3.0 + rng.range(-0.05, 0.05);
@@ -1023,11 +1050,14 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     let bank_e = |z: f32| river_x(river, z) + BANK_OFFSET;
     let columns: Vec<(Box<dyn Fn(f32) -> f32>, LineKind)> = vec![
         (Box::new(move |_| -l), LineKind::Ring),
-        (Box::new(move |z| -l + (bank_w(z) + l) * west_mid), LineKind::Collector),
+        (Box::new(move |z| -l + (bank_w(z) + l) * west_mid), LineKind::Collector,
+        ),
         (Box::new(bank_w), LineKind::Arterial),
         (Box::new(bank_e), LineKind::Arterial),
-        (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_a), LineKind::Arterial),
-        (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_b), LineKind::Collector),
+        (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_a), LineKind::Arterial,
+        ),
+        (Box::new(move |z| bank_e(z) + (l - bank_e(z)) * east_b), LineKind::Collector,
+        ),
         (Box::new(move |_| l), LineKind::Ring),
     ];
     const RIVER_COL: usize = 2;
@@ -1167,7 +1197,8 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
             if c == RIVER_COL {
                 continue;
             }
-            let corners = [grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]];
+            let corners = [grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c],
+            ];
             let quad: [P; 4] = corners.map(|n| b.nodes[n].p);
             // Protected land keeps only its own footprint open: streets and
             // lots touching it are filtered after subdivision.
@@ -1227,13 +1258,15 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     // Lots, after every street exists so setbacks see final kinds.
     for (block, district) in &all_blocks {
         let line_kind = |label: Option<usize>| label.map(|l| b.lines[l].kind);
-        let inner = inset(block, |label| line_kind(label).map_or(0.0, |k| k.lot_setback()));
+        let inner = inset(block, |label| {
+            line_kind(label).map_or(0.0, |k| k.lot_setback())});
         if inner.len() < 3 {
             continue;
         }
         let is_arterial = |line: usize| b.lines[line].kind == RoadKind::Arterial;
         let first_lot = pending.len();
-        partition_block(&inner, *district, block_id, &is_arterial, &mut rng, &mut pending);
+        partition_block(&inner, *district, block_id, &is_arterial, &mut rng, &mut pending,
+        );
         // Dead-end roji: a 4 m alley from a local street into a deep block.
         let roji_chance = match district {
             District::Compact => 0.55,
@@ -1269,7 +1302,8 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
         .iter()
         .enumerate()
         .filter(|(_, (_, line))| line.kind == LineKind::Arterial)
-        .min_by(|x, y| (x.1 .0 - rail_z + 60.0).abs().total_cmp(&(y.1 .0 - rail_z + 60.0).abs()))
+        .min_by(|x, y| {
+            (x.1 .0 - rail_z + 60.0).abs().total_cmp(&(y.1 .0 - rail_z + 60.0).abs())})
         .map(|(r, _)| r)
         .unwrap();
     let east = grid[gateway_row][columns.len() - 1];
@@ -1347,54 +1381,134 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
     let mut row_elevated: BTreeMap<usize, usize> = BTreeMap::new();
     let mut row_lift = |b: &mut Builder, street_node: usize| -> usize {
         *row_elevated.entry(street_node).or_insert_with(|| {
-            b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated });
+            b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated ,
+            });
             b.nodes.len() - 1
         })
     };
     let mut edge_node = |b: &mut Builder, p: P| -> usize {
-        b.nodes.push(PlanNode { p, kind: NodeKind::Elevated });
+        b.nodes.push(PlanNode { p, kind: NodeKind::Elevated ,
+        });
         b.nodes.len() - 1
     };
     let expressway_row = rows
         .iter()
         .position(|(z, line)| line.kind == LineKind::Arterial && *z > rail_z)
-        .or_else(|| rows.iter().position(|(_, line)| line.kind == LineKind::Arterial))
+        .or_else(|| {
+            rows.iter().position(|(_, line)| line.kind == LineKind::Arterial)})
         .unwrap();
-    let east_z = b.nodes[grid[expressway_row][columns.len() - 1]].p.z;
-    let mut route: Vec<usize> = vec![edge_node(&mut b, P::new(EDGE, east_z))];
+    // Continue the last street bearing to the regional boundary. Forcing a
+    // short outer segment back to an axis created tight hooks (seed 1234).
+    let boundary = |outer: P, inner: P, edge: f32, along_x: bool| {
+        let delta = outer.sub(inner);
+        if along_x {
+            P::new(edge, (outer.z + delta.z * (edge - outer.x) / delta.x).clamp(-EDGE, EDGE))
+        } else {
+            P::new((outer.x + delta.x * (edge - outer.z) / delta.z).clamp(-EDGE, EDGE), edge)
+        }
+    };
+    let east = boundary(b.nodes[grid[expressway_row][columns.len()-1]].p,
+        b.nodes[grid[expressway_row][columns.len()-2]].p, EDGE, true);
+    let mut route: Vec<usize> = vec![edge_node(&mut b, east)];
     for c in (0..columns.len()).rev() {
         route.push(row_lift(&mut b, grid[expressway_row][c]));
     }
-    let west_z = b.nodes[grid[expressway_row][0]].p.z;
-    route.push(edge_node(&mut b, P::new(-EDGE, west_z)));
+    let west = boundary(b.nodes[grid[expressway_row][0]].p,
+        b.nodes[grid[expressway_row][1]].p, -EDGE, true);
+    route.push(edge_node(&mut b, west));
     for pair in route.windows(2) {
         expressway.push(b.road(pair[0], pair[1], RoadKind::Expressway));
     }
     drop(row_lift);
     // Independent north-south route above the first eastern interior arterial column.
     let column = RIVER_COL + 2;
-    let bottom_x = b.nodes[grid[0][column]].p.x;
-    let mut spur: Vec<usize> = vec![edge_node(&mut b, P::new(bottom_x, -EDGE))];
+    let bottom = boundary(b.nodes[grid[0][column]].p,
+        b.nodes[grid[1][column]].p, -EDGE, false);
+    let mut spur: Vec<usize> = vec![edge_node(&mut b, bottom)];
     let mut spur_elevated: BTreeMap<usize, usize> = BTreeMap::new();
     let mut spur_lift = |b: &mut Builder, street_node: usize| -> usize {
         *spur_elevated.entry(street_node).or_insert_with(|| {
-            b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated });
+            b.nodes.push(PlanNode { p: b.nodes[street_node].p, kind: NodeKind::Elevated ,
+            });
             b.nodes.len() - 1
         })
     };
     for r in 0..rows.len() {
         spur.push(spur_lift(&mut b, grid[r][column]));
     }
-    let top_x = b.nodes[grid[rows.len() - 1][column]].p.x;
-    spur.push(edge_node(&mut b, P::new(top_x, EDGE)));
+    let top = boundary(b.nodes[grid[rows.len()-1][column]].p,
+        b.nodes[grid[rows.len()-2][column]].p, EDGE, false);
+    spur.push(edge_node(&mut b, top));
     for pair in spur.windows(2) {
         let road_index = b.road(pair[0], pair[1], RoadKind::Expressway);
         b.roads[road_index].deck_height = 20.0;
         expressway.push(road_index);
     }
 
+    // Elevated corridors need a broader bearing than noisy street junctions.
+    // Only their independent nodes move; street access and blocks stay fixed.
+    for (route_nodes, along_x) in [(&route, true), (&spur, false)] {
+        let mut points: Vec<P> = route_nodes.iter().map(|&i| b.nodes[i].p).collect();
+        crate::road_curve::fair_route(&mut points, along_x);
+        for (&index, point) in route_nodes.iter().zip(points) {
+            b.nodes[index].p = point;
+        }
+    }
+
+    // Fix the complete route before any lots are admitted or sections realized.
+    // A growing route must not change the curve of an already-built section.
+    for &index in &expressway {
+        let road = b.roads[index];
+        let neighbor = |node: usize| -> Option<P> {
+            let connected: Vec<_> = expressway
+                .iter()
+                .copied()
+                .filter(|&i| {
+                    let other = b.roads[i];
+                    (other.a == node || other.b == node) && other.deck_height == road.deck_height
+                })
+                .collect();
+            if connected.len() != 2 {
+                return None;
+            }
+            let other = b.roads[*connected.iter().find(|&&i| i != index)?];
+            Some(b.nodes[if other.a == node { other.b } else { other.a }].p)
+        };
+        let curve = crate::road_curve::controls(
+            b.nodes[road.a].p,
+            b.nodes[road.b].p,
+            neighbor(road.a),
+            neighbor(road.b),
+        );
+        b.roads[index].curve = Some(curve);
+    }
     let Builder { nodes, roads, lines, .. } = b;
+    let elevated_clearance: Vec<_> = expressway
+        .iter()
+        .flat_map(|&index| {
+            let road = roads[index];
+            let (a, end) = (nodes[road.a].p, nodes[road.b].p);
+            let c = road.curve.unwrap();
+            // A cubic's distance from its sampled chord is bounded by M*h²/8,
+            // where M bounds the second derivative. Include that error in clearance.
+            let second = a
+                .sub(c[0].scale(2.0))
+                .add(c[1])
+                .len()
+                .max(c[0].sub(c[1].scale(2.0)).add(end).len())
+                * 6.0;
+            let clearance = 10.8 + second / (8.0 * 32.0 * 32.0);
+            (0..32).map(move |i| {
+                (
+                    crate::road_curve::sample(a, c, end, i as f32 / 32.0),
+                    crate::road_curve::sample(a, c, end, (i + 1) as f32 / 32.0),
+                    clearance,
+                )
+            })
+        })
+        .collect();
     let mut lots = Vec::new();
+    let mut lot_ground = Vec::new();
     for pending_lot in pending {
         let line = &lines[pending_lot.line];
         let (pa, pb) = (nodes[line.a].p, nodes[line.b].p);
@@ -1439,9 +1553,20 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
             }
             quad_segment_distance(&corners_exact, a, b2) < road.kind.lot_setback() - 0.5
         });
-        if intrudes {
+        if intrudes || elevated_clearance.iter().any(|&(a, b, clearance)| {
+                if a.x.min(b.x) > lot.x + reach + clearance
+                    || a.x.max(b.x) < lot.x - reach - clearance
+                    || a.z.min(b.z) > lot.z + reach + clearance
+                    || a.z.max(b.z) < lot.z - reach - clearance
+                {
+                    return false;
+                }
+                quad_segment_distance(&corners_exact, a, b) < clearance
+            })
+        {
             continue;
         }
+        lot_ground.push(pending_lot.ground);
         lots.push(lot);
         if lots.len() >= MAX_PLAN_LOTS {
             break;
@@ -1452,6 +1577,7 @@ pub(crate) fn generate(geo: &Geography) -> MasterPlan {
         nodes,
         roads,
         lots,
+        lot_ground,
         blocks: block_outlines,
         gateway,
         station,
@@ -1488,9 +1614,17 @@ impl MasterPlan {
             feed(road.b as u32);
             feed(road.kind as u32);
             feed(road.deck_height.to_bits());
+        feed(road.curve.is_some() as u32);
+            if let Some(controls) = road.curve {
+                for p in controls {
+                    feed(p.x.to_bits());
+                    feed(p.z.to_bits());
+                }
+            }
         }
         for lot in &self.lots {
-            for value in [lot.x, lot.z, lot.width, lot.depth, lot.facing.x, lot.facing.z] {
+            for value in [lot.x, lot.z, lot.width, lot.depth, lot.facing.x, lot.facing.z,
+            ] {
                 feed(value.to_bits());
             }
             feed(lot.road as u32);
@@ -1546,6 +1680,82 @@ mod tests {
         assert_eq!(a.roads, b.roads);
         let c = generate(&geography(7));
         assert_ne!(a.lots, c.lots);
+    }
+
+    #[test]
+    fn elevated_curves_clear_lots_and_share_tangents() {
+        for seed in [0, 7, 41, 2026, 87231] {
+            let plan = generate(&geography(seed));
+            for &index in &plan.expressway {
+                let road = plan.roads[index];
+                let a = plan.nodes[road.a].p;
+                let b = plan.nodes[road.b].p;
+                let controls = road.curve.unwrap();
+                // Independent dense point witness, distinct from generation's
+                // conservative capsule subdivision, catches deck/parcel overlap.
+                for i in 0..=128 {
+                    let p = crate::road_curve::sample(a, controls, b, i as f32 / 128.0);
+                    for lot in &plan.lots {
+                        if (p.x - lot.x).abs() > lot.width + lot.depth + 12.0
+                            || (p.z - lot.z).abs() > lot.width + lot.depth + 12.0
+                        {
+                            continue;
+                        }
+                        assert!(
+                            quad_segment_distance(&rect_corners(lot), p, p) >= 10.79,
+                            "seed {seed}, road {index}, lot {} {}",
+                            lot.x,
+                            lot.z
+                        );
+                    }
+                }
+                for &other_index in &plan.expressway {
+                    let other = plan.roads[other_index];
+                    if other.a == road.b && other.deck_height == road.deck_height {
+                        let incoming = b.sub(controls[1]).unit();
+                        let outgoing = other.curve.unwrap()[0].sub(b).unit();
+                        assert!(incoming.sub(outgoing).len()<0.0001, "seed {seed} roads {index} {other_index} a {a:?} joint {b:?} end {:?} tangents {incoming:?} {outgoing:?}",plan.nodes[other.b].p);
+                    }
+                }
+            }
+            let mut changed = plan.clone();
+            let index = changed.expressway[0];
+            changed.roads[index].curve.as_mut().unwrap()[0].x += 0.1;
+            assert_ne!(plan.digest(), changed.digest());
+        }
+    }
+
+    #[test]
+    fn elevated_boundary_tails_follow_their_chord_across_seed_corpus() {
+        for seed in [0, 7, 41, 2026, 87231, 1, 42, 1204, 1234, 65535] {
+            let plan = generate(&geography(seed));
+            assert_eq!(plan.expressway.len(), 16, "seed {seed}: expressway segment count");
+            for &index in &plan.expressway {
+                let road = plan.roads[index];
+                let a = plan.nodes[road.a].p;
+                let b = plan.nodes[road.b].p;
+                assert!(a.x.is_finite() && a.z.is_finite() && b.x.is_finite() && b.z.is_finite(),
+                    "seed {seed}, road {index}: non-finite endpoint");
+                assert!(a.x.abs() <= EDGE && a.z.abs() <= EDGE && b.x.abs() <= EDGE && b.z.abs() <= EDGE,
+                    "seed {seed}, road {index}: endpoint outside boundary: {a:?} {b:?}");
+                let tail = [a, b].iter().any(|p| p.x.abs() == EDGE || p.z.abs() == EDGE);
+                if tail {
+                    let [c0, c1] = road.curve.expect("elevated road missing controls");
+                    let chord = b.sub(a);
+                    let length = chord.len();
+                    assert!(length > 1.0e-5, "seed {seed}, road {index}: zero-length boundary tail");
+                    // Collinearity is checked as sine of the angle, so the
+                    // tolerance remains meaningful across the 10 m tails.
+                    for control in [c0, c1] {
+                        let offset = control.sub(a);
+                        let normalized_cross = (chord.x * offset.z - chord.z * offset.x).abs()
+                            / (length * offset.len().max(1.0e-5));
+                        assert!(normalized_cross <= 1.0e-5,
+                            "seed {seed}, road {index}: boundary curve bows from chord ({normalized_cross})");
+                    }
+                }
+            }
+        }
     }
 
     #[test]
@@ -1672,11 +1882,29 @@ mod tests {
         assert!(horizontal_nodes.is_disjoint(&vertical_nodes), "crossing corridors share a node");
         assert!(horizontal.iter().all(|&i| plan.roads[i].deck_height == 11.0));
         assert!(vertical.iter().all(|&i| plan.roads[i].deck_height == 20.0));
-        let crosses = horizontal_nodes.iter().any(|&h| {
-            vertical_nodes.iter().any(|&v| {
-                let hp = plan.nodes[h].p;
-                let vp = plan.nodes[v].p;
-                h != v && hp.x == vp.x && hp.z == vp.z
+        // Independent corridors cross between nodes after route fairing.
+        // Check their sampled curves, rather than requiring coincident anchors.
+        let segments = |indices: &[usize]| -> Vec<(P, P)> {
+            indices.iter().flat_map(|&index| {
+                let road = plan.roads[index];
+                let a = plan.nodes[road.a].p;
+                let b = plan.nodes[road.b].p;
+                (0..128).map(move |i| (
+                    crate::road_curve::sample(a, road.curve.unwrap(), b, i as f32 / 128.0),
+                    crate::road_curve::sample(a, road.curve.unwrap(), b, (i+1) as f32 / 128.0),
+                ))
+            }).collect()
+        };
+        let cross = |a: P, b: P| a.x*b.z-a.z*b.x;
+        let horizontal_segments = segments(&horizontal);
+        let vertical_segments = segments(&vertical);
+        let crosses = horizontal_segments.iter().any(|&(a,b)| {
+            vertical_segments.iter().any(|&(c,d)| {
+                let ab=b.sub(a); let cd=d.sub(c); let denominator=cross(ab,cd);
+                if denominator.abs()<1.0e-6 { return false; }
+                let t=cross(c.sub(a),cd)/denominator;
+                let u=cross(c.sub(a),ab)/denominator;
+                (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u)
             })
         });
         assert!(crosses, "expressway corridors should cross spatially");
@@ -1737,7 +1965,8 @@ mod svg {
             protected: (-350.0, -350.0, -260.0, -270.0),
         };
         let plan = generate(&geo);
-        let mut s = String::from(r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="-400 -400 800 800" width="1000" height="1000"><rect x="-400" y="-400" width="800" height="800" fill="#e4e8dc"/>"##);
+        let mut s = String::from(r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="-400 -400 800 800" width="1000" height="1000"><rect x="-400" y="-400" width="800" height="800" fill="#e4e8dc"/>"##,
+        );
         let r = geo.river;
         s += &format!(r##"<polyline points="{}" fill="none" stroke="#86b2bb" stroke-width="64"/>"##, r.iter().map(|p| format!("{},{}", p.x, -p.z)).collect::<Vec<_>>().join(" "));
         for road in &plan.roads {

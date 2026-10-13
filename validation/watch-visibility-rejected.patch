@@ -1,0 +1,341 @@
+--- web/src/camera/director.ts
++++ web/src/camera/director.ts
+@@ -1,4 +1,5 @@
+ import { SkylineClusterCache } from './skyline-cluster';
++import { chooseStreetWatchPosition } from './watch-visibility';
+ import { MOVEMENT_STRIDE } from '../movement';
+ import * as THREE from "three";
+ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+@@ -16,6 +17,8 @@
+   x: number;
+   z: number;
+   targetY?: number;
++  streetForward?: { x: number; z: number };
++  streetRoadId?: number;
+   /** World-space direction from the framed subject toward the camera. */
+   cameraDirection?: THREE.Vector3;
+   frameRadius?: number;
+@@ -115,6 +118,7 @@
+   private baselineFootprint = 0;
+   private overviewInitialized = false;
+   private framingAspect = 0;
++  private streetWatchShot: { id: string; revision: number; distance: number; target: THREE.Vector3; position: THREE.Vector3; forward: {x:number;z:number} } | null = null;
+   private extent: Extent = { x: 50, z: 20, span: 120 };
+   private revealSeconds = 0;
+   private reducedMotion = false;
+@@ -198,6 +202,7 @@
+     const initializeWatchPose = firstWorld || replacedWorld;
+     if (initializeWatchPose) {
+       this.followFocusValid = false;
++      this.streetWatchShot = null;
+       this.selectedAnchor = null;
+       this.lastVisit.clear();
+       this.growthAge = 0;
+@@ -251,6 +256,19 @@
+       return;
+     }
+ 
++    // Hold an authored street point while surrounding bins grow; reselect only
++    // if that road disappears/closes. Avoid chasing each new building centroid.
++    let streetClosed = false;
++    if (this.selectedAnchor?.streetRoadId !== undefined && !world.roads.some(road =>
++      road.id === this.selectedAnchor!.streetRoadId && road.stage === "open" && road.connected)) {
++      this.selectedAnchor = this.anchors.find(anchor => anchor.id === this.selectedAnchor!.id) ?? null;
++      this.streetWatchShot = null;
++      streetClosed = true;
++    }
++    if ((obstacleRevisionChanged || streetClosed) && this.currentMode === "watch" && this.followId === null
++      && this.revealSeconds === 0 && this.selectedAnchor?.streetForward) {
++      this.setAnchorPose(this.selectedAnchor, this.anchorDistance(this.selectedAnchor));
++    }
+     if (this.currentMode === "watch" && this.selectedAnchor && !this.anchors.some((anchor) => anchor.id === this.selectedAnchor?.id)) {
+       this.selectNextAnchor();
+     }
+@@ -921,6 +939,18 @@
+   private setAnchorPose(anchor: Anchor, distance: number): void {
+     this.desiredTarget.set(anchor.x, anchor.targetY ?? 0, anchor.z);
+     this.desiredPosition.copy(this.desiredTarget).addScaledVector(anchor.cameraDirection ?? WATCH_DIRECTION, distance);
++    if (!anchor.streetForward) return;
++    const previous = this.streetWatchShot;
++    if (!previous || previous.id !== anchor.id || previous.revision !== this.obstacleRevision
++      || Math.abs(previous.distance - distance) > .01 || previous.target.distanceTo(this.desiredTarget) > .01
++      || previous.forward.x !== anchor.streetForward.x || previous.forward.z !== anchor.streetForward.z) {
++      const preferred = previous?.id === anchor.id
++        ? previous.position.clone().sub(this.desiredTarget).normalize() : WATCH_DIRECTION;
++      const shot = chooseStreetWatchPosition(this.desiredTarget, anchor.streetForward, preferred, distance, this.cameraObstacles);
++      this.streetWatchShot = {id:anchor.id, revision:this.obstacleRevision, distance,
++        target:this.desiredTarget.clone(), position:new THREE.Vector3(shot.position.x, shot.position.y, shot.position.z), forward:{...anchor.streetForward}};
++    }
++    this.desiredPosition.copy(this.streetWatchShot!.position);
+   }
+ 
+   private updateFollow(dt: number): void {
+@@ -1188,13 +1218,33 @@
+       bin.minZ = Math.min(bin.minZ, building.z); bin.maxZ = Math.max(bin.maxZ, building.z);
+       neighborhoodBins.set(id, bin);
+     }
++    // A street shot needs an actual open street, not the centroid of building roofs.
++    const streetSegments = world.roads.flatMap(road => {
++      if (road.stage !== "open" || !road.connected || !["local", "arterial"].includes(road.kind)) return [];
++      const a = nodes.get(road.from), b = nodes.get(road.to);
++      if (!a || !b || Math.hypot(b.x-a.x, b.z-a.z) < 24) return [];
++      return [{a,b,roadId:road.id}];
++    });
+     for (const [id, bin] of neighborhoodBins) {
+       if (!anchors.some((anchor) => anchor.id.startsWith("founder:") && Math.hypot(anchor.x - bin.x / bin.count, anchor.z - bin.z / bin.count) < 45)) {
++        const cx=bin.x/bin.count, cz=bin.z/bin.count;
++        let street: {x:number;z:number;roadId:number;forward:{x:number;z:number}} | undefined;
++        let nearest=Infinity;
++        for (const {a,b,roadId} of streetSegments) {
++          const dx=b.x-a.x, dz=b.z-a.z, length=Math.hypot(dx,dz);
++          const t=THREE.MathUtils.clamp(((cx-a.x)*dx+(cz-a.z)*dz)/(length*length),12/length,1-12/length);
++          const x=a.x+dx*t,z=a.z+dz*t,distance=Math.hypot(x-cx,z-cz);
++          if(distance<nearest){nearest=distance;street={x,z,roadId,forward:{x:dx/length,z:dz/length}};}
++        }
++        if(nearest>70) street=undefined;
+         add({
+           id: `district:${id}`,
+           label: "Neighborhood street",
+-          x: bin.x / bin.count,
+-          z: bin.z / bin.count,
++          x: street?.x ?? cx,
++          z: street?.z ?? cz,
++          targetY: street ? 1 : 0,
++          streetForward: street?.forward,
++          streetRoadId: street?.roadId,
+           frameRadius: Math.max(bin.maxX - bin.minX, bin.maxZ - bin.minZ) / 2 + 12,
+           importance: 5.5,
+           activity: bin.activity,
+--- tests/camera.test.ts
++++ tests/camera.test.ts
+@@ -182,6 +182,65 @@
+     const anchors = (director as unknown as { anchors: unknown[] }).anchors;
+     expect(anchors.length).toBeLessThanOrEqual(32);
+     expect(anchors.length).toBeGreaterThan(1);
++    director.dispose();
++  });
++
++  it("frames a neighborhood's real street interior around a blocker and holds the shot under Explore", () => {
++    const world = makeWorld();
++    world.terrain.river = [];
++    world.nodes = [
++      { id: 3, x: 0, z: 0, kind: "street" },
++      { id: 4, x: 0, z: 120, kind: "street" },
++    ];
++    world.roads = [{ id: 20, from: 3, to: 4, kind: "local", stage: "open", progress: 1, connected: true, length: 120, lanes: 1 }];
++    const localHomes = [makeBuilding(101, 20, 50), makeBuilding(102, 24, 60), makeBuilding(103, 22, 70)]
++      .map(building => ({ ...building, anchor: false }));
++    const blocker = { ...makeBuilding(104, 15, 82), anchor: false, floors: 16, width: 24, depth: 18 };
++    blocker.stage = "structure";
++    world.buildings = [...localHomes, blocker];
++    world.parcels = localHomes.map(building => ({
++      id: building.parcel_id, x: building.x, z: building.z, width: building.width, depth: building.depth,
++      access_node: 3, suitability: 1, protected: false, reservation: null,
++    }));
++
++    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1, .1, 2_000), makeElement());
++    director.world(world);
++    const state = director as unknown as { selectedAnchor: { id: string; label: string } | null; desiredPosition: THREE.Vector3 };
++    expect(state.selectedAnchor?.id).toBe("district:0:0");
++    expect(state.selectedAnchor?.label).toBe("Neighborhood street");
++    // The target is the midpoint of the open local road, not the homes' (22,60) centroid.
++    expect(director.target.x).toBeCloseTo(0);
++    expect(director.target.z).toBeCloseTo(60);
++    expect(director.target.distanceTo(new THREE.Vector3(22, 0, 60))).toBeGreaterThan(20);
++
++    const obstacleSet = world.buildings.map(building => ({
++      center: { x: building.x, z: building.z }, rotation: building.rotation,
++      width: building.width + 2, depth: building.depth + 2, minY: 0, maxY: .58 + building.floors * 3.25 + 4.05,
++    }));
++    const preferredCamera = director.target.clone().add(new THREE.Vector3(.65, .28, .7).normalize()
++      .multiplyScalar(state.desiredPosition.distanceTo(director.target)));
++    expect(state.desiredPosition.distanceTo(preferredCamera)).toBeGreaterThan(5);
++    expect(cameraPathClearance(state.desiredPosition, state.desiredPosition, obstacleSet,
++      { terrainY: 0, safetyMarginM: 1.5 }).collides).toBe(false);
++    expect(cameraPathClearance({ x: director.target.x, y: Math.max(director.target.y, 1), z: director.target.z },
++      state.desiredPosition, obstacleSet, { terrainY: 0, safetyMarginM: .3 }).collides).toBe(false);
++
++    const heldCamera = state.desiredPosition.clone();
++    const heldTarget = director.target.clone();
++    for (let frame = 0; frame < 12; frame++) director.update(1 / 60, frame / 60);
++    const next = { ...world, tick: 1, revision: 1 };
++    director.world(next);
++    for (let frame = 0; frame < 12; frame++) director.update(1 / 60, 1 + frame / 60);
++    expect(state.desiredPosition.distanceTo(heldCamera)).toBeLessThan(.001);
++    expect(director.target.distanceTo(heldTarget)).toBeLessThan(.001);
++
++    orbitMocks.instances.at(-1)?.start();
++    expect(director.mode).toBe("explore");
++    expect(director.camera.position.distanceTo(heldCamera)).toBeLessThan(.001);
++    expect(director.target.distanceTo(heldTarget)).toBeLessThan(.001);
++    director.update(.1, 2);
++    expect(director.camera.position.distanceTo(heldCamera)).toBeLessThan(.001);
++    expect(director.target.distanceTo(heldTarget)).toBeLessThan(.001);
+     director.dispose();
+   });
+ 
+--- /dev/null
++++ web/src/camera/watch-visibility.ts
+@@ -0,0 +1,82 @@
++import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from './clearance';
++
++const WORLD_LIMIT = 430;
++const MAX_HEIGHT = 700;
++const CAMERA_MARGIN = 1.5;
++const SUBJECT_MARGIN = 0.3;
++const TURNS = [0, Math.PI / 6, -Math.PI / 6, Math.PI / 3, -Math.PI / 3, Math.PI] as const;
++
++/** Choose a bounded, clear camera position that sees along an ordinary street. */
++export function chooseStreetWatchPosition(
++  target: CameraPoint3,
++  forward: { x: number; z: number },
++  preferred: CameraPoint3,
++  distance: number,
++  obstacles: readonly CameraObstacleBox[],
++): { position: CameraPoint3; visible: boolean } {
++  for (const [name, value] of Object.entries({
++    'target.x': target.x, 'target.y': target.y, 'target.z': target.z,
++    'forward.x': forward.x, 'forward.z': forward.z,
++    'preferred.x': preferred.x, 'preferred.y': preferred.y, 'preferred.z': preferred.z,
++    distance,
++  })) {
++    if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite`);
++  }
++  if (distance <= 0) throw new RangeError('distance must be positive');
++  const forwardLength = Math.hypot(forward.x, forward.z);
++  if (forwardLength < 1e-9) throw new RangeError('forward direction must be non-zero');
++
++  const yaw = Math.atan2(preferred.x, preferred.z);
++  const horizontalPreferred = Math.hypot(preferred.x, preferred.z);
++  const baseSlope = preferred.y / Math.max(1e-3, horizontalPreferred);
++  const slopes = [baseSlope, Math.max(.65, baseSlope), Math.max(1.2, baseSlope), Math.max(2.4, baseSlope)];
++  const subjects = [-12, 0, 12].map(along => ({
++    x: target.x + forward.x / forwardLength * along,
++    y: Math.max(target.y, 1),
++    z: target.z + forward.z / forwardLength * along,
++  }));
++
++  let fallback: CameraPoint3 | undefined;
++  let bestVisibleCount = -1;
++  for (const slope of slopes) {
++    for (const turn of TURNS) {
++      const horizontal = distance / Math.sqrt(1 + slope * slope);
++      const position = boundedPoint({
++        x: target.x + Math.sin(yaw + turn) * horizontal,
++        y: target.y + slope * horizontal,
++        z: target.z + Math.cos(yaw + turn) * horizontal,
++      });
++      if (cameraPathClearance(position, position, obstacles, { terrainY: 0, safetyMarginM: CAMERA_MARGIN }).collides) continue;
++
++      const visibleCount = subjects.filter(subject => !cameraPathClearance(
++        subject, position, obstacles, { terrainY: 0, safetyMarginM: SUBJECT_MARGIN },
++      ).collides).length;
++      if (visibleCount > bestVisibleCount) {
++        fallback = position;
++        bestVisibleCount = visibleCount;
++      }
++      if (visibleCount === subjects.length) return { position, visible: true };
++    }
++  }
++
++  // If no destination is safe, leave recovery to the caller's existing travel guard.
++  if (!fallback) return { position: preferredBoundedPosition(target, preferred, distance), visible: false };
++  return { position: fallback, visible: false };
++}
++
++function boundedPoint(point: CameraPoint3): CameraPoint3 {
++  return {
++    x: Math.max(-WORLD_LIMIT, Math.min(WORLD_LIMIT, point.x)),
++    y: Math.max(0, Math.min(MAX_HEIGHT, point.y)),
++    z: Math.max(-WORLD_LIMIT, Math.min(WORLD_LIMIT, point.z)),
++  };
++}
++
++function preferredBoundedPosition(target: CameraPoint3, preferred: CameraPoint3, distance: number): CameraPoint3 {
++  const length = Math.hypot(preferred.x, preferred.y, preferred.z) || 1;
++  return boundedPoint({
++    x: target.x + preferred.x / length * distance,
++    y: target.y + preferred.y / length * distance,
++    z: target.z + preferred.z / length * distance,
++  });
++}
+--- /dev/null
++++ tests/watch-visibility.test.ts
+@@ -0,0 +1,77 @@
++import { describe, expect, it } from 'vitest';
++import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from '../web/src/camera/clearance';
++import { chooseStreetWatchPosition } from '../web/src/camera/watch-visibility';
++
++const target: CameraPoint3 = { x: 0, y: 0, z: 0 };
++const forward = { x: 0, z: 1 };
++const preferred: CameraPoint3 = { x: 0, y: .28, z: -.96 };
++const distance = 75;
++
++function sightPoints(): CameraPoint3[] {
++  return [-12, 0, 12].map(along => ({ x: 0, y: 1, z: along }));
++}
++
++function expectSightlinesClear(position: CameraPoint3, obstacles: readonly CameraObstacleBox[]): void {
++  for (const subject of sightPoints()) {
++    expect(cameraPathClearance(subject, position, obstacles, { terrainY: 0, safetyMarginM: .3 }).collides).toBe(false);
++  }
++}
++
++function expectSafeDestination(position: CameraPoint3, obstacles: readonly CameraObstacleBox[]): void {
++  expect(cameraPathClearance(position, position, obstacles, { terrainY: 0, safetyMarginM: 1.5 }).collides).toBe(false);
++}
++
++describe('street Watch visibility', () => {
++  it('preserves the preferred street view when its target sightlines are clear', () => {
++    const result = chooseStreetWatchPosition(target, forward, preferred, distance, []);
++    const expected = { x: 0, y: 21, z: -72 };
++    expect(result.visible).toBe(true);
++    expect(result.position.x).toBeCloseTo(expected.x);
++    expect(result.position.y).toBeCloseTo(expected.y);
++    expect(result.position.z).toBeCloseTo(expected.z);
++    expectSightlinesClear(result.position, []);
++    expectSafeDestination(result.position, []);
++  });
++
++  it('chooses a clear alternate view when a building blocks the preferred shot', () => {
++    const blocker: CameraObstacleBox = {
++      center: { x: 0, z: -38 }, rotation: 0, width: 42, depth: 8, minY: 0, maxY: 46,
++    };
++    const result = chooseStreetWatchPosition(target, forward, preferred, distance, [blocker]);
++    expect(result.visible).toBe(true);
++    expect(result.position).not.toEqual({ x: 0, y: 21, z: -72 });
++    expectSightlinesClear(result.position, [blocker]);
++    expectSafeDestination(result.position, [blocker]);
++  });
++
++  it('returns the same bounded shot for repeated inputs', () => {
++    const blockers: CameraObstacleBox[] = [
++      { center: { x: -38, z: 0 }, rotation: 0, width: 6, depth: 82, minY: 0, maxY: 36 },
++      { center: { x: 38, z: 0 }, rotation: 0, width: 6, depth: 82, minY: 0, maxY: 36 },
++    ];
++    const first = chooseStreetWatchPosition(target, forward, preferred, distance, blockers);
++    const second = chooseStreetWatchPosition(target, forward, preferred, distance, blockers);
++    expect(second).toEqual(first);
++    expect(Math.abs(first.position.x)).toBeLessThanOrEqual(430);
++    expect(Math.abs(first.position.z)).toBeLessThanOrEqual(430);
++    expect(first.position.y).toBeLessThanOrEqual(700);
++    expect(Object.values(first.position).every(Number.isFinite)).toBe(true);
++  });
++
++  it('reports invisible when no destination is camera-safe', () => {
++    const enclosure: CameraObstacleBox = {
++      center: { x: 0, z: 0 }, rotation: 0, width: 860, depth: 860, minY: 0, maxY: 700,
++    };
++    const result = chooseStreetWatchPosition(target, forward, preferred, distance, [enclosure]);
++    expect(result.visible).toBe(false);
++    expect(Object.values(result.position).every(Number.isFinite)).toBe(true);
++    expect(Math.abs(result.position.x)).toBeLessThanOrEqual(430);
++    expect(Math.abs(result.position.z)).toBeLessThanOrEqual(430);
++    expect(result.position.y).toBeLessThanOrEqual(700);
++  });
++
++  it('rejects invalid street directions and distance', () => {
++    expect(() => chooseStreetWatchPosition(target, { x: 0, z: 0 }, preferred, distance, [])).toThrow(RangeError);
++    expect(() => chooseStreetWatchPosition(target, forward, preferred, 0, [])).toThrow(RangeError);
++  });
++});

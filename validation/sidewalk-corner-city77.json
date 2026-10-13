@@ -1,0 +1,29 @@
+{
+  "seed": 87231,
+  "tick": 7072,
+  "buildings": 77,
+  "before": {
+    "polygons": 49,
+    "vertices": 192,
+    "area": 3032.5847620941945,
+    "elapsedDiagnosticMs": 5.5340419999999995,
+    "buildingEnvelopeConflicts": [
+      {
+        "building": 84,
+        "m2": 0.2698105348436002
+      }
+    ]
+  },
+  "candidate": {
+    "polygons": 104,
+    "vertices": 403,
+    "area": 3088.640256637545,
+    "elapsedDiagnosticMs": 7.595292000000001,
+    "buildingEnvelopeConflicts": [
+      {
+        "building": 84,
+        "m2": 0.2698105348436002
+      }
+    ]
+  }
+}

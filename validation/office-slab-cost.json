@@ -1,0 +1,46 @@
+{
+  "baseline": {
+    "revision": "8e9f5e196659c29c9c6a5b9dcd6bed43fd1de2f7",
+    "buildingMassingSha256": "8dcfe1ab6f5c10b9170906b610d995d645f5d4326c35a57eb30f984fe123437a",
+    "verification": "Current file equals the pinned baseline after removing only the inserted office slab branch."
+  },
+  "input": {
+    "path": ".tools/waterfront-growth/fully-realized.json",
+    "sourceHash": "82824e3792d2d4e6295e967ff3f145c9d1b89da9c19daf89407e877beef4dce4",
+    "saveHash": "68ebd93241a12b21d9cea4ec45976a13955eac03049d173c8acec29102905712",
+    "seed": 87231,
+    "tick": 75925,
+    "buildingCount": 1839,
+    "eligibleOfficeCount": 126
+  },
+  "method": "Restore the normal saved checkpoint with production WASM and record source and canonical restore/save hashes; build production buildingKit and ArtMaterials, overriding only building-massing.ts to the pinned baseline for before; measure eligible nonanchor offices only; dispose each generated group and ArtMaterials. No browser is used.",
+  "units": {
+    "triangles": "Index count/3 or non-indexed position count/3.",
+    "geometryTypedArrayBytes": "Sum of BufferGeometry attribute and index typed-array byteLength values.",
+    "meshes": "THREE.Mesh objects in generated building groups."
+  },
+  "before": {
+    "buildings": 126,
+    "meshes": 1455,
+    "triangles": 365064,
+    "geometryTypedArrayBytes": 25425456
+  },
+  "after": {
+    "buildings": 126,
+    "meshes": 1455,
+    "triangles": 374016,
+    "geometryTypedArrayBytes": 26052096
+  },
+  "delta": {
+    "triangles": 8952,
+    "geometryTypedArrayBytes": 626640,
+    "maxPerBuilding": {
+      "triangles": 828,
+      "geometryTypedArrayBytes": 57960
+    },
+    "changedBuildingCount": 58
+  },
+  "limitations": [
+    "CPU-side authored Three.js geometry accounting; not GPU memory, rendering performance, or browser heap measurement."
+  ]
+}

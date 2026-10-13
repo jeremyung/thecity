@@ -1,0 +1,5 @@
+<!doctype html><meta charset="utf-8"><title>Renewal motion review</title>
+<style>body{margin:0;background:#10151b;color:white;font:16px sans-serif}video{display:block;width:100%;max-height:90vh}label{display:block;padding:8px}</style>
+<video id="clip" controls src="miniature-night-renewal-batched-repeat.webm"></video>
+<label>Review time in seconds <input id="seek" type="number" min="0" max="20" step="1" value="0"></label><output id="info"></output>
+<script>const v=document.querySelector('video');document.querySelector('input').onchange=e=>{v.pause();v.currentTime=Number(e.target.value)};v.onloadedmetadata=()=>document.querySelector('output').textContent=`${v.videoWidth}×${v.videoHeight}; duration ${v.duration}s`;</script>

@@ -1,0 +1,8 @@
+[
+  {
+    "level": "log",
+    "message": "persistent-light-growth {\"tick\":10300,\"style\":\"miniature\",\"samples\":4725,\"cost\":{\"max\":49.20000001788139,\"p95\":15.099999994039536,\"over30\":27},\"render\":{\"max\":43.30000001192093,\"p95\":9.400000005960464,\"over30\":1},\"node\":{\"max\":30,\"p95\":0,\"over30\":0},\"misses\":{\"MeshStandardNodeMaterial\":{\"count\":1,\"ms\":30}}}",
+    "timestamp": "2026-10-13T00:52:42.092Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791852249890"
+  }
+]

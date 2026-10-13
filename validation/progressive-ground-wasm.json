@@ -1,0 +1,34 @@
+[
+  {
+    "file": "ground-depth-candidate",
+    "seed": 87231,
+    "tick": 1804,
+    "buildings": 26,
+    "groundPatches": 26,
+    "groundVertices": 105,
+    "groundBytes": 3007,
+    "groundArea": 3816.0031841469663,
+    "weather": {
+      "kind": "clear",
+      "intensity": 0
+    },
+    "replayTicks": 200,
+    "replay": "equal"
+  },
+  {
+    "file": "rail-doors-open",
+    "seed": 87231,
+    "tick": 168000,
+    "buildings": 1839,
+    "groundPatches": 1839,
+    "groundVertices": 7412,
+    "groundBytes": 209601,
+    "groundArea": 279270.05473391473,
+    "weather": {
+      "kind": "overcast",
+      "intensity": 0.22800122
+    },
+    "replayTicks": 200,
+    "replay": "equal"
+  }
+]

@@ -756,7 +756,7 @@ mod tests {
     #[test]
     fn mature_connected_ordinary_road_graph_reports_unsupported_crossing() {
         let engine = crate::Engine::restore_json(include_str!(
-            "../../validation/spine-experiment-browser-review-save.json"
+            "../../tests/fixtures/access-joins/spine-experiment-browser-review-save.json"
         ))
         .expect("saved mature world restores");
         let nodes = engine
@@ -1033,7 +1033,7 @@ mod tests {
             worlds.push((format!("native seed={seed}"), engine));
         }
         let wasm_world = crate::Engine::restore_json(include_str!(
-            "../../validation/founder-topology-wasm-87231-save.json"
+            "../../tests/fixtures/access-joins/founder-topology-wasm-87231-save.json"
         ))
         .expect("public WASM checkpoint restores for read-only topology inspection");
         assert_eq!(wasm_world.tick(), 242_000);

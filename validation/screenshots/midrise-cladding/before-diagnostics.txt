@@ -1,0 +1,4 @@
+Browser tab: 22, Title: "Last Train, First Light · The City", URL: "http://127.0.0.1:5173/".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~					106 text 119 fps  ·  CPU  7.4  ms  ·  WebGPUBackend ready  ·  120  frames · frame p95  9.3  ms · CPU p95  8.3  ms · longest frame  14.0  ms 416  draws ·  3,346,775  triangles ·  38  textures ·  230  shapes 0  buildings queued ·  0  neighborhood batches queued ·  0  sidewalk rebuilds queued ·  0  road rebuilds queued Last style switch to  anime :  112 / 112  shader samples · prepare  1  ms · submit  1543  ms (largest  38  ms) · await  4075  ms · apply  0  ms ·  applied Render quality
+The focused UI element is 37 checkbox Anime, Help: Anime rendering, Value: 1

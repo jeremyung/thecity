@@ -1,0 +1,19 @@
+--- city.ts
++++ instrumented-city.ts
+@@ -326,11 +326,15 @@
+   }
+   setSelected(id:number|null){this.selected=id;}
+   private setSize(){const w=this.element.clientWidth,h=this.element.clientHeight;if(!w||!h)return;this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.renderer.setSize(w,h);this.outputHeight.value=this.renderer.getDrawingBufferSize(new THREE.Vector2()).y;}
++  private narrowTraceCount=0;
+   setWorld(world:World,replaced=false){
+     this.worldState=world;this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
+     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
+     this.infrastructure().request(world);
+-    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.trains.setWorld({...world,nodes:this.committedRoadWorld?.nodes??[],rail_platforms:this.committedRoadWorld?.rail_platforms??[]});this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
++    this.worldTick=world.tick;
++    const narrow=world.tick>22026&&this.narrowTraceCount<40;let stamp=performance.now();const spans:Record<string,number>={};const mark=(name:string)=>{const n=performance.now();spans[name]=n-stamp;stamp=n;};
++    this.director.world(world);mark('director');this.buses.setWorld(world);mark('bus');this.trains.setWorld({...world,nodes:this.committedRoadWorld?.nodes??[],rail_platforms:this.committedRoadWorld?.rail_platforms??[]});mark('train');this.accessPaths.setWorld(world);mark('access');this.rearExtensions.setWorld(world);mark('extensions');
++    if(narrow){this.narrowTraceCount++;console.log('growth-transit-trace '+JSON.stringify({tick:world.tick,spans}));}
+ 
+     const signatures=roadBatchSignatures(world);
+     const signature=signatures.completed+signatures.construction;

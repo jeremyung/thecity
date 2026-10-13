@@ -1,0 +1,174 @@
+{
+  "legacyBox": true,
+  "cpu": "Apple M2 Max",
+  "savePath": ".tools/fidelity-review/sidewalk-live-growth.json",
+  "seed": 87231,
+  "tick": 18918,
+  "roads": 155,
+  "summary": {
+    "retire-and-bank": {
+      "medianMs": 4.214041000000066,
+      "maxMs": 7.937041000000022
+    },
+    "indexes-and-curves": {
+      "medianMs": 0.10941700000000765,
+      "maxMs": 0.3978749999999991
+    },
+    "road-kits": {
+      "medianMs": 25.44791699999996,
+      "maxMs": 31.334415999999976
+    },
+    "junctions-and-projects": {
+      "medianMs": 1.3815000000000168,
+      "maxMs": 4.235374999999976
+    },
+    "construction-merge": {
+      "medianMs": 0.12787500000001728,
+      "maxMs": 0.19983400000000984
+    },
+    "completed-merge": {
+      "medianMs": 3.807875000000081,
+      "maxMs": 4.564750000000004
+    },
+    "lighting": {
+      "medianMs": 0.4325420000000122,
+      "maxMs": 0.8159999999999741
+    },
+    "station": {
+      "medianMs": 1.3598329999999805,
+      "maxMs": 2.350167000000056
+    }
+  },
+  "samples": [
+    {
+      "retire-and-bank": 12.772291999999993,
+      "indexes-and-curves": 1.503875000000022,
+      "road-kits": 43.954207999999994,
+      "junctions-and-projects": 1.7512079999999912,
+      "construction-merge": 0.8088340000000187,
+      "completed-merge": 6.1637079999999855,
+      "lighting": 2.5950000000000273,
+      "station": 2.805582999999956
+    },
+    {
+      "retire-and-bank": 4.719583,
+      "indexes-and-curves": 0.14716700000002447,
+      "road-kits": 31.334415999999976,
+      "junctions-and-projects": 1.521000000000015,
+      "construction-merge": 0.19983400000000984,
+      "completed-merge": 4.564750000000004,
+      "lighting": 0.8159999999999741,
+      "station": 2.089458000000036
+    },
+    {
+      "retire-and-bank": 5.467291999999986,
+      "indexes-and-curves": 0.17558300000001736,
+      "road-kits": 28.477000000000032,
+      "junctions-and-projects": 1.2684999999999604,
+      "construction-merge": 0.14254199999999173,
+      "completed-merge": 4.4503330000000005,
+      "lighting": 0.5610829999999964,
+      "station": 1.4607920000000263
+    },
+    {
+      "retire-and-bank": 7.937041000000022,
+      "indexes-and-curves": 0.3978749999999991,
+      "road-kits": 30.75191699999999,
+      "junctions-and-projects": 2.017832999999996,
+      "construction-merge": 0.1801669999999831,
+      "completed-merge": 4.158167000000049,
+      "lighting": 0.6068750000000023,
+      "station": 1.3577499999999532
+    },
+    {
+      "retire-and-bank": 4.6875,
+      "indexes-and-curves": 0.08845800000000281,
+      "road-kits": 26.20466700000003,
+      "junctions-and-projects": 2.5236659999999915,
+      "construction-merge": 0.11512499999997772,
+      "completed-merge": 3.565125000000023,
+      "lighting": 0.4325420000000122,
+      "station": 1.3598329999999805
+    },
+    {
+      "retire-and-bank": 3.98845799999998,
+      "indexes-and-curves": 0.08362500000004047,
+      "road-kits": 24.70045799999997,
+      "junctions-and-projects": 1.3484169999999835,
+      "construction-merge": 0.17708300000003874,
+      "completed-merge": 3.726624999999956,
+      "lighting": 0.3608340000000112,
+      "station": 1.3065829999999892
+    },
+    {
+      "retire-and-bank": 4.1314160000000015,
+      "indexes-and-curves": 0.10941700000000765,
+      "road-kits": 26.070666999999958,
+      "junctions-and-projects": 1.3815000000000168,
+      "construction-merge": 0.12104099999999107,
+      "completed-merge": 4.258041999999989,
+      "lighting": 0.3838749999999891,
+      "station": 2.350167000000056
+    },
+    {
+      "retire-and-bank": 4.214041000000066,
+      "indexes-and-curves": 0.09216700000001765,
+      "road-kits": 25.44791699999996,
+      "junctions-and-projects": 4.235374999999976,
+      "construction-merge": 0.16833299999996143,
+      "completed-merge": 3.807875000000081,
+      "lighting": 0.5522919999999658,
+      "station": 1.785333000000037
+    },
+    {
+      "retire-and-bank": 6.090000000000032,
+      "indexes-and-curves": 0.11050000000000182,
+      "road-kits": 25.34287500000005,
+      "junctions-and-projects": 1.2282089999999926,
+      "construction-merge": 0.12787500000001728,
+      "completed-merge": 3.6045409999999265,
+      "lighting": 0.3678750000000264,
+      "station": 1.2513340000000426
+    },
+    {
+      "retire-and-bank": 3.863917000000015,
+      "indexes-and-curves": 0.09645799999998417,
+      "road-kits": 24.268208999999956,
+      "junctions-and-projects": 1.1499160000000757,
+      "construction-merge": 0.1089999999999236,
+      "completed-merge": 3.645167000000015,
+      "lighting": 0.43058300000006966,
+      "station": 1.9338339999999334
+    },
+    {
+      "retire-and-bank": 4.211084000000028,
+      "indexes-and-curves": 0.08837499999992815,
+      "road-kits": 23.350625000000036,
+      "junctions-and-projects": 1.9321250000000418,
+      "construction-merge": 0.10879099999999653,
+      "completed-merge": 3.0997089999999616,
+      "lighting": 0.37837500000000546,
+      "station": 1.2020410000000084
+    },
+    {
+      "retire-and-bank": 3.8452909999999747,
+      "indexes-and-curves": 0.0911670000000413,
+      "road-kits": 24.521499999999946,
+      "junctions-and-projects": 1.110125000000039,
+      "construction-merge": 0.10504199999991215,
+      "completed-merge": 3.185583000000065,
+      "lighting": 0.44258300000001327,
+      "station": 1.3025420000000167
+    },
+    {
+      "retire-and-bank": 4.046666000000073,
+      "indexes-and-curves": 0.11191699999994853,
+      "road-kits": 24.685292000000004,
+      "junctions-and-projects": 1.1384160000000065,
+      "construction-merge": 0.10520900000005895,
+      "completed-merge": 3.938582999999994,
+      "lighting": 0.4026249999999436,
+      "station": 1.1690830000000005
+    }
+  ]
+}

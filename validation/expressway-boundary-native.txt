@@ -1,0 +1,1227 @@
+   Compiling tokyo-city-engine v0.1.0 (/Users/jung/Development/thecity/engine)
+warning: variable does not need to be mutable
+    --> src/masterplan.rs:1384:9
+     |
+1384 |     let mut edge_node = |b: &mut Builder, p: P| -> usize {
+     |         ----^^^^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `edge_count`
+  --> src/road_face_bridges.rs:89:13
+   |
+89 |         let edge_count = edges.len();
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_edge_count`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `propose_interior_access_for_host` is never used
+    --> src/lib.rs:5948:8
+     |
+1129 | impl Engine {
+     | ----------- method in this implementation
+...
+5948 |     fn propose_interior_access_for_host(&self, host_id: u32) -> interior_access::AccessScan {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `CandidateScan` is never constructed
+  --> src/access_candidates.rs:29:19
+   |
+29 | pub(crate) struct CandidateScan {
+   |                   ^^^^^^^^^^^^^
+
+warning: constant `MAX_HEADINGS_PER_SPLIT` is never used
+  --> src/access_candidates.rs:50:18
+   |
+50 | pub(crate) const MAX_HEADINGS_PER_SPLIT: usize = 4;
+   |                  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `RAY_SAMPLE_M` is never used
+  --> src/access_candidates.rs:53:18
+   |
+53 | pub(crate) const RAY_SAMPLE_M: f32 = 1.0;
+   |                  ^^^^^^^^^^^^
+
+warning: constant `MAX_RAY_LOOKAHEAD_M` is never used
+  --> src/access_candidates.rs:54:18
+   |
+54 | pub(crate) const MAX_RAY_LOOKAHEAD_M: f32 = MAX_BRANCH_M + FACE_EDGE_MARGIN_M;
+   |                  ^^^^^^^^^^^^^^^^^^^
+
+warning: struct `PreparedAccessSearch` is never constructed
+  --> src/access_candidates.rs:69:19
+   |
+69 | pub(crate) struct PreparedAccessSearch {
+   |                   ^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `CandidatePage` is never constructed
+  --> src/access_candidates.rs:77:19
+   |
+77 | pub(crate) struct CandidatePage {
+   |                   ^^^^^^^^^^^^^
+
+warning: associated items `prepare`, `len`, and `page` are never used
+   --> src/access_candidates.rs:93:19
+    |
+ 86 | impl PreparedAccessSearch {
+    | ------------------------- associated items in this implementation
+...
+ 93 |     pub(crate) fn prepare(
+    |                   ^^^^^^^
+...
+143 |     pub(crate) fn len(&self) -> usize {
+    |                   ^^^
+...
+147 |     pub(crate) fn page(&self, cursor: usize) -> CandidatePage {
+    |                   ^^^^
+
+warning: function `candidates_for_face` is never used
+   --> src/access_candidates.rs:174:15
+    |
+174 | pub(crate) fn candidates_for_face(
+    |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `candidates_for_face_with_work` is never used
+   --> src/access_candidates.rs:185:15
+    |
+185 | pub(crate) fn candidates_for_face_with_work(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `candidates_for_face_mode` is never used
+   --> src/access_candidates.rs:202:4
+    |
+202 | fn candidates_for_face_mode(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `subtract_intervals` is never used
+   --> src/access_candidates.rs:623:4
+    |
+623 | fn subtract_intervals(base: (f32, f32), exclusions: &[(f32, f32)]) -> Vec<(f32, f32)> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `host_split_samples` is never used
+   --> src/access_candidates.rs:651:15
+    |
+651 | pub(crate) fn host_split_samples(
+    |               ^^^^^^^^^^^^^^^^^^
+
+warning: function `append_fragmented_edge_samples` is never used
+   --> src/access_candidates.rs:783:15
+    |
+783 | pub(crate) fn append_fragmented_edge_samples(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `point_in_polygon` is never used
+   --> src/access_candidates.rs:816:4
+    |
+816 | fn point_in_polygon(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `segment_inside_polygon` is never used
+   --> src/access_candidates.rs:840:4
+    |
+840 | fn segment_inside_polygon(start: (f32, f32), end: (f32, f32), polygon: &[(f32, f32)]) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `ray_exit_distance` is never used
+   --> src/access_candidates.rs:858:4
+    |
+858 | fn ray_exit_distance(start: (f32, f32), heading: (f32, f32), polygon: &[(f32, f32)]) -> f32 {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `max_clear_prefix` is never used
+   --> src/access_candidates.rs:882:4
+    |
+882 | fn max_clear_prefix(
+    |    ^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+   --> src/access_descriptor_search.rs:263:19
+    |
+262 | impl DescriptorSearch {
+    | --------------------- associated function in this implementation
+263 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: associated function `new` is never used
+   --> src/access_discovery_job.rs:224:19
+    |
+221 | impl DiscoveryJob {
+    | ----------------- associated function in this implementation
+...
+224 |     pub(crate) fn new(input: DiscoveryInput) -> Result<Self, DiscoveryError> {
+    |                   ^^^
+
+warning: associated items `new` and `geometry_revision` are never used
+   --> src/access_planning_job.rs:85:19
+    |
+ 82 | impl AccessPlanningJob {
+    | ---------------------- associated items in this implementation
+...
+ 85 |     pub(crate) fn new(
+    |                   ^^^
+...
+121 |     pub(crate) fn geometry_revision(&self) -> u64 {
+    |                   ^^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+  --> src/access_rays.rs:99:19
+   |
+98 | impl RayQuery {
+   | ------------- associated function in this implementation
+99 |     pub(crate) fn new(polygon: Vec<(f32, f32)>, kind: RayQueryKind) -> Result<Self, RayError> {
+   |                   ^^^
+
+warning: constant `MAX_HOST_INPUTS` is never used
+  --> src/access_search.rs:13:7
+   |
+13 | const MAX_HOST_INPUTS: usize = 512;
+   |       ^^^^^^^^^^^^^^^
+
+warning: variants `InvalidFace` and `DuplicateId` are never constructed
+  --> src/access_search.rs:49:5
+   |
+48 | pub(crate) enum SearchError {
+   |                 ----------- variants in this enum
+49 |     InvalidFace,
+   |     ^^^^^^^^^^^
+...
+52 |     DuplicateId,
+   |     ^^^^^^^^^^^
+   |
+   = note: `SearchError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+   --> src/access_search.rs:123:19
+    |
+122 | impl AccessHostPreparation {
+    | -------------------------- associated function in this implementation
+123 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: function `polygon_signed_area` is never used
+   --> src/access_search.rs:726:4
+    |
+726 | fn polygon_signed_area(polygon: &[(f32, f32)]) -> f32 {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: method `spine_limit_reached` is never used
+  --> src/development.rs:67:12
+   |
+34 | impl NeighborhoodCandidateBudget {
+   | -------------------------------- method in this implementation
+...
+67 |     pub fn spine_limit_reached(&self) -> bool {
+   |            ^^^^^^^^^^^^^^^^^^^
+
+warning: function `neighborhood_sites_per_road_is_better` is never used
+   --> src/development.rs:109:15
+    |
+109 | pub(crate) fn neighborhood_sites_per_road_is_better(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `frontage_metrics_available` is never used
+   --> src/district_controller.rs:111:19
+    |
+101 | impl Runtime {
+    | ------------ method in this implementation
+...
+111 |     pub(crate) fn frontage_metrics_available(&self) -> bool {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `built_envelope_coverage_proxy`, `floor_area_ratio_proxy`, `housing_vacancy_ratio`, and `commercial_vacancy_ratio` are never used
+   --> src/district_density.rs:98:19
+    |
+ 97 | impl CellMetrics {
+    | ---------------- methods in this implementation
+ 98 |     pub(crate) fn built_envelope_coverage_proxy(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+102 |     pub(crate) fn floor_area_ratio_proxy(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+...
+106 |     pub(crate) fn housing_vacancy_ratio(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^
+...
+110 |     pub(crate) fn commercial_vacancy_ratio(&self) -> f64 {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `cell` is never used
+   --> src/district_density.rs:126:19
+    |
+125 | impl DistrictMetrics {
+    | -------------------- method in this implementation
+126 |     pub(crate) fn cell(&self, id: usize) -> Option<&CellMetrics> {
+    |                   ^^^^
+
+warning: method `metrics` is never used
+   --> src/district_density.rs:292:19
+    |
+172 | impl MeasurementAccumulator {
+    | --------------------------- method in this implementation
+...
+292 |     pub(crate) fn metrics(&self) -> Option<&DistrictMetrics> {
+    |                   ^^^^^^^
+
+warning: function `measure` is never used
+   --> src/district_density.rs:504:15
+    |
+504 | pub(crate) fn measure(
+    |               ^^^^^^^
+
+warning: variant `Infill` is never constructed
+   --> src/district_density.rs:518:5
+    |
+517 | pub(crate) enum CandidateKind {
+    |                 ------------- variant in this enum
+518 |     Infill,
+    |     ^^^^^^
+    |
+    = note: `CandidateKind` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: struct `ProjectCandidate` is never constructed
+   --> src/district_density.rs:524:19
+    |
+524 | pub(crate) struct ProjectCandidate {
+    |                   ^^^^^^^^^^^^^^^^
+
+warning: struct `RankedCandidate` is never constructed
+   --> src/district_density.rs:570:19
+    |
+570 | pub(crate) struct RankedCandidate {
+    |                   ^^^^^^^^^^^^^^^
+
+warning: enum `ScoreError` is never used
+   --> src/district_density.rs:577:17
+    |
+577 | pub(crate) enum ScoreError {
+    |                 ^^^^^^^^^^
+
+warning: function `rank_candidates` is never used
+   --> src/district_density.rs:590:15
+    |
+590 | pub(crate) fn rank_candidates(
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `rank_candidates_by_district` is never used
+   --> src/district_density.rs:609:15
+    |
+609 | pub(crate) fn rank_candidates_by_district(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `CandidateTargets` is never used
+   --> src/district_density.rs:624:6
+    |
+624 | enum CandidateTargets<'a> {
+    |      ^^^^^^^^^^^^^^^^
+
+warning: methods `copy_for_cell`, `validate_count`, and `all` are never used
+   --> src/district_density.rs:630:8
+    |
+629 | impl<'a> CandidateTargets<'a> {
+    | ----------------------------- methods in this implementation
+630 |     fn copy_for_cell(self, cell_id: usize) -> Option<DistrictTargets> {
+    |        ^^^^^^^^^^^^^
+...
+637 |     fn validate_count(self, cell_count: usize) -> Result<(), ScoreError> {
+    |        ^^^^^^^^^^^^^^
+...
+646 |     fn all(self) -> impl Iterator<Item = DistrictTargets> + 'a {
+    |        ^^^
+
+warning: function `rank_candidates_with_targets` is never used
+   --> src/district_density.rs:659:4
+    |
+659 | fn rank_candidates_with_targets(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `valid_targets` is never used
+   --> src/district_density.rs:760:4
+    |
+760 | fn valid_targets(targets: DistrictTargets) -> bool {
+    |    ^^^^^^^^^^^^^
+
+warning: function `valid_weights` is never used
+   --> src/district_density.rs:777:4
+    |
+777 | fn valid_weights(weights: ScoreWeights) -> bool {
+    |    ^^^^^^^^^^^^^
+
+warning: function `ratio` is never used
+   --> src/district_density.rs:790:4
+    |
+790 | fn ratio(numerator: f64, denominator: f64) -> f64 {
+    |    ^^^^^
+
+warning: constant `MAX_FORECAST_RECTS` is never used
+  --> src/district_policy.rs:17:18
+   |
+17 | pub(crate) const MAX_FORECAST_RECTS: usize =
+   |                  ^^^^^^^^^^^^^^^^^^
+
+warning: associated items `restore`, `checkpoint`, and `result` are never used
+   --> src/face_target_containment.rs:123:19
+    |
+104 | impl PointContainment {
+    | --------------------- associated items in this implementation
+...
+123 |     pub(crate) fn restore(state: PointContainmentCheckpoint) -> Result<Self, ContainmentError> {
+    |                   ^^^^^^^
+...
+134 |     pub(crate) fn checkpoint(&self) -> PointContainmentCheckpoint {
+    |                   ^^^^^^^^^^
+...
+181 |     pub(crate) fn result(&self) -> Option<bool> {
+    |                   ^^^^^^
+
+warning: function `validate_polygon` is never used
+   --> src/face_target_containment.rs:233:4
+    |
+233 | fn validate_polygon(points: &[(f32, f32)]) -> Result<(), ContainmentError> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `polygon_fingerprint` is never used
+   --> src/face_target_containment.rs:243:4
+    |
+243 | fn polygon_fingerprint(points: &[(f32, f32)]) -> u64 {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `validate_checkpoint` is never used
+   --> src/face_target_containment.rs:274:4
+    |
+274 | fn validate_checkpoint(state: &PointContainmentCheckpoint) -> Result<(), ContainmentError> {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_FACE_COORDINATE` is never used
+  --> src/face_target_sampling.rs:22:7
+   |
+22 | const MAX_FACE_COORDINATE: f32 = 100_000.0;
+   |       ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new` and `centers` are never used
+   --> src/face_target_sampling.rs:104:19
+    |
+103 | impl FaceSampler {
+    | ---------------- associated items in this implementation
+104 |     pub(crate) fn new(
+    |                   ^^^
+...
+202 |     pub(crate) fn centers(&self) -> Option<&[(f32, f32)]> {
+    |                   ^^^^^^^
+
+warning: fields `face_index` and `centers` are never read
+  --> src/face_target_selection.rs:87:9
+   |
+86 | pub(crate) struct SelectionView<'a> {
+   |                   ------------- fields in this struct
+87 |     pub face_index: usize,
+   |         ^^^^^^^^^^
+88 |     pub centers: &'a [(f32, f32)],
+   |         ^^^^^^^
+   |
+   = note: `SelectionView` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+   --> src/face_target_selection.rs:101:19
+    |
+100 | impl FaceSelection {
+    | ------------------ associated function in this implementation
+101 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: field `gateway` is never read
+   --> src/masterplan.rs:166:16
+    |
+160 | pub(crate) struct MasterPlan {
+    |                   ---------- field in this struct
+...
+166 |     pub(crate) gateway: usize,
+    |                ^^^^^^^
+    |
+    = note: `MasterPlan` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variants `TooManyNodes`, `TooManyEdges`, and `InvalidEndpoint` are never constructed
+  --> src/road_face_bridges.rs:16:5
+   |
+15 | pub(crate) enum BridgeError {
+   |                 ----------- variants in this enum
+16 |     TooManyNodes,
+   |     ^^^^^^^^^^^^
+17 |     TooManyEdges,
+   |     ^^^^^^^^^^^^
+18 |     InvalidEndpoint,
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `BridgeError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+  --> src/road_face_bridges.rs:76:19
+   |
+75 | impl BridgeSearch {
+   | ----------------- associated function in this implementation
+76 |     pub(crate) fn new(node_count: usize, edges: Vec<(usize, usize)>) -> Result<Self, BridgeError> {
+   |                   ^^^
+
+warning: variants `TooManyNodes`, `TooManyEdges`, and `InvalidInput` are never constructed
+  --> src/road_face_topology.rs:18:5
+   |
+17 | pub(crate) enum TopologyError {
+   |                 ------------- variants in this enum
+18 |     TooManyNodes,
+   |     ^^^^^^^^^^^^
+19 |     TooManyEdges,
+   |     ^^^^^^^^^^^^
+20 |     InvalidInput,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `TopologyError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+  --> src/road_face_topology.rs:97:19
+   |
+96 | impl TopologySearch {
+   | ------------------- associated function in this implementation
+97 |     pub(crate) fn new(
+   |                   ^^^
+
+warning: associated function `new` is never used
+   --> src/road_face_walk.rs:138:19
+    |
+137 | impl FaceWalkSearch {
+    | ------------------- associated function in this implementation
+138 |     pub(crate) fn new(
+    |                   ^^^
+
+warning: function `validate_inputs` is never used
+   --> src/road_face_walk.rs:791:4
+    |
+791 | fn validate_inputs(
+    |    ^^^^^^^^^^^^^^^
+
+warning: constant `MAX_NODES` is never used
+  --> src/road_faces.rs:13:7
+   |
+13 | const MAX_NODES: usize = 512;
+   |       ^^^^^^^^^
+
+warning: constant `MAX_EDGES` is never used
+  --> src/road_faces.rs:14:7
+   |
+14 | const MAX_EDGES: usize = 512;
+   |       ^^^^^^^^^
+
+warning: constant `MAX_HALF_EDGE_STEPS` is never used
+  --> src/road_faces.rs:15:7
+   |
+15 | const MAX_HALF_EDGE_STEPS: usize = MAX_EDGES * 2;
+   |       ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_PAIR_TESTS` is never used
+  --> src/road_faces.rs:16:7
+   |
+16 | const MAX_PAIR_TESTS: usize = 131_072;
+   |       ^^^^^^^^^^^^^^
+
+warning: constant `MAX_ADJACENCY_SEARCH_STEPS` is never used
+  --> src/road_faces.rs:17:7
+   |
+17 | const MAX_ADJACENCY_SEARCH_STEPS: usize = MAX_HALF_EDGE_STEPS * MAX_NODES;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `MAX_OUTPUT_FACES` is never used
+  --> src/road_faces.rs:18:7
+   |
+18 | const MAX_OUTPUT_FACES: usize = MAX_EDGES;
+   |       ^^^^^^^^^^^^^^^^
+
+warning: constant `MIN_FACE_AREA` is never used
+  --> src/road_faces.rs:19:7
+   |
+19 | const MIN_FACE_AREA: f64 = 1.0e-3;
+   |       ^^^^^^^^^^^^^
+
+warning: constant `COINCIDENT_EPSILON` is never used
+  --> src/road_faces.rs:20:7
+   |
+20 | const COINCIDENT_EPSILON: f32 = 1.0e-5;
+   |       ^^^^^^^^^^^^^^^^^^
+
+warning: struct `HalfEdge` is never constructed
+  --> src/road_faces.rs:70:8
+   |
+70 | struct HalfEdge {
+   |        ^^^^^^^^
+
+warning: function `trace_faces` is never used
+  --> src/road_faces.rs:83:15
+   |
+83 | pub(crate) fn trace_faces(
+   |               ^^^^^^^^^^^
+
+warning: function `half_edge_index` is never used
+   --> src/road_faces.rs:355:4
+    |
+355 | fn half_edge_index(
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `has_repeated_vertex` is never used
+   --> src/road_faces.rs:371:4
+    |
+371 | fn has_repeated_vertex(vertices: &[usize]) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `graph_bridge_edges` is never used
+   --> src/road_faces.rs:376:15
+    |
+376 | pub(crate) fn graph_bridge_edges(node_count: usize, edges: &[(usize, usize)]) -> BTreeSet<usize> {
+    |               ^^^^^^^^^^^^^^^^^^
+
+warning: function `signed_area` is never used
+   --> src/road_faces.rs:432:4
+    |
+432 | fn signed_area(vertices: &[usize], nodes: &[RoadFaceNode]) -> f64 {
+    |    ^^^^^^^^^^^
+
+warning: function `canonical_cycle` is never used
+   --> src/road_faces.rs:442:4
+    |
+442 | fn canonical_cycle(ids: &[u32]) -> Vec<u32> {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `point_strictly_inside` is never used
+   --> src/road_faces.rs:459:4
+    |
+459 | fn point_strictly_inside(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `SPINE_ROAD_WIDTH` is never used
+  --> src/spine_plan.rs:19:7
+   |
+19 | const SPINE_ROAD_WIDTH: f32 = 9.0;
+   |       ^^^^^^^^^^^^^^^^
+
+warning: methods `parcel_conflicts` and `road_conflicts` are never used
+   --> src/spine_plan.rs:82:19
+    |
+ 52 | impl SpinePlan {
+    | -------------- methods in this implementation
+...
+ 82 |     pub(crate) fn parcel_conflicts(
+    |                   ^^^^^^^^^^^^^^^^
+...
+116 |     pub(crate) fn road_conflicts(
+    |                   ^^^^^^^^^^^^^^
+
+warning: function `lot_rect` is never used
+   --> src/spine_plan.rs:213:4
+    |
+213 | fn lot_rect(lot: &crate::spine_blocks::SpineLot) -> OrientedRect {
+    |    ^^^^^^^^
+
+warning: variable does not need to be mutable
+    --> src/access_search.rs:1394:13
+     |
+1394 |         let mut search = AccessHostPreparation::new(&face, &hosts(), &[], &[]).unwrap();
+     |             ----^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> src/masterplan.rs:1384:9
+     |
+1384 |     let mut edge_node = |b: &mut Builder, p: P| -> usize {
+     |         ----^^^^^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: unused variable: `road`
+     --> src/lib.rs:21838:13
+      |
+21838 |         let road = engine.add_road(1, node, "local", "open", 1.0);
+      |             ^^^^ help: if this is intentional, prefix it with an underscore: `_road`
+
+warning: multiple fields are never read
+     --> src/lib.rs:12019:9
+      |
+12018 |     struct MidEdgeLotProbe {
+      |            --------------- fields in this struct
+12019 |         x: f32,
+      |         ^
+12020 |         z: f32,
+      |         ^
+12021 |         width: f32,
+      |         ^^^^^
+12022 |         depth: f32,
+      |         ^^^^^
+12023 |         rotation: f32,
+      |         ^^^^^^^^
+12024 |         side: i8,
+      |         ^^^^
+12025 |         along: f32,
+      |         ^^^^^
+      |
+      = note: `MidEdgeLotProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `end` is never read
+     --> src/lib.rs:12033:9
+      |
+12029 |     struct MidEdgeAccessProbe {
+      |            ------------------ field in this struct
+...
+12033 |         end: WorldPoint,
+      |         ^^^
+      |
+      = note: `MidEdgeAccessProbe` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:451:13
+    |
+451 | /             run(
+452 | |                 rectangle_nodes.clone(),
+453 | |                 rectangle_edges.clone(),
+454 | |                 None,
+455 | |                 quotas,
+456 | |             );
+    | |_____________^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+451 |             let _ = run(
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:457:13
+    |
+457 | /             run(
+458 | |                 rectangle_nodes.clone(),
+459 | |                 rectangle_edges[..3].to_vec(),
+460 | |                 Some(rectangle_edges[3]),
+461 | |                 quotas,
+462 | |             );
+    | |_____________^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+457 |             let _ = run(
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:463:13
+    |
+463 |             run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+463 |             let _ = run(adjacent_nodes.clone(), adjacent_edges.clone(), None, quotas);
+    |             +++++++
+
+warning: unused `Result` that must be used
+   --> src/road_face_trace.rs:472:13
+    |
+472 |             run(Vec::new(), Vec::new(), None, quotas);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+472 |             let _ = run(Vec::new(), Vec::new(), None, quotas);
+    |             +++++++
+
+warning: `tokyo-city-engine` (lib) generated 82 warnings (run `cargo fix --lib -p tokyo-city-engine` to apply 2 suggestions)
+warning: `tokyo-city-engine` (lib test) generated 10 warnings (1 duplicate) (run `cargo fix --lib -p tokyo-city-engine --tests` to apply 3 suggestions)
+    Finished `release` profile [optimized] target(s) in 28.64s
+     Running unittests src/lib.rs (engine/target/release/deps/tokyo_city_engine-0b1a1c0ec829c545)
+
+running 471 tests
+test access_bend_diagnostic::diagnose_destination_first_access_witness ... ignored, bounded destination-first lot/access witness search; writes evidence to /tmp
+test access_bend_diagnostic::diagnose_two_segment_bend_witness ... ignored, bounded offline two-segment bend witness search; writes evidence to /tmp
+test access_bend_diagnostic::tests::synthetic_face_edge_blocks_bend ... ok
+test access_bend_diagnostic::tests::synthetic_obstacles_reject_second_leg_and_host_approach ... ok
+test access_bend_diagnostic::tests::bend_is_a_new_node_and_retains_eighteen_metre_clearance ... ok
+test access_bend_diagnostic::tests::compact_frontage_preserves_road_clearance_for_rotated_streets ... ok
+test access_bend_diagnostic::tests::collinear_reversal_is_rejected_and_concave_escape_is_detected ... ok
+test access_candidates::tests::edge_splits_hug_host_end_clearance_and_clear_parcels ... ok
+test access_candidates::tests::blocked_full_ray_keeps_longest_clear_prefix ... ok
+test access_bend_diagnostic::tests::synthetic_lot_first_layout_stops_when_parcel_blocks_lots ... ok
+test access_bend_diagnostic::tests::synthetic_bend_stays_in_face_and_supports_final_lots ... ok
+test access_bend_diagnostic::tests::viability_work_budget_stops_without_exceeding_cap ... ok
+test access_candidates::tests::fourth_split_stays_inside_free_interval_away_from_parcel_end ... ok
+test access_candidates::tests::fragmented_edge_selection_skips_duplicates_and_falls_through ... ok
+test access_bend_diagnostic::tests::synthetic_lot_first_layout_connects_to_unique_host_split ... ok
+test access_candidates::tests::fragmented_intervals_keep_midpoint_prefix_then_add_edge_entrances ... ok
+test access_candidates::tests::prepared_search_rejects_oversized_target_input_without_sorting_it ... ok
+test access_candidates::tests::ray_limit_preserves_sixty_meters_and_face_margin ... ok
+test access_candidates::tests::prepared_pages_are_directly_indexed_and_out_of_range_is_exhausted ... ok
+test access_candidates::tests::fragmented_edge_start_has_a_clear_branch_ray_where_midpoints_are_blocked ... ok
+test access_candidates::tests::face_candidate_work_counts_prefilters_and_stays_bounded ... ok
+test access_candidates::tests::safe_host_intervals_skip_existing_split_nodes ... ok
+test access_candidates::tests::two_fragmented_spans_keep_both_midpoints_before_two_edges ... ok
+test access_candidates::tests::face_candidate_budget_and_order_are_stable ... ok
+test access_candidates::tests::blocked_target_slots_leave_room_for_clear_corner_tangents ... ok
+test access_candidates::tests::road_bounding_face_twice_scans_both_sides_within_one_allowance ... ok
+test access_density_diagnostic::diagnose_one_exhausted_face ... ignored, bounded one-face proposal rejection diagnosis; writes evidence to /tmp
+test access_descriptor_integration_tests::incremental_descriptors_match_frozen_mature_reference ... ignored, mature descriptor parity across work quotas and serialized resumes
+test access_candidates::tests::unreachable_targets_do_not_change_bounded_candidate_slots ... ok
+test access_descriptor_search::tests::owned_initialization_matches_frozen_mature_descriptors ... ignored, mature golden parity through the owned incremental initializer
+test access_capture::tests::capture_is_read_only_and_initial_world_counts_are_bounded ... ok
+test access_capture::tests::shared_neighborhood_projection_keeps_first_duplicate_and_skips_missing_endpoints ... ok
+test access_capture::tests::pair_rejects_each_adapters_caps_without_mutating_engine ... ok
+test access_descriptor_search::tests::owned_initializer_rejects_edge_sort_cursor_out_of_bounds ... ok
+test access_descriptor_search::tests::malformed_phase_cursor_and_nonfinite_input_are_rejected ... ok
+test access_discovery_job::tests::corrupted_copy_cursor_is_rejected ... ok
+test access_capture::tests::over_cap_graph_fails_without_truncating_or_mutating_world ... ok
+test access_discovery_job::tests::duplicate_snapshot_node_ids_reject_before_work ... ok
+test access_discovery_job::tests::exclusions_are_capped_at_construction_and_restore ... ok
+test access_discovery_job::tests::forged_host_phase_without_matching_edge_is_rejected ... ok
+test access_discovery_job::tests::non_planar_trace_is_a_terminal_error_without_partial_descriptors ... ok
+test access_discovery_job::tests::restore_rejects_empty_selected_identity_but_allows_no_face_done ... ok
+test access_discovery_job::tests::restore_enforces_exclusion_ownership_after_selection_transition ... ok
+test access_discovery_work_diagnostic::tests::export_native_top_level_work_breakdown ... ignored, diagnostic native stage-work breakdown for native/WASM comparison
+test access_discovery_job::tests::invalid_graphs_reject_at_construction_and_valid_copy_checkpoints_resume ... ok
+test access_discovery_job::tests::no_bounded_face_is_successful_empty_discovery ... ok
+test access_live::tests::empty_discovery_terminates_with_unit_quotas_and_json_resume ... ok
+test access_discovery_job::tests::selected_identity_is_stable_across_checkpoint_restore_and_exclusion ... ok
+test access_live::tests::restore_rejects_old_schema_and_corrupt_proposal_cursor ... ok
+test access_candidates::tests::prepared_pages_concatenate_without_gaps_or_repeats_and_ignore_input_order ... ok
+test access_live::tests::restore_rejects_forged_approved_lot_even_when_finite ... ok
+test access_descriptor_search::tests::small_search_makes_bounded_progress_and_resumes_from_json ... ok
+test access_live::tests::stale_validation_retries_twice_then_skips_candidate ... ok
+test access_live_engine::tests::profile_shared_capture ... ignored, native capture microbenchmark; not browser or full-step performance
+test access_discovery_job::tests::single_item_and_large_quotas_have_same_ordered_output_and_work ... ok
+test access_discovery_job::tests::json_checkpoint_restores_at_each_quota_boundary ... ok
+test access_math::tests::algebraic_rotations_match_angle_reference_for_cardinal_and_oblique_vectors ... ok
+test access_math::tests::explicit_length_and_tangent_vectors_stay_finite_for_oblique_inputs ... ok
+test access_planning_job::tests::constructor_rejects_different_frozen_world_projections ... ok
+test access_planning_job::tests::empty_no_face_input_exhausts_cleanly_and_restores ... ok
+test access_capture::tests::capture_matches_mature_frozen_projection_oracle ... ok
+test access_proposal_capture::tests::capture_supports_more_than_face_tracer_host_limit_without_truncation ... ok
+test access_capture::tests::pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation ... ok
+test access_proposal_capture::tests::over_cap_state_fails_before_projection_and_does_not_mutate_engine ... ok
+test access_proposal_validation::tests::checkpoint_rejects_cursor_outside_its_phase ... ok
+test access_proposal_validation::tests::checkpoint_rejects_forged_area_accumulator ... ok
+test access_proposal_validation::tests::checkpoint_rejects_missing_or_mismatched_pending_lot ... ok
+test access_proposal_validation::tests::explicit_candidate_is_quota_invariant_and_resumes_through_json ... ok
+test access_proposal_validation::tests::input_accepts_full_engine_host_and_legacy_footprint_caps ... ok
+test access_proposal_validation::tests::input_rejects_nonfinite_geometry_and_unsorted_hosts ... ok
+test access_proposal_validation::tests::input_rejects_over_cap_hosts_and_footprints ... ok
+test access_proposal_validation::tests::zero_budget_and_terminal_advance_are_noops ... ok
+test access_rays::tests::constructor_rejects_nonfinite_unsafe_and_oversized_inputs ... ok
+test access_rays::tests::ray_exit_matches_reference_for_convex_concave_and_boundary_paths ... ok
+test access_rays::tests::restore_rejects_bad_cursor_and_query_state ... ok
+test access_rays::tests::segment_matches_reference_including_empty_and_overlong_sampling ... ok
+test access_rays::tests::validated_polygon_queries_share_storage_and_keep_checkpoint_json_shape ... ok
+test access_reference::export_candidate_descriptor_sequence_for_cross_target_review ... ignored
+test access_live_engine::tests::exhausted_history_is_bounded_and_invalid_saves_are_rejected ... ok
+test access_search::tests::fragmented_edge_samples_match_sync_at_quotas_one_and_seven ... ok
+test access_search::tests::fragmented_short_spans_exhaust_edge_scan_without_extra_samples ... ok
+test access_search::tests::malformed_and_over_cap_checkpoints_are_rejected ... ok
+test access_search::tests::split_projection_matches_one_shot_for_varied_quotas_and_restore ... ok
+test access_search::tests::sub_millimeter_residual_is_filtered_like_one_shot_helper ... ok
+test block_subdivision_diagnostic::compare_live_block_subdivision_geometry ... ignored, bounded seed growth diagnostic; writes a report only when BLOCK_SUBDIVISION_REPORT is set
+test block_subdivision_diagnostic::subdivision_geometry_diagnostic_keeps_source_and_respects_parcel_blocker ... ok
+test blocks::tests::arbitrary_rotation_and_reversed_winding_preserve_lot_geometry_and_facing ... ok
+test blocks::tests::compact_template_merges_selected_slots_and_preserves_gaps ... ok
+test blocks::tests::compact_template_rejects_invalid_geometry_and_is_bounded ... ok
+test blocks::tests::eighty_two_by_fifty_block_produces_two_gapped_rows_inside_inset ... ok
+test blocks::tests::frontage_metadata_is_finite_and_stably_indexed ... ok
+test blocks::tests::invalid_rectangles_and_parameters_are_rejected ... ok
+test blocks::tests::mixed_equal_frontage_is_struct_exactly_canonical ... ok
+test blocks::tests::mixed_frontage_rejects_invalid_inputs_and_stays_bounded ... ok
+test blocks::tests::mixed_frontages_preserve_narrow_side_and_two_meter_clearance ... ok
+test blocks::tests::mixed_production_spacing_passes_exact_collision_predicate ... ok
+test blocks::tests::oversized_blocks_are_bounded_to_sixty_four_lots ... ok
+test blocks::tests::rotations_use_three_y_convention_and_opposite_rows_face_outward ... ok
+test compact_frontage_diagnostic::compact_frontage_existing_road ... ignored, bounded read-only mature-crop geometry/access diagnostic
+test access_reference::offline_search_matches_frozen_mature_descriptor_sequence ... ok
+test density_gap_diagnosis::early_reservation_mature_gaps_use_current_admission_predicates ... ignored, read-only exact-predicate diagnosis of the three largest mature-world voids
+test development::tests::established_infill_beats_a_closer_or_isolated_candidate ... ok
+test development::tests::founding_fallback_uses_stable_parcel_id_when_no_open_buildings_exist ... ok
+test development::tests::neighborhood_candidate_budgets_allow_both_types_and_stop_at_their_caps ... ok
+test development::tests::neighborhood_ranking_compares_site_benefit_per_new_road_cost ... ok
+test development::tests::neighborhood_score_ties_use_sites_cost_and_stable_key ... ok
+test development::tests::scoring_window_is_bounded_and_cursor_wraps ... ok
+test district_density::tests::building_floor_area_and_housing_commercial_vacancy_are_separate ... ok
+test district_density::tests::candidate_ranking_is_stable_and_rejects_infeasible_projects ... ok
+test district_density::tests::candidate_ranking_uses_the_targets_and_metrics_of_its_district_cell ... ok
+test district_density::tests::district_clipping_keeps_gross_denominator_and_clips_world_edges ... ok
+test district_density::tests::district_target_count_and_candidate_cell_indices_are_exact ... ok
+test district_density::tests::duplicate_candidate_ids_are_rejected ... ok
+test district_density::tests::forecast_envelope_allocation_conserves_area_across_cells_and_world_edge ... ok
+test district_density::tests::grid_line_frontage_is_attributed_once_and_clipped_to_domain ... ok
+test district_density::tests::incremental_measurement_resumes_every_sample_boundary_from_frozen_inputs ... ok
+test district_density::tests::invalid_and_overlarge_grids_fail_closed ... ok
+test district_density::tests::invalid_incremental_samples_fail_terminally_and_hide_partial_metrics ... ok
+test district_density::tests::invalid_target_ranges_and_candidate_overflow_fail_closed ... ok
+test district_density::tests::measurement_advance_clamps_work_and_zero_budget_is_a_noop ... ok
+test district_density::tests::resume_rejects_malformed_checkpoint_metadata_and_unprocessed_samples ... ok
+test district_density::tests::rotated_envelopes_are_clipped_to_fixed_district_cells ... ok
+test district_density::tests::uniform_wrapper_matches_repeated_per_cell_targets ... ok
+test district_density::tests::vacant_capacity_suppresses_expansion_but_keeps_infill_ranked ... ok
+test district_density::tests::work_caps_match_world_entity_bounds ... ok
+test district_density::tests::zero_vacancy_limit_does_not_suppress_expansion_when_cell_has_no_capacity ... ok
+test access_proposal_capture::tests::initial_and_mature_capture_match_the_existing_geometry_projection ... ok
+test district_policy::tests::catchment_uses_only_served_buildings_inside_the_origin_radius ... ok
+test district_policy::tests::experiment_targets_are_provisional_and_weights_remain_explicit_at_call_site ... ok
+test district_policy::tests::live_vacancy_gates_only_markets_with_positive_capacity ... ok
+test district_policy::tests::test_diagnostics_aggregate_all_comparisons_and_keep_at_most_32_samples ... ok
+test early_access_experiment::early_access_scheduling_matched_seeds ... ignored, matched-seed early-access scheduling experiment; run explicitly for calibration
+test early_block_reservation_experiment::early_block_reservation_additional_seeds ... ignored, additional matched seeds for early coordinated-block reservation
+test early_block_reservation_experiment::early_block_reservation_matched_seeds ... ignored, matched-seed early coordinated-block reservation experiment
+test early_block_reservation_experiment::early_reservation_keeps_block_safe_while_existing_building_finishes ... ok
+test early_block_reservation_experiment::early_reservation_records_noop_when_existing_plan_guards_reject_candidate ... ok
+test expressway_traffic::tests::departures_wait_for_a_complete_route_and_stay_bounded ... ok
+test district_density_integration_tests::mature_district_measurements_conserve_capacity_without_mutating_worlds ... ok
+test expressway_traffic::tests::mixed_height_chain_is_not_flattened_into_a_route ... ok
+test expressway_traffic::tests::plan_contains_two_independent_boundary_chains_with_cubic_decks ... ok
+test access_live::tests::fresh_revalidation_offer_sequence_is_quota_invariant_and_resumable ... ok
+test expressway_traffic::tests::regional_chain_readiness_does_not_use_ground_connectivity ... ok
+test expressway_traffic::tests::trips_retire_at_the_boundary_and_publish_the_curve_height ... ok
+test face_access_exact_tests::audit_largest_face_direct_access_candidate ... ignored, exact read-only candidate gate audit for the tick-242000 checkpoint
+test face_access_exact_tests::exhaustive_prepared_pages_measure_mature_face_access_candidates ... ignored, offline exhaustive prepared-page diagnostic on a mature face
+test access_live_engine::tests::shared_capture_start_preserves_live_checkpoint_and_continuation ... ok
+test face_access_exact_tests::export_generalized_access_pending_fixture ... ignored, exports the generalized geometry-valid pending access plan for WASM integration checks
+test compact_frontage_diagnostic::compact_frontage_width_comparison_at_crop_host ... ok
+test face_access_exact_tests::map_known_branch_local_sensitivity ... ignored, offline local geometry sensitivity map around known feasible branch
+test face_access_exact_tests::mature_access_capture_cost ... ignored, measure current synchronous frozen access input capture on mature fixture
+test face_access_exact_tests::mature_access_planning_job_matches_ranked_pages ... ignored, composed discovery to ranked proposal pages on mature city
+test face_access_exact_tests::mature_composed_face_trace_matches_reference ... ignored, composed road-face tracing on the frozen mature connected graph
+test face_access_exact_tests::mature_discovery_job_matches_reference ... ignored, single persisted discovery job reproduces mature ordered descriptors
+test face_access_exact_tests::mature_face_sampling_matches_reference ... ignored, complete face sampler parity against all mature frozen face centers
+test face_access_exact_tests::mature_face_selection_matches_reference ... ignored, streaming mature face selection matches frozen viable-face ranking
+test face_access_exact_tests::mature_graph_preflight_preserves_indexed_edges ... ignored, mature graph preflight quota and JSON resume parity
+test face_access_exact_tests::mature_incremental_pipeline_matches_exact_evaluator ... ignored, end-to-end frozen graph to exact access proposal through resumable stages
+test face_access_exact_tests::mature_incremental_proposal_validation_matches_live_oracle ... ignored, mature candidate validation parity across all discovered descriptors
+test face_access_exact_tests::mature_target_containment_matches_reference ... ignored, mature target-grid containment parity against the frozen face fixture
+test face_access_exact_tests::mature_target_ranking_matches_reference ... ignored, mature winning-face clearance and target spacing parity
+test face_access_exact_tests::mature_target_viability_matches_engine ... ignored, frozen target viability parity against the mature engine predicates
+test face_access_exact_tests::scan_exact_planner_for_access_into_largest_face ... ignored, bounded exact-engine scan of viable access proposals inside the largest face
+test face_target_containment::tests::concave_rotated_and_boundary_points_match_frozen_oracle ... ok
+test face_target_containment::tests::quota_zero_and_terminal_calls_do_no_work ... ok
+test face_target_containment::tests::validation_and_forged_cursor_fail_closed ... ok
+test face_target_ranking::tests::checkpoint_rejects_malformed_cursors_and_inputs ... ok
+test face_target_ranking::tests::empty_score_inputs_use_infinity_and_spacing_searches_past_first_twelve ... ok
+test face_target_ranking::tests::ranking_matches_exact_oracle_across_quotas_and_every_boundary_resume ... ok
+test face_target_sampling::tests::checkpoint_stores_one_polygon_and_rejects_bad_cursors ... ok
+test face_target_sampling::tests::concave_face_centers_match_reference_order_at_multiple_quotas ... ok
+test face_target_sampling::tests::viability_projection_rejects_each_candidate_without_changing_sampling_order ... ok
+test face_target_selection::tests::checkpoint_resume_preserves_streaming_result_and_rejects_forged_cursor ... ok
+test face_target_selection::tests::empty_input_is_done_without_a_winner ... ok
+test face_target_selection::tests::equal_count_and_area_uses_lexicographically_smallest_identity ... ok
+test face_target_selection::tests::exclusions_resume_identically_across_quotas_and_reject_malformed_ids ... ok
+test face_target_selection::tests::exclusions_skip_the_default_winner_and_all_excluded_faces ... ok
+test face_target_selection::tests::no_viable_face_returns_completed_empty_selection ... ok
+test face_target_selection::tests::streams_all_faces_and_ranks_count_before_area ... ok
+test face_target_viability::tests::context_roundtrip_and_mismatched_context_checkpoint_are_checked ... ok
+test face_target_viability::tests::extra_branch_matches_appended_context_with_every_unit_restore ... ok
+test face_target_viability::tests::extra_branch_rejects_invalid_geometry_and_cursor ... ok
+test face_target_viability::tests::frozen_predicate_matches_reference_with_resumable_json ... ok
+test face_target_viability::tests::unsafe_context_values_and_rectangles_fail_closed ... ok
+test frontage::tests::endpoint_margins_and_exact_touches_are_respected ... ok
+test frontage::tests::exclusions_are_clipped_unioned_and_input_order_independent ... ok
+test frontage::tests::invalid_dimensions_and_nonfinite_exclusions_fail_closed ... ok
+test frontage::tests::lot_cap_never_stretches_lots_or_continues_into_later_spans ... ok
+test frontage::tests::short_spans_obey_minimum_and_long_spans_tile_with_balanced_widths ... ok
+test geometry::tests::benchmark_overlap_against_frozen_sat_reference ... ignored, manual deterministic microbenchmark; run with --ignored --nocapture
+test geometry::tests::collinear_overlap_touching_crossing_and_parallel_cases_are_distinguished ... ok
+test geometry::tests::degenerate_segments_are_points_and_only_intersect_when_on_the_other_segment ... ok
+test geometry::tests::disjoint_collinear_segments_have_their_endpoint_gap ... ok
+test geometry::tests::far_axis_aligned_separation_matches_the_original_sat_predicate ... ok
+test geometry::tests::malformed_rectangles_conservatively_block_overlap_and_clearance ... ok
+test geometry::tests::oriented_rectangle_uses_three_y_rotation_and_reports_world_bounds ... ok
+test geometry::tests::overlap_fast_path_matches_frozen_sat_for_seeded_random_geometry ... ok
+test geometry::tests::overlap_fast_path_preserves_invalid_and_extreme_float_policy ... ok
+test geometry::tests::rectangle_overlap_handles_containment_and_exact_requested_gap ... ok
+test geometry::tests::rectangle_segment_distance_handles_crossing_inside_and_parallel_segments ... ok
+test geometry::tests::rotated_clearance_inflates_local_corners_before_sat_projection ... ok
+test geometry::tests::rotated_nonsquare_rectangles_use_oriented_separating_axes ... ok
+test geometry::tests::segment_distance_is_symmetric_under_endpoint_reversal ... ok
+test initial_depth_diagnostic::paired_station_core_initial_depth_experiment ... ignored, bounded paired 242,000-tick two-seed initial-depth experiment
+test initial_depth_diagnostic::tests::depth_expansion_preserves_local_positive_z_frontage_edge ... ok
+test initial_depth_diagnostic::tests::exact_progressive_geometry_rejects_blockers_and_world_bounds ... ok
+test initial_depth_diagnostic::tests::own_footprint_mapping_skips_both_legacy_envelopes ... ok
+test interior_access::tests::candidate_enumeration_budget_is_finite_and_stable ... ok
+test interior_access::tests::candidate_ranking_compares_area_per_meter_then_stable_geometry ... ok
+test masterplan::export::export_plan_json ... ignored
+test masterplan::svg::write_plan_svg ... ignored
+test expressway_traffic::tests::malformed_saved_trip_state_is_rejected ... ok
+test masterplan::tests::elevated_boundary_tails_follow_their_chord_across_seed_corpus ... ok
+test face_access_exact_tests::explicit_angled_access_candidate_uses_branch_frontage_and_restores ... ok
+test masterplan::tests::expressway_corridors_cross_as_separate_decks_without_a_junction ... ok
+test masterplan::tests::elevated_curves_clear_lots_and_share_tangents ... ok
+test masterplan::tests::expressway_crosses_the_river_but_never_runs_along_it ... ok
+test masterplan::tests::plan_is_deterministic ... ok
+test masterplan::tests::lots_are_disjoint_and_dense ... ok
+test masterplan::tests::street_graph_is_connected_from_gateway ... ok
+test masterplan_growth::tests::founding_opens_gateway_streets_and_founder ... ok
+test masterplan_growth::tests::long_run ... ignored
+test access_planning_job::tests::synthetic_face_is_quota_invariant_and_page_sort_is_stable ... ok
+test expressway_traffic::tests::save_restore_continues_natural_trip_identically ... ok
+test masterplan::tests::lots_clear_streets_and_face_their_frontage_road ... ok
+test masterplan_growth::tests::same_seed_master_plan_growth_is_deterministic ... ok
+test face_access_exact_tests::geometry_valid_noncanonical_interior_access_plan_restores_and_completes ... ok
+test masterplan_validation::tests::rejects_erased_mappings_and_invalid_frontage ... ok
+test access_live_engine::tests::exhausted_face_sweep_survives_save_and_selects_another_interior ... ok
+test masterplan_validation::tests::rejects_missing_and_duplicate_node_mappings ... ok
+test masterplan_validation::tests::rejects_missing_duplicate_and_misplaced_lot_mappings ... ok
+test mature_planner_trace_tests::mature_neighborhood_planner_trace ... ignored, bounded mature planner feasibility trace; no production mutation
+test mature_void_diagnostic::diagnose_access_proposals_for_mature_browser_voids ... ignored, bounded exact proposal scan for mature browser-review save
+test neighborhood_admission::capture_tests::nested_rejection_capture_is_rejected_and_cleared ... ok
+test neighborhood_admission::capture_tests::rejection_capture_clears_after_panic ... ok
+test neighborhood_spine::tests::completed_cursor_with_pending_fourth_road_project_restores ... ok
+test neighborhood_spine::tests::reserved_spine_corridor_rejects_a_parcel_in_the_street_gap ... ok
+test neighborhood_spine::tests::reversed_host_directions_keep_split_and_frontage_access_valid ... ok
+test neighborhood_spine::tests::spine_lifecycle_restores_each_stage_and_admits_all_twenty_frontages ... ok
+test neighborhood_spine::tests::spine_stage_references_are_validated_and_failed_pair_is_atomic ... ok
+test neighborhood_spine::tests::temporary_project_pressure_does_not_invalidate_a_reserved_spine_save ... ok
+test network_split::tests::expands_forward_reverse_and_repeated_edges_with_stable_indices ... ok
+test network_split::tests::leaves_routes_without_host_edge_unchanged ... ok
+test node_coincidence_index::tests::candidates_advance_inside_a_dense_cell ... ok
+test node_coincidence_index::tests::cell_boundaries_and_threshold_neighbors_preserve_f32_pairs ... ok
+test node_coincidence_index::tests::randomized_points_cover_every_near_pair_and_candidates_are_ordered ... ok
+test node_coincidence_index::tests::sparse_grid_queries_find_no_candidates ... ok
+test node_coincidence_index::tests::unsupported_coordinates_request_legacy_fallback ... ok
+test partial_block_diagnostic::mature_full_block_partial_lot_diagnostic ... ignored, bounded mature-state partial full-block geometry diagnostic
+test partial_block_diagnostic::partial_full_block_experiment_hook_defaults_off_and_is_not_persisted ... ok
+test partial_block_diagnostic::partial_full_block_usefulness_requires_four_lots_and_both_long_edges ... ok
+test project_scoring::tests::expansion_uses_live_served_catchment_not_stale_destination_metrics ... ok
+test project_scoring::tests::fractional_live_catchment_vacancy_uses_true_capacity_denominator ... ok
+test project_scoring::tests::road_cost_and_demand_apply_once_for_a_multicell_project ... ok
+test project_scoring::tests::stable_ties_use_kind_then_project_id ... ok
+test project_scoring::tests::sums_forecast_gains_against_each_districts_own_targets ... ok
+test project_scoring::tests::validates_caps_cells_duplicates_and_nonfinite_forecasts ... ok
+test rear_extension_diagnostic::rear_extension_geometry_opportunity ... ignored, bounded hypothetical rear parcel extension diagnostic; writes optional JSON report
+test rear_extension_diagnostic::tests::own_footprint_removal_accounts_for_legacy_duplicate ... ok
+test rear_extensions::tests::export_first_mature_rear_extension_fixture ... ignored, bounded normal-scheduler fixture export for visual review
+test rear_extensions::tests::extension_schema_migrates_legacy_saves_without_plans ... ok
+test rear_extensions::tests::inhabited_extension_stays_original_until_completion_and_resumes_each_phase ... ok
+test road_curve::tests::cubic_sample_preserves_endpoints_and_clamps_parameter ... ok
+test road_curve::tests::handles_span_a_third_of_the_chord_for_broad_bends ... ok
+test road_curve::tests::neighboring_directions_make_a_continuous_shallow_turn ... ok
+test masterplan_validation::tests::rejects_missing_duplicate_and_swapped_road_mappings ... ok
+test road_face_bridges::tests::malformed_inputs_and_checkpoints_fail_closed ... ok
+test road_face_bridges::tests::tarjan_matches_reference_graph_shapes_and_parallel_edges ... ok
+test road_face_bridges::tests::zero_budget_and_finished_calls_are_noops ... ok
+test road_face_preflight::tests::coincidence_index_preserves_first_pair_and_source_cursor_after_resume ... ok
+test road_face_preflight::tests::crossing_and_caps_fail_closed ... ok
+test road_face_preflight::tests::dense_filter_falls_back_once_and_resumes_exact_scan ... ok
+test road_face_preflight::tests::empty_node_index_missing_endpoint_failure_restores ... ok
+test road_face_preflight::tests::every_quota_boundary_json_resume_matches_uninterrupted_work ... ok
+test road_face_preflight::tests::legacy_preflight_restarts_frozen_graph_and_preserves_result ... ok
+test road_face_preflight::tests::malformed_inputs_preserve_preflight_errors ... ok
+test road_face_preflight::tests::mixed_schema_downgrade_is_rejected_and_pending_candidate_cannot_be_forged ... ok
+test road_face_preflight::tests::proposed_edge_handoff_reuses_buffer_after_json_restore ... ok
+test road_face_preflight::tests::raw_segment_aabb_can_miss_f32_endpoint_projection ... ok
+test road_face_preflight::tests::rectangle_and_shared_endpoint_pairs_pass_preflight ... ok
+test road_face_preflight::tests::restore_rejects_out_of_range_and_forged_cursors ... ok
+test masterplan_validation::tests::validates_initial_and_growth_saves ... ok
+test road_face_preflight::tests::zero_quota_is_stable_and_unsupported_coordinates_use_exact_fallback ... ok
+test road_face_topology::tests::initialize_checkpoint_rejects_forged_indexed_endpoints ... ok
+test road_face_topology::tests::malformed_input_and_checkpoint_cursors_reject_safely ... ok
+test road_face_topology::tests::topology_matches_reference_order_for_cycles_spurs_and_disconnected_graphs ... ok
+test road_face_topology::tests::zero_budget_and_done_are_noops_and_caps_are_enforced ... ok
+test road_face_bridges::tests::capped_chain_drains_without_recursion_or_quota_overrun ... ok
+test road_face_trace::tests::invalid_composed_checkpoints_are_rejected_at_each_stage ... ok
+test road_face_walk::tests::initialize_checkpoint_rejects_scratch_that_would_survive_initialization ... ok
+test road_face_walk::tests::malformed_active_cursors_are_rejected_without_indexing ... ok
+test road_face_walk::tests::nested_disconnected_cycles_match_reference_rejection ... ok
+test road_face_walk::tests::restore_rejects_empty_active_walks_bad_minimum_indices_and_empty_nested_polygons ... ok
+test road_face_walk::tests::results_match_reference_for_faces_spurs_and_proposed_marking ... ok
+test road_faces::tests::adjacent_rectangles_trace_two_faces_and_proposed_diagonal_is_marked ... ok
+test road_faces::tests::dangling_street_and_disconnected_components_add_no_false_faces ... ok
+test road_faces::tests::early_reservation_wasm_checkpoint_has_planar_ordinary_network ... ignored, audits the exact public-WASM early-reservation checkpoint without advancing it
+test road_faces::tests::explicit_input_and_work_caps_are_enforced ... ok
+test road_faces::tests::fresh_mature_world_ordinary_graph_topology_diagnostic ... ignored, bounded fresh-world topology diagnostic for mature growth; run explicitly with --ignored --nocapture
+test road_faces::tests::graph_bridge_and_crossing_edges_fail_or_yield_no_bounded_face_safely ... ok
+test road_faces::tests::interior_dangling_branch_is_removed_without_losing_its_block_face ... ok
+test road_faces::tests::malformed_and_nonfinite_inputs_fail_closed ... ok
+test road_face_trace::tests::composed_job_matches_reference_across_all_stage_handoffs_and_json_resumes ... ok
+test road_faces::tests::nested_disconnected_cycles_are_rejected_instead_of_double_counted ... ok
+test road_faces::tests::new_founder_network_is_planar_connected_and_keeps_nonincident_parcels_clear ... ok
+test road_faces::tests::rectangle_is_one_ccw_bounded_face_and_marks_proposed_edge ... ok
+test road_faces::tests::rotated_irregular_face_is_stable_under_reordered_reversed_inputs ... ok
+test road_opening_access_experiment::blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host ... ok
+test road_faces::tests::mature_connected_ordinary_road_graph_reports_unsupported_crossing ... ok
+test road_opening_access_experiment::face_candidate_window_round_robins_over_boundary_with_global_budget ... ok
+test road_opening_access_experiment::face_conditioned_road_opening_access_matched_seeds ... ignored, matched face-conditioned road-opening access experiment; run explicitly for calibration
+test road_opening_access_experiment::face_containment_rejects_segment_and_lot_crossing_concave_notch ... ok
+test road_opening_access_experiment::face_filter_accepts_inside_plan_and_rejects_external_branch_or_lot ... ok
+test road_opening_access_experiment::face_filter_keeps_only_contained_lots_and_requires_two_sites ... ok
+test road_opening_access_experiment::opening_host_frontage_uses_rendered_rotation_against_reserved_lots ... ok
+test road_opening_access_experiment::point_to_oriented_rect_distance_matches_local_axes_at_zero_right_and_oblique_angles ... ok
+test road_opening_access_experiment::road_opening_access_matched_seeds ... ignored, matched-seed road-opening access experiment; run explicitly for calibration
+test masterplan_growth::tests::constructing_expressway_does_not_rebend_existing_sections ... ok
+test road_opening_access_experiment::explicit_host_window_matches_legacy_wrapper_geometry_and_order ... ok
+test road_opening_access_experiment::shallow_or_fully_served_faces_do_not_qualify_for_access ... ok
+test road_pair_broadphase::tests::coincident_bounds_stream_first_pair_without_pair_graph ... ok
+test road_pair_broadphase::tests::epsilon_touching_extents_and_corrupt_checkpoint ... ok
+test road_pair_broadphase::tests::five_thousand_segment_street_grid_streams_candidates ... ok
+test road_pair_broadphase::tests::incremental_input_matches_batch_and_rejects_late_or_invalid_append ... ok
+test road_opening_access_experiment::road_opening_access_noop_keeps_global_planner_state_unchanged ... ok
+test road_pair_broadphase::tests::restore_rejects_missing_candidates_and_inconsistent_stage_fields ... ok
+test road_split::tests::combined_segment_and_route_capacity_failures_leave_state_unchanged ... ok
+test road_split::tests::paired_split_matches_two_sequential_splits_with_routes_and_transit ... ok
+test road_split::tests::paired_split_rejections_are_atomic_and_reject_duplicate_hosts ... ok
+test road_split_profile::atomic_split_preserves_actor_positions_and_late_failure_writes_nothing ... ok
+test road_split_profile::profile_atomic_open_road_split_cost ... ignored, native road-split timing profile; run explicitly with --ignored
+test route_equivalence_tests::delivery_does_not_spawn_midway_along_an_oversized_route ... ok
+test route_equivalence_tests::exact_routes_match_scan_for_deterministic_generated_graphs ... ok
+test route_equivalence_tests::exact_routes_match_scan_for_equal_cost_diamonds_and_source_order ... ok
+test route_equivalence_tests::exact_routes_match_scan_for_filters_parallel_edges_and_blocked_nodes ... ok
+test route_equivalence_tests::large_sparse_id_graph_matches_after_live_road_mutations ... ok
+test route_equivalence_tests::route_limit_accepts_complete_boundary_and_rejects_suffix ... ok
+test spine_blocks::tests::deeper_spine_recipes_keep_twenty_contained_clear_lots_and_canonical_plans ... ok
+test spine_blocks::tests::rotated_and_reversed_winding_keep_valid_spine_sides_and_parameters ... ok
+test spine_blocks::tests::rows_respect_frontage_setbacks_do_not_overlap_and_conserve_lot_area ... ok
+test spine_blocks::tests::shallow_invalid_and_over_cap_blocks_are_rejected ... ok
+test spine_blocks::tests::spine_minimum_cross_depth_preserves_eight_metre_rows ... ok
+test spine_blocks::tests::square_produces_four_balanced_rows_and_twenty_lots ... ok
+test spine_plan::tests::every_stage_roundtrips_and_zero_ids_are_rejected ... ok
+test spine_plan::tests::parcel_and_road_reservations_fail_closed_and_protect_layout ... ok
+test spine_plan::tests::parcel_clearance_includes_physical_spine_and_honors_exact_margin ... ok
+test spine_plan::tests::rejects_unknown_recipe_malformed_geometry_and_duplicate_stage_ids ... ok
+test spine_plan::tests::validates_canonical_spine_geometry_and_stage_ids ... ok
+test spine_ranking_experiment_tests::compare_spine_ranking_by_area_vs_sites_per_road ... ignored, controlled matched-seed comparison of two neighborhood ranking objectives
+test spine_ranking_experiment_tests::ranking_selector_is_scoped_and_defaults_to_nominal_area ... ok
+test spine_ranking_experiment_tests::sites_per_road_experiment_comparator_has_area_and_stable_tiebreaks ... ok
+test spine_replay_tests::spine_normal_ticks_match_uninterrupted_from_every_saved_stage ... ok
+test tests::accelerated_growth_changes_measured_stage_without_a_calendar_unlock ... ok
+test tests::access_geometry_revision_is_backward_compatible_and_fails_closed_at_overflow ... ok
+test tests::access_geometry_revision_tracks_effective_writers_and_ignores_ticks ... ok
+test tests::access_geometry_revision_tracks_road_opening_and_plan_reservations ... ok
+test access_live_engine::tests::legacy_preflight_restart_preserves_mature_city_and_is_deterministic ... ok
+test tests::active_commerce_is_not_vacant_when_residential_occupancy_is_zero ... ok
+test masterplan_replay_tests::live_masterplan_construction_matches_restored_continuation ... ok
+test tests::available_connected_infill_precedes_neighborhood_block_planning ... ok
+test tests::bounded_frontier_cursor_reaches_later_viable_origins ... ok
+test tests::bounded_world_keeps_open_buildings_connected ... ok
+test tests::building_picker_bounds_window_wraps_cursor_and_replays ... ok
+test tests::building_picker_prefers_connected_infill_and_excludes_invalid_sites ... ok
+test tests::admitted_interior_branch_with_exact_clearance_restores_without_radial_rejection ... ok
+test tests::bus_movement_uses_kind_three_and_left_hand_lane ... ok
+test tests::bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save ... ok
+test tests::bus_stop_selection_keeps_fractional_forward_and_reverse_stops_pending ... ok
+test tests::cached_neighborhood_collisions_match_reference_after_world_edits ... ok
+test tests::cars_keep_a_following_gap_behind_a_stopped_bus ... ok
+test tests::bus_capacity_keeps_overflow_queue_visible_and_bounded ... ok
+test tests::coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore ... ok
+test tests::coordinated_block_reserves_all_parcel_slots_until_retirement ... ok
+test tests::coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed ... ok
+test tests::coordinated_block_reuses_open_edge_and_waits_for_three_new_streets ... ok
+test tests::coordinated_block_road_clearance_protects_interior_and_allows_perimeter ... ok
+test tests::diagnose_mature_neighborhood_and_road_proposal_rejections ... ignored, bounded diagnostic over mature public-WASM save fixtures
+test tests::diagnose_mid_edge_access_feasibility_on_mature_saves ... ignored, bounded offline geometry probe for mid-edge street access on mature saves
+test tests::district_measurement_advances_at_most_sixteen_samples_per_fixed_tick ... ok
+test tests::district_measurement_completes_and_reconstructs_cached_metrics ... ok
+test tests::district_measurement_is_frozen_bounded_and_save_resumable ... ok
+test tests::district_measurement_rejects_malformed_checkpoints_and_accepts_legacy_saves ... ok
+test tests::district_policy_candidate_ids_are_unique_across_maximum_scan_batch ... ok
+test tests::district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero ... ignored, matched-seed district policy experiment; run explicitly for calibration evidence
+test tests::district_policy_forecast_geometry_is_clipped_and_bounded ... ok
+test tests::district_policy_obeys_existing_road_demand_boundary ... ok
+test tests::dwelling_bus_uses_the_departure_curb_on_curved_stops_in_both_directions ... ok
+test tests::early_growth_fills_connected_blocks_before_expanding_the_map ... ok
+test tests::exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots ... ok
+test tests::following_bus_holds_its_position_without_being_forced_backward ... ok
+test tests::frontage_access_selection_is_projection_based_and_orientation_stable ... ok
+test tests::frontage_cursor_accepts_exact_candidate_cap_and_rejects_overflow ... ok
+test tests::frontage_gap_default_layout_is_exactly_the_legacy_candidate_sequence ... ok
+test tests::frontage_grid_keeps_midpoint_spacing_clear_and_endpoint_bounded ... ok
+test tests::frontage_scan_skips_unfinished_road_without_opening_it_and_replays ... ok
+test masterplan_growth::tests::master_plan_city_grows_connected_without_overlaps_and_replays ... ok
+test tests::full_pending_alight_queue_keeps_bus_passenger_seated ... ok
+test access_live_engine::tests::mature_live_job_admits_known_route_and_resumes_with_moving_actors ... ok
+test tests::inbound_train_passenger_waits_at_platform_until_home_route_opens ... ok
+test tests::indexed_connectivity_matches_source_order_scan ... ok
+test tests::interior_access_capacity_preflight_does_not_split_or_allocate ... ok
+test tests::interior_access_plan_is_visible_reserved_atomic_and_replayable ... ok
+test tests::frontier_proposal_scan_is_read_only_and_plan_road_replays ... ok
+test tests::legacy_business_activity_migration_preserves_housing_and_pending_work ... ok
+test tests::legacy_city_save_can_unlock_progressive_frontage ... ok
+test tests::legacy_save_without_bus_keys_restores_with_empty_service ... ok
+test tests::legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap ... ok
+test tests::local_chord_construction_opens_connected_frontage_and_adds_accessible_density ... ok
+test tests::active_commerce_does_not_age_into_false_vacancy ... ok
+test tests::interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged ... ok
+test road_pair_broadphase::tests::random_small_sets_match_oracle_and_resume ... ok
+test tests::mature_fixture_road_splits_preserve_routes_access_and_replay ... ignored, bounded integration probe for mid-edge splits on mature public saves
+test road_opening_access_experiment::road_opening_access_reserves_before_frontage_and_completes_after_restore ... ok
+test tests::missing_parcel_rotation_keeps_legacy_and_rendered_envelopes ... ok
+test tests::movement_buffer_places_traffic_in_left_lane_and_on_sidewalks ... ok
+test tests::named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save ... ok
+test tests::mature_city_grows_a_beneficial_road_beyond_old_open_road_stop ... ok
+test tests::neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence ... ok
+test tests::neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers ... ok
+test tests::neighborhood_plan_is_bounded_and_legacy_saves_restore_without_one ... ok
+test tests::neighborhood_plan_reserves_connected_corridors_and_replays_pending_work ... ok
+test tests::open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment ... ok
+test tests::oriented_admission_respects_legacy_saved_and_rendered_envelopes ... ok
+test tests::parcel_corridor_uses_exact_clearance_instead_of_max_dimension_radius ... ok
+test tests::pedestrian_building_connectors_are_continuous_saved_and_face_frontage ... ok
+test tests::pending_alight_retries_when_destination_opens_without_geometry_change ... ok
+test tests::pending_alight_scheduler_checks_at_most_eight_waiters_per_tick ... ok
+test tests::pending_bus_alighter_at_rail_terminal_stays_on_ground ... ok
+test tests::named_resident_walks_rides_alights_and_returns_by_bus_with_replay ... ok
+test tests::project_history_admission_trims_completed_and_respects_active_cap ... ok
+test tests::quiet_hours_do_not_start_new_bus_rides_but_current_riders_finish ... ok
+test tests::rail_access_connectors_follow_rotated_and_translated_axes ... ok
+test tests::rail_platform_slots_fit_both_oriented_platforms ... ok
+test tests::rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn ... ok
+test tests::rail_transfer_boards_to_capacity_and_keeps_platform_queue_visible_and_bounded ... ok
+test tests::reverse_bus_obeys_signal_for_its_actual_outgoing_route_leg ... ok
+test tests::river_crossing_and_founder_are_present ... ok
+test tests::road_frontage_benefit_accepts_two_sites_on_one_side ... ok
+test tests::progressive_gap_infill_admits_compact_frontage_with_access_and_replay ... ok
+test tests::road_split_preserves_frontage_travelers_bus_train_and_replay ... ok
+test tests::road_split_rejections_leave_state_and_ids_unchanged ... ok
+test tests::rotated_parcel_corner_blocks_a_corridor_that_passes_center_clearance ... ok
+test tests::rotated_progressive_frontage_uses_road_facing_footprint ... ok
+test tests::generated_seed_five_bus_shuttle_runs_both_directions_after_bridge_growth ... ok
+test road_face_preflight::tests::spatial_candidates_preserve_actual_f32_planarity_rejections ... ok
+test tests::save_restore_replays_pending_projects ... ok
+test tests::save_restore_preserves_residents_and_active_trips ... ok
+test tests::same_seed_and_ticks_have_identical_state ... ok
+test tests::seed_87231_natural_growth_uses_a_saved_partial_shared_edge_layout ... ok
+test tests::seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves ... ok
+test tests::seeded_business_turnover_defers_jobs_and_deliveries_then_reopens ... ok
+test tests::seeded_neighborhood_bus_carries_residents_on_connected_roads ... ok
+test tests::shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes ... ok
+test tests::shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds ... ignored, matched mature-world shallow-frontage geometry diagnostic
+test tests::shallow_frontage_mature_continuations_construct_and_replay_pending_lots ... ignored, 20k-tick mature-save continuation and construction audit
+test tests::spine_candidate_validation_and_score_include_deep_road_cost ... ok
+test tests::station_queue_positions_are_rail_aligned_reserved_and_continuous ... ok
+test tests::station_tower_frontages_are_reserved_before_rail_and_small_lots ... ok
+test tests::time_and_rate_are_integer_deterministic ... ok
+test tests::train_shuttle_dwells_and_reverses_inside_rail_end_clearances ... ok
+test tests::mature_connected_bridgehead_grows_occupied_far_bank_neighborhood ... ok
+test tests::compact_infill_continuation_restores_with_exact_legacy_road_clearance ... ok
+test access_descriptor_search::tests::every_work_boundary_restores_and_matches_reference ... ok
+test masterplan_growth::tests::snapshot_reports_realized_expressway_decks_from_plan_mappings ... ok
+test access_live_engine::tests::real_steps_resume_deterministically_across_geometry_churn ... ok
+test tests::mature_neighborhoods_keep_low_rise_core_and_tall_station_cluster ... ok
+test access_descriptor_search::tests::owned_initialization_matches_borrowed_output_and_resumes_every_phase ... ok
+test tests::seed_87231_builds_bounded_station_towers_on_connected_large_lots ... ok
+test tests::seed_87231_growth_remains_valid_and_canonical_after_corridor_checks ... ok
+test tests::twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city ... ok
+test tests::road_planner_keeps_frontier_candidates_connected_and_bounded ... ok
+test tests::long_run_keeps_state_collections_bounded_after_expansion ... ok
+
+test result: ok. 418 passed; 0 failed; 53 ignored; 0 measured; 0 filtered out; finished in 43.75s
+
+   Doc-tests tokyo_city_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findSkylineCluster, skylineClusterKey, type SkylineCluster } from "../web/src/camera/director";
+import { SkylineClusterCache } from "../web/src/camera/skyline-cluster";
 import type { Building } from "../web/src/types";
 
 function random(seed: number) { return () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return (seed >>> 0) / 4294967296; }; }
@@ -53,8 +54,36 @@ describe("skyline cluster search", () => {
         const z = snap ? (rand() - 0.5) * 1100 : Math.round((rand() - 0.5) * 12) * 90;
         return building(id, x, z, 1 + Math.floor(rand() ** 3 * 30), { width: 6 + rand() * 30, depth: 6 + rand() * 30 });
       });
-      expectSameCluster(findSkylineCluster(buildings), reference(buildings));
+      const expected = reference(buildings);
+      expectSameCluster(findSkylineCluster(buildings), expected);
+      expectSameCluster(new SkylineClusterCache().get(buildings), expected);
     }
+  });
+
+  it("reuses the same cached result for framing-equivalent buildings and invalidates on every framing input", () => {
+    const fields: Partial<Building>[] = [
+      { id: 9 }, { x: 2 }, { z: 3 }, { floors: 9 }, { width: 20 }, { depth: 17 }, { rotation: 0.5 }, { kind: "apartment" }, { anchor: true },
+    ];
+    for (const field of fields) {
+      const cache = new SkylineClusterCache();
+      const original = [building(1, 0, 0, 8), building(2, 20, 0, 8)];
+      const first = cache.get(original);
+      expect(cache.get(original.map((item) => ({ ...item, name: "different", occupancy: 99 })))).toBe(first);
+      const changed = original.map((item, index) => index === 0 ? { ...item, ...field } : item);
+      const next = cache.get(changed);
+      expect(next).not.toBe(first);
+      expect(next).toEqual(new SkylineClusterCache().get(changed));
+    }
+  });
+
+  it("preserves seed ties in world order and clears results when eligibility changes", () => {
+    const cache = new SkylineClusterCache();
+    const west = building(1, -300, 0, 8), east = building(2, 300, 0, 8);
+    expect(cache.get([west, east])?.towers[0].id).toBe(1);
+    expect(cache.get([east, west])?.towers[0].id).toBe(2);
+    expect(cache.get([])).toBeNull();
+    expect(cache.get([west])?.towers).toEqual([west]);
+    expect(cache.get([{ ...west, floors: 2 }])).toBeNull();
   });
 
   it("keeps the earliest seed on exact score ties and world order inside each cluster", () => {

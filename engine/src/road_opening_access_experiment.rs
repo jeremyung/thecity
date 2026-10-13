@@ -207,7 +207,7 @@ fn face_candidate_window_round_robins_over_boundary_with_global_budget() {
 #[test]
 fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
     let mut engine = Engine::restore_json(include_str!(
-        "../../validation/mature-world.ranked-blocks.json"
+        "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;
@@ -840,7 +840,7 @@ impl Engine {
 #[test]
 fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
     let mut engine = Engine::restore_json(include_str!(
-        "../../validation/mature-world.ranked-blocks.json"
+        "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;

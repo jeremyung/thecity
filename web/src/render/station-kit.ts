@@ -1,13 +1,14 @@
 import * as THREE from 'three/webgpu';
 import type { RailPlatform } from '../types';
 import { Kit } from './kit';
+import { PLATFORM_EDGE_X } from './rail-profile';
 
 /** Both styles and both terminals use the engine's rail frame and access levels. */
 export function buildStationPlatform(layout: RailPlatform, art: { get(color:string, emission?:number, lamp?:boolean):THREE.Material }, roof = true) {
   const s = new Kit(), top = layout.surface_y, base = top - 2;
   const concrete = art.get('#b9bbb1'), metal = art.get('#94a4a0');
-  s.box(5.2, top - 1, 23.5, 5.2, 2, 49, concrete);
-  s.box(2.9, top + .08, 23.5, .45, .1, 48, art.get('#d3b962'));
+  s.box((7.8 + PLATFORM_EDGE_X) / 2, top - 1, 23.5, 7.8 - PLATFORM_EDGE_X, 2, 49, concrete);
+  s.box(PLATFORM_EDGE_X + .3, top + .08, 23.5, .45, .1, 48, art.get('#d3b962'));
   if (roof) {
     s.box(5.5, top + 4, 23.5, 7, .22, 51, art.get('#546d6c'));
     for (let z = 3; z <= 45; z += 10.5) {

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "source": "public CityEngine WASM API; normal seeded development and project stepping",
+  "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+  "seed": 0,
+  "developmentRate": 16,
+  "target": {
+    "id": 1814,
+    "parcelId": 1813,
+    "kind": "office",
+    "floors": 7,
+    "appearanceSeed": 1965357609,
+    "anchor": false,
+    "stage": "surface",
+    "progress": 0.8543333,
+    "geometry": {
+      "x": 129.54147,
+      "z": 4.5897775,
+      "width": 21.386086,
+      "depth": 9.078911,
+      "rotation": 0.038661122,
+      "parcel": {
+        "id": 1813,
+        "x": 129.54147,
+        "z": 4.5897775,
+        "width": 21.386086,
+        "depth": 9.078911,
+        "rotation": 0.038661122,
+        "access_node": 1272,
+        "suitability": 0.95,
+        "protected": false,
+        "reservation": 1814
+      }
+    }
+  },
+  "before": {
+    "tick": 9200,
+    "worldStage": "TransitCity",
+    "buildingCount": 259,
+    "project": {
+      "id": 1815,
+      "kind": "building",
+      "from": null,
+      "to": null,
+      "parcel_id": 1813,
+      "stage": "surface",
+      "progress": 0.8543333,
+      "reason": "Station Office is built to meet nearby demand",
+      "duration": 2.3410068,
+      "started_tick": 9120
+    },
+    "snapshotSha256": "22437fba1a909ec63e22feb5b4eb0e175058d784a01375cc64c6908a2d3f49cb",
+    "saveSha256": "bd7968acf3fc7a5e568e4b3a0286988601fd3d9b99e4dc3ce740f745c383b161"
+  },
+  "after": {
+    "tick": 9250,
+    "worldStage": "TransitCity",
+    "buildingCount": 260,
+    "targetStage": "open",
+    "targetProgress": 1,
+    "stepsToOpen": 50,
+    "snapshotSha256": "db805182948796fc348e28cdec3339008599c3bd590b01c720e0c8d4c483ceb4",
+    "saveSha256": "e16f9d05f1b54e70fe5296986e616ad3c7672c74ba0b475c957cec7ea9535f85"
+  },
+  "continuation": {
+    "originalLiveSavedBeforeRestore": true,
+    "canonicalPreOpeningRestore": true,
+    "originalVsRestoredEqualAtEveryStep": true,
+    "comparedTicks": 50,
+    "equalAtOpening": true
+  },
+  "scope": "Compact developing-city browser-review fixture. The snapshots show the same naturally admitted non-anchor office immediately before opening and at its first observed open state."
+}

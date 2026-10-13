@@ -14,8 +14,9 @@ import type { LensPresetId } from './camera/lens';
 import type { World, Style, Metrics } from './types';
 
 type Subject={id:number;name:string;kind:string;activity:string;destination?:string;history?:string[];passengers?:number;capacity?:number;station_waiting?:number;gateway_waiting?:number;line?:string;nextStop?:string;dwelling?:boolean;waiting?:number};
-function inspectedSubject(id:number,data:unknown,world:World|null):Subject{
+function inspectedSubject(id:number,data:unknown,world:World|null):Subject|null{
   const info=data as {entityType?:string;name?:string;activity?:string;kind?:string;destination?:number;history?:string[];passengers?:number;capacity?:number;station_waiting?:number;gateway_waiting?:number;line?:string|number;line_id?:number;next_stop?:number|null;dwelling?:boolean;waiting?:number};
+  if(info.entityType==='unknown')return null;
   const bus=info.entityType==='bus'||info.kind==='bus';
   const snapshotBus=bus?world?.buses?.find(entity=>entity.id===id):undefined;
   const lineId=info.line_id??snapshotBus?.line_id??(typeof info.line==='number'?info.line:undefined);
@@ -143,7 +144,7 @@ function CityExperience(){
     renderer.onError=error=>{if(disposed)return;graphicsStartup.complete();graphicsReady=false;setReady(false);styleSwitch.current++;setPreparingStyle(null);setError(`Graphics stopped: ${error.message}. Try Retry or the WebGL fallback.`);};
     client.onError(e=>{if(!disposed)setError(e.message);});
     client.subscribeWorld(w=>{if(disposed)return;const replaced=audioEpoch!==client.worldEpoch;if(replaced){audioEpoch=client.worldEpoch;setDevelopment(w.development_rate);}currentWorld.current=w;renderer.setWorld(w,replaced);setWorld(w);simReady=true;if(recoveryInitPending){const url=new URL(window.location.href);url.searchParams.delete('recover');window.history.replaceState(null,'',`${url.pathname}${url.search}${url.hash}`);recoveryInitPending=false;}isReady();});
-    client.subscribeMovement((data,tick,minute,day)=>{renderer.setMovement(data,tick,minute);if(currentWorld.current){currentWorld.current.tick=tick;currentWorld.current.minute_of_day=minute;currentWorld.current.day=day;}});
+    client.subscribeMovement((data,tick,minute,day,trainDoors,support)=>{renderer.setMovement(data,tick,minute,trainDoors,support);if(currentWorld.current){currentWorld.current.tick=tick;currentWorld.current.minute_of_day=minute;currentWorld.current.day=day;}});
     client.subscribeMetrics(m=>{latestMetrics=m;if(!disposed)setSimulationMetrics(m);});
     renderer.start(style).then(()=>{if(disposed)return;graphicsStartup.complete();graphicsReady=true;isReady();}).catch(e=>{graphicsStartup.complete();if(!disposed){styleSwitch.current++;setPreparingStyle(null);setError(`Graphics could not start: ${e instanceof Error?e.message:String(e)}. Try the WebGL fallback.`);}});
     void resolveStartupWorld(location.search,87231,loadWorld).then(startup=>{
@@ -212,7 +213,11 @@ function CityExperience(){
       onGraphicsRetry={()=>void recoverGraphics(new URLSearchParams(window.location.search).has('webgl'))} onGraphicsFallback={()=>void recoverGraphics(!new URLSearchParams(window.location.search).has('webgl'))}
       onReviewMature={import.meta.env.DEV?()=>void reviewMature():undefined} onSave={()=>void save()} onExport={()=>void exportCity()} onImport={file=>void importCity(file)} onResume={()=>void resume()} onNewWorld={seed=>void newWorld(seed)}
       onReviewSkyline={import.meta.env.DEV?()=>{if(!runtime.current?.renderer.director.reviewSkyline())notice('This city has no completed tall-building scene yet.');}:undefined}
+      onReviewBuilding={import.meta.env.DEV?id=>{if(!runtime.current?.renderer.director.reviewBuilding(id))notice('This building is not available to frame.');}:undefined}
       onReviewStation={import.meta.env.DEV?()=>{const station=currentWorld.current?.nodes.find(n=>n.kind==='station');if(station)runtime.current?.renderer.director.follow(station.id);}:undefined}
+      onReviewWaterReflection={import.meta.env.DEV?()=>runtime.current?.renderer.toggleWaterReflectionForReview()??false:undefined}
+      onReviewStreetLights={import.meta.env.DEV?()=>runtime.current?.renderer.toggleStreetLightsForReview()??false:undefined}
+      onReviewWaterfront={import.meta.env.DEV?(preset='overhead')=>{if(!runtime.current?.renderer.director.reviewWaterfront(preset))notice('This city has no river view yet.');}:undefined}
       onCloseInspector={()=>{setSelectedId(null);setSubject(null);runtime.current?.renderer.setSelected(null);runtime.current?.renderer.director.follow(null);}}
       onFollow={id=>{const r=runtime.current;if(!r)return;r.renderer.director.follow(id);if(!currentWorld.current?.buildings.some(b=>b.id===id)){void r.client.inspect(id).then(data=>{setSubject(inspectedSubject(id,data,currentWorld.current));setSelectedId(null);}).catch(()=>{});}}} />
   </main>;

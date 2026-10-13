@@ -4,7 +4,11 @@ import { ArtMaterials } from './materials';
 import { compactMidriseEnvelope, midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing, type LowriseMass, type LowriseMassing } from './lowrise-massing';
 import { buildingPalette } from './building-palette';
-import { renderTower } from './tower-kit';
+import { renderTower, towerMassing } from './tower-kit';
+import { renderDemolition } from './demolition-kit';
+import { addCeramicRoofDetail } from './ceramic-roof';
+import { renderRoofServices } from './roof-services';
+import { boxGeometry } from './box-geometry';
 import type { Building } from '../types';
 
 // Every repeatable detail is baked into one geometry per shared material.
@@ -23,10 +27,7 @@ export class Kit {
   }
 
   box(x: number, y: number, z: number, w: number, h: number, d: number, mat: THREE.Material, rotation = 0) {
-    const geo = new THREE.BoxGeometry(w, h, d);
-    geo.rotateY(rotation);
-    geo.translate(x, y, z);
-    this.add(geo, mat);
+    this.add(boxGeometry(x, y, z, w, h, d, rotation), mat);
   }
   cylinder(x: number, y: number, z: number, r: number, h: number, mat: THREE.Material, segments = 8) {
     const geo = new THREE.CylinderGeometry(r, r, h, segments);
@@ -58,6 +59,11 @@ export class Kit {
     }
     this.parts.clear();
     return group;
+  }
+  /** Cancel unfinished geometry; materials remain owned by the shared palette. */
+  dispose() {
+    for (const parts of this.parts.values()) for (const geometry of parts) geometry.dispose();
+    this.parts.clear();
   }
 }
 
@@ -159,11 +165,35 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
     kit.box(0, foundation + .08, stepZ, Math.min(w * .48, 3.7), .16, stepDepth, paleConcrete);
   }
 
+  if (b.stage === 'demolition') {
+    renderDemolition(kit, midrise?.masses ?? (floors >= 12 ? towerMassing(b, w, d) : [{ x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors, role: 'main' }]), {
+      progress: b.progress, floors, parcelW: b.width, parcelD: b.depth,
+      wall, concrete, dark, scaffold, caution,
+    });
+    return finishBuilding(kit, b, w, d, height, art, false);
+  }
+
   if (!isOpen && !renovating) {
-    if (midrise) {
+    const towerConstruction = floors >= 12 && (isApartment || b.kind === 'office');
+    const constructionLayout = midrise ?? (towerConstruction
+      ? { masses: towerMassing(b, w, d) } : null);
+    if (constructionLayout) {
       const progress = THREE.MathUtils.clamp(b.progress, 0, 1);
       const builtFloors = Math.ceil(floors * THREE.MathUtils.clamp((progress - .12) / .57, 0, 1));
-      renderMidriseConstruction(kit, midrise, { w, d, parcelW: b.width, base, floor, floors, builtFloors, progress, wall, concrete, iron, glass, dark, wood, scaffold, caution, paleConcrete });
+      const authoredMidrise = Boolean(midrise);
+      renderMassingConstruction(kit, constructionLayout, { w, d, parcelW: b.width, base, floor, floors, builtFloors, progress, authoredEnvelope: towerConstruction || authoredMidrise, wall, concrete, iron, glass, dark, wood, scaffold, caution, paleConcrete });
+      if (towerConstruction) {
+        const cladFloors = Math.min(builtFloors, Math.ceil(floors * THREE.MathUtils.clamp((progress - .69) / .23, 0, 1)));
+        if (cladFloors > 0) renderTower(kit, b, art, w, d, base, floor, cladFloors);
+      } else if (midrise) {
+        const cladFloors = Math.min(builtFloors, Math.ceil(floors * THREE.MathUtils.clamp((progress - .69) / .23, 0, 1)));
+        if (cladFloors > 0) {
+          const roofFloor = Math.max(...midrise.masses.filter((mass) => mass.role === 'main').map((mass) => mass.baseFloor + mass.floors));
+          renderMidriseOpen(kit, b, art, midrise, {
+            w, d, base, floor, wall, roof, trim, concrete, paleConcrete, iron, dark, glass, lightGlass, wood, glow: glass,
+          }, cladFloors, cladFloors >= roofFloor);
+        }
+      }
       return finishBuilding(kit, b, w, d, height, art, false);
     }
     if (lowrise) {
@@ -351,21 +381,26 @@ type MidriseOpenMaterials = {
   glass:THREE.Material; lightGlass:THREE.Material; wood:THREE.Material; glow:THREE.Material;
 };
 
-function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMassing,m:MidriseOpenMaterials){
+function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMassing,m:MidriseOpenMaterials,installedThrough=Infinity,includeRoof=true){
   const {base,floor,wall,roof,trim,concrete,paleConcrete,iron,dark,glass,lightGlass,wood,glow}=m;
   const mains=layout.masses.filter(mass=>mass.role==='main');
   const roofMass=mains.reduce((a,c)=>a.baseFloor+a.floors>c.baseFloor+c.floors?a:c);
 
-  for(const mass of layout.masses){
+  for(const source of layout.masses){
+    const admittedFloors=Math.min(source.floors,Math.max(0,installedThrough-source.baseFloor));
+    if(admittedFloors<=0)continue;
+    const mass={...source,floors:admittedFloors};
     const massBase=base+mass.baseFloor*floor;
     const massTop=base+(mass.baseFloor+mass.floors)*floor;
     kit.withOffset(mass.x,0,mass.z,()=>{
       kit.box(0,massBase+mass.floors*floor/2,0,mass.width,mass.floors*floor,mass.depth,wall);
       if(mass.role==='core'){
-        renderMidriseCoreFacade(kit,{width:mass.width,depth:mass.depth,base:massBase,floor,floors:mass.floors,wood,dark,glass,iron,concrete,trim});
+        renderMidriseCoreFacade(kit,{outerSide:mass.x<0?-1:1,width:mass.width,depth:mass.depth,base:massBase,floor,floors:mass.floors,wood,dark,glass,iron,concrete,trim});
         // A compact stair headhouse sits on the full-height circulation core.
-        kit.box(0,massTop+.16,0,mass.width*.72,.32,mass.depth*.7,trim);
-        kit.box(0,massTop+.54,0,mass.width*.42,.48,mass.depth*.42,concrete);
+        if (source.baseFloor + source.floors <= installedThrough) {
+          kit.box(0,massTop+.16,0,mass.width*.72,.32,mass.depth*.7,trim);
+          kit.box(0,massTop+.54,0,mass.width*.42,.48,mass.depth*.42,concrete);
+        }
       }else{
         const core=layout.masses.find(candidate=>candidate.role==='core');
         const omitSideWindows=core&&layout.family==='walkup'?(core.x>mass.x?1:-1):undefined;
@@ -386,7 +421,7 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
   // Exposed terrace strips appear only where a main volume steps inward.
   for(let i=0;i<mains.length-1;i++){
     const lower=mains[i],upper=mains[i+1];
-    if(lower.baseFloor+lower.floors!==upper.baseFloor)continue;
+    if(lower.baseFloor+lower.floors!==upper.baseFloor || lower.baseFloor+lower.floors>installedThrough || upper.baseFloor+upper.floors>installedThrough)continue;
     const y=base+upper.baseFloor*floor-.045;
     const plate=.12, overlap=.08;
     kit.withOffset(lower.x,0,lower.z,()=>{
@@ -406,11 +441,13 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
 
   // Roof equipment belongs to one highest main mass; the core receives only
   // its slim stair cap above. This avoids buried duplicate equipment at tiers.
-  const roofTop=base+(roofMass.baseFloor+roofMass.floors)*floor;
-  kit.withOffset(roofMass.x,0,roofMass.z,()=>renderFlatRoof(kit,{w:roofMass.width,d:roofMass.depth,top:roofTop,roof,trim,concrete,iron,paleConcrete,seed:b.appearance_seed,art}));
+  if(includeRoof){
+    const roofTop=base+(roofMass.baseFloor+roofMass.floors)*floor;
+    kit.withOffset(roofMass.x,0,roofMass.z,()=>renderFlatRoof(kit,{w:roofMass.width,d:roofMass.depth,top:roofTop,roof,trim,concrete,iron,paleConcrete,seed:b.appearance_seed,art}));
+  }
 }
 
-function renderMidriseCoreFacade(kit:Kit,m:{width:number;depth:number;base:number;floor:number;floors:number;wood:THREE.Material;dark:THREE.Material;glass:THREE.Material;iron:THREE.Material;concrete:THREE.Material;trim:THREE.Material}){
+function renderMidriseCoreFacade(kit:Kit,m:{outerSide:-1|1;width:number;depth:number;base:number;floor:number;floors:number;wood:THREE.Material;dark:THREE.Material;glass:THREE.Material;iron:THREE.Material;concrete:THREE.Material;trim:THREE.Material}){
   const {width,depth,base,floor,floors,wood,dark,glass,iron,concrete,trim}=m;
   const slotW=Math.max(.32,Math.min(.62,width*.38));
   for(let f=0;f<floors;f++){
@@ -421,6 +458,16 @@ function renderMidriseCoreFacade(kit:Kit,m:{width:number;depth:number;base:numbe
       kit.box(0,y,z+side*.08,slotW,1.82,.04,glass);
       kit.box(0,y,z+side*.13,.055,1.84,.04,iron);
       kit.box(0,base+(f+1)*floor-.13,z+side*.08,width*.86,.14,.18,trim);
+    }
+    // The circulation core spans the full depth. Give its exposed flank a
+    // restrained service-window rhythm; the attached apartment side stays solid.
+    const outer=m.outerSide,x=outer*width/2;
+    const bays=Math.max(1,Math.floor((depth-1.6)/5));
+    for(let bay=0;bay<bays;bay++){
+      const z=(bay+.5)*depth/bays-depth/2,landingY=base+f*floor+2.15;
+      kit.box(x+outer*.045,landingY,z,.12,1.31,.84,dark);
+      kit.box(x+outer*.12,landingY,z,.035,1.15,.68,glass);
+      kit.box(x+outer*.15,landingY,z,.035,1.15,.045,trim);
     }
     if(f===0){
       for(const side of [-1,1]){
@@ -440,7 +487,7 @@ function renderMidriseEntry(kit:Kit,doorX:number,depth:number,base:number,dark:T
   kit.box(doorX,base+2.31,depth/2+.22,1.24,.13,.46,concrete);
 }
 
-function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:number;parcelW:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
+function renderMassingConstruction(kit:Kit,layout:Pick<MidriseMassing,'masses'>,m:{w:number;d:number;parcelW:number;base:number;floor:number;floors:number;builtFloors:number;progress:number;authoredEnvelope?:boolean;wall:THREE.Material;concrete:THREE.Material;iron:THREE.Material;glass:THREE.Material;dark:THREE.Material;wood:THREE.Material;scaffold:THREE.Material;caution:THREE.Material;paleConcrete:THREE.Material}){
   const {base,floor,builtFloors,progress,wall,concrete,iron,glass,dark,wood,scaffold,caution,paleConcrete}=m;
   const installBudget=Math.ceil(THREE.MathUtils.clamp((progress-.69)/.23,0,1)*m.floors);
   for(const mass of layout.masses){
@@ -451,7 +498,8 @@ function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:n
     const frameTop=massBase+erected*floor;
     const scaffoldTop=Math.min(massBase+mass.floors*floor+.45,Math.max(massBase+2.1,frameTop+1.05));
     kit.withOffset(mass.x,0,mass.z,()=>{
-      for(let f=0;f<erected;f++){
+      const installed = m.authoredEnvelope ? Math.min(erected, Math.max(0, installBudget - mass.baseFloor)) : 0;
+      for(let f=installed;f<erected;f++){
         const y0=massBase+f*floor;
         for(const x of [-mass.width/2+.18,mass.width/2-.18])for(const z of [-mass.depth/2+.18,mass.depth/2-.18]){
           kit.box(x,y0+floor/2,z,.18,floor,.18,iron);
@@ -459,7 +507,7 @@ function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:n
         kit.box(0,y0+floor-.08,0,mass.width,.16,mass.depth,concrete);
       }
       const cladFloors=Math.min(erected,Math.max(0,Math.min(mass.floors,installBudget-mass.baseFloor)));
-      for(let f=0;f<cladFloors;f++){
+      for(let f=0;f<(m.authoredEnvelope ? 0 : cladFloors);f++){
         const y=massBase+f*floor+1.62;
         const panelH=2.42;
         for(const side of [-1,1]){
@@ -505,7 +553,7 @@ function renderMidriseConstruction(kit:Kit,layout:MidriseMassing,m:{w:number;d:n
   kit.box(craneX-jibW*.24,craneHeight-.65,craneZ,.1,1,.1,iron);
 }
 
-function erectedMax(layout:MidriseMassing,builtFloors:number){
+function erectedMax(layout:Pick<MidriseMassing,'masses'>,builtFloors:number){
   return layout.masses.reduce((max,mass)=>{
     const reached=Math.max(0,Math.min(mass.floors,builtFloors-mass.baseFloor));
     return Math.max(max,reached>0?mass.baseFloor+reached:0);
@@ -647,20 +695,10 @@ function renderLowriseGable(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Mater
   for(const side of [-1,1]){
     const panel=new THREE.BoxGeometry(roofW,.18,slopeLength);
     panel.rotateX(side*angle);panel.translate(0,top+rise/2,side*half/2);kit.add(panel,roof);
-    for(let row=0;row<5;row++){
-      const distance=(row+.5)*half/5;
-      const course=new THREE.BoxGeometry(roofW,.055,.09);
-      course.rotateX(side*angle);course.translate(0,top+rise*(1-distance/half)+.1,side*distance);kit.add(course,row%2?roof:tiles);
-    }
     kit.box(0,top-.015,side*half,roofW,.13,.1,trim);
-    const ribs=Math.max(3,Math.floor(roofW/2));
-    for(let i=0;i<=ribs;i++){
-      const x=-roofW/2+roofW*i/ribs;
-      const rib=new THREE.BoxGeometry(.04,.04,slopeLength*.94);
-      rib.rotateX(side*angle);rib.translate(x,top+rise/2+.11,side*half/2);kit.add(rib,iron);
-    }
   }
-  kit.box(0,top+rise+.08,0,roofW,.16,.22,roof);
+  addCeramicRoofDetail(kit,{width:roofW,halfDepth:half,rise,top,roof,tile:roof});
+  kit.box(0,top+rise+.12,0,roofW,.22,.22,roof);
   if(pick(seed,4)===0)kit.box(0,top+rise+.2,0,Math.min(.6,roofW*.2),.08,.28,tiles);
 }
 
@@ -794,6 +832,17 @@ function renderShopFront(
   // keeping the founding shop's established single-sided composition intact.
   for (const zone of displayZones) {
     renderShopDisplay(kit, zone, { base, shopTop, frontZ, dark, glass, wood, trim, ivory, latticeCount:m.centerDoor?undefined:Math.max(3,Math.floor(w/1.2)) });
+    // One paper notice sits within an outer glazing bay, clear of entry and mullions.
+    const displayWidth=zone.right-zone.left-.18;
+    if(displayWidth>1.1){
+      const bays=Math.max(3,Math.ceil(displayWidth/1.6)),bayWidth=displayWidth/bays;
+      const width=Math.min(.55,bayWidth*.68),height=width*1.35;
+      const face=new THREE.PlaneGeometry(width,height);
+      const slot=(isCafe?0:2)+pick(b.appearance_seed>>>4,2),uv=face.getAttribute('uv');
+      for(let i=0;i<uv.count;i++){uv.setX(i,((slot%2)+.03+uv.getX(i)*.94)/2);uv.setY(i,(1-Math.floor(slot/2)+.03+uv.getY(i)*.94)/2);}
+      face.translate(zone.right-.09-bayWidth/2,base+1.2,frontZ(.08,.035)+.021);
+      kit.add(face,art.storefrontPoster());
+    }
   }
   const jambs = m.centerDoor
     ? [-w * .42, doorX - doorW / 2 - doorGap, doorX + doorW / 2 + doorGap, w * .42]
@@ -1157,30 +1206,13 @@ function renderGabledRoof(
     panel.rotateX(side * angle);
     panel.translate(0, top + rise / 2, side * half / 2);
     kit.add(panel, roof);
-    for (let row = 0; row < 7; row++) {
-      const dist = (row + .5) * half / 7;
-      const z = side * dist;
-      const y = top + rise * (1 - dist / half) + .15;
-      const course = new THREE.BoxGeometry(roofW, .075, .11);
-      course.rotateX(side * angle);
-      course.translate(0, y, z);
-      kit.add(course, row % 2 === 0 ? tiles : roof);
-    }
-    // Raised seams read as small ceramic tile courses from the diorama camera.
-    const ribCount = Math.max(4, Math.floor(roofW / 2.3));
-    for (let i = 0; i <= ribCount; i++) {
-      const x = -roofW / 2 + roofW * i / ribCount;
-      const geo = new THREE.BoxGeometry(.055, .045, slopeLength * .93);
-      geo.rotateX(side * angle);
-      geo.translate(x, top + rise / 2 + .16, side * half / 2);
-      kit.add(geo, i % 2 ? tiles : trim);
-    }
     // Eaves and their short exposed rafter tails.
     kit.box(0, top - .02, side * half, Math.min(roofW + .22, parcelWidth), .18, .2, trim);
     for (let x = -w / 2; x <= w / 2; x += 1.65) {
       kit.box(x, top - .1, side * (d / 2 + .32), .1, .24, .46, iron);
     }
   }
+  addCeramicRoofDetail(kit,{width:roofW,halfDepth:half,rise,top,roof,tile:roof,surfaceOffset:.15});
   kit.box(0, top + rise + .12, 0, Math.min(roofW + .12, parcelWidth), .26, .3, roof);
   // Gable-end fascia frames a small attic vent and painted end boards.
   for (const side of [-1, 1]) {
@@ -1197,28 +1229,14 @@ function renderFlatRoof(
 ) {
   const { w, d, top, roof, trim, concrete, iron, paleConcrete, seed, art } = m;
   kit.box(0, top + .22, 0, w + .45, .42, d + .45, roof);
-  kit.box(0, top + .48, 0, w + .15, .1, d + .15, trim);
+  // Keep the waterproof roof field visible. A full-width pale trim slab here
+  // used to cover it, making every roof read as the same concrete platform.
+  kit.box(0, top + .48, 0, w + .15, .1, d + .15, roof);
   for (const z of [-d / 2, d / 2]) kit.box(0, top + .82, z, w + .45, .7, .16, concrete);
   for (const x of [-w / 2, w / 2]) kit.box(x, top + .82, 0, .16, .7, d + .35, concrete);
-  // Rooftop water tanks, lift overruns, and pipework are selected from a small kit of parts.
-  const tankRadius=Math.max(.24,Math.min(.73,w*.18,d*.18));
-  const tankXSide=pick(seed >>> 2, 2) === 0 ? -1 : 1;
-  const tankX=tankXSide*Math.min(w*.24,w/2-tankRadius-.12);
-  const tankZ=Math.min(d*.18,d/2-tankRadius-.12);
-  const tankHeight=Math.min(1.16,Math.max(.52,d*.24));
-  const tankBase=top+.9;
-  kit.cylinder(tankX, tankBase+tankHeight/2, tankZ, tankRadius, tankHeight, paleConcrete, 10);
-  kit.cylinder(tankX, tankBase+tankHeight+.04, tankZ, tankRadius, .08, iron, 10);
-  const serviceW=Math.max(.55,Math.min(3.8,w-.42)),serviceD=Math.max(.55,Math.min(2.35,d-.42));
-  const serviceX=-w/2+.21+serviceW/2,serviceZ=-d/2+.21+serviceD/2;
-  kit.box(serviceX, top + .95, serviceZ, serviceW, 1.1, serviceD, concrete);
-  const unitW=Math.max(.5,Math.min(1.8,w*.4)),unitD=Math.max(.5,Math.min(2.2,d*.48));
-  kit.box(w/2-.2-unitW/2, top + .7, d/2-.2-unitD/2, unitW, .22, unitD, iron);
-  const pipeZ=d/2-.16;
-  for (let index=0;index<3;index++) {
-    const x=-w/2+.24+(index+1)*(w-.48)/4;
-    kit.box(x, top + .68, pipeZ, .1, .22, .1, iron);
-  }
+  for (const z of [-d / 2, d / 2]) kit.box(0, top + 1.2, z, w + .45, .06, .23, trim);
+  for (const x of [-w / 2, w / 2]) kit.box(x, top + 1.2, 0, .23, .06, Math.max(.1,d-.23), trim);
+  renderRoofServices(kit,{w,d,top,seed,concrete,iron,paleConcrete,dark:art.get('#344346')});
   // Aerial and rooftop laundry vary by use and seed.
   if (pick(seed >>> 8, 3) === 0) {
     const aerialX=-w/2+.2;

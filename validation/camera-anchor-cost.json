@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "scope": "Bounded Node CPU comparison of production CameraDirector snapshot methods on restored WASM growth worlds; no browser, renderer, GPU, frame-time, or camera-movement claim.",
+  "host": {
+    "cpu": "Apple M2 Max",
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v26.7.0"
+  },
+  "inputs": {
+    "savePath": ".tools/movement-support/browser/growth-575.json",
+    "saveSha256": "4db6a36fe85f53305da9964e228df9d1406fa7ed7acc9407e210b000963d7b93",
+    "wasmSha256": "5a58ba40f206ece3002268b293dccee2dd85b63663908dd75ac43646dca0b1e0",
+    "baselineBundle": ".tools/camera-cost/before.mjs",
+    "baselineBundleSha256": "89c0eb10f9ebd8e8529cb7762011ba2e962dc00a8f01c0072333a5973216f0f1",
+    "candidateBundle": ".tools/camera-cost/after.mjs",
+    "advancement": "Restore seed-87231 tick-22026 snapshot, set development rate 16, take four more snapshots at 2,000-tick intervals."
+  },
+  "measurements": {
+    "roundsPerWorldPerVersion": 3,
+    "methods": {
+      "obstacleEnvelopes": {
+        "before": {
+          "n": 15,
+          "p50Ms": 0.0354579999999487,
+          "p95Ms": 0.09320900000000165,
+          "maxMs": 0.09320900000000165
+        },
+        "after": {
+          "n": 15,
+          "p50Ms": 0.06662500000004457,
+          "p95Ms": 0.07891600000004928,
+          "maxMs": 0.07891600000004928
+        }
+      },
+      "buildAnchors": {
+        "before": {
+          "n": 15,
+          "p50Ms": 11.151457999999934,
+          "p95Ms": 14.53937499999995,
+          "maxMs": 14.53937499999995
+        },
+        "after": {
+          "n": 15,
+          "p50Ms": 5.840083999999933,
+          "p95Ms": 7.250374999999963,
+          "maxMs": 7.250374999999963
+        }
+      },
+      "developedExtent": {
+        "before": {
+          "n": 15,
+          "p50Ms": 0.1323330000000169,
+          "p95Ms": 0.22587499999997362,
+          "maxMs": 0.22587499999997362
+        },
+        "after": {
+          "n": 15,
+          "p50Ms": 0.1265410000000884,
+          "p95Ms": 0.21479099999999107,
+          "maxMs": 0.21479099999999107
+        }
+      }
+    }
+  },
+  "worlds": [
+    {
+      "tick": 22026,
+      "buildings": 575,
+      "nodes": 149,
+      "roads": 163,
+      "anchors": 30,
+      "exactAnchorParity": true
+    },
+    {
+      "tick": 24026,
+      "buildings": 625,
+      "nodes": 157,
+      "roads": 175,
+      "anchors": 32,
+      "exactAnchorParity": true
+    },
+    {
+      "tick": 26026,
+      "buildings": 675,
+      "nodes": 169,
+      "roads": 189,
+      "anchors": 32,
+      "exactAnchorParity": true
+    },
+    {
+      "tick": 28026,
+      "buildings": 725,
+      "nodes": 184,
+      "roads": 210,
+      "anchors": 32,
+      "exactAnchorParity": true
+    },
+    {
+      "tick": 30026,
+      "buildings": 775,
+      "nodes": 195,
+      "roads": 223,
+      "anchors": 32,
+      "exactAnchorParity": true
+    }
+  ],
+  "parity": {
+    "exactNormalizedAnchorOutputPerWorld": true,
+    "worldCount": 5
+  },
+  "limitations": [
+    "Uses object-created CameraDirector prototypes and invokes only the three selected methods; it does not instantiate OrbitControls or call world().",
+    "Node timings are CPU-only and are not representative of browser main-thread contention, garbage collection over long sessions, or GPU work.",
+    "The baseline is the preserved .tools/camera-cost/before.mjs bundle; only current source is bundled during this run."
+  ]
+}

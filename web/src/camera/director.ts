@@ -1,18 +1,26 @@
+import { SkylineClusterCache } from './skyline-cluster';
+import { chooseStreetWatchPosition } from './watch-visibility';
 import { MOVEMENT_STRIDE } from '../movement';
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { LENS_PRESETS, verticalFovDegrees, type LensPresetId } from "./lens";
 import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from "./clearance";
+import { chooseTrainFollowPosition, chooseBuildingFollowPosition } from './follow-visibility';
+import { RAIL_HEAD_Y } from '../render/rail-profile';
 import { planAutomaticCameraPath } from "./automatic-path";
 import type { BusLineView, BusView, Point, Project, World } from "../types";
 
 export type CameraMode = "watch" | "explore" | "overview";
+type StreetSubject = {x:number;z:number;roadId:number;forward:{x:number;z:number}};
 type Anchor = {
   id: string;
   label: string;
   x: number;
   z: number;
   targetY?: number;
+  streetForward?: { x: number; z: number };
+  streetRoadId?: number;
+  streetSubjects?: StreetSubject[];
   /** World-space direction from the framed subject toward the camera. */
   cameraDirection?: THREE.Vector3;
   frameRadius?: number;
@@ -68,6 +76,7 @@ export type SkylineCluster = { x: number; z: number; floors: number; spread: num
 
 /** Smooth scene direction around one shared world camera. */
 export class CameraDirector {
+  private skylineClusterCache?: SkylineClusterCache;
   readonly controls: OrbitControls;
   onModeChange?: (mode: CameraMode) => void;
 
@@ -87,13 +96,19 @@ export class CameraDirector {
   private desiredPosition = new THREE.Vector3(240, 170, 290);
   private followId: number | null = null;
   private followPositionValid = false;
+  private withheldMovement: ReadonlySet<number> = new Set();
   private followMovementPresent = false;
   private followLostSeconds = 0;
   private readonly followPosition = new THREE.Vector3();
+  /** Last valid subject point for DOF, independent of look-ahead composition. */
+  private readonly followFocusPosition = new THREE.Vector3();
+  private followFocusValid = false;
   private readonly lastClearManualPosition = new THREE.Vector3();
   private readonly lastClearManualTarget = new THREE.Vector3();
   private readonly followForward = new THREE.Vector3();
   private readonly followViewDirection=WATCH_DIRECTION.clone();
+  private followShot: {center:THREE.Vector3;offset:THREE.Vector3;revision:number;heading:number} | null = null;
+  private buildingFollowShot: {id:number;center:THREE.Vector3;position:THREE.Vector3;revision:number;distance:number} | null = null;
   private followHeading = 0;
   private followKind = 0;
   private elapsed = 0;
@@ -105,12 +120,12 @@ export class CameraDirector {
   private baselineFootprint = 0;
   private overviewInitialized = false;
   private framingAspect = 0;
+  private streetWatchShot: { id: string; revision: number; distance: number; visible: boolean; roadId?: number; originTarget: THREE.Vector3; target: THREE.Vector3; position: THREE.Vector3; forward: {x:number;z:number} } | null = null;
   private extent: Extent = { x: 50, z: 20, span: 120 };
   private revealSeconds = 0;
   private reducedMotion = false;
   private mediaQuery: MediaQueryList | null = null;
   private disposed = false;
-  private skylineClusterCache: { key: string; best: SkylineCluster | null } | null = null;
   private currentLens: LensPresetId = "environment";
 
   private readonly onControlsStart = () => this.takeManualControl();
@@ -127,7 +142,9 @@ export class CameraDirector {
     this.controls.minDistance = 45;
     this.controls.maxDistance = 700;
     this.controls.minPolarAngle = 0.14;
-    this.controls.maxPolarAngle = 1.32;
+    // Permit a shallow skyline view with the 50/85mm lenses. Height and
+    // obstacle clearance are enforced independently by manual pose recovery.
+    this.controls.maxPolarAngle = 1.44;
     this.controls.addEventListener("start", this.onControlsStart);
     this.element.addEventListener("keydown", this.onKeyDown);
     this.element.tabIndex = this.element.tabIndex < 0 ? 0 : this.element.tabIndex;
@@ -174,6 +191,11 @@ export class CameraDirector {
   /** The current OrbitControls focus point. */
   get target(): THREE.Vector3 { return this.controls.target; }
 
+  /** Stable subject focus for DOF; Follow look-ahead remains a composition concern. */
+  get focusTarget(): THREE.Vector3 {
+    return this.followId !== null && this.followFocusValid ? this.followFocusPosition : this.controls.target;
+  }
+
   world(world: World): void {
     if (this.disposed) return;
     const firstWorld = this.currentWorld === null;
@@ -181,6 +203,8 @@ export class CameraDirector {
       && (world.seed !== this.currentWorld.seed || world.tick < this.currentWorld.tick);
     const initializeWatchPose = firstWorld || replacedWorld;
     if (initializeWatchPose) {
+      this.followFocusValid = false;
+      this.streetWatchShot = null;
       this.selectedAnchor = null;
       this.lastVisit.clear();
       this.growthAge = 0;
@@ -234,6 +258,20 @@ export class CameraDirector {
       return;
     }
 
+    // Hold an authored street point while surrounding bins grow; reselect only
+    // if that road disappears/closes. Avoid chasing each new building centroid.
+    let streetClosed = false;
+    const heldStreetId=this.streetWatchShot?.id===this.selectedAnchor?.id ? this.streetWatchShot?.roadId : this.selectedAnchor?.streetRoadId;
+    if (heldStreetId !== undefined && !world.roads.some(road =>
+      road.id === heldStreetId && road.stage === "open" && road.connected)) {
+      this.selectedAnchor = this.anchors.find(anchor => anchor.id === this.selectedAnchor!.id) ?? null;
+      this.streetWatchShot = null;
+      streetClosed = true;
+    }
+    if ((obstacleRevisionChanged || streetClosed) && this.currentMode === "watch" && this.followId === null
+      && this.revealSeconds === 0 && this.selectedAnchor && (streetClosed || this.selectedAnchor.streetForward)) {
+      this.setAnchorPose(this.selectedAnchor, this.anchorDistance(this.selectedAnchor));
+    }
     if (this.currentMode === "watch" && this.selectedAnchor && !this.anchors.some((anchor) => anchor.id === this.selectedAnchor?.id)) {
       this.selectNextAnchor();
     }
@@ -263,7 +301,7 @@ export class CameraDirector {
 
     if (this.followId !== null) {
       this.updateFollow(step);
-      this.applyPose(step, 0.38);
+      this.applyPose(step, this.followId === null ? this.blendSeconds : 0.38);
       return;
     }
 
@@ -304,6 +342,7 @@ export class CameraDirector {
     this.settledAutomaticPose = null;
     this.followId = null;
     this.followPositionValid = false;
+    this.followFocusValid = false;
     this.followMovementPresent = false;
     this.revealSeconds = 0;
     if (mode === "watch") {
@@ -325,8 +364,10 @@ export class CameraDirector {
     this.automaticRoute = null;
     this.settledAutomaticPose = null;
     this.followId = id;
+    this.followShot = null;
     this.followLostSeconds = 0;
     this.followPositionValid = false;
+    this.followFocusValid = false;
     this.followMovementPresent = false;
     if (id === null) {
       this.desiredPosition.copy(this.camera.position);
@@ -348,6 +389,7 @@ export class CameraDirector {
     this.automaticRoute = null;
     this.settledAutomaticPose = null;
     this.followPositionValid = false;
+    this.followFocusValid = false;
     this.followMovementPresent = false;
     this.selectedAnchor = anchor;
     this.lastVisit.set(anchor.id, this.elapsed);
@@ -361,8 +403,114 @@ export class CameraDirector {
     return true;
   }
 
+  /** Set a deterministic, held Explore pose over the river for visual review. */
+  reviewWaterfront(preset: 'overhead' | 'low' = 'overhead'): boolean {
+    if (this.disposed || !this.currentWorld) return false;
+    const river = this.currentWorld.terrain.river.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.z));
+    if (!river.length) return false;
+
+    let totalLength = 0;
+    for (let i = 1; i < river.length; i++) {
+      totalLength += Math.hypot(river[i].x - river[i - 1].x, river[i].z - river[i - 1].z);
+    }
+    if (!Number.isFinite(totalLength) || totalLength <= 0) return false;
+
+    let remaining = totalLength / 2;
+    let midpoint: Point | null = null;
+    for (let i = 1; i < river.length; i++) {
+      const a = river[i - 1];
+      const b = river[i];
+      const length = Math.hypot(b.x - a.x, b.z - a.z);
+      if (length <= 0) continue;
+      if (remaining <= length) {
+        const t = remaining / length;
+        midpoint = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
+        break;
+      }
+      remaining -= length;
+    }
+    if (!midpoint) return false;
+
+    this.currentMode = "explore";
+    this.skylineTransition = null;
+    this.automaticRoute = null;
+    this.settledAutomaticPose = null;
+    this.followId = null;
+    this.followPositionValid = false;
+    this.followFocusValid = false;
+    this.followMovementPresent = false;
+    this.selectedAnchor = null;
+    this.revealSeconds = 0;
+    this.holdSeconds = 0;
+
+    // Consume any OrbitControls damping from the previous pose before setting
+    // the exact review framing. Keep the user's normal damping preference.
+    const damping = this.controls.enableDamping;
+    this.controls.enableDamping = false;
+    this.controls.update();
+    this.controls.target.set(midpoint.x, 0, midpoint.z);
+    const offset = preset === 'low' ? { x: 130, y: 55, z: 215 } : { x: 110, y: 145, z: 180 };
+    this.camera.position.set(midpoint.x + offset.x, offset.y, midpoint.z + offset.z);
+    this.clampControls();
+    this.recoverAndRememberManualPose();
+    this.controls.enableDamping = damping;
+
+    this.desiredPosition.copy(this.camera.position);
+    this.desiredTarget.copy(this.controls.target);
+    this.onModeChange?.("explore");
+    return true;
+  }
+
+  /** Set a deterministic, held Explore pose that frames one existing building. */
+  reviewBuilding(id: number): boolean {
+    const building = this.currentWorld?.buildings.find(candidate => candidate.id === id);
+    if (this.disposed || !building) return false;
+    if (Math.abs(building.x) > WORLD_LIMIT || Math.abs(building.z) > WORLD_LIMIT) return false;
+
+    const height = .58 + building.floors * 3.25 + 4.05;
+    const center = new THREE.Vector3(building.x, height / 2, building.z);
+    const radius = Math.hypot(building.width / 2 + 1.2, building.depth / 2 + 2.6, height / 2);
+    const distance = Math.max(65, this.fitSphereDistance(radius, 1.2));
+    const shot = chooseBuildingFollowPosition(center, radius, distance, this.cameraObstacles);
+    const position = new THREE.Vector3(shot.position.x, shot.position.y, shot.position.z);
+    const target = center.clone();
+    if (position.distanceTo(target) < this.controls.minDistance || position.distanceTo(target) > this.controls.maxDistance
+      || position.y < target.y + MIN_HEIGHT) return false;
+    if (cameraPathClearance(this.cameraPoint(position), this.cameraPoint(position), this.cameraObstacles,
+      { terrainY: 0, safetyMarginM: 1.5 }).collides) return false;
+
+    // Validate everything before taking control so a failed request is inert.
+    const damping = this.controls.enableDamping;
+    this.controls.enableDamping = false;
+    this.controls.update();
+    this.currentMode = "explore";
+    this.skylineTransition = null;
+    this.automaticRoute = null;
+    this.settledAutomaticPose = null;
+    this.followId = null;
+    this.followPositionValid = false;
+    this.followFocusValid = false;
+    this.followMovementPresent = false;
+    this.selectedAnchor = null;
+    this.revealSeconds = 0;
+    this.holdSeconds = 0;
+    this.controls.target.copy(target);
+    this.camera.position.copy(position);
+    this.controls.update();
+    this.camera.lookAt(target);
+    this.camera.updateMatrixWorld(true);
+    this.desiredPosition.copy(position);
+    this.desiredTarget.copy(target);
+    this.lastClearManualPosition.copy(position);
+    this.lastClearManualTarget.copy(target);
+    this.controls.enableDamping = damping;
+    this.onModeChange?.("explore");
+    return true;
+  }
+
   /** Copy only the selected subject's tuple [id,x,z,heading,kind,surfaceY]. */
-  setPositions(data: Float32Array): void {
+  setPositions(data: Float32Array, withheld: ReadonlySet<number> = new Set()): void {
+    this.withheldMovement = withheld;
     if (this.followId === null || this.disposed) return;
     this.followMovementPresent = false;
     const resident = this.findResident(this.followId);
@@ -377,6 +525,9 @@ export class CameraDirector {
       this.followLostSeconds = 0;
       return;
     }
+    // A complete movement publication omits retired trips. Preserve indoor and
+    // onboard structural fallbacks, but never keep an extinct car's last tuple.
+    this.followPositionValid = this.findEntityPoint(this.followId, this.followPosition);
   }
 
   dispose(): void {
@@ -399,6 +550,7 @@ export class CameraDirector {
     this.settledAutomaticPose = null;
     this.followId = null;
     this.followPositionValid = false;
+    this.followFocusValid = false;
     this.followMovementPresent = false;
     this.revealSeconds = 0;
     this.recoverAndRememberManualPose();
@@ -790,10 +942,47 @@ export class CameraDirector {
   private setAnchorPose(anchor: Anchor, distance: number): void {
     this.desiredTarget.set(anchor.x, anchor.targetY ?? 0, anchor.z);
     this.desiredPosition.copy(this.desiredTarget).addScaledVector(anchor.cameraDirection ?? WATCH_DIRECTION, distance);
+    if (!anchor.streetForward) return;
+    const previous = this.streetWatchShot;
+    if (!previous || previous.id !== anchor.id || previous.revision !== this.obstacleRevision
+      || Math.abs(previous.distance - distance) > .01 || previous.originTarget.distanceTo(this.desiredTarget) > .01
+      || previous.forward.x !== anchor.streetForward.x || previous.forward.z !== anchor.streetForward.z) {
+      const originTarget=this.desiredTarget.clone();
+      let position=this.desiredPosition.clone(), target=originTarget.clone(), roadId=anchor.streetRoadId, visible=false;
+      const subjects=anchor.streetSubjects ?? [{x:anchor.x,z:anchor.z,roadId:anchor.streetRoadId!,forward:anchor.streetForward}];
+      for(const subject of subjects){
+        const candidate=new THREE.Vector3(subject.x,1,subject.z);
+        const preferred=previous?.id===anchor.id ? previous.position.clone().sub(candidate).normalize() : WATCH_DIRECTION;
+        const shot=chooseStreetWatchPosition(candidate,subject.forward,preferred,distance,this.cameraObstacles);
+        if(!shot.visible) continue;
+        visible=true;target=candidate;roadId=subject.roadId;position.set(shot.position.x,shot.position.y,shot.position.z);break;
+      }
+      this.streetWatchShot = {id:anchor.id, revision:this.obstacleRevision, distance,
+        visible,roadId,originTarget,target,position,forward:{...anchor.streetForward}};
+    }
+    this.desiredTarget.copy(this.streetWatchShot!.target);
+    this.desiredPosition.copy(this.streetWatchShot!.position);
   }
 
   private updateFollow(dt: number): void {
     if (this.followId === null) return;
+    const building = this.currentWorld?.buildings.find(candidate => candidate.id === this.followId);
+    if (building) {
+      const height = .58 + building.floors * 3.25 + 4.05;
+      const center = new THREE.Vector3(building.x, height / 2, building.z);
+      const radius = Math.hypot(building.width / 2 + 1.2, building.depth / 2 + 2.6, height / 2);
+      const distance = Math.max(65, this.fitSphereDistance(radius, 1.2));
+      if (!this.buildingFollowShot || this.buildingFollowShot.id !== building.id || this.buildingFollowShot.revision !== this.obstacleRevision
+        || this.buildingFollowShot.center.distanceTo(center) > .01 || Math.abs(this.buildingFollowShot.distance-distance) > .01) {
+        const shot = chooseBuildingFollowPosition(center, radius, distance, this.cameraObstacles);
+        this.buildingFollowShot = {id:building.id,center: center.clone(), position: new THREE.Vector3(shot.position.x,shot.position.y,shot.position.z), revision:this.obstacleRevision, distance};
+      }
+      this.desiredTarget.copy(center);
+      this.desiredPosition.copy(this.buildingFollowShot.position);
+      this.followFocusPosition.copy(center);
+      this.followFocusValid = true;
+      return;
+    }
     if (!this.followPositionValid && this.findEntityPoint(this.followId, this.followPosition)) {
       this.followPositionValid = true;
       this.followLostSeconds = 0;
@@ -801,18 +990,23 @@ export class CameraDirector {
     if (!this.followPositionValid) {
       this.followLostSeconds += dt;
       if (this.followLostSeconds >= 4) {
-        this.followId = null;
-        this.desiredPosition.copy(this.camera.position);
-        this.desiredTarget.copy(this.controls.target);
-        return;
+        this.setMode("watch");
       }
+      // Hold the last pose during the grace period. Adding look-ahead to the
+      // current target every frame would make an absent subject drift away.
+      return;
     }
     const point = this.followPositionValid ? this.followPosition : this.controls.target;
+    if (this.followPositionValid) {
+      this.followFocusPosition.copy(point);
+      if (this.followKind === 2) this.followFocusPosition.y = RAIL_HEAD_Y + 1.8;
+      this.followFocusValid = true;
+    }
     const lookAhead = this.followKind === 2 ? 10 : this.followKind === 3 ? 8 : 6;
     const forward = this.headingForward(this.followHeading, this.followForward);
     this.desiredTarget.set(
       point.x + forward.x * lookAhead,
-      point.y,
+      this.followKind === 2 ? RAIL_HEAD_Y + 1.8 : point.y,
       point.z + forward.z * lookAhead,
     );
     if(this.followKind===2){
@@ -823,6 +1017,18 @@ export class CameraDirector {
     const minimum=this.followKind===2?145:95;
     const distance=THREE.MathUtils.clamp(Math.max(minimum,this.fitDistance(this.followKind===2?26:18,1.17,this.followViewDirection)),minimum,320);
     this.desiredPosition.copy(this.desiredTarget).addScaledVector(this.followViewDirection, distance);
+    if (this.followKind === 2) {
+      const center = new THREE.Vector3(point.x, RAIL_HEAD_Y + 1.8, point.z);
+      // Keep a shot stable between bounded spatial/revision checks, including reversal.
+      if (!this.followShot || this.followShot.revision !== this.obstacleRevision
+        || this.followShot.center.distanceTo(center) >= 12 || Math.abs(this.followShot.heading-this.followHeading) > .1) {
+        const preferredOffset = this.followShot && Math.abs(this.followShot.heading-this.followHeading) <= .1
+          ? this.followShot.offset.clone() : this.desiredPosition.clone().sub(center);
+        const selected = chooseTrainFollowPosition(center, forward, preferredOffset.clone().normalize(), preferredOffset.length(), this.cameraObstacles);
+        this.followShot = {center:center.clone(),offset:new THREE.Vector3(selected.position.x,selected.position.y,selected.position.z).sub(center),revision:this.obstacleRevision,heading:this.followHeading};
+      }
+      this.desiredPosition.copy(center).add(this.followShot.offset);
+    }
   }
 
   private updateFootprintReveal(dt: number): void {
@@ -1023,13 +1229,34 @@ export class CameraDirector {
       bin.minZ = Math.min(bin.minZ, building.z); bin.maxZ = Math.max(bin.maxZ, building.z);
       neighborhoodBins.set(id, bin);
     }
+    // A street shot needs an actual open street, not the centroid of building roofs.
+    const streetSegments = world.roads.flatMap(road => {
+      if (road.stage !== "open" || !road.connected || !["local", "arterial"].includes(road.kind)) return [];
+      const a = nodes.get(road.from), b = nodes.get(road.to);
+      if (!a || !b || Math.hypot(b.x-a.x, b.z-a.z) < 24) return [];
+      return [{a,b,roadId:road.id}];
+    });
     for (const [id, bin] of neighborhoodBins) {
       if (!anchors.some((anchor) => anchor.id.startsWith("founder:") && Math.hypot(anchor.x - bin.x / bin.count, anchor.z - bin.z / bin.count) < 45)) {
+        const cx=bin.x/bin.count, cz=bin.z/bin.count;
+        const candidates:Array<StreetSubject & {distance:number}>=[];
+        for (const {a,b,roadId} of streetSegments) {
+          const dx=b.x-a.x, dz=b.z-a.z, length=Math.hypot(dx,dz);
+          const t=THREE.MathUtils.clamp(((cx-a.x)*dx+(cz-a.z)*dz)/(length*length),12/length,1-12/length);
+          const x=a.x+dx*t,z=a.z+dz*t,distance=Math.hypot(x-cx,z-cz);
+          if(distance<=70) candidates.push({x,z,roadId,distance,forward:{x:dx/length,z:dz/length}});
+        }
+        candidates.sort((a,b)=>a.distance-b.distance || a.roadId-b.roadId);
+        const streetSubjects=candidates.slice(0,4), street=streetSubjects[0];
         add({
           id: `district:${id}`,
           label: "Neighborhood street",
-          x: bin.x / bin.count,
-          z: bin.z / bin.count,
+          x: street?.x ?? cx,
+          z: street?.z ?? cz,
+          targetY: street ? 1 : 0,
+          streetForward: street?.forward,
+          streetRoadId: street?.roadId,
+          streetSubjects,
           frameRadius: Math.max(bin.maxX - bin.minX, bin.maxZ - bin.minZ) / 2 + 12,
           importance: 5.5,
           activity: bin.activity,
@@ -1062,7 +1289,7 @@ export class CameraDirector {
     });
     if (buildings.length === 0) return null;
 
-    const best = this.skylineCluster(buildings);
+    const best = (this.skylineClusterCache ??= new SkylineClusterCache()).get(buildings);
     if (!best) return null;
 
     // Only the selected local tall-building cluster is framed; distant
@@ -1131,19 +1358,6 @@ export class CameraDirector {
       activity: Math.min(10, world.stats.active_travelers * 0.02),
       suitability: "night",
     };
-  }
-
-  /**
-   * Snapshots arrive every couple of seconds while open buildings change far
-   * less often, so the cluster search is memoized on every building field it
-   * and skylineBounds read.
-   */
-  private skylineCluster(buildings: World["buildings"]): SkylineCluster | null {
-    const key = skylineClusterKey(buildings);
-    if (this.skylineClusterCache?.key === key) return this.skylineClusterCache.best;
-    const best = findSkylineCluster(buildings);
-    this.skylineClusterCache = { key, best };
-    return best;
   }
 
   /** Match the visible footprint and rooftop equipment produced by buildingKit. */
@@ -1272,6 +1486,9 @@ export class CameraDirector {
     const world = this.currentWorld;
     if (!world) return false;
     const resident = this.findResident(id);
+    if (this.withheldMovement.has(id)
+      || (resident?.bus_id != null && this.withheldMovement.has(resident.bus_id))
+      || (resident?.train_id != null && this.withheldMovement.has(resident.train_id))) return false;
     if (resident) {
       if (resident.bus_id !== null && resident.bus_id !== undefined) {
         const bus = (world as FollowWorld).buses?.find((entity) => entity.id === resident.bus_id);

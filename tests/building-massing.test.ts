@@ -124,6 +124,45 @@ describe('footprint-bounded midrise massing', () => {
     }
   });
 
+  it('gives a deterministic seeded subset of offices a straight slab and one modest top setback', () => {
+    let slabCount = 0;
+    const seedCount = 96;
+    for (let seed = 0; seed < seedCount; seed++) {
+      for (let floors = 4; floors <= 11; floors++) {
+        const input = building({ kind: 'office', floors, appearance_seed: seed });
+        const result = midriseMassing(input, 24, 18)!;
+        expect(midriseMassing(input, 24, 18)).toEqual(result);
+        if (seed % 3 !== 0) {
+          expect(result.masses).toHaveLength(floors === 4 ? 2 : 3);
+          continue;
+        }
+
+        slabCount++;
+        expect(result.family).toBe('setback-office');
+        expect(result.masses).toHaveLength(2);
+        const [lower, top] = result.masses;
+        expect(lower).toMatchObject({ x: 0, z: 0, width: 24, depth: 18, baseFloor: 0, floors: floors - 1, role: 'main' });
+        expect(top.baseFloor).toBe(floors - 1);
+        expect(top.floors).toBe(1);
+        expect(top.width / lower.width).toBeGreaterThanOrEqual(.85);
+        expect(top.width / lower.width).toBeLessThanOrEqual(.90);
+        expect(top.depth / lower.depth).toBeGreaterThanOrEqual(.86);
+        expect(top.depth / lower.depth).toBeLessThanOrEqual(.92);
+        expectInsideEnvelope(result.masses, 24, 18);
+        expectSupported(result.masses);
+
+        // Each occupied floor has exactly one complete main footprint. This
+        // proves the vertical tiers meet without gaps or same-floor overlap.
+        for (let floor = 0; floor < floors; floor++) {
+          const active = result.masses.filter(mass => floor >= mass.baseFloor && floor < mass.baseFloor + mass.floors);
+          expect(active).toHaveLength(1);
+          expect(active[0].width * active[0].depth).toBeCloseTo(floor < floors - 1 ? 24 * 18 : top.width * top.depth, 8);
+        }
+      }
+    }
+    expect(slabCount).toBe(seedCount / 3 * 8);
+  });
+
   it('uses bounded seed-stable variation for core side and setbacks', () => {
     const first = midriseMassing(building({ appearance_seed: 2468 }), 18, 14)!;
     const repeat = midriseMassing(building({ appearance_seed: 2468 }), 18, 14)!;

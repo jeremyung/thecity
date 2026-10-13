@@ -191,6 +191,32 @@ describe('midrise family geometry integration',()=>{
     art.dispose();
   });
 
+  it('erects the slab office at full width until its single inset top floor in both styles',()=>{
+    const art=new ArtMaterials(),base=.58,floor=3.25;
+    for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      for(const floors of [4,8,11]){
+        // All structural floors exist before authored cladding replaces plates.
+        const b=midrise('office','construction',.69,floors,24,19,27);
+        const group=buildingKit(b,art);
+        const concrete=positions(group,mesh=>mesh.material===art.get('#aaa99e'));
+        const atFloor=(n:number)=>boundsAt(concrete,base+n*floor-.17,base+n*floor+.01);
+        const first=atFloor(1),lastFull=atFloor(floors-1),top=atFloor(floors);
+        expect(lastFull.min.x).toBeCloseTo(first.min.x,5);
+        expect(lastFull.max.x).toBeCloseTo(first.max.x,5);
+        expect(lastFull.min.z).toBeCloseTo(first.min.z,5);
+        expect(lastFull.max.z).toBeCloseTo(first.max.z,5);
+        expect(top.min.x).toBeGreaterThan(lastFull.min.x);
+        expect(top.max.x).toBeLessThan(lastFull.max.x);
+        expect(top.min.z).toBeGreaterThan(lastFull.min.z);
+        expect(top.max.z).toBeLessThan(lastFull.max.z);
+        expectParcelContained(group,b);
+        disposeGroup(group);
+      }
+    }
+    art.dispose();
+  });
+
   it('does not duplicate ground-level renovation scaffold on recessed tiers',()=>{
     const art=new ArtMaterials();
     const group=buildingKit(midrise('office','renovation',.5),art);

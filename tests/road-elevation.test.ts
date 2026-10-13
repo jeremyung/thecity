@@ -37,3 +37,14 @@ describe('expressway crossing supports',()=>{
     expect(expresswayPierClear({x:0,z:0},a,b,20,[{a,b,width:16,height:0}])).toBe(true);
   });
 });
+
+it('places elevated cars on the authoritative deck even above a lower bridge',async()=>{
+  const {vehicleSurfacePose}=await import('../web/src/render/road-elevation');
+  const spans=[{a:{x:0,z:-40},b:{x:0,z:40}}];
+  for(const surface of [11.15,20.15]){
+    const pose=vehicleSurfacePose({x:0,z:0},0,2.7,spans,surface);
+    expect(pose.lift+.3).toBeCloseTo(surface);
+    expect(pose.pitch).toBe(0);
+  }
+  expect(vehicleSurfacePose({x:0,z:0},0,2.7,spans,-1).lift).toBeGreaterThan(0);
+});

@@ -1,0 +1,5 @@
+<!doctype html><meta charset="utf-8"><title>Roof orbit review</title>
+<style>body{margin:0;background:#111820;color:#eee;font:16px sans-serif}video{display:block;width:100%;max-height:85vh}label,button{margin:8px}</style>
+<label>Seconds <input id="seek" type="number" min="0" max="20" step=".5" value="0"></label><button id="jump">Seek</button><output id="info"></output>
+<video id="clip" controls src="miniature-orbit.webm"></video>
+<script>const v=document.querySelector('video');document.querySelector('#jump').onclick=()=>{v.pause();v.currentTime=Number(document.querySelector('input').value)};v.onloadedmetadata=()=>document.querySelector('output').textContent=`${v.videoWidth}×${v.videoHeight}; duration ${v.duration}s`;</script>

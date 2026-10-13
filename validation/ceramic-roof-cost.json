@@ -1,0 +1,44 @@
+{
+  "baseline": {
+    "revision": "8e9f5e196659c29c9c6a5b9dcd6bed43fd1de2f7",
+    "kitSha256": "5a807603b6153e4f11179c0b3fe53d966ce5599f1ffbddc802b647bee90704c3"
+  },
+  "input": {
+    "path": "/tmp/city-ceramic-mature.json",
+    "sha256": "ab6293b2013546fe36f9f46c2108050edcd87c5b3dc7feefad2e376e936cdddb",
+    "seed": 87231,
+    "tick": 160000,
+    "buildingCount": 1854
+  },
+  "method": "For each snapshot building, generate production buildingKit geometry in Node for pinned baseline kit.ts (before) and the working kit.ts (after), count Mesh objects, triangles and typed-array bytes, then dispose the geometry before continuing. No renderer or browser is used.",
+  "units": {
+    "triangles": "Index count/3 or non-indexed position count/3.",
+    "geometryTypedArrayBytes": "Sum of resident BufferGeometry attribute and index typed-array byteLength values.",
+    "meshes": "THREE.Mesh objects in generated building groups."
+  },
+  "before": {
+    "buildings": 1854,
+    "meshes": 29670,
+    "triangles": 4513402,
+    "geometryTypedArrayBytes": 314999772
+  },
+  "after": {
+    "buildings": 1854,
+    "meshes": 29051,
+    "triangles": 4692330,
+    "geometryTypedArrayBytes": 322194812
+  },
+  "delta": {
+    "meshes": -619,
+    "triangles": 178928,
+    "geometryTypedArrayBytes": 7195040,
+    "percent": {
+      "meshes": -2.0862824401752613,
+      "triangles": 3.9643709999685384,
+      "geometryTypedArrayBytes": 2.284141335822935
+    }
+  },
+  "limitations": [
+    "CPU-side authored Three.js geometry accounting; not GPU memory, rendering performance, or browser heap measurement."
+  ]
+}

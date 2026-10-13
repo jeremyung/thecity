@@ -6,7 +6,7 @@ import type { World } from '../web/src/types';
 
 it('uses an opened bridge to establish occupied far-bank frontage through ordinary construction', () => {
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const engine=CityEngine.restore(readFileSync(new URL('../validation/mature-world.multiblock-candidate.json',import.meta.url),'utf8'));
+  const engine=CityEngine.restore(readFileSync(new URL('./fixtures/access-joins/mature-world.multiblock-candidate.json',import.meta.url),'utf8'));
   let replay:CityEngine|undefined;
   try {
     const initial:World=JSON.parse(engine.snapshot());

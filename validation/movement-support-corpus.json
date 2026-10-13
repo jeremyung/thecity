@@ -1,0 +1,458 @@
+{
+  "baselineSha256": "8587759fc5b867faf614c18c8008e72f4b2f922d629f5f48c9981658c4f4c125",
+  "previousWasmSha256": "79da28178bb8227e8d2905eae87d88c6a21a5c3bc92c84778626ce2a5b6d48b8",
+  "wasmSha256": "9bdb8d23c995e9bb8b85f85e6dcb5b360e786abaaaa1a730f6c29d03aaa764be",
+  "samples": [
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "fixtureSha256": "a668d78842d5afbdc87c49244c9a216c45fc84b694fa78772f66efadb35c0f0e",
+      "offset": 0,
+      "tick": 18918,
+      "actors": 13,
+      "counts": {
+        "0": {
+          "resolved": 4,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 5,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "fixtureSha256": "a668d78842d5afbdc87c49244c9a216c45fc84b694fa78772f66efadb35c0f0e",
+      "offset": 80,
+      "tick": 18998,
+      "actors": 14,
+      "counts": {
+        "0": {
+          "resolved": 4,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 6,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "fixtureSha256": "a668d78842d5afbdc87c49244c9a216c45fc84b694fa78772f66efadb35c0f0e",
+      "offset": 160,
+      "tick": 19078,
+      "actors": 13,
+      "counts": {
+        "0": {
+          "resolved": 4,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 5,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "fixtureSha256": "a668d78842d5afbdc87c49244c9a216c45fc84b694fa78772f66efadb35c0f0e",
+      "offset": 240,
+      "tick": 19158,
+      "actors": 13,
+      "counts": {
+        "0": {
+          "resolved": 4,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 5,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "fixtureSha256": "a668d78842d5afbdc87c49244c9a216c45fc84b694fa78772f66efadb35c0f0e",
+      "offset": 320,
+      "tick": 19238,
+      "actors": 13,
+      "counts": {
+        "0": {
+          "resolved": 3,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 6,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "fixtureSha256": "02229ace29f754d251e9019cdc727c12b83ec944ec111bf88d0da0f3507319ae",
+      "offset": 0,
+      "tick": 34591,
+      "actors": 79,
+      "counts": {
+        "0": {
+          "resolved": 64,
+          "unresolved": 0
+        },
+        "1": {
+          "resolved": 12,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "fixtureSha256": "02229ace29f754d251e9019cdc727c12b83ec944ec111bf88d0da0f3507319ae",
+      "offset": 80,
+      "tick": 34671,
+      "actors": 112,
+      "counts": {
+        "0": {
+          "resolved": 93,
+          "unresolved": 0
+        },
+        "1": {
+          "resolved": 16,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "fixtureSha256": "02229ace29f754d251e9019cdc727c12b83ec944ec111bf88d0da0f3507319ae",
+      "offset": 160,
+      "tick": 34751,
+      "actors": 113,
+      "counts": {
+        "0": {
+          "resolved": 92,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 17,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "fixtureSha256": "02229ace29f754d251e9019cdc727c12b83ec944ec111bf88d0da0f3507319ae",
+      "offset": 240,
+      "tick": 34831,
+      "actors": 149,
+      "counts": {
+        "0": {
+          "resolved": 123,
+          "unresolved": 1
+        },
+        "1": {
+          "resolved": 22,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "fixtureSha256": "02229ace29f754d251e9019cdc727c12b83ec944ec111bf88d0da0f3507319ae",
+      "offset": 320,
+      "tick": 34911,
+      "actors": 126,
+      "counts": {
+        "0": {
+          "resolved": 103,
+          "unresolved": 2
+        },
+        "1": {
+          "resolved": 18,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/rail-doors-open.json",
+      "fixtureSha256": "6a5b6c9e1a23fd8e78a5b0ac872fa35831639550e724bd972fab796f65c0251d",
+      "offset": 0,
+      "tick": 168000,
+      "actors": 29,
+      "counts": {
+        "0": {
+          "resolved": 17,
+          "unresolved": 4
+        },
+        "1": {
+          "resolved": 5,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/rail-doors-open.json",
+      "fixtureSha256": "6a5b6c9e1a23fd8e78a5b0ac872fa35831639550e724bd972fab796f65c0251d",
+      "offset": 80,
+      "tick": 168080,
+      "actors": 29,
+      "counts": {
+        "0": {
+          "resolved": 17,
+          "unresolved": 4
+        },
+        "1": {
+          "resolved": 5,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/rail-doors-open.json",
+      "fixtureSha256": "6a5b6c9e1a23fd8e78a5b0ac872fa35831639550e724bd972fab796f65c0251d",
+      "offset": 160,
+      "tick": 168160,
+      "actors": 26,
+      "counts": {
+        "0": {
+          "resolved": 14,
+          "unresolved": 4
+        },
+        "1": {
+          "resolved": 5,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/rail-doors-open.json",
+      "fixtureSha256": "6a5b6c9e1a23fd8e78a5b0ac872fa35831639550e724bd972fab796f65c0251d",
+      "offset": 240,
+      "tick": 168240,
+      "actors": 27,
+      "counts": {
+        "0": {
+          "resolved": 15,
+          "unresolved": 3
+        },
+        "1": {
+          "resolved": 6,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    },
+    {
+      "path": ".tools/fidelity-review/rail-doors-open.json",
+      "fixtureSha256": "6a5b6c9e1a23fd8e78a5b0ac872fa35831639550e724bd972fab796f65c0251d",
+      "offset": 320,
+      "tick": 168320,
+      "actors": 27,
+      "counts": {
+        "0": {
+          "resolved": 15,
+          "unresolved": 3
+        },
+        "1": {
+          "resolved": 6,
+          "unresolved": 0
+        },
+        "2": {
+          "resolved": 1,
+          "unresolved": 0
+        },
+        "3": {
+          "resolved": 2,
+          "unresolved": 0
+        }
+      }
+    }
+  ],
+  "observations": 783,
+  "unresolved": 27,
+  "witnesses": [
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "tick": 18918,
+      "id": 1064,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "commute"
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "tick": 18998,
+      "id": 1064,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "commute"
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "tick": 19078,
+      "id": 1064,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "commute"
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "tick": 19158,
+      "id": 1064,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "commute"
+    },
+    {
+      "path": ".tools/fidelity-review/sidewalk-live-growth.json",
+      "tick": 19238,
+      "id": 1064,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "commute"
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "tick": 34751,
+      "id": 162,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "walking_to_bus"
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "tick": 34831,
+      "id": 162,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "walking_to_bus"
+    },
+    {
+      "path": ".tools/fidelity-review/building-gate-live-growth.json",
+      "tick": 34911,
+      "id": 162,
+      "kind": 0,
+      "roads": [],
+      "platforms": [],
+      "activity": "walking_to_bus"
+    }
+  ]
+}

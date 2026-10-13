@@ -72,6 +72,26 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
     };
   }
 
+  // A seeded minority of offices reads as a straight street-wall slab with a
+  // single, modest top-floor setback. Keep the office family identity shared.
+  if (seed % 3 === 0) {
+    const topWidthRatio = 0.85 + ((seed >>> 3) % 6) * 0.01;
+    const topDepthRatio = 0.86 + ((seed >>> 6) % 7) * 0.01;
+    const shiftX = side * w * (((seed >>> 9) % 5) - 2) * 0.008;
+    const shiftZ = d * (((seed >>> 12) % 5) - 2) * 0.008;
+    return {
+      family: 'setback-office',
+      masses: [
+        { x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors: b.floors - 1, role: 'main' },
+        {
+          x: shiftX, z: shiftZ,
+          width: w * topWidthRatio, depth: d * topDepthRatio,
+          baseFloor: b.floors - 1, floors: 1, role: 'main',
+        },
+      ],
+    };
+  }
+
   const podiumFloors = 2;
   const shaftFloors = Math.max(0, b.floors - 4);
   const shaftWidth = w * (0.76 + ((seed >>> 2) % 5) * 0.01);

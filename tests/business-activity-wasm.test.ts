@@ -6,7 +6,7 @@ import type { Building, World } from '../web/src/types';
 
 it('migrates a real legacy city without changing its history or treating commerce as residents', () => {
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const raw=readFileSync(new URL('../validation/mature-world.json',import.meta.url),'utf8');
+  const raw=readFileSync(new URL('./fixtures/access-joins/mature-world.json',import.meta.url),'utf8');
   const legacy=JSON.parse(raw);
   expect(legacy.activity_schema_version).toBeUndefined();
   const engine=CityEngine.restore(raw);

@@ -1,0 +1,12 @@
+{
+  "scope": "Node CPU geometry construction only; not browser/GPU performance",
+  "hardware": "Apple M2 Max",
+  "platform": "darwin",
+  "node": "v26.7.0",
+  "patches": 1839,
+  "batches": 4,
+  "triangles": 3734,
+  "samples": 10,
+  "medianMs": 7.771791000000121,
+  "maxMs": 11.201415999999881
+}

@@ -1,0 +1,39 @@
+--- city.ts
++++ instrumented-city.ts
+@@ -775,17 +775,20 @@
+     for(const [id,{building}] of this.objectQueue)if(this.infrastructure().canPresentBuilding(id))pendingChunks.add(buildingChunkKey(building.x,building.z));
+     this.chunks.update(pendingChunks);
+   }
++  private growthTraceCount=0;
+   private animate(){
+     if(this.disposed)return;
+     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
+     const begin=performance.now();
++    let traceLast=begin;const traceParts:Record<string,number>={};
++    const mark=(name:string)=>{const t=performance.now();traceParts[name]=t-traceLast;traceLast=t;};
+     const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
+-    this.updateBuildingBatches();
+-    this.sidewalks.update();
+-    this.updateRoads();
++    this.updateBuildingBatches();mark("buildings");
++    this.sidewalks.update();mark("sidewalks");
++    this.updateRoads();mark("roads");
+     if(this.worldState)this.rearExtensions.flushCompleted(this.worldState);
+-    this.updateActors(now);
+-    this.director.update(dt,now/1000);
++    this.updateActors(now);mark("actors");
++    this.director.update(dt,now/1000);mark("camera");
+     const activeLens=LENS_PRESETS[this.director.lens];
+     this.lensFocalM.value=activeLens.focalLengthMm/1000;this.lensFNumber.value=activeLens.fNumber;
+     this.updateTreeDetail();
+@@ -797,8 +800,9 @@
+     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
+     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
+     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
+-    this.pipeline?.render();
++    mark("lighting-water");this.pipeline?.render();mark("render");
+     const cost=performance.now()-begin;
++    if(this.worldTick>9250&&cost>30&&this.growthTraceCount++<80)console.log('contour-growth-trace '+JSON.stringify({tick:this.worldTick,cost,frameInterval,parts:traceParts,pending:this.chunks.pendingCount}));
+     if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
+     this.frame++;
+     this.frameTiming.record(now,cost,timingPhase,!document.hidden);

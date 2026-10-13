@@ -1,0 +1,439 @@
+{
+  "scope": "Node CPU only; public CityEngine seed 0 development-rate 16 snapshot tick 9250; production buildExtendedBuilding and ConstructionBatches, no browser/GPU",
+  "host": {
+    "cpu": "Apple M2 Max",
+    "node": "v26.7.0"
+  },
+  "source": {
+    "seed": 0,
+    "tick": 9250,
+    "buildings": 260,
+    "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+    "snapshotSha256": "ec0e69c699cf97c2326f7be54a0766eef39f70228049f39db0ff8a6e30da0783"
+  },
+  "ordinaryBuildings": 257,
+  "constructionBuildings": 3,
+  "constructionSources": [
+    {
+      "id": 1819,
+      "stage": "clearing",
+      "kind": "home",
+      "floors": 3,
+      "chunk": "3:1",
+      "factoryMs": 0.8112919999999804,
+      "setMs": 0.012459000000035303
+    },
+    {
+      "id": 1821,
+      "stage": "clearing",
+      "kind": "home",
+      "floors": 3,
+      "chunk": "3:1",
+      "factoryMs": 0.40612499999997453,
+      "setMs": 0.002000000000066393
+    },
+    {
+      "id": 1823,
+      "stage": "clearing",
+      "kind": "home",
+      "floors": 6,
+      "chunk": "3:2",
+      "factoryMs": 0.6724169999999958,
+      "setMs": 0.0019579999999450592
+    }
+  ],
+  "perBuildingFactory": {
+    "count": 260,
+    "p50": 1.294540999999981,
+    "p95": 5.099291999999991,
+    "max": 21.70666700000004
+  },
+  "setBookkeeping": {
+    "count": 260,
+    "p50": 0.002417000000036751,
+    "p95": 0.010334000000000287,
+    "max": 0.12762499999996635
+  },
+  "schedulerUpdate": {
+    "count": 2985,
+    "p50": 0.5166669999998703,
+    "p95": 2.2540829999998095,
+    "max": 18.586207999999942
+  },
+  "schedulerUpdateCount": 2985,
+  "topFactorySources": [
+    {
+      "id": 1602,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 32,
+      "chunk": "3:1",
+      "factoryMs": 21.70666700000004,
+      "setMs": 0.005708000000026914
+    },
+    {
+      "id": 1450,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 29,
+      "chunk": "2:1",
+      "factoryMs": 20.91391699999997,
+      "setMs": 0.008249999999975444
+    },
+    {
+      "id": 1611,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 29,
+      "chunk": "3:1",
+      "factoryMs": 20.486625000000004,
+      "setMs": 0.007625000000075488
+    },
+    {
+      "id": 1714,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 27,
+      "chunk": "3:1",
+      "factoryMs": 18.366750000000025,
+      "setMs": 0.0062499999999090505
+    },
+    {
+      "id": 1647,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "2:1",
+      "factoryMs": 15.421166999999969,
+      "setMs": 0.006540999999970154
+    },
+    {
+      "id": 237,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 16,
+      "chunk": "2:1",
+      "factoryMs": 14.538499999999999,
+      "setMs": 0.010334000000000287
+    },
+    {
+      "id": 89,
+      "stage": "open",
+      "kind": "shop",
+      "floors": 2,
+      "chunk": "1:1",
+      "factoryMs": 14.116083000000003,
+      "setMs": 0.12762499999996635
+    },
+    {
+      "id": 1115,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "3:1",
+      "factoryMs": 12.130499999999984,
+      "setMs": 0.005084000000010747
+    },
+    {
+      "id": 235,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "2:1",
+      "factoryMs": 11.879707999999994,
+      "setMs": 0.011792000000014013
+    },
+    {
+      "id": 817,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 16,
+      "chunk": "2:1",
+      "factoryMs": 10.889792000000057,
+      "setMs": 0.009708000000046013
+    },
+    {
+      "id": 94,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 8,
+      "chunk": "1:0",
+      "factoryMs": 8.998666000000014,
+      "setMs": 0.015667000000007647
+    },
+    {
+      "id": 1424,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "2:1",
+      "factoryMs": 6.356875000000059,
+      "setMs": 0.0028749999999035936
+    },
+    {
+      "id": 420,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "2:1",
+      "factoryMs": 5.6205830000000105,
+      "setMs": 0.00437499999998181
+    },
+    {
+      "id": 1607,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 9,
+      "chunk": "3:1",
+      "factoryMs": 5.099291999999991,
+      "setMs": 0.007041000000072017
+    },
+    {
+      "id": 1584,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 9,
+      "chunk": "2:1",
+      "factoryMs": 4.773500000000013,
+      "setMs": 0.004000000000019099
+    },
+    {
+      "id": 258,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "2:1",
+      "factoryMs": 4.149875000000009,
+      "setMs": 0.009833000000014636
+    },
+    {
+      "id": 1471,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "2:1",
+      "factoryMs": 4.095666000000051,
+      "setMs": 0.007833000000005086
+    },
+    {
+      "id": 134,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 7,
+      "chunk": "1:0",
+      "factoryMs": 3.9232079999999883,
+      "setMs": 0.007374999999967713
+    },
+    {
+      "id": 1655,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 8,
+      "chunk": "3:1",
+      "factoryMs": 3.914041999999995,
+      "setMs": 0.0037499999999681677
+    },
+    {
+      "id": 102,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 3,
+      "chunk": "1:1",
+      "factoryMs": 3.576833000000022,
+      "setMs": 0.01045899999996891
+    }
+  ],
+  "isolatedRegistration": [
+    {
+      "id": 1602,
+      "kind": "apartment",
+      "floors": 32,
+      "oracle": {
+        "floatCount": 2352,
+        "sha256": "2fe397e44114fcc8eab6a37814cf7bc38cc29371c99b0f23ccc6585429e4d206"
+      },
+      "incremental": {
+        "floatCount": 2352,
+        "sha256": "2fe397e44114fcc8eab6a37814cf7bc38cc29371c99b0f23ccc6585429e4d206",
+        "exactMatch": true,
+        "stepQuota": 2000,
+        "stepWork": {
+          "count": 126,
+          "p50": 2000,
+          "p95": 2000,
+          "max": 2000
+        },
+        "stepMs": {
+          "count": 126,
+          "p50": 0.03304099999968457,
+          "p95": 2.295459000000392,
+          "max": 2.6224170000000413
+        }
+      },
+      "registrationMs": {
+        "count": 5,
+        "p50": 0.017625000000407454,
+        "p95": 0.109958000000006,
+        "max": 0.109958000000006
+      },
+      "boundedRuns": [
+        {
+          "repeat": 0,
+          "registrationMs": 0.109958000000006,
+          "updateMs": {
+            "count": 144,
+            "p50": 0.03687499999978172,
+            "p95": 2.4351659999997537,
+            "max": 4.651292000000012
+          },
+          "updateCount": 144,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 1,
+          "registrationMs": 0.017625000000407454,
+          "updateMs": {
+            "count": 144,
+            "p50": 0.038457999999991443,
+            "p95": 2.215291999999863,
+            "max": 3.1600829999997586
+          },
+          "updateCount": 144,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 2,
+          "registrationMs": 0.012999999999919964,
+          "updateMs": {
+            "count": 144,
+            "p50": 0.03170799999998053,
+            "p95": 2.2371250000001055,
+            "max": 3.833708000000115
+          },
+          "updateCount": 144,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 3,
+          "registrationMs": 0.01375000000007276,
+          "updateMs": {
+            "count": 144,
+            "p50": 0.03470900000002075,
+            "p95": 2.1892079999997804,
+            "max": 3.0467499999999745
+          },
+          "updateCount": 144,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 4,
+          "registrationMs": 0.0182079999999587,
+          "updateMs": {
+            "count": 144,
+            "p50": 0.03487500000028376,
+            "p95": 2.3090000000001965,
+            "max": 2.951999999999771
+          },
+          "updateCount": 144,
+          "committedExactMatch": true
+        }
+      ]
+    },
+    {
+      "id": 1611,
+      "kind": "apartment",
+      "floors": 29,
+      "oracle": {
+        "floatCount": 2424,
+        "sha256": "1245b812d0520d9411166faf2fb6573f0a196cbd26da1339dce67c1612538aaf"
+      },
+      "incremental": {
+        "floatCount": 2424,
+        "sha256": "1245b812d0520d9411166faf2fb6573f0a196cbd26da1339dce67c1612538aaf",
+        "exactMatch": true,
+        "stepQuota": 2000,
+        "stepWork": {
+          "count": 115,
+          "p50": 2000,
+          "p95": 2000,
+          "max": 2000
+        },
+        "stepMs": {
+          "count": 115,
+          "p50": 0.03566599999976461,
+          "p95": 2.48174999999992,
+          "max": 2.907582999999704
+        }
+      },
+      "registrationMs": {
+        "count": 5,
+        "p50": 0.015540999999757332,
+        "p95": 0.02766700000029232,
+        "max": 0.02766700000029232
+      },
+      "boundedRuns": [
+        {
+          "repeat": 0,
+          "registrationMs": 0.012665999999626365,
+          "updateMs": {
+            "count": 131,
+            "p50": 0.032458000000133325,
+            "p95": 2.4159169999998085,
+            "max": 2.681666999999834
+          },
+          "updateCount": 131,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 1,
+          "registrationMs": 0.015207999999802269,
+          "updateMs": {
+            "count": 131,
+            "p50": 0.03150000000005093,
+            "p95": 2.570125000000189,
+            "max": 3.120292000000063
+          },
+          "updateCount": 131,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 2,
+          "registrationMs": 0.015540999999757332,
+          "updateMs": {
+            "count": 131,
+            "p50": 0.03449999999975262,
+            "p95": 2.5056249999997817,
+            "max": 3.227625000000444
+          },
+          "updateCount": 131,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 3,
+          "registrationMs": 0.02766700000029232,
+          "updateMs": {
+            "count": 131,
+            "p50": 0.03291700000045239,
+            "p95": 2.378958000000239,
+            "max": 8.665208000000348
+          },
+          "updateCount": 131,
+          "committedExactMatch": true
+        },
+        {
+          "repeat": 4,
+          "registrationMs": 0.025666999999884865,
+          "updateMs": {
+            "count": 131,
+            "p50": 0.03183400000034453,
+            "p95": 2.1596669999998994,
+            "max": 2.508958000000348
+          },
+          "updateCount": 131,
+          "committedExactMatch": true
+        }
+      ]
+    }
+  ],
+  "method": "Node CPU diagnostic only. Tick-9250 ordinary/construction scene profile remains as a broad baseline; isolated buildings 1602/1611 compare incremental contours at quota 2000 work units per update against independent THREE.EdgesGeometry(42), applyMatrix4, world-length >=12.25 oracle, and time actual BuildingChunks descriptor registration plus bounded update drain. Descriptor regeneration factory restores building root position and rotation. Browser/GPU frame behavior and CityRenderer admission are not modeled."
+}

@@ -1,0 +1,258 @@
+{
+  "seed": 87231,
+  "developmentRate": 16,
+  "tickLimit": 240000,
+  "firstProject": {
+    "project_id": 8032,
+    "building_id": 1243,
+    "parcel_id": 927,
+    "original_floors": 6,
+    "original_capacity": 30,
+    "target_floors": 12,
+    "target_capacity": 60,
+    "tick": 72000,
+    "totalBuildings": 1795,
+    "realizedLots": 1813,
+    "plannedLots": 1839
+  },
+  "completed": true,
+  "replayChecks": 49,
+  "replayTicks": 2450,
+  "captures": [
+    {
+      "label": "demolition-early",
+      "tick": 72000,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 6,
+        "kind": "office",
+        "stage": "demolition",
+        "progress": 0,
+        "capacity": 30,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "demolition-late",
+      "tick": 72400,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 6,
+        "kind": "office",
+        "stage": "demolition",
+        "progress": 0.5555555,
+        "capacity": 30,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "construction-survey",
+      "tick": 72750,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 12,
+        "kind": "office",
+        "stage": "survey",
+        "progress": 0.017857127,
+        "capacity": 60,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "construction-clearing",
+      "tick": 73100,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 12,
+        "kind": "office",
+        "stage": "clearing",
+        "progress": 0.22619057,
+        "capacity": 60,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "construction-structure",
+      "tick": 73550,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 12,
+        "kind": "office",
+        "stage": "structure",
+        "progress": 0.4940475,
+        "capacity": 60,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "construction-surface",
+      "tick": 73950,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 12,
+        "kind": "office",
+        "stage": "surface",
+        "progress": 0.7321425,
+        "capacity": 60,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "construction-finishing",
+      "tick": 74300,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 12,
+        "kind": "office",
+        "stage": "finishing",
+        "progress": 0.94047564,
+        "capacity": 60,
+        "occupancy": 0,
+        "built_day": 0,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": false
+      }
+    },
+    {
+      "label": "completed",
+      "tick": 74450,
+      "building": {
+        "id": 1243,
+        "parcel_id": 927,
+        "x": 202.25581,
+        "z": -139.70508,
+        "rotation": -2.8956225,
+        "width": 10.986089,
+        "depth": 30.092897,
+        "floors": 12,
+        "kind": "office",
+        "stage": "open",
+        "progress": 1,
+        "capacity": 60,
+        "occupancy": 0,
+        "built_day": 3,
+        "name": "Station Office",
+        "appearance_seed": 960251355,
+        "history": [
+          "Reserved after sustained neighborhood demand on day 0",
+          "Station Office begins a staged station-core height renewal",
+          "Station Office reopens at 12 floors"
+        ],
+        "anchor": false,
+        "vacant_days": 0,
+        "business_active": true
+      }
+    }
+  ],
+  "elapsedMs": 22169.5415,
+  "scope": "Normal fresh Node WASM growth and live/restored save comparison. Not browser or visual acceptance."
+}

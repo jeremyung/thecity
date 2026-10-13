@@ -1,0 +1,188 @@
+{
+  "method": "Current compiled public WASM CityEngine; development rate 16; step in 200-tick batches until 16 road_decks or tick 160000. Cubic curvature sampled at 129 evenly spaced t values per deck. Same-height connected endpoint tangent comparison.",
+  "seeds": [
+    0,
+    7,
+    41,
+    2026,
+    87231,
+    1,
+    42,
+    1204,
+    1234,
+    65535
+  ],
+  "results": [
+    {
+      "seed": 0,
+      "tick": 19200,
+      "deckCount": 16,
+      "minRadiusM": 249.12701850107578,
+      "worstRoad": 2591,
+      "worstContinuityDegrees": 0.00004465815653602843,
+      "continuityWitness": {
+        "node": "2354",
+        "roads": [
+          2355,
+          2434
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 7,
+      "tick": 23400,
+      "deckCount": 16,
+      "minRadiusM": 156.21363910151777,
+      "worstRoad": 2987,
+      "worstContinuityDegrees": 0.00010420236525074472,
+      "continuityWitness": {
+        "node": "3198",
+        "roads": [
+          3199,
+          3272
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 41,
+      "tick": 20800,
+      "deckCount": 16,
+      "minRadiusM": 203.02409517861156,
+      "worstRoad": 2684,
+      "worstContinuityDegrees": 0.00009818768130810824,
+      "continuityWitness": {
+        "node": "2476",
+        "roads": [
+          2477,
+          2539
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 2026,
+      "tick": 22800,
+      "deckCount": 16,
+      "minRadiusM": 439.725584035608,
+      "worstRoad": 2906,
+      "worstContinuityDegrees": 0.000027413979128244083,
+      "continuityWitness": {
+        "node": "2905",
+        "roads": [
+          2906,
+          2979
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 87231,
+      "tick": 21000,
+      "deckCount": 16,
+      "minRadiusM": 144.61047560650513,
+      "worstRoad": 2698,
+      "worstContinuityDegrees": 0.00005729196509083288,
+      "continuityWitness": {
+        "node": "2623",
+        "roads": [
+          2624,
+          2698
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 1,
+      "tick": 21600,
+      "deckCount": 16,
+      "minRadiusM": 112.76707182919283,
+      "worstRoad": 2753,
+      "worstContinuityDegrees": 0.000047559100594122153,
+      "continuityWitness": {
+        "node": "2677",
+        "roads": [
+          2678,
+          2753
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 42,
+      "tick": 22200,
+      "deckCount": 16,
+      "minRadiusM": 428.8468861471004,
+      "worstRoad": 2816,
+      "worstContinuityDegrees": 0.00009357296843466734,
+      "continuityWitness": {
+        "node": "2605",
+        "roads": [
+          2606,
+          2673
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 1204,
+      "tick": 22000,
+      "deckCount": 16,
+      "minRadiusM": 423.7002955999035,
+      "worstRoad": 2810,
+      "worstContinuityDegrees": 0.00006555180427039652,
+      "continuityWitness": {
+        "node": "3039",
+        "roads": [
+          3040,
+          3083
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 1234,
+      "tick": 22000,
+      "deckCount": 16,
+      "minRadiusM": 123.92915779243707,
+      "worstRoad": 2757,
+      "worstContinuityDegrees": 0.00014755224323971435,
+      "continuityWitness": {
+        "node": "2962",
+        "roads": [
+          2963,
+          3040
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    },
+    {
+      "seed": 65535,
+      "tick": 21800,
+      "deckCount": 16,
+      "minRadiusM": 102.36312468769196,
+      "worstRoad": 2815,
+      "worstContinuityDegrees": 0.00003367809684552461,
+      "continuityWitness": {
+        "node": "2603",
+        "roads": [
+          2604,
+          2669
+        ]
+      },
+      "degenerateTangents": 0,
+      "innerDeckFold": false
+    }
+  ],
+  "failures": []
+}

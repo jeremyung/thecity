@@ -1,0 +1,74 @@
+--- city.ts
++++ instrumented-city.ts
+@@ -326,16 +326,23 @@
+   }
+   setSelected(id:number|null){this.selected=id;}
+   private setSize(){const w=this.element.clientWidth,h=this.element.clientHeight;if(!w||!h)return;this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.renderer.setSize(w,h);this.outputHeight.value=this.renderer.getDrawingBufferSize(new THREE.Vector2()).y;}
++  private traceCounts={world:0,frame:0};
++  private traceStage(kind:'world'|'frame'){
++    if(!import.meta.env.DEV||this.traceCounts[kind]>=100)return null;
++    const start=performance.now();let last=start;const stages:Record<string,number>={};
++    return {mark:(name:string)=>{const t=performance.now();stages[name]=t-last;last=t;},finish:(tick:number)=>{const total=performance.now()-start;if(kind==='world'||total>25){this.traceCounts[kind]++;console.log('growth-trace-v2 '+JSON.stringify({kind,tick,total,stages}));}}};
++  }
+   setWorld(world:World,replaced=false){
++    const trace=this.traceStage('world');
+     this.worldState=world;this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
+     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
+-    this.infrastructure().request(world);
++    trace?.mark('terrain');this.infrastructure().request(world);
+     this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.trains.setWorld({...world,nodes:this.committedRoadWorld?.nodes??[],rail_platforms:this.committedRoadWorld?.rail_platforms??[]});this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
+ 
+-    const signatures=roadBatchSignatures(world);
++    trace?.mark('transit-access');const signatures=roadBatchSignatures(world);
+     const signature=signatures.completed+signatures.construction;
+     if(signature!==this.roadSignature){this.rebuildRoads(world,signatures.completed);this.roadSignature=signature;}
+-    this.sidewalks.setWorld(world);
++    trace?.mark('road-input');this.sidewalks.setWorld(world);trace?.mark('sidewalk-input');
+     const groundSignature=JSON.stringify(world.ground??[]);
+     if(groundSignature!==this.groundSignature){
+       this.groundSignature=groundSignature;
+@@ -343,7 +350,7 @@
+       this.ground=buildGroundSurfaces(world.ground??[],this.art);
+       this.scene.add(this.ground);
+     }
+-    const ids=new Set(world.buildings.map(b=>b.id));
++    trace?.mark('ground');const ids=new Set(world.buildings.map(b=>b.id));
+     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
+     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
+     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
+@@ -361,7 +368,7 @@
+       };
+       this.objectQueue.set(b.id,{building:snapshot,signature,source});
+     }
+-    this.updateTrees(world);
++    trace?.mark('building-input');this.updateTrees(world);trace?.mark('trees');trace?.finish(world.tick);
+   }
+   setMovement(data:Float32Array,tick:number,minute:number,trainDoors:Float32Array,support:ReadonlyMap<number,MovementSupport>){
+     this.trains.setMovement(trainDoors);
+@@ -719,13 +726,13 @@
+   private animate(){
+     if(this.disposed)return;
+     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
+-    const begin=performance.now();
++    const begin=performance.now();const trace=this.traceStage('frame');
+     const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
+     this.updateBuildingBatches();
+-    this.sidewalks.update();
+-    this.updateRoads();
++    trace?.mark('buildings');this.sidewalks.update();trace?.mark('sidewalk-step');
++    this.updateRoads();trace?.mark('road-step');
+     if(this.worldState)this.rearExtensions.flushCompleted(this.worldState);
+-    this.updateActors(now);
++    this.updateActors(now);trace?.mark('actors');
+     this.director.update(dt,now/1000);
+     const activeLens=LENS_PRESETS[this.director.lens];
+     this.lensFocalM.value=activeLens.focalLengthMm/1000;this.lensFNumber.value=activeLens.fNumber;
+@@ -738,7 +745,7 @@
+     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
+     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
+     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
+-    this.pipeline?.render();
++    trace?.mark('scene');this.pipeline?.render();trace?.mark('render');trace?.finish(this.worldTick);
+     const cost=performance.now()-begin;
+     if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
+     this.frame++;

@@ -1,0 +1,482 @@
+[
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":5091106984589451,\"material\":\"MeshStandardNodeMaterial\",\"ms\":31.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.509Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":12419954774258352,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.099999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.537Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":10580437125932692,\"material\":\"MeshStandardNodeMaterial\",\"ms\":24.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.562Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":10046329073098700,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.591Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":7370461160670589,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.900000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.618Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":4715195772165031,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.400000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.647Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":12012005880249732,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.652Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":4921967082533584,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.655Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":10537021810582346,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.659Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9300,\"frame\":6426,\"key\":11258163389288016,\"material\":\"MeshBasicNodeMaterial\",\"ms\":4.699999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:25.664Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":9901633755446066,\"material\":\"MeshStandardNodeMaterial\",\"ms\":30.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.549Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":12316459399936436,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.900000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.578Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":9286592842354730,\"material\":\"MeshStandardNodeMaterial\",\"ms\":24.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.602Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":12313175914519800,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.900000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.631Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":6642858973321839,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.19999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.657Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":9083126971439952,\"material\":\"MeshStandardNodeMaterial\",\"ms\":25.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.684Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":10642482300577556,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.688Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":6249435647869233,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.692Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":4789672997309171,\"material\":\"MeshBasicNodeMaterial\",\"ms\":4.800000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.698Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9320,\"frame\":6523,\"key\":13031652971687212,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.899999976158142,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:26.701Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":4365157378800927,\"material\":\"MeshStandardNodeMaterial\",\"ms\":30.100000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.017Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":6133805040085472,\"material\":\"MeshStandardNodeMaterial\",\"ms\":28,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.046Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":11033527749674910,\"material\":\"MeshStandardNodeMaterial\",\"ms\":25,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.071Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":6005685655695139,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.100Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":6025089969555524,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.127Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":11592371583702384,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.156Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":7462847168054024,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.199999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.161Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":4934117308132611,\"material\":\"MeshBasicNodeMaterial\",\"ms\":4.799999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.165Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":10905449987420066,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.2999999821186066,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.169Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9350,\"frame\":6670,\"key\":9631655632039692,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.173Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":5797806696596453,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.508Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":5922268602398662,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.536Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":10471594230693148,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.562Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":9766188409400440,\"material\":\"MeshStandardNodeMaterial\",\"ms\":24.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.589Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":12811027621796276,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.616Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":6368057374741885,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.900000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.644Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":9201147971755932,\"material\":\"MeshBasicNodeMaterial\",\"ms\":4.5999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.650Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":9381374080566288,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.653Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":6539954490279520,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.657Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9360,\"frame\":6701,\"key\":6533085225605841,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:28.660Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":9877426316144476,\"material\":\"MeshStandardNodeMaterial\",\"ms\":28.100000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.530Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":4525929262047834,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.200000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.558Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":9515547483233076,\"material\":\"MeshStandardNodeMaterial\",\"ms\":23.600000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.581Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":4871963658038188,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.610Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":4070541023940603,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.637Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":10164548617738284,\"material\":\"MeshStandardNodeMaterial\",\"ms\":25.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.664Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":9822812196764774,\"material\":\"MeshBasicNodeMaterial\",\"ms\":5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.670Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":4328226860368999,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.674Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":13054892640916120,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.679Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9400,\"frame\":6907,\"key\":11114002140786330,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:30.681Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":11172854084036366,\"material\":\"MeshStandardNodeMaterial\",\"ms\":31.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.048Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":6928735476197424,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.400000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.076Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":9472572519627572,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.104Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":8339491473946947,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.131Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":7210176970576315,\"material\":\"MeshStandardNodeMaterial\",\"ms\":25.299999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.157Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":8967574041192524,\"material\":\"MeshStandardNodeMaterial\",\"ms\":29.299999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.188Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":6266567481111072,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.5999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.193Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":4715523817879907,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.199999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.196Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":8615832640251465,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.200Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9450,\"frame\":7176,\"key\":9142900312598280,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.2999999821186066,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:33.205Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":11642219270663616,\"material\":\"MeshStandardNodeMaterial\",\"ms\":30.600000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.519Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":7800780467931047,\"material\":\"MeshStandardNodeMaterial\",\"ms\":24.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.544Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":9775898278661272,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.570Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":8700991864628700,\"material\":\"MeshStandardNodeMaterial\",\"ms\":24.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.597Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":10757445457484004,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.599999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.624Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":10625232789566760,\"material\":\"MeshStandardNodeMaterial\",\"ms\":28,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.653Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":5820440324769042,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.658Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":7813920955327906,\"material\":\"MeshBasicNodeMaterial\",\"ms\":2.899999976158142,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.661Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":4400206283728359,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.664Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9480,\"frame\":7317,\"key\":5398412874180585,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:34.667Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":8150902380145039,\"material\":\"MeshStandardNodeMaterial\",\"ms\":27.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.549Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":6568787720541240,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.576Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":8943845013482291,\"material\":\"MeshStandardNodeMaterial\",\"ms\":26,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.603Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":9565498787347228,\"material\":\"MeshStandardNodeMaterial\",\"ms\":25.899999976158142,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.630Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":5723436015380565,\"material\":\"MeshStandardNodeMaterial\",\"ms\":25.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.656Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":11838175656264280,\"material\":\"MeshStandardNodeMaterial\",\"ms\":28.400000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.686Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":6107833836227365,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.691Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":5250068172573891,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.695Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":4831446345947945,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3.199999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.698Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  },
+  {
+    "level": "log",
+    "message": "node-cache-correlation {\"tick\":9600,\"frame\":7935,\"key\":9303840194062520,\"material\":\"MeshBasicNodeMaterial\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:25:40.702Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851040439"
+  }
+]

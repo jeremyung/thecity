@@ -1,0 +1,51 @@
+--- web/src/render/city.ts
++++ web/src/render/city.ts
+@@ -263,6 +263,7 @@
+       setPhase:phase=>{this.renderer.domElement.dataset.graphicsPhase=phase;},
+       onError:error=>this.onError?.(error),
+     });
++    this.installPersistentTrace();
+     this.renderer.setAnimationLoop(()=>startup.runFrame(()=>this.animate()));
+     this.renderer.domElement.dataset.graphicsPhase='loop-started';
+     await startup.promise;
+@@ -780,10 +781,23 @@
+     for(const [id,{building}] of this.objectQueue)if(this.infrastructure().canPresentBuilding(id))pendingChunks.add(buildingChunkKey(building.x,building.z));
+     this.chunks.update(pendingChunks);
+   }
++  private persistentTraceSamples:Array<{cost:number;render:number;node:number}>=[];
++  private persistentTraceMisses:Record<string,{count:number;ms:number}>={};
++  private persistentTraceNodeMs=0;
++  private persistentTraceDone=false;
++  private installPersistentTrace(){
++    const nodes=(this.renderer as any)._nodes,trace=this,original=nodes.getForRender;
++    nodes.getForRender=function(object:any){
++      const missing=!this.nodeBuilderCache.has(object.initialCacheKey),start=performance.now();
++      const result=original.call(this,object),ms=performance.now()-start;trace.persistentTraceNodeMs+=ms;
++      if(missing&&trace.worldTick>9250&&trace.worldTick<10300){const key=object.object.name||object.material.type;const row=trace.persistentTraceMisses[key]??={count:0,ms:0};row.count++;row.ms+=ms;}
++      return result;
++    };
++  }
+   private animate(){
+     if(this.disposed)return;
+     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
+-    const begin=performance.now();
++    const begin=performance.now();this.persistentTraceNodeMs=0;
+     const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
+     this.updateBuildingBatches();
+     this.sidewalks.update();
+@@ -802,8 +816,14 @@
+     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
+     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
+     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
+-    this.pipeline?.render();
++    const traceRenderStart=performance.now();this.pipeline?.render();const traceRenderMs=performance.now()-traceRenderStart;
+     const cost=performance.now()-begin;
++    if(this.worldTick>9250&&this.worldTick<10300&&this.persistentTraceSamples.length<12000)this.persistentTraceSamples.push({cost,render:traceRenderMs,node:this.persistentTraceNodeMs});
++    if(this.worldTick>=10300&&!this.persistentTraceDone&&this.persistentTraceSamples.length){
++      this.persistentTraceDone=true;
++      const summary=(key:'cost'|'render'|'node')=>{const values=this.persistentTraceSamples.map(row=>row[key]).sort((a,b)=>a-b);return {max:values.at(-1),p95:values[Math.floor(values.length*.95)],over30:values.filter(x=>x>30).length};};
++      console.log('persistent-light-growth '+JSON.stringify({tick:this.worldTick,style:this.style,samples:this.persistentTraceSamples.length,cost:summary('cost'),render:summary('render'),node:summary('node'),misses:this.persistentTraceMisses}));
++    }
+     if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
+     this.frame++;
+     this.frameTiming.record(now,cost,timingPhase,!document.hidden);

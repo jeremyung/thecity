@@ -1,0 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>Night lens motion review</title>
+<style>body{margin:0;background:#10151b;color:white;font:16px sans-serif}video{display:block;width:100%;max-height:85vh}label{display:inline-block;padding:8px}</style>
+<label>Style <select id="style"><option value="anime">Anime</option><option value="miniature">Miniature</option></select></label>
+<label>Review time in seconds <input id="seek" type="number" min="0" max="20" step="0.25" value="0"></label><button id="jump">Seek</button><output id="info"></output>
+<video id="clip" controls src="anime-night-orbit.webm"></video>
+<script>const v=document.querySelector('video');document.querySelector('#jump').onclick=()=>{v.pause();v.currentTime=Number(document.querySelector('input').value)};document.querySelector('select').onchange=e=>{v.src=e.target.value+'-night-orbit.webm';v.load()};v.onloadedmetadata=()=>document.querySelector('output').textContent=`${v.videoWidth}×${v.videoHeight}; duration ${v.duration}s`;</script>

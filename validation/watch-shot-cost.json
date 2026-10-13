@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "scope": "CPU-only measurement of CameraDirector.buildAnchors and cold district setAnchorPose calls on WASM-restored snapshots; no browser, renderer, GPU, or frame-time claim.",
+  "host": {
+    "cpu": "Apple M2 Max",
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v26.7.0"
+  },
+  "camera": {
+    "viewport": [
+      847,
+      764
+    ],
+    "lensFocalLengthMm": 50,
+    "sensorHeightMm": 24,
+    "fovDegrees": 26.991466561591626,
+    "near": 0.1,
+    "far": 2000
+  },
+  "inputs": {
+    "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+    "directorBundle": ".tools/watch-cost/director.mjs",
+    "files": [
+      {
+        "label": "after-opening-save",
+        "path": ".tools/midrise-cladding-postmerge/after-opening.save.json",
+        "sha256": "55cfe2fad47932df0fc58d7be08502bdb8beebb89d9f475b0bdf949efa87f3fa",
+        "compatible": true
+      },
+      {
+        "label": "growth-575",
+        "path": ".tools/movement-support/browser/growth-575.json",
+        "sha256": "4db6a36fe85f53305da9964e228df9d1406fa7ed7acc9407e210b000963d7b93",
+        "compatible": false,
+        "error": "traveler 3011 destination connector does not meet its route endpoint"
+      }
+    ]
+  },
+  "measurement": {
+    "warmupRounds": 1,
+    "measuredRounds": 5,
+    "districtShotsPerRound": "one cold setAnchorPose per district street anchor",
+    "worlds": [
+      {
+        "label": "after-opening-save",
+        "report": {
+          "world": {
+            "seed": 0,
+            "tick": 9250,
+            "buildings": 260,
+            "roads": 78,
+            "anchors": 26,
+            "streetDistrictAnchors": 15
+          },
+          "timings": {
+            "buildAnchors": {
+              "n": 5,
+              "p50Ms": 0.5113750000000152,
+              "p95Ms": 0.9142500000000098,
+              "maxMs": 0.9142500000000098
+            },
+            "coldSetAnchorPose": {
+              "n": 75,
+              "p50Ms": 0.7902919999999938,
+              "p95Ms": 3.0312080000000208,
+              "maxMs": 5.053832999999997
+            },
+            "roundsPerDistrict": 5
+          },
+          "visibility": {
+            "visibleDistrictAnchors": 12,
+            "noClearDistrictAnchors": 3,
+            "testedStreetCandidates": 34,
+            "distinctChosenRoads": 12
+          },
+          "sample": [
+            {
+              "id": "district:1:-1",
+              "subjectCount": 4,
+              "target": {
+                "x": 177.94711,
+                "y": 1,
+                "z": -74.426544
+              },
+              "camera": {
+                "x": 369.7213222957456,
+                "y": 58.66296611094927,
+                "z": -118.27439272298524
+              }
+            },
+            {
+              "id": "district:1:-2",
+              "subjectCount": 4,
+              "target": {
+                "x": 191.01314682996977,
+                "y": 1,
+                "z": -170.9638675457675
+              },
+              "camera": {
+                "x": 369.6725769896959,
+                "y": 85.12475885240356,
+                "z": -115.92903345837453
+              }
+            },
+            {
+              "id": "district:2:-1",
+              "subjectCount": 4,
+              "target": {
+                "x": 287.5020982978723,
+                "y": 1,
+                "z": -74.426544
+              },
+              "camera": {
+                "x": 430,
+                "y": 58.66296611094927,
+                "z": -118.27439272298524
+              }
+            },
+            {
+              "id": "district:-1:-3",
+              "subjectCount": 4,
+              "target": {
+                "x": -28.243201849434826,
+                "y": 1,
+                "z": -312.51543858156975
+              },
+              "camera": {
+                "x": 105.61725519384026,
+                "y": 58.66296611094928,
+                "z": -168.3580233041966
+              }
+            },
+            {
+              "id": "district:2:-2",
+              "subjectCount": 4,
+              "target": {
+                "x": 285.0703523125198,
+                "y": 1,
+                "z": -161.86580766053706
+              },
+              "camera": {
+                "x": 430,
+                "y": 85.12475885240356,
+                "z": -203.53395832765608
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Uses Object.create(CameraDirector.prototype), production obstacle-envelope and anchor methods, and live clearance/visibility helpers; no controls or transition travel are simulated.",
+    "The helper visibility count reports geometric line clearance for candidate street samples, not a rendered image or human judgment of composition.",
+    "Node process timings are CPU-only and do not represent browser main-thread contention, garbage collection during a long session, GPU work, or camera-transition frame cost."
+  ]
+}

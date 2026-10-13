@@ -6,7 +6,7 @@ import type { World } from '../web/src/types';
 
 it('constructs shallow infill on connected existing streets and replays the resulting city', () => {
   initSync({ module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)) });
-  const engine = CityEngine.restore(readFileSync(new URL('../validation/spine-ranking-seed-87231-by-sites-false.json', import.meta.url), 'utf8'));
+  const engine = CityEngine.restore(readFileSync(new URL('./fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json', import.meta.url), 'utf8'));
   let resumed: CityEngine | undefined;
   try {
     const before: World = JSON.parse(engine.snapshot());

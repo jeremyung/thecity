@@ -1,0 +1,66 @@
+{
+  "scope": "Node CPU only; no GPU upload, frame scheduling or lifecycle swap acceptance",
+  "hardware": "Apple M2 Max",
+  "fixture": ".tools/fidelity-review/mature-layered-87231.snapshot.json",
+  "fixtureSha256": "6d460f129e3183a14a454953b610bb7f811e906e577bc878fee2e1dac74d9967",
+  "seed": 87231,
+  "tick": 160000,
+  "geometrySha256": "5c21d1b5e46bee7ce63232eb415708d8acefc3962c25b2cf3957ef73b30aac9c",
+  "exactGeometryParity": true,
+  "runs": [
+    {
+      "run": 0,
+      "warmup": true,
+      "constructMs": 0.012958999999995058,
+      "updates": 182,
+      "totalStepMs": 58.307842999999906,
+      "maxStepMs": 3.772999999999996,
+      "p95StepMs": 0.6320420000000126
+    },
+    {
+      "run": 1,
+      "warmup": true,
+      "constructMs": 0.0030420000000219716,
+      "updates": 182,
+      "totalStepMs": 40.41912500000009,
+      "maxStepMs": 1.6099579999999492,
+      "p95StepMs": 0.4028340000000128
+    },
+    {
+      "run": 2,
+      "warmup": false,
+      "constructMs": 0.001541000000031545,
+      "updates": 182,
+      "totalStepMs": 36.12042300000002,
+      "maxStepMs": 0.8025409999999624,
+      "p95StepMs": 0.2716249999999718
+    },
+    {
+      "run": 3,
+      "warmup": false,
+      "constructMs": 0.0016249999999899956,
+      "updates": 182,
+      "totalStepMs": 31.52432800000048,
+      "maxStepMs": 0.8771249999999782,
+      "p95StepMs": 0.24108400000000074
+    },
+    {
+      "run": 4,
+      "warmup": false,
+      "constructMs": 0.0015420000000290202,
+      "updates": 182,
+      "totalStepMs": 29.55413799999991,
+      "maxStepMs": 1.1811250000000086,
+      "p95StepMs": 0.22112499999997226
+    },
+    {
+      "run": 5,
+      "warmup": false,
+      "constructMs": 0.002166999999985819,
+      "updates": 182,
+      "totalStepMs": 32.96591999999998,
+      "maxStepMs": 1.314292000000023,
+      "p95StepMs": 0.2492910000000279
+    }
+  ]
+}

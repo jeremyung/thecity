@@ -1,0 +1,19 @@
+{
+  "scope": "Node CPU only, not browser frame cost",
+  "hardware": "Apple M2 Max",
+  "fixture": ".tools/fidelity-review/mature-layered-87231.snapshot.json",
+  "seed": 87231,
+  "tick": 160000,
+  "roads": 564,
+  "arterials": 89,
+  "polygons": 1192,
+  "triangles": 14360,
+  "batches": 1,
+  "samplesMs": [
+    26.914625,
+    26.116083000000003,
+    25.249708999999996,
+    22.089207999999985,
+    30.709500000000048
+  ]
+}

@@ -1,0 +1,475 @@
+{
+  "scope": "Node CPU only; public CityEngine seed 0 development-rate 16 snapshot tick 9250; production buildExtendedBuilding and ConstructionBatches, no browser/GPU",
+  "host": {
+    "cpu": "Apple M2 Max",
+    "node": "v26.7.0"
+  },
+  "source": {
+    "seed": 0,
+    "tick": 9250,
+    "buildings": 260,
+    "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+    "snapshotSha256": "ec0e69c699cf97c2326f7be54a0766eef39f70228049f39db0ff8a6e30da0783"
+  },
+  "ordinaryBuildings": 257,
+  "constructionBuildings": 3,
+  "constructionSources": [
+    {
+      "id": 1819,
+      "stage": "clearing",
+      "kind": "home",
+      "floors": 3,
+      "chunk": "3:1",
+      "factoryMs": 0.7832079999998314,
+      "setMs": 1.3608750000003056
+    },
+    {
+      "id": 1821,
+      "stage": "clearing",
+      "kind": "home",
+      "floors": 3,
+      "chunk": "3:1",
+      "factoryMs": 0.3903330000002825,
+      "setMs": 1.493750000000091
+    },
+    {
+      "id": 1823,
+      "stage": "clearing",
+      "kind": "home",
+      "floors": 6,
+      "chunk": "3:2",
+      "factoryMs": 0.7602090000000317,
+      "setMs": 1.3104170000001432
+    }
+  ],
+  "perBuildingFactory": {
+    "count": 260,
+    "p50": 1.6912500000003092,
+    "p95": 5.741833000000042,
+    "max": 27.125542000000223
+  },
+  "setBookkeeping": {
+    "count": 260,
+    "p50": 5.769874999999956,
+    "p95": 23.244125000000167,
+    "max": 127.96675000000005
+  },
+  "schedulerUpdate": {
+    "count": 505,
+    "p50": 0.7315409999996518,
+    "p95": 2.7669999999998254,
+    "max": 8.26354100000026
+  },
+  "schedulerUpdateCount": 505,
+  "topFactorySources": [
+    {
+      "id": 1450,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 29,
+      "chunk": "2:1",
+      "factoryMs": 27.125542000000223,
+      "setMs": 127.96675000000005
+    },
+    {
+      "id": 1602,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 32,
+      "chunk": "3:1",
+      "factoryMs": 24.190374999999676,
+      "setMs": 95.47866599999998
+    },
+    {
+      "id": 1611,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 29,
+      "chunk": "3:1",
+      "factoryMs": 22.180541000000176,
+      "setMs": 107.61274999999978
+    },
+    {
+      "id": 1714,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 27,
+      "chunk": "3:1",
+      "factoryMs": 20.442332999999962,
+      "setMs": 88.97291599999971
+    },
+    {
+      "id": 89,
+      "stage": "open",
+      "kind": "shop",
+      "floors": 2,
+      "chunk": "1:1",
+      "factoryMs": 16.241083000000003,
+      "setMs": 7.919499999999971
+    },
+    {
+      "id": 817,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 16,
+      "chunk": "2:1",
+      "factoryMs": 14.177249999999958,
+      "setMs": 61.16391700000008
+    },
+    {
+      "id": 237,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 16,
+      "chunk": "2:1",
+      "factoryMs": 14.104125000000067,
+      "setMs": 60.450166999999965
+    },
+    {
+      "id": 235,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "2:1",
+      "factoryMs": 11.929250000000025,
+      "setMs": 42.384915999999976
+    },
+    {
+      "id": 1115,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "3:1",
+      "factoryMs": 11.719083999999839,
+      "setMs": 39.15379199999984
+    },
+    {
+      "id": 94,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 8,
+      "chunk": "1:0",
+      "factoryMs": 9.435541999999998,
+      "setMs": 14.740083000000027
+    },
+    {
+      "id": 1647,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "2:1",
+      "factoryMs": 9.314957999999933,
+      "setMs": 44.7673749999999
+    },
+    {
+      "id": 1424,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "2:1",
+      "factoryMs": 9.203541000000087,
+      "setMs": 27.29887500000018
+    },
+    {
+      "id": 420,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 12,
+      "chunk": "2:1",
+      "factoryMs": 7.585749999999962,
+      "setMs": 29.541582999999946
+    },
+    {
+      "id": 1471,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "2:1",
+      "factoryMs": 5.741833000000042,
+      "setMs": 21.222792000000027
+    },
+    {
+      "id": 1434,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "2:1",
+      "factoryMs": 5.57916699999987,
+      "setMs": 21.44904200000019
+    },
+    {
+      "id": 1655,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 8,
+      "chunk": "3:1",
+      "factoryMs": 4.636707999999999,
+      "setMs": 18.045500000000175
+    },
+    {
+      "id": 1131,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "3:1",
+      "factoryMs": 4.573124999999891,
+      "setMs": 17.782916999999998
+    },
+    {
+      "id": 1448,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 9,
+      "chunk": "2:1",
+      "factoryMs": 4.415792000000238,
+      "setMs": 17.275250000000142
+    },
+    {
+      "id": 1350,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 10,
+      "chunk": "3:1",
+      "factoryMs": 4.341625000000022,
+      "setMs": 17.341457999999875
+    },
+    {
+      "id": 1457,
+      "stage": "open",
+      "kind": "apartment",
+      "floors": 8,
+      "chunk": "2:1",
+      "factoryMs": 4.289999999999964,
+      "setMs": 15.458042000000205
+    }
+  ],
+  "isolatedRegistration": [
+    {
+      "id": 1602,
+      "kind": "apartment",
+      "floors": 32,
+      "geometryFingerprint": {
+        "meshes": 13,
+        "vertices": 111168,
+        "indices": 164952,
+        "positionsSha256": "808e9599c13f62a50898cd59dbdce3fe38e25b7c8c6fab8e09067a1096f7ee55"
+      },
+      "withContours": {
+        "totalSetMs": {
+          "count": 5,
+          "p50": 88.05124999999953,
+          "p95": 106.23054200000024,
+          "max": 106.23054200000024
+        },
+        "directOutlinesMs": {
+          "count": 5,
+          "p50": 88.03145799999947,
+          "p95": 106.15691700000025,
+          "max": 106.15691700000025
+        },
+        "repetitions": [
+          {
+            "repeat": 0,
+            "contours": true,
+            "totalSetMs": 106.23054200000024,
+            "directOutlinesMs": 106.15691700000025,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 1,
+            "contours": true,
+            "totalSetMs": 103.55812500000047,
+            "directOutlinesMs": 103.51075000000037,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 2,
+            "contours": true,
+            "totalSetMs": 88.05124999999953,
+            "directOutlinesMs": 88.03145799999947,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 3,
+            "contours": true,
+            "totalSetMs": 86.92416700000012,
+            "directOutlinesMs": 86.90449999999964,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 4,
+            "contours": true,
+            "totalSetMs": 85.39674999999988,
+            "directOutlinesMs": 85.36987500000032,
+            "outlineCalls": 1
+          }
+        ]
+      },
+      "withoutContours": {
+        "totalSetMs": {
+          "count": 5,
+          "p50": 0.01862500000061118,
+          "p95": 0.021125000000211003,
+          "max": 0.021125000000211003
+        },
+        "directOutlinesMs": {
+          "count": 5,
+          "p50": 0.00166700000045239,
+          "p95": 0.0035420000003796304,
+          "max": 0.0035420000003796304
+        },
+        "repetitions": [
+          {
+            "repeat": 0,
+            "contours": false,
+            "totalSetMs": 0.01862500000061118,
+            "directOutlinesMs": 0.00166700000045239,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 1,
+            "contours": false,
+            "totalSetMs": 0.015957999999955064,
+            "directOutlinesMs": 0.0011660000000119908,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 2,
+            "contours": false,
+            "totalSetMs": 0.013291999999637483,
+            "directOutlinesMs": 0.0011670000003505265,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 3,
+            "contours": false,
+            "totalSetMs": 0.01912499999980355,
+            "directOutlinesMs": 0.0018329999993511592,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 4,
+            "contours": false,
+            "totalSetMs": 0.021125000000211003,
+            "directOutlinesMs": 0.0035420000003796304,
+            "outlineCalls": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 1611,
+      "kind": "apartment",
+      "floors": 29,
+      "geometryFingerprint": {
+        "meshes": 11,
+        "vertices": 100704,
+        "indices": 147456,
+        "positionsSha256": "a8a80280e122c24275cbb9a230fd5d8e68da3d7d49438f37f7ce6c4ea95681df"
+      },
+      "withContours": {
+        "totalSetMs": {
+          "count": 5,
+          "p50": 87.19595800000025,
+          "p95": 92.8342500000008,
+          "max": 92.8342500000008
+        },
+        "directOutlinesMs": {
+          "count": 5,
+          "p50": 87.18029200000001,
+          "p95": 92.77258399999937,
+          "max": 92.77258399999937
+        },
+        "repetitions": [
+          {
+            "repeat": 0,
+            "contours": true,
+            "totalSetMs": 86.60137500000019,
+            "directOutlinesMs": 86.58529199999975,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 1,
+            "contours": true,
+            "totalSetMs": 87.19595800000025,
+            "directOutlinesMs": 87.18029200000001,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 2,
+            "contours": true,
+            "totalSetMs": 90.53308300000026,
+            "directOutlinesMs": 90.51633399999992,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 3,
+            "contours": true,
+            "totalSetMs": 92.8342500000008,
+            "directOutlinesMs": 92.77258399999937,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 4,
+            "contours": true,
+            "totalSetMs": 82.15850000000046,
+            "directOutlinesMs": 82.14291700000012,
+            "outlineCalls": 1
+          }
+        ]
+      },
+      "withoutContours": {
+        "totalSetMs": {
+          "count": 5,
+          "p50": 0.012875000000349246,
+          "p95": 0.013832999999976892,
+          "max": 0.013832999999976892
+        },
+        "directOutlinesMs": {
+          "count": 5,
+          "p50": 0.0009159999999610591,
+          "p95": 0.001208000000588072,
+          "max": 0.001208000000588072
+        },
+        "repetitions": [
+          {
+            "repeat": 0,
+            "contours": false,
+            "totalSetMs": 0.012875000000349246,
+            "directOutlinesMs": 0.0009159999999610591,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 1,
+            "contours": false,
+            "totalSetMs": 0.011499999999614374,
+            "directOutlinesMs": 0.0009170000002995948,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 2,
+            "contours": false,
+            "totalSetMs": 0.013832999999976892,
+            "directOutlinesMs": 0.001208000000588072,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 3,
+            "contours": false,
+            "totalSetMs": 0.0117500000005748,
+            "directOutlinesMs": 0.0004580000004352769,
+            "outlineCalls": 1
+          },
+          {
+            "repeat": 4,
+            "contours": false,
+            "totalSetMs": 0.013625000000502041,
+            "directOutlinesMs": 0.0005409999994299142,
+            "outlineCalls": 1
+          }
+        ]
+      }
+    }
+  ],
+  "method": "All tick-9250 buildings are prepared as one initial scene; construction stage flag is passed to production ConstructionBatches. Isolated source1602/1611 measurements use 5 registrations with contours on/off, same production-generated geometry fingerprint; direct outlines() wrapper timing is included. Two-source-per-frame CityRenderer admission and road dependency gate are not modeled; scheduler work is drained in Node."
+}

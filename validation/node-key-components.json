@@ -1,0 +1,482 @@
+[
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":10217576446209032,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6428,\"count\":118,\"context\":2,\"materialKey\":8826232357977172,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":32,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.209Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":13203484990795216,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6429,\"count\":118,\"context\":2,\"materialKey\":7166409298635585,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":24.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.234Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":13094461064995540,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":416,\"objectType\":\"Mesh\",\"objectId\":6430,\"count\":118,\"context\":2,\"materialKey\":7057385372835907,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1717019092919711\",\"ms\":26.700000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.261Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":14091211466735602,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6429,\"count\":118,\"context\":7,\"materialKey\":8054135774575970,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":26.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.290Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":12664575834497816,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":416,\"objectType\":\"Mesh\",\"objectId\":6430,\"count\":118,\"context\":7,\"materialKey\":6627500142338184,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1717019092919711\",\"ms\":24.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.315Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":7812498544143967,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6428,\"count\":118,\"context\":7,\"materialKey\":6421154455912106,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":29.799999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.346Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":14921196114087892,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":417,\"objectType\":\"Mesh\",\"objectId\":6431,\"count\":118,\"context\":7,\"materialKey\":8884120421928260,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial7913490254936585\",\"ms\":3.5999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.352Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":8214786575193143,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":417,\"objectType\":\"Mesh\",\"objectId\":6431,\"count\":118,\"context\":7,\"materialKey\":2177710883033511,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial7913490254936585\",\"ms\":3,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.355Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":6810217985950979,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":417,\"objectType\":\"Mesh\",\"objectId\":6431,\"count\":118,\"context\":2,\"materialKey\":773142293791347,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial7913490254936585\",\"ms\":3.100000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.359Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9300,\"frame\":9858,\"key\":12261016044451424,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":417,\"objectType\":\"Mesh\",\"objectId\":6431,\"count\":118,\"context\":2,\"materialKey\":6223940352291791,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial7913490254936585\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:39.362Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":4172390105864202,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6749,\"count\":118,\"context\":2,\"materialKey\":2781046017632341,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28.19999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.208Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":12846572004680784,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6750,\"count\":118,\"context\":2,\"materialKey\":6809496312521152,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":27.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.236Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":8651805634754055,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":420,\"objectType\":\"Mesh\",\"objectId\":6751,\"count\":118,\"context\":2,\"materialKey\":2614729942594423,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial8097348293597658\",\"ms\":26.400000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.262Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":14941684397291596,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6750,\"count\":118,\"context\":7,\"materialKey\":8904608705131965,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":25.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.290Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":11638311306988828,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":420,\"objectType\":\"Mesh\",\"objectId\":6751,\"count\":118,\"context\":7,\"materialKey\":5601235614829195,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial8097348293597658\",\"ms\":26.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.317Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":4368000190899716,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":6749,\"count\":118,\"context\":7,\"materialKey\":2976656102667855,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.347Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":11477904247440340,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":421,\"objectType\":\"Mesh\",\"objectId\":6752,\"count\":118,\"context\":7,\"materialKey\":5440828555280709,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4435710472945167\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.352Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":12167985095047940,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":421,\"objectType\":\"Mesh\",\"objectId\":6752,\"count\":118,\"context\":7,\"materialKey\":6130909402888308,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4435710472945167\",\"ms\":3.2999999821186066,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.355Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":7327172967168203,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":421,\"objectType\":\"Mesh\",\"objectId\":6752,\"count\":118,\"context\":2,\"materialKey\":1290097275008571,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4435710472945167\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.359Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9320,\"frame\":9949,\"key\":10227033921867880,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":421,\"objectType\":\"Mesh\",\"objectId\":6752,\"count\":118,\"context\":2,\"materialKey\":4189958229708248,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4435710472945167\",\"ms\":3.199999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:40.363Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":2027773877499411,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7093,\"count\":119,\"context\":2,\"materialKey\":636429789267550,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":31.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.746Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":12799894285222868,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7094,\"count\":119,\"context\":2,\"materialKey\":6762818593063237,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":25,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.772Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":8012376492040965,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":424,\"objectType\":\"Mesh\",\"objectId\":7095,\"count\":119,\"context\":2,\"materialKey\":1975300799881333,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1623188632327760\",\"ms\":26.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.799Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":9877223432407136,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7094,\"count\":119,\"context\":7,\"materialKey\":3840147740247503,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":25.19999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.826Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":11382486105038540,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":424,\"objectType\":\"Mesh\",\"objectId\":7095,\"count\":119,\"context\":7,\"materialKey\":5345410412878907,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1623188632327760\",\"ms\":26.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.853Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":3267005278383791,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7093,\"count\":119,\"context\":7,\"materialKey\":1875661190151930,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":29.099999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.884Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":11355010471592864,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":425,\"objectType\":\"Mesh\",\"objectId\":7096,\"count\":119,\"context\":7,\"materialKey\":5317934779433233,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial6130476024677893\",\"ms\":3.4000000059604645,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.889Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":11217392217104834,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":425,\"objectType\":\"Mesh\",\"objectId\":7096,\"count\":119,\"context\":7,\"materialKey\":5180316524945202,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial6130476024677893\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.892Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":9218332334872316,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":425,\"objectType\":\"Mesh\",\"objectId\":7096,\"count\":119,\"context\":2,\"materialKey\":3181256642712683,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial6130476024677893\",\"ms\":3.100000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.896Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9350,\"frame\":10103,\"key\":13486695650888666,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":425,\"objectType\":\"Mesh\",\"objectId\":7096,\"count\":119,\"context\":2,\"materialKey\":7449619958729034,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial6130476024677893\",\"ms\":3.199999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:41.900Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":8703194699336288,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7422,\"count\":119,\"context\":2,\"materialKey\":7311850611104427,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":29.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.260Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":14869626061062986,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7423,\"count\":119,\"context\":2,\"materialKey\":8832550368903354,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":26.200000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.287Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":10737634917334496,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":428,\"objectType\":\"Mesh\",\"objectId\":7424,\"count\":119,\"context\":2,\"materialKey\":4700559225174863,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1257866508778031\",\"ms\":25.099999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.313Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":12275518406504064,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7423,\"count\":119,\"context\":7,\"materialKey\":6238442714344431,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":24.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.339Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":14035734677167676,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":428,\"objectType\":\"Mesh\",\"objectId\":7424,\"count\":119,\"context\":7,\"materialKey\":7998658985008044,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1257866508778031\",\"ms\":26.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.366Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":8212679380446995,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7422,\"count\":119,\"context\":7,\"materialKey\":6821335292215134,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":27,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.395Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":11716115510272428,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":429,\"objectType\":\"Mesh\",\"objectId\":7425,\"count\":119,\"context\":7,\"materialKey\":5679039818112795,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4610610094039447\",\"ms\":5.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.401Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":9964345774391020,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":429,\"objectType\":\"Mesh\",\"objectId\":7425,\"count\":119,\"context\":7,\"materialKey\":3927270082231389,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4610610094039447\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.405Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":12287732502778930,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":429,\"objectType\":\"Mesh\",\"objectId\":7425,\"count\":119,\"context\":2,\"materialKey\":6250656810619298,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4610610094039447\",\"ms\":3.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.409Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9360,\"frame\":10131,\"key\":15006760720781072,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":429,\"objectType\":\"Mesh\",\"objectId\":7425,\"count\":119,\"context\":2,\"materialKey\":8969685028621439,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4610610094039447\",\"ms\":3.4000000059604645,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:42.413Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":10309568453502960,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7803,\"count\":119,\"context\":2,\"materialKey\":8918224365271100,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":27.69999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.272Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":12234175615865746,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7804,\"count\":119,\"context\":2,\"materialKey\":6197099923706114,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":34.10000002384186,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.307Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":10366956378957392,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":432,\"objectType\":\"Mesh\",\"objectId\":7805,\"count\":119,\"context\":2,\"materialKey\":4329880686797761,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial6873592498691587\",\"ms\":24.600000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.332Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":11606880849690188,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7804,\"count\":119,\"context\":7,\"materialKey\":5569805157530555,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":27,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.361Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":7156706060212634,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":432,\"objectType\":\"Mesh\",\"objectId\":7805,\"count\":119,\"context\":7,\"materialKey\":1119630368053002,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial6873592498691587\",\"ms\":26.099999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.387Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":2307047577738796,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":7803,\"count\":119,\"context\":7,\"materialKey\":915703489506935,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":27.200000017881393,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.416Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":6493615361415958,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":433,\"objectType\":\"Mesh\",\"objectId\":7806,\"count\":119,\"context\":7,\"materialKey\":456539669256326,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4043472348412362\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.421Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":13690964764042220,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":433,\"objectType\":\"Mesh\",\"objectId\":7806,\"count\":119,\"context\":7,\"materialKey\":7653889071882588,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4043472348412362\",\"ms\":4.899999976158142,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.426Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":13798617582869884,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":433,\"objectType\":\"Mesh\",\"objectId\":7806,\"count\":119,\"context\":2,\"materialKey\":7761541890710252,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4043472348412362\",\"ms\":3.199999988079071,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.430Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9401,\"frame\":10337,\"key\":13742349758681916,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":433,\"objectType\":\"Mesh\",\"objectId\":7806,\"count\":119,\"context\":2,\"materialKey\":7705274066522285,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial4043472348412362\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:44.433Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":7799105860766632,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":8397,\"count\":120,\"context\":2,\"materialKey\":6407761772534771,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":30.30000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.764Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":8168418404659884,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":8398,\"count\":120,\"context\":2,\"materialKey\":2131342712500252,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":25,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.790Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":13354912860310284,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":436,\"objectType\":\"Mesh\",\"objectId\":8399,\"count\":120,\"context\":2,\"materialKey\":7317837168150651,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial3456779570013132\",\"ms\":26.19999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.816Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":13680807487871444,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":8398,\"count\":120,\"context\":7,\"materialKey\":7643731795711812,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":26.400000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.844Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":6484874639602000,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":436,\"objectType\":\"Mesh\",\"objectId\":8399,\"count\":120,\"context\":7,\"materialKey\":447798947442368,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial3456779570013132\",\"ms\":24.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.869Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":7488986539077266,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":8397,\"count\":120,\"context\":7,\"materialKey\":6097642450845405,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28.400000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.899Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":14889863412485628,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":437,\"objectType\":\"Mesh\",\"objectId\":8400,\"count\":120,\"context\":7,\"materialKey\":8852787720325997,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3121247462230020\",\"ms\":3.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.904Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":13068538660089156,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":437,\"objectType\":\"Mesh\",\"objectId\":8400,\"count\":120,\"context\":7,\"materialKey\":7031462967929523,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3121247462230020\",\"ms\":3.5,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.908Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":13264902095794308,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":437,\"objectType\":\"Mesh\",\"objectId\":8400,\"count\":120,\"context\":2,\"materialKey\":7227826403634677,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3121247462230020\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.912Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9451,\"frame\":10600,\"key\":7199548350725135,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":437,\"objectType\":\"Mesh\",\"objectId\":8400,\"count\":120,\"context\":2,\"materialKey\":1162472658565503,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3121247462230020\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:46.916Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":8107395969623291,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":9106,\"count\":120,\"context\":2,\"materialKey\":6716051881391430,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":29.900000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.242Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":14872291280150010,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":9107,\"count\":120,\"context\":2,\"materialKey\":8835215587990378,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":24.80000001192093,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.268Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":11077012395031036,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":440,\"objectType\":\"Mesh\",\"objectId\":9108,\"count\":120,\"context\":2,\"materialKey\":5039936702871404,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1380019717344201\",\"ms\":26.299999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.295Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":14284584319831544,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":9107,\"count\":120,\"context\":7,\"materialKey\":8247508627671911,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":24.599999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.321Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":6054233410862055,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":440,\"objectType\":\"Mesh\",\"objectId\":9108,\"count\":120,\"context\":7,\"materialKey\":17157718702423,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1380019717344201\",\"ms\":26.900000005960464,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.348Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":8998227097218920,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":9106,\"count\":120,\"context\":7,\"materialKey\":7606883008987059,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28.599999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.379Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":8639542626851791,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":441,\"objectType\":\"Mesh\",\"objectId\":9109,\"count\":120,\"context\":7,\"materialKey\":2602466934692159,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3298109457270750\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.383Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":13650081067838048,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":441,\"objectType\":\"Mesh\",\"objectId\":9109,\"count\":120,\"context\":7,\"materialKey\":7613005375678417,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3298109457270750\",\"ms\":3.100000023841858,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.387Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":13180633879965144,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":441,\"objectType\":\"Mesh\",\"objectId\":9109,\"count\":120,\"context\":2,\"materialKey\":7143558187805513,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3298109457270750\",\"ms\":3.300000011920929,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.391Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9480,\"frame\":10730,\"key\":7380540769640518,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":441,\"objectType\":\"Mesh\",\"objectId\":9109,\"count\":120,\"context\":2,\"materialKey\":1343465077480886,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial3298109457270750\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:48.394Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":8793953387827631,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":10971,\"count\":122,\"context\":2,\"materialKey\":7402609299595770,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28.299999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.260Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":12980969999328716,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":10972,\"count\":122,\"context\":2,\"materialKey\":6943894307169083,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.289Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":13143037506698984,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":444,\"objectType\":\"Mesh\",\"objectId\":10973,\"count\":122,\"context\":2,\"materialKey\":7105961814539352,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial2635130652308476\",\"ms\":27.399999976158142,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.316Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":14334924352357148,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":10972,\"count\":122,\"context\":7,\"materialKey\":8297848660197517,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":28.099999994039536,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.347Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":13749109429207798,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":444,\"objectType\":\"Mesh\",\"objectId\":10973,\"count\":122,\"context\":7,\"materialKey\":7712033737048166,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial2635130652308476\",\"ms\":26.799999982118607,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.374Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":3890405949233763,\"material\":\"MeshStandardNodeMaterial\",\"materialId\":118,\"objectType\":\"Mesh\",\"objectId\":10971,\"count\":122,\"context\":7,\"materialKey\":2499061861001902,\"dynamicKey\":1391344088231861,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshStandardNodeMaterial1359111487395754\",\"ms\":29.19999998807907,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.404Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":8148091470566420,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":445,\"objectType\":\"Mesh\",\"objectId\":10974,\"count\":122,\"context\":7,\"materialKey\":2111015778406788,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial5443413073211175\",\"ms\":3.4000000059604645,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.410Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":7976171366119809,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":445,\"objectType\":\"Mesh\",\"objectId\":10974,\"count\":122,\"context\":7,\"materialKey\":1939095673960177,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial5443413073211175\",\"ms\":3.0999999940395355,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.413Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":7835947771368102,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":445,\"objectType\":\"Mesh\",\"objectId\":10974,\"count\":122,\"context\":2,\"materialKey\":1798872079208470,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial5443413073211175\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.417Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  },
+  {
+    "level": "log",
+    "message": "node-key-components {\"tick\":9600,\"frame\":11367,\"key\":14470745624755844,\"material\":\"MeshBasicNodeMaterial\",\"materialId\":445,\"objectType\":\"Mesh\",\"objectId\":10974,\"count\":122,\"context\":2,\"materialKey\":8433669932596213,\"dynamicKey\":6037075692159632,\"geometryKey\":\"normal,3,position,3,uv,2,index,\",\"programKey\":\"MeshBasicNodeMaterial5443413073211175\",\"ms\":3.2000000178813934,\"deleted\":null}",
+    "timestamp": "2026-10-13T00:29:54.420Z",
+    "url": "http://127.0.0.1:5173/web/src/render/city.ts?t=1791851286078"
+  }
+]

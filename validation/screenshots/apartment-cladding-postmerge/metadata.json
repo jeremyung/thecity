@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "source": "public CityEngine WASM API; normal seeded development and project stepping",
+  "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+  "seed": 0,
+  "developmentRate": 16,
+  "target": {
+    "id": 1156,
+    "parcelId": 49,
+    "kind": "apartment",
+    "floors": 4,
+    "appearanceSeed": 3893322662,
+    "anchor": false,
+    "stage": "surface",
+    "progress": 0.8692354,
+    "geometry": {
+      "x": 215.51321,
+      "z": -183.04857,
+      "width": 8.766229,
+      "depth": 14.706716,
+      "rotation": -0.2686043,
+      "parcel": {
+        "id": 49,
+        "x": 215.51321,
+        "z": -183.04857,
+        "width": 8.766229,
+        "depth": 14.706716,
+        "rotation": -0.2686043,
+        "access_node": 10,
+        "suitability": 0.88,
+        "protected": false,
+        "reservation": 1156
+      }
+    }
+  },
+  "before": {
+    "tick": 2400,
+    "worldStage": "Neighborhoods",
+    "buildingCount": 89,
+    "project": {
+      "id": 1157,
+      "kind": "building",
+      "from": null,
+      "to": null,
+      "parcel_id": 49,
+      "stage": "surface",
+      "progress": 0.8692354,
+      "reason": "Riverside House is built to meet nearby demand",
+      "duration": 3.4513092,
+      "started_tick": 2280
+    },
+    "snapshotSha256": "43b1ca1940886f2d88cb5435277d934b870da8f71bb77d139972c219f6a5c61b",
+    "saveSha256": "cfe823ab79f8dd356a585518e46d66bb169133c5c94e218057f05e3a511dff77"
+  },
+  "after": {
+    "tick": 2450,
+    "worldStage": "Neighborhoods",
+    "buildingCount": 90,
+    "targetStage": "open",
+    "targetProgress": 1,
+    "stepsToOpen": 50,
+    "snapshotSha256": "2b5ffa1239d81b2636c4807eebe781e3e3d87e45b137db4fe87e2ee4253a92b3",
+    "saveSha256": "c3c3f3254980ac0735058923b804d80fc2539b335d484faddcd04babc912c3da"
+  },
+  "continuation": {
+    "originalLiveSavedBeforeRestore": true,
+    "canonicalPreOpeningRestore": true,
+    "originalVsRestoredEqualAtEveryStep": true,
+    "comparedTicks": 50,
+    "equalAtOpening": true
+  },
+  "scope": "Compact developing-city browser-review fixture. The snapshots show the same naturally admitted non-anchor midrise immediately before opening and at its first observed open state."
+}

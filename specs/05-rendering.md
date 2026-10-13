@@ -4,7 +4,79 @@ Render one shared three-dimensional world with selectable material and shader tr
 
 ## Foundation
 
+Flat-roof service candidate (2026-10-12): tanks have physical supports; wider roofs
+receive bounded HVAC and a human-scale access headhouse using existing materials.
+An Anime still study supports improved silhouettes, while final seeded variation,
+both-style motion and night acceptance remain open. See
+[roof service evidence](../validation/roof-services.md).
+
+Daylight fill candidate (2026-10-12): matched, fixed-camera DOF-off comparisons in
+both styles support increasing hemisphere fill from0.5 to1.0 at full daylight.
+The visible sky does not illuminate the scene. Night endpoint remains1.05;
+intermediate dawn/dusk and motion acceptance remain open. See
+[daylight evidence](../validation/daylight-fill.md). This is a readability
+improvement, not acceptance of overall lighting or concept fidelity.
+
+
 Vehicle checkpoint (2026-10-12): road traffic and the city bus use bodies traced from generated side elevations (`scripts/build-vehicle-kits.py` → `public/art/vehicles`, `web/src/render/vehicle-manifest.json`). Eleven bodies share one material, a 2048×1024 atlas and a 1024×512 paint/lamp/glass mask (13.3 MiB decoded with mips) plus a 512×1024 canvas livery sheet. Each engine length class has weighted body variants (compact: hatch, crossover, minivan; kei: tall wagon, hatch, pickup; taxi: modern, classic sedan), and each vehicle gets a stable weighted paint, a few percent of shade and width variation, and one of thirteen invented operator liveries where it is a fleet vehicle. Bodies narrow toward each end in plan; fronts take corner lamps and a flat grille below the belt line. Wheels roll and steer in the vertex stage; lamps light at night with brake response. Traffic drives on the left: the engine's lane and kerb offsets (`KERB_LANE`, `BUS_STOP_KERB`) are negative along (-dz, dx), which is the driver's right in the renderer's right-handed y-up frame; bus doorways and the kerb-side elevation are on local +x. The engine reports the body class as the movement kind (1 compact, 4 kei, 5 taxi, 6 van, 7 truck, 8 mail van) and queues road vehicles at half their combined lengths plus 0.5 m, never below 4.5 m. Lane queues run every tick; a car enters a lane only a queue gap behind the last car in; driveways queue at both ends of the access path, and a car still waiting at its door is not emitted. Seed-87231 save over 2,000 ticks: 109 sub-2 m road-vehicle pair samples (31 under 1 m, all momentary driveway crossings), longest stationary vehicle 120 ticks. Hardware WebGL (ANGLE/OpenGL ES, RTX PRO 6000; `scripts/benchmark-vehicles.mjs`): 1,000 moving vehicles add about 0.8 ms per frame including updates and shadows, 16 draws and 0.36 M triangles. Open: WebGPU frame time (headless Chromium exposes no adapter here) and fascias, which remain approximations from the side elevation.
+
+A four-SpotLight nearby-fixture prototype now follows committed ordinary-road
+lamp heads and fades selection changes. It has a fixed light/source budget;
+occlusion, actor crossings, mature-city cost and fallback acceptance remain
+open. See [prototype evidence](../validation/nearby-street-lights.md). It is not
+a replacement for the complete night-scene acceptance gate.
+
+Ground streetlight coverage correction (2026-10-12): shared fixtures now use
+actual road widths, terrain-level local bases and sidewalk-level arterial bases.
+Legacy duplicate ordinary-road fixtures were removed. An enlarged soft-pool
+experiment was rejected after close playback review; restrained existing pools
+remain an approximation, not dynamic actor lighting. See
+[coverage validation](../validation/street-light-coverage.md); elevated-road
+illumination and full day-cycle/motion acceptance remain open.
+
+Flat roofs should distinguish waterproof roof fields from parapet coping and
+service equipment. The current candidate restores this separation without new
+textures; [validation](../validation/roof-surface.md) records the limited daytime
+evidence and outstanding matched-camera/night review.
+
+Ground-road continuity checkpoint (2026-10-12): local streets, lanes and
+junction fill now share a .3 m asphalt top; open locals render edge lines
+without construction cones. Actual mesh regressions and isolated dual-backend
+captures support this correction. A shared width-aware rounded footprint now replaces mixed-width circular
+pads in road and sidewalk geometry. Arterial bends add clipped outer sidewalk
+connections using that shared footprint. Local/arterial paint now clears finite
+incident ground carriageways. Full-city motion and broader street realism
+remain unfinished. See
+[validation](../validation/ground-surface-artifacts.md#ground-junction-datum-and-open-local-streets--2026-10-12).
+
+Ground-road overlap candidate (2026-10-12): coplanar pavement now has explicit
+ownership. Existing road footprints, junction remainders and growing surfaces
+are partitioned without changing the .3m datum. The completed ownership index
+commits with the visible road batch; progress updates fork it. The captured
+edge-overlap triangle is clean in a static Miniature view and mesh coverage tests
+pass. Motion, both styles and mature active-construction performance remain open;
+see [current handoff](../validation/HANDOFF.md) and
+[CPU profile](../validation/road-surface-partition-cost.json).
+
+Visible-infrastructure checkpoint (2026-10-12): queued building geometry is
+admitted only when its explicit access-road identity matches a committed road
+batch. Identity includes endpoints, road kind and deck geometry; world reset
+invalidates older commit tokens. Missing, closed or disconnected dependencies
+remain queued. Unrelated buildings on unchanged roads continue normally. This
+is partial implementation: actor movement, ground, access paths and other
+dependent presentation still need synchronized infrastructure admission. Do not
+accept a coherent living-city frame from the building gate alone. See
+[the road staging report](../validation/road-staging.md).
+
+Road-growth checkpoint (2026-10-12): completed infrastructure and active
+construction use separate attached material batches. Construction progress
+retains finished roads, river rails, junctions, lighting and station geometry;
+topology/crossing, deck, platform, river and canopy dependencies invalidate it.
+Measured CPU work declines on retained updates without dropping geometry, but
+full topology rebuilds and browser growth still hitch. See
+[the batch retention audit](../validation/road-batch-retention.md); this does not
+satisfy the frame-time or concept-fidelity gates.
+
 
 Style-switch checkpoint (2026-10-10): warmup submits one material/layout representative at a time and yields a browser task between samples. Superseded requests stop before the next sample; the live material swap occurs after successful preparation. Founder WebGL observations reduce the largest uninterrupted submission from a multi-second all-layout call to under 100 ms per sample, but total warmup remains about ten seconds and mature/WebGPU/performance acceptance is open. See the audit for measurements and caveats.
 
@@ -12,7 +84,7 @@ Street-lighting checkpoint (2026-10-10): ordinary open connected streets share a
 
 Geometry streaming coalesces spatial batch rebuilds while arrivals are pending. Existing batches stay visible; busy chunks become eligible after 12 render updates. Preparation and merging now advance under vertex/index quotas with one active chunk, then atomically replace the completed batch. Preserve authored triangles, materials, and picking spans. Completed source meshes are released; immutable building descriptors regenerate them when their chunk changes, with at most one regeneration factory call per update. Owned sign materials and textures transfer to the batch and retire only after outstanding style compilation releases its references. Source contour copies remain resident. Renderer diagnostics expose remaining building and batch queues for visual verification.
 
-Memory/performance checkpoint: the 850-building fixture retains 2,135,638 triangles with 219,495,028 bytes of counted CPU geometry arrays after source release (150,410,212 fewer source-array bytes). These are Node structural/array measurements, not browser heap or GPU memory. A single regenerated building can still exceed a frame budget: an earlier descriptor benchmark recorded replacement-drain p95 31.3 ms per update; a later root rerun recorded p95 3.092 ms and max 4.493 ms. Host load was not isolated, so this spread is variability evidence, not a measured tenfold optimization. Initial set/outline extraction and kit construction remain synchronous. Count quotas do not prove bounded frame time; continue profiling and stage these operations without dropping focal detail. See [the geometry audit](../validation/mature-building-geometry-budget.md) and [regeneration benchmark](../validation/staged-building-chunks-benchmark.md).
+Memory/performance checkpoint: the 850-building fixture retains 2,135,638 triangles with 219,495,028 bytes of counted CPU geometry arrays after source release (150,410,212 fewer source-array bytes). These are Node structural/array measurements, not browser heap or GPU memory. A single regenerated building can still exceed a frame budget: an earlier descriptor benchmark recorded replacement-drain p95 31.3 ms per update; a later root rerun recorded p95 3.092 ms and max 4.493 ms. Host load was not isolated, so this spread is variability evidence, not a measured tenfold optimization. Kit construction remains synchronous. Contour extraction now advances at a shared 2,000-work-unit quota per BuildingChunks update (bounds vertices, triangles, unmatched edges and final output floats); registration defers extraction entirely. Complete contours are cached per source and published with the complete batch. This candidate preserves exact legacy edge coordinates in focused tests and two production tall-building comparisons, but browser frame timing and publication latency remain acceptance gates. Count quotas do not prove bounded frame time; continue profiling and stage these operations without dropping focal detail. See [the geometry audit](../validation/mature-building-geometry-budget.md) and [regeneration benchmark](../validation/staged-building-chunks-benchmark.md).
 
 Style-resource checkpoint: shader warmup now uses `compileAsync(samples, camera, liveScene)` to borrow the actual scene lights. It creates no temporary light clones or shadow targets and leaves live light ownership unchanged. Mature WebGPU Anime→Miniature→Anime→Miniature verification held at277 textures and504 geometries after warmup, with zero queued geometry and no captured console errors. This supersedes the earlier clone-and-dispose workaround. The short counter plateau does not prove the multi-hour memory gate. The warmed repeat still took about3.3 seconds of submission/await work, with a25ms largest submission; no performance improvement is claimed. Visual transitions and latency remain unfinished.
 
@@ -47,7 +119,7 @@ Lowrise surface checkpoint (2026-10-10): non-anchor home windows now use layered
 
 ### Party walls, lanes and elevated layers
 
-Master-plan lots tile each block with no gaps. Bodies run to the shared lot lines, keeping a fixed side margin for eaves, sills and foundation lips: 0.9 m for low-rise homes and shops, and 1.3 m for apartments and offices. Neighbors therefore stand about 0.9–1.3 m apart, near Tokyo's 0.5 m-per-side norm, and form a near-continuous street wall. Towers and anchors keep their proportional plaza inset; depth keeps a front setback and rear yard. Developed blocks render as paved urban ground, not lawn. Local streets render 6.5 m wide with painted edge lines and no raised sidewalk or center line. Lanes are 4 m. Only arterials have sidewalks and center markings. Party-wall sides should move to quiet, windowless material (not yet implemented). Elevated rail runs on a viaduct deck about 7 m above the ground, with piers at least every 24 m, and trains follow the deck height. Expressway deck elevations come from authoritative `road_decks`: the east–west route is at 11 m and the north–south route at 20 m, on single-column piers with sound barriers. Upper piers skip lower transverse road/rail clearance envelopes. Neither elevated layer occludes construction picking or street lighting below.
+Master-plan partition cells follow clipped block geometry; rectangular building parcels are fitted inside those cells. Some rejected or unusable cells remain unbuilt. Bodies run to the shared lot lines, keeping a fixed side margin for eaves, sills and foundation lips: 0.9 m for low-rise homes and shops, and 1.3 m for apartments and offices. Neighbors therefore stand about 0.9–1.3 m apart, near Tokyo's 0.5 m-per-side norm, and form a near-continuous street wall. Towers and anchors keep their proportional plaza inset; depth keeps a front setback and rear yard. Realized building sites render their retained partition cells as urban ground. Merely releasing a parcel does not pave its block; unbuilt cells retain natural ground. Vacancy and renewal retain the realized ground. Local streets render 6.5 m wide with painted edge lines and no raised sidewalk or center line. Lanes are 4 m. Only arterials have sidewalks and center markings. Party-wall sides should move to quiet, windowless material (not yet implemented). Elevated rail runs on a viaduct roadbed centered 6.4 m above the ground, with piers at least every 24 m, and trains follow the deck height. Expressway deck elevations come from authoritative `road_decks`: the east–west route is at 11 m and the north–south route at 20 m, on single-column piers with sound barriers. Upper piers skip lower transverse road/rail clearance envelopes. Neither elevated layer occludes construction picking or street lighting below.
 
 At 3,000 buildings, distant low-rise fabric must use simplified merged geometry: body box, roof color and window band. Full kits are reserved for focal and near chunks, so the triangle budget stays within the existing performance policy.
 
@@ -117,6 +189,12 @@ Create geometry in physical world units. Use modular roofs, facades, windows, sh
 
 Reuse glTF assets, mesh instances, shared materials, texture atlases, and distance-based detail. Group repeated geometry by mesh, material, and spatial chunk. Visibility culling must operate at useful chunk granularity rather than treating the entire city as one giant instance batch.
 
+Walk-up facade checkpoint (2026-10-12): the exposed circulation-core flank now
+carries narrow service windows; the attached apartment face stays unperforated.
+Existing materials and common geometry preserve style switching. See
+[geometry and visual evidence](../validation/core-facade.md); broader architectural
+fidelity remains open.
+
 ## Style contract
 
 A style receives surface category, base colors, normals, depth, world coordinates, lighting, wetness, and shared water state. It owns surface response, edge treatment, atmosphere, color grading, focus defaults, and required render passes.
@@ -137,6 +215,19 @@ Painterly and ink styles are future implementations of this contract. Brush mark
 Prepare the new pipeline without discarding the current one, precompile likely material variants, then switch at a frame boundary. Preserve camera, clock, selection, geometry, and world IDs. Reset temporal history when the pipeline changes. Dispose unused resources after the switch. Transition effects must respect reduced motion and memory ceilings; a short fade is sufficient.
 
 ## Water
+
+Engineered-bank checkpoint (2026-10-12): continuous wall, coping and promenade
+sweeps follow the shared X-offset river boundary. This replaces repeated polygonal
+shoulders and overlapping segment boxes; existing railings remain. Matched static
+views support silhouette correction, while closer bends, motion and fallback
+remain under review. See [bank evidence](../validation/riverbank.md).
+
+
+Fine-detail checkpoint (2026-10-11): independent advected 2D noise slopes replace
+coherent sine normals that produced river-wide bands. Screen-footprint attenuation,
+roughness transfer and simulated rain remain. Matched dusk views and fallback
+smoke support this narrow correction; full motion, rain, nighttime and measured
+shader cost remain open. See [validation](../validation/water-fine-normals.md).
 
 Use finite river geometry and a flow field following its course. Layer flowing normals and gentle displacement with a bounded low-resolution ripple grid near observation areas. Rain and wakes inject impulses. When no fine grid is active, analytic waves preserve continuity. Local ripple detail is visual and does not affect city economics.
 
@@ -173,3 +264,149 @@ Track draw calls, triangles, buffer sizes, texture memory, pipeline compilation,
 
 - [Renderer backends and MSAA options](https://threejs.org/docs/pages/WebGPURenderer.html)
 - [TSL post-processing and temporal inputs](https://threejs.org/manual/pages/webgpu-postprocessing.html)
+
+
+### Expressway connection geometry (implemented 2026-10-11)
+
+The authoritative master plan supplies cubic controls for elevated road sections.
+The renderer samples those controls by arc distance and sweeps indexed deck,
+median, barrier and paint geometry along the shared endpoint frames. Lights and
+piers follow the same curve. Construction reveals a clipped arc length. Curves
+do not change when later road sections appear. Coincident but disconnected nodes
+and different deck levels remain separate.
+
+This supersedes the temporary renderer-derived two-metre smoothing. The planner
+now allows broader handles and excludes lots from a conservative sampled curve
+corridor before final admission. Current scope remains constant-height routes;
+ramps, vertical transitions, expressway traffic and engineered merges are still
+required to approach the new photographic references. Future expressway vehicle
+motion must sample these controls rather than the original straight chords.
+
+Ceramic-roof checkpoint (2026-10-11): low-rise and anchor gables share bounded
+rounded tile rolls and course lips, merged into existing materials. Controlled
+views and 27 architecture tests support the local change; full-city motion,
+loading cost and night fidelity remain acceptance work. See
+[roof validation](../validation/ceramic-roof.md).
+
+
+### Commuter rail fidelity checkpoint — 2026-10-11
+
+The first rail family uses a compact fictional three-car stainless commuter kit,
+15 m coaches with rounded shoulders, paired doors, green/orange bands, cab lights,
+roof equipment and bogies. Geometry is shared through bounded instances (eight
+trainsets maximum). A shared rail profile aligns wheels with the 1.067 m inside
+rail gauge, coach floor with the engine's 8 m platform surface, and platform edge
+0.1 m from the main body. This is an authored approximation, not an exact train model.
+
+Separate streetcar, ground-level commuter and elevated infrastructure kits remain
+required. Prioritize coherent catenary, ballast/track slab, corridor edges and platform
+detail, then coach articulation and door/dwell behavior. Do not imply that selecting
+a different shader supplies these missing geometry or behavior features.
+See `validation/commuter-rail.md` for verification and remaining fidelity limits.
+
+
+The elevated family now includes a bounded straight-corridor catenary and service
+edge kit, with a shared pantograph contact height and clearance reservations from
+both authoritative terminal frames. The contact wire is straight; curved-track
+support, variable heights and complete fencing remain outstanding. See
+`validation/rail-corridor.md` for cost and limited browser acceptance.
+
+
+Terminal reversal now keeps the physical consist oriented along its current
+straight route and switches head/tail lamps between cabs. Travel-heading changes
+do not rotate the entire vehicle through the platform. General curved-route
+articulation remains required; see `validation/train-reversal.md`.
+
+Platform-side doors now use real sidewall openings and shared sliding leaves, driven
+by authoritative terminal and opening-fraction fields. The opposite side remains
+closed; movement clears stale open poses. This works in both material styles.
+Overhead canopy occlusion and snapshot interpolation still limit visual acceptance;
+see `validation/train-doors.md`. Individual passengers do not yet walk through
+specific door apertures.
+
+### Storefront notice atlas checkpoint
+
+Existing shop glazing now includes a bounded authored 512² atlas of paper menus
+and notices, shared across buildings and both styles. It adds no emission and
+does not state simulated opening hours. Two triangles per notice; full street
+and residency review remain required. See `validation/storefront-notices.md`.
+
+### Paved ground and vegetation
+
+Natural tree roots must not emerge through uninterrupted developed paving.
+Clearance follows the rendered filled polygons, preserving unpaved gaps and
+concave notches; canopy overhang from outside the paved area is allowed.
+The current block-polygon clearance is verified on one developing checkpoint
+in both styles; progressive ground realization and full motion/backend review
+remain open. See [ground surface evidence](../validation/ground-surface-artifacts.md).
+
+
+Shadow binding checkpoint (2026-10-11): shared storefront atlas node materials
+explicitly use the default TSL materialColor expression so unchanged receivers
+refresh bindings after shadow texture resizing. Keep the focused observer test
+and actual WebGPU style/quality transition checks when upgrading Three.js.
+Do not globally dispose city materials to repair binding lifetime: the tested
+workaround introduced a roughly 4.8-second hitch. See
+[ground/shadow evidence](../validation/ground-surface-artifacts.md#shadow-binding-diagnosis-and-narrow-material-fix--2026-10-11).
+
+Shop-sign batching checkpoint (2026-10-12): ordinary shop/cafe/anchor signs share
+one opaque512×528 padded atlas with cell UVs. Source groups own geometry;
+ArtMaterials owns the shared texture/material. Focused checks verify in-bounds
+cells, merged label UVs and disposal. Small-city style captures and limitations
+are recorded in [the atlas report](../validation/shop-sign-atlas.md); mature
+GPU savings and full visual acceptance are not established by these tests.
+
+
+Tower construction checkpoint (2026-10-12): apartments/offices of twelve or more
+floors share their finished podium/shaft/crown mass definitions with staged
+construction and demolition. Normal-import structure-stage captures in both
+styles verify recessed frame geometry; facade completion and recorded motion
+remain unaccepted. See [renewal evidence](../validation/height-redevelopment.md).
+
+Tower finishing checkpoint: installed floors now use the shared authored open
+facade rather than generic temporary panels. Roof equipment waits for full
+cladding and operational emission waits for opening. Normal Anime before/after
+playback confirms retained facade geometry; full motion and both-style browser
+acceptance remain open. See the renewal evidence above.
+
+
+Construction batching candidate (2026-10-12): non-open buildings use isolated
+batches while completed buildings retain spatial merging. Both share the authored
+geometry, material and quota paths. Cross-pool transitions must preserve exactly
+one visible building and all static neighbors. See the height-redevelopment
+validation report; browser motion, first-renewal handoff latency and draw-call
+cost remain acceptance work. This does not change the art or geometry requirements.
+
+Reopening handoff candidate (2026-10-12): final open geometry first publishes in
+its isolated construction batch; a budgeted background source then returns it to
+the static neighborhood batch. Retire isolated geometry only after the exact
+replacement is committed. The mature synthetic audit improves first visibility
+from 463 to 1 update, while background work remains bounded and drains. Browser
+motion acceptance is still required; see validation/height-redevelopment.md.
+
+Committed-source retirement candidate (2026-10-12): construction entry may degenerate only the retiring building's indexed triangles and contour segments after its isolated replacement is ready. Preflight uses existing per-update quotas; oversized sources retain normal rebuild behavior. Picking and committed membership must reflect the removed source; owned resources retire with the batch. Synthetic improvement is documented in validation/height-redevelopment.md; browser/backend acceptance remains pending.
+
+Office silhouette candidate (2026-10-12): a seeded subset of eligible midrise
+offices keeps a straight lower body with one inset top floor; the remaining
+offices retain podium/shaft/crown silhouettes. Same authoritative lot/floors
+and shared style geometry. See validation/office-slab-variation.md for limited
+visual and geometry evidence and remaining cost/motion checks.
+
+
+### Street-light instance lifetime checkpoint — 2026-10-12
+
+Road preparation produces detached lamp transforms and source records. Atomic road
+publication copies them into four persistent instanced meshes (capacity1000), so
+normal growth preserves shader-node cache identities. Reset clears active counts;
+disposal releases owned geometry/materials under existing compilation safeguards.
+This preserves lamp and glow detail. Focused publication/lifetime tests pass;
+full both-style performance and visual acceptance remain outstanding. Evidence:
+`validation/backend-growth-attribution.md`.
+
+
+Persistent-lighting verification (2026-10-12): one matched 4,725-frame Miniature
+growth interval recorded one new shader-state build, versus repeated builds in the
+prior diagnostic. Render CPU maximum was 43.3 ms; complete animation CPU maximum
+49.2 ms. This supports retaining persistent instance identities, but does not
+establish GPU, both-style, long-run or smooth-growth acceptance. See
+[measurement scope](../validation/backend-growth-attribution.md#persistent-lighting-matched-growth-trace--2026-10-12).

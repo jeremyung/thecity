@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "source": "Fresh seed 0 CityEngine using public WASM API; dev rate 16; renderer-equivalent open road ID order, junction pads, then construction prefixes/projects. Fresh replay timings create a partition; cached timings fork a previously populated completed partition.",
+  "environment": {
+    "node": "v26.7.0",
+    "platform": "darwin 25.6.0 arm64",
+    "hostname": "MacBook-Pro.local",
+    "cpu": "Apple M2 Max",
+    "logicalCpus": 12,
+    "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82",
+    "gpuMeasured": false
+  },
+  "method": {
+    "stepping": "advance each target in steps no larger than 2,000 ticks, with JSON snapshot outside claim timings",
+    "warmupPasses": 3,
+    "measuredPasses": 15,
+    "polygon": "roadWidth rectangles with renderer construction endpoint clamp((progress-.12)/.88), junctionFootprint pads for open non-bridge/non-rail/non-expressway roads",
+    "timing": "Node process performance.now CPU elapsed time; fresh replay per pass, plus separately timed cached completed-partition fork and construction claims; no GPU or mesh extrusion measured",
+    "limitations": "No browser frame scheduling or GPU claim. Fork construction output is deep-compared against the same construction claim sequence following a completed replay on every measured sample."
+  },
+  "snapshots": [
+    {
+      "tick": 9250,
+      "world": {
+        "roads": 78,
+        "openRoads": 74,
+        "activeRoadProjects": 3,
+        "nodes": 73,
+        "buildings": 260
+      },
+      "ownershipClaims": {
+        "completedRoads": 71,
+        "junctionPads": 42,
+        "constructionRoads": 3,
+        "constructionProjects": 0,
+        "emittedRoadPieces": 160,
+        "emittedPadPieces": 24,
+        "emittedConstructionPieces": 29,
+        "emptyClaims": 18
+      },
+      "freshPartitionPass": {
+        "completedRoadsAndPads": {
+          "samples": 15,
+          "medianMs": 1.1199159999996482,
+          "p95Ms": 1.598707999999533,
+          "maxMs": 2.340832999999293
+        },
+        "completedPlusConstruction": {
+          "samples": 15,
+          "medianMs": 1.0935829999998532,
+          "p95Ms": 1.5837080000001151,
+          "maxMs": 1.682542000000467
+        },
+        "constructionClaimsOnlyAfterCompletedReplay": {
+          "samples": 15,
+          "medianMs": 0.04712500000005093,
+          "p95Ms": 0.06300000000010186,
+          "maxMs": 0.08737500000006548
+        },
+        "constructionReplayIncrementMedianMs": -0.0263
+      },
+      "cachedFork": {
+        "forkOnly": {
+          "samples": 15,
+          "medianMs": 0.015333000000282482,
+          "p95Ms": 0.029624999999214197,
+          "maxMs": 0.114875000000211
+        },
+        "forkPlusConstructionClaims": {
+          "samples": 15,
+          "medianMs": 0.07891699999981938,
+          "p95Ms": 0.18983300000036252,
+          "maxMs": 0.523707999999715
+        },
+        "constructionOutputDeepEqualToReplay": true,
+        "comparisonSamples": 15
+      },
+      "gpuMeasured": false
+    },
+    {
+      "tick": 100000,
+      "world": {
+        "roads": 530,
+        "openRoads": 530,
+        "activeRoadProjects": 0,
+        "nodes": 374,
+        "buildings": 1730
+      },
+      "ownershipClaims": {
+        "completedRoads": 509,
+        "junctionPads": 329,
+        "constructionRoads": 0,
+        "constructionProjects": 0,
+        "emittedRoadPieces": 1458,
+        "emittedPadPieces": 159,
+        "emittedConstructionPieces": 0,
+        "emptyClaims": 175
+      },
+      "freshPartitionPass": {
+        "completedRoadsAndPads": {
+          "samples": 15,
+          "medianMs": 9.633708000000297,
+          "p95Ms": 10.110333999999966,
+          "maxMs": 10.486416999999165
+        },
+        "completedPlusConstruction": {
+          "samples": 15,
+          "medianMs": 10.01866599999994,
+          "p95Ms": 10.692250000000058,
+          "maxMs": 11.328999999999724
+        },
+        "constructionClaimsOnlyAfterCompletedReplay": {
+          "samples": 15,
+          "medianMs": 0.010208000000602624,
+          "p95Ms": 0.015124999999898137,
+          "maxMs": 0.01695800000015879
+        },
+        "constructionReplayIncrementMedianMs": 0.385
+      },
+      "cachedFork": {
+        "forkOnly": {
+          "samples": 15,
+          "medianMs": 0.04591699999946286,
+          "p95Ms": 0.06224999999994907,
+          "maxMs": 0.06279099999937898
+        },
+        "forkPlusConstructionClaims": {
+          "samples": 15,
+          "medianMs": 0.08150000000023283,
+          "p95Ms": 0.10024999999950523,
+          "maxMs": 0.11541599999964092
+        },
+        "constructionOutputDeepEqualToReplay": true,
+        "comparisonSamples": 15
+      },
+      "gpuMeasured": false
+    }
+  ]
+}

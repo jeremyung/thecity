@@ -140,3 +140,10 @@ Fabric acceptance (2026-10-11): at maturity, rendered-footprint crops of compact
 Procedural-generation research acceptance (proposed work, 2026-10-09): compare fixed-seed, fixed-tick scenes with matched camera, time, style, and focus settings. Measure rendered building footprint and net developable block coverage separately from parcel-envelope proxies. Check parcel overlap, real street access, connected junctions, bounded proposal queues, and save/resume of pending planning work. Verify infrastructure construction precedes adjacent opening. Evaluate several seeds and stages; one denser screenshot does not establish general quality. Architectural variation should remain coherent within districts and survive style switching without geometry changes. Prioritize compact blocks and street detail before using extra towers, blur, or grading to imply density.
 
 A viewer can watch infrastructure open new land, see homes and businesses grow around it, follow purposeful activity through a full daily cycle, and observe a mature city that continues changing within finite bounds. Last Train, First Light must feel complete before adding more art modes or larger maps.
+
+Frame-diagnostic implementation: use bounded windows labeled loading, ready or
+hidden; reset across visibility and phase transitions. Report sample count,
+frame interval p95, CPU submission p95 and longest frame separately. Retain
+slow visible frames. These diagnostics support, but do not replace, named-device
+GPU/CPU and end-to-end performance profiles. See
+[measurement evidence](../validation/frame-timing.md).

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/jung/Development/thecity
+
+
+ Test Files  2 passed (2)
+      Tests  62 passed (62)
+   Start at  17:47:32
+   Duration  423ms (transform 292ms, setup 0ms, import 408ms, tests 222ms, environment 0ms)
+

@@ -1,0 +1,11 @@
+{
+  "seed": 87231,
+  "developmentRate": 16,
+  "steps": 40000,
+  "sampleEvery": 800,
+  "observations": 12197,
+  "unresolved": 0,
+  "counts": {},
+  "witnesses": [],
+  "wasmSha256": "d34ab401259a0ff218e29dc40eae79c2b9f0ce2311b2676695943a75b2d90b82"
+}
