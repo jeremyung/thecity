@@ -15,10 +15,11 @@ import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '.
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv, fog, rangeFogFactor, positionWorld } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { ssr } from 'three/addons/tsl/display/SSRNode.js';
+import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
 import { SkyEnvironment } from './sky-environment';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
@@ -100,8 +101,16 @@ export class CityRenderer {
   private pipeline:THREE.RenderPipeline|null=null;
   private occlusion:ReturnType<typeof ao>|null=null;
   private occlusionStrength=uniform(.65);
+  private hazeColor=uniform(new THREE.Color('#d2d6cc'));
+  private hazeNear=uniform(HAZE_NEAR.anime);
+  private hazeFar=uniform(HAZE_FAR.anime);
+  private mist=uniform(0);
   private reflections:ReturnType<typeof ssr>|null=null;
   private wetReflections=false;
+  private shafts:ReturnType<typeof godrays>|null=null;
+  private lightShafts=false;
+  private shaftColor=uniform(new THREE.Color(0,0,0));
+  private shaftStrength=0;
   private skyEnvironment:SkyEnvironment|null=null;
   private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
@@ -213,7 +222,11 @@ export class CityRenderer {
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.05;
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
-    this.scene.fog=new THREE.Fog('#d2d6cc',HAZE_NEAR.anime,HAZE_FAR.anime);
+    // Range haze (clear city, veiled backdrop) plus low-lying mist: it builds
+    // with distance but only near the ground and water, strongest at first
+    // light and in rain, so towers rise out of it as in the dawn concept.
+    const mist=positionView.z.negate().mul(-.0032).exp().oneMinus().mul(positionWorld.y.add(1.5).div(-8).exp()).mul(this.mist);
+    this.scene.fogNode=fog(this.hazeColor,rangeFogFactor(this.hazeNear,this.hazeFar).max(mist));
     this.scene.add(this.terrain,this.roads,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
@@ -315,6 +328,15 @@ export class CityRenderer {
       // so add it; alpha blending would replace the street with a dark mirror.
       sceneColor=sceneColor.add(vec4(reflections.rgb,0));
     }
+    if(this.lightShafts){
+      // Raymarched shafts through the key light's shadow map, only while the
+      // sun is low enough for them to read (rebuilt when that changes).
+      const shafts=this.shafts=godrays(this.scenePass.getTextureNode('depth'),this.camera,this.sun);
+      shafts.resolutionScale=.5;// Aerial views see sunlit air almost everywhere: keep density low so
+      // only the contrast behind occluders reads, not a uniform glow.
+      shafts.raymarchSteps.value=40;shafts.density.value=.09;shafts.maxDensity.value=.22;shafts.distanceAttenuation.value=2;
+      sceneColor=sceneColor.add(vec4(shafts.getTextureNode().rgb.mul(this.shaftColor),0));
+    }
     const depth=this.scenePass.getViewZNode();
     const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
       focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
@@ -324,7 +346,7 @@ export class CityRenderer {
     this.pipeline=new THREE.RenderPipeline(this.renderer);
     this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
   }
-  private disposePipeline(){this.occlusion?.dispose();this.occlusion=null;this.reflections?.dispose();this.reflections=null;this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
+  private disposePipeline(){this.occlusion?.dispose();this.occlusion=null;this.reflections?.dispose();this.reflections=null;this.shafts?.dispose();this.shafts=null;this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
   async setStyle(style:Style){
     const request=++this.styleRequest;
     const previous=this.styleWarmupTail;
@@ -922,13 +944,15 @@ export class CityRenderer {
     const low=new THREE.Color('#d5ded3').lerp(new THREE.Color('#efb185'),dusk).lerp(new THREE.Color('#334860'),1-this.daylight);
     this.skyHigh.value.copy(top);this.skyLow.value.copy(low);this.skyCloudShade.value.set('#8ba5bc').lerp(new THREE.Color('#9c829b'),dusk*.7).lerp(new THREE.Color('#283c58'),1-this.daylight);this.hillColor.value.set('#577773').lerp(new THREE.Color('#747386'),dusk*.55).lerp(new THREE.Color('#20384a'),1-this.daylight);this.skyCloud.value.set('#fff3dc').lerp(new THREE.Color('#d29e91'),dusk*.5).lerp(new THREE.Color('#45526a'),1-this.daylight);
     this.skylineColor.value.set('#8193a1').lerp(new THREE.Color('#8a7f93'),dusk*.6).lerp(new THREE.Color('#1c2a3c'),1-this.daylight);this.skylineNight.value=1-this.daylight;
-    const atmosphere=this.scene.fog as THREE.Fog;
     // Haze matches the horizon so hills, skyline and mountains recede into the
     // sky. The range keeps the city itself clear (overview contrast, spec 05)
     // while the backdrop gains aerial perspective. Rain pulls the veil closer.
-    atmosphere.color.copy(low).lerp(top,.25);
+    this.hazeColor.value.copy(low).lerp(top,.25);
     const veil=1-this.rain*.45;
-    atmosphere.near=HAZE_NEAR[this.style]*veil;atmosphere.far=HAZE_FAR[this.style]*veil;
+    this.hazeNear.value=HAZE_NEAR[this.style]*veil;this.hazeFar.value=HAZE_FAR[this.style]*veil;
+    // Morning mist peaks around 05:30-07:00 and burns off by mid-morning.
+    const morning=THREE.MathUtils.smoothstep(hour%24,4.5,5.8)*(1-THREE.MathUtils.smoothstep(hour%24,7,9.5));
+    this.mist.value=Math.min(.7,morning*.5+this.rain*.3);
     const solarY=Math.sin(angle)*450;this.sunDisc.position.set(Math.cos(angle)*1050,solarY*3,-480);this.sunDisc.visible=solarY>-25;this.moonDisc.position.set(-Math.cos(angle)*1050,-solarY*3,480);this.moonDisc.visible=solarY<25;
     const keyBlend=this.daylight*2-1;
     // Snap only the shadow camera's light-plane translation. The key's
@@ -940,7 +964,9 @@ export class CityRenderer {
       shadowCamera.right-shadowCamera.left,shadowCamera.top-shadowCamera.bottom,
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
-    this.sun.intensity=.16+this.daylight*2.05;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
+    this.sun.intensity=.16+this.daylight*2.05;
+    this.shaftStrength=dusk*THREE.MathUtils.smoothstep(this.daylight,.15,.6)*(1-this.rain);
+    this.shaftColor.value.set(dusk>.4?'#ffc58a':'#ffe2b4').multiplyScalar(this.shaftStrength*.45);this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
     this.water?.setSun(v.copy(this.sun.position).sub(this.sun.target.position),new THREE.Color().copy(this.sun.color).multiplyScalar(this.sun.intensity*.5));
     // Soft urban bounce keeps opaque facades and lanes readable between local
     // emitters. The visible sky is not an environment light: retain enough
@@ -972,6 +998,9 @@ export class CityRenderer {
     // Hysteresis: rebuild the pipeline only when streets clearly get or lose a sheen.
     const wetStreets=this.wetReflections?this.art.wet.value>.03:this.art.wet.value>.08;
     if(wetStreets!==this.wetReflections&&this.pipeline){this.wetReflections=wetStreets;this.buildPipeline();}
+    // Golden-hour shafts: low sun, daylight, little rain.
+    const golden=this.lightShafts?this.shaftStrength>.02:this.shaftStrength>.06;
+    if(golden!==this.lightShafts&&this.pipeline){this.lightShafts=golden;this.buildPipeline();}
     this.nearbyStreetLights.update(dt,this.director.target,1-this.daylight);
     if(this.shine)this.shine.strength.value=.06+(1-this.daylight)*.2;
     this.renderer.toneMappingExposure=1;
