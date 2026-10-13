@@ -15,7 +15,7 @@ import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '.
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, step } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
@@ -143,7 +143,7 @@ export class CityRenderer {
   private treeBatches:Array<{indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean}>=[];
   private treeNearGeometry:THREE.BufferGeometry|null=null;
   private treeFarGeometry:THREE.BufferGeometry|null=null;
-  private treePoints:Array<{x:number,z:number,s:number}> = [];
+  private treePoints:Array<{x:number,z:number,s:number,h?:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
   private rearExtensions=new RearExtensions(this.art,release=>this.retire(release),building=>{
@@ -420,9 +420,7 @@ export class CityRenderer {
     const visibleRiver=[{x:river[0].x,z:-1400},...river,{x:river.at(-1)!.x,z:1400}];
     this.water=new RiverWater(visibleRiver,halfWidth);this.scene.add(this.water.mesh);this.applyQuality();
     const backdropMaterial=new THREE.MeshStandardNodeMaterial({roughness:1});
-    const outerLandscape=smoothstep(420,1000,positionLocal.x.abs().max(positionLocal.z.abs()));
-    const woodland=mix(color('#526e60'),color('#78816b'),mx_noise_float(positionLocal.mul(.012)).mul(.5).add(.5));
-    backdropMaterial.colorNode=mix(land.colorNode!,woodland,outerLandscape);
+    backdropMaterial.colorNode=mix(land.colorNode!,this.outerLandscapeColor(),smoothstep(420,520,positionLocal.x.abs().max(positionLocal.z.abs())));
     const backdrop=new THREE.Mesh(createBackdropGeometry(world.seed,river,halfWidth),backdropMaterial);
     backdrop.userData.ownedMaterial=true;backdrop.receiveShadow=true;this.terrain.add(backdrop);
     const bankKit=new Kit();
@@ -435,7 +433,7 @@ export class CityRenderer {
     }
     this.terrain.add(bankKit.finish(false));
     const rng=random(world.seed+937);
-    const positions:Array<{x:number,z:number,s:number}>=[];
+    const positions:Array<{x:number,z:number,s:number,h?:number}>=[];
     // Groves leave clear meadows between them; the city gradually clears real
     // development footprints, while riverbank vegetation stays recognizable.
     for(let grove=0;grove<26;grove++){const cx=rng()*740-370,cz=rng()*740-370,radius=24+rng()*40;
@@ -478,6 +476,39 @@ export class CityRenderer {
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const m=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});m.colorNode=mix(this.hillColor,mix(this.skyLow,this.skyHigh,.55),.2+ring*.24).mul(mx_noise_float(positionLocal.mul(.025)).mul(.055).add(.97));const mountain=new THREE.Mesh(g,m);mountain.userData.ownedMaterial=true;this.terrain.add(mountain);
     }
   }
+  /** Distant land as a working landscape rather than one mottled lawn: a
+   * suburban roofscape continues the city past its edge, farmland fills the
+   * valley floor and forest climbs the hills. All of it sits behind range haze. */
+  private outerLandscapeColor(){
+    const p=positionLocal,edge=p.x.abs().max(p.z.abs());
+    // Field parcels on a slightly rotated grid, each with its own crop tone.
+    const u=p.x.mul(.92).add(p.z.mul(.39)).div(74),v=p.z.mul(.92).sub(p.x.mul(.39)).div(46);
+    const parcel=mx_noise_float(vec3(floor(u),floor(v),3.1).mul(.61)).mul(.5).add(.5);
+    const crops=mix(mix(color('#7d985c'),color('#a7a272'),smoothstep(.3,.62,parcel)),color('#5d7a4e'),smoothstep(.7,.86,parcel));
+    const fu=fract(u),fv=fract(v);
+    const hedge=smoothstep(.0,.05,fu.min(fu.oneMinus()).min(fv.min(fv.oneMinus())));
+    const fields=mix(color('#566b47'),crops,hedge.mul(.35).add(.65));
+    // Forest on higher ground and in irregular woods on the plain. A warped,
+    // multi-octave mask gives ragged woodland edges rather than smooth ovals.
+    const warp=vec2(mx_noise_float(vec2(p.x,p.z).mul(.02)),mx_noise_float(vec2(p.z,p.x).mul(.02).add(7.3))).mul(24);
+    const wp=vec2(p.x,p.z).add(warp);
+    const woods=mx_noise_float(wp.mul(.005)).mul(.7).add(mx_noise_float(wp.mul(.021)).mul(.3)).mul(.5).add(.5);
+    const forestMask=smoothstep(26,58,p.y).max(smoothstep(.58,.7,woods));
+    const crowns=mx_noise_float(p.mul(.21)).mul(.5).add(.5);
+    const canopy=mix(color('#4a6248'),color('#6c8053'),crowns.mul(crowns));
+    // Low dense roofs just outside the basin, thinning with distance: a block
+    // grid of individually toned roofs split by darker streets.
+    const town=smoothstep(1050,560,edge).mul(smoothstep(22,8,p.y)).mul(smoothstep(.4,.52,mx_noise_float(wp.mul(.004)).mul(.5).add(.5)));
+    const townP=vec2(p.x,p.z).add(warp.mul(.12));
+    const lot=townP.div(vec2(11,8)),lotCell=floor(lot),lotUv=fract(lot);
+    const tone=mx_noise_float(vec3(lotCell,1.7).mul(.83)).mul(.5).add(.5);
+    const roofPalette=mix(mix(color('#7d8288'),color('#a59d8c'),smoothstep(.25,.55,tone)),color('#8a5f4f'),smoothstep(.78,.9,tone));
+    const lotGap=smoothstep(.02,.12,lotUv.x.min(lotUv.x.oneMinus())).mul(smoothstep(.03,.15,lotUv.y.min(lotUv.y.oneMinus())));
+    const blocks=townP.div(vec2(66,48)),blockUv=fract(blocks);
+    const street=smoothstep(.0,.04,blockUv.x.min(blockUv.x.oneMinus())).mul(smoothstep(.0,.05,blockUv.y.min(blockUv.y.oneMinus())));
+    const roofs=mix(color('#62655f'),roofPalette,lotGap.mul(.25).add(.75).mul(street.mul(.6).add(.4)));
+    return mix(mix(fields,canopy,forestMask),roofs,town.mul(forestMask.oneMinus()));
+  }
   private buildSkyline(seed:number,river:Point[]){
     const material=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});
     // World-space window cells: sparse warm lights after dusk, flat haze by day.
@@ -504,7 +535,7 @@ export class CityRenderer {
       if(!hidden)hidden=candidates.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='bridge'?2.5+2.38*p.s/1.8:r.kind==='lane'?1.5:3.5);});
       if(!hidden)hidden=(world.rail_platforms??[]).some(platform=>overlapsStation(p,p.s*1.7+2,platform));
       if(!hidden)hidden=candidates.rearExtensions.some(e=>{const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
-      dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
+      dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.set(hidden?0:p.s/1.8,hidden?0:p.s/1.8*(p.h??1),hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
     this.treeClearanceKey=clearanceKey;
@@ -874,6 +905,7 @@ export class CityRenderer {
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
     this.sun.intensity=.16+this.daylight*2.05;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
+    this.water?.setSun(v.copy(this.sun.position).sub(this.sun.target.position),new THREE.Color().copy(this.sun.color).multiplyScalar(this.sun.intensity*.5));
     // Soft urban bounce keeps opaque facades and lanes readable between local
     // emitters. The visible sky is not an environment light: retain enough
     // daytime fill to read shaded facades while the sun describes orientation.
