@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { color, mix, uniform, positionWorld, positionLocal, positionView, vec2, vec3, sin, reflector, texture, uv, smoothstep, mx_noise_float, screenUV, viewportSafeUV, viewportSharedTexture, viewportDepthTexture, perspectiveDepthToViewZ, cameraNear, cameraFar, cameraPosition, normalize, dot, max, pow, float } from 'three/tsl';
+import { color, mix, uniform, positionWorld, positionLocal, positionView, vec2, vec3, sin, reflector, texture, uv, smoothstep, mx_noise_float, screenUV, viewportSafeUV, viewportSharedTexture, viewportDepthTexture, perspectiveDepthToViewZ, attribute, fract, cameraNear, cameraFar, cameraPosition, normalize, dot, max, pow, float } from 'three/tsl';
 import type { Point, Style } from '../types';
 import { createWaterNormalTexture } from './water-normals';
 
@@ -33,7 +33,7 @@ export class RiverWater {
   private reflectionReview:THREE.MeshBasicNodeMaterial|null=null;
   private random=123456789;
   constructor(points:Point[],halfWidth=32) {
-    this.mesh=new THREE.Mesh(riverStrip(points,halfWidth,1,()=>-.7),this.surface=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide,transparent:true}));
+    this.mesh=new THREE.Mesh(riverStrip(points,halfWidth,6,()=>-.7),this.surface=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide,transparent:true}));
     // A shallow bowl below the surface gives refraction and depth tint
     // something real to show: pale shallows at the walls, darker mid-channel.
     // It stays above the flat backdrop at y=-3 that underlies the basin.
@@ -51,11 +51,21 @@ export class RiverWater {
     const rain=texture(this.ripple,uv());
     mat.positionNode=positionLocal.add(vec3(0,wave.add(rain.r.mul(.06)),0));
 
-    // Two ripple layers at different scales drift with the current at
-    // different rates; mipmapped sampling keeps distant water calm, not noisy.
-    const ground=vec2(w.x,w.z);
-    const layerA=texture(this.normals,ground.div(38).add(vec2(.003,.012).mul(t))).rgb.mul(2).sub(1);
-    const layerB=texture(this.normals,ground.div(13).add(vec2(-.009,.008).mul(t))).rgb.mul(2).sub(1);
+    // Flow map (Water2 style): each ripple layer is advected along the local
+    // current for one cycle, sampled twice half a cycle apart, and the pair is
+    // cross-faded so the texture never stretches. The current follows bends
+    // and is slowest along the walls (per-vertex 'flow', metres/second).
+    const ground=vec2(w.x,w.z),current=vec2(attribute('flow','vec2'));
+    const cycle=float(6),phase0=fract(t.div(cycle)),phase1=fract(t.div(cycle).add(.5));
+    const blend=phase0.mul(2).sub(1).abs();
+    const advected=(scale:number,rate:number,shift:number)=>{
+      const base=ground.div(scale);
+      const a=texture(this.normals,base.sub(current.mul(phase0.mul(cycle).mul(rate/scale))));
+      const b=texture(this.normals,base.add(shift).sub(current.mul(phase1.mul(cycle).mul(rate/scale))));
+      return mix(b,a,blend).rgb.mul(2).sub(1);
+    };
+    const layerA=advected(38,1,.37);
+    const layerB=advected(13,1.35,.61);
     // A calm urban river: gentle slopes, not open-water chop.
     const strength=mix(float(.38),float(.3),this.style);
     const normal=normalize(vec3(
@@ -117,16 +127,19 @@ export class RiverWater {
 
 /** Strip following the river centreline; `height(across)` gets -1..1 bank to bank. */
 function riverStrip(points:Point[],halfWidth:number,acrossSegments:number,height:(across:number)=>number){
-  const vertices:number[]=[],uvs:number[]=[],indices:number[]=[];
+  const vertices:number[]=[],uvs:number[]=[],flows:number[]=[],indices:number[]=[];
   const columns=acrossSegments+1;
   for(let i=0;i<points.length-1;i++){
     const a=points[i],b=points[i+1],offset=vertices.length/3;
+    const length=Math.hypot(b.x-a.x,b.z-a.z)||1,dx=(b.x-a.x)/length,dz=(b.z-a.z)/length;
     for(let j=0;j<=32;j++){
       const t=j/32,z=THREE.MathUtils.lerp(a.z,b.z,t),x=THREE.MathUtils.lerp(a.x,b.x,t);
-      for(let k=0;k<columns;k++){const across=k/acrossSegments*2-1;vertices.push(x+across*halfWidth,height(across),z);uvs.push((across+1)/2,(z+400)/800);}
+      for(let k=0;k<columns;k++){const across=k/acrossSegments*2-1;vertices.push(x+across*halfWidth,height(across),z);uvs.push((across+1)/2,(z+400)/800);
+        // ~0.6 m/s mid-channel, a quarter of that against the walls.
+        const speed=.15+.45*(1-across*across);flows.push(dx*speed,dz*speed);}
     }
     for(let j=0;j<32;j++)for(let k=0;k<acrossSegments;k++){const n=offset+j*columns+k;indices.push(n,n+columns,n+1,n+1,n+columns,n+columns+1);}
   }
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.setIndex(indices);geo.computeVertexNormals();
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.setAttribute('flow',new THREE.Float32BufferAttribute(flows,2));geo.setIndex(indices);geo.computeVertexNormals();
   return geo;
 }
