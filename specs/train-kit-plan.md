@@ -35,7 +35,7 @@ should not relitigate them without new evidence.
 | D5 | Livery is **baked into the elevation** (`tint:false`, like the bus). Promote to per-instance decals only if multiple operators are wanted. | one operator |
 | D6 | The **consist manifest is the single source of truth** for car lengths; the engine's rail length must agree, as `vehicleLength` does for cars. | `TRAIN_HALF_LENGTH` |
 | D7 | Share code rather than fork: extract the Python image ops from `build-vehicle-kits.py`, and generalize the TS material; keep the car kit as the regression test. | plan |
-| D8 | Local HunyuanImage-2.1 full is the default generator; `Qwen-Image-2.1` (installed) is the edit fallback, `qwen/qwen-image-3` the hosted flat-elevation fallback. | pilot decision |
+| D8 | Production generator is HunyuanImage-2.1 **fp8** (matches full bf16 quality at ~half VRAM); full bf16 is the reference; distilled 8-step is exploration only. Qwen-Image-2.1 is **not usable locally** (ComfyUI has no diffusers, no edit weights), so an edit model needs a deliberate install; `qwen/qwen-image-3` is the hosted flat-elevation fallback. | pilot + variant sweep |
 
 ## 2.1 Train classes and variety
 
@@ -142,6 +142,11 @@ Offline; no runtime change.
       bands, bogie centres and wheel radius, clearance, end rounding, lamp and
       headlight positions, destination-sign box, livery mode, per-role roof
       equipment.
+- [ ] **Front acceptance gate.** A generated front is only a source if it is
+      near head-on: measured front width/height within ~10% of the real ratio
+      and mirror symmetry above ~0.75. The sweep showed raked noses come back as
+      three-quarter views, so generate several seeds per front or escalate to an
+      edit/control model; never accept one front image blindly.
 - [ ] `scripts/build-train-kits.py`:
       - matte each view with the separable model;
       - trace the side outline (reuse `column_outline` + `simplify`);
