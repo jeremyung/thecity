@@ -15,7 +15,7 @@ import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '.
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, step } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
@@ -41,6 +41,7 @@ import { bezierRoad, sweepRoad, type RoadCurve } from './road-curve';
 import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
+import { createSkylineGeometry } from './skyline';
 import { createPavedGroundTest } from './paved-ground';
 import { buildGroundSurfaces } from './ground-surfaces';
 import { CitySidewalks } from './sidewalks';
@@ -69,6 +70,9 @@ export function buildingRenderSignature(b:Building,original?:BuildingOriginalFoo
   return `${b.stage}:${b.floors}:${phase}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
 }
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
+// Range haze (m from camera): clear through the city, veiling the backdrop.
+// Miniature keeps crisper air, matching its tilt-shift photographic read.
+const HAZE_NEAR:Record<Style,number>={anime:380,miniature:460},HAZE_FAR:Record<Style,number>={anime:3200,miniature:3700};
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
 
@@ -109,6 +113,8 @@ export class CityRenderer {
   private skyCloud=uniform(new THREE.Color('#fff5df'));
   private skyCloudShade=uniform(new THREE.Color('#809aaf'));
   private hillColor=uniform(new THREE.Color('#637f85'));
+  private skylineColor=uniform(new THREE.Color('#8496a3'));
+  private skylineNight=uniform(0);
   private sunDisc:THREE.Mesh;
   private moonDisc:THREE.Mesh;
   private sun=new THREE.DirectionalLight('#fff1d1',3);
@@ -199,7 +205,7 @@ export class CityRenderer {
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.05;
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
-    this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
+    this.scene.fog=new THREE.Fog('#d2d6cc',HAZE_NEAR.anime,HAZE_FAR.anime);
     this.scene.add(this.terrain,this.roads,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
@@ -457,6 +463,7 @@ export class CityRenderer {
     }
     this.updateTrees(world);
     this.buildMountains(rng);
+    this.buildSkyline(world.seed,river);
     const detail=new Kit();
     // Park benches along the riverside walk.
     for(let z=-150;z<300;z+=80){const x=this.riverX(river,z)+halfWidth+12;detail.box(x,.9,z,1.2,.15,3.1,this.art.get('#7a6754'));detail.box(x+.5,1.3,z,.12,.8,3.1,this.art.get('#7a6754'));}
@@ -470,6 +477,15 @@ export class CityRenderer {
       for(let i=0;i<=96;i++){const a=i/96*Math.PI*2,r=2500+ring*250,h=160+ring*32+Math.sin(a*5+phase)*38+Math.sin(a*11+phase*.3)*17+Math.sin(a*23+phase)*7;vertices.push(Math.cos(a)*r,-8,Math.sin(a)*r,Math.cos(a)*r,h,Math.sin(a)*r);if(i<96){const n=i*2;indices.push(n,n+2,n+1,n+1,n+2,n+3);}}
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const m=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});m.colorNode=mix(this.hillColor,mix(this.skyLow,this.skyHigh,.55),.2+ring*.24).mul(mx_noise_float(positionLocal.mul(.025)).mul(.055).add(.97));const mountain=new THREE.Mesh(g,m);mountain.userData.ownedMaterial=true;this.terrain.add(mountain);
     }
+  }
+  private buildSkyline(seed:number,river:Point[]){
+    const material=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});
+    // World-space window cells: sparse warm lights after dusk, flat haze by day.
+    const cell=floor(vec3(positionLocal.x.add(positionLocal.z).mul(.31),positionLocal.y.mul(.29),0));
+    const lit=step(.48,mx_noise_float(cell.mul(.73))).mul(step(6,positionLocal.y));
+    material.colorNode=mix(this.skylineColor,color('#e8b878'),lit.mul(this.skylineNight).mul(.55)).mul(mx_noise_float(positionLocal.mul(.02)).mul(.06).add(.97));
+    const skyline=new THREE.Mesh(createSkylineGeometry(seed,river),material);
+    skyline.userData.ownedMaterial=true;this.terrain.add(skyline);
   }
   private updateTrees(world:World){
     const clearanceKey=treeClearanceSignature(world);
@@ -838,27 +854,30 @@ export class CityRenderer {
     const top=new THREE.Color('#659bbd').lerp(new THREE.Color('#9aa5bd'),dusk*.5).lerp(new THREE.Color('#11253e'),1-this.daylight);
     const low=new THREE.Color('#d5ded3').lerp(new THREE.Color('#efb185'),dusk).lerp(new THREE.Color('#334860'),1-this.daylight);
     this.skyHigh.value.copy(top);this.skyLow.value.copy(low);this.skyCloudShade.value.set('#8ba5bc').lerp(new THREE.Color('#9c829b'),dusk*.7).lerp(new THREE.Color('#283c58'),1-this.daylight);this.hillColor.value.set('#577773').lerp(new THREE.Color('#747386'),dusk*.55).lerp(new THREE.Color('#20384a'),1-this.daylight);this.skyCloud.value.set('#fff3dc').lerp(new THREE.Color('#d29e91'),dusk*.5).lerp(new THREE.Color('#45526a'),1-this.daylight);
-    const atmosphere=this.scene.fog as THREE.FogExp2;
-    atmosphere.color.copy(top).lerp(low,.35);
-    // Clear air preserves facade contrast at neighborhood scale. Rain still
-    // veils the distant city; stylized skies retain a little more atmosphere.
-    const clearHaze=this.style==='miniature'?.00022:.0003;
-    atmosphere.density=clearHaze+this.rain*.00025;
+    this.skylineColor.value.set('#8193a1').lerp(new THREE.Color('#8a7f93'),dusk*.6).lerp(new THREE.Color('#1c2a3c'),1-this.daylight);this.skylineNight.value=1-this.daylight;
+    const atmosphere=this.scene.fog as THREE.Fog;
+    // Haze matches the horizon so hills, skyline and mountains recede into the
+    // sky. The range keeps the city itself clear (overview contrast, spec 05)
+    // while the backdrop gains aerial perspective. Rain pulls the veil closer.
+    atmosphere.color.copy(low).lerp(top,.25);
+    const veil=1-this.rain*.45;
+    atmosphere.near=HAZE_NEAR[this.style]*veil;atmosphere.far=HAZE_FAR[this.style]*veil;
     const solarY=Math.sin(angle)*450;this.sunDisc.position.set(Math.cos(angle)*1050,solarY*3,-480);this.sunDisc.visible=solarY>-25;this.moonDisc.position.set(-Math.cos(angle)*1050,-solarY*3,480);this.moonDisc.visible=solarY<25;
     const keyBlend=this.daylight*2-1;
     // Snap only the shadow camera's light-plane translation. The key's
     // direction and elevation still follow the clock, not camera movement.
-    this.sun.position.set(Math.cos(angle)*350*keyBlend,Math.max(30,Math.abs(Math.sin(angle))*450),-160*keyBlend);
+    // A lower key (about 50 degrees at 14:00) draws longer modelling shadows.
+    this.sun.position.set(Math.cos(angle)*350*keyBlend,Math.max(30,Math.abs(Math.sin(angle))*270),-160*keyBlend);
     const shadowCamera=this.sun.shadow.camera;
     snapShadowAnchor(this.director.controls.target,this.sun.position,
       shadowCamera.right-shadowCamera.left,shadowCamera.top-shadowCamera.bottom,
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
-    this.sun.intensity=.16+this.daylight*1.8;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#fff1d9'),this.daylight);
+    this.sun.intensity=.16+this.daylight*2.05;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
     // Soft urban bounce keeps opaque facades and lanes readable between local
     // emitters. The visible sky is not an environment light: retain enough
     // daytime fill to read shaded facades while the sun describes orientation.
-    this.hemi.intensity=1.05-this.daylight*.05;
+    this.hemi.intensity=1.05-this.daylight*.27;
     this.hemi.groundColor.set('#a0a09a').lerp(new THREE.Color('#748998'),this.daylight);
     // A painted moonlit fill keeps rooflines and quiet lanes readable between
     // pools of warm shop light; the sky itself can remain a deep midnight blue.

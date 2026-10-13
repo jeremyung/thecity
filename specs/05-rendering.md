@@ -92,6 +92,8 @@ Implementation checkpoint (2026-10-10): the outer scenic terrain is a finite see
 
 Atmosphere checkpoint (2026-10-10): clear-air exponential fog uses density 0.00022 for Miniature and 0.00030 for Anime, plus 0.00025 times rain intensity. The lower aerial haze improves mature overview contrast; it is not a density fix. See the latest audit for captures and outstanding dusk/night/backend checks.
 
+Horizon checkpoint (2026-10-13, supersedes the fog densities above): exponential fog is replaced by range haze (Anime 380–3200 m, Miniature 460–3700 m from camera, both pulled in by up to 45% in rain) coloured toward the horizon sky. The city stays clear while hills, mountains and a new visual-only distant skyline (`skyline.ts`: six seeded tower clusters at 1.8–2.35 km, peaks up to ~360 m, kept off the river vista, sparse lit windows after dusk) recede into the sky. The daytime key is lower (about 50° at 14:00) and warmer, with less hemisphere fill, for longer modelling shadows. Before/after captures (software WebGL, balanced quality, DOF off, seed 87231 at tick 80000): `validation/captures/horizon-atmosphere-*.jpg`. Not yet reviewed on WebGPU, at dawn/dusk transitions, in motion, or in Miniature; the near backdrop hills still read as a broad green blanket.
+
 Water checkpoint (2026-10-10): broad normal variation now uses continuous two-axis drifting noise instead of river-spanning axial sine bands. Fine-wave screen-footprint filtering and the simulated rain grid remain. Dusk WebGPU review is recorded in the audit; broad reflected glare and the remaining style/backend/motion checks are still open.
 
 ### Dense-city reference update
