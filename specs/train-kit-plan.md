@@ -1,8 +1,29 @@
 # Train kit — implementation plan (all phases)
 
-Status: Phase 1 complete. Phases 0 (partly), 2–6 pending.
+Status: Phases 1–6 implemented on this branch. Open: the hardware frame-cost
+benchmark and concept-board art acceptance. Outcome note below.
 Branch: `render/train-kit`.
 Related: [rendering spec](05-rendering.md), [world growth — rail and transit](02-world-growth.md#rail-and-transit), [pilot review](../art-workshop/train-pilot/REVIEW.md).
+
+## Outcome (2026-10-13)
+
+- Phase 1–2: local HunyuanImage-2.1 elevations; generated a clean trailer and a
+  front seed sweep; `scripts/build-train-kits.py` (shared ops extracted into
+  `scripts/kit_image_ops.py`, car outputs proven byte-identical) writes
+  `public/art/trains` and `web/src/render/train-manifest.json`.
+- Phase 3–4: `train-kit.ts`, `train-materials.ts` and `trains.ts`; `city.ts`
+  uses `TrainFleet`; the engine's `TRAIN_HALF_LENGTH` is 40.9 m and the station
+  platform follows it. 4-car consist, baked livery, four wheels per car,
+  pantograph, night lamps and glass.
+- Phase 5–6: `tests/train-kit.test.ts`, `tests/trains.test.ts`,
+  `scripts/capture-train-review.mjs`; captures under
+  `validation/captures/train-kit/`; rendering spec, asset manifest and texture
+  audit updated. `npm test` 330 passing; the one failing engine test
+  (`frontier_proposal_scan_is_read_only_and_plan_road_replays`) also fails on
+  the unmodified engine, so it is pre-existing.
+- Open: `scripts/benchmark-trains.mjs` frame cost, and art acceptance against
+  the concept boards. The generator sweep is in
+  [art-workshop/train-variants/REVIEW.md](../art-workshop/train-variants/REVIEW.md).
 
 ## 1. Goal and definition of done
 

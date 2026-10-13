@@ -13,6 +13,7 @@ import { BuildingChunks, buildingChunkKey, type RebuildableBuildingSource } from
 import { Umbrellas } from './umbrellas';
 import { CityBuses } from './buses';
 import { isRoadVehicle, ROAD_SURFACE_Y, VehicleFleet } from './vehicles';
+import { TRAIN_HALF_LENGTH, TrainFleet } from './trains';
 import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
@@ -111,10 +112,7 @@ export class CityRenderer {
   private heads:THREE.InstancedMesh;
   private fleet=new VehicleFleet(this.art);
   private lastActorFrame=0;
-  private trains:THREE.InstancedMesh;
-  private trainGlass:THREE.InstancedMesh;
-  private trainStripe:THREE.InstancedMesh;
-  private wheels:THREE.InstancedMesh;
+  private trainFleet=new TrainFleet(this.art);
   private previous=new Map<number,{x:number,z:number,h:number,k:number}>();
   private current=new Map<number,{x:number,z:number,h:number,k:number}>();
   private received=performance.now();
@@ -155,7 +153,7 @@ export class CityRenderer {
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
     this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
-    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
+    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.trainFleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
@@ -198,13 +196,6 @@ export class CityRenderer {
     this.scene.add(this.rainLines);
     this.pedestrians=this.instances(new THREE.CapsuleGeometry(.33,.9,3,5),this.art.get('#e7e5d9'),2000);
     this.heads=this.instances(new THREE.SphereGeometry(.28,6,4),this.art.get('#dfbe97'),2000);
-    this.trains=this.instances(new THREE.BoxGeometry(3.1,2.8,15),this.art.get('#c8d2cd',.4),30);
-    const trainWindows=new Kit();for(const side of [-1,1])for(let z=-5.5;z<=5.5;z+=2.2)trainWindows.box(side*1.57,0,z,.06,1.12,1.6,this.art.get('#526e77',.3));
-    const windowGroup=trainWindows.finish(false),windowMesh=windowGroup.children[0] as THREE.Mesh;
-    this.trainGlass=this.instances(windowMesh.geometry,this.art.get('#526e77',.3),30);
-    this.trainStripe=this.instances(new THREE.BoxGeometry(3.14,.3,15.1),this.art.get('#bd8054'),30);
-    const wheelParts=new Kit();for(const side of [-1,1])for(const z of [-4.5,4.5])wheelParts.box(side*.9,0,z,.4,.65,.8,this.art.get('#35484b'));
-    const wheelGroup=wheelParts.finish(false);this.wheels=this.instances((wheelGroup.children[0] as THREE.Mesh).geometry,this.art.get('#35484b'),30);
     this.highlight=new THREE.Mesh(new THREE.RingGeometry(8,8.2,64),new THREE.MeshBasicNodeMaterial({color:'#f2d79b',side:THREE.DoubleSide}));this.highlight.rotation.x=-Math.PI/2;this.highlight.visible=false;this.scene.add(this.highlight);
     this.resize=new ResizeObserver(()=>this.setSize());this.resize.observe(element);
     this.renderer.domElement.addEventListener('pointerdown',this.pointerDown);
@@ -471,21 +462,23 @@ export class CityRenderer {
       const bearing=other?Math.atan2(other.x-stationNode.x,other.z-stationNode.z):0;
       // The 47 m train stops alongside a platform aligned to its real corridor.
       // Local z points down the line; the platform stays beside the tracks.
-      s.box(5.2,1,23.5,5.2,2,49,this.art.get('#b9bbb1'));
-      s.box(2.9,2.08,23.5,.45,.1,48,this.art.get('#d3b962'));
+      // Platform length follows the consist so the whole train sits alongside it.
+      const platformMid=TRAIN_HALF_LENGTH,platformLen=TRAIN_HALF_LENGTH*2;
+      s.box(5.2,1,platformMid,5.2,2,platformLen,this.art.get('#b9bbb1'));
+      s.box(2.9,2.08,platformMid,.45,.1,platformLen-1,this.art.get('#d3b962'));
       if((stationProject?.progress??1)>.2){
-        s.box(5.5,6,23.5,7,.22,51,this.art.get('#546d6c'));
-        for(let d=3;d<=45;d+=10.5){s.cylinder(6.7,3.95,d,.14,3.9,this.art.get('#d1d3c5'));s.box(5.4,5.55,d,3.8,.12,.12,this.art.get('#94a4a0'));s.box(4.7,5.7,d,1.7,.08,.3,this.art.get('#ffdda5',.5,true));}
+        s.box(5.5,6,platformMid,7,.22,platformLen+2,this.art.get('#546d6c'));
+        for(let d=3;d<=platformLen-3;d+=10.5){s.cylinder(6.7,3.95,d,.14,3.9,this.art.get('#d1d3c5'));s.box(5.4,5.55,d,3.8,.12,.12,this.art.get('#94a4a0'));s.box(4.7,5.7,d,1.7,.08,.3,this.art.get('#ffdda5',.5,true));}
       }
-      for(const z of [12,34]){s.box(5.7,2.6,z,1.15,.15,3.1,this.art.get('#7a6754'));s.box(6.2,3,z,.13,.75,3.1,this.art.get('#7a6754'));}
+      for(const z of [12,34,56,78]){s.box(5.7,2.6,z,1.15,.15,3.1,this.art.get('#7a6754'));s.box(6.2,3,z,.13,.75,3.1,this.art.get('#7a6754'));}
       s.box(5.6,2.85,43,1.1,1.7,1.1,this.art.get('#557777'));s.box(5.58,3.15,42.42,.72,.85,.04,this.art.get('#ceddd8',.35,true));
       // Entry ramp and its small ticket shelter connect to the station node.
       s.box(6,.6,-4,4.5,1.2,7,this.art.get('#aaa99e'));s.box(6,2.7,-6,3,3.2,2.4,this.art.get('#c9c8c1'));s.box(6,4.45,-6,3.8,.2,3.1,this.art.get('#59676a'));s.box(5.96,2.8,-7.23,1.5,1.4,.08,this.art.get('#52757a',.35));
-      for(const z of [2,23.5,45])s.box(5.2,-RAIL_DECK/2,z,2.4,RAIL_DECK,2.4,this.art.get('#9a9d93'));
+      for(const z of [2,platformMid,platformLen-3])s.box(5.2,-RAIL_DECK/2,z,2.4,RAIL_DECK,2.4,this.art.get('#9a9d93'));
       s.box(9.4,-RAIL_DECK/2+.2,-2,2.6,RAIL_DECK+.4,8,this.art.get('#aaa99e'));
       const platform=s.finish();platform.position.set(stationNode.x,RAIL_DECK,stationNode.z);platform.rotation.y=bearing;
       const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
-      const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,4.6,24);platform.add(board);
+      const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,4.6,platformMid);platform.add(board);
       this.station.add(platform);
     }
   }
@@ -592,12 +585,12 @@ export class CityRenderer {
       if(current.k===0&&ped<2000){const offset=ped*5;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
       else if(isRoadVehicle(current.k)){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,dt);}
       else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+ROAD_SURFACE_Y,vehicle.pitch);}
-      else if(current.k===2&&train<24){for(let coach=0;coach<3;coach++){dummy.position.set(x-Math.sin(h)*(coach-1)*16,2.75+RAIL_DECK,z-Math.cos(h)*(coach-1)*16);dummy.rotation.set(0,h,0);dummy.scale.setScalar(1);dummy.updateMatrix();this.trains.setMatrixAt(train,dummy.matrix);dummy.position.y=3.05+RAIL_DECK;dummy.updateMatrix();this.trainGlass.setMatrixAt(train,dummy.matrix);dummy.position.y=2.35+RAIL_DECK;dummy.updateMatrix();this.trainStripe.setMatrixAt(train,dummy.matrix);dummy.position.y=1.1+RAIL_DECK;dummy.updateMatrix();this.wheels.setMatrixAt(train,dummy.matrix);trainIds[train]=id;train++;}}
+      else if(current.k===2&&train<this.trainFleet.capacity){this.trainFleet.add(id,x,z,h,RAIL_DECK,0,dt);trainIds[train]=id;train++;}
     }
     this.umbrellaCount=ped;
     this.buses.finish(bus);for(const mesh of this.buses.meshes)this.actorIds.set(mesh,this.buses.ids);
-    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);this.actorIds.set(this.trains,trainIds);this.actorIds.set(this.trainGlass,trainIds);
-    for(const [mesh,count]of [[this.pedestrians,ped],[this.heads,ped],[this.trains,train],[this.trainGlass,train],[this.trainStripe,train],[this.wheels,train]] as const){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}
+    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);this.trainFleet.finish(train);for(const {mesh,ids} of this.trainFleet.pickable)this.actorIds.set(mesh,ids);
+    for(const [mesh,count]of [[this.pedestrians,ped],[this.heads,ped]] as const){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}
     if(this.pedestrians.instanceColor)this.pedestrians.instanceColor.needsUpdate=true;
   }
   private updateLight(dt:number){
@@ -660,7 +653,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);if(!hits.length)return;const hit=hits[0],building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.retire(()=>this.fleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.retire(()=>this.fleet.dispose());this.retire(()=>this.trainFleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

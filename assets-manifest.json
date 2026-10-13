@@ -47,6 +47,16 @@
       "normalization": "Native Japanese language editorial review remains pending"
     },
     {
+      "id": "train-kit",
+      "source": "Generated side and head-on elevations (HunyuanImage-2.1 via ComfyUI, art-workshop/train-pilot/ledger.json and art-workshop/train-final/local-ledger.json), traced into geometry and packed into public/art/trains by scripts/build-train-kits.py",
+      "rights": "Generated imagery under the model's output terms; invented livery; no real railway operator branding",
+      "attribution": null,
+      "duration_seconds": null,
+      "loop_points": null,
+      "normalization": "Cars in metres on a 4-car 20 m consist; cab, trailer and motor bodies plus a cab front cap on one 2048x1024 colour atlas and one 1024x512 mask. Livery is baked; the mask carries only lamps and glass.",
+      "file": "public/art/trains/train-atlas.png"
+    },
+    {
       "id": "vehicle-kit",
       "source": "Generated side elevations (qwen/qwen-image-3 via OpenRouter, art-workshop/vehicle-pilot/ledger.json), traced into geometry and packed into public/art/vehicles by scripts/build-vehicle-kits.py; livery marks and lettering drawn to canvas in web/src/render/vehicle-materials.ts",
       "rights": "Generated imagery under the provider's output terms; invented operator names and marks; no real manufacturer or company branding",
