@@ -302,6 +302,7 @@ mod tests {
             protected: false,
             rotation,
             reservation: None,
+            open_space: None,
         };
         let parcels = vec![parcel(1, None), parcel(2, Some(0.7)), parcel(3, None)];
         assert_eq!(own_footprint_index(&parcels, 2), Some(2));

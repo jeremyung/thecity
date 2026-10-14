@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as THREE from "three/webgpu";
-import { ArtMaterials, SHOP_SIGN_LABELS, SIGN_ATLAS_HEIGHT, shopSignCell } from "../web/src/render/materials";
+import { ArtMaterials, SHOP_SIGN_LABELS, SIGN_ATLAS_HEIGHT, shopSignCell, shopSignLabel } from "../web/src/render/materials";
 import { buildingKit, disposeGroup } from "../web/src/render/kit";
 import { BuildingChunks } from "../web/src/render/building-chunks";
 import type { Building } from "../web/src/types";
@@ -46,6 +46,16 @@ function vRange(geometry: THREE.BufferGeometry) {
 }
 
 describe("shop sign atlas", () => {
+  it("varies storefront labels by use and seed while the anchor keeps its name", () => {
+    const shops = new Set(Array.from({ length: 64 }, (_, i) => shopSignLabel(building("shop", { appearance_seed: i << 11 }))));
+    const cafes = new Set(Array.from({ length: 64 }, (_, i) => shopSignLabel(building("cafe", { appearance_seed: i << 11 }))));
+    expect(shops.size).toBe(7);
+    expect(cafes.size).toBe(3);
+    expect([...shops, ...cafes].every((label) => SHOP_SIGN_LABELS.includes(label))).toBe(true);
+    expect([...shops].some((label) => cafes.has(label))).toBe(false);
+    expect(shopSignLabel(building("cafe", { anchor: true }))).toBe("喫茶 青葉");
+  });
+
   it("packs every cell inside the atlas with at least 8px of paper on both sides", () => {
     const cells = SHOP_SIGN_LABELS.map((_, slot) => shopSignCell(slot));
     expect(cells[0].top).toBeGreaterThanOrEqual(8);
@@ -57,7 +67,7 @@ describe("shop sign atlas", () => {
       expect(cell.v1).toBeLessThanOrEqual(1);
       expect(cell.v1 - cell.v0).toBeCloseTo(160 / SIGN_ATLAS_HEIGHT, 12);
     }
-    expect(SIGN_ATLAS_HEIGHT).toBe(512); // Still a power of two.
+    expect(SIGN_ATLAS_HEIGHT).toBe(2048); // Still a power of two.
   });
 
   it("draws every sign and its border inside its own cell of the canvas", () => {
@@ -90,7 +100,7 @@ describe("shop sign atlas", () => {
       const material = signs[0].material;
 
       const cases: Array<[Building, string]> = [
-        [building("shop"), "商店"], [building("cafe"), "珈琲"], [building("shop", { anchor: true, width: 14 }), "喫茶 青葉"],
+        [building("shop"), shopSignLabel(building("shop"))], [building("cafe"), shopSignLabel(building("cafe"))], [building("shop", { anchor: true, width: 14 }), "喫茶 青葉"],
       ];
       for (const [b, label] of cases) {
         const group = buildingKit(b, art);
@@ -122,7 +132,7 @@ describe("shop sign atlas", () => {
       const merged = signMeshes(chunks.root, material);
       expect(merged).toHaveLength(1); // Both signs share one draw.
       const geometry = merged[0].geometry, uv = geometry.getAttribute("uv");
-      const cafe = shopSignCell(1), shop = shopSignCell(2);
+      const cafe = shopSignCell(SHOP_SIGN_LABELS.indexOf(shopSignLabel(building("cafe", { id: 1, x: 4 })))), shop = shopSignCell(SHOP_SIGN_LABELS.indexOf(shopSignLabel(building("shop", { id: 2, x: 30 }))));
       const inCafe = (v: number) => v >= cafe.v0 - 1e-6 && v <= cafe.v1 + 1e-6, inShop = (v: number) => v >= shop.v0 - 1e-6 && v <= shop.v1 + 1e-6;
       let cafeVertices = 0, shopVertices = 0;
       for (let i = 0; i < uv.count; i++) {

@@ -810,6 +810,7 @@ mod tests {
             suitability: 0.9,
             protected: false,
             reservation: None,
+            open_space: None,
         });
         engine
             .state

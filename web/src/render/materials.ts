@@ -20,7 +20,6 @@ export class ArtMaterials {
   private cache = new Map<string,{anime:Surface,miniature:Surface}>();
   private buildingCache = new Map<string,BuildingSurfaceVariants>();
   private bands:THREE.DataTexture;
-  private tenantAtlas:THREE.CanvasTexture|null=null;
   private leafMask:THREE.CanvasTexture|null=null;
   private shopSignAtlas:THREE.CanvasTexture|null=null;
   private shopSignMaterial:THREE.MeshBasicNodeMaterial|null=null;
@@ -76,36 +75,6 @@ export class ArtMaterials {
     }
     return variants[this.style];
   }
-  /** One atlas/material pair for every vertical tenant sign, shared across chunks. */
-  tenantSign():Surface {
-    const key='tenant-sign-atlas';
-    let variants=this.cache.get(key);
-    if(!variants){
-      this.tenantAtlas=canvasTexture(128,4096,ctx=>{
-        const labels=['青葉商会','中央書房','東都写真','山田時計','光文印刷','喫茶白鳥','銀河音楽','朝日旅館'];
-        const backgrounds=['#b94336','#ede4c9','#326779','#e4dbbf','#315a60','#b54b37','#3b596e','#eee4cb'];
-        for(let slot=0;slot<8;slot++){
-          const y=slot*512;
-          ctx.fillStyle=backgrounds[slot];ctx.fillRect(0,y,128,512);
-          ctx.strokeStyle=slot===1||slot===3||slot===7?'#8f856e':'#e8d9b7';
-          ctx.lineWidth=2;ctx.strokeRect(7,y+7,114,498);
-          ctx.fillStyle=slot===1||slot===3||slot===7?'#263e43':'#fff0ca';
-          ctx.font='600 76px "Hiragino Kaku Gothic ProN", sans-serif';
-          ctx.textAlign='center';ctx.textBaseline='middle';
-          [...labels[slot]].forEach((character,index)=>ctx.fillText(character,64,y+82+index*115));
-        }
-      });
-      const anime=new THREE.MeshToonNodeMaterial({map:this.tenantAtlas,gradientMap:this.bands});
-      const miniature=new THREE.MeshStandardNodeMaterial({map:this.tenantAtlas,roughness:.55});
-      for(const material of [anime,miniature]){
-        material.userData.artKey=key;
-        const emission=texture(this.tenantAtlas).rgb.mul(this.night).mul(this.litShop).mul(.65);
-        (material as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;
-      }
-      variants={anime,miniature};this.cache.set(key,variants);
-    }
-    return variants[this.style];
-  }
   /**
    * One opaque atlas/material for every storefront sign. A material per sign
    * kept each one out of the neighborhood batches: ~600 extra draws per pass.
@@ -143,7 +112,7 @@ export class ArtMaterials {
     const key=material.userData.artKey as string|undefined;
     return key?this.cache.get(key)?.[style]??material:material;
   }
-  dispose(){this.disposers.splice(0).forEach(release=>release());for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.tenantAtlas?.dispose();this.shopSignMaterial?.dispose();this.shopSignAtlas?.dispose();this.shopSignMaterial=null;this.shopSignAtlas=null;this.contours.dispose();}
+  dispose(){this.disposers.splice(0).forEach(release=>release());for(const pair of this.cache.values()){pair.anime.dispose();pair.miniature.dispose();}for(const pair of this.buildingCache.values()){pair.anime.dispose();pair.miniature.dispose();}this.cache.clear();this.buildingCache.clear();this.bands.dispose();this.leafMask?.dispose();this.shopSignMaterial?.dispose();this.shopSignAtlas?.dispose();this.shopSignMaterial=null;this.shopSignAtlas=null;this.contours.dispose();}
 
   /** Toon ramp shared by every Anime surface. */
   get toonRamp(){return this.bands;}
@@ -228,9 +197,18 @@ export function canvasTexture(width:number,height:number,draw:(ctx:CanvasRenderi
   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;return tex;
 }
 const SIGN_WIDTH=512,SIGN_HEIGHT=160,SIGN_PADDING=8,SIGN_PAPER='#f2e9ce',SIGN_INK='#314247';
-export const SHOP_SIGN_LABELS=['喫茶 青葉','珈琲','商店'] as const;
-// Cells share the paper gutters between them: 8 + 3×(160+8) = 512 rows.
-export const SIGN_ATLAS_HEIGHT=SIGN_PADDING+SHOP_SIGN_LABELS.length*(SIGN_HEIGHT+SIGN_PADDING);
+export const SHOP_SIGN_LABELS=['喫茶 青葉','珈琲','商店','喫茶','甘味処','八百屋','酒店','花屋','パン','文具','時計店'] as const;
+const CAFE_SIGNS=['珈琲','喫茶','甘味処'] as const;
+const SHOP_SIGNS=['商店','八百屋','酒店','花屋','パン','文具','時計店'] as const;
+/** Storefront label for a building: the founding anchor keeps its name; others vary by seed. */
+export function shopSignLabel(b:{anchor:boolean;kind:string;appearance_seed:number}):typeof SHOP_SIGN_LABELS[number]{
+  if(b.anchor)return '喫茶 青葉';
+  const labels=b.kind==='cafe'?CAFE_SIGNS:SHOP_SIGNS;
+  return labels[((b.appearance_seed>>>11)>>>0)%labels.length];
+}
+// Cells share 8 px paper gutters: 8 + 11×(160+8) = 1856 rows, padded with
+// paper to a power-of-two 2048-row atlas.
+export const SIGN_ATLAS_HEIGHT=2048;
 /** Canvas rows and texture v range of one atlas cell. CanvasTexture is flipped: canvas row 0 is v=1. */
 export function shopSignCell(slot:number){
   const top=SIGN_PADDING+slot*(SIGN_HEIGHT+SIGN_PADDING),bottom=top+SIGN_HEIGHT;

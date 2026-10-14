@@ -11,11 +11,21 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::masterplan::{self, District, Geography, MasterPlan, RoadKind, P};
+use crate::masterplan::{self, District, Geography, MasterPlan, NodeKind, PlanLot, RoadKind, P};
 use crate::{
     frontage_access_node, random_unit, site_active, site_vacant, Engine, ParcelFrontage, Project,
     MAX_PROJECTS, RIVER_BANK_BUFFER, RIVER_HALF_WIDTH, TICKS_PER_DAY,
 };
+
+/// Street-facing plan lots this close to the planned station become its plaza.
+const STATION_PLAZA_RADIUS: f32 = 45.0;
+const MAX_STATION_PLAZA_LOTS: usize = 2;
+/// Shrines stay out of the station core.
+const SHRINE_STATION_CLEARANCE: f32 = 150.0;
+/// One neighborhood shrine per this distance, at most six per city.
+const SHRINE_SPACING: f32 = 260.0;
+const MAX_SHRINES: usize = 6;
+const SHRINE_AREA: std::ops::RangeInclusive<f32> = 150.0..=600.0;
 
 /// Persisted realization state. Indices follow the regenerated plan; zero
 /// means "not yet realized" because world IDs start at one.
@@ -303,8 +313,26 @@ impl Engine {
             if parcel_id == 0 {
                 break;
             }
+            let open_space = self.open_space_for_released_lot(&lot, &runtime.plan);
             if let Some(parcel) = self.state.parcels.last_mut() {
                 parcel.rotation = Some(lot.rotation);
+                if let Some(kind) = open_space {
+                    parcel.protected = true;
+                    parcel.open_space = Some(kind.into());
+                }
+            }
+            match open_space {
+                Some("plaza") => self.record(
+                    "PlazaReserved",
+                    parcel_id,
+                    "A lot beside the planned station is kept as its open plaza".into(),
+                ),
+                Some(_) => self.record(
+                    "ShrineReserved",
+                    parcel_id,
+                    "A new neighborhood keeps a corner lot for its shrine".into(),
+                ),
+                None => {}
             }
             self.state.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
@@ -490,6 +518,39 @@ impl Engine {
         {
             self.start_masterplan_road();
         }
+    }
+
+    /// Open space kept when a plan lot is first released: up to two
+    /// street-facing lots beside the planned station form its plaza, and each
+    /// residential neighborhood keeps one ordinary lot for a shrine. Spacing
+    /// and caps make the choice deterministic in release order.
+    fn open_space_for_released_lot(&self, lot: &PlanLot, plan: &MasterPlan) -> Option<&'static str> {
+        if lot.flag {
+            return None;
+        }
+        let reserved = |kind: &'static str| {
+            self.state
+                .parcels
+                .iter()
+                .filter(move |p| p.open_space.as_deref() == Some(kind))
+        };
+        if let Some(station) = plan.nodes.iter().find(|node| node.kind == NodeKind::Station) {
+            let distance = (lot.x - station.p.x).hypot(lot.z - station.p.z);
+            if distance <= STATION_PLAZA_RADIUS {
+                return (reserved("plaza").count() < MAX_STATION_PLAZA_LOTS).then_some("plaza");
+            }
+            if distance < SHRINE_STATION_CLEARANCE {
+                return None;
+            }
+        }
+        if !matches!(lot.district, District::Compact | District::Strips)
+            || !SHRINE_AREA.contains(&(lot.width * lot.depth))
+            || reserved("shrine").count() >= MAX_SHRINES
+            || reserved("shrine").any(|p| (p.x - lot.x).hypot(p.z - lot.z) < SHRINE_SPACING)
+        {
+            return None;
+        }
+        Some("shrine")
     }
 
     fn available_masterplan_parcels(&self) -> usize {

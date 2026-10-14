@@ -19,7 +19,9 @@ import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
-import { addPocketPark, addShrineGrove, parkSignature, pocketParks, streetTreePlacements, type PlantedTree } from './parks';
+import { signageContexts, type SignageContext } from './signage';
+import { seasonAt, seasonKey, treeColor, type SeasonState, type TreeSpecies } from './seasons';
+import { addNeighborhoodShrine, addPocketPark, addScrambleCrossing, addShrineGrove, addStationPlaza, openSpaceKind, openSpaces, parkSignature, streetTreePlacements, type PlantedTree } from './parks';
 import { createBackdropGeometry } from './backdrop';
 import { treeOcclusion } from './tree-occlusion';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
@@ -36,12 +38,14 @@ export interface StyleSwitchMetrics { target:Style; samples:number; compiledSamp
 export interface RenderMetrics { styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number }
 /** Fields that affect a building's rendered group. Home occupancy is binary
  * because only the seeded window-light subset depends on whether anyone lives there. */
-export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint):string {
+export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint,signage?:SignageContext):string {
   const homeOccupancy=(b.kind==='home'||(original&&b.kind==='apartment'))?(b.occupancy>0?'occupied':'vacant'):'-';
   const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
-  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
+  const signs=signage&&(signage.proximity||signage.feature)?`:s${signage.proximity}${signage.feature??''}`:'';
+  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}${signs}`;
 }
 type TreeBatch={indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean};
+type TreeLook={species:TreeSpecies,color:string,variation:number};
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
@@ -105,13 +109,20 @@ export class CityRenderer {
   private parks=new THREE.Group();
   private parkBatches:TreeBatch[]=[];
   private parkKey='';
+  // Crown look per tree (species, summer color, variation) for seasonal repainting.
+  private groveLook:TreeLook[]=[];
+  private parkLook:TreeLook[]=[];
+  private season:SeasonState=seasonAt(0);
+  private paintedSeason='';
+  /** Latest per-building signage context; part of each building's render signature. */
+  private signage=new Map<number,SignageContext>();
   private treePoints:Array<{x:number,z:number,s:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
   private rearExtensions=new RearExtensions(this.art,release=>this.retire(release),building=>{
     const current=this.buildings.get(building.id);
     const original=this.worldState?.building_original_footprints?.find(form=>form.building_id===building.id);
-    return !!current&&current.signature===buildingRenderSignature(building,original)&&this.chunks.isSourceVisible(building.id,current.source);
+    return !!current&&current.signature===buildingRenderSignature(building,original,this.signage.get(building.id))&&this.chunks.isSourceVisible(building.id,current.source);
   });
   private umbrellas=new Umbrellas(2000,hex=>this.art.get(hex));
   private umbrellaTuples=new Float32Array(2000*5);
@@ -295,7 +306,7 @@ export class CityRenderer {
   setSelected(id:number|null){this.selected=id;}
   private setSize(){const w=this.element.clientWidth,h=this.element.clientHeight;if(!w||!h)return;this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.renderer.setSize(w,h);this.outputHeight.value=this.renderer.getDrawingBufferSize(new THREE.Vector2()).y;}
   setWorld(world:World,replaced=false){
-    this.worldState=world;this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
+    this.worldState=world;this.season=seasonAt(world.day,world.minute_of_day);this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
     this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
     const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
@@ -303,20 +314,23 @@ export class CityRenderer {
     if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
     const parkKey=`${signatures}#${parkSignature(world)}`;
     if(parkKey!==this.parkKey){this.parkKey=parkKey;this.rebuildParks(world);}
+    if(seasonKey(this.season)!==this.paintedSeason)this.paintSeason();
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
+    const signage=this.signage=signageContexts(world);
     for(const b of world.buildings){
       const original=originals.get(b.id);
-      const signature=buildingRenderSignature(b,original);
+      const context=signage.get(b.id);
+      const signature=buildingRenderSignature(b,original,context);
       if(this.buildings.get(b.id)?.signature===signature){this.objectQueue.delete(b.id);continue;}
       // One pending update per authoritative building. Repeated snapshots replace
       // its data without appending duplicate closures or starving older parcels.
       const snapshot:Building={...b,history:[...b.history]};
       const originalSnapshot=original?{...original}:undefined;
       const source:RebuildableBuildingSource={
-        createGroup:()=>{const group=buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
+        createGroup:()=>{const group=buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview,signage:context});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
         disposeGroup:group=>disposeGroup(group),
       };
       this.objectQueue.set(b.id,{building:snapshot,signature,source});
@@ -334,7 +348,7 @@ export class CityRenderer {
     this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trainFleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
     this.buildings.clear();
-    this.clearParks();this.parkKey='';
+    this.clearParks();this.parkKey='';this.paintedSeason='';
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry,trunk=this.treeTrunkGeometry;this.retire(()=>{near?.dispose();far?.dispose();trunk?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeTrunkGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
     this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);
     const oldWater=this.water;oldWater?.mesh.removeFromParent();this.retire(()=>oldWater?.dispose());this.water=null;this.waterTime=0;this.motionTick=0;this.motionDelta=.05;this.received=performance.now();this.current.clear();this.previous.clear();this.objectQueue.clear();this.roadSignature='';this.selected=null;this.treePoints=[];
@@ -390,7 +404,11 @@ export class CityRenderer {
     const foliage=createFoliageGeometry('near');
     this.treeNearGeometry=foliage;this.treeFarGeometry=createFoliageGeometry('far');
     this.treeTrunkGeometry=createTreeTrunkGeometry();
-    this.treeBatches=this.createTreeBatches(positions,(p,local)=>Math.abs(p.x-this.riverX(river,p.z)-halfWidth-17)<.01?['#e5bdba','#edcfc4','#cfa9b0'][local%3]:['#758a67','#899b70','#607e67','#a0aa7a'][local%4]);
+    this.groveLook=positions.map((p,i)=>{
+      const blossom=Math.abs(p.x-this.riverX(river,p.z)-halfWidth-17)<.01,variation=((i*2654435761)>>>0)/4294967296;
+      return blossom?{species:'blossom',color:'#e5bdba',variation}:{species:'broadleaf',color:['#758a67','#899b70','#607e67','#a0aa7a'][i%4],variation};
+    });
+    this.treeBatches=this.createTreeBatches(positions,(_,local,i)=>treeColor(this.groveLook[i].species,this.groveLook[i].color,this.season,this.groveLook[i].variation));
     for(const batch of this.treeBatches)this.terrain.add(batch.trees,batch.trunks);
     this.updateTrees(world);
     this.buildMountains(rng);
@@ -409,14 +427,14 @@ export class CityRenderer {
     }
   }
   /** Instanced trees in 200 m cells so each cell can switch foliage detail by camera distance. */
-  private createTreeBatches<T extends {x:number,z:number}>(points:readonly T[],colorOf:(p:T,local:number)=>string):TreeBatch[]{
+  private createTreeBatches<T extends {x:number,z:number}>(points:readonly T[],colorOf:(p:T,local:number,index:number)=>THREE.Color):TreeBatch[]{
     if(!this.treeNearGeometry||!this.treeTrunkGeometry)return [];
     const cells=new Map<string,number[]>();for(let i=0;i<points.length;i++){const p=points[i],key=`${Math.floor((p.x+400)/200)}:${Math.floor((p.z+400)/200)}`;const list=cells.get(key)??[];list.push(i);cells.set(key,list);}
     const batches:TreeBatch[]=[];
     for(const indices of cells.values()){
       const trunks=new THREE.InstancedMesh(this.treeTrunkGeometry,this.art.get('#746b5c'),indices.length),trees=new THREE.InstancedMesh(this.treeNearGeometry,this.art.get('#fffffe',.96),indices.length),center=new THREE.Vector3();
       trunks.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.castShadow=true;trunks.castShadow=true;
-      for(let local=0;local<indices.length;local++){const p=points[indices[local]];center.x+=p.x;center.z+=p.z;trees.setColorAt(local,new THREE.Color(colorOf(p,local)));}
+      for(let local=0;local<indices.length;local++){const p=points[indices[local]];center.x+=p.x;center.z+=p.z;trees.setColorAt(local,colorOf(p,local,indices[local]));}
       center.divideScalar(indices.length);batches.push({indices,trees,trunks,center,far:false});
     }
     return batches;
@@ -430,15 +448,29 @@ export class CityRenderer {
   private rebuildParks(world:World){
     this.clearParks();
     const kit=new Kit(),planted:PlantedTree[]=[...streetTreePlacements(world)];
-    for(const parcel of pocketParks(world))planted.push(...addPocketPark(kit,parcel,this.art));
+    for(const parcel of openSpaces(world)){
+      const kind=openSpaceKind(parcel);
+      planted.push(...(kind==='plaza'?addStationPlaza:kind==='shrine'?addNeighborhoodShrine:addPocketPark)(kit,parcel,this.art));
+    }
+    addScrambleCrossing(kit,world,this.art);
     for(const polygon of world.terrain.protected)planted.push(...addShrineGrove(kit,polygon,this.art));
     this.parks.add(kit.finish());
-    this.parkBatches=this.createTreeBatches(planted,p=>p.color);
+    this.parkLook=planted;
+    this.parkBatches=this.createTreeBatches(planted,p=>treeColor(p.species,p.color,this.season,p.variation));
     for(const batch of this.parkBatches){
       for(let local=0;local<batch.indices.length;local++){const i=batch.indices[local],p=planted[i];dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(p.s/1.8);dummy.updateMatrix();batch.trees.setMatrixAt(local,dummy.matrix);batch.trunks.setMatrixAt(local,dummy.matrix);}
       batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();
       this.parks.add(batch.trees,batch.trunks);
     }
+  }
+  /** Repaint every crown for the current season; called only when its quantized key changes. */
+  private paintSeason(){
+    this.paintedSeason=seasonKey(this.season);
+    const paint=(batches:TreeBatch[],looks:TreeLook[])=>{for(const batch of batches){
+      for(let local=0;local<batch.indices.length;local++){const look=looks[batch.indices[local]];if(look)batch.trees.setColorAt(local,treeColor(look.species,look.color,this.season,look.variation));}
+      if(batch.trees.instanceColor)batch.trees.instanceColor.needsUpdate=true;
+    }};
+    paint(this.treeBatches,this.groveLook);paint(this.parkBatches,this.parkLook);
   }
   private updateTrees(world:World){
     const hides=treeOcclusion(world,this.treePoints);
