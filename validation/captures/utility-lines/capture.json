@@ -1,0 +1,72 @@
+{
+  "source": "seed 87231, tick 242000 (day 10, summer), development rate 16; scripts/generate-review-city.mjs then scripts/capture-parks.mjs",
+  "backend": "software WebGL (swiftshader)",
+  "style": "anime",
+  "performanceEvidence": false,
+  "poles": 801,
+  "spans": 605,
+  "runs": {
+    "day": {
+      "previewHour": 15,
+      "views": [
+        {
+          "name": "local-street-wires",
+          "target": [
+            320.109412,
+            4,
+            -71.81525
+          ],
+          "position": [
+            215.27353,
+            20,
+            -77.81525
+          ]
+        },
+        {
+          "name": "neighborhood-wires",
+          "target": [
+            304.63676499999997,
+            2,
+            -71.81525
+          ],
+          "position": [
+            304.63676499999997,
+            55,
+            -116.81525
+          ]
+        }
+      ]
+    },
+    "night": {
+      "previewHour": 21,
+      "views": [
+        {
+          "name": "local-street-wires",
+          "target": [
+            320.109412,
+            4,
+            -71.81525
+          ],
+          "position": [
+            215.27353,
+            20,
+            -77.81525
+          ]
+        },
+        {
+          "name": "neighborhood-wires",
+          "target": [
+            304.63676499999997,
+            2,
+            -71.81525
+          ],
+          "position": [
+            304.63676499999997,
+            55,
+            -116.81525
+          ]
+        }
+      ]
+    }
+  }
+}
