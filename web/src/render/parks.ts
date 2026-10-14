@@ -217,7 +217,24 @@ export function addShrineGrove(kit:Kit,polygon:readonly Point[],art:ArtMaterials
   return trees;
 }
 
-/** Signature of the inputs that place parks and street trees. */
+/** Two independent 32-bit FNV-1a lanes over centimeter-quantized values. */
+function digest(values:Iterable<number>){
+  let a=0x811c9dc5,b=0x01000193^0x5bd1e995;
+  for(const value of values){
+    const q=Number.isFinite(value)?Math.round(value*100):0x7fffffff;
+    a=Math.imul(a^(q&0xffff),0x01000193);a=Math.imul(a^(q>>>16),0x01000193);
+    b=Math.imul(b^(q>>>16),0x5bd1e995);b=Math.imul(b^(q&0xffff),0x5bd1e995);
+  }
+  return `${(a>>>0).toString(36)}${(b>>>0).toString(36)}`;
+}
+
+/**
+ * Signature of every input that places parks and street trees. Entrances and
+ * bus stops contribute their ids and coordinates, not just their counts, so a
+ * moved entrance or relocated stop rebuilds the trees that must clear it.
+ */
 export function parkSignature(world:World){
-  return `${pocketParks(world).map(p=>`${p.id}:${p.x}:${p.z}:${p.width}:${p.depth}:${p.rotation??0}`).join(',')}|${world.building_access?.length??0}|${(world.bus_lines??[]).map(line=>line.stop_positions?.length??0).join(',')}`;
+  const entrances=function*(){for(const access of world.building_access??[]){yield access.building_id;yield access.road_id;for(const p of access.points){yield p.x;yield p.z;}}};
+  const stops=function*(){for(const line of world.bus_lines??[]){yield line.id;yield -1;for(const stop of line.stop_positions??[]){yield stop.node_id;yield stop.x;yield stop.z;}}};
+  return `${pocketParks(world).map(p=>`${p.id}:${p.x}:${p.z}:${p.width}:${p.depth}:${p.rotation??0}`).join(',')}|${digest(entrances())}|${digest(stops())}`;
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { Kit, disposeGroup } from '../web/src/render/kit';
-import { addPocketPark, addShrineGrove, pocketParks, streetTreePlacements, STREET_TREE_OFFSET, STREET_TREE_SPACING, MAX_STREET_TREES } from '../web/src/render/parks';
+import { addPocketPark, addShrineGrove, parkSignature, pocketParks, streetTreePlacements, STREET_TREE_OFFSET, STREET_TREE_SPACING, MAX_STREET_TREES } from '../web/src/render/parks';
 import { streetLightPlacements } from '../web/src/render/street-lighting';
 import type { Building, Parcel, World } from '../web/src/types';
 
@@ -108,5 +108,32 @@ describe('pocket parks',()=>{
     expect(trees.some(tree=>Math.abs(tree.x+305)<4&&tree.z>-305)).toBe(false);
     expect(addShrineGrove(new Kit(),[{x:0,z:0},{x:1,z:1}],new ArtMaterials())).toEqual([]);
     disposeGroup(kit.finish());
+  });
+});
+
+describe('park layer invalidation', () => {
+  const world = (overrides: Partial<World> = {}) => ({
+    nodes: [{ id: 1, x: 0, z: 0, kind: 'junction' }, { id: 2, x: 200, z: 0, kind: 'junction' }],
+    roads: [{ id: 1, from: 1, to: 2, kind: 'arterial', stage: 'open', progress: 1, connected: true, length: 200, lanes: 2 }],
+    parcels: [], buildings: [],
+    building_access: [{ building_id: 4, road_id: 1, points: [{ x: 100, z: 14 }, { x: 100, z: 9 }] as const }],
+    bus_lines: [{ id: 1, stops: [1], route: [1, 2], active: true, stop_positions: [{ node_id: 1, x: 60, z: 9.5, heading: 0, direction: 1 as const }] }],
+    ...overrides,
+  }) as unknown as World;
+
+  it('changes when an entrance or stop moves without changing the count', () => {
+    // Put the entrance on a tree that would otherwise stand on the +z sidewalk.
+    const tree = streetTreePlacements(world({ building_access: [] })).filter(t => t.z > 0)[3];
+    const entrance = (x: number) => [{ building_id: 4, road_id: 1, points: [{ x, z: tree.z + 5 }, { x, z: tree.z - .5 }] }];
+    const base = world({ building_access: entrance(tree.x) });
+    expect(parkSignature(world({ building_access: entrance(tree.x) }))).toBe(parkSignature(base));
+    const movedEntrance = world({ building_access: entrance(tree.x + STREET_TREE_SPACING / 2) });
+    const movedStop = world({ building_access: entrance(tree.x), bus_lines: [{ id: 1, stops: [1], route: [1, 2], active: true, stop_positions: [{ node_id: 1, x: 150, z: 9.5, heading: 0, direction: 1 }] }] });
+    // The move really changes the trees this key guards, with the same entrance count.
+    expect(streetTreePlacements(movedEntrance)).not.toEqual(streetTreePlacements(base));
+    expect(parkSignature(movedEntrance)).not.toBe(parkSignature(base));
+    expect(parkSignature(movedStop)).not.toBe(parkSignature(base));
+    const reassigned = world({ building_access: [{ ...entrance(tree.x)[0], building_id: 5 }] });
+    expect(parkSignature(reassigned)).not.toBe(parkSignature(base));
   });
 });
