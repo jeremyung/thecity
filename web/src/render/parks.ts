@@ -10,7 +10,9 @@ import type { Parcel, Point, World } from '../types';
 export interface PlantedTree { x:number; z:number; s:number; color:string }
 
 export const STREET_TREE_SPACING=9;
-const STREET_TREE_EDGE_MARGIN=12;
+/** Gap at segment ends; corners are cleared per side by the crossing-street keep-out. */
+const STREET_TREE_END_MARGIN=2;
+const STREET_TREE_DEAD_END_MARGIN=12;
 /** Trunks stand in the outer part of the 2.5 m arterial sidewalk, clear of the lamp line. */
 export const STREET_TREE_OFFSET=roadWidth('arterial')/2+ARTERIAL_SIDEWALK*.6;
 const STREET_TREE_LAMP_CLEARANCE=3;
@@ -47,13 +49,25 @@ export function streetTreePlacements(world:Pick<World,'nodes'|'roads'|'building_
   for(const access of world.building_access??[]){const [door,curb]=access.points;if(!finite(door,curb))continue;const r=STREET_TREE_DOOR_CLEARANCE;doors.insertBox(access.points,Math.min(door.x,curb.x)-r,Math.min(door.z,curb.z)-r,Math.max(door.x,curb.x)+r,Math.max(door.z,curb.z)+r);}
   for(const stop of (world.bus_lines??[]).flatMap(line=>line.stop_positions??[]))if(finite(stop))stops.insert(stop,stop.x,stop.z,STREET_TREE_STOP_CLEARANCE);
   for(const segment of segments){const {a,b}=segment,r=crossingClearance(segment.road.kind);crossings.insertBox(segment,Math.min(a.x,b.x)-r,Math.min(a.z,b.z)-r,Math.max(a.x,b.x)+r,Math.max(a.z,b.z)+r);}
+  // Master-plan arterials split at every node, and most nodes are T-junctions
+  // with a street on one side only. Corners are cleared per side by the
+  // crossing keep-out below; only dead ends keep a full margin.
+  const degree=new Map<number,number>();
+  for(const {road} of segments)if(road.kind!=='rail'&&road.kind!=='expressway')for(const id of [road.from,road.to])degree.set(id,(degree.get(id)??0)+1);
+  const margin=(id:number)=>(degree.get(id)??0)>1?STREET_TREE_END_MARGIN:STREET_TREE_DEAD_END_MARGIN;
+  const continues=(road:(typeof segments)[number],other:(typeof segments)[number])=>{
+    if(other.road.kind!=='arterial'||![other.road.from,other.road.to].some(id=>id===road.road.from||id===road.road.to))return false;
+    const ux=road.b.x-road.a.x,uz=road.b.z-road.a.z,vx=other.b.x-other.a.x,vz=other.b.z-other.a.z;
+    return Math.abs(ux*vx+uz*vz)>.97*Math.hypot(ux,uz)*Math.hypot(vx,vz);
+  };
   const result:PlantedTree[]=[];
-  for(const {road,a,b} of [...segments].sort((x,y)=>x.road.id-y.road.id)){
+  for(const segment of [...segments].sort((x,y)=>x.road.id-y.road.id)){
+    const {road,a,b}=segment;
     if(road.kind!=='arterial'||road.stage!=='open'||!road.connected)continue;
     const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
-    const available=length-2*STREET_TREE_EDGE_MARGIN;
+    const startMargin=margin(road.from),available=length-startMargin-margin(road.to);
     if(available<0)continue;
-    const intervals=Math.floor(available/STREET_TREE_SPACING),first=(length-intervals*STREET_TREE_SPACING)/2;
+    const intervals=Math.floor(available/STREET_TREE_SPACING),first=startMargin+(available-intervals*STREET_TREE_SPACING)/2;
     const normalX=dz/length,normalZ=-dx/length;
     for(let index=0;index<=intervals;index++){
       const t=(first+index*STREET_TREE_SPACING)/length;
@@ -62,7 +76,7 @@ export function streetTreePlacements(world:Pick<World,'nodes'|'roads'|'building_
         if(lamps.at(p.x,p.z).some(lamp=>Math.hypot(lamp.x-p.x,lamp.z-p.z)<STREET_TREE_LAMP_CLEARANCE))continue;
         if(doors.at(p.x,p.z).some(([door,curb])=>distanceToSegment(p,door,curb)<STREET_TREE_DOOR_CLEARANCE))continue;
         if(stops.at(p.x,p.z).some(stop=>Math.hypot(stop.x-p.x,stop.z-p.z)<STREET_TREE_STOP_CLEARANCE))continue;
-        if(crossings.at(p.x,p.z).some(other=>other.road.id!==road.id&&distanceToSegment(p,other.a,other.b)<crossingClearance(other.road.kind)))continue;
+        if(crossings.at(p.x,p.z).some(other=>other.road.id!==road.id&&!continues(segment,other)&&distanceToSegment(p,other.a,other.b)<crossingClearance(other.road.kind)))continue;
         const r=hash(p.x,p.z,road.id);
         result.push({...p,s:1.35+r*.3,color:STREET_TREE_COLORS[Math.floor(r*STREET_TREE_COLORS.length)%STREET_TREE_COLORS.length]});
         if(result.length>=MAX_STREET_TREES)return result;
@@ -72,8 +86,12 @@ export function streetTreePlacements(world:Pick<World,'nodes'|'roads'|'building_
   return result;
 }
 
-/** Trunk keep-out around another road's centerline; viaduct piers need more room. */
-function crossingClearance(kind:string){return roadWidth(kind)/2+(kind==='rail'||kind==='expressway'?3:1.5);}
+/**
+ * Trunk keep-out around another road's centerline: open sight lines at street
+ * corners and room under the 7 m rail viaduct. The expressway deck is 11 m up
+ * on single central piers, so ~6 m street trees only avoid the pier line.
+ */
+function crossingClearance(kind:string){return kind==='expressway'?3:roadWidth(kind)/2+(kind==='rail'?3:4);}
 
 /** Protected master-plan lots with nothing built on them are the city's pocket parks. */
 export function pocketParks(world:Pick<World,'parcels'|'buildings'>):Parcel[]{

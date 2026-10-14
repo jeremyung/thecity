@@ -31,10 +31,14 @@ describe('street trees',()=>{
     expect(trees.length).toBeGreaterThan(30);
     for(const tree of trees){
       expect(Math.abs(tree.z)).toBeCloseTo(STREET_TREE_OFFSET,5);
+      // Node 1 is a dead end; node 2 is a T-junction whose local street runs toward +z.
       expect(tree.x).toBeGreaterThanOrEqual(12-1e-6);
-      expect(tree.x).toBeLessThanOrEqual(188+1e-6);
+      if(tree.z>0)expect(200-tree.x).toBeGreaterThanOrEqual(6.5/2+4);
+      else expect(tree.x).toBeLessThanOrEqual(198+1e-6);
       expect(tree.s).toBeGreaterThan(1.3);expect(tree.s).toBeLessThan(1.7);
     }
+    // The side away from the T-junction's street runs on past the corner.
+    expect(Math.max(...trees.filter(tree=>tree.z<0).map(tree=>tree.x))).toBeGreaterThan(Math.max(...trees.filter(tree=>tree.z>0).map(tree=>tree.x)));
     const north=trees.filter(tree=>tree.z>0).map(tree=>tree.x).sort((a,b)=>a-b);
     for(let i=1;i<north.length;i++)expect(north[i]-north[i-1]).toBeGreaterThanOrEqual(STREET_TREE_SPACING-1e-6);
     for(const lamp of streetLightPlacements(world))for(const tree of trees)expect(Math.hypot(lamp.x-tree.x,lamp.z-tree.z)).toBeGreaterThanOrEqual(3);
@@ -54,8 +58,14 @@ describe('street trees',()=>{
 
     const crossed=streetWorld([{id:1,from:1,to:2},{id:2,from:3,to:4,kind:'local'},{id:3,from:5,to:6,kind:'rail'}],
       [{id:1,x:0,z:0},{id:2,x:200,z:0},{id:3,x:100,z:-30},{id:4,x:100,z:30},{id:5,x:150,z:-30},{id:6,x:150,z:30}]);
-    const near=streetTreePlacements(crossed).filter(tree=>Math.abs(tree.x-100)<4.75||Math.abs(tree.x-150)<6.5);
+    const near=streetTreePlacements(crossed).filter(tree=>Math.abs(tree.x-100)<6.5/2+4||Math.abs(tree.x-150)<7/2+3);
     expect(near).toEqual([]);
+
+    // An expressway deck straight overhead keeps the rows; only its pier line is cleared.
+    const covered=streetWorld([{id:1,from:1,to:2},{id:2,from:3,to:4,kind:'expressway'}],[{id:1,x:0,z:0},{id:2,x:200,z:0},{id:3,x:0,z:STREET_TREE_OFFSET},{id:4,x:200,z:STREET_TREE_OFFSET}]);
+    const underDeck=streetTreePlacements(covered);
+    expect(underDeck.filter(tree=>tree.z<0)).toEqual(streetTreePlacements(base).filter(tree=>tree.z<0));
+    expect(underDeck.some(tree=>tree.z>0)).toBe(false);
 
     const points=Array.from({length:120},(_,index)=>({id:index+1,x:0,z:index*400}));
     const long=streetWorld(points.slice(1).map((point,index)=>({id:index+1,from:index+1,to:point.id})),points);

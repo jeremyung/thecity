@@ -54,7 +54,12 @@ try {
       .map((road) => ({ road, a: nodes.get(road.from), b: nodes.get(road.to) }))
       .filter(({ a, b }) => a && b)
       .sort((x, y) => Math.hypot(y.b.x - y.a.x, y.b.z - y.a.z) - Math.hypot(x.b.x - x.a.x, x.b.z - x.a.z))[0];
-    return { tick: w.tick, steps, parks: parks.map((p) => ({ id: p.id, x: p.x, z: p.z, rotation: p.rotation ?? 0 })), arterial: arterial && { a: arterial.a, b: arterial.b }, reserve: w.terrain.protected[0] };
+    const layer = r.parks;
+    const instanced = []; layer.traverse((o) => { if (o.isInstancedMesh) instanced.push(o.count); });
+    const diagnostics = { parkMeshes: layer.children.length, treeInstances: instanced.reduce((a, b) => a + b, 0), batches: instanced.length };
+    // Explore mode keeps manual poses clear of buildings; captures pose the camera directly.
+    r.director.update = () => {};
+    return { diagnostics, tick: w.tick, steps, parks: parks.map((p) => ({ id: p.id, x: p.x, z: p.z, rotation: p.rotation ?? 0 })), arterial: arterial && { a: arterial.a, b: arterial.b }, reserve: w.terrain.protected[0] };
   }, hour);
 
   const views = [];
@@ -88,7 +93,7 @@ try {
     captured.push({ ...view, file });
   }
   await writeFile(join(outDir, 'capture.json'), `${JSON.stringify({ source: savePath, backend: 'software WebGL (swiftshader)', performanceEvidence: false, previewHour: hour, depthOfField: false, scene, views: captured }, null, 2)}\n`);
-  console.log(JSON.stringify({ tick: scene.tick, steps: scene.steps, parks: scene.parks.length, views: captured.map((v) => v.name) }));
+  console.log(JSON.stringify({ diagnostics: scene.diagnostics, tick: scene.tick, steps: scene.steps, parks: scene.parks.length, views: captured.map((v) => v.name) }));
 } finally {
   await browser.close();
 }
