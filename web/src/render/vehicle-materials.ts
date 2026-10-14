@@ -63,7 +63,7 @@ function placeholder(rgba: [number, number, number, number] = [200, 200, 200, 25
  * Wheel roll and steer in body space. The POSITION sub-build sees the
  * geometry before the instance transform, which is applied afterwards.
  */
-function wheelPosition() {
+export function wheelPosition() {
   const w = attribute<'vec4'>('wheel', 'vec4'), st = attribute<'vec4'>('vstate', 'vec4'), g = positionLocal;
   const angle = st.x.div(w.z.max(.01)), ca = cos(angle), sa = sin(angle);
   const dy = g.y.sub(w.x), dz = g.z.sub(w.y);

@@ -7,6 +7,7 @@ import { buildingKit, disposeGroup, Kit } from './kit';
 import type { Building, Style } from '../types';
 import { VEHICLE_KINDS, VehicleFleet } from './vehicles';
 import { CityBuses } from './buses';
+import { TrainFleet } from './trains';
 
 /** Isolated development viewer for the same authored building kits used by the city. */
 export class ArchitectureAssetReview {
@@ -20,6 +21,7 @@ export class ArchitectureAssetReview {
   private readonly street = new THREE.Group();
   private readonly fleet: VehicleFleet;
   private readonly buses: CityBuses;
+  private readonly trainFleet: TrainFleet;
   private traffic: Array<{ id: number; kind: number; x: number; z: number; dir: number; speed: number }> = [];
   private lastFrame = 0;
   private trafficPaused = false;
@@ -86,7 +88,8 @@ export class ArchitectureAssetReview {
     this.buildStreet();
     this.fleet = new VehicleFleet(this.art, 1000);
     this.buses = new CityBuses(this.art, release => release());
-    this.scene.add(this.fleet.root, this.buses.root);
+    this.trainFleet = new TrainFleet(this.art, 8);
+    this.scene.add(this.fleet.root, this.buses.root, this.trainFleet.root);
     this.buildTraffic();
     if (import.meta.env.DEV) Object.assign(window, { __review: this });
     this.buildArchitecture();
@@ -254,6 +257,7 @@ export class ArchitectureAssetReview {
     disposeGroup(this.street);
     this.fleet.dispose();
     this.buses.dispose();
+    this.trainFleet.dispose();
     disposeGroup(this.materialStudy);
     this.ground.geometry.dispose();
     this.art.dispose();
@@ -289,6 +293,10 @@ export class ArchitectureAssetReview {
       else this.fleet.add(v.id, v.kind, v.x, v.z, yaw, lift, 0, this.trafficPaused ? 0 : dt);
     }
     this.fleet.finish(); this.buses.finish(bus);
+    // A consist on the review station's near rail (rails run along x at y=0.44).
+    this.trainFleet.begin();
+    this.trainFleet.add(1, -119, -73, Math.PI / 2, 0.44, 0, dt);
+    this.trainFleet.finish(1);
   }
 
   private setSize(): void {

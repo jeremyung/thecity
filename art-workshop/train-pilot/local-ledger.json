@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hy21-full-ortho--cab-side",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seed": 2101,
+    "size": [
+      2048,
+      768
+    ],
+    "prompt": "Strict orthographic technical elevation of one single Japanese electric commuter train car, rendered as a photograph-quality flat texture, exact profile, camera perpendicular to the car at half its height, zero perspective, not a three-quarter view. The whole car is in sharp focus edge to edge, no depth of field, no floor and no shadow under the car, seamless uniform pale gray backdrop, soft even diffuse lighting without bright specular highlights. Realistic factory finish and fine credible details: roof ribs, air-conditioner boxes, gangway, door leaves with window panes, continuous side window band, grab handles, pantograph wells, bogies with wheels and brake discs, couplers. Generic contemporary Japanese commuter design, warm ivory-white body, a deep teal waist stripe, dark grey underframe and bogie, silver-grey roof. No logos, no operator marks, no readable text and no licence or car numbers. Clean reference for texturing a miniature Tokyo street model. Driving cab car of a Japanese commuter EMU, 20 m long and 3.6 m tall, seen in exact side elevation with the cab front at the left. Slightly raked flat cab end with a large black-framed windscreen wrapping the corner, a slim door behind the cab, then four evenly spaced passenger double doors along the body, each with two tall windows. A continuous dark window band runs the full length between the doors. Two bogies near the ends, each with two wheels. Roof carries a row of low rectangular air-conditioner boxes. The teal waist stripe runs the full length at mid height and turns up slightly at the cab. Camera exactly level with the axle centre line, roof surface and tyre treads not visible, the car spans the full image width with the driving cab end at the LEFT, all wheels resting on one horizontal baseline.",
+    "seconds": 28.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--intermediate-side",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seed": 2101,
+    "size": [
+      2048,
+      768
+    ],
+    "prompt": "Strict orthographic technical elevation of one single Japanese electric commuter train car, rendered as a photograph-quality flat texture, exact profile, camera perpendicular to the car at half its height, zero perspective, not a three-quarter view. The whole car is in sharp focus edge to edge, no depth of field, no floor and no shadow under the car, seamless uniform pale gray backdrop, soft even diffuse lighting without bright specular highlights. Realistic factory finish and fine credible details: roof ribs, air-conditioner boxes, gangway, door leaves with window panes, continuous side window band, grab handles, pantograph wells, bogies with wheels and brake discs, couplers. Generic contemporary Japanese commuter design, warm ivory-white body, a deep teal waist stripe, dark grey underframe and bogie, silver-grey roof. No logos, no operator marks, no readable text and no licence or car numbers. Clean reference for texturing a miniature Tokyo street model. Intermediate trailer car of a Japanese commuter EMU, 20 m long and 3.6 m tall, seen in exact side elevation, both ends plain and vertical with gangways and no cab. Four evenly spaced passenger double doors along the body, each with two tall windows, and a continuous dark window band between them. Two bogies near the ends, each with two wheels. A row of low rectangular air-conditioner boxes along the roof. The teal waist stripe runs the full length at mid height. Camera exactly level with the axle centre line, roof surface and tyre treads not visible, the car spans the full image width with the driving cab end at the LEFT, all wheels resting on one horizontal baseline.",
+    "seconds": 9.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--cab-front",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seed": 2101,
+    "size": [
+      1024,
+      1280
+    ],
+    "prompt": "Strict orthographic technical elevation of one single Japanese electric commuter train car, rendered as a photograph-quality flat texture, exact profile, camera perpendicular to the car at half its height, zero perspective, not a three-quarter view. The whole car is in sharp focus edge to edge, no depth of field, no floor and no shadow under the car, seamless uniform pale gray backdrop, soft even diffuse lighting without bright specular highlights. Realistic factory finish and fine credible details: roof ribs, air-conditioner boxes, gangway, door leaves with window panes, continuous side window band, grab handles, pantograph wells, bogies with wheels and brake discs, couplers. Generic contemporary Japanese commuter design, warm ivory-white body, a deep teal waist stripe, dark grey underframe and bogie, silver-grey roof. No logos, no operator marks, no readable text and no licence or car numbers. Clean reference for texturing a miniature Tokyo street model. Head-on front of a Japanese commuter EMU driving cab, 2.95 m wide and 3.6 m tall. A large two-pane black-framed windscreen across the upper half, a lit rectangular destination rollsign box directly above it under the roof edge, two round warm-white headlamps low at the outer corners, two small red tail lamps beside them, a teal band sweeping across the body below the windscreen, a black lower skirt with a central automatic coupler, and a silver-grey roof edge above with the top of an air-conditioner box. Symmetric about the vertical centre line. Exact head-on front elevation, camera level with the middle of the car, zero perspective, the entire front face is visible and centred, no side, no roof and no wheels visible. Symmetric left and right about the vertical centre line.",
+    "seconds": 8.0,
+    "costUSD": 0
+  },
+  {
+    "id": "hy21-full-ortho--motor-roof",
+    "unet": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "sampler": "euler",
+    "seed": 2101,
+    "size": [
+      2048,
+      768
+    ],
+    "prompt": "Strict orthographic technical elevation of one single Japanese electric commuter train car, rendered as a photograph-quality flat texture, exact profile, camera perpendicular to the car at half its height, zero perspective, not a three-quarter view. The whole car is in sharp focus edge to edge, no depth of field, no floor and no shadow under the car, seamless uniform pale gray backdrop, soft even diffuse lighting without bright specular highlights. Realistic factory finish and fine credible details: roof ribs, air-conditioner boxes, gangway, door leaves with window panes, continuous side window band, grab handles, pantograph wells, bogies with wheels and brake discs, couplers. Generic contemporary Japanese commuter design, warm ivory-white body, a deep teal waist stripe, dark grey underframe and bogie, silver-grey roof. No logos, no operator marks, no readable text and no licence or car numbers. Clean reference for texturing a miniature Tokyo street model. Motor car of a Japanese commuter EMU, 20 m long and 3.6 m tall, exact side elevation, no cab. Three passenger double doors and a continuous dark window band, two bogies with two wheels each. On the roof a single-arm pantograph in its raised V shape plus a run of low rectangular air-conditioner boxes and roof cabling. The teal waist stripe runs the full length at mid height. Camera exactly level with the axle centre line, roof surface and tyre treads not visible, the car spans the full image width with the driving cab end at the LEFT, all wheels resting on one horizontal baseline.",
+    "seconds": 9.0,
+    "costUSD": 0
+  }
+]

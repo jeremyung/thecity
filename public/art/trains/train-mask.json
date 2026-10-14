@@ -1,0 +1,12 @@
+{
+  "id": "train-mask",
+  "source": "Derived from the train atlas sources by scripts/build-train-kits.py",
+  "provenance": "art-workshop/train-kit.json",
+  "status": "runtime: commuter train consist",
+  "role": "atlas",
+  "colorSpace": "linear",
+  "width": 1024,
+  "height": 512,
+  "runtimeIntegration": true,
+  "note": "G lamp, B glass. R unused because the livery is baked. Half the atlas resolution."
+}

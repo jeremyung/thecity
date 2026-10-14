@@ -1,0 +1,26 @@
+[
+  {
+    "model": "full bf16, 30 steps",
+    "side_body_ratio": 5.018716577540107,
+    "side_error_pct": -8.910294117647066,
+    "front_ratio": 0.7993527508090615,
+    "front_symmetry": 0.8556454437206696,
+    "sharpness": 230.02423167028925
+  },
+  {
+    "model": "fp8, 30 steps",
+    "side_body_ratio": 5.032171581769437,
+    "side_error_pct": -8.666085790884726,
+    "front_ratio": 0.7632432432432432,
+    "front_symmetry": 0.8665943259184067,
+    "sharpness": 213.0334090435179
+  },
+  {
+    "model": "distilled bf16, 8 steps",
+    "side_body_ratio": 5.3911845730027546,
+    "side_error_pct": -2.1500000000000186,
+    "front_ratio": 0.8861566484517304,
+    "front_symmetry": 0.7494800802936868,
+    "sharpness": 87.8078743815521
+  }
+]

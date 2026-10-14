@@ -14,18 +14,36 @@
     "totalDecodedMipMiB": 32
   },
   "summary": {
-    "assetCount": 1,
-    "runtimeListedCount": 0,
-    "developmentCandidateCount": 1,
+    "assetCount": 6,
+    "runtimeListedCount": 2,
+    "developmentCandidateCount": 2,
     "unsupportedOrInvalidCount": 0,
     "sideBudgetViolationCount": 1,
-    "knownEstimatedDecodedMipBytes": 8384072,
-    "knownEstimatedDecodedMipMiB": 7.9957,
-    "totalBudgetExceeded": false,
+    "knownEstimatedDecodedMipBytes": 37744204,
+    "knownEstimatedDecodedMipMiB": 35.9957,
+    "totalBudgetExceeded": true,
     "complete": true,
     "passesProposedBudget": false
   },
   "assets": [
+    {
+      "file": "public/art/textures/cast-concrete-pilot-512.png",
+      "format": "PNG",
+      "fileBytes": 434367,
+      "runtimeListed": false,
+      "developmentCandidate": {
+        "id": "cast-concrete-pilot-512",
+        "usage": "Development architecture review only; no living-city integration"
+      },
+      "metadataRole": "base-color",
+      "budgetClass": "tile",
+      "budgetMaxSide": 1024,
+      "width": 512,
+      "height": 512,
+      "maxSide": 512,
+      "estimatedDecodedRgba8MipBytes": 1398100,
+      "status": "ok"
+    },
     {
       "file": "public/art/textures/ivory-plaster-v1.png",
       "format": "PNG",
@@ -43,6 +61,66 @@
       "maxSide": 1254,
       "estimatedDecodedRgba8MipBytes": 8384072,
       "status": "side-budget-exceeded"
+    },
+    {
+      "file": "public/art/trains/train-atlas.png",
+      "format": "PNG",
+      "fileBytes": 1242635,
+      "runtimeListed": true,
+      "developmentCandidate": null,
+      "metadataRole": "atlas",
+      "budgetClass": "atlas",
+      "budgetMaxSide": 2048,
+      "width": 2048,
+      "height": 1024,
+      "maxSide": 2048,
+      "estimatedDecodedRgba8MipBytes": 11184812,
+      "status": "ok"
+    },
+    {
+      "file": "public/art/trains/train-mask.png",
+      "format": "PNG",
+      "fileBytes": 23756,
+      "runtimeListed": false,
+      "developmentCandidate": null,
+      "metadataRole": "atlas",
+      "budgetClass": "atlas",
+      "budgetMaxSide": 2048,
+      "width": 1024,
+      "height": 512,
+      "maxSide": 1024,
+      "estimatedDecodedRgba8MipBytes": 2796204,
+      "status": "ok"
+    },
+    {
+      "file": "public/art/vehicles/vehicle-atlas.png",
+      "format": "PNG",
+      "fileBytes": 1248136,
+      "runtimeListed": true,
+      "developmentCandidate": null,
+      "metadataRole": "atlas",
+      "budgetClass": "atlas",
+      "budgetMaxSide": 2048,
+      "width": 2048,
+      "height": 1024,
+      "maxSide": 2048,
+      "estimatedDecodedRgba8MipBytes": 11184812,
+      "status": "ok"
+    },
+    {
+      "file": "public/art/vehicles/vehicle-mask.png",
+      "format": "PNG",
+      "fileBytes": 52634,
+      "runtimeListed": false,
+      "developmentCandidate": null,
+      "metadataRole": "atlas",
+      "budgetClass": "atlas",
+      "budgetMaxSide": 2048,
+      "width": 1024,
+      "height": 512,
+      "maxSide": 1024,
+      "estimatedDecodedRgba8MipBytes": 2796204,
+      "status": "ok"
     }
   ]
 }

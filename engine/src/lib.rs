@@ -144,9 +144,11 @@ const MAX_BUS_ROUTE_NODES: usize = 128;
 const BUS_HEADWAY_TICKS: u64 = 240;
 const BUS_DWELL_TICKS: u16 = 80;
 const BUS_RETRY_TICKS: u64 = 2_000;
-// Three symmetric coaches sit at -16m, 0m, and +16m from the train's
-// movement-buffer position. Keep an extra 7.5m of rail under each end.
-const TRAIN_HALF_LENGTH: f32 = 23.5;
+// A four-car 20 m consist (cab, trailer, motor, cab) with 0.6 m gangways spans
+// 81.8 m, so the consist centre sits 40.9 m from each terminal. Keep this equal
+// to consistHalfLength() in web/src/render/train-kit.ts and the station platform
+// length in web/src/render/city.ts.
+const TRAIN_HALF_LENGTH: f32 = 40.9;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Point {

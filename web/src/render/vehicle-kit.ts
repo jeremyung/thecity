@@ -27,7 +27,7 @@ export function vehicleSpec(body: VehicleBody): BodySpec {
 /** Geometric length used by renderer spacing and engine following gaps. */
 export function vehicleLength(body: VehicleBody) { return vehicleSpec(body).length; }
 
-class Builder {
+export class Builder {
   position: number[] = []; normal: number[] = []; uv: number[] = [];
   part: number[] = []; lateral: number[] = []; wheel: number[] = [];
   vertex(p: THREE.Vector3, n: THREE.Vector3, u: number, v: number, part: number, lateral: number, wheel = [0, 0, 0, 0]) {

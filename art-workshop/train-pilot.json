@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "status": "approved",
+  "purpose": "Pilot the same generated-side-elevation workflow used for road vehicles on one Japanese commuter EMU. Tests whether local HunyuanImage-2.1 can produce the three views a train kit needs (cab side, intermediate side, head-on cab front), where the front is a first-class view rather than the cars' approximated fascia.",
+  "capUSD": 2,
+  "aspectRatio": "16:9",
+  "hostedModels": [
+    { "id": "qwen/qwen-image-3", "provider": "alibaba", "estimateUSD": 0.03, "request": { "resolution": "1K" } },
+    { "id": "tencent/hy-image-v3.5-preview", "provider": "tencent", "estimateUSD": 0.024, "request": { "resolution": "1K" } }
+  ],
+  "local": {
+    "model": "hunyuanimage2.1_bf16.safetensors",
+    "steps": 30,
+    "cfg": 3.5,
+    "seed": 2101
+  },
+  "commonPrompt": "Strict orthographic technical elevation of one single Japanese electric commuter train car, rendered as a photograph-quality flat texture, exact profile, camera perpendicular to the car at half its height, zero perspective, not a three-quarter view. The whole car is in sharp focus edge to edge, no depth of field, no floor and no shadow under the car, seamless uniform pale gray backdrop, soft even diffuse lighting without bright specular highlights. Realistic factory finish and fine credible details: roof ribs, air-conditioner boxes, gangway, door leaves with window panes, continuous side window band, grab handles, pantograph wells, bogies with wheels and brake discs, couplers. Generic contemporary Japanese commuter design, warm ivory-white body, a deep teal waist stripe, dark grey underframe and bogie, silver-grey roof. No logos, no operator marks, no readable text and no licence or car numbers. Clean reference for texturing a miniature Tokyo street model.",
+  "sideSuffix": "Camera exactly level with the axle centre line, roof surface and tyre treads not visible, the car spans the full image width with the driving cab end at the LEFT, all wheels resting on one horizontal baseline.",
+  "frontSuffix": "Exact head-on front elevation, camera level with the middle of the car, zero perspective, the entire front face is visible and centred, no side, no roof and no wheels visible. Symmetric left and right about the vertical centre line.",
+  "negativeBase": "perspective, three-quarter view, angled view, logo, badge, emblem, operator mark, readable text, letters, destination text, licence plate, car number, watermark, cast shadow, ground shadow, floor, reflections, people, background scenery, cropped vehicle, multiple cars, two trains, model kit, illustration, painting",
+  "views": [
+    {
+      "id": "cab-side",
+      "view": "side",
+      "size": [2048, 768],
+      "role": "driving cab car, side elevation",
+      "dimensionsM": [20.0, 2.95, 3.63],
+      "prompt": "Driving cab car of a Japanese commuter EMU, 20 m long and 3.6 m tall, seen in exact side elevation with the cab front at the left. Slightly raked flat cab end with a large black-framed windscreen wrapping the corner, a slim door behind the cab, then four evenly spaced passenger double doors along the body, each with two tall windows. A continuous dark window band runs the full length between the doors. Two bogies near the ends, each with two wheels. Roof carries a row of low rectangular air-conditioner boxes. The teal waist stripe runs the full length at mid height and turns up slightly at the cab."
+    },
+    {
+      "id": "intermediate-side",
+      "view": "side",
+      "size": [2048, 768],
+      "role": "intermediate trailer car, side elevation",
+      "dimensionsM": [20.0, 2.95, 3.63],
+      "prompt": "Intermediate trailer car of a Japanese commuter EMU, 20 m long and 3.6 m tall, seen in exact side elevation, both ends plain and vertical with gangways and no cab. Four evenly spaced passenger double doors along the body, each with two tall windows, and a continuous dark window band between them. Two bogies near the ends, each with two wheels. A row of low rectangular air-conditioner boxes along the roof. The teal waist stripe runs the full length at mid height."
+    },
+    {
+      "id": "cab-front",
+      "view": "front",
+      "size": [1024, 1280],
+      "role": "driving cab car, head-on front elevation",
+      "dimensionsM": [2.95, 3.63],
+      "prompt": "Head-on front of a Japanese commuter EMU driving cab, 2.95 m wide and 3.6 m tall. A large two-pane black-framed windscreen across the upper half, a lit rectangular destination rollsign box directly above it under the roof edge, two round warm-white headlamps low at the outer corners, two small red tail lamps beside them, a teal band sweeping across the body below the windscreen, a black lower skirt with a central automatic coupler, and a silver-grey roof edge above with the top of an air-conditioner box. Symmetric about the vertical centre line."
+    },
+    {
+      "id": "motor-roof",
+      "view": "side",
+      "size": [2048, 768],
+      "role": "motor car with pantograph, side elevation for roof equipment",
+      "dimensionsM": [20.0, 2.95, 3.63],
+      "prompt": "Motor car of a Japanese commuter EMU, 20 m long and 3.6 m tall, exact side elevation, no cab. Three passenger double doors and a continuous dark window band, two bogies with two wheels each. On the roof a single-arm pantograph in its raised V shape plus a run of low rectangular air-conditioner boxes and roof cabling. The teal waist stripe runs the full length at mid height."
+    }
+  ],
+  "criteria": [
+    "Orthographic: no visible perspective or three-quarter view; wheels share one baseline on side views.",
+    "Proportion: measured length/height within 10% of dimensionsM on the side views.",
+    "Front: a symmetric head-on face with windscreen, destination box, head and tail lamps; reads at 128 px wide.",
+    "Consistency: cab side and cab front agree on livery band position, roof line and window height.",
+    "Flat lighting: no baked specular streaks or cast shadow that fight live shading.",
+    "Clean: no logos, operator marks, text, plate or car numbers; easy to matte.",
+    "Typology: reads as a contemporary Japanese commuter EMU at miniature street scale."
+  ]
+}

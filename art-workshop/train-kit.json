@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "purpose": "Source images and measured dimensions for scripts/build-train-kits.py. Every side source faces left (front at low x). The front source is head-on. Livery is baked into the elevation, so the paint mask is empty and the runtime keeps the atlas colour.",
+  "pixelsPerMeter": 72,
+  "atlas": [2048, 1024],
+  "classes": [
+    {
+      "id": "commuter",
+      "length": 20.0,
+      "width": 2.95,
+      "tumblehome": 0.05,
+      "gap": 0.6,
+      "consist": ["cab", "trailer", "motor", "cab"],
+      "cars": [
+        {
+          "id": "cab",
+          "source": "train-pilot/hy21-full-ortho--cab-side.png",
+          "frontSource": "train-final/seed4008--cab-front.png",
+          "lampFront": [0.26, 0.34],
+          "lampRear": [0.30, 0.40],
+          "wheelRadius": 0.43,
+          "axleSpacing": 2.1,
+          "clearance": 0.16,
+          "roofline": 0.5,
+          "round": [0.05, 0.03],
+          "roof": "ac"
+        },
+        {
+          "id": "trailer",
+          "source": "train-final/hy21-full-ortho--trailer-side.png",
+          "lampFront": [0.30, 0.40],
+          "lampRear": [0.30, 0.40],
+          "wheelRadius": 0.43,
+          "axleSpacing": 2.1,
+          "clearance": 0.16,
+          "roofline": 0.5,
+          "round": [0.04, 0.04],
+          "roof": "ac"
+        },
+        {
+          "id": "motor",
+          "source": "train-pilot/hy21-full-ortho--motor-roof.png",
+          "lampFront": [0.30, 0.40],
+          "lampRear": [0.30, 0.40],
+          "wheelRadius": 0.43,
+          "axleSpacing": 2.1,
+          "clearance": 0.16,
+          "roofline": 0.5,
+          "round": [0.04, 0.04],
+          "roof": "pantograph"
+        }
+      ]
+    }
+  ]
+}

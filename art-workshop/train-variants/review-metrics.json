@@ -1,0 +1,214 @@
+[
+  {
+    "id": "shinkansen-side",
+    "view": "side",
+    "role": "high-speed Shinkansen, side elevation",
+    "dimensionsM": [
+      25.0,
+      3.35,
+      3.65
+    ],
+    "px": [
+      63,
+      208,
+      1995,
+      521
+    ],
+    "width_px": 1933.0,
+    "height_px": 314.0,
+    "body_height_px": 298.0,
+    "ratio": 6.156,
+    "body_ratio": 6.487,
+    "expected": 6.849,
+    "error_pct": -10.122,
+    "body_error_pct": -5.296,
+    "pantograph": 1.0,
+    "symmetry": 0.875,
+    "sharpness": 400.278
+  },
+  {
+    "id": "shinkansen-front",
+    "view": "front",
+    "role": "high-speed Shinkansen, head-on front elevation",
+    "dimensionsM": [
+      3.35,
+      3.65
+    ],
+    "px": [
+      0,
+      262,
+      887,
+      1199
+    ],
+    "width_px": 888.0,
+    "height_px": 938.0,
+    "body_height_px": 886.0,
+    "ratio": 0.947,
+    "body_ratio": 1.002,
+    "expected": 0.918,
+    "error_pct": 3.147,
+    "body_error_pct": 9.201,
+    "pantograph": 1.0,
+    "symmetry": 0.806,
+    "sharpness": 206.251
+  },
+  {
+    "id": "subway-side",
+    "view": "side",
+    "role": "subway / metro car, side elevation",
+    "dimensionsM": [
+      18.0,
+      2.8,
+      3.5
+    ],
+    "px": [
+      74,
+      285,
+      1984,
+      711
+    ],
+    "width_px": 1911.0,
+    "height_px": 427.0,
+    "body_height_px": 395.0,
+    "ratio": 4.475,
+    "body_ratio": 4.838,
+    "expected": 5.143,
+    "error_pct": -12.978,
+    "body_error_pct": -5.928,
+    "pantograph": 1.0,
+    "symmetry": 0.936,
+    "sharpness": 337.755
+  },
+  {
+    "id": "subway-front",
+    "view": "front",
+    "role": "subway / metro car, head-on front elevation",
+    "dimensionsM": [
+      2.8,
+      3.5
+    ],
+    "px": [
+      0,
+      251,
+      859,
+      1175
+    ],
+    "width_px": 860.0,
+    "height_px": 925.0,
+    "body_height_px": 842.0,
+    "ratio": 0.93,
+    "body_ratio": 1.021,
+    "expected": 0.8,
+    "error_pct": 16.216,
+    "body_error_pct": 27.672,
+    "pantograph": 1.0,
+    "symmetry": 0.872,
+    "sharpness": 173.474
+  },
+  {
+    "id": "express-side",
+    "view": "side",
+    "role": "limited express, side elevation",
+    "dimensionsM": [
+      21.0,
+      2.9,
+      3.6
+    ],
+    "px": [
+      92,
+      241,
+      2047,
+      649
+    ],
+    "width_px": 1956.0,
+    "height_px": 409.0,
+    "body_height_px": 390.0,
+    "ratio": 4.782,
+    "body_ratio": 5.015,
+    "expected": 5.833,
+    "error_pct": -18.016,
+    "body_error_pct": -14.022,
+    "pantograph": 1.0,
+    "symmetry": 0.762,
+    "sharpness": 316.541
+  },
+  {
+    "id": "express-front",
+    "view": "front",
+    "role": "limited express, head-on front elevation",
+    "dimensionsM": [
+      2.9,
+      3.6
+    ],
+    "px": [
+      0,
+      407,
+      966,
+      1169
+    ],
+    "width_px": 967.0,
+    "height_px": 763.0,
+    "body_height_px": 714.0,
+    "ratio": 1.267,
+    "body_ratio": 1.354,
+    "expected": 0.806,
+    "error_pct": 57.328,
+    "body_error_pct": 68.125,
+    "pantograph": 1.0,
+    "symmetry": 0.578,
+    "sharpness": 267.467
+  },
+  {
+    "id": "tram-side",
+    "view": "side",
+    "role": "articulated light-rail tram, side elevation",
+    "dimensionsM": [
+      20.0,
+      2.3,
+      3.4
+    ],
+    "px": [
+      64,
+      288,
+      1985,
+      709
+    ],
+    "width_px": 1922.0,
+    "height_px": 422.0,
+    "body_height_px": 363.0,
+    "ratio": 4.555,
+    "body_ratio": 5.295,
+    "expected": 5.882,
+    "error_pct": -22.573,
+    "body_error_pct": -9.989,
+    "pantograph": 1.0,
+    "symmetry": 0.938,
+    "sharpness": 269.248
+  },
+  {
+    "id": "tram-front",
+    "view": "front",
+    "role": "articulated light-rail tram, head-on front elevation",
+    "dimensionsM": [
+      2.3,
+      3.4
+    ],
+    "px": [
+      92,
+      153,
+      1023,
+      1180
+    ],
+    "width_px": 932.0,
+    "height_px": 1028.0,
+    "body_height_px": 817.0,
+    "ratio": 0.907,
+    "body_ratio": 1.141,
+    "expected": 0.676,
+    "error_pct": 34.021,
+    "body_error_pct": 68.634,
+    "pantograph": 1.0,
+    "symmetry": 0.846,
+    "sharpness": 125.596
+  }
+]
