@@ -277,7 +277,9 @@ export function addNeighborhoodShrine(kit:Kit,parcel:Parcel,art:ArtMaterials):Pl
   const gateZ=d/2-1.2,gateW=Math.min(3.4,w*.4);
   for(const side of [-1,1])frame.post(side*gateW/2,1.9,gateZ,.16,3.8,vermilion);
   frame.box(0,3.95,gateZ,gateW+1.2,.24,.36,black);frame.box(0,3.7,gateZ,gateW+.8,.22,.3,vermilion);frame.box(0,3.1,gateZ,gateW+.3,.16,.22,vermilion);
-  for(const side of [-1,1]){const z=gateZ-2.2;frame.box(side*1.4,.35,z,.5,.7,.5,stone);frame.box(side*1.4,.95,z,.34,.5,.34,stone);frame.box(side*1.4,1.3,z,.62,.18,.62,stone);}
+  // Paired stone lanterns; the fire boxes glow after dark.
+  const flame=art.get('#ffc874',.5,true);
+  for(const side of [-1,1]){const z=gateZ-2.2;frame.box(side*1.4,.35,z,.5,.7,.5,stone);frame.box(side*1.4,.95,z,.34,.5,.34,stone);frame.box(side*1.4,.95,z,.36,.22,.2,flame);frame.box(side*1.4,1.3,z,.62,.18,.62,stone);}
   const hallD=Math.min(4.4,d*.3),hallW=Math.min(4.6,w*.5),hallZ=-d/2+1.2+hallD/2;
   frame.box(0,.3,hallZ,hallW+1,.6,hallD+1,stone);frame.box(0,1.65,hallZ,hallW,2.1,hallD,hall);
   frame.box(0,3.05,hallZ+hallD*.28,hallW+1.2,.2,hallD*.75,roof,0,-.42);frame.box(0,3.05,hallZ-hallD*.28,hallW+1.2,.2,hallD*.75,roof,0,.42);

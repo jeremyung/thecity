@@ -1,0 +1,38 @@
+{
+  "source": "seed 87231, tick 242000 (day 10, summer), development rate 16; scripts/generate-review-city.mjs then scripts/capture-parks.mjs",
+  "backend": "software WebGL (swiftshader)",
+  "performanceEvidence": false,
+  "depthOfField": false,
+  "runs": {
+    "day-anime": {
+      "previewHour": 15,
+      "style": "anime",
+      "diagnostics": {
+        "parkMeshes": 33,
+        "treeInstances": 1204,
+        "batches": 32,
+        "season": "summer"
+      }
+    },
+    "night-anime": {
+      "previewHour": 21,
+      "style": "anime",
+      "diagnostics": {
+        "parkMeshes": 33,
+        "treeInstances": 1204,
+        "batches": 32,
+        "season": "summer"
+      }
+    },
+    "day-miniature": {
+      "previewHour": 15,
+      "style": "miniature",
+      "diagnostics": {
+        "parkMeshes": 33,
+        "treeInstances": 1204,
+        "batches": 32,
+        "season": "summer"
+      }
+    }
+  }
+}
