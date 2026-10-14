@@ -19,6 +19,7 @@ import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
+import { signageContexts, type SignageContext } from './signage';
 import { addPocketPark, addShrineGrove, parkSignature, pocketParks, streetTreePlacements, type PlantedTree } from './parks';
 import { createBackdropGeometry } from './backdrop';
 import { treeOcclusion } from './tree-occlusion';
@@ -36,10 +37,11 @@ export interface StyleSwitchMetrics { target:Style; samples:number; compiledSamp
 export interface RenderMetrics { styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number }
 /** Fields that affect a building's rendered group. Home occupancy is binary
  * because only the seeded window-light subset depends on whether anyone lives there. */
-export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint):string {
+export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint,signage?:SignageContext):string {
   const homeOccupancy=(b.kind==='home'||(original&&b.kind==='apartment'))?(b.occupancy>0?'occupied':'vacant'):'-';
   const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
-  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
+  const signs=signage&&(signage.proximity||signage.feature)?`:s${signage.proximity}${signage.feature??''}`:'';
+  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}${signs}`;
 }
 type TreeBatch={indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean};
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
@@ -105,13 +107,15 @@ export class CityRenderer {
   private parks=new THREE.Group();
   private parkBatches:TreeBatch[]=[];
   private parkKey='';
+  /** Latest per-building signage context; part of each building's render signature. */
+  private signage=new Map<number,SignageContext>();
   private treePoints:Array<{x:number,z:number,s:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
   private rearExtensions=new RearExtensions(this.art,release=>this.retire(release),building=>{
     const current=this.buildings.get(building.id);
     const original=this.worldState?.building_original_footprints?.find(form=>form.building_id===building.id);
-    return !!current&&current.signature===buildingRenderSignature(building,original)&&this.chunks.isSourceVisible(building.id,current.source);
+    return !!current&&current.signature===buildingRenderSignature(building,original,this.signage.get(building.id))&&this.chunks.isSourceVisible(building.id,current.source);
   });
   private umbrellas=new Umbrellas(2000,hex=>this.art.get(hex));
   private umbrellaTuples=new Float32Array(2000*5);
@@ -307,16 +311,18 @@ export class CityRenderer {
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
+    const signage=this.signage=signageContexts(world);
     for(const b of world.buildings){
       const original=originals.get(b.id);
-      const signature=buildingRenderSignature(b,original);
+      const context=signage.get(b.id);
+      const signature=buildingRenderSignature(b,original,context);
       if(this.buildings.get(b.id)?.signature===signature){this.objectQueue.delete(b.id);continue;}
       // One pending update per authoritative building. Repeated snapshots replace
       // its data without appending duplicate closures or starving older parcels.
       const snapshot:Building={...b,history:[...b.history]};
       const originalSnapshot=original?{...original}:undefined;
       const source:RebuildableBuildingSource={
-        createGroup:()=>{const group=buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
+        createGroup:()=>{const group=buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview,signage:context});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
         disposeGroup:group=>disposeGroup(group),
       };
       this.objectQueue.set(b.id,{building:snapshot,signature,source});

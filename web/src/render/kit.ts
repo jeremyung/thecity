@@ -1,10 +1,11 @@
 import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { ArtMaterials } from './materials';
+import { ArtMaterials, shopSignLabel } from './materials';
 import { compactMidriseEnvelope, midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing, type LowriseMass, type LowriseMassing } from './lowrise-massing';
 import { buildingPalette } from './building-palette';
 import { renderTower } from './tower-kit';
+import { addBladeSign, addFacadeFeature, addRooftopBillboard, hasRooftopBillboard, type SignageContext } from './signage';
 import type { Building } from '../types';
 
 // Every repeatable detail is baked into one geometry per shared material.
@@ -84,7 +85,11 @@ export function isModernHomeVariant(b:Pick<Building,'kind'|'floors'|'appearance_
   return !b.anchor&&b.kind==='home'&&(b.floors===2||b.floors===3)&&(((b.appearance_seed>>>2)&1)===0);
 }
 
-export interface BuildingKitReviewOptions { compactMidrise?: boolean }
+export interface BuildingKitReviewOptions {
+  compactMidrise?: boolean;
+  /** Station proximity and any podium display chosen for this building. */
+  signage?: SignageContext;
+}
 
 export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
   const seed = b.appearance_seed >>> 0;
@@ -313,8 +318,8 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
     renderStreetLife(kit, b, art, { w, d, parcelW: b.width, parcelD: b.depth, frontageEdge, wood, dark, green, paleConcrete, iron, trim, seed });
   }
 
-  if (isOpen && b.business_active !== false && b.kind === 'office' && floors >= 3 && floors < 16 && pick(seed >>> 4, 3) !== 0) {
-    renderTenantBlade(kit, b, art, w, d, height, iron);
+  if (isOpen && b.business_active !== false) {
+    renderCommercialSignage(kit, b, art, { w, d, base, floor, height, frame: iron, midrise, lowrise, signage: review.signage });
   }
 
   if (renovating) {
@@ -325,23 +330,43 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   return finishBuilding(kit, b, w, d, height, art, true);
 }
 
-/** Street-facing blades give commercial midrises a readable, narrow vertical accent. */
-function renderTenantBlade(kit:Kit,b:Building,art:ArtMaterials,w:number,d:number,height:number,frame:THREE.Material){
-  const depth=Math.min(.85,(b.depth-d)/2-.14);
-  if(depth<.35)return;
-  const signHeight=Math.min(depth*4.5,height-3.4);
-  const x=w/2-.48,y=3.2+signHeight/2,z=d/2+.07+depth/2;
-  kit.box(x,y,z,.19,signHeight+.12,depth+.06,frame);
-  for(const end of [-1,1])kit.box(x,y+end*(signHeight/2-.24),d/2+.09,.13,.10,.28,frame);
-  const slot=pick(b.appearance_seed>>>9,8);
-  const material=art.tenantSign();
-  for(const side of [-1,1]){
-    const face=new THREE.PlaneGeometry(depth-.045,signHeight);
-    const uv=face.getAttribute('uv');
-    for(let i=0;i<uv.count;i++)uv.setY(i,(uv.getY(i)*.96+.02+7-slot)/8);
-    face.rotateY(side*Math.PI/2);
-    face.translate(x+side*.101,y,z);
-    kit.add(face,material);
+/**
+ * Street-facing commercial signage for an open business: stacked blade signs
+ * on offices and shop-houses, rooftop billboard frames on 4–11 floor
+ * commercial roofs (likelier near the station), and the podium display the
+ * city chose for a few station-area towers and offices.
+ */
+function renderCommercialSignage(kit:Kit,b:Building,art:ArtMaterials,m:{w:number;d:number;base:number;floor:number;height:number;frame:THREE.Material;midrise:MidriseMassing|null;lowrise:LowriseMassing|null;signage?:SignageContext}){
+  const {w,d,base,floor,height,frame,midrise,lowrise}=m;
+  const seed=b.appearance_seed>>>0,proximity=m.signage?.proximity??0;
+  const shop=b.kind==='shop'||b.kind==='cafe',tower=b.floors>=12&&(b.kind==='office'||b.kind==='apartment');
+  // Blades: offices of 3–15 floors as before, plus shop-houses of two or more floors.
+  if(b.kind==='office'&&b.floors>=3&&b.floors<16&&pick(seed>>>4,3)!==0){
+    const shaft=midrise?.family==='setback-office'?midrise.masses.find(mass=>mass.baseFloor>0&&mass.depth<d):undefined;
+    if(shaft){
+      const bottom=base+shaft.baseFloor*floor+.3;
+      addBladeSign(kit,art,frame,{x:shaft.x+shaft.width/2-.48,frontZ:shaft.z+shaft.depth/2,maxDepth:b.depth/2-(shaft.z+shaft.depth/2)-.14,bottom,maxHeight:shaft.floors*floor-.6,panels:4,seed:seed>>>9});
+    }else if(!tower){
+      addBladeSign(kit,art,frame,{x:w/2-.48,frontZ:d/2,maxDepth:(b.depth-d)/2-.14,bottom:3.2,maxHeight:height-3.4,panels:Math.min(4,b.floors-2),seed:seed>>>9});
+    }
+  }else if(shop&&b.floors>=2&&pick(seed>>>6,4)<1+proximity){
+    const frontage=lowrise?.masses.find(mass=>mass.role==='frontage');
+    const frontZ=frontage?frontage.z+frontage.depth/2:d/2,halfW=frontage?frontage.width/2:w/2,cx=frontage?.x??0;
+    const side=pick(seed>>>7,2)?1:-1;
+    addBladeSign(kit,art,frame,{x:cx+side*(halfW-.48),frontZ,maxDepth:b.depth/2-frontZ-.14,bottom:3.2,maxHeight:height-3.4,panels:1,seed:seed>>>9});
+  }
+  // Rooftop boards stand on the highest flat roof.
+  if(!tower&&hasRooftopBillboard(b,proximity)){
+    const mains=midrise?.masses.filter(mass=>mass.role==='main');
+    const roof=mains?.length?mains.reduce((a,c)=>a.baseFloor+a.floors>c.baseFloor+c.floors?a:c):null;
+    if(roof)addRooftopBillboard(kit,art,frame,{x:roof.x,z:roof.z,width:roof.width,depth:roof.depth,top:base+(roof.baseFloor+roof.floors)*floor},seed>>>15);
+    else if(!lowrise)addRooftopBillboard(kit,art,frame,{x:0,z:0,width:w,depth:d,top:base+height},seed>>>15);
+  }
+  // Station-area podium displays sit above the entrance floor.
+  const feature=m.signage?.feature;
+  if(feature){
+    if(tower)addFacadeFeature(kit,art,frame,feature,{frontZ:d/2,width:w*.72,bottom:base+floor+.2,height:2*floor-.6,seed});
+    else if(midrise?.family==='setback-office')addFacadeFeature(kit,art,frame,feature,{frontZ:d/2,width:w*.8,bottom:base+floor+.2,height:floor-.5,seed});
   }
 }
 
@@ -1417,7 +1442,7 @@ function seedInt(seed: number) { return Math.trunc(seed) >>> 0; }
 function finishBuilding(kit: Kit, b: Building, w: number, d: number, height: number, art: ArtMaterials, completed: boolean) {
   const group = kit.finish();
   if (completed && (b.anchor || b.kind === 'shop' || b.kind === 'cafe')) {
-    const { material, v0, v1 } = art.shopSign(b.anchor ? '喫茶 青葉' : (b.kind === 'cafe' ? '珈琲' : '商店'));
+    const { material, v0, v1 } = art.shopSign(shopSignLabel(b));
     const signW = Math.min(w * .7, b.anchor ? 5.5 : 4.8);
     const signH = signW / 3.7;
     const plane = new THREE.PlaneGeometry(signW, signH), uvs = plane.getAttribute('uv');
