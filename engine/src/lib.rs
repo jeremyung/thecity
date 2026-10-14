@@ -14049,6 +14049,7 @@ mod tests {
             .parcels
             .iter()
             .filter(|p| p.protected && !built.contains(&p.id))
+            .filter(|p| p.open_space.as_deref() == Some("park"))
             .collect();
         assert!(parks.len() >= 2, "growing neighborhoods dedicate pocket parks");
         let homes = engine
