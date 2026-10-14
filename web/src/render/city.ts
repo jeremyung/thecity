@@ -18,6 +18,7 @@ import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
+import { buildUtilityLines } from './utility-lines';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { signageContexts, type SignageContext } from './signage';
 import { seasonAt, seasonKey, treeColor, type SeasonState, type TreeSpecies } from './seasons';
@@ -453,6 +454,8 @@ export class CityRenderer {
       planted.push(...(kind==='plaza'?addStationPlaza:kind==='shrine'?addNeighborhoodShrine:addPocketPark)(kit,parcel,this.art));
     }
     addScrambleCrossing(kit,world,this.art);
+    // Overhead lines follow streets and building entries, which also key this layer.
+    this.parks.add(buildUtilityLines(world,this.art));
     for(const polygon of world.terrain.protected)planted.push(...addShrineGrove(kit,polygon,this.art));
     this.parks.add(kit.finish());
     this.parkLook=planted;
