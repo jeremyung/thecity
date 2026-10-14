@@ -6,7 +6,8 @@ it('warms material layouts without copying the city instance arrays or owning so
  const source=new THREE.InstancedMesh(geometry,material,20000);source.setColorAt(0,new THREE.Color('#408050'));source.receiveShadow=true;scene.add(source);
  const duplicate=new THREE.InstancedMesh(geometry,material,5000);duplicate.setColorAt(0,new THREE.Color('#408050'));duplicate.receiveShadow=true;scene.add(duplicate);
  const plain=new THREE.Mesh(geometry,material);scene.add(plain,new THREE.HemisphereLight());
- const warm=styleWarmup(scene,m=>m),meshes=warm.scene.children.filter(o=>o instanceof THREE.Mesh);
+ const alternate=material.clone();
+ const warm=styleWarmup(scene,()=>alternate),meshes=warm.scene.children.filter(o=>o instanceof THREE.Mesh);
  expect(meshes).toHaveLength(2);
  const instance=meshes.find(o=>o instanceof THREE.InstancedMesh) as THREE.InstancedMesh;
  expect(instance.instanceMatrix.count).toBe(1);expect(instance.instanceColor?.count).toBe(1);expect(instance.geometry).toBe(geometry);
@@ -55,4 +56,36 @@ it('borrows the live lighting target without cloning, reparenting, or disposing 
  expect(liveDispose).not.toHaveBeenCalled();expect(liveShadowDispose).not.toHaveBeenCalled();expect(targetDispose).not.toHaveBeenCalled();
  expect(sun.parent).toBe(parent);expect(parent.parent).toBe(scene);expect(warm.scene.children).toHaveLength(0);
  sun.dispose();
+});
+
+it('submits warmup against scene attachments and restores state before GPU completion',async()=>{
+ const {compileForScenePass}=await import('../web/src/render/style-warmup');
+ const oldTarget=new THREE.RenderTarget(),passTarget=new THREE.RenderTarget();
+ const oldMrt={} as ReturnType<THREE.WebGPURenderer['getMRT']>,passMrt={} as typeof oldMrt;
+ let target=oldTarget,mrt=oldMrt,face=2,mip=1;
+ let finish!:()=>void;
+ const pending=new Promise<void>(resolve=>{finish=resolve;});
+ const renderer={
+  getRenderTarget:()=>target,getMRT:()=>mrt,getActiveCubeFace:()=>face,getActiveMipmapLevel:()=>mip,
+  setRenderTarget:(value:THREE.RenderTarget,f=0,m=0)=>{target=value;face=f;mip=m;},setMRT:(value:typeof mrt)=>{mrt=value;},
+  compileAsync:vi.fn(()=>{expect(target).toBe(passTarget);expect(mrt).toBe(passMrt);return pending;}),
+ };
+ const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();
+ const result=compileForScenePass(renderer as unknown as THREE.WebGPURenderer,{renderTarget:passTarget,getMRT:()=>passMrt},scene,camera,scene);
+ expect(result).toBe(pending);expect(target).toBe(oldTarget);expect(mrt).toBe(oldMrt);expect([face,mip]).toEqual([2,1]);
+ finish();await result;
+ renderer.compileAsync.mockImplementation(()=>{throw new Error('submission failed');});
+ expect(()=>compileForScenePass(renderer as unknown as THREE.WebGPURenderer,{renderTarget:passTarget,getMRT:()=>passMrt},scene,camera,scene)).toThrow('submission failed');
+ expect(target).toBe(oldTarget);expect(mrt).toBe(oldMrt);expect([face,mip]).toEqual([2,1]);
+});
+
+
+it('omits unchanged shared materials while retaining changed multi-material meshes',()=>{
+ const scene=new THREE.Scene(),geometry=new THREE.BoxGeometry();
+ const shared=new THREE.MeshBasicNodeMaterial(),original=new THREE.MeshStandardNodeMaterial(),alternate=original.clone();
+ scene.add(new THREE.Mesh(geometry,shared),new THREE.Mesh(geometry,[shared,original]));
+ const warm=styleWarmup(scene,m=>m===original?alternate:m);
+ const samples=warm.scene.children.filter(o=>o instanceof THREE.Mesh);
+ expect(samples).toHaveLength(1);expect(samples[0].material).toEqual([shared,alternate]);
+ warm.dispose();geometry.dispose();shared.dispose();original.dispose();alternate.dispose();
 });

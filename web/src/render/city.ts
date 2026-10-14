@@ -13,7 +13,7 @@ import { VisibleInfrastructure, type InfrastructureCommit } from './visible-infr
 import { buildStationPlatform } from './station-kit';
 import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '../movement';
 import { snapShadowAnchor } from './shadow-anchor';
-import { styleWarmup, compileStyleSamples } from './style-warmup';
+import { styleWarmup, compileStyleSamples, compileForScenePass } from './style-warmup';
 import * as THREE from 'three/webgpu';
 import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv, fog, rangeFogFactor, positionWorld } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
@@ -302,22 +302,21 @@ export class CityRenderer {
   private buildPipeline(){
     this.disposePipeline();
     this.scenePass=pass(this.scene,this.camera,{samples:4});
-    // Wet weather adds a view-normal target and screen-space reflections;
-    // dry weather keeps the cheaper single-target pass (rebuilt on change).
+    // Explicit resolved normals avoid Three's depth-normal reconstruction path,
+    // which emits an invalid textureDimensions mip argument for MSAA WebGPU depth.
+    // Keep four-sample scene AA; AO and wet-weather SSR share the normal target.
     const wet=this.wetReflections;
-    if(wet)this.scenePass.setMRT(mrt({output,normal:directionToColor(normalView)}));
-    // Ground-truth AO at half resolution, normals reconstructed from depth (no
-    // extra MRT target). Radii are metres: contact shading where buildings,
-    // kerbs and trees meet the ground, not a whole-block darkening.
-    const occlusion=this.occlusion=ao(this.scenePass.getTextureNode('depth'),null as unknown as THREE.Node,this.camera);
+    this.scenePass.setMRT(mrt({output,normal:directionToColor(normalView)}));
+    const depthTexture=this.scenePass.getTextureNode('depth');
+    const normalTexture=this.scenePass.getTextureNode('normal');
+    const viewNormal=sample(uv=>colorToDirection(normalTexture.sample(uv)));
+    const occlusion=this.occlusion=ao(depthTexture,viewNormal,this.camera);
     occlusion.resolutionScale=.5;occlusion.radius.value=3;occlusion.thickness.value=2.5;occlusion.distanceExponent.value=1.4;occlusion.samples.value=12;
-    // Fade AO beyond ~700 m: depth-reconstructed normals lose precision there
-    // and band across the hills, skyline and mountain ring.
+    // Fade AO beyond ~700 m: distant depth loses precision and can band
+    // across the hills, skyline and mountain ring.
     const aoReach=smoothstep(1300,700,this.scenePass.getViewZNode().negate());
     let sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength.mul(aoReach))),1));
     if(wet){
-      const depthTexture=this.scenePass.getTextureNode('depth'),normalTexture=this.scenePass.getTextureNode('normal');
-      const viewNormal=sample(uv=>colorToDirection(normalTexture.sample(uv)));
       // Reflectivity is derived in the SSR pass itself: flat ground near street
       // level, in the same world-space puddles the asphalt darkens. Camera
       // matrices are explicit uniforms because the pass renders a screen quad.
@@ -346,12 +345,23 @@ export class CityRenderer {
     const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
       focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
       outputHeightPx:this.outputHeight,maxGatherRadiusPx:this.bokeh,enabled:this.dofEnabled});
-    const focus=this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh);
+    // A zero CoC still runs seven full-screen passes. Omit the DOF node
+    // entirely when disabled, preserving the unblurred scene and bloom.
+    const focus=this.focusEnabled
+      ?(this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh))
+      :sceneColor;
     const shine=bloom(sceneColor,.1,.5,.9);this.shine=shine;
     this.pipeline=new THREE.RenderPipeline(this.renderer);
     this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
   }
-  private disposePipeline(){this.occlusion?.dispose();this.occlusion=null;this.reflections?.dispose();this.reflections=null;this.shafts?.dispose();this.shafts=null;this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
+  private disposePipeline(){
+    // Warmup borrows scene attachments. Detach immediately, but keep the old
+    // resources alive until pending compiler work releases its references.
+    const resources=[this.occlusion,this.reflections,this.shafts,this.pipeline,this.depthOfField,this.shine,this.scenePass];
+    this.occlusion=null;this.reflections=null;this.shafts=null;this.pipeline=null;
+    this.depthOfField=null;this.shine=null;this.scenePass=null;
+    this.retire(()=>{for(const resource of resources)resource?.dispose();});
+  }
   async setStyle(style:Style){
     const request=++this.styleRequest;
     const previous=this.styleWarmupTail;
@@ -368,7 +378,9 @@ export class CityRenderer {
       this.pendingCompiles++;
       try{
         await compileStyleSamples(prepared.scene,
-          scene=>this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
+          scene=>this.scenePass
+            ?compileForScenePass(this.renderer,this.scenePass,scene,this.camera,prepared.targetScene)
+            :this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
           ()=>!this.disposed&&request===this.styleRequest,timing);
       }catch(error){timing.outcome='failed';throw error;}finally{
         prepared.dispose();this.pendingCompiles--;
@@ -390,7 +402,11 @@ export class CityRenderer {
   toggleWaterReflectionForReview(){return this.water?.toggleReflectionForReview()??false;}
   toggleStreetLightsForReview(){return this.nearbyStreetLights.enabled=!this.nearbyStreetLights.enabled;}
   setLens(id:LensPresetId,takeManualControl=true){this.director.setLens(id,takeManualControl);const lens=LENS_PRESETS[id];this.lensFocalM.value=lens.focalLengthMm/1000;this.lensFNumber.value=lens.fNumber;}
-  setFocus(value:boolean){this.focusEnabled=value;this.dofEnabled.value=value?1:0;}
+  setFocus(value:boolean){
+    if(this.focusEnabled===value)return;
+    this.focusEnabled=value;this.dofEnabled.value=value?1:0;
+    if(this.pipeline)this.buildPipeline();
+  }
   setQuality(quality:'high'|'balanced'){this.quality=quality;this.qualityController.setProfile(quality);this.applyQuality();}
   private applyQuality(){
     const level=this.qualityController.level,high=this.quality==='high';
@@ -1048,7 +1064,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);const hit=hits.find(candidate=>{for(let object:THREE.Object3D|null=candidate.object;object;object=object.parent)if(!object.visible)return false;return true;});if(!hit)return;const building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment;this.skyEnvironment=null;this.retire(()=>environment?.dispose());const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

@@ -1,7 +1,8 @@
 import * as THREE from 'three/webgpu';
-import { color, mix, uniform, positionWorld, positionLocal, positionView, vec2, vec3, sin, reflector, texture, uv, smoothstep, mx_noise_float, screenUV, viewportSafeUV, viewportSharedTexture, viewportDepthTexture, perspectiveDepthToViewZ, attribute, fract, cameraNear, cameraFar, cameraPosition, normalize, dot, max, pow, float } from 'three/tsl';
+import { color, mix, uniform, positionWorld, positionLocal, positionView, vec2, vec3, sin, reflector, texture, uv, smoothstep, mx_noise_float, screenUV, viewportSafeUV, viewportSharedTexture, viewportDepthTexture, perspectiveDepthToViewZ, attribute, cameraNear, cameraFar, cameraPosition, normalize, dot, max, pow, float } from 'three/tsl';
 import type { Point, Style } from '../types';
 import { createWaterNormalTexture } from './water-normals';
+import { waterFlowPhase, WATER_FLOW_CYCLE } from './water-flow';
 
 /**
  * River surface after three.js Water2Mesh: two scrolling ripple normal layers
@@ -28,6 +29,7 @@ export class RiverWater {
   private normals:THREE.DataTexture;
   private reflection:ReturnType<typeof reflector>;
   private elapsed=0;
+  private flowPhase=uniform(new THREE.Vector3(0,.5,1));
   private surface:THREE.MeshBasicNodeMaterial;
   private bed:THREE.Mesh;
   private reflectionReview:THREE.MeshBasicNodeMaterial|null=null;
@@ -56,13 +58,14 @@ export class RiverWater {
     // cross-faded so the texture never stretches. The current follows bends
     // and is slowest along the walls (per-vertex 'flow', metres/second).
     const ground=vec2(w.x,w.z),current=vec2(attribute('flow','vec2'));
-    const cycle=float(6),phase0=fract(t.div(cycle)),phase1=fract(t.div(cycle).add(.5));
-    const blend=phase0.mul(2).sub(1).abs();
+    const cycle=float(WATER_FLOW_CYCLE),phase0=this.flowPhase.x,phase1=this.flowPhase.y;
+    const blend=this.flowPhase.z;
     const advected=(scale:number,rate:number,shift:number)=>{
       const base=ground.div(scale);
       const a=texture(this.normals,base.sub(current.mul(phase0.mul(cycle).mul(rate/scale))));
       const b=texture(this.normals,base.add(shift).sub(current.mul(phase1.mul(cycle).mul(rate/scale))));
-      return mix(b,a,blend).rgb.mul(2).sub(1);
+      // The wrapping sample must be invisible at each half-cycle boundary.
+      return mix(a,b,blend).rgb.mul(2).sub(1);
     };
     const layerA=advected(38,1,.37);
     const layerB=advected(13,1.35,.61);
@@ -111,6 +114,7 @@ export class RiverWater {
   }
   setReflectionScale(scale:number){this.reflection.reflector.resolutionScale=THREE.MathUtils.clamp(scale,.15,.5);}
   update(dt:number,t:number,rain:number,style:Style,night:number){
+    waterFlowPhase(t,this.flowPhase.value);
     this.time.value=t;this.style.value=style==='miniature'?1:0;this.night.value=night;
     this.elapsed+=dt;
     if(this.elapsed<.05)return;this.elapsed=0;
