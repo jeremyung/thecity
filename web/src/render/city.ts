@@ -19,6 +19,7 @@ import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
+import { addPocketPark, addShrineGrove, parkSignature, pocketParks, streetTreePlacements, type PlantedTree } from './parks';
 import { createBackdropGeometry } from './backdrop';
 import { treeOcclusion } from './tree-occlusion';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
@@ -40,6 +41,7 @@ export function buildingRenderSignature(b:Building,original?:BuildingOriginalFoo
   const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
   return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
 }
+type TreeBatch={indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean};
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
@@ -94,9 +96,15 @@ export class CityRenderer {
   private water:RiverWater|null=null;
   private riverHalfWidth=32;
   private bridgeSpans:BridgeSpan[]=[];
-  private treeBatches:Array<{indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean}>=[];
+  private treeBatches:TreeBatch[]=[];
   private treeNearGeometry:THREE.BufferGeometry|null=null;
   private treeFarGeometry:THREE.BufferGeometry|null=null;
+  private treeTrunkGeometry:THREE.BufferGeometry|null=null;
+  // Street trees, pocket parks and the shrine grove follow roads and parcels,
+  // so they rebuild separately from the seeded terrain groves.
+  private parks=new THREE.Group();
+  private parkBatches:TreeBatch[]=[];
+  private parkKey='';
   private treePoints:Array<{x:number,z:number,s:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
@@ -153,7 +161,7 @@ export class CityRenderer {
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
     this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
-    this.scene.add(this.terrain,this.roads,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.trainFleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
+    this.scene.add(this.terrain,this.roads,this.parks,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.trainFleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
@@ -293,6 +301,8 @@ export class CityRenderer {
     const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
     const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|');
     if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
+    const parkKey=`${signatures}#${parkSignature(world)}`;
+    if(parkKey!==this.parkKey){this.parkKey=parkKey;this.rebuildParks(world);}
     const ids=new Set(world.buildings.map(b=>b.id));
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);}
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
@@ -324,7 +334,8 @@ export class CityRenderer {
     this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trainFleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
     this.buildings.clear();
-    this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry;this.retire(()=>{near?.dispose();far?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
+    this.clearParks();this.parkKey='';
+    this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry,trunk=this.treeTrunkGeometry;this.retire(()=>{near?.dispose();far?.dispose();trunk?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeTrunkGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
     this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);
     const oldWater=this.water;oldWater?.mesh.removeFromParent();this.retire(()=>oldWater?.dispose());this.water=null;this.waterTime=0;this.motionTick=0;this.motionDelta=.05;this.received=performance.now();this.current.clear();this.previous.clear();this.objectQueue.clear();this.roadSignature='';this.selected=null;this.treePoints=[];
   }
@@ -378,14 +389,9 @@ export class CityRenderer {
     // observation distances, rather than a row of identical smooth spheres.
     const foliage=createFoliageGeometry('near');
     this.treeNearGeometry=foliage;this.treeFarGeometry=createFoliageGeometry('far');
-    const chunks=new Map<string,number[]>();for(let i=0;i<positions.length;i++){const p=positions[i],key=`${Math.floor((p.x+400)/200)}:${Math.floor((p.z+400)/200)}`;const list=chunks.get(key)??[];list.push(i);chunks.set(key,list);}
-    const trunkGeometry=createTreeTrunkGeometry();
-    for(const indices of chunks.values()){
-      const trunks=new THREE.InstancedMesh(trunkGeometry,this.art.get('#746b5c'),indices.length),trees=new THREE.InstancedMesh(foliage,this.art.get('#fffffe',.96),indices.length),center=new THREE.Vector3();
-      trunks.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.castShadow=true;trunks.castShadow=true;
-      for(let local=0;local<indices.length;local++){const p=positions[indices[local]],blossom=Math.abs(p.x-this.riverX(river,p.z)-halfWidth-17)<.01;center.x+=p.x;center.z+=p.z;trees.setColorAt(local,new THREE.Color(blossom?['#e5bdba','#edcfc4','#cfa9b0'][local%3]:['#758a67','#899b70','#607e67','#a0aa7a'][local%4]));}
-      center.divideScalar(indices.length);this.treeBatches.push({indices,trees,trunks,center,far:false});this.terrain.add(trees,trunks);
-    }
+    this.treeTrunkGeometry=createTreeTrunkGeometry();
+    this.treeBatches=this.createTreeBatches(positions,(p,local)=>Math.abs(p.x-this.riverX(river,p.z)-halfWidth-17)<.01?['#e5bdba','#edcfc4','#cfa9b0'][local%3]:['#758a67','#899b70','#607e67','#a0aa7a'][local%4]);
+    for(const batch of this.treeBatches)this.terrain.add(batch.trees,batch.trunks);
     this.updateTrees(world);
     this.buildMountains(rng);
     const detail=new Kit();
@@ -402,6 +408,38 @@ export class CityRenderer {
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const m=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});m.colorNode=mix(this.hillColor,mix(this.skyLow,this.skyHigh,.55),.2+ring*.24).mul(mx_noise_float(positionLocal.mul(.025)).mul(.055).add(.97));const mountain=new THREE.Mesh(g,m);mountain.userData.ownedMaterial=true;this.terrain.add(mountain);
     }
   }
+  /** Instanced trees in 200 m cells so each cell can switch foliage detail by camera distance. */
+  private createTreeBatches<T extends {x:number,z:number}>(points:readonly T[],colorOf:(p:T,local:number)=>string):TreeBatch[]{
+    if(!this.treeNearGeometry||!this.treeTrunkGeometry)return [];
+    const cells=new Map<string,number[]>();for(let i=0;i<points.length;i++){const p=points[i],key=`${Math.floor((p.x+400)/200)}:${Math.floor((p.z+400)/200)}`;const list=cells.get(key)??[];list.push(i);cells.set(key,list);}
+    const batches:TreeBatch[]=[];
+    for(const indices of cells.values()){
+      const trunks=new THREE.InstancedMesh(this.treeTrunkGeometry,this.art.get('#746b5c'),indices.length),trees=new THREE.InstancedMesh(this.treeNearGeometry,this.art.get('#fffffe',.96),indices.length),center=new THREE.Vector3();
+      trunks.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.castShadow=true;trunks.castShadow=true;
+      for(let local=0;local<indices.length;local++){const p=points[indices[local]];center.x+=p.x;center.z+=p.z;trees.setColorAt(local,new THREE.Color(colorOf(p,local)));}
+      center.divideScalar(indices.length);batches.push({indices,trees,trunks,center,far:false});
+    }
+    return batches;
+  }
+  private clearParks(){
+    // Instanced trees share the terrain's foliage and trunk geometry; detach
+    // them so retiring the park group disposes only park-owned geometry.
+    for(const batch of this.parkBatches){batch.trees.removeFromParent();batch.trunks.removeFromParent();batch.trees.dispose();batch.trunks.dispose();}
+    this.parkBatches=[];this.retireGroup(this.parks);this.parks=new THREE.Group();this.parks.name='parks';this.scene.add(this.parks);
+  }
+  private rebuildParks(world:World){
+    this.clearParks();
+    const kit=new Kit(),planted:PlantedTree[]=[...streetTreePlacements(world)];
+    for(const parcel of pocketParks(world))planted.push(...addPocketPark(kit,parcel,this.art));
+    for(const polygon of world.terrain.protected)planted.push(...addShrineGrove(kit,polygon,this.art));
+    this.parks.add(kit.finish());
+    this.parkBatches=this.createTreeBatches(planted,p=>p.color);
+    for(const batch of this.parkBatches){
+      for(let local=0;local<batch.indices.length;local++){const i=batch.indices[local],p=planted[i];dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(p.s/1.8);dummy.updateMatrix();batch.trees.setMatrixAt(local,dummy.matrix);batch.trunks.setMatrixAt(local,dummy.matrix);}
+      batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();
+      this.parks.add(batch.trees,batch.trunks);
+    }
+  }
   private updateTrees(world:World){
     const hides=treeOcclusion(world,this.treePoints);
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
@@ -414,7 +452,7 @@ export class CityRenderer {
   }
   private updateTreeDetail(){
     if(!this.treeNearGeometry||!this.treeFarGeometry)return;
-    for(const batch of this.treeBatches){const distance=this.camera.position.distanceTo(batch.center),far=batch.far?distance>280:distance>330;if(far!==batch.far){batch.far=far;batch.trees.geometry=far?this.treeFarGeometry:this.treeNearGeometry;batch.trees.computeBoundingSphere();}}
+    for(const batch of [...this.treeBatches,...this.parkBatches]){const distance=this.camera.position.distanceTo(batch.center),far=batch.far?distance>280:distance>330;if(far!==batch.far){batch.far=far;batch.trees.geometry=far?this.treeFarGeometry:this.treeNearGeometry;batch.trees.computeBoundingSphere();}}
   }
   private rebuildRoads(world:World){
     this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);this.roadGroups.clear();

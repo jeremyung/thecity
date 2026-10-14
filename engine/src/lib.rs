@@ -99,6 +99,18 @@ const DEVELOPMENT_TICKS_PER_DAY: u64 = 800;
 const MAX_BUILDINGS: usize = 3_000;
 const MAX_SEGMENTS: usize = 5_000;
 const MAX_PARCELS: usize = 4_000;
+/// Occupied homes within this distance form a pocket park's catchment.
+const POCKET_PARK_CATCHMENT: f32 = 70.0;
+/// Occupied homes a catchment needs before a vacant lot becomes a park.
+const POCKET_PARK_MIN_HOMES: usize = 8;
+/// Minimum distance between pocket parks, so each serves its own streets.
+const POCKET_PARK_SPACING: f32 = 120.0;
+/// A quarter day between pocket park reviews.
+const POCKET_PARK_INTERVAL_TICKS: u64 = TICKS_PER_DAY / 4;
+/// City-wide ceiling: at most one pocket park per this many occupied homes.
+const HOMES_PER_POCKET_PARK: usize = 30;
+/// Ordinary neighborhood lots only; station towers and tiny slivers are skipped.
+const POCKET_PARK_AREA: std::ops::RangeInclusive<f32> = 80.0..=520.0;
 const MAX_FRONTAGE_ROADS_PER_EVALUATION: usize = 24;
 const MAX_FRONTAGE_SITES_PER_EVALUATION: usize = 48;
 const MAX_FRONTAGE_GRID_SITES_PER_ROAD: usize = 34;
@@ -2401,6 +2413,9 @@ impl Engine {
         if self.state.tick % 40 == 0 {
             self.evaluate_growth();
         }
+        if self.state.tick % POCKET_PARK_INTERVAL_TICKS == 0 && self.state.development_rate > 0 {
+            self.dedicate_pocket_park();
+        }
         self.trim_completed_projects();
         self.advance_face_access();
         if self.state.tick % 200 == 0 {
@@ -2539,6 +2554,70 @@ impl Engine {
         if day > 0 && day % 3 == 0 && self.state.last_renewal_day != day {
             self.renewal(day);
         }
+    }
+    /// Once enough households live around a still-vacant master-plan lot, the
+    /// neighborhood keeps it as protected open space. Protected parcels are
+    /// never developed; the renderer draws vacant ones as pocket parks.
+    /// Selection is deterministic and draws no random numbers.
+    fn dedicate_pocket_park(&mut self) {
+        if !self.masterplan_active() {
+            return;
+        }
+        let homes: Vec<(f32, f32)> = self
+            .state
+            .buildings
+            .iter()
+            .filter(|b| is_housing(b) && site_active(b))
+            .map(|b| (b.x, b.z))
+            .collect();
+        let built: BTreeSet<u32> = self.state.buildings.iter().map(|b| b.parcel_id).collect();
+        let parks: Vec<(f32, f32)> = self
+            .state
+            .parcels
+            .iter()
+            .filter(|p| p.protected && !built.contains(&p.id))
+            .map(|p| (p.x, p.z))
+            .collect();
+        if homes.len() < POCKET_PARK_MIN_HOMES
+            || parks.len().saturating_mul(HOMES_PER_POCKET_PARK) >= homes.len()
+        {
+            return;
+        }
+        let mut best: Option<(usize, u32)> = None;
+        for parcel in &self.state.parcels {
+            if parcel.protected
+                || parcel.reservation.is_some()
+                || built.contains(&parcel.id)
+                || !POCKET_PARK_AREA.contains(&(parcel.width * parcel.depth))
+                || parks.iter().any(|&(x, z)| {
+                    (x - parcel.x).hypot(z - parcel.z) < POCKET_PARK_SPACING
+                })
+                || !self.node_connected(parcel.access_node)
+                || !self.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
+                || self.is_station_tower_lot(parcel)
+            {
+                continue;
+            }
+            let nearby = homes
+                .iter()
+                .filter(|&&(x, z)| (x - parcel.x).hypot(z - parcel.z) <= POCKET_PARK_CATCHMENT)
+                .count();
+            if nearby >= POCKET_PARK_MIN_HOMES && best.is_none_or(|(count, _)| nearby > count) {
+                best = Some((nearby, parcel.id));
+            }
+        }
+        let Some((nearby, parcel_id)) = best else {
+            return;
+        };
+        if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+            parcel.protected = true;
+        }
+        self.record(
+            "ParkDedicated",
+            parcel_id,
+            format!("A vacant lot becomes a pocket park for {nearby} nearby homes"),
+        );
+        self.state.revision = self.state.revision.saturating_add(1);
     }
     fn advance_projects(&mut self) {
         let mut completed = Vec::new();
@@ -13899,6 +13978,54 @@ mod tests {
             .bus_line
             .as_ref()
             .is_some_and(|current| current.id == line.id));
+    }
+
+    #[test]
+    fn mature_neighborhoods_keep_spaced_pocket_parks_on_vacant_lots() {
+        let mut engine = Engine::new(3);
+        engine.set_development_rate(60);
+        for _ in 0..12 {
+            engine.step(2_000);
+        }
+        let built: BTreeSet<u32> = engine.state.buildings.iter().map(|b| b.parcel_id).collect();
+        let parks: Vec<&Parcel> = engine
+            .state
+            .parcels
+            .iter()
+            .filter(|p| p.protected && !built.contains(&p.id))
+            .collect();
+        assert!(parks.len() >= 2, "growing neighborhoods dedicate pocket parks");
+        let homes = engine
+            .state
+            .buildings
+            .iter()
+            .filter(|b| is_housing(b) && site_active(b))
+            .count();
+        assert!(parks.len() * HOMES_PER_POCKET_PARK <= homes + HOMES_PER_POCKET_PARK);
+        for (i, park) in parks.iter().enumerate() {
+            assert!(POCKET_PARK_AREA.contains(&(park.width * park.depth)));
+            assert!(park.reservation.is_none());
+            for other in &parks[i + 1..] {
+                assert!((park.x - other.x).hypot(park.z - other.z) >= POCKET_PARK_SPACING);
+            }
+        }
+        assert!(engine
+            .state
+            .events
+            .iter()
+            .any(|event| event.kind == "ParkDedicated"));
+        engine.validate().expect("parks keep the city valid");
+
+        // Dedication is part of the deterministic simulation.
+        let mut replay = Engine::new(3);
+        replay.set_development_rate(60);
+        for _ in 0..12 {
+            replay.step(2_000);
+        }
+        let protected = |engine: &Engine| -> Vec<u32> {
+            engine.state.parcels.iter().filter(|p| p.protected).map(|p| p.id).collect()
+        };
+        assert_eq!(protected(&engine), protected(&replay));
     }
 
     #[test]
