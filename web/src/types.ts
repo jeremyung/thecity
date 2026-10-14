@@ -3,7 +3,7 @@ export interface Point { x: number; z: number }
 export interface BuildingAccess { building_id: number; road_id: number; points: readonly [Point, Point] }
 export interface WorldNode extends Point { id: number; kind: string }
 export interface Road { id: number; from: number; to: number; kind: string; stage: string; progress: number; connected: boolean; length: number; lanes: number }
-export interface Parcel extends Point { id: number; width: number; depth: number; rotation?: number; access_node: number; suitability: number; protected: boolean; reservation: number | null }
+export interface Parcel extends Point { id: number; width: number; depth: number; rotation?: number; access_node: number; suitability: number; protected: boolean; reservation: number | null; /** Open space kept on a protected lot. */ open_space?: 'park' | 'shrine' | 'plaza' }
 export interface Building extends Point { id: number; parcel_id: number; rotation: number; width: number; depth: number; floors: number; kind: string; stage: string; progress: number; capacity: number; occupancy: number; business_active?: boolean; built_day: number; name: string; appearance_seed: number; history: string[]; anchor: boolean; vacant_days: number }
 export interface Project { id: number; kind: string; from: number | null; to: number | null; parcel_id: number | null; stage: string; progress: number; reason: string; duration: number; started_tick: number }
 /** Temporary rear annex view supplied by the engine while its project is active. */

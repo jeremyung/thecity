@@ -274,6 +274,7 @@ mod tests {
             suitability: 1.0,
             protected: false,
             reservation: None,
+            open_space: None,
         }
     }
 

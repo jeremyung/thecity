@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { Kit, disposeGroup } from '../web/src/render/kit';
-import { addPocketPark, addShrineGrove, pocketParks, streetTreePlacements, STREET_TREE_OFFSET, STREET_TREE_SPACING, MAX_STREET_TREES } from '../web/src/render/parks';
+import { addNeighborhoodShrine, addPocketPark, addScrambleCrossing, addShrineGrove, addStationPlaza, openSpaceKind, openSpaces, pocketParks, streetTreePlacements, STREET_TREE_OFFSET, STREET_TREE_SPACING, MAX_STREET_TREES } from '../web/src/render/parks';
 import { streetLightPlacements } from '../web/src/render/street-lighting';
 import type { Building, Parcel, World } from '../web/src/types';
 
@@ -108,5 +108,66 @@ describe('pocket parks',()=>{
     expect(trees.some(tree=>Math.abs(tree.x+305)<4&&tree.z>-305)).toBe(false);
     expect(addShrineGrove(new Kit(),[{x:0,z:0},{x:1,z:1}],new ArtMaterials())).toEqual([]);
     disposeGroup(kit.finish());
+  });
+});
+
+describe('station plaza, shrines and the scramble crossing', () => {
+  const localBounds = (group: THREE.Group, lot: Parcel) => {
+    const c = Math.cos(lot.rotation ?? 0), sn = Math.sin(lot.rotation ?? 0), box = new THREE.Box3();
+    group.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const position = object.geometry.getAttribute('position');
+      for (let i = 0; i < position.count; i++) {
+        const dx = position.getX(i) - lot.x, dz = position.getZ(i) - lot.z;
+        box.expandByPoint(new THREE.Vector3(c * dx - sn * dz, position.getY(i), sn * dx + c * dz));
+      }
+    });
+    return box;
+  };
+
+  it('classifies open spaces and keeps legacy parks as parks', () => {
+    expect(openSpaceKind({})).toBe('park');
+    expect(openSpaceKind({ open_space: 'shrine' })).toBe('shrine');
+    expect(openSpaceKind({ open_space: 'plaza' })).toBe('plaza');
+    const world = { parcels: [parcel(1), parcel(2, { open_space: 'shrine' }), parcel(3, { open_space: 'plaza' }), parcel(4, { open_space: 'park' })], buildings: [] };
+    expect(openSpaces(world).map(p => p.id)).toEqual([1, 2, 3, 4]);
+    expect(pocketParks(world).map(p => p.id)).toEqual([1, 4]);
+  });
+
+  it('keeps plaza and shrine furniture and trees inside their rotated lots', () => {
+    const art = new ArtMaterials();
+    for (const [build, lot] of [[addStationPlaza, parcel(1, { x: 30, z: 10, width: 20, depth: 14, rotation: .4, open_space: 'plaza' })], [addNeighborhoodShrine, parcel(2, { x: -40, z: 5, width: 13, depth: 18, rotation: 2.1, open_space: 'shrine' })]] as const) {
+      const kit = new Kit(), trees = build(kit, lot, art), group = kit.finish();
+      const box = localBounds(group, lot);
+      expect(box.min.x).toBeGreaterThanOrEqual(-lot.width / 2 - 1e-3); expect(box.max.x).toBeLessThanOrEqual(lot.width / 2 + 1e-3);
+      expect(box.min.z).toBeGreaterThanOrEqual(-lot.depth / 2 - 1e-3); expect(box.max.z).toBeLessThanOrEqual(lot.depth / 2 + 1e-3);
+      expect(box.min.y).toBeGreaterThanOrEqual(-1e-4);
+      expect(trees.length).toBeGreaterThanOrEqual(1);
+      const c = Math.cos(lot.rotation!), sn = Math.sin(lot.rotation!);
+      for (const tree of trees) {
+        const dx = tree.x - lot.x, dz = tree.z - lot.z;
+        expect(Math.abs(c * dx - sn * dz)).toBeLessThan(lot.width / 2);
+        expect(Math.abs(sn * dx + c * dz)).toBeLessThan(lot.depth / 2);
+      }
+      disposeGroup(group);
+    }
+  });
+
+  it('marks the busiest arterial junction near the station and nothing without one', () => {
+    const art = new ArtMaterials();
+    const points = [{ id: 1, x: 0, z: 0 }, { id: 2, x: 80, z: 0 }, { id: 3, x: -80, z: 0 }, { id: 4, x: 0, z: 80 }, { id: 5, x: 0, z: -80 }, { id: 6, x: 400, z: 400 }, { id: 7, x: 40, z: 60 }];
+    const world = streetWorld([{ id: 1, from: 1, to: 2 }, { id: 2, from: 1, to: 3 }, { id: 3, from: 1, to: 4, kind: 'local' }, { id: 4, from: 1, to: 5, kind: 'local' }], points);
+    world.nodes.push({ id: 99, x: 30, z: 30, kind: 'station' });
+    const kit = new Kit();
+    expect(addScrambleCrossing(kit, world, art)).toBe(1);
+    const group = kit.finish();
+    let bars = 0;
+    group.traverse(object => { if (object instanceof THREE.Mesh) bars += object.geometry.getAttribute('position').count / 24; });
+    expect(bars).toBeGreaterThan(20);
+    disposeGroup(group);
+    const quiet = streetWorld([{ id: 1, from: 1, to: 2, kind: 'local' }, { id: 2, from: 1, to: 3, kind: 'local' }, { id: 3, from: 1, to: 4, kind: 'local' }], points);
+    quiet.nodes.push({ id: 99, x: 30, z: 30, kind: 'station' });
+    expect(addScrambleCrossing(new Kit(), quiet, art)).toBeNull();
+    expect(addScrambleCrossing(new Kit(), streetWorld([{ id: 1, from: 1, to: 2 }], points), art)).toBeNull();
   });
 });

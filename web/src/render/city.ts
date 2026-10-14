@@ -20,7 +20,7 @@ import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { signageContexts, type SignageContext } from './signage';
-import { addPocketPark, addShrineGrove, parkSignature, pocketParks, streetTreePlacements, type PlantedTree } from './parks';
+import { addNeighborhoodShrine, addPocketPark, addScrambleCrossing, addShrineGrove, addStationPlaza, openSpaceKind, openSpaces, parkSignature, streetTreePlacements, type PlantedTree } from './parks';
 import { createBackdropGeometry } from './backdrop';
 import { treeOcclusion } from './tree-occlusion';
 import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
@@ -436,7 +436,11 @@ export class CityRenderer {
   private rebuildParks(world:World){
     this.clearParks();
     const kit=new Kit(),planted:PlantedTree[]=[...streetTreePlacements(world)];
-    for(const parcel of pocketParks(world))planted.push(...addPocketPark(kit,parcel,this.art));
+    for(const parcel of openSpaces(world)){
+      const kind=openSpaceKind(parcel);
+      planted.push(...(kind==='plaza'?addStationPlaza:kind==='shrine'?addNeighborhoodShrine:addPocketPark)(kit,parcel,this.art));
+    }
+    addScrambleCrossing(kit,world,this.art);
     for(const polygon of world.terrain.protected)planted.push(...addShrineGrove(kit,polygon,this.art));
     this.parks.add(kit.finish());
     this.parkBatches=this.createTreeBatches(planted,p=>p.color);

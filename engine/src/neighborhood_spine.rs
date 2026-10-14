@@ -1129,6 +1129,7 @@ mod tests {
             suitability: 0.7,
             protected: false,
             reservation: None,
+            open_space: None,
         });
         assert!(!engine.spine_world_geometry_safe(&plan, spine, &layout));
     }

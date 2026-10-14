@@ -93,10 +93,19 @@ export function streetTreePlacements(world:Pick<World,'nodes'|'roads'|'building_
  */
 function crossingClearance(kind:string){return kind==='expressway'?3:roadWidth(kind)/2+(kind==='rail'?3:4);}
 
-/** Protected master-plan lots with nothing built on them are the city's pocket parks. */
-export function pocketParks(world:Pick<World,'parcels'|'buildings'>):Parcel[]{
+export type OpenSpaceKind='park'|'shrine'|'plaza';
+/** Kind of open space a protected lot holds; parks from older saves carry no kind. */
+export function openSpaceKind(parcel:Pick<Parcel,'open_space'>):OpenSpaceKind{
+  return parcel.open_space==='shrine'||parcel.open_space==='plaza'?parcel.open_space:'park';
+}
+/** Protected master-plan lots with nothing built on them: pocket parks, shrines and the station plaza. */
+export function openSpaces(world:Pick<World,'parcels'|'buildings'>):Parcel[]{
   const built=new Set(world.buildings.map(building=>building.parcel_id));
   return world.parcels.filter(parcel=>parcel.protected&&!built.has(parcel.id)&&parcel.width>=6&&parcel.depth>=6&&[parcel.x,parcel.z,parcel.width,parcel.depth].every(Number.isFinite)).sort((a,b)=>a.id-b.id);
+}
+/** The open spaces drawn as neighborhood playgrounds. */
+export function pocketParks(world:Pick<World,'parcels'|'buildings'>):Parcel[]{
+  return openSpaces(world).filter(parcel=>openSpaceKind(parcel)==='park');
 }
 
 /** Maps lot-local coordinates (+Z toward the frontage street) into the world. */
@@ -217,7 +226,110 @@ export function addShrineGrove(kit:Kit,polygon:readonly Point[],art:ArtMaterials
   return trees;
 }
 
+/**
+ * Station plaza on a lot kept beside the station: granite paving, zelkova in
+ * raised planters ring-seated with benches, a clock post, bicycle racks and a
+ * pair of lamps. Open toward the street; no fence.
+ */
+export function addStationPlaza(kit:Kit,parcel:Parcel,art:ArtMaterials):PlantedTree[]{
+  const w=parcel.width,d=parcel.depth,frame=new LotFrame(kit,parcel.x,parcel.z,parcel.rotation??0);
+  const paving=art.get('#c8c2b4'),joint=art.get('#a8a294'),stone=art.get('#b3ad9f'),timber=art.get('#866a52'),steel=art.get('#6f7a76',.6),soil=art.get('#6b5a47');
+  frame.box(0,.08,0,w-.1,.16,d-.1,paving);
+  // Large-format paving joints in both directions.
+  for(let x=-w/2+2;x<w/2-.5;x+=2)frame.box(x,.165,0,.05,.01,d-.3,joint);
+  for(let z=-d/2+2;z<d/2-.5;z+=2)frame.box(0,.165,z,w-.3,.01,.05,joint);
+  const trees:PlantedTree[]=[];
+  const planters=Math.max(1,Math.min(3,Math.floor(w/7)));
+  for(let i=0;i<planters;i++){
+    const x=(i-(planters-1)/2)*(w/planters),z=-d*.12;
+    frame.box(x,.35,z,2.6,.5,2.6,stone);frame.box(x,.61,z,2.2,.04,2.2,soil);
+    // Timber ring seats on all four sides of the planter.
+    for(const side of [-1,1]){frame.box(x+side*1.55,.45,z,.45,.06,2.6,timber);frame.box(x,.45,z+side*1.55,2.6,.06,.45,timber);}
+    const p=frame.point(x,z),r=hash(p.x,p.z,i);trees.push({...p,s:1.9+r*.5,color:STREET_TREE_COLORS[Math.floor(r*STREET_TREE_COLORS.length)%STREET_TREE_COLORS.length]});
+  }
+  // Clock post near the street edge, lit dial faces at night.
+  frame.post(0,2,d/2-1.6,.08,4,steel);
+  frame.box(0,4.2,d/2-1.6,.9,.9,.25,steel);frame.box(0,4.2,d/2-1.47,.72,.72,.02,art.get('#f6f1df',.5,true));
+  // Bicycle racks along one side, with parked bicycles' simple frames.
+  const rackX=(hash(parcel.x,parcel.z,7)<.5?-1:1)*(w/2-1.1);
+  for(let z=-d/2+1.5;z<d/2-3;z+=.75){frame.box(rackX,.5,z,1.4,.04,.04,steel);frame.box(rackX,.5,z,.05,.62,1.6,art.get(['#3d5a73','#9a3b30','#2f3e3b','#c9c3b2'][Math.floor(hash(z,rackX,3)*4)%4],.6),Math.PI/2);}
+  for(const side of [-1,1]){frame.post(side*(w/2-.8),2.1,d/2-.8,.06,4.2,steel);frame.box(side*(w/2-.8),4.2,d/2-.8,.32,.2,.32,art.get('#ffd38a',.5,true));}
+  return trees;
+}
+
+/**
+ * Neighborhood shrine on a small kept lot: a vermilion torii at the street,
+ * a stone path between paired lanterns, a low stone fence, a small hall and
+ * old trees at the rear corners.
+ */
+export function addNeighborhoodShrine(kit:Kit,parcel:Parcel,art:ArtMaterials):PlantedTree[]{
+  const w=parcel.width,d=parcel.depth,frame=new LotFrame(kit,parcel.x,parcel.z,parcel.rotation??0);
+  const gravel=art.get('#d4cdbb'),stone=art.get('#b9b4a6'),vermilion=art.get('#c4472f',.6),black=art.get('#2f2b29'),hall=art.get('#8a6a4e'),roof=art.get('#4d4e4c'),rope=art.get('#e8dcb8');
+  frame.box(0,.06,0,w-.3,.12,d-.3,gravel);
+  // Low stone fence with a gap at the torii.
+  for(const side of [-1,1]){
+    frame.box(side*(w/2-.3),.35,0,.3,.7,d-.6,stone);
+    frame.box(side*(w/4+.9),.35,d/2-.3,w/2-1.8,.7,.3,stone);
+  }
+  frame.box(0,.35,-d/2+.3,w-.6,.7,.3,stone);
+  frame.box(0,.13,.5,1.6,.06,d-2.5,stone);
+  const gateZ=d/2-1.2,gateW=Math.min(3.4,w*.4);
+  for(const side of [-1,1])frame.post(side*gateW/2,1.9,gateZ,.16,3.8,vermilion);
+  frame.box(0,3.95,gateZ,gateW+1.2,.24,.36,black);frame.box(0,3.7,gateZ,gateW+.8,.22,.3,vermilion);frame.box(0,3.1,gateZ,gateW+.3,.16,.22,vermilion);
+  for(const side of [-1,1]){const z=gateZ-2.2;frame.box(side*1.4,.35,z,.5,.7,.5,stone);frame.box(side*1.4,.95,z,.34,.5,.34,stone);frame.box(side*1.4,1.3,z,.62,.18,.62,stone);}
+  const hallD=Math.min(4.4,d*.3),hallW=Math.min(4.6,w*.5),hallZ=-d/2+1.2+hallD/2;
+  frame.box(0,.3,hallZ,hallW+1,.6,hallD+1,stone);frame.box(0,1.65,hallZ,hallW,2.1,hallD,hall);
+  frame.box(0,3.05,hallZ+hallD*.28,hallW+1.2,.2,hallD*.75,roof,0,-.42);frame.box(0,3.05,hallZ-hallD*.28,hallW+1.2,.2,hallD*.75,roof,0,.42);
+  frame.box(0,2.5,hallZ+hallD/2+.05,hallW*.7,.12,.12,rope);
+  const trees:PlantedTree[]=[];
+  for(const side of [-1,1]){const p=frame.point(side*(w/2-1.8),-d/2+1.8),r=hash(p.x,p.z,side);trees.push({...p,s:2.7+r*.6,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length]});}
+  if(d>14){const p=frame.point((hash(parcel.x,parcel.z,5)<.5?-1:1)*(w/2-1.6),0),r=hash(p.x,p.z,9);trees.push({...p,s:2.4+r*.5,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length]});}
+  return trees;
+}
+
+/**
+ * Scramble crossing at the busiest open street junction near the station:
+ * zebra bands on every approach plus two diagonals through the junction.
+ * Returns the junction's node id, or null when none qualifies.
+ */
+export function addScrambleCrossing(kit:Kit,world:Pick<World,'nodes'|'roads'>,art:ArtMaterials):number|null{
+  const station=world.nodes.find(node=>node.kind==='station');
+  if(!station)return null;
+  const nodes=new Map(world.nodes.map(node=>[node.id,node]));
+  const streets=new Map<number,Array<{kind:string,toward:Point}>>();
+  for(const road of world.roads){
+    if(road.stage!=='open'||!['arterial','local'].includes(road.kind))continue;
+    const a=nodes.get(road.from),b=nodes.get(road.to);if(!a||!b)continue;
+    for(const [from,to] of [[a,b],[b,a]]){const list=streets.get(from.id)??[];list.push({kind:road.kind,toward:to});streets.set(from.id,list);}
+  }
+  let best:{id:number,distance:number,count:number}|null=null;
+  for(const [id,list] of streets){
+    const node=nodes.get(id)!;
+    if(list.length<3||!list.some(street=>street.kind==='arterial'))continue;
+    const distance=Math.hypot(node.x-station.x,node.z-station.z);
+    if(distance>150)continue;
+    if(!best||list.length>best.count||(list.length===best.count&&distance<best.distance))best={id,distance,count:list.length};
+  }
+  if(!best)return null;
+  const node=nodes.get(best.id)!,approaches=streets.get(best.id)!,white=art.get('#e9e6da');
+  const radius=Math.max(...approaches.map(street=>roadWidth(street.kind)/2))+.3,y=.375;
+  const stripes=(cx:number,cz:number,along:number,length:number,span:number)=>{
+    // Bars lie along `along` (the traffic direction) and repeat across `span`.
+    const ax=Math.sin(along),az=Math.cos(along),px=az,pz=-ax;
+    for(let offset=-span/2+.35;offset<=span/2-.35;offset+=.9)kit.box(cx+px*offset,y,cz+pz*offset,.45,.02,length,white,along);
+  };
+  for(const street of approaches){
+    const dx=street.toward.x-node.x,dz=street.toward.z-node.z,len=Math.hypot(dx,dz);if(len<radius+6)continue;
+    const ux=dx/len,uz=dz/len,c=radius+2;
+    stripes(node.x+ux*c,node.z+uz*c,Math.atan2(ux,uz),3,roadWidth(street.kind)-.6);
+  }
+  // Diagonals: bars perpendicular to the walking line, repeated along it.
+  const first=approaches[0],bearing=Math.atan2(first.toward.x-node.x,first.toward.z-node.z);
+  for(const turn of [Math.PI/4,-Math.PI/4])stripes(node.x,node.z,bearing+turn+Math.PI/2,3,radius*2.3);
+  return best.id;
+}
+
 /** Signature of the inputs that place parks and street trees. */
 export function parkSignature(world:World){
-  return `${pocketParks(world).map(p=>`${p.id}:${p.x}:${p.z}:${p.width}:${p.depth}:${p.rotation??0}`).join(',')}|${world.building_access?.length??0}|${(world.bus_lines??[]).map(line=>line.stop_positions?.length??0).join(',')}`;
+  return `${openSpaces(world).map(p=>`${p.id}:${openSpaceKind(p)}:${p.x}:${p.z}:${p.width}:${p.depth}:${p.rotation??0}`).join(',')}|${world.building_access?.length??0}|${(world.bus_lines??[]).map(line=>line.stop_positions?.length??0).join(',')}`;
 }

@@ -240,6 +240,10 @@ pub struct Parcel {
     pub suitability: f32,
     pub protected: bool,
     pub reservation: Option<u32>,
+    /// Open space a protected, unbuilt parcel holds: "park", "shrine" or
+    /// "plaza". Absent for ordinary lots and for parks from older saves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub open_space: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1507,6 +1511,7 @@ impl Engine {
             suitability: s,
             protected,
             reservation: None,
+            open_space: None,
         });
         self.mark_access_geometry_changed();
         id
@@ -2611,6 +2616,7 @@ impl Engine {
         };
         if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
             parcel.protected = true;
+            parcel.open_space = Some("park".into());
         }
         self.record(
             "ParkDedicated",
@@ -13981,6 +13987,56 @@ mod tests {
     }
 
     #[test]
+    fn master_plan_keeps_a_station_plaza_and_spaced_neighborhood_shrines() {
+        let mut engine = Engine::new(3);
+        engine.set_development_rate(60);
+        for _ in 0..12 {
+            engine.step(2_000);
+        }
+        let built: BTreeSet<u32> = engine.state.buildings.iter().map(|b| b.parcel_id).collect();
+        let kind = |kind: &str| -> Vec<Parcel> {
+            engine
+                .state
+                .parcels
+                .iter()
+                .filter(|p| p.open_space.as_deref() == Some(kind))
+                .cloned()
+                .collect()
+        };
+        let (plazas, shrines, parks) = (kind("plaza"), kind("shrine"), kind("park"));
+        assert!(!plazas.is_empty() && plazas.len() <= 2, "plaza lots: {}", plazas.len());
+        assert!(!shrines.is_empty() && shrines.len() <= 6, "shrine lots: {}", shrines.len());
+        assert!(!parks.is_empty());
+        let station = engine
+            .plan
+            .as_ref()
+            .and_then(|runtime| runtime.plan.nodes.iter().find(|n| n.kind == masterplan::NodeKind::Station))
+            .map(|n| n.p)
+            .expect("master plan has a station");
+        for plaza in &plazas {
+            assert!((plaza.x - station.x).hypot(plaza.z - station.z) <= 45.0 + 1e-3);
+        }
+        for (i, shrine) in shrines.iter().enumerate() {
+            assert!((shrine.x - station.x).hypot(shrine.z - station.z) >= 150.0);
+            for other in &shrines[i + 1..] {
+                assert!((shrine.x - other.x).hypot(shrine.z - other.z) >= 260.0);
+            }
+        }
+        for space in plazas.iter().chain(&shrines).chain(&parks) {
+            assert!(space.protected && !built.contains(&space.id));
+        }
+        for event in ["PlazaReserved", "ShrineReserved"] {
+            assert!(engine.state.events.iter().any(|e| e.kind == event), "{event}");
+        }
+        engine.validate().expect("open space keeps the city valid");
+        let restored = Engine::restore_json(&engine.save_json()).expect("save restores");
+        let open_spaces = |engine: &Engine| -> Vec<(u32, Option<String>)> {
+            engine.state.parcels.iter().map(|p| (p.id, p.open_space.clone())).collect()
+        };
+        assert_eq!(open_spaces(&restored), open_spaces(&engine));
+    }
+
+    #[test]
     fn mature_neighborhoods_keep_spaced_pocket_parks_on_vacant_lots() {
         let mut engine = Engine::new(3);
         engine.set_development_rate(60);
@@ -14765,6 +14821,7 @@ mod tests {
             suitability: 1.0,
             protected: false,
             reservation: None,
+            open_space: None,
         });
         let context = engine.collision_context();
         let road_z = 12.1;
@@ -14803,6 +14860,7 @@ mod tests {
             suitability: 1.0,
             protected: false,
             reservation: None,
+            open_space: None,
         });
         let context = engine.collision_context();
 
@@ -14835,6 +14893,7 @@ mod tests {
             suitability: 1.0,
             protected: false,
             reservation: None,
+            open_space: None,
         });
         engine.state.buildings.push(Building {
             id: 10_002,
@@ -18612,6 +18671,7 @@ mod tests {
                 suitability: 0.5,
                 protected: false,
                 reservation: None,
+                open_space: None,
             });
         }
         assert!(invalid
