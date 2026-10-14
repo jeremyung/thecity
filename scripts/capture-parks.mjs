@@ -57,12 +57,16 @@ try {
       .map((road) => ({ road, a: nodes.get(road.from), b: nodes.get(road.to) }))
       .filter(({ a, b }) => a && b)
       .sort((x, y) => Math.hypot(y.b.x - y.a.x, y.b.z - y.a.z) - Math.hypot(x.b.x - x.a.x, x.b.z - x.a.z))[0];
+    const local = w.roads.filter((road) => road.kind === 'local' && road.stage === 'open' && road.connected)
+      .map((road) => ({ a: nodes.get(road.from), b: nodes.get(road.to) }))
+      .filter(({ a, b }) => a && b)
+      .sort((x, y) => Math.hypot(y.b.x - y.a.x, y.b.z - y.a.z) - Math.hypot(x.b.x - x.a.x, x.b.z - x.a.z))[0];
     const layer = r.parks;
     const instanced = []; layer.traverse((o) => { if (o.isInstancedMesh) instanced.push(o.count); });
     const diagnostics = { parkMeshes: layer.children.length, treeInstances: instanced.reduce((a, b) => a + b, 0), batches: instanced.length, season: r.season.season };
     // Explore mode keeps manual poses clear of buildings; captures pose the camera directly.
     r.director.update = () => {};
-    return { diagnostics, tick: w.tick, steps, parks: pick('park'), shrines: pick('shrine'), plazas: pick('plaza'), station: w.nodes.find((n) => n.kind === 'station'), arterial: arterial && { a: arterial.a, b: arterial.b }, reserve: w.terrain.protected[0] };
+    return { diagnostics, tick: w.tick, steps, parks: pick('park'), shrines: pick('shrine'), plazas: pick('plaza'), station: w.nodes.find((n) => n.kind === 'station'), arterial: arterial && { a: arterial.a, b: arterial.b }, local: local && { a: local.a, b: local.b }, reserve: w.terrain.protected[0] };
   }, hour);
 
   // Look steeply down from above a lot's frontage street so neighboring towers do not block it.
@@ -82,6 +86,12 @@ try {
   if (scene.arterial) {
     const { a, b } = scene.arterial, mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, len = Math.hypot(b.x - a.x, b.z - a.z), ux = (b.x - a.x) / len, uz = (b.z - a.z) / len;
     views.push({ name: 'arterial-street-trees', target: [mx, 3, mz], position: [mx - ux * 45 - uz * 18, 16, mz - uz * 45 + ux * 18] });
+  }
+  if (scene.local) {
+    // Look down a local street from just above roof height to read the overhead lines.
+    const { a, b } = scene.local, len = Math.hypot(b.x - a.x, b.z - a.z), ux = (b.x - a.x) / len, uz = (b.z - a.z) / len;
+    views.push({ name: 'local-street-wires', target: [a.x + ux * len * .6, 4, a.z + uz * len * .6], position: [a.x - ux * 12 + uz * 6, 20, a.z - uz * 12 - ux * 6] });
+    views.push({ name: 'neighborhood-wires', target: [a.x + ux * len * .5, 2, a.z + uz * len * .5], position: [a.x + ux * len * .5 + uz * 45, 55, a.z + uz * len * .5 - ux * 45] });
   }
   if (scene.reserve?.length) {
     const xs = scene.reserve.map((p) => p.x), zs = scene.reserve.map((p) => p.z);
