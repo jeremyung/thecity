@@ -13,10 +13,16 @@ import { VisibleInfrastructure, type InfrastructureCommit } from './visible-infr
 import { buildStationPlatform } from './station-kit';
 import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '../movement';
 import { snapShadowAnchor } from './shadow-anchor';
-import { styleWarmup, compileStyleSamples } from './style-warmup';
+import { styleWarmup, compileStyleSamples, compileForScenePass } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv, fog, rangeFogFactor, positionWorld } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { ao } from 'three/addons/tsl/display/GTAONode.js';
+import { ssr } from 'three/addons/tsl/display/SSRNode.js';
+import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
+import { SkyEnvironment } from './sky-environment';
+import { skyRadiance } from './sky-scattering';
+import { backdropForestMatrices } from './backdrop-forest';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -41,6 +47,7 @@ import { bezierRoad, sweepRoad, type RoadCurve } from './road-curve';
 import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { createBackdropGeometry } from './backdrop';
+import { createSkylineGeometry } from './skyline';
 import { createPavedGroundTest } from './paved-ground';
 import { buildGroundSurfaces } from './ground-surfaces';
 import { CitySidewalks } from './sidewalks';
@@ -69,6 +76,9 @@ export function buildingRenderSignature(b:Building,original?:BuildingOriginalFoo
   return `${b.stage}:${b.floors}:${phase}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}`;
 }
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
+// Range haze (m from camera): clear through the city, veiling the backdrop.
+// Miniature keeps crisper air, matching its tilt-shift photographic read.
+const HAZE_NEAR:Record<Style,number>={anime:380,miniature:460},HAZE_FAR:Record<Style,number>={anime:3200,miniature:3700};
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
 
@@ -91,6 +101,19 @@ export class CityRenderer {
   private styleSwitchMetrics:StyleSwitchMetrics|undefined;
   private retiredResources:Array<()=>void>=[];
   private pipeline:THREE.RenderPipeline|null=null;
+  private occlusion:ReturnType<typeof ao>|null=null;
+  private occlusionStrength=uniform(.65);
+  private hazeColor=uniform(new THREE.Color('#d2d6cc'));
+  private hazeNear=uniform(HAZE_NEAR.anime);
+  private hazeFar=uniform(HAZE_FAR.anime);
+  private mist=uniform(0);
+  private reflections:ReturnType<typeof ssr>|null=null;
+  private wetReflections=false;
+  private shafts:ReturnType<typeof godrays>|null=null;
+  private lightShafts=false;
+  private shaftColor=uniform(new THREE.Color(0,0,0));
+  private shaftStrength=0;
+  private skyEnvironment:SkyEnvironment|null=null;
   private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
   private focus=uniform(300);
@@ -109,6 +132,8 @@ export class CityRenderer {
   private skyCloud=uniform(new THREE.Color('#fff5df'));
   private skyCloudShade=uniform(new THREE.Color('#809aaf'));
   private hillColor=uniform(new THREE.Color('#637f85'));
+  private skylineColor=uniform(new THREE.Color('#8496a3'));
+  private skylineNight=uniform(0);
   private sunDisc:THREE.Mesh;
   private moonDisc:THREE.Mesh;
   private sun=new THREE.DirectionalLight('#fff1d1',3);
@@ -137,7 +162,7 @@ export class CityRenderer {
   private treeBatches:Array<{indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean}>=[];
   private treeNearGeometry:THREE.BufferGeometry|null=null;
   private treeFarGeometry:THREE.BufferGeometry|null=null;
-  private treePoints:Array<{x:number,z:number,s:number}> = [];
+  private treePoints:Array<{x:number,z:number,s:number,h?:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
   private rearExtensions=new RearExtensions(this.art,release=>this.retire(release),building=>{
@@ -199,7 +224,11 @@ export class CityRenderer {
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.05;
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
-    this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
+    // Range haze (clear city, veiled backdrop) plus low-lying mist: it builds
+    // with distance but only near the ground and water, strongest at first
+    // light and in rain, so towers rise out of it as in the dawn concept.
+    const mist=positionView.z.negate().mul(-.0032).exp().oneMinus().mul(positionWorld.y.add(1.5).div(-8).exp()).mul(this.mist);
+    this.scene.fogNode=fog(this.hazeColor,rangeFogFactor(this.hazeNear,this.hazeFar).max(mist));
     this.scene.add(this.terrain,this.roads,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
@@ -221,7 +250,7 @@ export class CityRenderer {
     const cloudRelief=smoothstep(-.04,.2,cloudField.add(direction.y.mul(.13)));
     const cloudPaint=mix(this.skyCloudShade,this.skyCloud,cloudRelief);
     (sky.material as THREE.MeshBasicNodeMaterial).colorNode=mix(skyBase,cloudPaint,clouds);
-    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);
+    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);this.skyEnvironment=new SkyEnvironment(sky);
     this.sunDisc=new THREE.Mesh(new THREE.SphereGeometry(15,16,8),new THREE.MeshBasicNodeMaterial({color:'#ffe5bc',fog:false}));this.scene.add(this.sunDisc);
     this.moonDisc=new THREE.Mesh(new THREE.SphereGeometry(7,16,8),new THREE.MeshBasicNodeMaterial({color:'#cbdbe2',fog:false}));this.scene.add(this.moonDisc);
     const rainPositions:number[]=[],rainPhases:number[]=[];const rainRandom=random(123);
@@ -273,17 +302,66 @@ export class CityRenderer {
   private buildPipeline(){
     this.disposePipeline();
     this.scenePass=pass(this.scene,this.camera,{samples:4});
-    const sceneColor=this.scenePass.getTextureNode('output');
+    // Explicit resolved normals avoid Three's depth-normal reconstruction path,
+    // which emits an invalid textureDimensions mip argument for MSAA WebGPU depth.
+    // Keep four-sample scene AA; AO and wet-weather SSR share the normal target.
+    const wet=this.wetReflections;
+    this.scenePass.setMRT(mrt({output,normal:directionToColor(normalView)}));
+    const depthTexture=this.scenePass.getTextureNode('depth');
+    const normalTexture=this.scenePass.getTextureNode('normal');
+    const viewNormal=sample(uv=>colorToDirection(normalTexture.sample(uv)));
+    const occlusion=this.occlusion=ao(depthTexture,viewNormal,this.camera);
+    occlusion.resolutionScale=.5;occlusion.radius.value=3;occlusion.thickness.value=2.5;occlusion.distanceExponent.value=1.4;occlusion.samples.value=12;
+    // Fade AO beyond ~700 m: distant depth loses precision and can band
+    // across the hills, skyline and mountain ring.
+    const aoReach=smoothstep(1300,700,this.scenePass.getViewZNode().negate());
+    let sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength.mul(aoReach))),1));
+    if(wet){
+      // Reflectivity is derived in the SSR pass itself: flat ground near street
+      // level, in the same world-space puddles the asphalt darkens. Camera
+      // matrices are explicit uniforms because the pass renders a screen quad.
+      const viewPosition=getViewPosition(uv(),depthTexture.r,uniform(this.camera.projectionMatrixInverse));
+      const cameraWorld=uniform(this.camera.matrixWorld);
+      const world=cameraWorld.mul(vec4(viewPosition,1)).xyz;
+      const up=cameraWorld.mul(vec4(colorToDirection(normalTexture.rgb),0)).xyz.normalize().y;
+      const reflectivity=smoothstep(.86,.97,up).mul(smoothstep(1.6,.5,world.y)).mul(ArtMaterials.puddles(world.x,world.z).mul(.55).add(.1)).mul(this.art.wet);
+      // SSR samples its colour input, so it reflects the raw pass texture.
+      const reflections=this.reflections=ssr(this.scenePass.getTextureNode('output'),depthTexture,viewNormal,reflectivity,float(.32),this.camera);
+      reflections.resolutionScale=.5;reflections.maxDistance.value=60;reflections.thickness.value=.6;reflections.quality.value=.45;
+      // SSR writes reflected colour already scaled by reflectivity with alpha 1,
+      // so add it; alpha blending would replace the street with a dark mirror.
+      sceneColor=sceneColor.add(vec4(reflections.rgb,0));
+    }
+    if(this.lightShafts){
+      // Raymarched shafts through the key light's shadow map, only while the
+      // sun is low enough for them to read (rebuilt when that changes).
+      const shafts=this.shafts=godrays(this.scenePass.getTextureNode('depth'),this.camera,this.sun);
+      shafts.resolutionScale=.5;// Aerial views see sunlit air almost everywhere: keep density low so
+      // only the contrast behind occluders reads, not a uniform glow.
+      shafts.raymarchSteps.value=40;shafts.density.value=.09;shafts.maxDensity.value=.22;shafts.distanceAttenuation.value=2;
+      sceneColor=sceneColor.add(vec4(shafts.getTextureNode().rgb.mul(this.shaftColor),0));
+    }
     const depth=this.scenePass.getViewZNode();
     const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
       focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
       outputHeightPx:this.outputHeight,maxGatherRadiusPx:this.bokeh,enabled:this.dofEnabled});
-    const focus=this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh);
+    // A zero CoC still runs seven full-screen passes. Omit the DOF node
+    // entirely when disabled, preserving the unblurred scene and bloom.
+    const focus=this.focusEnabled
+      ?(this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh))
+      :sceneColor;
     const shine=bloom(sceneColor,.1,.5,.9);this.shine=shine;
     this.pipeline=new THREE.RenderPipeline(this.renderer);
     this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
   }
-  private disposePipeline(){this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
+  private disposePipeline(){
+    // Warmup borrows scene attachments. Detach immediately, but keep the old
+    // resources alive until pending compiler work releases its references.
+    const resources=[this.occlusion,this.reflections,this.shafts,this.pipeline,this.depthOfField,this.shine,this.scenePass];
+    this.occlusion=null;this.reflections=null;this.shafts=null;this.pipeline=null;
+    this.depthOfField=null;this.shine=null;this.scenePass=null;
+    this.retire(()=>{for(const resource of resources)resource?.dispose();});
+  }
   async setStyle(style:Style){
     const request=++this.styleRequest;
     const previous=this.styleWarmupTail;
@@ -300,7 +378,9 @@ export class CityRenderer {
       this.pendingCompiles++;
       try{
         await compileStyleSamples(prepared.scene,
-          scene=>this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
+          scene=>this.scenePass
+            ?compileForScenePass(this.renderer,this.scenePass,scene,this.camera,prepared.targetScene)
+            :this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
           ()=>!this.disposed&&request===this.styleRequest,timing);
       }catch(error){timing.outcome='failed';throw error;}finally{
         prepared.dispose();this.pendingCompiles--;
@@ -322,7 +402,11 @@ export class CityRenderer {
   toggleWaterReflectionForReview(){return this.water?.toggleReflectionForReview()??false;}
   toggleStreetLightsForReview(){return this.nearbyStreetLights.enabled=!this.nearbyStreetLights.enabled;}
   setLens(id:LensPresetId,takeManualControl=true){this.director.setLens(id,takeManualControl);const lens=LENS_PRESETS[id];this.lensFocalM.value=lens.focalLengthMm/1000;this.lensFNumber.value=lens.fNumber;}
-  setFocus(value:boolean){this.focusEnabled=value;this.dofEnabled.value=value?1:0;}
+  setFocus(value:boolean){
+    if(this.focusEnabled===value)return;
+    this.focusEnabled=value;this.dofEnabled.value=value?1:0;
+    if(this.pipeline)this.buildPipeline();
+  }
   setQuality(quality:'high'|'balanced'){this.quality=quality;this.qualityController.setProfile(quality);this.applyQuality();}
   private applyQuality(){
     const level=this.qualityController.level,high=this.quality==='high';
@@ -402,7 +486,8 @@ export class CityRenderer {
     // leave tree roots and banks floating, while biasing paving can hide details.
     const land=new THREE.MeshStandardNodeMaterial({roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const meadow=mx_noise_float(positionLocal.mul(.024)).mul(.5).add(.5);
     const scrub=mx_noise_float(positionLocal.mul(.007)).mul(.5).add(.5);
-    land.colorNode=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
+    const landBase=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
+    land.colorNode=landBase.mul(this.art.cloudShade());
     for(const side of [-1,1]){
       const shape=new THREE.Shape();const edge=side<0?-420:420;shape.moveTo(edge,-420);
       const pts=side<0?river:[...river].reverse();
@@ -414,11 +499,18 @@ export class CityRenderer {
     const visibleRiver=[{x:river[0].x,z:-1400},...river,{x:river.at(-1)!.x,z:1400}];
     this.water=new RiverWater(visibleRiver,halfWidth);this.scene.add(this.water.mesh);this.applyQuality();
     const backdropMaterial=new THREE.MeshStandardNodeMaterial({roughness:1});
-    const outerLandscape=smoothstep(420,1000,positionLocal.x.abs().max(positionLocal.z.abs()));
-    const woodland=mix(color('#526e60'),color('#78816b'),mx_noise_float(positionLocal.mul(.012)).mul(.5).add(.5));
-    backdropMaterial.colorNode=mix(land.colorNode!,woodland,outerLandscape);
+    backdropMaterial.colorNode=mix(landBase,this.outerLandscapeColor(),smoothstep(420,520,positionLocal.x.abs().max(positionLocal.z.abs()))).mul(this.art.cloudShade());
     const backdrop=new THREE.Mesh(createBackdropGeometry(world.seed,river,halfWidth),backdropMaterial);
     backdrop.userData.ownedMaterial=true;backdrop.receiveShadow=true;this.terrain.add(backdrop);
+    // Low-poly crowns give the wooded hills a broken silhouette; haze softens
+    // them with distance. One instanced draw, no shadows (outside the frustum).
+    const forest=backdropForestMatrices(backdrop.geometry,world.seed);
+    if(forest.length){
+      const crowns=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),this.art.get('#e9eee5',.95),forest.length);
+      const tones=['#4a6347','#58704c','#3f5843','#66784f'].map(c=>new THREE.Color(c));
+      forest.forEach((matrix,i)=>{crowns.setMatrixAt(i,matrix);crowns.setColorAt(i,tones[i%tones.length]);});
+      crowns.instanceMatrix.needsUpdate=true;crowns.computeBoundingSphere();this.terrain.add(crowns);
+    }
     const bankKit=new Kit();
     // Sweep the same X-offset boundary used by land and water. Shared bend
     // stations keep the wall and path continuous without overlapping boxes.
@@ -429,7 +521,7 @@ export class CityRenderer {
     }
     this.terrain.add(bankKit.finish(false));
     const rng=random(world.seed+937);
-    const positions:Array<{x:number,z:number,s:number}>=[];
+    const positions:Array<{x:number,z:number,s:number,h?:number}>=[];
     // Groves leave clear meadows between them; the city gradually clears real
     // development footprints, while riverbank vegetation stays recognizable.
     for(let grove=0;grove<26;grove++){const cx=rng()*740-370,cz=rng()*740-370,radius=24+rng()*40;
@@ -457,6 +549,7 @@ export class CityRenderer {
     }
     this.updateTrees(world);
     this.buildMountains(rng);
+    this.buildSkyline(world.seed,river);
     const detail=new Kit();
     // Park benches along the riverside walk.
     for(let z=-150;z<300;z+=80){const x=this.riverX(river,z)+halfWidth+12;detail.box(x,.9,z,1.2,.15,3.1,this.art.get('#7a6754'));detail.box(x+.5,1.3,z,.12,.8,3.1,this.art.get('#7a6754'));}
@@ -470,6 +563,48 @@ export class CityRenderer {
       for(let i=0;i<=96;i++){const a=i/96*Math.PI*2,r=2500+ring*250,h=160+ring*32+Math.sin(a*5+phase)*38+Math.sin(a*11+phase*.3)*17+Math.sin(a*23+phase)*7;vertices.push(Math.cos(a)*r,-8,Math.sin(a)*r,Math.cos(a)*r,h,Math.sin(a)*r);if(i<96){const n=i*2;indices.push(n,n+2,n+1,n+1,n+2,n+3);}}
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const m=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});m.colorNode=mix(this.hillColor,mix(this.skyLow,this.skyHigh,.55),.2+ring*.24).mul(mx_noise_float(positionLocal.mul(.025)).mul(.055).add(.97));const mountain=new THREE.Mesh(g,m);mountain.userData.ownedMaterial=true;this.terrain.add(mountain);
     }
+  }
+  /** Distant land as a working landscape rather than one mottled lawn: a
+   * suburban roofscape continues the city past its edge, farmland fills the
+   * valley floor and forest climbs the hills. All of it sits behind range haze. */
+  private outerLandscapeColor(){
+    const p=positionLocal,edge=p.x.abs().max(p.z.abs());
+    // Field parcels on a slightly rotated grid, each with its own crop tone.
+    const u=p.x.mul(.92).add(p.z.mul(.39)).div(74),v=p.z.mul(.92).sub(p.x.mul(.39)).div(46);
+    const parcel=mx_noise_float(vec3(floor(u),floor(v),3.1).mul(.61)).mul(.5).add(.5);
+    const crops=mix(mix(color('#7d985c'),color('#a7a272'),smoothstep(.3,.62,parcel)),color('#5d7a4e'),smoothstep(.7,.86,parcel));
+    const fu=fract(u),fv=fract(v);
+    const hedge=smoothstep(.0,.05,fu.min(fu.oneMinus()).min(fv.min(fv.oneMinus())));
+    const fields=mix(color('#566b47'),crops,hedge.mul(.35).add(.65));
+    // Forest on higher ground and in irregular woods on the plain. A warped,
+    // multi-octave mask gives ragged woodland edges rather than smooth ovals.
+    const warp=vec2(mx_noise_float(vec2(p.x,p.z).mul(.02)),mx_noise_float(vec2(p.z,p.x).mul(.02).add(7.3))).mul(24);
+    const wp=vec2(p.x,p.z).add(warp);
+    const woods=mx_noise_float(wp.mul(.005)).mul(.7).add(mx_noise_float(wp.mul(.021)).mul(.3)).mul(.5).add(.5);
+    const forestMask=smoothstep(26,58,p.y).max(smoothstep(.58,.7,woods));
+    const crowns=mx_noise_float(p.mul(.21)).mul(.5).add(.5);
+    const canopy=mix(color('#4a6248'),color('#6c8053'),crowns.mul(crowns));
+    // Low dense roofs just outside the basin, thinning with distance: a block
+    // grid of individually toned roofs split by darker streets.
+    const town=smoothstep(1050,560,edge).mul(smoothstep(22,8,p.y)).mul(smoothstep(.4,.52,mx_noise_float(wp.mul(.004)).mul(.5).add(.5)));
+    const townP=vec2(p.x,p.z).add(warp.mul(.12));
+    const lot=townP.div(vec2(11,8)),lotCell=floor(lot),lotUv=fract(lot);
+    const tone=mx_noise_float(vec3(lotCell,1.7).mul(.83)).mul(.5).add(.5);
+    const roofPalette=mix(mix(color('#7d8288'),color('#a59d8c'),smoothstep(.25,.55,tone)),color('#8a5f4f'),smoothstep(.78,.9,tone));
+    const lotGap=smoothstep(.02,.12,lotUv.x.min(lotUv.x.oneMinus())).mul(smoothstep(.03,.15,lotUv.y.min(lotUv.y.oneMinus())));
+    const blocks=townP.div(vec2(66,48)),blockUv=fract(blocks);
+    const street=smoothstep(.0,.04,blockUv.x.min(blockUv.x.oneMinus())).mul(smoothstep(.0,.05,blockUv.y.min(blockUv.y.oneMinus())));
+    const roofs=mix(color('#62655f'),roofPalette,lotGap.mul(.25).add(.75).mul(street.mul(.6).add(.4)));
+    return mix(mix(fields,canopy,forestMask),roofs,town.mul(forestMask.oneMinus()));
+  }
+  private buildSkyline(seed:number,river:Point[]){
+    const material=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});
+    // World-space window cells: sparse warm lights after dusk, flat haze by day.
+    const cell=floor(vec3(positionLocal.x.add(positionLocal.z).mul(.31),positionLocal.y.mul(.29),0));
+    const lit=step(.48,mx_noise_float(cell.mul(.73))).mul(step(6,positionLocal.y));
+    material.colorNode=mix(this.skylineColor,color('#e8b878'),lit.mul(this.skylineNight).mul(.55)).mul(mx_noise_float(positionLocal.mul(.02)).mul(.06).add(.97));
+    const skyline=new THREE.Mesh(createSkylineGeometry(seed,river),material);
+    skyline.userData.ownedMaterial=true;this.terrain.add(skyline);
   }
   private updateTrees(world:World){
     const clearanceKey=treeClearanceSignature(world);
@@ -488,7 +623,7 @@ export class CityRenderer {
       if(!hidden)hidden=candidates.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);return a&&b&&distanceToSegment(p,a,b)<roadWidth(r.kind)/2+(r.kind==='bridge'?2.5+2.38*p.s/1.8:r.kind==='lane'?1.5:3.5);});
       if(!hidden)hidden=(world.rail_platforms??[]).some(platform=>overlapsStation(p,p.s*1.7+2,platform));
       if(!hidden)hidden=candidates.rearExtensions.some(e=>{const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
-      dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
+      dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.set(hidden?0:p.s/1.8,hidden?0:p.s/1.8*(p.h??1),hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
     this.treeClearanceKey=clearanceKey;
@@ -628,7 +763,7 @@ export class CityRenderer {
       for(const [id,arms] of junctions){
         const node=nodes.get(id)!;const points=junctionFootprint(node,arms);
         const pieces=surfaces.claim(points);
-        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.get('#747f7b'));
+        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.asphalt());
         if(rebuildCompleted)yield;
       }
     }
@@ -675,7 +810,7 @@ export class CityRenderer {
       if(end<.01)return;
       const width=roadWidth(r.kind),y=deckHeight,concrete=this.art.get('#9a9d93');
       sweepRoad(kit,curve,0,end,0,y-.35,width+.6,.5,this.art.get('#a3a69c'));
-      sweepRoad(kit,curve,0,end,0,y,width,.3,this.art.get(open?'#747f7b':'#ac9a78'));
+      sweepRoad(kit,curve,0,end,0,y,width,.3,(open?this.art.asphalt():this.art.get('#ac9a78')));
       for(const side of [-1,1])sweepRoad(kit,curve,0,end,side*(width/2+.25),y+.75,.3,1.3,this.art.get('#b8bbb2'));
       for(let distance=14;distance<end;distance+=28){const p=curve.at(distance),angle=Math.atan2(p.ux,p.uz);
         if(!expresswayPierClear(p,{x:p.x-p.ux,z:p.z-p.uz},{x:p.x+p.ux,z:p.z+p.uz},y,crossings))continue;
@@ -711,10 +846,10 @@ export class CityRenderer {
       const ramp=Math.min(12,len*.22),shape=new THREE.Shape();
       shape.moveTo(-len/2,.3);shape.lineTo(-len/2+ramp,2);shape.lineTo(len/2-ramp,2);shape.lineTo(len/2,.3);
       shape.lineTo(len/2,-.15);shape.lineTo(len/2-ramp,.8);shape.lineTo(-len/2+ramp,.8);shape.lineTo(-len/2,-.15);shape.closePath();
-      const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
+      const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,(open?this.art.asphalt():this.art.get('#ac9a78')));
     }else if(surfaces&&!rail&&!expressway){
-      this.addGroundRoadSurface(kit,surfaces.claim(groundRoadFootprint(a,b,width)),this.art.get(open?'#747f7b':'#ac9a78'));
-    }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
+      this.addGroundRoadSurface(kit,surfaces.claim(groundRoadFootprint(a,b,width)),(open?this.art.asphalt():this.art.get('#ac9a78')));
+    }else kit.box(mid.x,y,mid.z,width,.3,len,(open?this.art.asphalt():this.art.get('#ac9a78')),angle);
     if(expressway){
       if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y);
       return;
@@ -837,32 +972,63 @@ export class CityRenderer {
     this.daylight=THREE.MathUtils.lerp(this.daylight,day,Math.min(1,dt*3));
     const top=new THREE.Color('#659bbd').lerp(new THREE.Color('#9aa5bd'),dusk*.5).lerp(new THREE.Color('#11253e'),1-this.daylight);
     const low=new THREE.Color('#d5ded3').lerp(new THREE.Color('#efb185'),dusk).lerp(new THREE.Color('#334860'),1-this.daylight);
+    // Steer the painted gradient toward Preetham scattering for this sun:
+    // deeper zenith and a warm sunward horizon at low sun. Painted colours
+    // still own night, dusk mood and the clouds; scattering only leads by day.
+    const solar=new THREE.Vector3(Math.cos(angle),Math.max(-.05,Math.sin(angle)),-.45).normalize();
+    const lead=this.daylight*.42;
+    if(lead>.01){
+      const zenith=skyRadiance(solar,new THREE.Vector3(0,1,0));
+      const toward=new THREE.Vector3(solar.x,0,solar.z).normalize().setY(.04);
+      const horizon=skyRadiance(solar,toward).lerp(skyRadiance(solar,toward.clone().set(-toward.x,.04,-toward.z)),.65);
+      top.lerp(zenith,lead);low.lerp(horizon,lead*.85);
+    }
     this.skyHigh.value.copy(top);this.skyLow.value.copy(low);this.skyCloudShade.value.set('#8ba5bc').lerp(new THREE.Color('#9c829b'),dusk*.7).lerp(new THREE.Color('#283c58'),1-this.daylight);this.hillColor.value.set('#577773').lerp(new THREE.Color('#747386'),dusk*.55).lerp(new THREE.Color('#20384a'),1-this.daylight);this.skyCloud.value.set('#fff3dc').lerp(new THREE.Color('#d29e91'),dusk*.5).lerp(new THREE.Color('#45526a'),1-this.daylight);
-    const atmosphere=this.scene.fog as THREE.FogExp2;
-    atmosphere.color.copy(top).lerp(low,.35);
-    // Clear air preserves facade contrast at neighborhood scale. Rain still
-    // veils the distant city; stylized skies retain a little more atmosphere.
-    const clearHaze=this.style==='miniature'?.00022:.0003;
-    atmosphere.density=clearHaze+this.rain*.00025;
+    this.skylineColor.value.set('#8193a1').lerp(new THREE.Color('#8a7f93'),dusk*.6).lerp(new THREE.Color('#1c2a3c'),1-this.daylight);this.skylineNight.value=1-this.daylight;
+    // Haze matches the horizon so hills, skyline and mountains recede into the
+    // sky. The range keeps the city itself clear (overview contrast, spec 05)
+    // while the backdrop gains aerial perspective. Rain pulls the veil closer.
+    this.hazeColor.value.copy(low).lerp(top,.25);
+    const veil=1-this.rain*.45;
+    this.hazeNear.value=HAZE_NEAR[this.style]*veil;this.hazeFar.value=HAZE_FAR[this.style]*veil;
+    // Morning mist peaks around 05:30-07:00 and burns off by mid-morning.
+    const morning=THREE.MathUtils.smoothstep(hour%24,4.5,5.8)*(1-THREE.MathUtils.smoothstep(hour%24,7,9.5));
+    this.mist.value=Math.min(.7,morning*.5+this.rain*.3);
     const solarY=Math.sin(angle)*450;this.sunDisc.position.set(Math.cos(angle)*1050,solarY*3,-480);this.sunDisc.visible=solarY>-25;this.moonDisc.position.set(-Math.cos(angle)*1050,-solarY*3,480);this.moonDisc.visible=solarY<25;
     const keyBlend=this.daylight*2-1;
     // Snap only the shadow camera's light-plane translation. The key's
     // direction and elevation still follow the clock, not camera movement.
-    this.sun.position.set(Math.cos(angle)*350*keyBlend,Math.max(30,Math.abs(Math.sin(angle))*450),-160*keyBlend);
+    // A lower key (about 50 degrees at 14:00) draws longer modelling shadows.
+    this.sun.position.set(Math.cos(angle)*350*keyBlend,Math.max(30,Math.abs(Math.sin(angle))*270),-160*keyBlend);
     const shadowCamera=this.sun.shadow.camera;
     snapShadowAnchor(this.director.controls.target,this.sun.position,
       shadowCamera.right-shadowCamera.left,shadowCamera.top-shadowCamera.bottom,
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
-    this.sun.intensity=.16+this.daylight*1.8;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#fff1d9'),this.daylight);
+    this.sun.intensity=.16+this.daylight*2.05;
+    this.shaftStrength=dusk*THREE.MathUtils.smoothstep(this.daylight,.15,.6)*(1-this.rain);
+    this.shaftColor.value.set(dusk>.4?'#ffc58a':'#ffe2b4').multiplyScalar(this.shaftStrength*.45);this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
+    this.water?.setSun(v.copy(this.sun.position).sub(this.sun.target.position),new THREE.Color().copy(this.sun.color).multiplyScalar(this.sun.intensity*.5));
     // Soft urban bounce keeps opaque facades and lanes readable between local
     // emitters. The visible sky is not an environment light: retain enough
     // daytime fill to read shaded facades while the sun describes orientation.
-    this.hemi.intensity=1.05-this.daylight*.05;
+    this.hemi.intensity=1.05-this.daylight*.27;
     this.hemi.groundColor.set('#a0a09a').lerp(new THREE.Color('#748998'),this.daylight);
     // A painted moonlit fill keeps rooflines and quiet lanes readable between
     // pools of warm shop light; the sky itself can remain a deep midnight blue.
     this.hemi.color.set('#829eb9').lerp(new THREE.Color('#d8e6e7'),this.daylight);
+    // Ambient follows the live sky: warm at dusk, cool at noon, for both the
+    // toon (Anime) and standard (Miniature) paths. Standard surfaces also get
+    // a pre-filtered sky environment for reflections.
+    this.hemi.color.lerp(new THREE.Color().copy(top).lerp(low,.55),.4);
+    const environment=this.skyEnvironment?.update(this.renderer,performance.now(),[top,low,this.skyCloud.value]);
+    if(environment&&this.scene.environment!==environment)this.scene.environment=environment;
+    // The environment adds to the hemisphere fill on standard surfaces; trade
+    // some of that fill for sky-shaped ambient rather than stacking both.
+    this.scene.environmentIntensity=.1+this.daylight*.16;
+    if(this.style==='miniature')this.hemi.intensity*=.78;
+    this.art.sunDirection.value.copy(this.sun.position).sub(this.sun.target.position).normalize();
+    this.art.cloudShadow.value=.42*Math.max(0,this.daylight*2-1)*(1-dusk*.6)*(1-this.rain);
     if(this.frame%30===0){const target=this.director.target;
       const lit=this.worldState?.buildings.filter(b=>b.stage==='open'&&(b.anchor||b.kind==='shop'||b.kind==='cafe')).sort((a,b)=>Math.hypot(a.x-target.x,a.z-target.z)-Math.hypot(b.x-target.x,b.z-target.z)).slice(0,8)??[];
       for(let i=0;i<this.lanternLights.length;i++){const b=lit[i],lamp=this.lanternLights[i];lamp.userData.active=!!b;if(b)lamp.position.set(b.x+Math.sin(b.rotation)*(b.depth*.45+1.5),3.1,b.z+Math.cos(b.rotation)*(b.depth*.45+1.5));}
@@ -870,6 +1036,12 @@ export class CityRenderer {
     const activityHour=hour%24,lightBlend=Math.min(1,dt*.8);this.art.litHome.value=THREE.MathUtils.lerp(this.art.litHome.value,activityHour>=23||activityHour<5?.32:1,lightBlend);this.art.litOffice.value=THREE.MathUtils.lerp(this.art.litOffice.value,activityHour>=7&&activityHour<20?1:.1,lightBlend);this.art.litShop.value=THREE.MathUtils.lerp(this.art.litShop.value,activityHour>=6&&activityHour<23?1:.18,lightBlend);
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
+    // Hysteresis: rebuild the pipeline only when streets clearly get or lose a sheen.
+    const wetStreets=this.wetReflections?this.art.wet.value>.03:this.art.wet.value>.08;
+    if(wetStreets!==this.wetReflections&&this.pipeline){this.wetReflections=wetStreets;this.buildPipeline();}
+    // Golden-hour shafts: low sun, daylight, little rain.
+    const golden=this.lightShafts?this.shaftStrength>.02:this.shaftStrength>.06;
+    if(golden!==this.lightShafts&&this.pipeline){this.lightShafts=golden;this.buildPipeline();}
     this.nearbyStreetLights.update(dt,this.director.target,1-this.daylight);
     if(this.shine)this.shine.strength.value=.06+(1-this.daylight)*.2;
     this.renderer.toneMappingExposure=1;
@@ -892,7 +1064,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);const hit=hits.find(candidate=>{for(let object:THREE.Object3D|null=candidate.object;object;object=object.parent)if(!object.visible)return false;return true;});if(!hit)return;const building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment;this.skyEnvironment=null;this.retire(()=>environment?.dispose());const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

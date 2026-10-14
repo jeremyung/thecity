@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /private/tmp/thecity-pr14-fixes
+
+
+ Test Files  6 passed (6)
+      Tests  15 passed (15)
+   Start at  17:35:01
+   Duration  1.50s (transform 349ms, setup 0ms, import 651ms, tests 360ms, environment 0ms)
+

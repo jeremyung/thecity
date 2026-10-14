@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
+import { float, floor, fwidth, color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
@@ -15,6 +15,10 @@ export class ArtMaterials {
   readonly litHome=uniform(1);
   readonly litOffice=uniform(1);
   readonly litShop=uniform(1);
+  /** Toward the sun, world space; set each frame with the key light. */
+  readonly sunDirection=uniform(new THREE.Vector3(0,1,0));
+  /** 0 disables cloud shadows (night, overcast); ~.4 on a clear day. */
+  readonly cloudShadow=uniform(0);
   readonly palette = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
   private style:Style='anime';
   private cache = new Map<string,{anime:Surface,miniature:Surface}>();
@@ -29,6 +33,19 @@ export class ArtMaterials {
     this.contours.opacityNode=smoothstep(100,420,positionView.z.negate()).mul(-1).add(1).mul(.27);
     this.bands=new THREE.DataTexture(new Uint8Array([95,145,195,230,255]),5,1,THREE.RedFormat);
     this.bands.minFilter=THREE.NearestFilter;this.bands.magFilter=THREE.NearestFilter;this.bands.needsUpdate=true;
+  }
+  /**
+   * Drifting cloud shadows as an albedo factor on sun-facing surfaces. Faces
+   * turned from the sun keep their ambient look, which approximates removing
+   * only the direct term without a per-light cookie.
+   */
+  cloudShade(){
+    const drift=vec3(this.time.mul(3.2),0,this.time.mul(1.3));
+    const p=positionWorld.add(drift).mul(vec3(.0045,0,.0045));
+    // MaterialX noise rarely leaves ±.35; this band covers roughly 40% of the ground.
+    const cover=smoothstep(-.02,.2,mx_noise_float(p).mul(.72).add(mx_noise_float(p.mul(2.9)).mul(.28)));
+    const sunlit=normalWorld.dot(this.sunDirection).max(0).sqrt();
+    return float(1).sub(cover.mul(sunlit).mul(this.cloudShadow));
   }
   get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient',window=false):Surface {
     const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}/${window}`;
@@ -48,6 +65,7 @@ export class ArtMaterials {
         anime.colorNode=anime.colorNode.mul(sheen);miniature.colorNode=miniature.colorNode.mul(sheen);
         this.applyGlassSky(anime,miniature);
       }
+      const shade=this.cloudShade();anime.colorNode=anime.colorNode.mul(shade);miniature.colorNode=miniature.colorNode.mul(shade);
       miniature.roughnessNode=mix(roughness,Math.max(.1,roughness*.67),this.wet);
       if(hex==='#fffffe'){
         anime.vertexColors=true;miniature.vertexColors=true;
@@ -209,6 +227,39 @@ export class ArtMaterials {
     if(!variants){variants=create();variants.anime.userData.artKey=key;variants.miniature.userData.artKey=key;this.cache.set(key,variants);}
     return variants[this.style];
   }
+  /** World-space puddle mask shared by the asphalt albedo and the SSR pass. */
+  static puddles(x:ReturnType<typeof float>,z:ReturnType<typeof float>){
+    return smoothstep(.1,.28,mx_noise_float(vec3(x,0,z).mul(.09)));
+  }
+  /**
+   * Road asphalt. Roads are merged into shared batches without lane UVs, so
+   * every detail is world-anchored: aggregate grain (faded once unresolved),
+   * rectangular repair patches, hairline cracks and broad wear. Rain darkens
+   * the surface and collects in puddles that the wet-weather SSR pass mirrors.
+   */
+  asphalt():Surface{
+    return this.shared('asphalt',()=>{
+      const p=vec3(positionWorld.x,0,positionWorld.z);
+      const grainP=p.mul(2.6);
+      const grainVisible=smoothstep(.4,1.4,fwidth(grainP).length()).oneMinus();
+      const grain=mx_noise_float(grainP).mul(.08).mul(grainVisible);
+      const patch=smoothstep(.2,.26,mx_noise_float(vec3(floor(p.x.div(5.5)),0,floor(p.z.div(9))).mul(.71)));
+      const crackP=p.mul(.32);
+      const crackVisible=smoothstep(.05,.2,fwidth(crackP).length()).oneMinus();
+      // Hairlines only in scattered stretches, faint: continuous isolines read as a map.
+      const crackZone=smoothstep(.15,.3,mx_noise_float(p.mul(.05)));
+      const crack=smoothstep(.012,0,mx_noise_float(crackP).abs()).mul(crackVisible).mul(crackZone).mul(.14);
+      const wear=mx_noise_float(p.mul(.028)).mul(.07);
+      const puddle=ArtMaterials.puddles(positionWorld.x,positionWorld.z).mul(this.wet);
+      const wetness=mix(float(1),float(.8),this.wet.mul(.6).add(puddle.mul(.4)));
+      const albedo=color('#747f7b').mul(grain.add(wear).add(1)).mul(mix(float(1),float(.87),patch)).mul(crack.oneMinus()).mul(wetness).mul(this.cloudShade());
+      const anime=new THREE.MeshToonNodeMaterial({color:'#747f7b',gradientMap:this.bands});
+      const miniature=new THREE.MeshStandardNodeMaterial({color:'#747f7b',roughness:.9});
+      anime.colorNode=albedo;miniature.colorNode=albedo;
+      miniature.roughnessNode=mix(mix(float(.9),float(.5),this.wet),float(.08),puddle);
+      return{anime,miniature};
+    });
+  }
   private applyGlassSky(anime:Surface,miniature:Surface){
     const radiance=this.glassRadiance();
     (anime as unknown as {emissiveNode:typeof radiance}).emissiveNode=radiance.mul(.55);
@@ -246,6 +297,7 @@ export class ArtMaterials {
       anime.colorNode=anime.colorNode.mul(sheen);miniature.colorNode=miniature.colorNode.mul(sheen);
       this.applyGlassSky(anime,miniature);
     }
+    {const shade=this.cloudShade();anime.colorNode=anime.colorNode.mul(shade);miniature.colorNode=miniature.colorNode.mul(shade);}
     miniature.roughnessNode=mix(artClass.roughness,Math.max(.1,artClass.roughness*.67),this.wet);
     if(artClass.emissive){
       const use=artClass.activity==='home'?this.litHome:artClass.activity==='office'?this.litOffice:artClass.activity==='shop'?this.litShop:1;
