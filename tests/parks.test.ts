@@ -4,7 +4,7 @@ import { ArtMaterials } from '../web/src/render/materials';
 import { Kit, disposeGroup } from '../web/src/render/kit';
 import { addPocketPark, addShrineGrove, parkSignature, pocketParks, streetTreePlacements, STREET_TREE_OFFSET, STREET_TREE_SPACING, MAX_STREET_TREES } from '../web/src/render/parks';
 import { streetLightPlacements } from '../web/src/render/street-lighting';
-import type { Building, Parcel, World } from '../web/src/types';
+import type { Building, BuildingAccess, Parcel, World } from '../web/src/types';
 
 type StreetWorld=Pick<World,'nodes'|'roads'|'building_access'|'bus_lines'>;
 function streetWorld(segments:Array<{id:number;from:number;to:number;kind?:string;stage?:string;connected?:boolean}>,points:Array<{id:number;x:number;z:number}>):StreetWorld{
@@ -124,7 +124,7 @@ describe('park layer invalidation', () => {
   it('changes when an entrance or stop moves without changing the count', () => {
     // Put the entrance on a tree that would otherwise stand on the +z sidewalk.
     const tree = streetTreePlacements(world({ building_access: [] })).filter(t => t.z > 0)[3];
-    const entrance = (x: number) => [{ building_id: 4, road_id: 1, points: [{ x, z: tree.z + 5 }, { x, z: tree.z - .5 }] }];
+    const entrance = (x: number): BuildingAccess[] => [{ building_id: 4, road_id: 1, points: [{ x, z: tree.z + 5 }, { x, z: tree.z - .5 }] }];
     const base = world({ building_access: entrance(tree.x) });
     expect(parkSignature(world({ building_access: entrance(tree.x) }))).toBe(parkSignature(base));
     const movedEntrance = world({ building_access: entrance(tree.x + STREET_TREE_SPACING / 2) });
