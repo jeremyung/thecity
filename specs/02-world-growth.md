@@ -121,6 +121,8 @@ Use and height come from district character, as an initial calibration:
 - **Compact interior:** homes and shop-houses of 2–3 floors (almost no single-storey buildings), with scattered 5–6 storey apartment and office blocks.
 - **Waterfront:** larger, lower-coverage lots and parks.
 
+Pocket parks (2026-10-14): every quarter day, a master-plan city may keep one still-vacant ordinary lot (80–520 m², connected, not a station-tower site) as protected open space. The lot needs at least eight occupied homes within 70 m and must stand at least 120 m from any other park. The city holds at most one park per 30 occupied homes. Protected lots are never developed. The choice is deterministic, draws no random numbers, and records a `ParkDedicated` event. Seed 3 at development rate 60 grows to 11 parks by maturity. The renderer draws each one as a fenced neighborhood playground.
+
 ### Densification and renewal
 
 Mature districts densify on the lots they already have. Renewal replaces an aging low-rise building with a taller one where district demand supports it. Lot assembly merges 2–4 adjacent lots on one frontage into a single site for a mid-rise or tower, but only around working stations and on arterials. Lot splitting may divide an oversized lot on inheritance-style turnover. Every redevelopment needs relocation capacity, keeps a seeded fraction of character buildings (including the founding shop when feasible), and uses hysteresis so no site oscillates.

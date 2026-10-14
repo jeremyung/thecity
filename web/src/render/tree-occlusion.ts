@@ -1,5 +1,5 @@
 import { roadWidth } from './road-elevation';
-import type { Building, Point, RearExtensionView as RearExtension, Road, World } from '../types';
+import type { Building, Parcel, Point, RearExtensionView as RearExtension, Road, World } from '../types';
 
 export type TreePoint = { x: number; z: number; s: number };
 
@@ -21,6 +21,10 @@ export function buildingTreeReach(b: Building, maxCanopy: number) { return Math.
 export function roadHidesTree(r: Road, nodes: Map<number, Point>, p: TreePoint) {
   const a = nodes.get(r.from), b = nodes.get(r.to);
   return !!a && !!b && r.kind !== 'expressway' && distanceToSegment(p, a, b) < roadTreeClearance(r.kind);
+}
+export function parcelHidesTree(parcel: Parcel, p: TreePoint) {
+  const dx = p.x - parcel.x, dz = p.z - parcel.z, rotation = parcel.rotation ?? 0, c = Math.cos(rotation), s = Math.sin(rotation), canopy = treeCanopy(p);
+  return Math.abs(c * dx - s * dz) < parcel.width / 2 + canopy && Math.abs(s * dx + c * dz) < parcel.depth / 2 + canopy;
 }
 export function extensionHidesTree(e: RearExtension, p: TreePoint) {
   if (e.stage === 'survey') return false;
@@ -44,8 +48,17 @@ export function treeOcclusion(world: World, points: readonly TreePoint[]): (p: T
     const reach = roadTreeClearance(r.kind);
     roadCells.insertBox(r, Math.min(a.x, b.x) - reach, Math.min(a.z, b.z) - reach, Math.max(a.x, b.x) + reach, Math.max(a.z, b.z) + reach);
   }
+  // Pocket parks and the shrine grove plant their own trees around furniture.
+  const built = new Set(world.buildings.map(b => b.parcel_id));
+  const parks = (world.parcels ?? []).filter(p => p.protected && !built.has(p.id));
+  const reserves = (world.terrain?.protected ?? []).filter(polygon => polygon.length >= 3).map(polygon => ({
+    minX: Math.min(...polygon.map(p => p.x)), maxX: Math.max(...polygon.map(p => p.x)),
+    minZ: Math.min(...polygon.map(p => p.z)), maxZ: Math.max(...polygon.map(p => p.z)),
+  }));
   const extensions = (world.rear_extensions ?? []).slice(0, 2);
   return p => buildingCells.at(p.x, p.z).some(b => buildingHidesTree(b, p))
+    || parks.some(park => parcelHidesTree(park, p))
+    || reserves.some(r => p.x > r.minX && p.x < r.maxX && p.z > r.minZ && p.z < r.maxZ)
     || roadCells.at(p.x, p.z).some(r => roadHidesTree(r, nodes, p))
     || extensions.some(e => extensionHidesTree(e, p));
 }
