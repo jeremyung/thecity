@@ -5,9 +5,10 @@ import { ARTERIAL_SIDEWALK, roadWidth } from './road-elevation';
 import { streetLightPlacements } from './street-lighting';
 import { distanceToSegment, SpatialCells } from './tree-occlusion';
 import type { Parcel, Point, World } from '../types';
+import type { TreeSpecies } from './seasons';
 
-/** One instanced tree outside the seeded groves: x/z trunk base, s grove-scale size. */
-export interface PlantedTree { x:number; z:number; s:number; color:string }
+/** One instanced tree outside the seeded groves; `color` is its summer crown, `variation` a stable 0..1 hash. */
+export interface PlantedTree { x:number; z:number; s:number; color:string; species:TreeSpecies; variation:number }
 
 export const STREET_TREE_SPACING=9;
 /** Gap at segment ends; corners are cleared per side by the crossing-street keep-out. */
@@ -78,7 +79,7 @@ export function streetTreePlacements(world:Pick<World,'nodes'|'roads'|'building_
         if(stops.at(p.x,p.z).some(stop=>Math.hypot(stop.x-p.x,stop.z-p.z)<STREET_TREE_STOP_CLEARANCE))continue;
         if(crossings.at(p.x,p.z).some(other=>other.road.id!==road.id&&!continues(segment,other)&&distanceToSegment(p,other.a,other.b)<crossingClearance(other.road.kind)))continue;
         const r=hash(p.x,p.z,road.id);
-        result.push({...p,s:1.35+r*.3,color:STREET_TREE_COLORS[Math.floor(r*STREET_TREE_COLORS.length)%STREET_TREE_COLORS.length]});
+        result.push({...p,s:1.35+r*.3,color:STREET_TREE_COLORS[Math.floor(r*STREET_TREE_COLORS.length)%STREET_TREE_COLORS.length],species:'ginkgo',variation:r});
         if(result.length>=MAX_STREET_TREES)return result;
       }
     }
@@ -154,7 +155,7 @@ export function addPocketPark(kit:Kit,parcel:Parcel,art:ArtMaterials):PlantedTre
   frame.box(0,.45,-innerD/2+.65,innerW-1.2,.75,.9,hedge);
   const trees:PlantedTree[]=[];
   const blossom=seed<.3;
-  const addTree=(lx:number,lz:number,index:number)=>{const p=frame.point(lx,lz),r=hash(p.x,p.z,index);trees.push({...p,s:1.6+r*.7,color:blossom&&index===0?BLOSSOM_COLORS[Math.floor(r*2)]:PARK_TREE_COLORS[Math.floor(r*PARK_TREE_COLORS.length)%PARK_TREE_COLORS.length]});};
+  const addTree=(lx:number,lz:number,index:number)=>{const p=frame.point(lx,lz),r=hash(p.x,p.z,index);const cherry=blossom&&index===0;trees.push({...p,s:1.6+r*.7,color:cherry?BLOSSOM_COLORS[Math.floor(r*2)]:PARK_TREE_COLORS[Math.floor(r*PARK_TREE_COLORS.length)%PARK_TREE_COLORS.length],species:cherry?'blossom':'broadleaf',variation:r});};
   addTree(-innerW/2+1.8,-innerD/2+1.9,0);addTree(innerW/2-1.8,-innerD/2+1.9,1);
   if(innerD>13)addTree((seed<.5?-1:1)*(innerW/2-1.6),1,2);
   // Swing frame in the rear half, slide or sandbox opposite, scaled to the lot.
@@ -221,7 +222,7 @@ export function addShrineGrove(kit:Kit,polygon:readonly Point[],art:ArtMaterials
     const r=hash(x+cx,z+cz,0x5a1),lx=x+(r-.5)*4.6,lz=z+(hash(z,x,0x5a2)-.5)*4.6;
     if(Math.abs(lx)<4.5&&lz>hallZ-5)continue;
     const p=frame.point(lx,lz);
-    trees.push({...p,s:2.6+r*1.1,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length]});
+    trees.push({...p,s:2.6+r*1.1,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length],species:'evergreen',variation:r});
   }
   return trees;
 }
@@ -245,7 +246,7 @@ export function addStationPlaza(kit:Kit,parcel:Parcel,art:ArtMaterials):PlantedT
     frame.box(x,.35,z,2.6,.5,2.6,stone);frame.box(x,.61,z,2.2,.04,2.2,soil);
     // Timber ring seats on all four sides of the planter.
     for(const side of [-1,1]){frame.box(x+side*1.55,.45,z,.45,.06,2.6,timber);frame.box(x,.45,z+side*1.55,2.6,.06,.45,timber);}
-    const p=frame.point(x,z),r=hash(p.x,p.z,i);trees.push({...p,s:1.9+r*.5,color:STREET_TREE_COLORS[Math.floor(r*STREET_TREE_COLORS.length)%STREET_TREE_COLORS.length]});
+    const p=frame.point(x,z),r=hash(p.x,p.z,i);trees.push({...p,s:1.9+r*.5,color:STREET_TREE_COLORS[Math.floor(r*STREET_TREE_COLORS.length)%STREET_TREE_COLORS.length],species:'broadleaf',variation:r});
   }
   // Clock post near the street edge, lit dial faces at night.
   frame.post(0,2,d/2-1.6,.08,4,steel);
@@ -282,8 +283,8 @@ export function addNeighborhoodShrine(kit:Kit,parcel:Parcel,art:ArtMaterials):Pl
   frame.box(0,3.05,hallZ+hallD*.28,hallW+1.2,.2,hallD*.75,roof,0,-.42);frame.box(0,3.05,hallZ-hallD*.28,hallW+1.2,.2,hallD*.75,roof,0,.42);
   frame.box(0,2.5,hallZ+hallD/2+.05,hallW*.7,.12,.12,rope);
   const trees:PlantedTree[]=[];
-  for(const side of [-1,1]){const p=frame.point(side*(w/2-1.8),-d/2+1.8),r=hash(p.x,p.z,side);trees.push({...p,s:2.7+r*.6,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length]});}
-  if(d>14){const p=frame.point((hash(parcel.x,parcel.z,5)<.5?-1:1)*(w/2-1.6),0),r=hash(p.x,p.z,9);trees.push({...p,s:2.4+r*.5,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length]});}
+  for(const side of [-1,1]){const p=frame.point(side*(w/2-1.8),-d/2+1.8),r=hash(p.x,p.z,side);trees.push({...p,s:2.7+r*.6,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length],species:'evergreen',variation:r});}
+  if(d>14){const p=frame.point((hash(parcel.x,parcel.z,5)<.5?-1:1)*(w/2-1.6),0),r=hash(p.x,p.z,9);trees.push({...p,s:2.4+r*.5,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length],species:'evergreen',variation:r});}
   return trees;
 }
 
