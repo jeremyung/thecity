@@ -321,7 +321,7 @@ export class CityRenderer {
   }
   private resetWorld(){
     this.focusResetPending=true;
-    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
+    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trainFleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
     this.buildings.clear();
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry;this.retire(()=>{near?.dispose();far?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
@@ -580,7 +580,7 @@ export class CityRenderer {
     if(this.frame++%90===0&&this.onMetrics){const avg=this.frames.reduce((a,b)=>a+b,0)/this.frames.length;this.onMetrics({fps:1000/avg,frameMs:cost,calls:this.renderer.info.render.drawCalls,triangles:this.renderer.info.render.triangles,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,backend:this.renderer.backend.constructor.name,styleSwitch:this.styleSwitchMetrics?{...this.styleSwitchMetrics}:undefined,pendingBuildings:this.objectQueue.size,pendingChunks:this.chunks.pendingCount});}
   }
   private updateActors(now:number){
-    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;const dt=this.lastActorFrame?Math.min(.1,(now-this.lastActorFrame)/1000):1/60;this.lastActorFrame=now;this.buses.begin(now);this.fleet.begin();const pedIds:number[]=[],trainIds:number[]=[];
+    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;const dt=this.lastActorFrame?Math.min(.1,(now-this.lastActorFrame)/1000):1/60;this.lastActorFrame=now;this.buses.begin(now);this.fleet.begin();this.trainFleet.begin();const pedIds:number[]=[],trainIds:number[]=[];
     for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=THREE.MathUtils.lerp(old.x,current.x,t),z=THREE.MathUtils.lerp(old.z,current.z,t);let h=current.h;const dh=Math.atan2(Math.sin(current.h-old.h),Math.cos(current.h-old.h));h=Math.PI/2-(old.h+dh*t);const lift=current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
       if(current.k===0&&ped<2000){const offset=ped*5;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
       else if(isRoadVehicle(current.k)){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,dt);}

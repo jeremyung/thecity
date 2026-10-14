@@ -63,6 +63,11 @@ describe('train kit', () => {
     expect(cars.map(c => c.role)).toEqual(spec.consist);
     expect(cars[0].leading).toBe(true);
     expect(cars[cars.length - 1].trailing).toBe(true);
+    // The leading car is ahead of the centre (+offset) so its +z front cap and
+    // lamps point along the heading; only the trailing car is mirrored.
+    expect(cars[0].offset).toBeGreaterThan(0);
+    expect(cars[cars.length - 1].offset).toBeLessThan(0);
+    expect(cars[0].offset).toBeCloseTo(-cars[cars.length - 1].offset, 5);
     // Mirrors engine/src/lib.rs TRAIN_HALF_LENGTH.
     expect(consistHalfLength()).toBeCloseTo(40.9, 2);
   });

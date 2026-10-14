@@ -180,10 +180,13 @@ export function buildTrainCar(cls: TrainClass, role: TrainCar) {
   return b.finish(0, belt);
 }
 
-/** Cars of one consist in travel order, front to rear, with centre offsets in metres. */
+/** Cars of one consist in travel order, front to rear, with centre offsets in metres.
+ * Index 0 is the leading car and takes the +offset (ahead along the heading);
+ * index n-1 is the trailing car at -offset. The front cap is local +z, so the
+ * leading car keeps the heading and only the trailing car is turned by PI. */
 export function consistCars(cls: TrainClass = TRAIN_CLASS) {
   const spec = trainClass(cls), n = spec.consist.length, pitch = spec.length + spec.gap;
-  return spec.consist.map((role, i) => ({ role, offset: (i - (n - 1) / 2) * pitch, leading: i === 0, trailing: i === n - 1 }));
+  return spec.consist.map((role, i) => ({ role, offset: ((n - 1) / 2 - i) * pitch, leading: i === 0, trailing: i === n - 1 }));
 }
 
 /** Half the total consist length; must equal the engine's TRAIN_HALF_LENGTH. */

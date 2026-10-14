@@ -8,7 +8,7 @@ import { VehicleMotion } from './vehicles';
 /** Half the consist length; mirrors engine/src/lib.rs TRAIN_HALF_LENGTH. */
 export const TRAIN_HALF_LENGTH = consistHalfLength();
 
-interface Slot { mesh: THREE.InstancedMesh; state: THREE.InstancedBufferAttribute; ids: number[]; count: number }
+interface Slot { mesh: THREE.InstancedMesh; state: THREE.InstancedBufferAttribute; ids: number[]; count: number; capacity: number }
 
 function instanced(geometry: THREE.BufferGeometry, material: THREE.Material, capacity: number) {
   const mesh = new THREE.InstancedMesh(geometry, material, capacity);
@@ -19,13 +19,16 @@ function instanced(geometry: THREE.BufferGeometry, material: THREE.Material, cap
 
 /**
  * Instanced train consists. The engine reports one movement point per train
- * (kind 2); the fleet expands it into the manifest's cars, places the cab at
- * the leading end and mirrors the trailing cab, and rolls every wheel.
+ * (kind 2); the fleet expands it into the manifest's cars, places the leading
+ * cab at +offset along the heading and mirrors the trailing cab, and rolls every
+ * wheel. Each role's instance buffer is sized by how often it appears in the
+ * consist, so a cab is not capped at one per train.
  */
 export class TrainFleet {
   readonly root = new THREE.Group();
   private slots = new Map<TrainCar, Slot>();
   private shadows: THREE.InstancedMesh;
+  private shadowCapacity: number;
   private shadowCount = 0;
   private matrix = new THREE.Matrix4();
   private pose = new THREE.Object3D();
@@ -36,19 +39,22 @@ export class TrainFleet {
     const material = trainMaterial(art);
     const roles: TrainCar[] = ['cab', 'trailer', 'motor'];
     for (const role of roles) {
+      const roleCapacity = this.cars.filter(car => car.role === role).length * capacity;
+      if (roleCapacity === 0) continue;
       const geometry = buildTrainCar(TRAIN_CLASS, role);
-      const mesh = instanced(geometry, material, capacity);
-      const state = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+      const mesh = instanced(geometry, material, roleCapacity);
+      const state = new THREE.InstancedBufferAttribute(new Float32Array(roleCapacity * 4), 4);
       state.setUsage(THREE.DynamicDrawUsage);
       geometry.setAttribute('vstate', state);
-      this.slots.set(role, { mesh, state, ids: [], count: 0 });
+      this.slots.set(role, { mesh, state, ids: [], count: 0, capacity: roleCapacity });
       this.root.add(mesh);
     }
     const plane = new THREE.PlaneGeometry(1, 1); plane.rotateX(-Math.PI / 2);
     const shade = new THREE.MeshBasicNodeMaterial({ color: '#1d2526', transparent: true, depthWrite: false });
     const d = uv().sub(vec2(.5, .5)).mul(vec2(2, 2)).length();
     shade.opacityNode = smoothstep(float(1), float(.35), d).mul(.42).sub(art.night.mul(.12));
-    this.shadows = new THREE.InstancedMesh(plane, shade, capacity);
+    this.shadowCapacity = this.cars.length * capacity;
+    this.shadows = new THREE.InstancedMesh(plane, shade, this.shadowCapacity);
     this.shadows.count = 0; this.shadows.frustumCulled = false; this.shadows.renderOrder = 1;
     this.shadows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.root.add(this.shadows);
@@ -66,7 +72,7 @@ export class TrainFleet {
     const m = this.motion.update(id, x, z, yaw, spec.length * 2, dt);
     for (const car of this.cars) {
       const slot = this.slots.get(car.role)!;
-      if (slot.count >= this.capacity) continue;
+      if (slot.count >= slot.capacity) continue;
       const i = slot.count++;
       const cx = x + forwardX * car.offset, cz = z + forwardZ * car.offset;
       const carYaw = car.trailing ? yaw + Math.PI : yaw;
@@ -77,7 +83,7 @@ export class TrainFleet {
       slot.mesh.setMatrixAt(i, this.pose.matrix);
       slot.state.setXYZW(i, m.odo, 0, carYaw, m.brake);
       slot.ids[i] = id;
-      if (this.shadowCount < this.capacity) {
+      if (this.shadowCount < this.shadowCapacity) {
         this.pose.position.y = lift + .02; this.pose.scale.set(spec.width + .4, 1, spec.length + .4); this.pose.updateMatrix();
         this.shadows.setMatrixAt(this.shadowCount++, this.pose.matrix);
       }
