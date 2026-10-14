@@ -64,9 +64,9 @@ try {
 
   const views = [];
   for (const park of scene.parks.slice(0, 3)) {
-    // Look into the park from across its frontage street, slightly elevated.
+    // Look steeply down from above the frontage street so neighboring towers do not block the lot.
     const fx = Math.sin(park.rotation), fz = Math.cos(park.rotation);
-    views.push({ name: `park-${park.id}`, target: [park.x, 1.5, park.z], position: [park.x + fx * 30 + fz * 12, 22, park.z + fz * 30 - fx * 12] });
+    views.push({ name: `park-${park.id}`, target: [park.x, 1, park.z], position: [park.x + fx * 16 + fz * 4, 42, park.z + fz * 16 - fx * 4] });
   }
   if (scene.arterial) {
     const { a, b } = scene.arterial, mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, len = Math.hypot(b.x - a.x, b.z - a.z), ux = (b.x - a.x) / len, uz = (b.z - a.z) / len;

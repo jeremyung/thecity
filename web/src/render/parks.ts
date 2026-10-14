@@ -209,7 +209,7 @@ export function addShrineGrove(kit:Kit,polygon:readonly Point[],art:ArtMaterials
   for(const side of [-1,1])frame.post(side*1.2,.7,gateZ-3,.25,1.4,stone);
   const trees:PlantedTree[]=[];
   for(let x=-halfAcross+3;x<=halfAcross-3;x+=6.5)for(let z=-halfAlong+3;z<=halfAlong-3;z+=6.5){
-    const r=hash(x+cx,z+cz,0x5a1),lx=x+(r-.5)*3,lz=z+(hash(z,x,0x5a2)-.5)*3;
+    const r=hash(x+cx,z+cz,0x5a1),lx=x+(r-.5)*4.6,lz=z+(hash(z,x,0x5a2)-.5)*4.6;
     if(Math.abs(lx)<4.5&&lz>hallZ-5)continue;
     const p=frame.point(lx,lz);
     trees.push({...p,s:2.6+r*1.1,color:SHRINE_TREE_COLORS[Math.floor(r*SHRINE_TREE_COLORS.length)%SHRINE_TREE_COLORS.length]});
