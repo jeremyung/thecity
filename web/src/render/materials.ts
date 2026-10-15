@@ -3,9 +3,13 @@ import { color, positionWorld, positionView, smoothstep, positionLocal, instance
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
+import { claddingShade, claddingShadeBatched, windowMaterials, type Cladding, type WindowActivity } from './building-surfaces';
 type Surface=THREE.MeshStandardNodeMaterial|THREE.MeshToonNodeMaterial;
-type BuildingArtClass={key:string,roughness:number,emissive:boolean,painted:boolean,activity:'home'|'office'|'shop'|'ambient'};
+type BuildingArtClass={key:string,roughness:number,emissive:boolean,painted:boolean,activity:'home'|'office'|'shop'|'ambient',cladding?:Cladding};
 type BuildingSurfaceVariants={anime:Surface,miniature:Surface};
+
+/** Anime keeps cladding lighter so its painted surface leads; Miniature shows it fully. */
+const ANIME_CLADDING=.55;
 
 export class ArtMaterials {
   readonly contours=new THREE.LineBasicNodeMaterial({color:'#283e4c',transparent:true,opacity:.3,depthWrite:false});
@@ -15,6 +19,8 @@ export class ArtMaterials {
   readonly litHome=uniform(1);
   readonly litOffice=uniform(1);
   readonly litShop=uniform(1);
+  /** Share of rooms with a light on, per window schedule; set from the time of day. */
+  readonly occupancy={home:uniform(.5),office:uniform(.5),shop:uniform(.5)} as const;
   readonly palette = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
   private style:Style='anime';
   private cache = new Map<string,{anime:Surface,miniature:Surface}>();
@@ -28,8 +34,8 @@ export class ArtMaterials {
     this.bands=new THREE.DataTexture(new Uint8Array([95,145,195,230,255]),5,1,THREE.RedFormat);
     this.bands.minFilter=THREE.NearestFilter;this.bands.magFilter=THREE.NearestFilter;this.bands.needsUpdate=true;
   }
-  get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient'):Surface {
-    const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}`;
+  get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient', cladding:Cladding='plaster'):Surface {
+    const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}${cladding==='plaster'?'':`/${cladding}`}`;
     let variants=this.cache.get(key);
     if(!variants){
       const anime=new THREE.MeshToonNodeMaterial({color:hex,gradientMap:this.bands});
@@ -40,6 +46,8 @@ export class ArtMaterials {
       const painted=roughness>=.65&&!emissive&&hex!=='#fffffe'&&hex!=='#ffffff';
       if(painted)anime.colorNode=vec3(color(hex)).mul(paintedSurfaceTint());
       miniature.colorNode=color(hex).mul(brush.mul(.3).add(.7));
+      const clad=painted&&cladding!=='plaster'?cladding:undefined;
+      if(clad){anime.colorNode=anime.colorNode.mul(claddingShade(clad,ANIME_CLADDING));miniature.colorNode=miniature.colorNode.mul(claddingShade(clad,1));}
       if(roughness<.4&&!emissive){
         const grazing=normalWorld.dot(cameraPosition.sub(positionWorld).normalize()).abs().oneMinus().pow(3);
         const sheen=grazing.mul(.6).add(.08).mul(this.night.oneMinus()).add(1);
@@ -68,7 +76,8 @@ export class ArtMaterials {
       }
       for(const mat of [anime,miniature]){
         mat.userData.artKey=key;
-        mat.userData.artBuildingClass={key:`${roughness}/${emissive}/${emissive?activity:'ambient'}/${painted}`,roughness,emissive,painted,activity} satisfies BuildingArtClass;
+        // Every clad wall shares one batch class; each vertex carries its cladding kind.
+        mat.userData.artBuildingClass={key:`${roughness}/${emissive}/${emissive?activity:'ambient'}/${painted}${clad?'/clad':''}`,roughness,emissive,painted,activity,...(clad?{cladding:clad}:{})} satisfies BuildingArtClass;
         if(emissive){const use=activity==='home'?this.litHome:activity==='office'?this.litOffice:activity==='shop'?this.litShop:1;const emission=color(hex).mul(this.night.mul(1.4).add(.12)).mul(use);(mat as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;}
       }
       variants={anime,miniature};this.cache.set(key,variants);
@@ -95,12 +104,18 @@ export class ArtMaterials {
     const{v0,v1}=shopSignCell(slot);
     return{material:this.shopSignMaterial,v0,v1};
   }
+  /** Window panes with rooms behind them, one shared pair per light schedule. */
+  window(activity:WindowActivity):Surface{
+    return this.shared(`window/${activity}`,()=>windowMaterials(activity,{night:this.night,occupancy:this.occupancy},this.bands) as unknown as {anime:Surface,miniature:Surface});
+  }
   setStyle(style:Style){this.style=style;}
   private disposers:Array<()=>void>=[];
   /** Resources owned by `shared` materials (textures) released with the art set. */
   onDispose(release:()=>void){this.disposers.push(release);}
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
   buildingBatch(material:THREE.Material):BuildingBatchSurface{
+    // Panes read their schedule from vertex data, so all of them share one batch.
+    if(material.userData.windowPane)return{material:this.window('home')};
     const artClass=material.userData.artBuildingClass as BuildingArtClass|undefined;
     const baseColor=(material as THREE.Material&{color?:THREE.Color}).color;
     if(!artClass||!baseColor)return{material:this.variant(material)};
@@ -154,6 +169,7 @@ export class ArtMaterials {
     anime.colorNode=vec3(brush.mul(pigment));
     if(artClass.painted)anime.colorNode=paintedSurfaceTint();
     miniature.colorNode=vec3(brush.mul(.3).add(.7));
+    if(artClass.cladding){anime.colorNode=anime.colorNode.mul(claddingShadeBatched(ANIME_CLADDING));miniature.colorNode=miniature.colorNode.mul(claddingShadeBatched(1));}
     if(artClass.roughness<.4&&!artClass.emissive){
       const grazing=normalWorld.dot(cameraPosition.sub(positionWorld).normalize()).abs().oneMinus().pow(3);
       // Batch colorNode is multiplied by the original facade vertex color.

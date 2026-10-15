@@ -18,6 +18,7 @@ import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
+import { windowOccupancy } from './building-surfaces';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { signageContexts, type SignageContext } from './signage';
 import { seasonAt, seasonKey, treeColor, type SeasonState, type TreeSpecies } from './seasons';
@@ -700,6 +701,8 @@ export class CityRenderer {
       for(let i=0;i<this.lanternLights.length;i++){const b=lit[i],lamp=this.lanternLights[i];lamp.userData.active=!!b;if(b)lamp.position.set(b.x+Math.sin(b.rotation)*(b.depth*.45+1.5),3.1,b.z+Math.cos(b.rotation)*(b.depth*.45+1.5));}
     }
     const activityHour=hour%24,lightBlend=Math.min(1,dt*.8);this.art.litHome.value=THREE.MathUtils.lerp(this.art.litHome.value,activityHour>=23||activityHour<5?.32:1,lightBlend);this.art.litOffice.value=THREE.MathUtils.lerp(this.art.litOffice.value,activityHour>=7&&activityHour<20?1:.1,lightBlend);this.art.litShop.value=THREE.MathUtils.lerp(this.art.litShop.value,activityHour>=6&&activityHour<23?1:.18,lightBlend);
+    // Rooms switch on and off individually as each schedule's occupancy passes their threshold.
+    for(const activity of ['home','office','shop'] as const){const share=this.art.occupancy[activity];share.value=THREE.MathUtils.lerp(share.value,windowOccupancy(activity,activityHour),lightBlend);}
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
     if(this.shine)this.shine.strength.value=.06+(1-this.daylight)*.2;

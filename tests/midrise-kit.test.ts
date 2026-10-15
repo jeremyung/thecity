@@ -116,7 +116,7 @@ describe('midrise family geometry integration',()=>{
     for(const compactMidrise of [false,true])for(const kind of ['apartment','office'] as const){
       const b=midrise(kind,'open',1,8,12,14,17),group=buildingKit(b,art,{compactMidrise});
       const frontZ=(compactMidrise?compactMidriseEnvelope(b,b.width*.84,b.depth*.84).depth:b.depth*.84)/2;
-      const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
+      const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3),art.window('home'),art.window('office'),art.window('shop')];
       let doorwayGlassVertices=0,rearGlassVertices=0;
       group.traverse(object=>{
         if(!(object instanceof THREE.Mesh)||!paneMaterials.some(material=>material===object.material))return;
@@ -149,7 +149,7 @@ describe('midrise family geometry integration',()=>{
         const b=midrise(kind,'open',1,floors,8,12,appearance_seed);
         const group=buildingKit(b,art),context=`${style} ${kind} ${floors} floors seed ${appearance_seed}`;
         let doorwayGlassVertices=0;
-        const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
+        const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3),art.window('home'),art.window('office'),art.window('shop')];
         group.traverse(object=>{
           if(!(object instanceof THREE.Mesh)||!paneMaterials.some(material=>material===object.material))return;
           const position=object.geometry.getAttribute('position');
