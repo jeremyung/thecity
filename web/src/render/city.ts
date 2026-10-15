@@ -28,6 +28,7 @@ import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ArtMaterials, signTexture } from './materials';
 import { Kit, disposeGroup } from './kit';
+import { buildOverheadLines } from './overhead-lines';
 import { StagedKit } from './staged-kit';
 import { RiverWater } from './water';
 import { createRiverbankGeometry } from './riverbank';
@@ -663,14 +664,14 @@ export class CityRenderer {
   }
   private rebuildParks(world:World){
     this.clearParks();
-    const kit=new Kit(),planted:PlantedTree[]=[...streetTreePlacements(world)];
+    const streetTrees=streetTreePlacements(world),kit=new Kit(),planted:PlantedTree[]=[...streetTrees];
     for(const parcel of openSpaces(world)){
       const kind=openSpaceKind(parcel);
       planted.push(...(kind==='plaza'?addStationPlaza:kind==='shrine'?addNeighborhoodShrine:addPocketPark)(kit,parcel,this.art));
     }
     addScrambleCrossing(kit,world,this.art);
     for(const polygon of world.terrain.protected)planted.push(...addShrineGrove(kit,polygon,this.art));
-    this.parks.add(kit.finish());
+    this.parks.add(kit.finish(),buildOverheadLines(world,this.art,streetTrees));
     this.parkLook=planted;
     this.parkBatches=this.createTreeBatches(planted,p=>treeColor(p.species,p.color,this.season,p.variation));
     for(const batch of this.parkBatches){

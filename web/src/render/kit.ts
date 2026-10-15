@@ -1487,25 +1487,6 @@ function renderStreetLife(
     }
   }
 
-  // Wider corner lots can carry a discreet pair of service poles and a single
-  // taut wire. Keeping it above the roofline avoids tangling the shop facade.
-  if (b.anchor && parcelW >= 16 && parcelD >= 16) {
-    const poleX = parcelHalfWidth - .39;
-    const wireZ = parcelFront - .3;
-    const poleY = Math.max(5.1, Math.min(8.2, (b.floors * 3.25) + 1.4));
-    for (const side of [-1, 1]) {
-      kit.box(side * poleX, poleY / 2, wireZ, .13, poleY, .13, iron);
-      kit.box(side * poleX, poleY - .35, wireZ, .72, .075, .075, wood);
-      for (const dx of [-.23, .23]) kit.cylinder(side * poleX + dx, poleY - .27, wireZ, .045, .16, trim, 6);
-    }
-    addRod(kit,
-      { x: -poleX, y: poleY - .22, z: wireZ },
-      { x: poleX, y: poleY - .22, z: wireZ },
-      .018,
-      dark,
-    );
-  }
-
 }
 
 function addRod(
