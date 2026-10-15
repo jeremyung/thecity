@@ -79,3 +79,15 @@ A fresh default `npm run setup:fixtures` completed successfully: 23 verified,
 archive were uploaded. Keep PR19 draft until the full CI run succeeds.
 PR19 replaces PR12; do not merge both. The separate dirty development checkout
 and unaccepted corridor experiments are not included in this checkpoint.
+
+## CI geometry-test overhead correction — 2026-10-15
+
+Run38753307912 passed fixture setup/integrity, native release tests and the WASM
+build, then failed two web tests on their existing timeouts (low-rise lifecycle
+5s, tower bounds20s);666 other tests passed. Production build was not reached.
+The two checks repeatedly created matcher objects per vertex. The correction
+scans the same coordinates and bounds but reports the first invalid vertex once
+per mesh/group. No sample, assertion condition, timeout or test case is removed.
+On AppleM2Max/macOS Node26.7, the same two suites pass19 tests before and after:
+13.84s before,2.75s after. This is test-harness overhead, not a runtime performance
+claim. Full Ubuntu/Node22 CI must pass on the new commit before leaving draft.

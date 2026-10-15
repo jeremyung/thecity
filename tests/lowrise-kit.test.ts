@@ -223,12 +223,12 @@ describe('integrated low-rise families',()=>{
       for(const [name,group] of [['open',open],['construction',framing],['renovation',renovation]] as const){
         group.position.set(b.x,0,b.z);group.rotation.y=b.rotation;
         const points=geometryPoints(group);expectFinite(points);
-        for(const point of parcelLocalPoints(group)){
-          expect(point.x,`${kind} ${name}`).toBeGreaterThanOrEqual(-b.width/2-1e-5);
-          expect(point.x,`${kind} ${name}`).toBeLessThanOrEqual(b.width/2+1e-5);
-          expect(point.z,`${kind} ${name}`).toBeGreaterThanOrEqual(-b.depth/2-1e-5);
-          expect(point.z,`${kind} ${name}`).toBeLessThanOrEqual(b.depth/2+1e-5);
-        }
+        // Keep the full vertex scan and exact bounds; report the first
+        // offending point without allocating four matchers for every vertex.
+        const outside=parcelLocalPoints(group).find(point=>!(
+          point.x>=-b.width/2-1e-5 && point.x<=b.width/2+1e-5 &&
+          point.z>=-b.depth/2-1e-5 && point.z<=b.depth/2+1e-5));
+        expect(outside,`${kind} ${name} stays within parcel bounds`).toBeUndefined();
       }
       const builtWall=localGeometryPoints(framing,art.get(buildingPalette(b,art.palette).wall));
       expect(builtWall.some(point=>point.y>1&&point.z>envelopeDepth*.25)).toBe(true);
