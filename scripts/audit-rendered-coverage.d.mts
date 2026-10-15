@@ -5,6 +5,7 @@ export interface CoverageGrid {
   rows: number;
   mask: Uint8Array;
   envelopeMask?: Uint8Array;
+  streetMask?: Uint8Array;
 }
 
 export interface CoverageSnapshot {
@@ -20,6 +21,8 @@ export interface CoverageSnapshot {
     rotation?: number;
     [key: string]: unknown;
   }>;
+  nodes?: Array<{ id: number; x: number; z: number; [key: string]: unknown }>;
+  roads?: Array<{ from: number; to: number; kind: string; stage: string; [key: string]: unknown }>;
 }
 
 export function createCoverageGrid(
@@ -57,6 +60,14 @@ export function auditRenderedCoverage(
     nominalParcelEnvelopeUnionM2: number;
     nominalParcelEnvelopeUnionPercent: number;
     projectedVsEnvelopePercent: number | null;
+  };
+  openStreetAdjustedDiagnostic: {
+    cellSizeM: number;
+    openStreetAreaM2: number;
+    netDomainAreaM2: number;
+    netProjectedKitGeometryAreaM2: number;
+    netProjectedKitGeometryPercent: number | null;
+    excludedKinds: string[];
   };
   cells: Array<{ x: number; z: number; projectedKitGeometryM2: number; nominalParcelEnvelopeM2: number }>;
 };

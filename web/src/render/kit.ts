@@ -81,6 +81,9 @@ export function partyWallBodyWidth(width: number, anchor = false, floors = 2, ki
   if (kind === 'office' && floors < 12) return width - 1.3;
   // Apartment and office families carry balconies and entry reveals.
   const lowrise = floors < 4 && (kind === 'home' || kind === 'shop' || kind === 'cafe');
+  // The planner admits 5 m sites. Do not let the legacy 6 m body floor
+  // exceed those parcels before the low-rise family selects its envelope.
+  if (lowrise && width < 6) return width - .9;
   return Math.max(6, width - (lowrise ? .9 : 1.3));
 }
 export function partyWallBodyDepth(depth: number): number {

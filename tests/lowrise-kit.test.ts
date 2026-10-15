@@ -92,6 +92,26 @@ describe('integrated low-rise families',()=>{
     }}finally{art.dispose();}
   });
 
+  it('contains geometry on planner-admitted five-metre frontages through the lifecycle',()=>{
+    const art=new ArtMaterials();
+    try {
+      for(const kind of ['home','shop','cafe'] as const)for(const width of [5,5.4,5.99])
+      for(const depth of [7,12])for(const floors of [1,2,3])for(const seed of [1,8,23])
+      for(const stage of ['open','construction','renovation'] as const){
+        const b=building(kind,stage,{width,depth,floors,appearance_seed:seed,rotation:.63,progress:.65});
+        const group=buildingKit(b,art);
+        group.position.set(b.x,0,b.z);group.rotation.y=b.rotation;
+        const points=parcelLocalPoints(group);expectFinite(points);
+        const maxX=Math.max(...points.map(p=>Math.abs(p.x)));
+        const maxZ=Math.max(...points.map(p=>Math.abs(p.z)));
+        disposeGroup(group);
+        const context=`${kind} ${width}x${depth} ${floors} floors seed ${seed} ${stage}`;
+        expect(maxX,context).toBeLessThanOrEqual(width/2+1e-5);
+        expect(maxZ,context).toBeLessThanOrEqual(depth/2+1e-5);
+      }
+    } finally {art.dispose();}
+  });
+
   it('keeps real transformed geometry inside narrow rotated parcels across styles and roof profiles',()=>{
     const art=new ArtMaterials();
     for(const kind of ['home','shop','cafe'] as const)for(const [width,depth] of [[6,6],[8,10],[10,8],[13,12],[8.6,8],[11.65,8],[14,8]] as const){

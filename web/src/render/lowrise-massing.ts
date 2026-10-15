@@ -25,10 +25,11 @@ type LowriseBuilding = Pick<Building, 'kind' | 'floors' | 'width' | 'depth' | 'a
 /** Widen only buildings supported by the low-rise family; others keep the kit's legacy width. */
 export function lowriseBuildingWidth(b: LowriseBuilding, fallbackWidth: number, depth: number): number {
   if (!lowriseMassing(b, fallbackWidth, depth)) return fallbackWidth;
-  return Math.max(6, Math.min(b.width * .96, b.width - .2));
+  return Math.max(Math.min(6, b.width - .2), Math.min(b.width * .96, b.width - .2));
 }
 
-/** Seeded compact massing; the simulation's use, floors and parcel stay authoritative. */
+/** Seeded compact massing, including the planner's 5 m minimum frontage.
+ * The simulation's use, floors and parcel stay authoritative. */
 export function lowriseMassing(b: LowriseBuilding, w: number, d: number): LowriseMassing | null {
   const home = b.kind === 'home';
   const shop = b.kind === 'shop' || b.kind === 'cafe';
@@ -36,12 +37,12 @@ export function lowriseMassing(b: LowriseBuilding, w: number, d: number): Lowris
       || !Number.isInteger(b.floors) || b.floors < 1 || b.floors > 3
       || !Number.isFinite(w) || !Number.isFinite(d)
       || !Number.isFinite(b.width) || !Number.isFinite(b.depth)
-      || b.width < 6 || b.depth < 6 || w < 5.5 || d < 5.5) return null;
+      || b.width < 5 || b.depth < 6 || w < 4 || d < 5.5) return null;
 
   const seed = b.appearance_seed >>> 0;
   const parcelW = b.width, parcelD = b.depth;
   const bodyW = Math.min(w, parcelW - .2), bodyD = Math.min(d, parcelD - .2);
-  if (bodyW < 5.3 || bodyD < 5.3) return null;
+  if (bodyW < 4 || bodyD < 5.3) return null;
   // Hold a nearly full-width street wall so detached low-rise buildings read
   // as a connected neighborhood; the rear service volume provides the silhouette break.
   const mainWidth = bodyW * .96;
