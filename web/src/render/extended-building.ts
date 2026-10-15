@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import type { Building, BuildingOriginalFootprint } from '../types';
 import { ArtMaterials } from './materials';
 import { buildingPalette } from './building-palette';
+import { claddingFor, windowActivity, windowLived } from './building-surfaces';
 import { compactMidriseEnvelope, midriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing } from './lowrise-massing';
 import { buildingKit, Kit, partyWallBodyDepth, partyWallBodyWidth, type BuildingKitReviewOptions } from './kit';
@@ -89,23 +90,14 @@ export function extendedAdditionEnvelope(
   return { x, z: (frontZ + rearZ) / 2, width, depth: frontZ - rearZ, frontZ, rearZ, retainedRearZ };
 }
 
-function occupancyWindowLit(b: Building, floor: number, bay: number, count: number): boolean {
-  if (b.stage !== 'open') return false;
-  const residential = b.kind === 'home' || b.kind === 'apartment';
-  if (residential ? b.occupancy <= 0 : b.business_active === false) return false;
-  const seed = b.appearance_seed >>> 0;
-  const guaranteed = seed % Math.max(1, count);
-  const mask = Math.imul(seed ^ Math.imul(floor + 1, 0x9e3779b9) ^ Math.imul(bay + 3, 0x85ebca6b), 0xc2b2ae35) >>> 0;
-  return (residential && floor === 0 && bay === guaranteed) || mask % (residential ? 5 : 4) === 0;
-}
-
 function additionKit(b: Building, envelope: ExtendedAdditionEnvelope, art: ArtMaterials): THREE.Group {
   const kit = new Kit();
+  kit.windowContext = { seed: (b.appearance_seed >>> 0) ^ 0x51ed27, lived: windowLived(b) };
   const palette = buildingPalette(b, art.palette);
-  const wall = art.get(palette.wall), trim = art.get(palette.trim);
-  const shadow = art.get('#344346'), glass = art.get('#55757a', .25);
-  const use = b.kind === 'office' ? 'office' : b.kind === 'home' || b.kind === 'apartment' ? 'home' : 'shop';
-  const glow = art.get('#e9aa58', .42, true, use);
+  const wall = art.get(palette.wall, .85, false, 'ambient', claddingFor(b)), trim = art.get(palette.trim);
+  const shadow = art.get('#344346');
+  // Rooms behind every pane; their lights follow the building's schedule.
+  const pane = art.window(windowActivity(b.kind));
   const concrete = art.get('#aaa99e'), roof = art.get(['#48575a', '#59676a', '#555d60', '#625d55'][(b.appearance_seed >>> 3) % 4]);
   const { x, z, width, depth } = envelope;
   const floors = Math.max(1, Math.min(30, Math.floor(b.floors)));
@@ -123,7 +115,6 @@ function additionKit(b: Building, envelope: ExtendedAdditionEnvelope, art: ArtMa
     const bayCount = Math.max(1, Math.floor(depth / 3.4));
     for (let bay = 0; bay < bayCount; bay++) {
       const bayZ = front - (bay + .5) * depth / bayCount;
-      const pane = occupancyWindowLit(b, floor, bay, bayCount) ? glow : glass;
       for (const side of [-1, 1]) {
         const sideX = side < 0 ? left : right;
         kit.box(sideX - side * .025, y, bayZ, .075, 1.55, 1.12, shadow);
@@ -135,7 +126,6 @@ function additionKit(b: Building, envelope: ExtendedAdditionEnvelope, art: ArtMa
     // Quiet rear elevation bays make the new depth legible from above and
     // from the service lane without adding a second street-facing facade.
     for (const bayX of [x - width * .25, x + width * .25]) {
-      const pane = occupancyWindowLit(b, floor, bayX < x ? 0 : 1, 2) ? glow : glass;
       kit.box(bayX, y, back, Math.min(1.12, width * .24), 1.55, .075, shadow);
       kit.box(bayX, y, back - .045, Math.min(.86, width * .19), 1.28, .035, pane);
       kit.box(bayX, y - .69, back - .07, Math.min(.96, width * .22), .07, .04, trim);

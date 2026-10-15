@@ -129,7 +129,7 @@ describe('tower construction mass geometry', () => {
         expect(openShell.length, `${style} ${kind} profile ${profile} open shell geometry`).toBeGreaterThan(0);
         expect(stagedShell, `${style} ${kind} profile ${profile} shell/frame/roof`).toEqual(openShell);
 
-        const glass = art.get(profileColors.glass, .22);
+        const glass = art.window(kind === 'office' ? 'office' : 'home');
         const boxKey = (box: Box) => [box.x, box.y, box.z, box.w, box.h, box.d].map((v) => Math.round(v * 1000)).join(':');
         const boxCounts = (root: THREE.Object3D) => {
           const counts = new Map<string, number>();

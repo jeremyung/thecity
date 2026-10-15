@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildingKit, disposeGroup } from '../web/src/render/kit';
+import { WINDOW_ATTRIBUTE } from '../web/src/render/building-surfaces';
 import type { Building, Style } from '../web/src/types';
 
 function tower(floors: number, profile: number, kind: 'office' | 'apartment' = 'office'): Building {
@@ -119,8 +120,8 @@ describe('tower building kit', () => {
     const art = new ArtMaterials();
     const apartment = buildingKit(tower(20, 0, 'apartment'), art);
     const office = buildingKit(tower(20, 0, 'office'), art);
-    const glass = art.get('#5c7d8e', .22);
-    const glassMesh = (root: THREE.Object3D) => meshes(root).find((mesh) => mesh.material === glass)!;
+    // Tower panes are window panes with rooms behind them, on each tower's light schedule.
+    const glassMesh = (root: THREE.Object3D) => meshes(root).find((mesh) => (mesh.material as THREE.Material).userData.windowPane)!;
     const maxBoxWidth = (mesh: THREE.Mesh) => {
       const p = mesh.geometry.getAttribute('position');
       let max = 0;
@@ -168,9 +169,11 @@ describe('tower building kit', () => {
     const art = new ArtMaterials();
     const building = tower(20, 0, 'apartment');
     const group = buildingKit(building, art);
-    const lit = art.get('#d9bd86', .42, true, 'home');
-    const litMesh = meshes(group).find((mesh) => mesh.material === lit);
+    // Occupied towers flag every pane as lived; the shader lights rooms from that and the hour.
+    const litMesh = meshes(group).find((mesh) => mesh.material === art.window('home'));
     expect(litMesh).toBeDefined();
+    const info = litMesh!.geometry.getAttribute(WINDOW_ATTRIBUTE);
+    for (let i = 0; i < info.count; i++) expect(info.getY(i)).toBe(1);
     const p = litMesh!.geometry.getAttribute('position');
     const shaftW = building.width * .84 * .86;
     const shaftD = building.depth * .84 * .79;
@@ -198,7 +201,7 @@ describe('tower building kit', () => {
     const art = new ArtMaterials();
     const building = tower(20, 1, 'apartment');
     const group = buildingKit(building, art);
-    const glass = art.get('#6f8f9a', .22);
+    const glass = art.window('home');
     const panes = boxes(meshes(group).find((mesh) => mesh.material === glass)!);
     const shaftW = building.width * .84 * .86;
     const shaftD = building.depth * .84 * .87;
@@ -209,7 +212,7 @@ describe('tower building kit', () => {
       expect(pane.maxY - pane.minY).toBeGreaterThan((pane.maxX - pane.minX) * 1.25);
     }
 
-    const stone = art.get('#aab6b8');
+    const stone = art.get('#aab6b8', .85, false, 'ambient', 'tile');
     const stoneBoxes = boxes(meshes(group).find((mesh) => mesh.material === stone)!);
     const bayWidth = (shaftW - 1.1) / Math.max(4, Math.floor(shaftW / 3.1));
     const shaftFirstFloorCenter = 0.58 + 3 * 3.25 + .46;

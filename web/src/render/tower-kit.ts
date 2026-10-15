@@ -22,13 +22,14 @@ export function towerMassing(b: Pick<Building, 'appearance_seed' | 'floors'>, w:
 export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number, d: number, base: number, floor: number, finishedFloors = b.floors) {
   const seed = b.appearance_seed >>> 0, apartment = b.kind === 'apartment';
   const profile = seed % 3;
-  const stone = art.get(['#c4c3b8', '#aab6b8', '#d3cec0'][profile]);
+  // Apartment towers are tile-faced; office towers show formed concrete between their ribbons.
+  const stone = art.get(['#c4c3b8', '#aab6b8', '#d3cec0'][profile], .85, false, 'ambient', apartment ? 'tile' : 'concrete');
   const frame = art.get(apartment ? ['#87999c', '#829294', '#99a5a3'][profile] : ['#768b93', '#647e8a', '#8e9da1'][profile], .6);
   const shadow = art.get(apartment ? '#59666b' : '#304752'), roof = art.get('#64767d');
-  const glass = art.get(['#5c7d8e', '#6f8f9a', '#536f83'][profile], .22);
+  // Every pane shows a room; lights switch per room with the time of day.
+  const glass = art.window(apartment ? 'home' : 'office');
   const silver = art.get('#becacd', .32);
   const operational = b.stage === 'open' || b.stage === 'renovation';
-  const lit = operational ? art.get('#d9bd86', .42, true, apartment ? 'home' : 'office') : glass;
   const lobby = operational ? art.get('#e2bd7f', .45, true, 'shop') : glass;
   const podiumFloors = 3, crownFloors = profile === 1 ? 3 : 2;
   const shaftFloors = b.floors - podiumFloors - crownFloors;
@@ -92,9 +93,6 @@ export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number,
                 kit.box(bx + edge * bayWidth * .32, y - .84, side * (deckEdge - .035), .045, .34, .06, frame);
               }
             }
-            if (((seed >>> (bay % 12)) + level * 13 + bay * 7 + side) % 9 < 2) {
-              kit.box(bx, paneY, side * (depth / 2 + .11), paneW * .68, paneHeight * .78, .018, lit);
-            }
           }
         }
         for (const side of [-1, 1]) {
@@ -108,11 +106,6 @@ export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number,
             kit.box(faceX + side * .055, y - 1.18, bz, .12, .11, sidePaneW + .12, stone);
             kit.box(faceX + side * .055, y + 1.16, bz, .12, .075, sidePaneW + .12, stone);
             kit.box(faceX + side * .085, y + .02, bz, .018, .035, sidePaneW * .9, frame);
-            // A restrained number of occupied side windows keep the tower
-            // legible when viewed along the street, not only from the river.
-            if (((seed + level * 13 + bay * 5 + (side > 0 ? 3 : 0)) % 11) < 2) {
-              kit.box(faceX + side * .1, y + .02, bz, .018, 1.6, sidePaneW * .66, lit);
-            }
           }
         }
         continue;
@@ -120,14 +113,6 @@ export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number,
       for (const side of [-1, 1]) {
         kit.box(x, y, side * (depth / 2 + .04), width - .45, 2.45, .075, glass);
         kit.box(x + side * (width / 2 + .04), y, 0, .075, 2.45, depth - .45, glass);
-        // Select a few occupied window groups. Dark glass remains the dominant
-        // mass at night, and whole floors never turn into luminous slabs.
-        for (let bay = 0; bay < 4; bay++) {
-          if (((seed >>> (bay + 2)) + level * 13 + bay * 7 + side) % 9 < 2) {
-            const bx = x + (bay - 1.5) * (width - .8) / 4;
-            kit.box(bx, y, side * (depth / 2 + .09), (width - .8) / 4 * .65, 1.65, .018, lit);
-          }
-        }
         const projection = apartment ? .38 : .11;
         kit.box(x, y - 1.32, side * (depth / 2 + projection / 2), width + .18, apartment ? .13 : .2, projection + .1, apartment ? stone : frame);
         kit.box(x + side * (width / 2 + projection / 2), y - 1.32, 0, projection + .1, apartment ? .13 : .2, depth + .18, apartment ? stone : frame);

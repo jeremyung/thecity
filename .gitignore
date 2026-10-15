@@ -22,10 +22,13 @@ __pycache__/
 # Agent worktrees and local state
 .claude/
 
-# External review evidence: hydrate from the matching release bundle.
+# Generated validation evidence stays local unless explicitly curated below.
 /validation/**
 !/validation/**/
 !/validation/**/*.md
+# Curated PR18 comparison evidence already retained on main.
+!/validation/building-surfaces-benchmark.json
+!/validation/captures/building-surfaces/**/*.png
 /concepts/**/*.png
 /concepts/**/*.jpg
 /concepts/**/*.jpeg

@@ -10,12 +10,15 @@ import { addCeramicRoofDetail } from './ceramic-roof';
 import { renderRoofServices } from './roof-services';
 import { boxGeometry } from './box-geometry';
 import { addBladeSign, addFacadeFeature, addRooftopBillboard, hasRooftopBillboard, type SignageContext } from './signage';
+import { claddingFor, paneSeed, tagCladding, tagWindowPane, windowActivity, windowLived, type Cladding } from './building-surfaces';
 import type { Building } from '../types';
 
 // Every repeatable detail is baked into one geometry per shared material.
 export class Kit {
   private parts = new Map<THREE.Material, THREE.BufferGeometry[]>();
   private offset = new THREE.Vector3();
+  /** The building whose window panes this kit draws: seeds each room and says whether anyone is in. */
+  windowContext = { seed: 0, lived: 1 };
 
   withOffset<T>(x: number, y: number, z: number, build: () => T): T {
     const previous = this.offset;
@@ -28,7 +31,10 @@ export class Kit {
   }
 
   box(x: number, y: number, z: number, w: number, h: number, d: number, mat: THREE.Material, rotation = 0) {
-    this.add(boxGeometry(x, y, z, w, h, d, rotation), mat);
+    const geo = boxGeometry(x, y, z, w, h, d, rotation);
+    // Keep room attributes on the optimized box path, including nested mass offsets.
+    if (mat.userData.windowPane) tagWindowPane(geo, paneSeed(this.windowContext.seed, x + this.offset.x, y + this.offset.y, z + this.offset.z), this.windowContext.lived, Math.max(w, d), h, mat.userData.windowActivity);
+    this.add(geo, mat);
   }
   cylinder(x: number, y: number, z: number, r: number, h: number, mat: THREE.Material, segments = 8) {
     const geo = new THREE.CylinderGeometry(r, r, h, segments);
@@ -41,6 +47,8 @@ export class Kit {
     this.add(geo, mat);
   }
   add(geo: THREE.BufferGeometry, mat: THREE.Material) {
+    const cladding = (mat.userData.artBuildingClass as { cladding?: Exclude<Cladding, 'plaster'> } | undefined)?.cladding;
+    if (cladding) tagCladding(geo, cladding);
     if (this.offset.lengthSq() > 0) geo.translate(this.offset.x, this.offset.y, this.offset.z);
     const list = this.parts.get(mat) ?? [];
     list.push(geo);
@@ -115,6 +123,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   const floors = Math.max(1, b.floors);
   const lowrise = lowriseMassing(b, w, d);
   const kit = new Kit();
+  kit.windowContext = { seed, lived: windowLived(b) };
   const height = Math.max(3.25, floors * floor);
   const base = .58, top = base + height;
   const isShop = b.kind === 'shop' || b.kind === 'cafe';
@@ -122,14 +131,14 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   const isApartment = b.kind === 'apartment';
   const lightUsage = b.kind === 'office' ? 'office' : (isHome || isApartment) ? 'home' : isShop ? 'shop' : 'ambient';
   const facadePalette=buildingPalette(b,art.palette);
-  const wall = art.get(facadePalette.wall);
+  const wall = art.get(facadePalette.wall, .85, false, 'ambient', claddingFor(b));
   const concrete = art.get('#aaa99e'), paleConcrete = art.get('#c3b9a5');
   const roof = art.get(['#48575a', '#59676a', '#555d60', '#625d55'][pick(seed >>> 3, 4)]);
   const roofTile = art.get('#78817a'), trim = art.get(facadePalette.trim);
   const wood = art.get(['#644e3e', '#755d49', '#56483d'][pick(seed >>> 5, 3)]);
   const dark = art.get('#344346'), iron = art.get('#536164', .62);
   const glass = art.get('#55757a', .25), lightGlass = art.get('#94a7a0', .3);
-  const glow = art.window(lightUsage), lantern = art.get('#ffbd62', .5, true, lightUsage);
+  const glow = art.window(windowActivity(b.kind)), lantern = art.get('#ffbd62', .5, true, lightUsage);
   const green = art.get(b.anchor ? '#426c5c' : ['#527366', '#a4654f', '#526c76'][pick(seed >>> 7, 3)]);
   const ivory = art.get('#eee1c1'), scaffold = art.get('#8c8070', .72), caution = art.get('#d6b25e');
   const isOpen = b.stage === 'open';
@@ -667,7 +676,7 @@ function renderLowriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:LowriseMas
     kit.box(0,base+frontage.floors*floor/2,-.06,frontage.width,frontage.floors*floor,frontage.depth-.12,wall);
     if(b.kind==='home'){
       renderHouseFacade(kit,b,art,{w:frontage.width,d:frontage.depth,base,top,floor,wood,dark,glass,lightGlass,trim,glow,iron,green,ivory:art.get('#eee1c1'),concrete,entrySide:1,quietSides:layout.quietSides,frontOnly:true,centerEntry:true,lowriseDetail:true,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x)});
-      if(isModernHomeVariant(b))renderModernHomeRearWindows(kit,frontage,{base,floor,dark,lightGlass,trim,concrete});
+      if(isModernHomeVariant(b))renderModernHomeRearWindows(kit,frontage,{base,floor,dark,lightGlass:windowPane(art,b),trim,concrete});
     }else{
       renderShopFront(kit,b,art,{w:frontage.width,d:frontage.depth,top,base,wood,dark,glass,trim,glow,green,ivory:art.get('#eee1c1'),lantern,concrete,quietSides:layout.quietSides,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x),canopyBoundary:b.depth/2-frontage.z-.04,centerDoor:true});
     }
@@ -873,7 +882,9 @@ function renderShopFront(
   m: { w: number; d: number; top: number; base: number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; trim: THREE.Material; glow: THREE.Material; green: THREE.Material; ivory: THREE.Material; lantern: THREE.Material; concrete: THREE.Material; quietSides?:Array<-1|1>; frontBoundary?:number; frontWidthBoundary?:number; sideBoundary?:number; canopyBoundary?:number; centerDoor?:boolean },
 ) {
   const { w, d, top, base, wood, dark, glass, trim, glow, green, ivory, lantern, concrete } = m;
-  renderSideElevation(kit,b,{w,d,base,dark,glass,trim,wood,concrete,quietSides:m.quietSides,sideBoundary:m.sideBoundary});
+  // Low-rise shop-houses live above the shop: their upper and side windows keep household hours.
+  const livingPane = art.window('home');
+  renderSideElevation(kit,b,{w,d,base,dark,glass:livingPane,trim,wood,concrete,quietSides:m.quietSides,sideBoundary:m.sideBoundary});
   const front = d / 2 + .08;
   const frontZ=(offset:number,depth:number)=>{
     if(m.frontBoundary===undefined)return front+offset;
@@ -971,7 +982,7 @@ function renderShopFront(
     const y = base + floorIndex * 3.25 + 1.78;
     for (const x of [-w * .27, w * .25]) {
       kit.box(x, y, frontZ(-.02,.14), Math.min(2.5, w * .25), 1.52, .14, dark);
-      kit.box(x, y, frontZ(.06,.04), Math.min(2.28, w * .23), 1.3, .04, ((seedInt(b.appearance_seed) + floorIndex + Math.round(x)) % 3) ? glass : glow);
+      kit.box(x, y, frontZ(.06,.04), Math.min(2.28, w * .23), 1.3, .04, livingPane);
       kit.box(x, y, frontZ(.13,.05), .06, 1.32, .05, trim);
       if (b.kind === 'apartment' || b.kind === 'home') {
         kit.box(x, y - .82, frontZ(.34,.62), Math.min(2.8, w * .28), .12, .62, concrete);
@@ -994,13 +1005,15 @@ function renderSideElevation(kit:Kit,b:Building,m:{w:number;d:number;base:number
       if(m.sideBoundary===undefined)return desired;
       return side>0?Math.min(desired,m.sideBoundary-width/2):Math.max(desired,-m.sideBoundary+width/2);
     };
-    const x=sideX(.045,.13);
     for(let level=0;level<b.floors;level++){
       const y=base+level*3.25+1.72;
       for(const [index,z]of [-d*.24,d*.23].entries()){
         const width=Math.min(1.6,d*.24),height=level===0&&index===0?1.05:1.4;
-        kit.box(x,y,z,.13,height+.18,width+.18,wood);
-        kit.box(sideX(.08,.035),y,z,.035,height,width,glass);
+        // The frame sits just behind the pane's face so the glass shows within it,
+        // including where the wall is clamped against the lot line.
+        const paneX=sideX(.08,.035);
+        kit.box(paneX-side*(.0175+.012+.065),y,z,.13,height+.18,width+.18,wood);
+        kit.box(paneX,y,z,.035,height,width,glass);
         kit.box(sideX(.13,.035),y,z,.035,height,.055,trim);
         kit.box(sideX(.14,.3),y-height/2-.14,z,.3,.12,width+.3,concrete);
         kit.box(sideX(.2,.45),y+height/2+.2,z,.45,.1,width+.4,dark);
@@ -1016,21 +1029,15 @@ function renderSideElevation(kit:Kit,b:Building,m:{w:number;d:number;base:number
 }
 
 function renderHouseFacade(
-  kit: Kit, b: Building, _art: ArtMaterials,
+  kit: Kit, b: Building, art: ArtMaterials,
   m: { w: number; d: number; base: number; top: number; floor: number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; lightGlass: THREE.Material; trim: THREE.Material; glow: THREE.Material; iron: THREE.Material; green: THREE.Material; ivory: THREE.Material; concrete: THREE.Material; entrySide?: -1 | 1; quietSides?:Array<-1|1>; frontOnly?:boolean; centerEntry?:boolean; lowriseDetail?:boolean; frontBoundary?:number; frontWidthBoundary?:number; sideBoundary?:number },
 ) {
-  const { w, d, base, floor, wood, dark, glass, lightGlass, trim, glow, iron, green, ivory, concrete, entrySide = 1 } = m;
-  const occupiedHome = b.stage === 'open' && b.occupancy > 0;
-  const windowGlass = (floorIndex:number,windowIndex:number,windowCount:number,unlit:THREE.Material=lightGlass) => {
-    if(!occupiedHome)return unlit;
-    const seed=b.appearance_seed>>>0;
-    // Keep one stable occupied window lit, then add only a sparse seeded subset.
-    // Material assignment changes with occupancy; pane geometry stays fixed.
-    const guaranteedWindow=seed%windowCount;
-    const mask=Math.imul(seed ^ Math.imul(floorIndex+1,0x9e3779b9) ^ Math.imul(windowIndex+3,0x85ebca6b),0xc2b2ae35)>>>0;
-    return floorIndex===0&&windowIndex===guaranteedWindow||mask%5===0?glow:unlit;
-  };
-  renderSideElevation(kit,b,{w,d,base,dark,glass,trim,wood,concrete,quietSides:m.quietSides,sideBoundary:m.sideBoundary});
+  const { w, d, base, floor, wood, dark, lightGlass, trim, iron, green, ivory, concrete, entrySide = 1 } = m;
+  // Every sash shows a room; whether its light is on is decided per room in
+  // the shader from the time of day and the building's occupancy.
+  const pane = windowPane(art, b);
+  const windowGlass = (_floorIndex:number,_windowIndex:number,_windowCount:number,_unlit?:THREE.Material) => pane;
+  renderSideElevation(kit,b,{w,d,base,dark,glass:pane,trim,wood,concrete,quietSides:m.quietSides,sideBoundary:m.sideBoundary});
   const fronts = m.frontOnly ? [1] : [1, -1];
   for (const side of fronts) {
     const z = side * (d / 2 + .08);
@@ -1059,7 +1066,7 @@ function renderHouseFacade(
       }else{
         const windowX = entrySide * w * .19;
         kit.box(windowX, base + 1.57, frontZ(0,.12), windowW, 1.75, .12, wood);
-        kit.box(windowX, base + 1.58, frontZ(.08,.035), windowW - .22, 1.48, .035, windowGlass(0,0,1,glass));
+        kit.box(windowX, base + 1.58, frontZ(.08,.035), windowW - .22, 1.48, .035, windowGlass(0,0,1));
         for (let k = -1; k <= 1; k++) kit.box(windowX + k * .52, base + 1.58, frontZ(.14,.035), .045, 1.48, .035, trim);
       }
       // The door sits behind a deep timber frame, giving the narrow entry a
@@ -1096,7 +1103,7 @@ function renderHouseFacade(
     } else {
       for (const x of [-w * .26, w * .24]) {
         kit.box(x, base + 1.9, z, Math.min(2.8, w * .3), 1.75, .13, dark);
-        kit.box(x, base + 1.9, z + side * .08, Math.min(2.55, w * .27), 1.48, .04, glass);
+        kit.box(x, base + 1.9, z + side * .08, Math.min(2.55, w * .27), 1.48, .04, pane);
         kit.box(x, base + 1.9, z + side * .15, .07, 1.5, .05, trim);
         kit.box(x, base + 1.9, z + side * .15, 2.5, .07, .05, trim);
         kit.box(x, base + .74, z + side * .35, 3.0, .13, .64, concrete);
@@ -1170,11 +1177,15 @@ function renderLowriseHouseWindow(
   kit.box(x,y-paneH/2-.045,frontZ(.22,.22),paneW+.2,.085,.22,concrete);
 }
 
+/** The window pane material for a building's light schedule. */
+function windowPane(art: ArtMaterials, b: Pick<Building, 'kind'>) { return art.window(windowActivity(b.kind)); }
+
 function renderUrbanFacade(
-  kit: Kit, b: Building, _art: ArtMaterials,
+  kit: Kit, b: Building, art: ArtMaterials,
   m: { w: number; d: number; base: number; top: number; floor: number; floors: number; baseFloor?: number; balconyStyle?: 'continuous'; omitSideWindows?:1|-1; entryX?:number; parcelD?:number; massOffsetZ?:number; parcelW?:number; massOffsetX?:number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; lightGlass: THREE.Material; trim: THREE.Material; glow: THREE.Material; iron: THREE.Material; concrete: THREE.Material; paleConcrete: THREE.Material; isApartment: boolean },
 ) {
-  const { w, d, base, floor, floors, wood, dark, glass, lightGlass, trim, glow, iron, concrete, paleConcrete, isApartment } = m;
+  const { w, d, base, floor, floors, wood, dark, trim, iron, concrete, paleConcrete, isApartment } = m;
+  const pane = windowPane(art, b);
   const baseFloor = m.baseFloor ?? 0;
   const spacing = isApartment ? (w > 17 ? 3.35 : 3.05) : (w > 17 ? 4.5 : 3.25);
   for (let f = 0; f < floors; f++) {
@@ -1186,7 +1197,6 @@ function renderUrbanFacade(
         // Offices use one calm curtain-wall ribbon per floor. Slim mullions and
         // opaque spandrels create a civic rhythm distinct from apartment bays.
         const bandW = w * .84;
-        const glassTint = (f + pick(seedInt(b.appearance_seed), 3)) % 4 === 0 ? lightGlass : glass;
         const segments:Array<[number,number]>=doorOpening
           ? [[-bandW/2,Math.min(bandW/2,m.entryX!-0.62)],[Math.max(-bandW/2,m.entryX!+0.62),bandW/2]]
           : [[-bandW/2,bandW/2]];
@@ -1195,7 +1205,7 @@ function renderUrbanFacade(
           if(segmentW<.12)continue;
           const center=(right+left)/2;
           kit.box(center, y, z, segmentW, 2.02, .13, dark);
-          kit.box(center, y + .04, z + side * .08, segmentW-.08, 1.78, .04, glassTint);
+          kit.box(center, y + .04, z + side * .08, segmentW-.08, 1.78, .04, pane);
           const mullions = Math.max(1, Math.floor(segmentW / 1.65));
           for (let i = 0; i <= mullions; i++) {
             const x = left + (segmentW * i) / mullions;
@@ -1205,14 +1215,13 @@ function renderUrbanFacade(
         }
       } else {
         for (let x = -w / 2 + 1.5; x < w / 2 - .8; x += spacing) {
-          const lit = ((Math.floor(x * 3) + f * 7 + seedInt(b.appearance_seed)) % 6 + 6) % 6 < (isApartment ? 3 : 2);
           const ww = isApartment ? Math.min(spacing - .5, 1.85) : Math.min(spacing - .55, 2.35);
           if(doorOpening&&x+ww/2>m.entryX!-.62&&x-ww/2<m.entryX!+.62)continue;
           const balconyDoor = m.balconyStyle === 'continuous' && side === 1 && baseFloor + f > 0;
           const openingY = balconyDoor ? base + f * floor + 1.30 : y;
           const openingH = balconyDoor ? 2.22 : 1.51;
           kit.box(x, openingY, z, ww + .22, openingH + .24, .13, dark);
-          kit.box(x, openingY, z + side * .08, ww, openingH, .04, lit ? glow : (f % 3 === 0 ? lightGlass : glass));
+          kit.box(x, openingY, z + side * .08, ww, openingH, .04, pane);
           kit.box(x, openingY, z + side * .15, .065, openingH, .045, trim);
           if (!balconyDoor) kit.box(x, y, z + side * .15, ww, .065, .045, trim);
           if (isApartment && m.balconyStyle !== 'continuous' && (f + pick(b.appearance_seed, 2)) % 2 === 0) {
@@ -1267,7 +1276,6 @@ function renderUrbanFacade(
         // of reverting to residential punched windows. Keep every projection
         // inside the same parcel clearance used by the original side windows.
         const bandD = d * .84;
-        const pane = (baseFloor + f + pick(seedInt(b.appearance_seed), 3)) % 4 === 0 ? lightGlass : glass;
         kit.box(x, y, 0, .13, 2.02, bandD, dark);
         kit.box(x + side * .08, y + .04, 0, .04, 1.78, bandD - .08, pane);
         const mullions = Math.max(1, Math.floor(bandD / 1.65));
@@ -1280,7 +1288,7 @@ function renderUrbanFacade(
       }
       for (let z = -d / 2 + 1.3; z < d / 2 - .6; z += 3.1) {
         kit.box(x, y, z, .13, 1.6, 1.5, dark);
-        kit.box(x + side * .08, y, z, .04, 1.38, 1.28, glass);
+        kit.box(x + side * .08, y, z, .04, 1.38, 1.28, pane);
         if (side === 1 && z > 0 && f < floors - 1 && b.kind !== 'office') {
           const stairWidth=Math.min(.42,Math.max(0,(sideClearance-sideOffset-.1)*.72));
           if(stairWidth>.12){

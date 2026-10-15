@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildingKit, disposeGroup } from '../web/src/render/kit';
+import { WINDOW_ATTRIBUTE } from '../web/src/render/building-surfaces';
 import type { Building, Style } from '../web/src/types';
 
 function midrise(kind: 'apartment' | 'office', stage: Building['stage'], progress: number, width: number, depth: number, floors = 8, seed = 9812): Building {
@@ -76,9 +77,18 @@ describe('midrise construction facade continuity', () => {
         expect(partialPanes.length, `${style} ${kind} partial authored panes`).toBeGreaterThan(0);
         expect(finishedPanes.length, `${style} ${kind} finished authored panes`).toBeGreaterThan(partialPanes.length);
         expect(finishedPanes, `${style} ${kind} finished/open glazing`).toEqual(openPanes);
-        expect(boxesFor(partial, glow)).toHaveLength(0);
-        expect(boxesFor(finished, glow)).toHaveLength(0);
-        if (kind === 'apartment') expect(boxesFor(open, glow).length).toBeGreaterThan(0);
+        // Pane geometry is installed during construction, but occupancy stays
+        // off until the building operates. Schedule and lived state are packed.
+        for (const [group, lived] of [[partial, 0], [finished, 0], [open, kind === 'apartment' ? 1 : 0]] as const) {
+          const states: number[] = [];
+          group.traverse(object => {
+            if (!(object instanceof THREE.Mesh) || object.material !== glow) return;
+            const info = object.geometry.getAttribute(WINDOW_ATTRIBUTE);
+            for (let i = 0; i < info.count; i++) states.push(info.getY(i));
+          });
+          expect(states.length).toBeGreaterThan(0);
+          expect(new Set(states)).toEqual(new Set([lived + (kind === 'office' ? 2 : 0)]));
+        }
         for (const group of [partial, finished, open]) disposeGroup(group);
       }
     }

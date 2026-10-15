@@ -10,7 +10,7 @@ This source-only replacement for PR12 starts from main `fca58ca` and preserves m
 4. Building fitting, camera, atmosphere, water, planting and their targeted tests. Latest narrow-site correction keeps 5 m planner-valid parcels within their geometry envelope.
 5. Specs and the living-city goal; these describe intent separately from implementation evidence.
 
-PR17 and PR18 are not included. Their separate review is in `pr17-pr18-review.md`: overhead wiring needs authoritative curved rail integration, and room windows need apartment-occupancy invalidation.
+PR17 overhead wiring is now included through `7ea0e22`. Main `710406f` brings PR18 cladding and room windows, including its apartment-occupancy invalidation fix. The initial separate assessment in `pr17-pr18-review.md` is historical; the integration result is recorded below.
 
 ## Fresh checkout
 
@@ -27,7 +27,22 @@ npm run build
 
 The fixture setup uses a committed SHA-256 manifest and a 3.6 MB archive containing 23 regression witnesses. It refuses conflicting local files, verifies every member, and only writes ignored fixture paths. Offline: `npm run setup:fixtures -- --archive /path/to/test-fixtures.tar.gz`. The archive has no screenshots or recordings. The approved archive and manifest are now [published](https://github.com/jeremyung/thecity/releases/tag/runtime-review-fixtures-2026-10-14). A fresh temporary checkout of the setup scripts successfully downloaded, verified and wrote all 23 fixtures on 2026-10-15; none were already present.
 
-## Current verification — 2026-10-15
+## Main integration and review feedback — 2026-10-15
+
+Merged main `710406f` into the PR17-inclusive review branch. Resolved all seven conflicting files explicitly. The new room-window material and cladding attributes supersede the old window boolean; cloud shading, optimized box geometry, balcony doors and office side ribbons remain. Pane tagging occurs on the optimized box path with nested offsets, and binary occupancy invalidates geometry consistently for homes, apartments and businesses. A new rotated/nested-offset regression verifies every pane vertex's seed, schedule, occupancy and dimensions. Existing construction checks now test baked vacancy rather than the removed emissive-overlay material.
+
+Validation of the combined code:
+
+- Native release: 504 passed, 0 failed, 59 ignored (51.83 s).
+- Web: 688 passed across 124 suites (117.89 s), including the integration regressions. No timeouts or geometry assertions relaxed.
+- Fresh default WASM and TypeScript/production build pass; existing bundle-size warning remains.
+- Fixture integrity: all 7 tests pass.
+- Four focused browser captures: home, terrace apartment and office side ribbons, Anime/Miniature at 13:00 and 21:00. ANGLE Metal on Apple M2 Max; no page or console errors. Pane interiors and night variation remain visible; balcony and office glazing geometry remain intact. Captures are local under `.tools/pr19-merge/`, not committed. This is an isolated authored-kit scene-pass check in the app lighting environment, not a full post-processing, mature-city performance or WebGPU acceptance run. The UI clock still shows simulation time, while lighting uses the preview hour.
+- Full remote CI must run on the pushed merge; the earlier green `74d1fa8` result is not evidence for this integration.
+
+The ignore rules explicitly retain main's curated PR18 surface captures and benchmark JSON (about 16 MB of existing-main images), while new generated validation stays ignored. The texture-budget JSON is documented as a local generated report, not a committed baseline. Build-mode selection uses a lookup table rather than nested ternaries. Experimental features remain opt-in with outputs isolated under `.tools`: they preserve reproducible comparison work and are not promoted into the default application by this merge.
+
+## Earlier verification — 2026-10-15
 
 Hardware: Apple M2 Max, macOS, Node 26.7.0. Tested a clean source copy with fixture hydration, preserving the dirty development checkout.
 

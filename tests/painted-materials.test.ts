@@ -29,19 +29,19 @@ describe("painted surface material classes", () => {
         const pane = art.window(activity);
         const lamp = art.get('#e9aa58', .42, true, activity);
         expect(pane).not.toBe(lamp);
-        expect(pane.userData.artBuildingClass.window).toBe(true);
-        expect(lamp.userData.artBuildingClass.window).toBe(false);
+        expect(pane.userData.windowPane).toBe(true);
+        expect(lamp.userData.windowPane).toBeUndefined();
         const paneBatch = art.buildingBatch(pane);
         const lampBatch = art.buildingBatch(lamp);
         expect(paneBatch.material).not.toBe(lampBatch.material);
-        expect(paneBatch.color?.equals(new THREE.Color('#e9aa58'))).toBe(true);
+        expect(paneBatch.color).toBeUndefined();
         for (const style of ['anime', 'miniature'] as const) {
           const batch = art.variant(paneBatch.material, style) as THREE.MeshStandardNodeMaterial;
-          expect(batch.userData.artBuildingClass.window).toBe(true);
-          // The shader explicitly consumes the per-pane warm tint. Automatic
-          // multiplication would incorrectly tint its daytime glass yellow.
+          expect(batch.userData.windowPane).toBe(true);
+          // The shader reads room state from pane attributes; automatic
+          // vertex-color multiplication would incorrectly tint daytime glass.
           expect(batch.vertexColors).toBe(false);
-          expect(art.variant(lampBatch.material, style).userData.artBuildingClass.window).toBe(false);
+          expect(art.variant(lampBatch.material, style).userData.windowPane).toBeUndefined();
         }
       }
     } finally { art.dispose(); }

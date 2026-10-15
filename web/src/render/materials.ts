@@ -3,9 +3,13 @@ import { float, floor, fwidth, color, materialColor, positionWorld, positionView
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
+import { claddingShade, claddingShadeBatched, windowMaterials, type Cladding, type WindowActivity } from './building-surfaces';
 type Surface=THREE.MeshStandardNodeMaterial|THREE.MeshToonNodeMaterial;
-type BuildingArtClass={key:string,roughness:number,emissive:boolean,painted:boolean,activity:'home'|'office'|'shop'|'ambient',window:boolean};
+type BuildingArtClass={key:string,roughness:number,emissive:boolean,painted:boolean,activity:'home'|'office'|'shop'|'ambient',cladding?:Cladding};
 type BuildingSurfaceVariants={anime:Surface,miniature:Surface};
+
+/** Anime keeps cladding lighter so its painted surface leads; Miniature shows it fully. */
+const ANIME_CLADDING=.55;
 
 export class ArtMaterials {
   readonly contours=new THREE.LineBasicNodeMaterial({color:'#283e4c',transparent:true,opacity:.3,depthWrite:false});
@@ -19,6 +23,8 @@ export class ArtMaterials {
   readonly sunDirection=uniform(new THREE.Vector3(0,1,0));
   /** 0 disables cloud shadows (night, overcast); ~.4 on a clear day. */
   readonly cloudShadow=uniform(0);
+  /** Share of rooms with a light on, per window schedule; set from the time of day. */
+  readonly occupancy={home:uniform(.5),office:uniform(.5),shop:uniform(.5)} as const;
   readonly palette = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
   private style:Style='anime';
   private cache = new Map<string,{anime:Surface,miniature:Surface}>();
@@ -47,8 +53,8 @@ export class ArtMaterials {
     const sunlit=normalWorld.dot(this.sunDirection).max(0).sqrt();
     return float(1).sub(cover.mul(sunlit).mul(this.cloudShadow));
   }
-  get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient',window=false):Surface {
-    const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}/${window}`;
+  get(hex: string, roughness = 0.85, emissive = false, activity:'home'|'office'|'shop'|'ambient'='ambient', cladding:Cladding='plaster'):Surface {
+    const key = `${hex}/${roughness}/${emissive}/${emissive?activity:'ambient'}${cladding==='plaster'?'':`/${cladding}`}`;
     let variants=this.cache.get(key);
     if(!variants){
       const anime=new THREE.MeshToonNodeMaterial({color:hex,gradientMap:this.bands});
@@ -59,6 +65,8 @@ export class ArtMaterials {
       const painted=roughness>=.65&&!emissive&&hex!=='#fffffe'&&hex!=='#ffffff';
       if(painted)anime.colorNode=vec3(color(hex)).mul(paintedSurfaceTint());
       miniature.colorNode=color(hex).mul(brush.mul(.3).add(.7));
+      const clad=painted&&cladding!=='plaster'?cladding:undefined;
+      if(clad){anime.colorNode=anime.colorNode.mul(claddingShade(clad,ANIME_CLADDING));miniature.colorNode=miniature.colorNode.mul(claddingShade(clad,1));}
       if(roughness<.4&&!emissive){
         const grazing=normalWorld.dot(cameraPosition.sub(positionWorld).normalize()).abs().oneMinus().pow(3);
         const sheen=grazing.mul(.6).add(.08).mul(this.night.oneMinus()).add(1);
@@ -88,27 +96,13 @@ export class ArtMaterials {
       }
       for(const mat of [anime,miniature]){
         mat.userData.artKey=key;
-        mat.userData.artBuildingClass={key:`${roughness}/${emissive}/${emissive?activity:'ambient'}/${painted}/${window}`,roughness,emissive,painted,activity,window} satisfies BuildingArtClass;
+        // Every clad wall shares one batch class; each vertex carries its cladding kind.
+        mat.userData.artBuildingClass={key:`${roughness}/${emissive}/${emissive?activity:'ambient'}/${painted}${clad?'/clad':''}`,roughness,emissive,painted,activity,...(clad?{cladding:clad}:{})} satisfies BuildingArtClass;
         if(emissive){const use=activity==='home'?this.litHome:activity==='office'?this.litOffice:activity==='shop'?this.litShop:1;const emission=color(hex).mul(this.night.mul(1.4).add(.12)).mul(use);(mat as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;}
       }
-      if(window)this.applyWindowResponse(anime,miniature,vec3(color(hex)),activity);
       variants={anime,miniature};this.cache.set(key,variants);
     }
     return variants[this.style];
-  }
-  /** Illuminated panes retain glazing in daylight; lanterns/signs keep their pigment. */
-  window(activity:'home'|'office'|'shop'|'ambient'):Surface {
-    return this.get('#e9aa58',.42,true,activity,true);
-  }
-  private applyWindowResponse(anime:Surface,miniature:Surface,warm:ReturnType<typeof vec3>,activity:BuildingArtClass['activity']){
-    const use=activity==='home'?this.litHome:activity==='office'?this.litOffice:activity==='shop'?this.litShop:1;
-    const interior=this.night.mul(use);
-    const pane=mix(color('#55757a'),warm,interior);
-    anime.colorNode=pane;miniature.colorNode=pane;
-    const emission=warm.mul(this.night.mul(1.4).add(.02)).mul(use);
-    const sky=this.glassRadiance().mul(this.night.oneMinus());
-    (anime as unknown as {emissiveNode:typeof emission}).emissiveNode=emission.add(sky.mul(.55));
-    (miniature as unknown as {emissiveNode:typeof emission}).emissiveNode=emission.add(sky);
   }
   /** One atlas/material pair for every vertical tenant sign, shared across chunks. */
   tenantSign():Surface {
@@ -197,12 +191,18 @@ export class ArtMaterials {
     const{v0,v1}=shopSignCell(slot);
     return{material:this.shopSignMaterial,v0,v1};
   }
+  /** Window panes with rooms behind them, one shared pair per light schedule. */
+  window(activity:WindowActivity):Surface{
+    return this.shared(`window/${activity}`,()=>windowMaterials(activity,{night:this.night,occupancy:this.occupancy},this.bands) as unknown as {anime:Surface,miniature:Surface});
+  }
   setStyle(style:Style){this.style=style;}
   private disposers:Array<()=>void>=[];
   /** Resources owned by `shared` materials (textures) released with the art set. */
   onDispose(release:()=>void){this.disposers.push(release);}
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
   buildingBatch(material:THREE.Material):BuildingBatchSurface{
+    // Panes read their schedule from vertex data, so all of them share one batch.
+    if(material.userData.windowPane)return{material:this.window('home')};
     const artClass=material.userData.artBuildingClass as BuildingArtClass|undefined;
     const baseColor=(material as THREE.Material&{color?:THREE.Color}).color;
     if(!artClass||!baseColor)return{material:this.variant(material)};
@@ -289,6 +289,7 @@ export class ArtMaterials {
     anime.colorNode=vec3(brush.mul(pigment));
     if(artClass.painted)anime.colorNode=paintedSurfaceTint();
     miniature.colorNode=vec3(brush.mul(.3).add(.7));
+    if(artClass.cladding){anime.colorNode=anime.colorNode.mul(claddingShadeBatched(ANIME_CLADDING));miniature.colorNode=miniature.colorNode.mul(claddingShadeBatched(1));}
     if(artClass.roughness<.4&&!artClass.emissive){
       const grazing=normalWorld.dot(cameraPosition.sub(positionWorld).normalize()).abs().oneMinus().pow(3);
       // Batch colorNode is multiplied by the original facade vertex color.
@@ -304,12 +305,6 @@ export class ArtMaterials {
       const emission=vertexColor().mul(this.night.mul(1.4).add(.12)).mul(use);
       (anime as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;
       (miniature as unknown as {emissiveNode:typeof emission}).emissiveNode=emission;
-    }
-    if(artClass.window){
-      // The window expression consumes the warm vertex tint explicitly. Disable
-      // NodeMaterial's automatic multiplication to avoid tinting blue glass gold.
-      anime.vertexColors=false;miniature.vertexColors=false;
-      this.applyWindowResponse(anime,miniature,vec3(vertexColor().rgb),artClass.activity);
     }
     anime.userData.artBuildingClass=artClass;miniature.userData.artBuildingClass=artClass;anime.userData.artBatchMaterial=true;miniature.userData.artBatchMaterial=true;
     variants={anime,miniature};this.buildingCache.set(artClass.key,variants);return variants;

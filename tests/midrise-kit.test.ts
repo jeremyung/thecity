@@ -52,7 +52,7 @@ describe('midrise family geometry integration',()=>{
           const hit=new THREE.Raycaster(new THREE.Vector3(side*20,.58+3.25+1.99,z),new THREE.Vector3(-side,0,0)).intersectObject(group,true)[0];
           expect(hit,`${style} side ${side} at ${z}`).toBeDefined();
           const material=(hit.object as THREE.Mesh).material;
-          expect([art.get('#55757a',.25),art.get('#94a7a0',.3)]).toContain(material);
+          expect(material).toBe(art.window('office'));
         }
         disposeGroup(group);
       }
@@ -203,7 +203,7 @@ describe('midrise family geometry integration',()=>{
     for(const seed of [17,32])for(const compactMidrise of [false,true])for(const kind of ['apartment','office'] as const){
       const b=midrise(kind,'open',1,8,12,14,seed),group=buildingKit(b,art,{compactMidrise});
       const frontZ=(compactMidrise?compactMidriseEnvelope(b,b.width*.84,b.depth*.84).depth:b.depth*.84)/2;
-      const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
+      const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3),art.window('home'),art.window('office'),art.window('shop')];
       let doorwayGlassVertices=0,rearGlassVertices=0;
       group.traverse(object=>{
         if(!(object instanceof THREE.Mesh)||!paneMaterials.some(material=>material===object.material))return;
@@ -236,7 +236,7 @@ describe('midrise family geometry integration',()=>{
         const b=midrise(kind,'open',1,floors,8,12,appearance_seed);
         const group=buildingKit(b,art),context=`${style} ${kind} ${floors} floors seed ${appearance_seed}`;
         let doorwayGlassVertices=0;
-        const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3)];
+        const paneMaterials=[art.get('#55757a',.25),art.get('#94a7a0',.3),art.window('home'),art.window('office'),art.window('shop')];
         group.traverse(object=>{
           if(!(object instanceof THREE.Mesh)||!paneMaterials.some(material=>material===object.material))return;
           const position=object.geometry.getAttribute('position');
