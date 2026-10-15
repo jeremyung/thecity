@@ -50,6 +50,9 @@ const MAX_INDICES_PER_UPDATE=36_000;
 const MAX_CONTOUR_FLOATS_PER_UPDATE=24_000;
 const MAX_PREPARED_VERTICES_PER_UPDATE=12_000;
 const MAX_PREPARED_MESHES_PER_UPDATE=16;
+const MAX_CONTOUR_WORK_PER_UPDATE=8_000;
+const CONTOUR_WORK_SLICE=500;
+const CONTOUR_TIME_BUDGET_MS=1.5;
 const MIN_CONTOUR_EDGE_LENGTH_SQ=12.25;
 
 /** Retains authored detail while rebuilding static neighborhood batches over multiple updates. */
@@ -194,7 +197,10 @@ export class BuildingChunks {
   }
 
   private prepareMeshes(build:Build){
-    let verticesLeft=MAX_PREPARED_VERTICES_PER_UPDATE,indicesLeft=MAX_INDICES_PER_UPDATE,started=0,regenerated=0,contourWorkLeft=2_000;
+    let verticesLeft=MAX_PREPARED_VERTICES_PER_UPDATE,indicesLeft=MAX_INDICES_PER_UPDATE,started=0,regenerated=0,contourWorkLeft=MAX_CONTOUR_WORK_PER_UPDATE;
+    // Use spare preparation time without an unbounded full-building outline pass.
+    // The deadline is cooperative: a slice (and allocation/GC) can overrun it.
+    const contourDeadline=performance.now()+CONTOUR_TIME_BUDGET_MS;
     while((build.transform!==null||build.currentGroup!==null||build.sourceCursor<build.sources.length)&&started<MAX_PREPARED_MESHES_PER_UPDATE){
       if(!build.currentGroup){
         const source=build.sources[build.sourceCursor];
@@ -212,8 +218,11 @@ export class BuildingChunks {
       if(build.currentSource!.contours===null){
         if(contourWorkLeft<=0)break;
         build.contourBuilder??=new IncrementalBuildingContours(build.currentGroup!,MIN_CONTOUR_EDGE_LENGTH_SQ);
-        const complete=build.contourBuilder.step(contourWorkLeft);
-        contourWorkLeft-=build.contourBuilder.processedWork;
+        let complete=false;
+        do {
+          complete=build.contourBuilder.step(Math.min(CONTOUR_WORK_SLICE,contourWorkLeft));
+          contourWorkLeft-=build.contourBuilder.processedWork;
+        } while(!complete&&contourWorkLeft>0&&performance.now()<contourDeadline);
         if(!complete)break;
         build.currentSource!.contours=build.contourBuilder.result!;
         build.contourBuilder.dispose();build.contourBuilder=null;
