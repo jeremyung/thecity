@@ -27,7 +27,7 @@ npm run build
 
 The fixture setup uses a committed SHA-256 manifest and a 3.6 MB archive containing 23 regression witnesses. It refuses conflicting local files, verifies every member, and only writes ignored fixture paths. Offline: `npm run setup:fixtures -- --archive /path/to/test-fixtures.tar.gz`. The archive has no screenshots or recordings. **Publication is awaiting explicit user approval; the default download is not yet available and remains a merge blocker.**
 
-## Current verification — 2026-10-14
+## Current verification — 2026-10-15
 
 Hardware: Apple M2 Max, macOS, Node 26.7.0. Tested a clean source copy with fixture hydration, preserving the dirty development checkout.
 
@@ -38,7 +38,19 @@ Hardware: Apple M2 Max, macOS, Node 26.7.0. Tested a clean source copy with fixt
 - Browser smoke: Chromium 145.0.7632.6, WebGLBackend with ANGLE Metal requested; fresh-world startup and Anime/Miniature switching complete without page errors. The earlier SwiftShader attempt was stopped after five minutes while switching styles. This is not a performance measurement, WebGPU check, mature-city review or matched visual comparison (the Anime frame preceded full scene population).
 - Fixture integrity/overwrite tests: 7 passed; local archive hydration verifies all 23 files and is idempotent.
 
-CI runs fixture hydration, native tests, WASM build, web tests and production build on Ubuntu/Node22. That workflow is prepared but has not run remotely.
+CI runs fixture hydration, native tests, WASM build, web tests and production build on Ubuntu / Node 22. [Run 38693036212](https://github.com/jeremyung/thecity/actions/runs/38693036212) failed at fixture download with HTTP 404. Native, WASM, web and build checks were not reached remotely. Publishing the two prepared fixture files and rerunning CI remain merge gates.
+
+A later seed 0 at tick 83000 renderer-only capture attempt did not finish loading within 120 or 300 seconds. The second attempt made progress to four pending building chunks before timing out; both browser processes closed. No complete mature comparison was produced. This is an unresolved loading concern, not proof of a deadlock or an accepted performance result. Diagnose it before treating the checkpoint as mature-browser validated.
+
+A bounded 60.3-second diagnostic on the same checkpoint sources confirmed the actual GPU as ANGLE Metal / Apple M2 Max. It recorded 2,097 static-chunk updates and five commits, with no page errors. The object queue emptied by 40 seconds, while 16 static chunks remained pending at the end. One active chunk advanced from source 9/122 to 111/122 between 40 and 60 seconds. Static update calls consumed about 1.58 seconds cumulatively (30.4ms maximum); this shows incremental preparation progress, not a blocked commit. Instrumented render calls include nested work and cannot be summed as frame time. No scheduler quotas or production code were changed. Complete loading duration and steady-state performance remain unverified.
+
+## Merge gates and scope freeze
+
+- Current main remains `fca58ca`; GitHub reports no merge conflicts. The source checkpoint is 283 changed files and contains no newly added recordings or bulk visual evidence.
+- Publish only the required fixture archive and manifest after explicit approval, verify the default download against the committed hashes, and obtain a successful Ubuntu / Node 22 CI run. Keep this PR draft until those gates pass.
+- Resolve or explicitly scope the mature-scene loading concern before claiming general browser readiness. Existing local tests validate source behavior; they do not replace that check.
+- Keep PR #17/#18 and the later experimental street-layout work separate. The authored neighborhood study was invalidated by a future expressway reservation; the reservation-aware residual route screen was rejected for insufficient benefit. Neither is included here.
+- The dirty development checkout is not the review branch. Do not bulk-stage it or merge its historical evidence commits into this PR.
 
 ## Evidence boundaries
 
