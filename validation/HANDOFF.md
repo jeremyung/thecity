@@ -1,3 +1,21 @@
+# Current review handoff — 2026-10-15
+
+This section supersedes the historical notes below, including their goal-status and save-migration statements. The living-city goal remains incomplete; obsolete-save compatibility is not required.
+
+The review branch is `codex/city-runtime-review`, draft [PR19](https://github.com/jeremyung/thecity/pull/19), based on main `fca58ca`. Start with [runtime-review-checkpoint.md](runtime-review-checkpoint.md) for review order, reproduction instructions and merge gates. Do not merge the dirty development branch or its bulk evidence history into this checkpoint.
+
+Source verification: 504 native tests pass, 668 web tests pass, fresh WASM and 79 dependent tests pass, TypeScript/production build and seven fixture-integrity tests pass. The contour scheduling improvement preserves all 1,007 compared building buffers and reduces the measured mature renderer load from 339.5 to 164.4 seconds; see [mature-building-loading.md](mature-building-loading.md) for the CPU tradeoff and measurement limits.
+
+The latest remote [CI run](https://github.com/jeremyung/thecity/actions/runs/38704405102) fails at fixture hydration with HTTP 404, before runtime tests. The prepared 3.6 MB regression fixture archive and hash manifest require explicit publication approval. Verify the default download and obtain passing Ubuntu/Node22 CI before marking this PR ready to merge.
+
+The [three-seed stage review](neighborhood-stage-review.md) covers 72 matched captures, both styles, developing and mature stages, with depth of field off. Developing gaps fill; mature repeated frontage strips, dominant elevated corridors, sparse banks and the visible city boundary remain fidelity gaps. Mature station views are partly tower-obstructed. Captures stay local; this report does not claim user visual acceptance or full production lifecycle/WebGPU acceptance.
+
+Scope is frozen for this checkpoint. PR17/18 and subsequent street-layout experiments remain separate. Keep all local reference images; recordings and bulk evidence are excluded. The next whole-block layout study belongs to follow-up work and has no implementation in this PR.
+
+---
+
+# Historical engineering notes
+
 # Engineering checkpoint — 2026-10-10
 
 ## Current review corrections — 2026-10-11

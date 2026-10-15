@@ -38,7 +38,7 @@ Hardware: Apple M2 Max, macOS, Node 26.7.0. Tested a clean source copy with fixt
 - Browser smoke: Chromium 145.0.7632.6, WebGLBackend with ANGLE Metal requested; fresh-world startup and Anime/Miniature switching complete without page errors. The earlier SwiftShader attempt was stopped after five minutes while switching styles. This is not a performance measurement, WebGPU check, mature-city review or matched visual comparison (the Anime frame preceded full scene population).
 - Fixture integrity/overwrite tests: 7 passed; local archive hydration verifies all 23 files and is idempotent.
 
-CI runs fixture hydration, native tests, WASM build, web tests and production build on Ubuntu / Node 22. [Run 38693036212](https://github.com/jeremyung/thecity/actions/runs/38693036212) failed at fixture download with HTTP 404. Native, WASM, web and build checks were not reached remotely. Publishing the two prepared fixture files and rerunning CI remain merge gates.
+CI runs fixture hydration, native tests, WASM build, web tests and production build on Ubuntu / Node 22. [Run 38704405102](https://github.com/jeremyung/thecity/actions/runs/38704405102) failed at fixture download with HTTP 404. Native, WASM, web and build checks were not reached remotely. Publishing the two prepared fixture files and rerunning CI remain merge gates.
 
 A complete baseline/candidate comparison now resolves the earlier mature-loading timeouts: the baseline completes in 339.5 s and the bounded contour-scheduling change in 164.4 s, with all 1,007 building buffers identical. Both captured the same numerical pose and world. Loading frame p95 was 36.3/36.7 ms; building-update p95 increased 3.4→5.2 ms. See [mature-building-loading.md](mature-building-loading.md) for exact scope, hashes and limitations. This is one WebGL renderer-only pair, not production-save, WebGPU or whole-city acceptance.
 
@@ -46,11 +46,15 @@ Latest source verification after that change:668 web tests pass across 122 suite
 
 ## Merge gates and scope freeze
 
-- Current main remains `fca58ca`; GitHub reports no merge conflicts. The source checkpoint is 284 changed files and contains no newly added recordings or bulk visual evidence.
+- Current main remains `fca58ca`; GitHub reports no merge conflicts. The source checkpoint is 285 changed files and contains no newly added recordings or bulk visual evidence.
 - Publish only the required fixture archive and manifest after explicit approval, verify the default download against the committed hashes, and obtain a successful Ubuntu / Node 22 CI run. Keep this PR draft until those gates pass.
 - The mature-loading concern is now scoped by a complete WebGL comparison and a geometry-preserving improvement. General browser performance, WebGPU and production lifecycle acceptance remain follow-up gates for the full living-city goal.
 - Keep PR #17/#18 and the later experimental street-layout work separate. The authored neighborhood study was invalidated by a future expressway reservation; the reservation-aware residual route screen was rejected for insufficient benefit. Neither is included here.
 - The dirty development checkout is not the review branch. Do not bulk-stage it or merge its historical evidence commits into this PR.
+
+## Latest visual review
+
+The completed [neighborhood stage review](neighborhood-stage-review.md) compares 72 captures across three seeds, two stages, two styles and six fixed poses. Current WASM restoration matches the captured geometry. Mature witnesses have no unreleased lots or unfinished construction, but repeated strips and major-corridor dominance remain. This adds review findings only; no experimental layout changes or capture binaries are included.
 
 ## Evidence boundaries
 
