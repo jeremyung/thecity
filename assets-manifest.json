@@ -12,7 +12,7 @@
     },
     {
       "id": "surface-and-water",
-      "source": "Original TSL materials, procedural pigment and leaf coverage mask, generated sign atlas of invented names and a time-driven video-wall material (signage.ts), finite river mesh and ripple solver",
+      "source": "Original TSL materials, procedural pigment and leaf coverage mask, procedural facade cladding and interior-mapped window rooms (building-surfaces.ts), generated sign atlas of invented names and a time-driven video-wall material (signage.ts), finite river mesh and ripple solver",
       "rights": "Original project work; project distribution license has not been declared",
       "attribution": null,
       "duration_seconds": null,

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
+import { claddingFor, WINDOW_ATTRIBUTE } from '../web/src/render/building-surfaces';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildingKit, disposeGroup, isModernHomeVariant } from '../web/src/render/kit';
 import { lowriseBuildingWidth, lowriseMassing } from '../web/src/render/lowrise-massing';
@@ -192,7 +193,7 @@ describe('integrated low-rise families',()=>{
           expect(point.z,`${kind} ${name}`).toBeLessThanOrEqual(b.depth/2+1e-5);
         }
       }
-      const builtWall=localGeometryPoints(framing,art.get(buildingPalette(b,art.palette).wall));
+      const builtWall=localGeometryPoints(framing,art.get(buildingPalette(b,art.palette).wall,.85,false,'ambient',claddingFor(b)));
       expect(builtWall.some(point=>point.y>1&&point.z>envelopeDepth*.25)).toBe(true);
       for(const mass of layout.masses){
         expect(mass.baseFloor).toBe(0); // both the frontage and rear wing are grounded
@@ -245,7 +246,7 @@ describe('integrated low-rise families',()=>{
       const frontageW=Math.min(lowriseBuildingWidth(b,Math.max(6,b.width*.84),Math.max(6,b.depth*.84)),b.width-.2)*.96;
       const doorWidth=floors===1?1.25:Math.min(1.12,frontageW*.24);
       expect(door.some(point=>Math.abs(point.x)<doorWidth/2+.02&&point.y>.8&&point.y<3.2&&point.z>2.8),`${floors} floors centered door`).toBe(true);
-      const paneMaterials=floors===1?[art.get('#55757a',.25),art.get('#e9aa58',.42,true,'home')]:[art.get('#94a7a0',.3),art.get('#e9aa58',.42,true,'home')];
+      const paneMaterials=[art.window('home')];
       const panes=paneMaterials.flatMap(material=>localGeometryPoints(group,material)).filter(point=>point.y>=.65&&point.y<3.05&&point.z>2.5);
       expect(panes.some(point=>point.x< -doorWidth/2-.1),`${floors} floors left window`).toBe(true);
       expect(panes.some(point=>point.x> doorWidth/2+.1),`${floors} floors right window`).toBe(true);
@@ -265,7 +266,7 @@ describe('integrated low-rise families',()=>{
     const art=new ArtMaterials();
     for(const style of ['anime','miniature'] as const){
       art.setStyle(style);
-      const paneMaterial=art.get('#94a7a0',.3),dark=art.get('#344346');
+      const paneMaterial=art.window('home'),dark=art.get('#344346');
       const b=building('home','open',{width:8,depth:8,floors:3,appearance_seed:23,occupancy:0});
       const group=buildingKit(b,art);
       const front=8*.84/2;
@@ -303,25 +304,30 @@ describe('integrated low-rise families',()=>{
     art.dispose();
   });
 
-  it('lights a sparse seeded subset of occupied house windows, while vacancies and construction stay dark',()=>{
+  it('flags occupied house windows as lived, while vacancies and construction stay dark',()=>{
+    // Rooms light individually in the shader from the hour; the kit only says whether anyone is in.
+    const lived=(group:THREE.Object3D)=>{
+      const values:number[]=[];
+      group.traverse(object=>{
+        if(!(object instanceof THREE.Mesh)||!(object.material as THREE.Material).userData.windowPane)return;
+        const info=object.geometry.getAttribute(WINDOW_ATTRIBUTE);
+        for(let i=0;i<info.count;i++)values.push(info.getY(i));
+      });
+      return values;
+    };
     const art=new ArtMaterials();
     for(const style of ['anime','miniature'] as const){
       art.setStyle(style);
-      const glow=art.get('#e9aa58',.42,true,'home');
       for(const floors of [1,2,3] as const){
         const b=building('home','open',{width:10,depth:10,floors,appearance_seed:19,occupancy:5,vacant_days:0});
         const occupied=buildingKit(b,art);
         const vacant=buildingKit({...b,occupancy:0,vacant_days:8},art);
-        expect(geometryPoints(occupied,glow).length,`${style} ${floors}-floor occupied home`).toBeGreaterThan(0);
-        expect(geometryPoints(vacant,glow),`${style} ${floors}-floor vacant home`).toHaveLength(0);
-        expect(vertexSignature(occupied),`${style} ${floors}-floor pane material does not alter geometry`).toEqual(vertexSignature(vacant));
-        if(floors===1){
-          // The two ground-floor panes are 36 vertices apiece; seed 19 lights
-          // exactly one, so the domestic facade stays warm without glowing in full.
-          expect(geometryPoints(occupied,glow).length).toBeLessThan(72);
-        }
+        expect(lived(occupied).length,`${style} ${floors}-floor occupied home has panes`).toBeGreaterThan(0);
+        expect(new Set(lived(occupied)),`${style} ${floors}-floor occupied home`).toEqual(new Set([1]));
+        expect(new Set(lived(vacant)),`${style} ${floors}-floor vacant home`).toEqual(new Set([0]));
+        expect(vertexSignature(occupied),`${style} ${floors}-floor occupancy does not alter geometry`).toEqual(vertexSignature(vacant));
         const construction=buildingKit({...b,stage:'construction',progress:.99},art);
-        expect(geometryPoints(construction,glow),`${style} ${floors}-floor late construction`).toHaveLength(0);
+        expect(lived(construction).every(value=>value===0),`${style} ${floors}-floor late construction`).toBe(true);
         for(const group of [occupied,vacant,construction])disposeGroup(group);
       }
     }
@@ -349,7 +355,7 @@ describe('integrated low-rise families',()=>{
       const frontage=layout.masses.find(mass=>mass.role==='frontage')!;
       const service=layout.masses.find(mass=>mass.role==='service')!;
       const base=.58,floor=3.25,upperY=base+floor+1.65,frontEdge=frontage.z+frontage.depth/2;
-      const iron=art.get('#536164',.62),lightGlass=art.get('#94a7a0',.3),pale=art.get('#c3b9a5');
+      const iron=art.get('#536164',.62),lightGlass=art.window('home'),pale=art.get('#c3b9a5');
 
       const guards=localGeometryPoints(open,iron).filter(point=>point.y>upperY-.72&&point.y<upperY-.2&&point.z>frontEdge-.1);
       const plainGuards=localGeometryPoints(plain,iron).filter(point=>point.y>upperY-.72&&point.y<upperY-.2&&point.z>frontEdge-.1);

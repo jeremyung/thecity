@@ -1,0 +1,227 @@
+{
+  "date": "2026-10-14",
+  "save": "seed 87231, tick 242000, development rate 16 (scripts/generate-review-city.mjs)",
+  "command": "node scripts/benchmark-building-surfaces.mjs <save.json> <port> <label>",
+  "note": "Scene pass with shadows, gl.finish per frame, 1600x900, balanced quality; post pipeline excluded. main served from origin/main, branch from render/building-surfaces.",
+  "renderer": "ANGLE (NVIDIA Corporation, NVIDIA RTX PRO 6000 Blackwell Workstation Edition/PCIe/SSE2, OpenGL ES 3.2)",
+  "main": [
+    {
+      "style": "anime",
+      "hour": 13,
+      "view": "street",
+      "median": 1.1000003814697266,
+      "p95": 1.2000007629394531,
+      "calls": 98,
+      "triangles": 817751
+    },
+    {
+      "style": "anime",
+      "hour": 13,
+      "view": "neighborhood",
+      "median": 2,
+      "p95": 2.1000003814697266,
+      "calls": 217,
+      "triangles": 2841561
+    },
+    {
+      "style": "anime",
+      "hour": 13,
+      "view": "overview",
+      "median": 3.3999996185302734,
+      "p95": 3.5,
+      "calls": 397,
+      "triangles": 5606017
+    },
+    {
+      "style": "anime",
+      "hour": 21,
+      "view": "street",
+      "median": 1.1000003814697266,
+      "p95": 1.2000007629394531,
+      "calls": 98,
+      "triangles": 817751
+    },
+    {
+      "style": "anime",
+      "hour": 21,
+      "view": "neighborhood",
+      "median": 2,
+      "p95": 2.1000003814697266,
+      "calls": 218,
+      "triangles": 2841561
+    },
+    {
+      "style": "anime",
+      "hour": 21,
+      "view": "overview",
+      "median": 3.3999996185302734,
+      "p95": 3.8000001907348633,
+      "calls": 397,
+      "triangles": 5580961
+    },
+    {
+      "style": "miniature",
+      "hour": 13,
+      "view": "street",
+      "median": 1.1999998092651367,
+      "p95": 1.3000001907348633,
+      "calls": 96,
+      "triangles": 817751
+    },
+    {
+      "style": "miniature",
+      "hour": 13,
+      "view": "neighborhood",
+      "median": 2.1999998092651367,
+      "p95": 2.40000057220459,
+      "calls": 210,
+      "triangles": 2841561
+    },
+    {
+      "style": "miniature",
+      "hour": 13,
+      "view": "overview",
+      "median": 3.6000003814697266,
+      "p95": 3.90000057220459,
+      "calls": 381,
+      "triangles": 5580961
+    },
+    {
+      "style": "miniature",
+      "hour": 21,
+      "view": "street",
+      "median": 1.1999998092651367,
+      "p95": 1.2999992370605469,
+      "calls": 96,
+      "triangles": 817751
+    },
+    {
+      "style": "miniature",
+      "hour": 21,
+      "view": "neighborhood",
+      "median": 2.1999998092651367,
+      "p95": 2.3999996185302734,
+      "calls": 210,
+      "triangles": 2841561
+    },
+    {
+      "style": "miniature",
+      "hour": 21,
+      "view": "overview",
+      "median": 3.6999998092651367,
+      "p95": 3.90000057220459,
+      "calls": 381,
+      "triangles": 5580961
+    }
+  ],
+  "branch": [
+    {
+      "style": "anime",
+      "hour": 13,
+      "view": "street",
+      "median": 1.1000003814697266,
+      "p95": 1.2999992370605469,
+      "calls": 99,
+      "triangles": 854111
+    },
+    {
+      "style": "anime",
+      "hour": 13,
+      "view": "neighborhood",
+      "median": 2,
+      "p95": 2.1000003814697266,
+      "calls": 214,
+      "triangles": 2968197
+    },
+    {
+      "style": "anime",
+      "hour": 13,
+      "view": "overview",
+      "median": 3.3000001907348633,
+      "p95": 3.5,
+      "calls": 389,
+      "triangles": 5762041
+    },
+    {
+      "style": "anime",
+      "hour": 21,
+      "view": "street",
+      "median": 1.1000003814697266,
+      "p95": 1.2000007629394531,
+      "calls": 98,
+      "triangles": 819983
+    },
+    {
+      "style": "anime",
+      "hour": 21,
+      "view": "neighborhood",
+      "median": 2,
+      "p95": 2.1999998092651367,
+      "calls": 215,
+      "triangles": 2840541
+    },
+    {
+      "style": "anime",
+      "hour": 21,
+      "view": "overview",
+      "median": 3.3000001907348633,
+      "p95": 3.5,
+      "calls": 389,
+      "triangles": 5572609
+    },
+    {
+      "style": "miniature",
+      "hour": 13,
+      "view": "street",
+      "median": 1.1999998092651367,
+      "p95": 1.5999994277954102,
+      "calls": 96,
+      "triangles": 819983
+    },
+    {
+      "style": "miniature",
+      "hour": 13,
+      "view": "neighborhood",
+      "median": 2.1999998092651367,
+      "p95": 2.3999996185302734,
+      "calls": 207,
+      "triangles": 2840541
+    },
+    {
+      "style": "miniature",
+      "hour": 13,
+      "view": "overview",
+      "median": 3.6000003814697266,
+      "p95": 3.799999237060547,
+      "calls": 373,
+      "triangles": 5572609
+    },
+    {
+      "style": "miniature",
+      "hour": 21,
+      "view": "street",
+      "median": 1.1999998092651367,
+      "p95": 1.3000001907348633,
+      "calls": 96,
+      "triangles": 819983
+    },
+    {
+      "style": "miniature",
+      "hour": 21,
+      "view": "neighborhood",
+      "median": 2.1999998092651367,
+      "p95": 2.5,
+      "calls": 207,
+      "triangles": 2840541
+    },
+    {
+      "style": "miniature",
+      "hour": 21,
+      "view": "overview",
+      "median": 3.6000003814697266,
+      "p95": 3.8000001907348633,
+      "calls": 373,
+      "triangles": 5572609
+    }
+  ]
+}

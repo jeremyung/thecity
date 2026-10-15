@@ -3,6 +3,7 @@ import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildExtendedBuilding, extendedAdditionEnvelope } from '../web/src/render/extended-building';
 import { buildingKit, disposeGroup } from '../web/src/render/kit';
+import { claddingFor, WINDOW_ATTRIBUTE } from '../web/src/render/building-surfaces';
 import { buildingPalette } from '../web/src/render/building-palette';
 import type { Building, BuildingOriginalFootprint, Style } from '../web/src/types';
 
@@ -109,7 +110,7 @@ describe('completed additive rear annex', () => {
       if (kind === 'apartment') {
         const source = retained(group);
         source.updateWorldMatrix(true, true);
-        const wall = art.get(buildingPalette(current, art.palette).wall);
+        const wall = art.get(buildingPalette(current, art.palette).wall, .85, false, 'ambient', claddingFor(current));
         let measuredRearWall = Infinity;
         for (const mesh of meshes(source).filter(mesh => mesh.material === wall)) {
           const p = mesh.geometry.getAttribute('position');
@@ -148,12 +149,16 @@ describe('completed additive rear annex', () => {
     const occupied = buildExtendedBuilding(building('home', .4, 12, 8), original, art);
     const vacantHost = { ...building('home', .4, 12, 8), occupancy: 0 };
     const vacant = buildExtendedBuilding(vacantHost, original, art);
-    const hasEmissiveAdditionMaterial = (group: THREE.Group) => meshes(addition(group)).some(mesh => {
+    // Each pane carries whether anyone is in; the shader lights only lived rooms.
+    const livedFlags = (group: THREE.Group) => meshes(addition(group)).flatMap(mesh => {
       const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-      return material.userData.artBuildingClass?.emissive === true;
+      if (!material.userData.windowPane) return [];
+      const info = mesh.geometry.getAttribute(WINDOW_ATTRIBUTE);
+      return Array.from({ length: info.count }, (_, i) => info.getY(i));
     });
-    expect(hasEmissiveAdditionMaterial(occupied)).toBe(true);
-    expect(hasEmissiveAdditionMaterial(vacant)).toBe(false);
+    expect(livedFlags(occupied).length).toBeGreaterThan(0);
+    expect(new Set(livedFlags(occupied))).toEqual(new Set([1]));
+    expect(new Set(livedFlags(vacant))).toEqual(new Set([0]));
     [occupied, vacant].forEach(disposeGroup);
     art.dispose();
   });
