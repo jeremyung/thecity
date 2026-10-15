@@ -18,7 +18,7 @@ import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
 import { buildExtendedBuilding } from './extended-building';
 import { buildStreetLighting } from './street-lighting';
-import { windowOccupancy } from './building-surfaces';
+import { windowLived, windowOccupancy } from './building-surfaces';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { signageContexts, type SignageContext } from './signage';
 import { seasonAt, seasonKey, treeColor, type SeasonState, type TreeSpecies } from './seasons';
@@ -37,10 +37,11 @@ import type { World, Style, Point, Road, Building, BuildingOriginalFootprint } f
 
 export interface StyleSwitchMetrics { target:Style; samples:number; compiledSamples:number; maxSubmitMs:number; prepareMs:number; submitMs:number; waitMs:number; applyMs:number; outcome:'compiling'|'applied'|'superseded'|'failed' }
 export interface RenderMetrics { styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number }
-/** Fields that affect a building's rendered group. Home occupancy is binary
- * because only the seeded window-light subset depends on whether anyone lives there. */
+/** Fields that affect a building's rendered group. Occupancy is binary: every
+ * window pane bakes whether anyone lives or works behind it (`windowLived`), so
+ * crossing the vacant boundary rebuilds, while other occupancy changes do not. */
 export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint,signage?:SignageContext):string {
-  const homeOccupancy=(b.kind==='home'||(original&&b.kind==='apartment'))?(b.occupancy>0?'occupied':'vacant'):'-';
+  const homeOccupancy=windowLived(b)?'occupied':'vacant';
   const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
   const signs=signage&&(signage.proximity||signage.feature)?`:s${signage.proximity}${signage.feature??''}`:'';
   return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}${signs}`;

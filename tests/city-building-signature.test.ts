@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildingRenderSignature } from '../web/src/render/city';
+import { windowLived } from '../web/src/render/building-surfaces';
 import type { Building } from '../web/src/types';
 
 const building=(overrides:Partial<Building>={}):Building=>({
@@ -25,17 +26,30 @@ describe('building render signatures',()=>{
       expect(buildingRenderSignature(building(geometry))).not.toBe(buildingRenderSignature(building()));
     }
   });
-  it('rebuilds home windows only when occupancy crosses the vacant boundary',()=>{
-    const vacant=building({occupancy:0});
-    const occupied=building({occupancy:1});
-    const fuller=building({occupancy:2});
-    expect(buildingRenderSignature(vacant)).not.toBe(buildingRenderSignature(occupied));
-    expect(buildingRenderSignature(occupied)).toBe(buildingRenderSignature(fuller));
-    expect(buildingRenderSignature(fuller)).not.toBe(buildingRenderSignature(building({occupancy:0})));
+  it('rebuilds residential windows only when occupancy crosses the vacant boundary',()=>{
+    // Window panes bake whether anyone lives behind them, for homes and apartment blocks alike.
+    for(const kind of ['home','apartment']){
+      const vacant=building({kind,occupancy:0});
+      const occupied=building({kind,occupancy:1});
+      const fuller=building({kind,occupancy:2});
+      expect(buildingRenderSignature(vacant),kind).not.toBe(buildingRenderSignature(occupied));
+      expect(buildingRenderSignature(occupied),kind).toBe(buildingRenderSignature(fuller));
+      expect(buildingRenderSignature(fuller),kind).not.toBe(buildingRenderSignature(building({kind,occupancy:0})));
+    }
   });
 
-  it('does not rebuild unrelated building kinds for occupancy changes',()=>{
-    for(const kind of ['shop','cafe','apartment','office']){
+  it('keeps every signature in step with the window occupancy the kit bakes',()=>{
+    for(const kind of ['home','apartment','shop','cafe','office'])for(const stage of ['open','construction','renovation'])
+      for(const occupancy of [0,4])for(const business_active of [true,false]){
+        const a=building({kind,stage,occupancy,business_active});
+        for(const b of [building({kind,stage,occupancy:occupancy?0:4,business_active}),building({kind,stage,occupancy,business_active:!business_active})]){
+          if(windowLived(a)!==windowLived(b))expect(buildingRenderSignature(a),`${kind} ${stage} ${occupancy} ${business_active}`).not.toBe(buildingRenderSignature(b));
+        }
+      }
+  });
+
+  it('does not rebuild businesses for occupancy changes',()=>{
+    for(const kind of ['shop','cafe','office']){
       const empty=building({kind,occupancy:0});
       const occupied=building({kind,occupancy:11});
       expect(buildingRenderSignature(empty),kind).toBe(buildingRenderSignature(occupied));
