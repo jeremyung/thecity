@@ -2,6 +2,10 @@
 
 The City is an early browser simulation of a small Tokyo-inspired neighborhood. It runs a deterministic Rust simulation in WebAssembly and renders the same world with Three.js. You can leave it running, watch its streets change, explore by camera, and return to a locally saved city.
 
+## Locked visual references
+
+Compare the city against [Little Tokyo](https://github.com/jeremyung/thecity/releases/download/locked-concepts-2026-10-14/01-little-tokyo.png) and [Last Train, First Light](https://github.com/jeremyung/thecity/releases/download/locked-concepts-2026-10-14/04-last-train-first-light.png). These are concept targets, not screenshots of implemented fidelity. The [reference release](https://github.com/jeremyung/thecity/releases/tag/locked-concepts-2026-10-14) includes original-file hashes. Images live outside Git history; recordings and bulk historical evidence are not included.
+
 ## Run it locally
 
 Install Node.js and npm, then from the project directory run:

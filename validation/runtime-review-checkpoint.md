@@ -61,3 +61,7 @@ The historical publication archive has 37 transcripts redacted for private paths
 all 1,280 members verify against its refreshed manifest. Durable hosting is pending. Do not claim all referenced evidence is
 published yet. Browser motion, platform-side boarding visibility, resource
 stability and matched multi-seed visual acceptance remain outstanding.
+
+## Published visual targets
+
+The [locked concepts](https://github.com/jeremyung/thecity/releases/tag/locked-concepts-2026-10-14) are publicly accessible, with hashes verified against the original two images. Only those images and their manifest were published. Test fixtures, logs, prompt supplement and historical archive remain local; fixture download availability remains a merge prerequisite.
