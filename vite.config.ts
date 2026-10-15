@@ -3,6 +3,7 @@ export default defineConfig({
   server: { port: 5173, strictPort: true },
   build: { target: 'es2022' },
   worker: { format: 'es' },
-  // Agent worktrees under .claude are full checkouts; never run their tests here.
-  test: { exclude: ['**/node_modules/**', '**/dist/**', '.claude/**'] },
+  // Geometry and WASM suites are CPU/memory heavy. Bound concurrency and
+  // collect only this checkout's tests, never local tool or agent checkouts.
+  test: { include: ['tests/**/*.test.ts'], maxWorkers: 2 },
 });

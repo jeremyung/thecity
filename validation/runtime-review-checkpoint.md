@@ -1,67 +1,47 @@
 # Runtime review checkpoint
 
-This replaces the oversized PR12 review surface with source, specs and small
-fixtures on a branch based on main `fca58ca12ec8ad8fe10546b22004f883a2ea57e2`.
-It does not merge the earlier evidence-heavy branch or rewrite its history.
+This source-only replacement for PR12 starts from main `fca58ca` and preserves main's parks, signage and textured four-car fleet. It does not merge the evidence-heavy branch or rewrite history. The overall living-city goal and visual acceptance remain incomplete.
 
-The runtime set combines engine, web and regression changes with main's parks,
-signage and textured four-car fleet. Generation, infrastructure presentation,
-train placement and platform geometry are integrated; the broader city fidelity
-milestones remain incomplete. Passing tests do not establish visual acceptance.
+## Review order
 
-## Evidence and test setup
+1. Engine movement/access, causal errands and expressway traffic: `engine/src/lib.rs`, `engine/src/expressway_traffic.rs`, `engine/src/neighborhood_errands.rs`, and the access modules.
+2. Worker/presentation ordering, committed infrastructure and bounded renderer work: `web/src/worker`, `web/src/render/movement-presentation.ts`, `visible-infrastructure.ts`, `building-chunks.ts`, `road-batches.ts`.
+3. Curved rail and platform integration with main's four-car fleet: `rail-path.ts`, `train-placement.ts`, `trains.ts`, and `city.ts`.
+4. Building fitting, camera, atmosphere, water, planting and their targeted tests. Latest narrow-site correction keeps 5 m planner-valid parcels within their geometry envelope.
+5. Specs and the living-city goal; these describe intent separately from implementation evidence.
 
-Large fixtures and visual evidence are external. The matching `test-fixtures.tar.gz` and `test-fixtures-manifest.json` must be
-obtained before fixture-based tests. This 23-file archive is 3.6 MB; the 336 MB
-historical visual-evidence bundle is not required to compile/run these tests. Durable hosting is still
-pending; this checkpoint is not ready to merge until the download is available.
-The manifest marks native validation witnesses as test fixtures as well as the
-large files under tests/fixtures.
+PR17 and PR18 are not included. Their separate review is in `pr17-pr18-review.md`: overhead wiring needs authoritative curved rail integration, and room windows need apartment-occupancy invalidation.
+
+## Fresh checkout
+
+Install Node.js 22+, Python 3.9+, Rust, the wasm32-unknown-unknown target and wasm-bindgen-cli 0.2.108.
 
 ```sh
-python3 scripts/hydrate-review-evidence.py --archive /path/to/test-fixtures.tar.gz \
-  --manifest /path/to/test-fixtures-manifest.json --destination . --fixtures-only --apply
 npm ci
+npm run setup:fixtures
+npm run test:engine -- --release
 npm run wasm
-npm run build
 npm test
-npm run test:engine
+npm run build
 ```
 
-Omit --apply for verification without writes. Conflicting local files are refused.
-Hydrated files are ignored. Two previously tracked bundle-owned files are removed
-from this branch's index; their old blobs already on main are not removed from
-history. Do not add hydrated data to the index with force.
+The fixture setup uses a committed SHA-256 manifest and a 3.6 MB archive containing 23 regression witnesses. It refuses conflicting local files, verifies every member, and only writes ignored fixture paths. Offline: `npm run setup:fixtures -- --archive /path/to/test-fixtures.tar.gz`. The archive has no screenshots or recordings. **Publication is awaiting explicit user approval; the default download is not yet available and remains a merge blocker.**
 
-## Validation and limitations
+## Current verification — 2026-10-14
 
-Reconstruction over the pinned main revision matched every exported source hash.
-All 210 engine/web/test files in this review branch match that reconciled export.
-The reconstructed source builds WASM and the production web application, and
-native tests compile after hydration. Existing Rust warnings and the web bundle
-size warning remain. These checks used local dependency caches on macOS.
+Hardware: Apple M2 Max, macOS, Node 26.7.0. Tested a clean source copy with fixture hydration, preserving the dirty development checkout.
 
-The full reconstructed web run initially passed 639 tests and failed 27. Test-only
-repairs addressed constructor-bypassing park mocks, a queue assertion using a
-terminal chord instead of the platform tangent, and an infill assertion that
-froze unrelated road growth. All 32 tests in the four affected files then passed;
-the other 118 files passed before these changes. No second clean full run claimed.
+- Native release: 504 passed, 0 failed, 59 ignored; 51.86 seconds. Ignored exploratory diagnostics are not acceptance coverage.
+- Web: 667 passed, 0 failed across 122 suites. Bounded two-worker run: 125.02 seconds. An earlier run concurrent with native compilation timed out the tower geometry test at 20 seconds; the unconstrained repeat also passed. No assertions or timeouts were relaxed.
+- Production TypeScript/Vite build passes; existing bundle-size warning remains.
+- Fresh default WASM release build passes; existing Rust warnings remain. Freshly rebuilt WASM: 79 tests pass across 15 dependent suites.
+- Browser smoke: Chromium 145.0.7632.6, WebGLBackend with ANGLE Metal requested; fresh-world startup and Anime/Miniature switching complete without page errors. The earlier SwiftShader attempt was stopped after five minutes while switching styles. This is not a performance measurement, WebGPU check, mature-city review or matched visual comparison (the Anime frame preceded full scene population).
+- Fixture integrity/overwrite tests: 7 passed; local archive hydration verifies all 23 files and is idempotent.
 
-The original working branch passed 500 native tests with 59 ignored. This is not a
-substitute for the reconciled four-car branch's full suite. That integrated suite
-now passes 504 tests, with 0 failures and 59 ignored (575.98 seconds on this macOS host).
-One ignored test is explicitly a known failing, rejected opening-time treatment;
-it was not fixed. Its assertions remain runnable as a historical diagnostic.
+CI runs fixture hydration, native tests, WASM build, web tests and production build on Ubuntu/Node22. That workflow is prepared but has not run remotely.
 
-The 47 referenced Markdown documents are included, bringing this review to 272
-changed paths. Historical exploratory tooling remains separate. Linked binary
-evidence still requires external hosting; the two locked concept images and
-the everyday-study prompt manifest are packaged in the verified reference supplement.
-The historical publication archive has 37 transcripts redacted for private paths;
-all 1,280 members verify against its refreshed manifest. Durable hosting is pending. Do not claim all referenced evidence is
-published yet. Browser motion, platform-side boarding visibility, resource
-stability and matched multi-seed visual acceptance remain outstanding.
+## Evidence boundaries
 
-## Published visual targets
+Both [locked concepts](https://github.com/jeremyung/thecity/releases/tag/locked-concepts-2026-10-14) remain publicly accessible with hashes. All 42 local references are preserved. Historical reports may link to local captures not distributed with this PR; those links are supporting history, not a fresh-checkout test dependency. No recordings, bulk historical archive or additional reference images are included in this update.
 
-The [locked concepts](https://github.com/jeremyung/thecity/releases/tag/locked-concepts-2026-10-14) are publicly accessible, with hashes verified against the original two images. Only those images and their manifest were published. Test fixtures, logs, prompt supplement and historical archive remain local; fixture download availability remains a merge prerequisite.
+This checkpoint does not claim full browser/hardware performance, audio acceptance, mature multi-seed visual fidelity or completion of spec08. Geometry fitting and test passes alone do not establish those outcomes.

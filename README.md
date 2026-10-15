@@ -8,7 +8,14 @@ Compare the city against [Little Tokyo](https://github.com/jeremyung/thecity/rel
 
 ## Run it locally
 
-Install Node.js and npm, then from the project directory run:
+Install Node.js 22 or newer, npm, and Rust. Before the first WASM build, install its target and matching bindings tool:
+
+```sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.108 --locked
+```
+
+Then from the project directory run:
 
 ```sh
 npm ci
@@ -16,12 +23,7 @@ npm run wasm
 npm run dev
 ```
 
-Open the local address printed by Vite. The WASM build also needs Rust with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` version `0.2.108`:
-
-```sh
-rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.108 --locked
-```
+Open the local address printed by Vite.
 
 The build script uses `.tools/cargo` and `.tools/rustup` when a local `.tools/cargo/bin` installation is present; otherwise it uses the Rust tools on `PATH`. Run `npm run wasm` again after changing the Rust engine. The browser and WASM integration tests read the generated files under `public/wasm`.
 
@@ -64,7 +66,7 @@ npm run test:engine
 npm run build
 ```
 
-`npm test` includes the compiled WASM integration tests, so build the WASM files first. To run just those checks, use `npm test tests/wasm.test.ts`.
+`npm test` includes compiled WASM integration tests and pinned regression saves. Run `npm run setup:fixtures` once (Python 3.9+) and build WASM first. Fixture downloads are verified against a committed hash manifest; conflicting local files are never overwritten. Offline setup: `npm run setup:fixtures -- --archive /path/to/test-fixtures.tar.gz`. To run just those checks, use `npm test tests/wasm.test.ts`.
 
 ## Graphics and sound
 
@@ -138,11 +140,12 @@ Image generation is an offline asset-production option. The browser must never r
 
 ## Repository workflow
 
-Dependency lockfiles, source, specifications, concept references, and validation evidence are versioned. `node_modules`, `dist`, Rust build output, the local `.tools` toolchain, and generated `public/wasm` bindings are ignored. Rebuild WASM before starting a fresh checkout or running browser integration tests; generated binaries are not the source of truth.
+Dependency lockfiles, source, specifications, small test fixtures and curated validation reports are versioned. Large regression fixtures use a pinned download; locked concepts use the linked reference release. Historical captures and recordings are not part of this PR. `node_modules`, `dist`, Rust build output, the local `.tools` toolchain, and generated `public/wasm` bindings are ignored. Rebuild WASM before starting a fresh checkout or running browser integration tests; generated binaries are not the source of truth.
 
 Before committing engine changes, run:
 
 ```sh
+npm run setup:fixtures
 npm run test:engine -- --release
 npm run wasm
 npm test
