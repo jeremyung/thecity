@@ -29,11 +29,13 @@ export function compactMidriseEnvelope(b: MidriseBuilding, width: number, depth:
  * Compose a deterministic midrise silhouette inside the supplied building
  * envelope. Floor counts and world-state dimensions remain authoritative; this
  * helper only provides visual mass groupings for the renderer.
+ * A planner-minimum 5 m apartment site leaves a 3.7 m body after side margins;
+ * retain the bounded midrise lifecycle and entrance on those narrow sites.
  */
 export function midriseMassing(b: MidriseBuilding, w: number, d: number): MidriseMassing | null {
   if (b.anchor || (b.kind !== 'apartment' && b.kind !== 'office')
       || !Number.isInteger(b.floors) || b.floors < 4 || b.floors > 11
-      || !Number.isFinite(w) || !Number.isFinite(d) || w < (b.kind === 'office' ? 3.2 : 6) || d < 6) {
+      || !Number.isFinite(w) || !Number.isFinite(d) || w < (b.kind === 'office' ? 3.2 : 3.7) || d < 6) {
     return null;
   }
 

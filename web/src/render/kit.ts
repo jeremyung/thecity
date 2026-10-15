@@ -84,9 +84,9 @@ export class Kit {
  */
 export function partyWallBodyWidth(width: number, anchor = false, floors = 2, kind = 'home'): number {
   if (anchor || floors >= 14) return Math.max(6, width * (anchor ? .66 : .84));
-  // Narrow generated offices still need their side margin for the foundation,
+  // Narrow generated offices and apartments need their side margin for the foundation,
   // roof coping and facade details. A minimum six-metre body can exceed the lot.
-  if (kind === 'office' && floors < 12) return width - 1.3;
+  if ((kind === 'office' || (kind === 'apartment' && floors >= 4)) && floors < 12) return width - 1.3;
   // Apartment and office families carry balconies and entry reveals.
   const lowrise = floors < 4 && (kind === 'home' || kind === 'shop' || kind === 'cafe');
   // The planner admits 5 m sites. Do not let the legacy 6 m body floor

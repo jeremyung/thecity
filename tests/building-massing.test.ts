@@ -213,7 +213,7 @@ describe('footprint-bounded midrise massing', () => {
     expect(midriseMassing(building({ floors: 3 }), 18, 14)).toBeNull();
     expect(midriseMassing(building({ floors: 12 }), 18, 14)).toBeNull();
     expect(midriseMassing(building({ floors: 4.5 }), 18, 14)).toBeNull();
-    expect(midriseMassing(building(), 5.99, 14)).toBeNull();
+    expect(midriseMassing(building(), 3.69, 14)).toBeNull();
     expect(midriseMassing(building({ kind: 'office' }), 18, Number.NaN)).toBeNull();
   });
 });
