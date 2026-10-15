@@ -3,7 +3,7 @@
   "runtime_media": [
     {
       "id": "city-geometry",
-      "source": "Original procedural geometry in web/src/render/kit.ts, city.ts, foliage.ts, parks.ts, signage.ts, buses.ts and umbrellas.ts",
+      "source": "Original procedural geometry in web/src/render/kit.ts, city.ts, foliage.ts, parks.ts, signage.ts, overhead-lines.ts, buses.ts and umbrellas.ts",
       "rights": "Original project work; project distribution license has not been declared",
       "attribution": null,
       "duration_seconds": null,
