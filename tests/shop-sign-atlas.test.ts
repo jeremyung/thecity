@@ -120,6 +120,28 @@ describe("shop sign atlas", () => {
     }
   });
 
+  it("keeps the atlas material shared across styles and releases its resources with ArtMaterials", () => {
+    const art = new ArtMaterials();
+    const animeSigns = SHOP_SIGN_LABELS.map((label) => art.shopSign(label));
+    const material = animeSigns[0].material;
+    const texture = material.map;
+    if (!texture) throw new Error("Shared sign material is missing its atlas");
+    expect(animeSigns.every((sign) => sign.material === material)).toBe(true);
+    expect((texture as THREE.CanvasTexture).image).toMatchObject({ width: 512, height: SIGN_ATLAS_HEIGHT });
+    expect(art.variant(material)).toBe(material);
+
+    const materialDispose = vi.spyOn(material, "dispose");
+    const textureDispose = vi.spyOn(texture, "dispose");
+    art.setStyle("miniature");
+    const miniatureSigns = SHOP_SIGN_LABELS.map((label) => art.shopSign(label));
+    expect(miniatureSigns).toHaveLength(SHOP_SIGN_LABELS.length);
+    expect(miniatureSigns.every(({ material: signMaterial }) => signMaterial === material)).toBe(true);
+    expect(miniatureSigns.map(({ v0, v1 }) => [v0, v1])).toEqual(animeSigns.map(({ v0, v1 }) => [v0, v1]));
+    art.dispose();
+    expect(materialDispose).toHaveBeenCalledTimes(1);
+    expect(textureDispose).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps sign UVs in their cells after merging into a neighborhood batch", () => {
     const art = new ArtMaterials();
     try {

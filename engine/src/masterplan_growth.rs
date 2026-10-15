@@ -47,6 +47,8 @@ pub(crate) struct MasterplanProgress {
 pub(crate) struct PlanRuntime {
     pub(crate) plan: MasterPlan,
     pub(crate) lots_by_road: Vec<Vec<usize>>,
+    pub(crate) expressway_network: crate::expressway_traffic::Network,
+    pub(crate) rail_paths: BTreeMap<usize, crate::rail_runtime::Path>,
 }
 
 impl PlanRuntime {
@@ -55,7 +57,7 @@ impl PlanRuntime {
         for (index, lot) in plan.lots.iter().enumerate() {
             lots_by_road[lot.road].push(index);
         }
-        Self { plan, lots_by_road }
+        Self { rail_paths: crate::rail_runtime::paths(&plan), expressway_network: crate::expressway_traffic::Network::from_plan(&plan), plan, lots_by_road }
     }
 }
 
@@ -72,7 +74,7 @@ impl Engine {
         let river = self.river_control_points();
         Geography {
             seed: self.state.seed,
-            river: river.map(|p| P { x: p.x, z: p.z }),
+            river: river.map(|p| P { x: p.x, z: p.z }).to_vec(),
             river_clearance: RIVER_HALF_WIDTH + RIVER_BANK_BUFFER,
             protected: (-350.0, -350.0, -260.0, -270.0),
         }
@@ -107,8 +109,8 @@ impl Engine {
     }
 
     /// Founding conditions for a master-plan world.
-    pub(crate) fn initialize_masterplan_world(&mut self) {
-        let plan = masterplan::generate(&self.masterplan_geography());
+    pub(crate) fn initialize_masterplan_world(&mut self, initial_plan: Option<MasterPlan>) {
+        let plan = initial_plan.unwrap_or_else(|| masterplan::generate(&self.masterplan_geography()));
         self.state.masterplan = Some(MasterplanProgress {
             node_ids: vec![0; plan.nodes.len()],
             road_ids: vec![0; plan.roads.len()],
@@ -244,6 +246,11 @@ impl Engine {
         let a = self.realize_plan_node(road.a);
         let b = self.realize_plan_node(road.b);
         let id = self.add_road(a, b, road.kind.as_str(), stage, progress);
+        if let Some(path) = self.plan_runtime().rail_paths.get(&index) {
+            if let Some(realized) = self.state.roads.iter_mut().find(|r| r.id == id) {
+                realized.length = path.length();
+            }
+        }
         if let Some(state) = self.state.masterplan.as_mut() {
             state.road_ids[index] = id;
         }
@@ -294,9 +301,11 @@ impl Engine {
             let lot = runtime.plan.lots[lot_index];
             let dx = b.x - a.x;
             let dz = b.z - a.z;
+            let entrance=lot.passage.map_or(P{x:lot.x,z:lot.z},|points|points[2]);
             let along =
-                (((lot.x - a.x) * dx + (lot.z - a.z) * dz) / (dx * dx + dz * dz)).clamp(0.0, 1.0);
-            let side = if dx * (lot.z - a.z) - dz * (lot.x - a.x) >= 0.0 {
+                (((entrance.x - a.x) * dx + (entrance.z - a.z) * dz) / (dx * dx + dz * dz)).clamp(0.0, 1.0);
+            let side_point = if lot.passage_rotation().is_some() { entrance } else { P{x:lot.x,z:lot.z} };
+            let side = if dx * (side_point.z - a.z) - dz * (side_point.x - a.x) >= 0.0 {
                 1
             } else {
                 -1
@@ -340,9 +349,9 @@ impl Engine {
                 along,
                 side,
             });
-            // Snap facing to the realized segment; split junctions are not
-            // bit-exactly collinear with the plan line.
-            let facing = self.frontage_rotation(parcel_id);
+            // Direct frontage follows the realized segment (split junctions
+            // are not bit-exactly collinear). Passage lots keep their own facing.
+            let facing = lot.passage_rotation().unwrap_or_else(||self.frontage_rotation(parcel_id));
             if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
                 parcel.rotation = Some(facing);
             }
@@ -367,27 +376,52 @@ impl Engine {
         Some(self.plan.as_ref()?.plan.lots[index])
     }
 
-    /// Outlines of plan blocks with at least one released parcel.
+    /// Surface only realized building sites, not the stock of released parcels.
+    /// Building records survive vacancy/renewal, so their ground does too.
     pub(crate) fn masterplan_ground(&self) -> Vec<crate::GroundPatch> {
         let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref()) else {
             return Vec::new();
         };
-        let mut developed = std::collections::BTreeSet::new();
-        for (index, parcel) in progress.lot_parcels.iter().enumerate() {
-            if *parcel != 0 {
-                developed.insert(runtime.plan.lots[index].block);
-            }
-        }
-        developed
-            .into_iter()
-            .filter_map(|block| {
-                let outline = runtime.plan.blocks.get(block as usize)?;
+        let developed: std::collections::BTreeSet<u32> = self
+            .state
+            .buildings
+            .iter()
+            .map(|building| building.parcel_id)
+            .collect();
+        progress
+            .lot_parcels
+            .iter()
+            .enumerate()
+            .filter_map(|(index, parcel)| {
+                if *parcel == 0 || !developed.contains(parcel) {
+                    return None;
+                }
+                let lot = &runtime.plan.lots[index];
+                let outline = &runtime.plan.lot_ground[index];
                 Some(crate::GroundPatch {
-                    block,
+                    block: lot.block,
                     points: outline.iter().map(|p| [p.x, p.z]).collect(),
                 })
             })
             .collect()
+    }
+
+    /// Deck elevations for realized expressway roads, derived from the
+    /// regenerated plan and its persisted road ID mapping.
+    pub(crate) fn masterplan_road_decks(&self) -> Vec<crate::RoadDeckView> {
+        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref()) else {
+            return Vec::new();
+        };
+        runtime.plan.roads.iter().enumerate().filter_map(|(index, road)| {
+            if road.kind != RoadKind::Expressway {
+                return None;
+            }
+            let road_id = *progress.road_ids.get(index)?;
+            let controls = road.curve?;
+            (road_id != 0).then_some(crate::RoadDeckView {
+                road_id, deck_height: road.deck_height, controls: controls.map(|p| [p.x, p.z]),
+            })
+        }).collect()
     }
 
     /// Keep visible construction state on pre-added plan road records.
@@ -853,7 +887,99 @@ mod tests {
         assert!(engine.state.roads.iter().any(|r| r.kind == "arterial" && r.connected));
         assert!(engine.state.buildings.iter().any(|b| b.anchor && b.stage == "open"));
         assert!(engine.state.parcels.len() >= 4, "founding row releases lots");
+        let ground = engine.masterplan_ground();
+        let developed_parcels: std::collections::BTreeSet<u32> = engine.state.buildings
+            .iter().map(|building| building.parcel_id).collect();
+        let mapped_developed = engine.state.masterplan.as_ref().unwrap().lot_parcels.iter()
+            .filter(|parcel| **parcel != 0 && developed_parcels.contains(parcel))
+            .count();
+        assert_eq!(ground.len(), mapped_developed);
+        assert!(ground.len() < engine.state.parcels.len(), "released vacant parcels stay unpaved");
         engine.validate().unwrap();
+    }
+
+    #[test]
+    fn ground_tracks_buildings_and_survives_save_restore_and_vacancy() {
+        let mut engine = grown(87231, 6_000);
+        let before = engine.masterplan_ground();
+        assert!(!before.is_empty(), "normal growth realizes buildings");
+        let built_parcels: std::collections::BTreeSet<u32> = engine.state.buildings
+            .iter().map(|building| building.parcel_id).collect();
+        let expected = engine.state.masterplan.as_ref().unwrap().lot_parcels.iter()
+            .filter(|parcel| **parcel != 0 && built_parcels.contains(parcel))
+            .count();
+        assert_eq!(before.len(), expected);
+
+        let restored = Engine::restore_json(&engine.save_json()).unwrap();
+        assert_eq!(serde_json::to_value(&before).unwrap(),
+            serde_json::to_value(restored.masterplan_ground()).unwrap());
+
+        {
+            let building = engine
+                .state
+                .buildings
+                .iter_mut()
+                .find(|building| building.stage == "open")
+                .expect("growth has an open building");
+            building.occupancy = 0;
+            building.vacant_days = 500;
+        }
+        assert_eq!(serde_json::to_value(&before).unwrap(),
+            serde_json::to_value(engine.masterplan_ground()).unwrap(), "vacancy retains developed ground");
+        engine.state.buildings.iter_mut().find(|building| building.stage == "open")
+            .unwrap().stage = "demolished".into();
+        assert_eq!(serde_json::to_value(&before).unwrap(),
+            serde_json::to_value(engine.masterplan_ground()).unwrap(), "retained demolition record preserves ground");
+    }
+
+    #[test]
+    fn lot_ground_polygons_contain_their_parcel_rectangles_across_seeds() {
+        fn contains(poly: &[P], point: P) -> bool {
+            let mut inside = false;
+            for i in 0..poly.len() {
+                let a = poly[i];
+                let b = poly[(i + 1) % poly.len()];
+                let dx = b.x - a.x;
+                let dz = b.z - a.z;
+                let length2 = dx * dx + dz * dz;
+                let t = if length2 > 0.0 {
+                    ((point.x - a.x) * dx + (point.z - a.z) * dz) / length2
+                } else { 0.0 }.clamp(0.0, 1.0);
+                // The existing rectangle fitter samples 2 cm inside its front/back
+                // slices; allow 5 cm at boundary corners, not interior gaps.
+                if (point.x - a.x - t * dx).hypot(point.z - a.z - t * dz) <= 0.05 {
+                    return true;
+                }
+                if (a.z > point.z) != (b.z > point.z)
+                    && point.x < (b.x - a.x) * (point.z - a.z) / (b.z - a.z) + a.x
+                {
+                    inside = !inside;
+                }
+            }
+            inside
+        }
+
+        for seed in [1, 7, 87231, 99173] {
+            let plan = masterplan::generate(&Geography {
+                seed,
+                river: [P { x: -112.0, z: -400.0 }, P { x: -98.0, z: -190.0 }, P { x: -112.0, z: 20.0 },
+                    P { x: -94.0, z: 210.0 }, P { x: -109.0, z: 400.0 }].to_vec(),
+                river_clearance: RIVER_HALF_WIDTH + RIVER_BANK_BUFFER,
+                protected: (-350.0, -350.0, -260.0, -270.0),
+            });
+            assert_eq!(plan.lot_ground.len(), plan.lots.len(), "seed {seed}");
+            for (lot, polygon) in plan.lots.iter().zip(&plan.lot_ground) {
+                assert!(polygon.len() >= 3, "seed {seed}: degenerate ground cell");
+                let ux = P { x: lot.facing.z * lot.width * 0.5, z: -lot.facing.x * lot.width * 0.5 };
+                let uz = P { x: lot.facing.x * lot.depth * 0.5, z: lot.facing.z * lot.depth * 0.5 };
+                for sx in [-1.0, 1.0] {
+                    for sz in [-1.0, 1.0] {
+                        let corner = P { x: lot.x + ux.x * sx + uz.x * sz, z: lot.z + ux.z * sx + uz.z * sz };
+                        assert!(contains(polygon, corner), "seed {seed}: parcel outside ground polygon");
+                    }
+                }
+            }
+        }
     }
 
     #[test]
@@ -896,10 +1022,110 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "flag-passage-candidate")]
+    fn generated_rear_passage_survives_renovation_and_replay() {
+        for seed in [87231, 0, 5] {
+            let mut engine = grown(seed, 40_000);
+            let id = engine.state.buildings.iter().find(|b| {
+                b.stage == "open" && crate::is_commercial(b)
+                    && !engine.errand_references_building(b.id)
+                    && engine.masterplan_lot_for_parcel(b.parcel_id)
+                        .is_some_and(|lot| lot.passage.is_some())
+            }).expect("generated rear commercial site").id;
+            // Arrange vacancy on real generated geometry. This exercises renewal,
+            // not the separate policy that decides when a business closes.
+            for building in &mut engine.state.buildings {
+                building.vacant_days = 0;
+                if building.id == id {
+                    building.business_active = false;
+                    building.vacant_days = 6;
+                }
+            }
+            engine.state.demand = 0.0; // Isolate renovation from height redevelopment.
+            let before = engine.building_access_segment(id).unwrap();
+            assert!(before.1.len() > 2);
+            let saved = engine.save_json();
+            let mut restored = Engine::restore_json(&saved).unwrap();
+            for city in [&mut engine, &mut restored] { city.renewal(3); }
+            assert_eq!(engine.state.buildings.iter().find(|b| b.id == id).unwrap().stage, "renovation");
+            // Restore while the building is actually undergoing work, then use
+            // the production fixed-step scheduler through completion.
+            restored = Engine::restore_json(&engine.save_json()).unwrap();
+            let mut reopened = false;
+            for _ in 0..400 {
+                engine.step(1);
+                restored.step(1);
+                assert_eq!(engine.save_json(), restored.save_json());
+                let after = engine.building_access_segment(id).unwrap();
+                assert_eq!(before.0, after.0);
+                assert_eq!(before.1.len(), after.1.len());
+                for (a, b) in before.1.iter().zip(&after.1) {
+                    assert_eq!((a.x.to_bits(), a.z.to_bits()), (b.x.to_bits(), b.z.to_bits()));
+                }
+                if engine.state.buildings.iter().find(|b| b.id == id).unwrap().stage == "open" {
+                    reopened = true;
+                    break;
+                }
+            }
+            assert!(reopened, "seed {seed}: renovation must finish");
+            engine.validate().unwrap();
+            Engine::restore_json(&engine.save_json()).unwrap();
+        }
+    }
+
+    #[test]
     fn same_seed_master_plan_growth_is_deterministic() {
         let a = grown(7, 6_000);
         let b = grown(7, 6_000);
         assert_eq!(a.save_json(), b.save_json());
+    }
+
+    #[test]
+    fn snapshot_reports_realized_expressway_decks_from_plan_mappings() {
+        let engine = grown(87231, 160_000);
+        engine.validate().unwrap();
+        let snapshot = engine.snapshot();
+        let restored = Engine::restore_json(&engine.save_json()).unwrap();
+        assert_eq!(snapshot.road_decks, restored.snapshot().road_decks);
+        assert_eq!(snapshot.road_decks.len(), engine.plan_runtime().plan.expressway.len());
+        for deck in &snapshot.road_decks {
+            let road = snapshot.roads.iter().find(|road| road.id == deck.road_id).unwrap();
+            assert_eq!(road.kind, "expressway");
+            let plan_index = engine.plan_road_index(deck.road_id).unwrap();
+            assert_eq!(deck.deck_height, engine.plan_runtime().plan.roads[plan_index].deck_height);
+            assert_eq!(
+                deck.controls,
+                engine.plan_runtime().plan.roads[plan_index]
+                    .curve
+                    .unwrap()
+                    .map(|p| [p.x, p.z])
+            );
+        }
+        assert!(snapshot.road_decks.iter().any(|deck| deck.deck_height == 11.0));
+        assert!(snapshot.road_decks.iter().any(|deck| deck.deck_height == 20.0));
+    }
+
+    #[test]
+    fn constructing_expressway_does_not_rebend_existing_sections() {
+        let mut engine = Engine::new(87231);
+        engine.set_development_rate(16);
+        while engine.snapshot().road_decks.is_empty() && engine.state.tick < 20_000 {
+            engine.step(80);
+        }
+        let first = engine.snapshot().road_decks;
+        assert!(!first.is_empty());
+        let saved = engine.save_json();
+        let mut restored = Engine::restore_json(&saved).unwrap();
+        for _ in 0..40 {
+            engine.step(80);
+            restored.step(80);
+            assert_eq!(engine.save_json(), restored.save_json());
+        }
+        let later = engine.snapshot().road_decks;
+        assert!(later.len() > first.len());
+        for deck in first {
+            assert_eq!(&deck, later.iter().find(|d| d.road_id == deck.road_id).unwrap());
+        }
     }
 
     /// `MASTERPLAN_TICKS=240000 MASTERPLAN_SNAPSHOT=/path cargo test --release masterplan_growth::tests::long_run -- --ignored --nocapture`

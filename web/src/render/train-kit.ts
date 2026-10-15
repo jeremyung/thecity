@@ -1,6 +1,8 @@
 import * as THREE from 'three/webgpu';
 import manifest from './train-manifest.json';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Builder } from './vehicle-kit';
+import { RAIL_CENTER_OFFSET, PANTOGRAPH_CONTACT_HEIGHT } from './rail-profile';
 
 /**
  * Train cars extruded from the traced side elevation (scripts/build-train-kits.py),
@@ -57,8 +59,85 @@ function halfWidth(spec: ClassSpec) {
   };
 }
 
+/** Passenger door bounds traced in atlas pixels; cab access doors are excluded.
+ * Convert through the same UV transform as the body so the opening and paint agree. */
+export function trainDoorBounds(role: TrainCar, cls: TrainClass = TRAIN_CLASS) {
+  const spec = trainClass(cls), side = spec.cars[role].left;
+  const pixels: Record<TrainCar, number[][]> = {
+    cab: [[200, 291, 56, 183], [524, 616, 56, 183], [850, 942, 56, 183], [1182, 1273, 56, 183]],
+    trailer: [[164, 248, 325, 450], [507, 590, 325, 450], [853, 939, 325, 450], [1198, 1275, 325, 450]],
+    motor: [[191, 283, 580, 711], [650, 745, 580, 711], [1117, 1207, 580, 711]],
+  };
+  const [u0, v0, u1, v1] = side.uv;
+  return pixels[role].map(([left, right, top, bottom]) => ({
+    minZ: spec.length / 2 - (right / manifest.atlas[0] - u0) / (u1 - u0) * spec.length,
+    maxZ: spec.length / 2 - (left / manifest.atlas[0] - u0) / (u1 - u0) * spec.length,
+    minY: (1 - bottom / manifest.atlas[1] - v0) / (v1 - v0) * spec.height,
+    maxY: (1 - top / manifest.atlas[1] - v0) / (v1 - v0) * spec.height,
+  }));
+}
+
+function clipAxis(poly: THREE.Vector2[], axis: 'x' | 'y', value: number, below: boolean) {
+  const out: THREE.Vector2[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const ia = below ? a[axis] <= value : a[axis] >= value;
+    const ib = below ? b[axis] <= value : b[axis] >= value;
+    if (ia) out.push(a);
+    if (ia !== ib) out.push(a.clone().lerp(b, (value - a[axis]) / (b[axis] - a[axis])));
+  }
+  return out;
+}
+
+/** Subtract rectangles without leaving triangles across an open doorway. */
+function doorPanels(poly: THREE.Vector2[], doors: ReturnType<typeof trainDoorBounds>) {
+  let panels = [poly];
+  for (const d of doors) panels = panels.flatMap(p => {
+    const middle = clipAxis(clipAxis(p, 'x', d.minZ, false), 'x', d.maxZ, true);
+    return [clipAxis(p, 'x', d.minZ, true), clipAxis(p, 'x', d.maxZ, false),
+      clipAxis(middle, 'y', d.minY, true), clipAxis(middle, 'y', d.maxY, false)]
+      .filter(part => part.length >= 3 && Math.abs(THREE.ShapeUtils.area(part)) > 1e-8);
+  });
+  return panels;
+}
+
+/** One sliding leaf in car coordinates, with the original atlas UVs.
+ * Animate by translating along z; the UVs remain attached to the leaf. */
+export function buildTrainDoorLeaf(cls: TrainClass, role: TrainCar, index: number, sideSign: -1 | 1, leaf: -1 | 1) {
+  const spec = trainClass(cls), side = spec.cars[role].left, door = trainDoorBounds(role, cls)[index];
+  if (!door) throw new RangeError(`Unknown passenger door ${index} for ${role}`);
+  const b = new Builder(), half = halfWidth(spec), belt = bodyBelt(spec);
+  const mid = (door.minZ + door.maxZ) / 2;
+  const lo = leaf < 0 ? door.minZ : mid, hi = leaf < 0 ? mid : door.maxZ;
+  const levels = [door.minY, ...((belt > door.minY && belt < door.maxY) ? [belt] : []), door.maxY];
+  for (let i = 0; i < levels.length - 1; i++) {
+    const points = [[lo, levels[i]], [hi, levels[i]], [hi, levels[i + 1]], [lo, levels[i + 1]]];
+    const lean = levels[i] >= belt ? spec.width / 2 * spec.tumblehome / Math.max(.01, bodyRoof(spec) - belt) : 0;
+    const normal = new THREE.Vector3(sideSign, lean, 0).normalize();
+    for (const k of sideSign < 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]) {
+      const [z, y] = points[k], [u, v] = sideUV(spec, side, z, y);
+      b.vertex(new THREE.Vector3(sideSign * (half(y, z) + .003), y, z), normal, u, v, 0, sideSign);
+    }
+  }
+  return b.finish(0, belt);
+}
+
+/** All leaves share one draw batch per car role; motion stays in the shader. */
+export function buildTrainDoors(cls: TrainClass, role: TrainCar) {
+  const parts: THREE.BufferGeometry[] = [];
+  for (const [index, door] of trainDoorBounds(role, cls).entries()) for (const side of [-1, 1] as const) for (const leaf of [-1, 1] as const) {
+    const g = buildTrainDoorLeaf(cls, role, index, side, leaf);
+    const count = g.getAttribute('position').count, travel = new Float32Array(count * 2);
+    for (let i = 0; i < count; i++) { travel[i * 2] = side; travel[i * 2 + 1] = leaf * (door.maxZ - door.minZ) / 2; }
+    g.setAttribute('doorTravel', new THREE.BufferAttribute(travel, 2)); parts.push(g);
+  }
+  const result = mergeGeometries(parts)!;
+  for (const part of parts) part.dispose();
+  return result;
+}
+
 /** One car body. `role` picks the side elevation and, for the cab, the front cap. */
-export function buildTrainCar(cls: TrainClass, role: TrainCar) {
+export function buildTrainCar(cls: TrainClass, role: TrainCar, doorApertures = false) {
   const spec = trainClass(cls), side = spec.cars[role].left;
   const b = new Builder();
   const ring = side.outline.map(([z, y]) => new THREE.Vector2(z, y));
@@ -69,18 +148,22 @@ export function buildTrainCar(cls: TrainClass, role: TrainCar) {
   for (const keepBelow of [true, false]) {
     const poly = clipRing(ring, belt, keepBelow);
     if (poly.length < 3) continue;
-    const tris = THREE.ShapeUtils.triangulateShape(poly, []);
+    const panels = doorApertures ? doorPanels(poly, trainDoorBounds(role, cls)) : [poly];
+    for (const panel of panels) {
+    const tris = THREE.ShapeUtils.triangulateShape(panel, []);
     for (const sign of [-1, 1]) {
       const n = new THREE.Vector3(sign, keepBelow ? 0 : lean, 0).normalize();
       for (const tri of tris) {
         const order = sign < 0 ? tri : [tri[0], tri[2], tri[1]];
         for (const index of order) {
-          const p = poly[index];
+          const p = panel[index];
           const [u, v] = sideUV(spec, side, p.x, p.y);
           b.vertex(new THREE.Vector3(sign * half(p.y, p.x), p.y, p.x), n, u, v, 0, sign);
         }
       }
     }
+  }
+
   }
 
   const count = ring.length;
@@ -140,27 +223,36 @@ export function buildTrainCar(cls: TrainClass, role: TrainCar) {
     ac.dispose();
   }
   if (side.roof === 'pantograph') {
-    for (const [tilt, y] of [[.5, 1.0], [-.5, 1.0]] as const) {
-      const arm = new THREE.BoxGeometry(.1, .1, 2.4);
-      arm.rotateX(tilt); arm.translate(0, roofY + y, -3.4);
-      const pos = arm.getAttribute('position'), nor = arm.getAttribute('normal'), idx = arm.getIndex()!;
+    // Articulated collector stays under the corridor wire; the shoe spans x,
+    // across the track, while the diamond arms lie in the longitudinal plane.
+    const bottom = roofY + .16, top = PANTOGRAPH_CONTACT_HEIGHT - .08;
+    const mid = (bottom + top) / 2, centerZ = -3.4;
+    const append = (g: THREE.BufferGeometry) => {
+      const pos = g.getAttribute('position'), nor = g.getAttribute('normal'), idx = g.getIndex()!;
       for (let t = 0; t < idx.count; t++) {
         const k = idx.getX(t);
-        b.vertex(new THREE.Vector3().fromBufferAttribute(pos, k), new THREE.Vector3().fromBufferAttribute(nor, k),
-          side.uv[0], side.uv[1], 4, 0);
+        b.vertex(new THREE.Vector3().fromBufferAttribute(pos, k), new THREE.Vector3().fromBufferAttribute(nor, k), side.uv[0], side.uv[1], 4, 0);
       }
-      arm.dispose();
+      g.dispose();
+    };
+    for (const sign of [-1, 1]) for (const [y0, z0, y1, z1] of [
+      [bottom, centerZ, mid, centerZ + sign * .65],
+      [mid, centerZ + sign * .65, top, centerZ],
+    ]) {
+      const a = new THREE.Vector3(0, y0, z0), end = new THREE.Vector3(0, y1, z1), delta = end.clone().sub(a);
+      const arm = new THREE.BoxGeometry(.065, delta.length(), .065);
+      arm.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.normalize()));
+      arm.translate(0, (y0 + y1) / 2, (z0 + z1) / 2); append(arm);
     }
-    const bar = new THREE.BoxGeometry(.12, .08, 1.8); bar.translate(0, roofY + 2.0, -3.4);
-    const bp = bar.getAttribute('position'), bn = bar.getAttribute('normal'), bi = bar.getIndex()!;
-    for (let t = 0; t < bi.count; t++) { const k = bi.getX(t); b.vertex(new THREE.Vector3().fromBufferAttribute(bp, k), new THREE.Vector3().fromBufferAttribute(bn, k), side.uv[0], side.uv[1], 4, 0); }
-    bar.dispose();
+    const shoe = new THREE.BoxGeometry(1.8, .08, .12);
+    shoe.translate(0, PANTOGRAPH_CONTACT_HEIGHT - .04, centerZ); append(shoe);
   }
 
   const tyreWidth = .26, frontZ = Math.max(...side.wheels.map(w => w.z));
   for (const w of side.wheels) {
     for (const sign of [-1, 1]) {
-      const x = sign * (spec.width / 2 - tyreWidth / 2 - .04);
+      // Wheelset gauge follows the rails, independently of the wider car body.
+      const x = sign * RAIL_CENTER_OFFSET;
       const cyl = new THREE.CylinderGeometry(w.r, w.r, tyreWidth, 14, 1);
       cyl.rotateZ(Math.PI / 2);
       const pos = cyl.getAttribute('position'), nor = cyl.getAttribute('normal'), index = cyl.getIndex()!;

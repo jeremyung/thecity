@@ -31,6 +31,28 @@ function meshes(root: THREE.Object3D): THREE.Mesh[] {
 }
 
 describe('BuildingAccessPaths', () => {
+  it('follows a bent passage without paving a diagonal through the front lot', () => {
+    const art = new ArtMaterials();
+    const paths = new BuildingAccessPaths(art, release => release());
+    paths.setWorld(world([building(1)], [{ building_id: 1, road_id: 9,
+      points: [{ x: 0, z: 0 }, { x: 0, z: 10 }, { x: 10, z: 10 }] }]));
+    const [mesh] = meshes(paths.root);
+    expect(meshes(paths.root)).toHaveLength(1);
+    const geometry = mesh.geometry.toNonIndexed();
+    const p = geometry.getAttribute('position');
+    let reachesBend = false, reachesCurb = false;
+    for (let i = 0; i < p.count; i += 3) {
+      const x = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3;
+      const z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3;
+      expect(Math.abs(x) < .95 || Math.abs(z - 10) < .95).toBe(true);
+      if (z > 9 && x < 1) reachesBend = true;
+      if (x > 9) reachesCurb = true;
+      if (z < 8) expect(Math.max(p.getY(i), p.getY(i + 1), p.getY(i + 2))).toBeLessThan(.06);
+    }
+    expect(reachesBend && reachesCurb).toBe(true);
+    geometry.dispose(); paths.reset(); art.dispose();
+  });
+
   it('places a diagonal path from authoritative door-to-curb points and merges same-material paths', () => {
     const art = new ArtMaterials();
     const retired: Array<() => void> = [];

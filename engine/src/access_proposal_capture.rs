@@ -205,7 +205,7 @@ mod tests {
 
     fn mature() -> Engine {
         Engine::restore_json(include_str!(
-            "../../validation/early-reservation-wasm-87231-save.json"
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
         ))
         .expect("mature fixture restores")
     }

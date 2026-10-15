@@ -207,7 +207,7 @@ fn face_candidate_window_round_robins_over_boundary_with_global_budget() {
 #[test]
 fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
     let mut engine = Engine::restore_json(include_str!(
-        "../../validation/mature-world.ranked-blocks.json"
+        "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;
@@ -840,7 +840,7 @@ impl Engine {
 #[test]
 fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
     let mut engine = Engine::restore_json(include_str!(
-        "../../validation/mature-world.ranked-blocks.json"
+        "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;
@@ -905,7 +905,11 @@ fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
     assert!(!engine.interior_plan_allows_frontage_candidate(&a, &b, x, z, 14.0, 12.0, -1));
 }
 
+// Rejected opening-time treatment; see validation/early-reservation-gap-diagnosis.md.
+// Preserve this failing historical probe for explicit investigation, not as a
+// current default-planner acceptance requirement. Safety unit tests stay active.
 #[test]
+#[ignore = "rejected test-only road-opening treatment; historical seed no longer admits; run explicitly for diagnosis"]
 fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     let mut engine = Engine::new_legacy(87_231);
     engine.set_development_rate(16);

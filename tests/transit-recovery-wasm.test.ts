@@ -20,7 +20,7 @@ it('alights a real bus rider at the curb, persists the wait, and resumes when co
   const inspect = () => JSON.parse(engine.inspect(46));
   const position = (e: CityEngine) => {
     const data = e.movements();
-    for (let i = 0; i < data.length; i += 5) if (data[i] === 46) return Array.from(data.slice(i, i + 5));
+    for (let i = 0; i < data.length; i += 6) if (data[i] === 46) return Array.from(data.slice(i, i + 6));
     return undefined;
   };
   try {

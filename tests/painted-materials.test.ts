@@ -22,6 +22,31 @@ function installCanvasForFoliageMask() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("painted surface material classes", () => {
+  it("keeps day-night glazing separate from equally colored lamps through batching and style switches", () => {
+    const art = new ArtMaterials();
+    try {
+      for (const activity of ['home', 'office', 'shop'] as const) {
+        const pane = art.window(activity);
+        const lamp = art.get('#e9aa58', .42, true, activity);
+        expect(pane).not.toBe(lamp);
+        expect(pane.userData.artBuildingClass.window).toBe(true);
+        expect(lamp.userData.artBuildingClass.window).toBe(false);
+        const paneBatch = art.buildingBatch(pane);
+        const lampBatch = art.buildingBatch(lamp);
+        expect(paneBatch.material).not.toBe(lampBatch.material);
+        expect(paneBatch.color?.equals(new THREE.Color('#e9aa58'))).toBe(true);
+        for (const style of ['anime', 'miniature'] as const) {
+          const batch = art.variant(paneBatch.material, style) as THREE.MeshStandardNodeMaterial;
+          expect(batch.userData.artBuildingClass.window).toBe(true);
+          // The shader explicitly consumes the per-pane warm tint. Automatic
+          // multiplication would incorrectly tint its daytime glass yellow.
+          expect(batch.vertexColors).toBe(false);
+          expect(art.variant(lampBatch.material, style).userData.artBuildingClass.window).toBe(false);
+        }
+      }
+    } finally { art.dispose(); }
+  });
+
   it("classifies matte paint while excluding glazing, emission, foliage, and white sentinels", () => {
     installCanvasForFoliageMask();
     const art = new ArtMaterials();

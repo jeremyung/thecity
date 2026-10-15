@@ -92,6 +92,11 @@ impl Engine {
                 ));
             };
             let expected = plan.roads[i];
+            if let Some(path) = runtime.rail_paths.get(&i) {
+                if !road.length.is_finite() || (road.length - path.length()).abs() > 0.001 {
+                    return Err(format!("master-plan rail mapping {i} has an invalid arc length"));
+                }
+            }
             let (Some(a), Some(b)) = (
                 progress.node_ids.get(expected.a),
                 progress.node_ids.get(expected.b),
@@ -182,13 +187,16 @@ impl Engine {
             let dx = b.x - a.x;
             let dz = b.z - a.z;
             let len2 = dx * dx + dz * dz;
-            let projected = ((lot.x - a.x) * dx + (lot.z - a.z) * dz) / len2;
-            let side = if dx * (lot.z - a.z) - dz * (lot.x - a.x) >= 0.0 {
+            let (entrance_x,entrance_z)=lot.passage.map_or((lot.x,lot.z),|points|(points[2].x,points[2].z));
+            let projected = ((entrance_x - a.x) * dx + (entrance_z - a.z) * dz) / len2;
+            let (side_x,side_z)=if lot.passage_rotation().is_some() {(entrance_x,entrance_z)} else {(lot.x,lot.z)};
+            let side = if dx * (side_z - a.z) - dz * (side_x - a.x) >= 0.0 {
                 1
             } else {
                 -1
             };
-            let facing = (frontage.side as f32 * dz).atan2(-frontage.side as f32 * dx);
+            let facing = lot.passage_rotation().unwrap_or_else(||
+                (frontage.side as f32 * dz).atan2(-frontage.side as f32 * dx));
             if side != frontage.side
                 || !near(projected.clamp(0.0, 1.0), frontage.along, 1.0e-4)
                 || !parcel

@@ -1,5 +1,29 @@
 # Browser Architecture
 
+### Movement support presentation (2026-10-12)
+
+An integer packet associates each pose with its supporting road and
+platform identities. Worker protocol v5 transfers it with the presentation token.
+The client validates token/epoch and decodes before recycling the buffer. The latest
+[validation](../validation/movement-support.md) records transit endpoint fixes
+and sampled fresh-world support coverage. Integration must match the packet's
+authoritative geometry revision and world epoch to committed infrastructure,
+preserve follow-camera continuity, and retain bounded transfer/backpressure.
+Entity IDs alone do not prove the supporting geometry version is visible.
+
+Engine snapshots and the cheap WASM `presentation_revision()` getter share an
+opaque string token: access geometry generation plus station visual/readiness
+phases. The worker publishes a matching structural snapshot before movement
+whenever this token changes, bypassing the ordinary 500 ms snapshot throttle.
+The token is epoch-scoped and preserves u64 precision. Exhausted generations
+fall back to a per-tick token. Actor support gating retains the last rendered pose
+only while its exact support remains committed; new actors await their geometry.
+Interpolation retains both endpoint dependencies until complete. The camera and
+spatial audio consume presented positions; hidden actor IDs suppress structural
+follow fallbacks. Integration is implemented, but full motion/performance
+acceptance remains open. The token is conservative because
+access reservations can advance its geometry component without changing pixels.
+
 Use Rust compiled to WASM for the engine, a dedicated simulation worker, and TypeScript for the application, rendering bridge, camera, and audio. Deploy as static files over HTTPS. Runtime simulation does not require a backend.
 
 ## Module layout
@@ -51,6 +75,13 @@ report exact descriptor visibility only after their atomic scene commit, allowin
 temporary construction geometry to remain until its replacement is visible.
 See [the checkpoint and verification limits](../validation/HANDOFF.md#inhabited-rear-extensions--implementation-in-progress-2026-10-11).
 
+The structural snapshot includes `road_decks` entries (`road_id`, `deck_height`)
+for realized master-plan expressways. They are derived from the regenerated plan
+and persisted road mapping, rather than guessed from road bearing in the renderer.
+Deck height participates in the plan digest. A changed plan rejects old saves;
+no migration is provided. Geometry invalidation includes this metadata so deck,
+markings, lamps and piers use a consistent elevation.
+
 ## Worker protocol
 
 Every message carries protocol version and world epoch. Epoch changes on load or new world; discard messages from old epochs.
@@ -68,6 +99,17 @@ Every message carries protocol version and world epoch. Epoch changes on load or
 | Metrics | tick cost, routing backlog, memory, active counts |
 
 Publish movement at 10–20 Hz initially. Interpolate between two snapshots with a short presentation delay; avoid extrapolating through intersections. Structural changes are applied in revision order. Reliable deltas are never dropped; request a full resync if a gap is detected.
+
+Elevated movement contract (2026-10-11): worker protocol 3 uses
+six Float32 values per actor: `[id, x, z, heading, kind, surfaceY]`. Actor kind
+continues to identify person/car/train/bus (0/1/2/3). A nonnegative `surfaceY`
+is an authoritative absolute pedestrian or vehicle surface height; -1 delegates
+to the existing ground/road presentation policy. Do not infer elevated access
+from proximity to a station, because other travelers can pass underneath.
+Interpolate resolved pedestrian surfaces along with horizontal positions and
+use the same elevation for picking geometry, follow targeting and accessories.
+Structural snapshots supply `rail_platforms` terminal frames and stair dimensions
+for both styles. See [implementation evidence and remaining acceptance](../validation/station-passengers.md).
 
 ## Buffer ownership and backpressure
 
@@ -107,3 +149,34 @@ Hidden tabs pause simulation and suspend or fade sound. Resume restores continui
 - [Shared memory isolation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/crossOriginIsolated)
 
 Pin tested dependency versions at implementation time.
+
+
+Expressway geometry contract (2026-10-11): each `road_decks` entry includes
+`controls: [[x,z],[x,z]]` in world metres, oriented from the realized road's
+`from` node to its `to` node. These cubic controls and deck height derive from
+the complete regenerated plan and participate in its digest. Renderers consume
+them directly; they must not infer tangents from the currently realized graph.
+Current saves regenerate the same controls; previous plan digests reject without
+migration. Curve clearance is enforced during lot admission. Road routing and
+construction costs still use the endpoint graph. Regional through-traffic uses
+cached arc-length samples of these curves, persisted trips and a 48-car cap.
+Only complete open boundary-to-boundary chains admit traffic; their regional
+connection is independent of ground-road gateway connectivity. Ramps, lane
+changes, merges and ramp grades remain future work.
+
+## Train door state checkpoint — 2026-10-11
+
+`TrainView.door_open_fraction` and `door_terminal` are derived from existing
+terminal position and dwell countdown, rather than a second persisted clock.
+Station/gateway dwell lasts 220/180 ticks, with 20-tick opening and closing phases
+at 20 Hz. Boarding and alighting require the fully open interval. Boarding cadence
+is three ticks to retain the existing 48-passenger capacity within that interval.
+Quiet-hour station holds keep doors closed. Worker protocol v4 includes a compact
+`trainDoors` Float32Array alongside each movement message: `[id, terminal, fraction]`
+with terminal -1 away from a stop. At most eight trainsets use 96 bytes. The WASM
+export shares the snapshot phase calculation without constructing a full world.
+Doors and positions use the same pair of updates and interpolation fraction;
+coarse world snapshots cannot rewind animated door state. The first movement
+sample displays the restored phase immediately. A platform-position guard keeps
+fast-forward skips from displaying open doors while moving. Full passenger
+approach choreography and visual motion acceptance remain outstanding.

@@ -35,15 +35,15 @@ available in `/tmp/thecity-frontier-compare/result.json` and
 The baseline and candidate capture commands used the local toolchain:
 
 ```sh
-CARGO_HOME=/Users/jung/Development/thecity/.tools/cargo \
-RUSTUP_HOME=/Users/jung/Development/thecity/.tools/rustup \
-/Users/jung/Development/thecity/.tools/cargo/bin/cargo test \
+CARGO_HOME=./.tools/cargo \
+RUSTUP_HOME=./.tools/rustup \
+./.tools/cargo/bin/cargo test \
   --manifest-path /tmp/thecity-frontier-compare/engine/Cargo.toml \
   frontier_equivalence_capture -- --nocapture
 
-CARGO_HOME=/Users/jung/Development/thecity/.tools/cargo \
-RUSTUP_HOME=/Users/jung/Development/thecity/.tools/rustup \
-/Users/jung/Development/thecity/.tools/cargo/bin/cargo test \
+CARGO_HOME=./.tools/cargo \
+RUSTUP_HOME=./.tools/rustup \
+./.tools/cargo/bin/cargo test \
   --manifest-path /tmp/thecity-frontier-compare/engine/Cargo.toml \
   frontier_equivalence_candidate_capture -- --nocapture
 ```

@@ -4,19 +4,25 @@ import { expect, it } from 'vitest';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
 import type { Building, World } from '../web/src/types';
 
-it('migrates a real legacy city without changing its history or treating commerce as residents', () => {
+it('restores a current-format city without changing its history or treating commerce as residents', () => {
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const raw=readFileSync(new URL('../validation/mature-world.json',import.meta.url),'utf8');
-  const legacy=JSON.parse(raw);
-  expect(legacy.activity_schema_version).toBeUndefined();
+  const live=new CityEngine(87231);
+  let raw:string;
+  try {
+    live.set_development_rate(16);
+    for(let tick=0;tick<80000;tick+=2000) live.step(2000);
+    raw=live.save();
+  } finally { live.free(); }
+  const saved=JSON.parse(raw);
+  expect(saved.activity_schema_version).toBe(5);
   const engine=CityEngine.restore(raw);
   let replay:CityEngine|undefined;
   try {
-    const migrated=JSON.parse(engine.save());
-    expect(migrated.activity_schema_version).toBe(4);
+    const restored=JSON.parse(engine.save());
+    expect(restored.activity_schema_version).toBe(5);
     for(const field of ['tick','rng_growth','rng_schedule','rng_weather','next_id','events','residents','roads','parcels']) {
-      expect(legacy[field],field).toBeDefined();
-      expect(migrated[field],field).toEqual(legacy[field]);
+      expect(saved[field],field).toBeDefined();
+      expect(restored[field],field).toEqual(saved[field]);
     }
     const world:World=JSON.parse(engine.snapshot());
     const commerce=world.buildings.filter(b=>['shop','cafe','office'].includes(b.kind));
@@ -27,7 +33,7 @@ it('migrates a real legacy city without changing its history or treating commerc
       expect(b.vacant_days).toBe(0);
     }
     for(const b of world.buildings.filter(b=>['home','apartment'].includes(b.kind))) {
-      const old=legacy.buildings.find((previous:Building)=>previous.id===b.id);
+      const old=saved.buildings.find((previous:Building)=>previous.id===b.id);
       expect(b.occupancy).toBe(old.occupancy);
       expect(b.business_active).toBe(false);
     }

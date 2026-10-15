@@ -209,15 +209,36 @@ impl Engine {
                 access_phase: 1,
                 access_progress: 0.0,
             };
-            let endpoint = self.route_endpoint_position(&traveler.route, false, resident_id, 0);
+            let endpoint = self.route_endpoint_position(&traveler.route, true, resident_id, 0);
             if let Some(endpoint) = endpoint {
                 if (pending.wait_position.x - endpoint.x)
                     .hypot(pending.wait_position.z - endpoint.z)
                     > 0.01
                 {
-                    traveler.origin_access = Some(AccessPath {
-                        points: vec![pending.wait_position, endpoint],
-                    });
+                    let rail_terminal = (pending.transfer_after_route == "walking_home")
+                        .then(|| self.rail_terminals())
+                        .flatten()
+                        .and_then(|(station, gateway)| {
+                            if pending.stop_node == station {
+                                Some(true)
+                            } else if pending.stop_node == gateway {
+                                Some(false)
+                            } else {
+                                None
+                            }
+                        });
+                    traveler.origin_access = if let Some(at_station) = rail_terminal {
+                        self.platform_exit_path_from_position(
+                            pending.wait_position,
+                            endpoint,
+                            at_station,
+                        )
+                    } else {
+                        Some(AccessPath {
+                            points: vec![pending.wait_position, endpoint],
+                            surface_y: Vec::new(),
+                        })
+                    };
                     traveler.access_phase = 0;
                 }
             }

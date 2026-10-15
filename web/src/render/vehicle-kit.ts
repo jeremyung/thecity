@@ -36,15 +36,29 @@ export class Builder {
   }
   finish(tinted = 1, belt = Infinity) {
     const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(this.position, 3));
-    g.setAttribute('normal', new THREE.Float32BufferAttribute(this.normal, 3));
-    g.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv, 2));
-    g.setAttribute('vpart', new THREE.Float32BufferAttribute(this.part, 1));
-    g.setAttribute('lateral', new THREE.Float32BufferAttribute(this.lateral, 1));
-    g.setAttribute('wheel', new THREE.Float32BufferAttribute(this.wheel, 4));
     const trimmable = new Float32Array(this.part.length);
     for (let i = 0; i < trimmable.length; i++) trimmable[i] = tinted && this.position[i * 3 + 1] <= belt + .05 ? 1 : 0;
-    g.setAttribute('tinted', new THREE.Float32BufferAttribute(trimmable, 1));
+    // Keep the authored vertex data lossless while placing its seven static
+    // attributes in one GPU buffer. WebGPU limits each draw to eight vertex
+    // buffers; vehicle instances add separate vstate/vtint buffers and the
+    // instance matrix, so separate static buffers exceed that limit.
+    const attributes = [
+      ['position', this.position, 3], ['normal', this.normal, 3], ['uv', this.uv, 2],
+      ['vpart', this.part, 1], ['lateral', this.lateral, 1], ['wheel', this.wheel, 4], ['tinted', trimmable, 1],
+    ] as const;
+    const stride = attributes.reduce((sum, [, , size]) => sum + size, 0);
+    const interleaved = new THREE.InterleavedBuffer(new Float32Array(this.part.length * stride), stride);
+    interleaved.setUsage(THREE.StaticDrawUsage);
+    let offset = 0;
+    for (const [name, source, size] of attributes) {
+      for (let vertex = 0; vertex < this.part.length; vertex++) {
+        for (let component = 0; component < size; component++) {
+          interleaved.array[vertex * stride + offset + component] = source[vertex * size + component];
+        }
+      }
+      g.setAttribute(name, new THREE.InterleavedBufferAttribute(interleaved, size, offset));
+      offset += size;
+    }
     g.computeBoundingSphere();
     return g;
   }

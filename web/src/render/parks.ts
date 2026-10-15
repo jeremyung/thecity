@@ -47,7 +47,10 @@ export function streetTreePlacements(world:Pick<World,'nodes'|'roads'|'building_
   const lamps=new SpatialCells<Point>(OBSTACLE_CELL),doors=new SpatialCells<readonly [Point,Point]>(OBSTACLE_CELL);
   const stops=new SpatialCells<Point>(OBSTACLE_CELL),crossings=new SpatialCells<(typeof segments)[number]>(OBSTACLE_CELL);
   for(const lamp of streetLightPlacements(world))lamps.insert(lamp,lamp.x,lamp.z,STREET_TREE_LAMP_CLEARANCE);
-  for(const access of world.building_access??[]){const [door,curb]=access.points;if(!finite(door,curb))continue;const r=STREET_TREE_DOOR_CLEARANCE;doors.insertBox(access.points,Math.min(door.x,curb.x)-r,Math.min(door.z,curb.z)-r,Math.max(door.x,curb.x)+r,Math.max(door.z,curb.z)+r);}
+  for(const access of world.building_access??[])for(let i=1;i<access.points.length;i++){
+    const door=access.points[i-1],curb=access.points[i];if(!finite(door,curb))continue;
+    const r=STREET_TREE_DOOR_CLEARANCE;doors.insertBox([door,curb],Math.min(door.x,curb.x)-r,Math.min(door.z,curb.z)-r,Math.max(door.x,curb.x)+r,Math.max(door.z,curb.z)+r);
+  }
   for(const stop of (world.bus_lines??[]).flatMap(line=>line.stop_positions??[]))if(finite(stop))stops.insert(stop,stop.x,stop.z,STREET_TREE_STOP_CLEARANCE);
   for(const segment of segments){const {a,b}=segment,r=crossingClearance(segment.road.kind);crossings.insertBox(segment,Math.min(a.x,b.x)-r,Math.min(a.z,b.z)-r,Math.max(a.x,b.x)+r,Math.max(a.z,b.z)+r);}
   // Master-plan arterials split at every node, and most nodes are T-junctions

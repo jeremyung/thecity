@@ -1,6 +1,7 @@
 // Derived from Three.js 0.183.2 DepthOfFieldNode.js (MIT).
 // Upstream SHA256: e031582eda45a5bda6b564e841f29472acf06f924dd55efcd0d98d29922b1f32
-// Changes: explicit signed normalized CoC input; upstream gather/composite retained.
+// Changes: signed normalized CoC input; upstream gather retained; composite
+// coverage uses output-pixel radius independently of the gather cap.
 import { TempNode, NodeMaterial, NodeUpdateType, RenderTarget, Vector2, HalfFloatType, RedFormat, QuadMesh, RendererUtils } from 'three/webgpu';
 import { convertToTexture, nodeObject, Fn, uniform, step, texture, max, uniformArray, outputStruct, property, vec4, vec3, uv, Loop, min, mix } from 'three/tsl';
 import { gaussianBlur } from 'three/addons/tsl/display/GaussianBlurNode.js';
@@ -433,13 +434,12 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 			const far = this._blur16FarTextureNode.sample( uvNode );
 			const beauty = this.textureNode.sample( uvNode );
 
-			// TODO: applying the bokeh scale to the near field CoC value introduces blending
-			// issues around edges of blurred foreground objects when their are rendered above
-			// the background. for now, don't apply the bokeh scale to the blend factors. that
-			// will cause less blur for objects which are partly out-of-focus (CoC between 0 and 1).
-
-			const blendNear = min( near.a, 0.5 ).mul( 2 );
-			const blendFar = min( far.a, 0.5 ).mul( 2 );
+			// Alpha stores radius normalized by the gather cap. Convert back to
+			// output pixels for coverage: changing the cap must not change the
+			// blend of an unsaturated physical CoC. Four pixels preserves the
+			// previous Miniature (8px cap) composite response.
+			const blendNear = min( near.a.mul( this.bokehScaleNode ).div( 4 ), 1 );
+			const blendFar = min( far.a.mul( this.bokehScaleNode ).div( 4 ), 1 );
 
 			const result = vec4( 0, 0, 0, 1 ).toVar();
 			result.rgb = mix( beauty.rgb, far.rgb, blendFar );

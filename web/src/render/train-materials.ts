@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { attribute, color, float, mix, positionGeometry, select, uv } from 'three/tsl';
+import { attribute, color, float, mix, positionGeometry, select, uv, vec3 } from 'three/tsl';
 import type { ArtMaterials } from './materials';
 import { streamedTexture, wheelPosition } from './vehicle-materials';
 
@@ -21,7 +21,7 @@ export function trainMaterial(art: ArtMaterials) {
     const part = attribute<'float'>('vpart', 'float');
     const glass = mask.b.mul(select(part.equal(2), float(0), float(1)));
     const lamp = mask.g.mul(select(part.equal(3), float(0), float(1)));
-    const front = positionGeometry.z.greaterThan(0);
+    const front = positionGeometry.z.mul(attribute<'float'>('trainFacing', 'float')).greaterThan(0);
     const lampColor = select(front, color('#fff0c8'), color('#ff3b26'));
     const lampPower = select(front, art.night.mul(2.2), art.night.mul(1.3).add(state.w.mul(1.6)));
     const sky = art.glassRadiance();
@@ -29,7 +29,10 @@ export function trainMaterial(art: ArtMaterials) {
       anime: new THREE.MeshToonNodeMaterial({ gradientMap: art.toonRamp }),
       miniature: new THREE.MeshStandardNodeMaterial({ roughness: .4, metalness: .05 }),
     };
-    const position = wheelPosition();
+    const door = attribute<'vec2'>('doorTravel', 'vec2');
+    const opening = attribute<'float'>('doorOpening', 'float');
+    const slide = select(door.x.mul(opening).greaterThan(0), opening.abs().mul(door.y), float(0));
+    const position = wheelPosition().add(vec3(0, 0, slide));
     for (const [style, material] of Object.entries(pair) as [keyof typeof pair, THREE.MeshStandardNodeMaterial | THREE.MeshToonNodeMaterial][]) {
       material.colorNode = base.rgb;
       material.positionNode = position;

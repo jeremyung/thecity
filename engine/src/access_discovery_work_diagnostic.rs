@@ -5,7 +5,7 @@ mod tests {
     use crate::{access_capture, access_discovery_job::DiscoveryJob, Engine};
     use std::collections::BTreeMap;
 
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     const CHUNK: usize = 65_536;
 
     fn outer_stage(job: &DiscoveryJob) -> String {

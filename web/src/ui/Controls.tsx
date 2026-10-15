@@ -20,6 +20,8 @@ import {
 import type { Building, Style, World } from '../types';
 import { LENS_PRESETS, type LensPresetId } from '../camera/lens';
 import './style.css';
+import ReviewRecording from './ReviewRecording';
+import ReviewCameraPose, { type ApplyReviewPose } from './ReviewCameraPose';
 
 export interface ControlsProps {
   world: World | null;
@@ -60,7 +62,7 @@ export interface ControlsProps {
     waiting?: number;
   } | null;
   quality?: 'high' | 'balanced';
-  metrics: { fps: number; frameMs: number; calls: number; triangles: number; textures: number; geometries: number; backend: string; pendingBuildings?: number; pendingChunks?: number; styleSwitch?: { target:string; samples:number; compiledSamples:number; maxSubmitMs:number; prepareMs:number; submitMs:number; waitMs:number; applyMs:number; outcome:string } } | null;
+  metrics: { timing?: { samples:number;phase:'loading'|'ready'|'hidden';frameP95Ms:number;cpuP95Ms:number;maxFrameMs:number }; fps: number; frameMs: number; calls: number; triangles: number; textures: number; geometries: number; backend: string; pendingBuildings?: number; pendingChunks?: number; pendingSidewalks?: number; pendingRoads?: number; styleSwitch?: { target:string; samples:number; compiledSamples:number; maxSubmitMs:number; prepareMs:number; submitMs:number; waitMs:number; applyMs:number; outcome:string } } | null;
   onPause: () => void;
   onSpeed: (n: number) => void;
   onDevelopment: (n: number) => void;
@@ -81,7 +83,16 @@ export interface ControlsProps {
   onFollow: (id: number) => void;
   onQuality?: (quality: 'high' | 'balanced') => void;
   onReviewMature?: () => void;
+  onReviewStreetLights?: () => boolean;
+  onReviewWaterReflection?: () => boolean;
   onReviewSkyline?: () => void;
+  onReviewStation?: () => void;
+  onReviewBuilding?: (id:number) => void;
+  onReadCameraPose?: () => string;
+  onApplyCameraPose?: ApplyReviewPose;
+  fixedReviewQuality?: boolean;
+  onFixedReviewQuality?: (enabled:boolean) => void;
+  onReviewWaterfront?: (preset?: 'overhead' | 'low') => void;
   onDismissError?: () => void;
   onGraphicsRetry: () => void;
   onGraphicsFallback: () => void;
@@ -205,10 +216,15 @@ export default function Controls(props: ControlsProps) {
     world, ready, error, message, paused, speed, achievableSpeed, development, style, preparingStyle, mode, sceneLabel, preview, sound,
     musicLevel, cityLevel, focus, contrast, lens, selected, subject, quality, metrics, onPause, onSpeed, onDevelopment,
     onStyle, onMode, onPreview, onSound, onLevels, onFocus, onContrast, onLens, onSave, onResume, onNewWorld,
-    onCloseInspector, onFollow, onQuality, onReviewMature, onReviewSkyline, onDismissError, onGraphicsRetry, onGraphicsFallback, onExport, onImport,
+    onCloseInspector, onFollow, onQuality, onReviewMature, onReviewSkyline, onReviewStation, onReviewWaterfront, onDismissError, onGraphicsRetry, onGraphicsFallback, onExport, onImport,
   } = props;
   const [panel, setPanel] = useState<'sound' | 'world' | 'details' | 'visual' | null>(null);
+  const [streetLightsOn, setStreetLightsOn] = useState(true);
+  const [rawWaterReflection, setRawWaterReflection] = useState(false);
   const [seedText, setSeedText] = useState('');
+  const [reviewBuildingId, setReviewBuildingId] = useState('');
+  const reviewBuilding = import.meta.env.DEV && /^\d+$/.test(reviewBuildingId)
+    ? world?.buildings.find(building => building.id === Number(reviewBuildingId)) : undefined;
   const [confirmSeed, setConfirmSeed] = useState<number | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const panelOpener = useRef<HTMLButtonElement | null>(null);
@@ -308,6 +324,8 @@ export default function Controls(props: ControlsProps) {
     ].filter((value): value is string => value !== null)
     : [];
   const busToFollow = activeBusToFollow(world);
+  const renewalProject = world?.projects.find(project => project.kind === 'redevelopment' && project.progress < 1);
+  const renewalSite = renewalProject && world?.buildings.find(building => building.parcel_id === renewalProject.parcel_id);
   const graphicsError = Boolean(error && /graphics|webgl|renderer/i.test(error) && !/could not restore the saved city/i.test(error));
   const forceWebGL = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('webgl');
 
@@ -459,10 +477,13 @@ export default function Controls(props: ControlsProps) {
           <RecentEvents events={events} />
           {world?.trains[0] && <button className="follow-button train-follow" onClick={() => onFollow(world.trains[0].id)}><Eye size={15} />Follow a train</button>}
           {busToFollow && <button className="follow-button train-follow" onClick={() => onFollow(busToFollow.id)}><Eye size={15} />Follow a bus</button>}
+          {renewalSite && <button className="follow-button train-follow" onClick={() => onFollow(renewalSite.id)}><Eye size={15} />Visit the renewal site</button>}
           {residents.length > 0 && <div className="resident-list"><span className="panel-kicker">RESIDENTS IN MOTION</span><ul>{residents.map((resident) => <li key={resident.id}><span><b>{resident.name}</b><small>{prettyKind(resident.activity)}</small></span><button type="button" onClick={() => onFollow(resident.id)} aria-label={`Follow ${resident.name}`}><Eye size={14} /></button></li>)}</ul></div>}
-          {(metrics || (quality && onQuality) || (import.meta.env.DEV && (onReviewMature || onReviewSkyline))) && <details className="render-note"><summary>Renderer details</summary>{metrics && <><p>{Math.round(metrics.fps)} fps · <span className="render-note__cpu">CPU {metrics.frameMs.toFixed(1)} ms</span> · {metrics.backend}</p><p>{metrics.calls} draws · {metrics.triangles.toLocaleString()} triangles · {metrics.textures} textures · {metrics.geometries} shapes</p>{metrics.pendingBuildings !== undefined && <p>{metrics.pendingBuildings} buildings queued · {metrics.pendingChunks ?? 0} neighborhood batches queued</p>}{import.meta.env.DEV && metrics.styleSwitch && <p>Last style switch to {metrics.styleSwitch.target}: {metrics.styleSwitch.compiledSamples}/{metrics.styleSwitch.samples} shader samples · prepare {metrics.styleSwitch.prepareMs.toFixed(0)} ms · submit {metrics.styleSwitch.submitMs.toFixed(0)} ms (largest {metrics.styleSwitch.maxSubmitMs.toFixed(0)} ms) · await {metrics.styleSwitch.waitMs.toFixed(0)} ms · apply {metrics.styleSwitch.applyMs.toFixed(0)} ms · {metrics.styleSwitch.outcome}</p>}</>}{quality && onQuality && <label className="quality-control">Render quality<select aria-label="Render quality" value={quality} onChange={(event) => onQuality(event.target.value as 'high' | 'balanced')}><option value="high">High detail</option><option value="balanced">Balanced</option></select></label>}{import.meta.env.DEV && onReviewMature && <button type="button" className="render-note__review" onClick={onReviewMature}>Review mature city</button>}{import.meta.env.DEV && onReviewSkyline && <button type="button" className="render-note__review" onClick={onReviewSkyline}>View skyline</button>}</details>}
+          {(metrics || (quality && onQuality) || (import.meta.env.DEV && (onReviewMature || onReviewSkyline))) && <details className="render-note"><summary>Renderer details</summary>{import.meta.env.DEV && <><ReviewRecording/><ReviewCameraPose read={props.onReadCameraPose} apply={props.onApplyCameraPose} fixedQuality={props.fixedReviewQuality} onFixedQuality={props.onFixedReviewQuality}/><label className="quality-control">Review building ID<input aria-label="Review building ID" inputMode="numeric" value={reviewBuildingId} onChange={event=>setReviewBuildingId(event.target.value)}/></label><button type="button" className="render-note__review" disabled={!reviewBuilding||!props.onReviewBuilding} onClick={()=>{if(reviewBuilding)props.onReviewBuilding?.(reviewBuilding.id);}}>Frame review building</button></>}{import.meta.env.DEV && props.onReviewStreetLights && <button type="button" className="render-note__review" onClick={()=>setStreetLightsOn(props.onReviewStreetLights!())}>Nearby light contribution: {streetLightsOn?'on':'off'}</button>}{import.meta.env.DEV && props.onReviewWaterReflection && <button type="button" className="render-note__review" onClick={()=>setRawWaterReflection(props.onReviewWaterReflection!())}>Water view: {rawWaterReflection?'raw reflection':'normal'}</button>}{metrics && <><RenderTimingNote metrics={metrics}/><p>{metrics.calls} draws · {metrics.triangles.toLocaleString()} triangles · {metrics.textures} textures · {metrics.geometries} shapes</p>{metrics.pendingBuildings !== undefined && <p>{metrics.pendingBuildings} buildings queued · {metrics.pendingChunks ?? 0} neighborhood batches queued · {metrics.pendingSidewalks ?? 0} sidewalk rebuilds queued · {metrics.pendingRoads ?? 0} road rebuilds queued</p>}{import.meta.env.DEV && metrics.styleSwitch && <p>Last style switch to {metrics.styleSwitch.target}: {metrics.styleSwitch.compiledSamples}/{metrics.styleSwitch.samples} shader samples · prepare {metrics.styleSwitch.prepareMs.toFixed(0)} ms · submit {metrics.styleSwitch.submitMs.toFixed(0)} ms (largest {metrics.styleSwitch.maxSubmitMs.toFixed(0)} ms) · await {metrics.styleSwitch.waitMs.toFixed(0)} ms · apply {metrics.styleSwitch.applyMs.toFixed(0)} ms · {metrics.styleSwitch.outcome}</p>}</>}{quality && onQuality && <label className="quality-control">Render quality<select aria-label="Render quality" value={quality} onChange={(event) => onQuality(event.target.value as 'high' | 'balanced')}><option value="high">High detail</option><option value="balanced">Balanced</option></select></label>}{import.meta.env.DEV && onReviewMature && <button type="button" className="render-note__review" onClick={onReviewMature}>Review mature city</button>}{import.meta.env.DEV && onReviewSkyline && <button type="button" className="render-note__review" onClick={onReviewSkyline}>View skyline</button>}{import.meta.env.DEV && onReviewStation && <button type="button" className="render-note__review" onClick={onReviewStation}>View station</button>}{import.meta.env.DEV && onReviewWaterfront && <><button type="button" className="render-note__review" onClick={()=>onReviewWaterfront('overhead')}>Hold waterfront view</button><button type="button" className="render-note__review" onClick={()=>onReviewWaterfront('low')}>Hold low waterfront view</button></>}</details>}
         </section>
       )}
     </div>
   );
 }
+
+export function RenderTimingNote({metrics}:{metrics:NonNullable<ControlsProps['metrics']>}){return <><p>{metrics.timing?.samples===0?'Collecting frame timings':`${Math.round(metrics.fps)} fps`} · <span className="render-note__cpu">CPU {metrics.frameMs.toFixed(1)} ms</span> · {metrics.backend}</p>{metrics.timing && <p>{metrics.timing.phase} · {metrics.timing.samples} frames · frame p95 {metrics.timing.frameP95Ms.toFixed(1)} ms · CPU p95 {metrics.timing.cpuP95Ms.toFixed(1)} ms · longest frame {metrics.timing.maxFrameMs.toFixed(1)} ms</p>}</>;}

@@ -1,5 +1,15 @@
 export type RenderQualityProfile = 'high' | 'balanced';
 export type RenderQualityLevel = 0 | 1 | 2;
+/** Review captures use one physical pixel per CSS pixel on every display. */
+export function renderQualitySettings(profile: RenderQualityProfile, level: RenderQualityLevel, devicePixelRatio: number, fixedReview = false) {
+  if (fixedReview) return { pixelRatio: 1, shadowSize: 2048, reflectionScale: .35 };
+  const high = profile === 'high';
+  return {
+    pixelRatio: Math.min(devicePixelRatio, (high ? [1.6, 1.6, 1.25] : [1, 1, .8])[level]),
+    shadowSize: (high ? [2048, 1536, 1024] : [1024, 768, 512])[level],
+    reflectionScale: (high ? [.35, .23, .16] : [.25, .19, .15])[level],
+  };
+}
 export type RenderQualityReason = 'startup' | 'stable' | 'slow' | 'recovery' | 'cooldown' | 'ineligible' | 'gap' | 'clock-reset';
 
 export type RenderQualitySnapshot = {

@@ -6,7 +6,7 @@ import type { World } from '../web/src/types';
 
 it('continues useful connected street growth beyond 160 roads and develops its frontage', () => {
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const engine=CityEngine.restore(readFileSync(new URL('../validation/mature-world.bounded-selection.json',import.meta.url),'utf8'));
+  const engine=CityEngine.restore(readFileSync(new URL('./fixtures/access-joins/mature-world.bounded-selection.json',import.meta.url),'utf8'));
   let resumed:CityEngine|undefined;
   try {
     const before:World=JSON.parse(engine.snapshot());

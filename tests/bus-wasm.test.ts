@@ -31,7 +31,7 @@ it('publishes connected bus service, real riders and replayable movement through
     for(const bus of buses){
       expect(bus.passengers).toBeLessThanOrEqual(bus.capacity);expect(bus.capacity).toBe(24);
       let found=false;
-      for(let i=0;i<movements.length;i+=5)if(movements[i]===bus.id){expect(movements[i+4]).toBe(3);found=true;}
+      for(let i=0;i<movements.length;i+=6)if(movements[i]===bus.id){expect(movements[i+4]).toBe(3);found=true;}
       expect(found).toBe(true);
       expect(JSON.parse(engine.inspect(bus.id)).entityType).toBe('bus');
     }

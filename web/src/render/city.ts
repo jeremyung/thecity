@@ -1,31 +1,65 @@
+import { riverbankTreePoints } from './riverbank-planting';
+import { groundRoadFootprint, groundRoadSurfaceGeometry } from './ground-road-footprint';
+import { RoadSurfacePartition } from './road-surface-partition';
+import { roadMarkingTrims, type MarkingTrim } from './road-markings';
+import { NearbyStreetLights } from './nearby-street-lights';
+import { junctionFootprint, type JunctionArm } from './road-junction';
+import { MovementPresentation } from './movement-presentation';
+import { overlapsStation } from './station-clearance';
+import { treeClearanceSignature } from './tree-clearance-signature';
+import { createTreeClearanceGrid } from './tree-clearance-grid';
+import type { MovementSupport } from '../movement-support';
+import { VisibleInfrastructure, type InfrastructureCommit } from './visible-infrastructure';
+import { buildStationPlatform } from './station-kit';
+import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '../movement';
 import { snapShadowAnchor } from './shadow-anchor';
-import { styleWarmup, compileStyleSamples } from './style-warmup';
+import { styleWarmup, compileStyleSamples, compileForScenePass } from './style-warmup';
 import * as THREE from 'three/webgpu';
-import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float } from 'three/tsl';
+import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv, fog, rangeFogFactor, positionWorld } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { ao } from 'three/addons/tsl/display/GTAONode.js';
+import { ssr } from 'three/addons/tsl/display/SSRNode.js';
+import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
+import { SkyEnvironment } from './sky-environment';
+import { skyRadiance } from './sky-scattering';
+import { backdropForestMatrices } from './backdrop-forest';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
 import { physicalCoCNode } from './postprocessing/physical-coc';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ArtMaterials, signTexture } from './materials';
 import { Kit, disposeGroup } from './kit';
+import { StagedKit } from './staged-kit';
 import { RiverWater } from './water';
-import { BuildingChunks, buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
+import { createRiverbankGeometry } from './riverbank';
+import { buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
 import { Umbrellas } from './umbrellas';
 import { CityBuses } from './buses';
 import { isRoadVehicle, ROAD_SURFACE_Y, VehicleFleet } from './vehicles';
-import { TRAIN_HALF_LENGTH, TrainFleet } from './trains';
+import { TrainFleet, trainWorldWithInfrastructure } from './trains';
+import { addRailCorridor } from './rail-corridor';
+import { sampledRail, type RailPath } from './rail-path';
+import { RAIL_CENTER_OFFSET, RAIL_HEAD_WIDTH, RAIL_HEAD_Y } from './rail-profile';
 import { BuildingAccessPaths } from './building-access';
 import { RearExtensions } from './rear-extensions';
+import { ConstructionBatches } from './construction-batches';
 import { buildExtendedBuilding } from './extended-building';
-import { buildStreetLighting } from './street-lighting';
+import { prepareStreetLighting, PersistentStreetLighting, type StreetLightingData } from './street-lighting';
+import { bezierRoad, sweepRoad, type RoadCurve } from './road-curve';
+import { CURRENT_EXPRESSWAY_PROFILE } from './expressway-profile';
+import { addExpresswayFurniture } from './expressway-kit';
 import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
 import { signageContexts, type SignageContext } from './signage';
 import { seasonAt, seasonKey, treeColor, type SeasonState, type TreeSpecies } from './seasons';
 import { addNeighborhoodShrine, addPocketPark, addScrambleCrossing, addShrineGrove, addStationPlaza, openSpaceKind, openSpaces, parkSignature, streetTreePlacements, type PlantedTree } from './parks';
 import { createBackdropGeometry } from './backdrop';
-import { treeOcclusion } from './tree-occlusion';
-import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, type BridgeSpan } from './road-elevation';
-import { RenderQualityController } from './quality';
+import { createSkylineGeometry } from './skyline';
+import { createPavedGroundTest } from './paved-ground';
+import { buildGroundSurfaces } from './ground-surfaces';
+import { CitySidewalks } from './sidewalks';
+import { roadBatchSignatures } from './road-batch-signature';
+import { ARTERIAL_SIDEWALK, bridgeDeckHeight, bridgeLift, bridgeVehiclePose, vehicleSurfacePose, EXPRESSWAY_DECK, RAIL_DECK, roadWidth, expresswayPierClear, type CrossingDeck, type BridgeSpan } from './road-elevation';
+import { RenderQualityController, renderQualitySettings } from './quality';
+import { FrameTiming, type FrameTimingSnapshot } from './frame-timing';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
 import { CameraDirector } from '../camera/director';
 import { dampFocusDepth, focusDepthFromViewZ } from '../camera/focus';
@@ -35,18 +69,24 @@ import { resolveAudioEventContext } from '../audio/event-context';
 import type { World, Style, Point, Road, Building, BuildingOriginalFootprint } from '../types';
 
 export interface StyleSwitchMetrics { target:Style; samples:number; compiledSamples:number; maxSubmitMs:number; prepareMs:number; submitMs:number; waitMs:number; applyMs:number; outcome:'compiling'|'applied'|'superseded'|'failed' }
-export interface RenderMetrics { styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number }
+export interface RenderMetrics { timing?:FrameTimingSnapshot; styleSwitch?:StyleSwitchMetrics; fps:number; frameMs:number; calls:number; triangles:number; textures:number; geometries:number; backend:string; pendingBuildings:number; pendingChunks:number; pendingSidewalks:number; pendingRoads:number }
 /** Fields that affect a building's rendered group. Home occupancy is binary
  * because only the seeded window-light subset depends on whether anyone lives there. */
 export function buildingRenderSignature(b:Building,original?:BuildingOriginalFootprint,signage?:SignageContext):string {
   const homeOccupancy=(b.kind==='home'||(original&&b.kind==='apartment'))?(b.occupancy>0?'occupied':'vacant'):'-';
   const retained=original?`${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`:'-';
   const signs=signage&&(signage.proximity||signage.feature)?`:s${signage.proximity}${signage.feature??''}`:'';
-  return `${b.stage}:${b.floors}:${Math.floor(b.progress*5)}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}${signs}`;
+  const stagedTower=b.floors>=12&&(b.kind==='office'||b.kind==='apartment')&&b.stage!=='open'&&b.stage!=='renovation'&&b.stage!=='demolition';
+  const towerPhase=`${Math.ceil(b.floors*Math.max(0,Math.min(1,(b.progress-.12)/.57)))}:${Math.ceil(b.floors*Math.max(0,Math.min(1,(b.progress-.69)/.23)))}`;
+  const phase=stagedTower?towerPhase:b.stage==='demolition'?`${Math.ceil(b.floors*(1-Math.max(0,Math.min(1,b.progress))))}:${b.progress>0}`:Math.floor(b.progress*5);
+  return `${b.stage}:${b.floors}:${phase}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}${signs}`;
 }
 type TreeBatch={indices:number[],trees:THREE.InstancedMesh,trunks:THREE.InstancedMesh,center:THREE.Vector3,far:boolean};
 type TreeLook={species:TreeSpecies,color:string,variation:number};
 const v=new THREE.Vector3(),dummy=new THREE.Object3D();
+// Range haze (m from camera): clear through the city, veiling the backdrop.
+// Miniature keeps crisper air, matching its tilt-shift photographic read.
+const HAZE_NEAR:Record<Style,number>={anime:380,miniature:460},HAZE_FAR:Record<Style,number>={anime:3200,miniature:3700};
 const personColors=['#e8d9b6','#bc7361','#89a589','#64839d','#e3b35f','#a897b0'].map(c=>new THREE.Color(c));
 function random(seed:number){return()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296;};}
 
@@ -69,6 +109,19 @@ export class CityRenderer {
   private styleSwitchMetrics:StyleSwitchMetrics|undefined;
   private retiredResources:Array<()=>void>=[];
   private pipeline:THREE.RenderPipeline|null=null;
+  private occlusion:ReturnType<typeof ao>|null=null;
+  private occlusionStrength=uniform(.65);
+  private hazeColor=uniform(new THREE.Color('#d2d6cc'));
+  private hazeNear=uniform(HAZE_NEAR.anime);
+  private hazeFar=uniform(HAZE_FAR.anime);
+  private mist=uniform(0);
+  private reflections:ReturnType<typeof ssr>|null=null;
+  private wetReflections=false;
+  private shafts:ReturnType<typeof godrays>|null=null;
+  private lightShafts=false;
+  private shaftColor=uniform(new THREE.Color(0,0,0));
+  private shaftStrength=0;
+  private skyEnvironment:SkyEnvironment|null=null;
   private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
   private focus=uniform(300);
@@ -87,15 +140,29 @@ export class CityRenderer {
   private skyCloud=uniform(new THREE.Color('#fff5df'));
   private skyCloudShade=uniform(new THREE.Color('#809aaf'));
   private hillColor=uniform(new THREE.Color('#637f85'));
+  private skylineColor=uniform(new THREE.Color('#8496a3'));
+  private skylineNight=uniform(0);
   private sunDisc:THREE.Mesh;
   private moonDisc:THREE.Mesh;
   private sun=new THREE.DirectionalLight('#fff1d1',3);
   private hemi=new THREE.HemisphereLight('#c8dce3','#748998',2);
   private lanternLights:Array<THREE.PointLight>=[];
+  private nearbyStreetLights=new NearbyStreetLights();
+  private streetLighting:PersistentStreetLighting|undefined;
   private terrain=new THREE.Group();
   private roads=new THREE.Group();
+  private constructionRoads=new THREE.Group();
+  private completedRoadSignature='';
+  private completedRoadSurfaces:RoadSurfacePartition|null=null;
+  private roadBuild:{kit:StagedKit;construction:THREE.Group;station:THREE.Group;lighting:{data:StreetLightingData|null};signature:string;surfaces:RoadSurfacePartition;identities:InfrastructureCommit;world:World;preparation:Generator<void,void,unknown>|null}|null=null;
+  private visibleInfrastructure?:VisibleInfrastructure;
+  private infrastructure(){return this.visibleInfrastructure??=new VisibleInfrastructure();}
+  private queuedRoadWorld:{world:World;signature:string}|null=null;
+  private get pendingRoads(){return Number(Boolean(this.roadBuild||this.queuedRoadWorld));}
+
   private station=new THREE.Group();
-  private chunks=new BuildingChunks(m=>this.art.buildingBatch(m),dispose=>this.retire(dispose),this.art.contours);
+  private sidewalks=new CitySidewalks(()=>this.art.get('#b4b8a6'),dispose=>this.retire(dispose));
+  private chunks=new ConstructionBatches(m=>this.art.buildingBatch(m),dispose=>this.retire(dispose),this.art.contours);
   private buildings=new Map<number,{source:RebuildableBuildingSource,signature:string}>();
   private water:RiverWater|null=null;
   private riverHalfWidth=32;
@@ -116,7 +183,7 @@ export class CityRenderer {
   private paintedSeason='';
   /** Latest per-building signage context; part of each building's render signature. */
   private signage=new Map<number,SignageContext>();
-  private treePoints:Array<{x:number,z:number,s:number}> = [];
+  private treePoints:Array<{x:number,z:number,s:number,h?:number}> = [];
   private buses=new CityBuses(this.art,release=>this.retire(release));
   private accessPaths=new BuildingAccessPaths(this.art,release=>this.retire(release));
   private rearExtensions=new RearExtensions(this.art,release=>this.retire(release),building=>{
@@ -125,15 +192,18 @@ export class CityRenderer {
     return !!current&&current.signature===buildingRenderSignature(building,original,this.signage.get(building.id))&&this.chunks.isSourceVisible(building.id,current.source);
   });
   private umbrellas=new Umbrellas(2000,hex=>this.art.get(hex));
-  private umbrellaTuples=new Float32Array(2000*5);
+  private umbrellaTuples=new Float32Array(2000*MOVEMENT_STRIDE);
   private umbrellaCount=0;
   private pedestrians:THREE.InstancedMesh;
   private heads:THREE.InstancedMesh;
   private fleet=new VehicleFleet(this.art);
-  private lastActorFrame=0;
-  private trainFleet=new TrainFleet(this.art);
-  private previous=new Map<number,{x:number,z:number,h:number,k:number}>();
-  private current=new Map<number,{x:number,z:number,h:number,k:number}>();
+  private trains=new TrainFleet(this.art);
+  private committedRoadWorld:World|null=null;
+  private movementPresentation=new MovementPresentation();
+  private actorSampleAt=0;
+  private treeClearanceKey='';
+  private previous=new Map<number,{x:number,z:number,h:number,k:number,y:number}>();
+  private current=new Map<number,{x:number,z:number,h:number,k:number,y:number}>();
   private received=performance.now();
   private interval=50;
   private lastTick=0;
@@ -144,8 +214,12 @@ export class CityRenderer {
   private frame=0;
   private disposed=false;
   private lastFrame=0;
-  private frames:number[]=[];
+  private frameTiming=new FrameTiming();
+  private lastMetricsAt=0;
+  private onVisibility=()=>{this.frameTiming.record(performance.now(),0,'loading',false);this.lastFrame=0;};
   private roadSignature='';
+  private groundSignature='';
+  private ground=new THREE.Group();
   private terrainSeed=-1;
   private resize:ResizeObserver;
   private pointerStart={x:0,y:0};
@@ -156,7 +230,7 @@ export class CityRenderer {
   private focusEnabled=true;
   private quality:'high'|'balanced'='high';
   private qualityController=new RenderQualityController();
-  private roadGroups=new Map<string,THREE.Group>();
+  private fixedReviewQuality=false;
   private actorIds=new Map<THREE.Object3D,number[]>();
   private worldTick=-1;
   private waterTime=0;
@@ -165,19 +239,25 @@ export class CityRenderer {
   private rainLines:THREE.LineSegments;
   private objectQueue=new Map<number,{building:Building,signature:string,source:RebuildableBuildingSource}>();
   constructor(readonly element:HTMLElement,forceWebGL=false){
+    document.addEventListener('visibilitychange',this.onVisibility);
     this.renderer=new THREE.WebGPURenderer({antialias:true,samples:4,forceWebGL,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.6));
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.05;
     element.appendChild(this.renderer.domElement);
     this.director=new CameraDirector(this.camera,this.renderer.domElement);
-    this.scene.fog=new THREE.FogExp2('#bfcbd0',.0008);
-    this.scene.add(this.terrain,this.roads,this.parks,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.fleet.root,this.trainFleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
+    // Range haze (clear city, veiled backdrop) plus low-lying mist: it builds
+    // with distance but only near the ground and water, strongest at first
+    // light and in rain, so towers rise out of it as in the dawn concept.
+    const mist=positionView.z.negate().mul(-.0032).exp().oneMinus().mul(positionWorld.y.add(1.5).div(-8).exp()).mul(this.mist);
+    this.scene.fogNode=fog(this.hazeColor,rangeFogFactor(this.hazeNear,this.hazeFar).max(mist));
+    this.scene.add(this.terrain,this.roads,this.parks,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
     this.scene.add(this.sun.target);
     for(let i=0;i<8;i++){const light=new THREE.PointLight('#ffd6a0',0,22,2);this.lanternLights.push(light);this.scene.add(light);}
+    this.scene.add(this.nearbyStreetLights.root);
     const sky=new THREE.Mesh(new THREE.SphereGeometry(1800,32,20),new THREE.MeshBasicNodeMaterial({side:THREE.BackSide,depthWrite:false}));
     const direction=positionLocal.normalize();
     const skyBase=mix(this.skyLow,this.skyHigh,smoothstep(-.05,.75,direction.y));
@@ -192,7 +272,7 @@ export class CityRenderer {
     const cloudRelief=smoothstep(-.04,.2,cloudField.add(direction.y.mul(.13)));
     const cloudPaint=mix(this.skyCloudShade,this.skyCloud,cloudRelief);
     (sky.material as THREE.MeshBasicNodeMaterial).colorNode=mix(skyBase,cloudPaint,clouds);
-    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);
+    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);this.skyEnvironment=new SkyEnvironment(sky);
     this.sunDisc=new THREE.Mesh(new THREE.SphereGeometry(15,16,8),new THREE.MeshBasicNodeMaterial({color:'#ffe5bc',fog:false}));this.scene.add(this.sunDisc);
     this.moonDisc=new THREE.Mesh(new THREE.SphereGeometry(7,16,8),new THREE.MeshBasicNodeMaterial({color:'#cbdbe2',fog:false}));this.scene.add(this.moonDisc);
     const rainPositions:number[]=[],rainPhases:number[]=[];const rainRandom=random(123);
@@ -244,17 +324,66 @@ export class CityRenderer {
   private buildPipeline(){
     this.disposePipeline();
     this.scenePass=pass(this.scene,this.camera,{samples:4});
-    const sceneColor=this.scenePass.getTextureNode('output');
+    // Explicit resolved normals avoid Three's depth-normal reconstruction path,
+    // which emits an invalid textureDimensions mip argument for MSAA WebGPU depth.
+    // Keep four-sample scene AA; AO and wet-weather SSR share the normal target.
+    const wet=this.wetReflections;
+    this.scenePass.setMRT(mrt({output,normal:directionToColor(normalView)}));
+    const depthTexture=this.scenePass.getTextureNode('depth');
+    const normalTexture=this.scenePass.getTextureNode('normal');
+    const viewNormal=sample(uv=>colorToDirection(normalTexture.sample(uv)));
+    const occlusion=this.occlusion=ao(depthTexture,viewNormal,this.camera);
+    occlusion.resolutionScale=.5;occlusion.radius.value=3;occlusion.thickness.value=2.5;occlusion.distanceExponent.value=1.4;occlusion.samples.value=12;
+    // Fade AO beyond ~700 m: distant depth loses precision and can band
+    // across the hills, skyline and mountain ring.
+    const aoReach=smoothstep(1300,700,this.scenePass.getViewZNode().negate());
+    let sceneColor=this.scenePass.getTextureNode('output').mul(vec4(vec3(mix(float(1),occlusion.getTextureNode().r,this.occlusionStrength.mul(aoReach))),1));
+    if(wet){
+      // Reflectivity is derived in the SSR pass itself: flat ground near street
+      // level, in the same world-space puddles the asphalt darkens. Camera
+      // matrices are explicit uniforms because the pass renders a screen quad.
+      const viewPosition=getViewPosition(uv(),depthTexture.r,uniform(this.camera.projectionMatrixInverse));
+      const cameraWorld=uniform(this.camera.matrixWorld);
+      const world=cameraWorld.mul(vec4(viewPosition,1)).xyz;
+      const up=cameraWorld.mul(vec4(colorToDirection(normalTexture.rgb),0)).xyz.normalize().y;
+      const reflectivity=smoothstep(.86,.97,up).mul(smoothstep(1.6,.5,world.y)).mul(ArtMaterials.puddles(world.x,world.z).mul(.55).add(.1)).mul(this.art.wet);
+      // SSR samples its colour input, so it reflects the raw pass texture.
+      const reflections=this.reflections=ssr(this.scenePass.getTextureNode('output'),depthTexture,viewNormal,reflectivity,float(.32),this.camera);
+      reflections.resolutionScale=.5;reflections.maxDistance.value=60;reflections.thickness.value=.6;reflections.quality.value=.45;
+      // SSR writes reflected colour already scaled by reflectivity with alpha 1,
+      // so add it; alpha blending would replace the street with a dark mirror.
+      sceneColor=sceneColor.add(vec4(reflections.rgb,0));
+    }
+    if(this.lightShafts){
+      // Raymarched shafts through the key light's shadow map, only while the
+      // sun is low enough for them to read (rebuilt when that changes).
+      const shafts=this.shafts=godrays(this.scenePass.getTextureNode('depth'),this.camera,this.sun);
+      shafts.resolutionScale=.5;// Aerial views see sunlit air almost everywhere: keep density low so
+      // only the contrast behind occluders reads, not a uniform glow.
+      shafts.raymarchSteps.value=40;shafts.density.value=.09;shafts.maxDensity.value=.22;shafts.distanceAttenuation.value=2;
+      sceneColor=sceneColor.add(vec4(shafts.getTextureNode().rgb.mul(this.shaftColor),0));
+    }
     const depth=this.scenePass.getViewZNode();
     const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
       focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
       outputHeightPx:this.outputHeight,maxGatherRadiusPx:this.bokeh,enabled:this.dofEnabled});
-    const focus=this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh);
+    // A zero CoC still runs seven full-screen passes. Omit the DOF node
+    // entirely when disabled, preserving the unblurred scene and bloom.
+    const focus=this.focusEnabled
+      ?(this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh))
+      :sceneColor;
     const shine=bloom(sceneColor,.1,.5,.9);this.shine=shine;
     this.pipeline=new THREE.RenderPipeline(this.renderer);
     this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
   }
-  private disposePipeline(){this.pipeline?.dispose();this.depthOfField?.dispose();this.shine?.dispose();this.scenePass?.dispose();this.pipeline=null;this.depthOfField=null;this.shine=null;this.scenePass=null;}
+  private disposePipeline(){
+    // Warmup borrows scene attachments. Detach immediately, but keep the old
+    // resources alive until pending compiler work releases its references.
+    const resources=[this.occlusion,this.reflections,this.shafts,this.pipeline,this.depthOfField,this.shine,this.scenePass];
+    this.occlusion=null;this.reflections=null;this.shafts=null;this.pipeline=null;
+    this.depthOfField=null;this.shine=null;this.scenePass=null;
+    this.retire(()=>{for(const resource of resources)resource?.dispose();});
+  }
   async setStyle(style:Style){
     const request=++this.styleRequest;
     const previous=this.styleWarmupTail;
@@ -271,7 +400,9 @@ export class CityRenderer {
       this.pendingCompiles++;
       try{
         await compileStyleSamples(prepared.scene,
-          scene=>this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
+          scene=>this.scenePass
+            ?compileForScenePass(this.renderer,this.scenePass,scene,this.camera,prepared.targetScene)
+            :this.renderer.compileAsync(scene,this.camera,prepared.targetScene),
           ()=>!this.disposed&&request===this.styleRequest,timing);
       }catch(error){timing.outcome='failed';throw error;}finally{
         prepared.dispose();this.pendingCompiles--;
@@ -285,22 +416,37 @@ export class CityRenderer {
   }
   private applyStyle(style:Style){
     this.style=style;this.art.setStyle(style);this.chunks.setContoursVisible(style==='anime');this.scene.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(m=>this.art.variant(m)):this.art.variant(o.material);});
-    this.opticalScale.value=style==='miniature'?.01:.04;this.bokeh.value=style==='miniature'?8:4;
+    this.opticalScale.value=style==='miniature'?.01:.04;this.bokeh.value=style==='miniature'?16:4;
   }
   private retire(dispose:()=>void){if(this.pendingCompiles)this.retiredResources.push(dispose);else dispose();}
   private retireGroup(group:THREE.Group){group.removeFromParent();this.retire(()=>disposeGroup(group));}
   setPreview(hour:number|null){this.preview=hour;}
+  toggleWaterReflectionForReview(){return this.water?.toggleReflectionForReview()??false;}
+  toggleStreetLightsForReview(){return this.nearbyStreetLights.enabled=!this.nearbyStreetLights.enabled;}
   setLens(id:LensPresetId,takeManualControl=true){this.director.setLens(id,takeManualControl);const lens=LENS_PRESETS[id];this.lensFocalM.value=lens.focalLengthMm/1000;this.lensFNumber.value=lens.fNumber;}
-  setFocus(value:boolean){this.focusEnabled=value;this.dofEnabled.value=value?1:0;}
+  setFocus(value:boolean){
+    if(this.focusEnabled===value)return;
+    this.focusEnabled=value;this.dofEnabled.value=value?1:0;
+    if(this.pipeline)this.buildPipeline();
+  }
   setQuality(quality:'high'|'balanced'){this.quality=quality;this.qualityController.setProfile(quality);this.applyQuality();}
+  setFixedReviewQuality(enabled:boolean){
+    if(!import.meta.env.DEV)return;
+    this.fixedReviewQuality=enabled;this.qualityController.reset();this.applyQuality();
+  }
+  reviewQualitySnapshot(){
+    const buffer=this.renderer.getDrawingBufferSize(new THREE.Vector2());
+    return {mode:this.fixedReviewQuality?'fixed-review':'adaptive',profile:this.quality,
+      adaptiveLevel:this.qualityController.level,
+      ...renderQualitySettings(this.quality,this.qualityController.level,window.devicePixelRatio,this.fixedReviewQuality),
+      actualBuffer:buffer.toArray()};
+  }
   private applyQuality(){
-    const level=this.qualityController.level,high=this.quality==='high';
     // Reduce reflection/shadow cost before lowering the focal scene's resolution.
-    const ratio=(high?[1.6,1.6,1.25]:[1,1,.8])[level];
-    const shadow=(high?[2048,1536,1024]:[1024,768,512])[level];
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,ratio));
-    this.sun.shadow.mapSize.set(shadow,shadow);
-    this.water?.setReflectionScale((high?[.35,.23,.16]:[.25,.19,.15])[level]);
+    const settings=renderQualitySettings(this.quality,this.qualityController.level,window.devicePixelRatio,this.fixedReviewQuality);
+    this.renderer.setPixelRatio(settings.pixelRatio);
+    this.sun.shadow.mapSize.set(settings.shadowSize,settings.shadowSize);
+    this.water?.setReflectionScale(settings.reflectionScale);
     this.setSize();
   }
   setSelected(id:number|null){this.selected=id;}
@@ -308,11 +454,21 @@ export class CityRenderer {
   setWorld(world:World,replaced=false){
     this.worldState=world;this.season=seasonAt(world.day,world.minute_of_day);this.hour=world.minute_of_day/60;this.rain=world.weather?.intensity??0;
     if(replaced||this.terrainSeed!==world.seed||world.tick<this.worldTick){this.resetWorld();this.buildTerrain(world);this.terrainSeed=world.seed;}
-    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
-    const bridgeNodes=new Map(world.nodes.map(n=>[n.id,n]));this.bridgeSpans=world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
-    const signatures=world.roads.map(r=>`${r.id}:${r.stage}:${Math.floor(r.progress*12)}`).join('|')+`-g${world.ground?.length??0}-`+world.projects.filter(p=>['road','rail','bridge','station'].includes(p.kind)).map(p=>`${p.id}:${p.stage}:${Math.floor(p.progress*12)}`).join('|');
-    if(signatures!==this.roadSignature){this.roadSignature=signatures;this.rebuildRoads(world);}
-    const parkKey=`${signatures}#${parkSignature(world)}`;
+    this.infrastructure().request(world);
+    this.worldTick=world.tick;this.director.world(world);this.buses.setWorld(world);this.trains.setWorld(trainWorldWithInfrastructure(world,this.committedRoadWorld));this.accessPaths.setWorld(world);this.rearExtensions.setWorld(world);
+
+    const signatures=roadBatchSignatures(world);
+    const signature=signatures.completed+signatures.construction;
+    if(signature!==this.roadSignature){this.rebuildRoads(world,signatures.completed);this.roadSignature=signature;}
+    this.sidewalks.setWorld(world);
+    const groundSignature=JSON.stringify(world.ground??[]);
+    if(groundSignature!==this.groundSignature){
+      this.groundSignature=groundSignature;
+      this.retireGroup(this.ground);
+      this.ground=buildGroundSurfaces(world.ground??[],this.art);
+      this.scene.add(this.ground);
+    }
+    const parkKey=`${signature}#${parkSignature(world)}`;
     if(parkKey!==this.parkKey){this.parkKey=parkKey;this.rebuildParks(world);}
     if(seasonKey(this.season)!==this.paintedSeason)this.paintSeason();
     const ids=new Set(world.buildings.map(b=>b.id));
@@ -337,27 +493,38 @@ export class CityRenderer {
     }
     this.updateTrees(world);
   }
-  setMovement(data:Float32Array,tick:number,minute:number){
-    this.previous=this.current;this.current=new Map();
-    for(let i=0;i<data.length;i+=5)this.current.set(data[i],{x:data[i+1],z:data[i+2],h:data[i+3],k:data[i+4]});
-    const now=performance.now();this.interval=Math.max(20,Math.min(250,now-this.received));this.received=now;this.motionDelta=Math.max(.05,(tick-this.motionTick)*.05);this.motionTick=tick;this.hour=minute/60;
-    this.director.setPositions(data);
+  setMovement(data:Float32Array,tick:number,minute:number,trainDoors:Float32Array,support:ReadonlyMap<number,MovementSupport>){
+    this.trains.setMovement(trainDoors);
+    const now=performance.now();this.interval=Math.max(20,Math.min(250,now-this.received));this.received=now;this.motionTick=tick;this.hour=minute/60;
+    this.movementPresentation.receive(data,support,this.interval);
   }
+
   private resetWorld(){
+    this.frameTiming=new FrameTiming();this.lastMetricsAt=0;
+    this.retireGroup(this.ground);this.ground=new THREE.Group();this.scene.add(this.ground);this.groundSignature='';
     this.focusResetPending=true;
-    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trainFleet.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
+    this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trains.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
+    this.sidewalks.reset();
+    this.cancelRoadBuild();
+    this.infrastructure().reset();
+    this.nearbyStreetLights?.reset();this.streetLighting?.reset();
     this.buildings.clear();
     this.clearParks();this.parkKey='';this.paintedSeason='';
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry,trunk=this.treeTrunkGeometry;this.retire(()=>{near?.dispose();far?.dispose();trunk?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeTrunkGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
     this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);
-    const oldWater=this.water;oldWater?.mesh.removeFromParent();this.retire(()=>oldWater?.dispose());this.water=null;this.waterTime=0;this.motionTick=0;this.motionDelta=.05;this.received=performance.now();this.current.clear();this.previous.clear();this.objectQueue.clear();this.roadSignature='';this.selected=null;this.treePoints=[];
+    this.retireGroup(this.constructionRoads);this.constructionRoads=new THREE.Group();this.scene.add(this.constructionRoads);this.completedRoadSignature='';this.completedRoadSurfaces=null;
+    const oldWater=this.water;oldWater?.mesh.removeFromParent();this.retire(()=>oldWater?.dispose());this.water=null;this.waterTime=0;this.motionTick=0;this.motionDelta=.05;this.received=performance.now();this.current.clear();this.previous.clear();this.movementPresentation?.reset();this.actorSampleAt=0;this.committedRoadWorld=null;this.objectQueue.clear();this.roadSignature='';this.selected=null;this.treePoints=[];
   }
   private buildTerrain(world:World){
     const river=world.terrain.river;const halfWidth=this.riverHalfWidth=world.terrain.river_half_width??32;
-    const land=new THREE.MeshStandardNodeMaterial({roughness:1});const meadow=mx_noise_float(positionLocal.mul(.024)).mul(.5).add(.5);
+    // Natural land is the underlay for near-coplanar block/parcel paving.
+    // Bias only its depth away from the camera: moving the actual surface would
+    // leave tree roots and banks floating, while biasing paving can hide details.
+    const land=new THREE.MeshStandardNodeMaterial({roughness:1,polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2});const meadow=mx_noise_float(positionLocal.mul(.024)).mul(.5).add(.5);
     const scrub=mx_noise_float(positionLocal.mul(.007)).mul(.5).add(.5);
-    land.colorNode=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
+    const landBase=mix(mix(color('#577d61'),color('#94ab6d'),meadow),color('#c2bc8c'),smoothstep(.59,.79,scrub).mul(.55)).mul(mx_noise_float(positionLocal.mul(.6)).mul(.075).add(.965));
+    land.colorNode=landBase.mul(this.art.cloudShade());
     for(const side of [-1,1]){
       const shape=new THREE.Shape();const edge=side<0?-420:420;shape.moveTo(edge,-420);
       const pts=side<0?river:[...river].reverse();
@@ -369,24 +536,29 @@ export class CityRenderer {
     const visibleRiver=[{x:river[0].x,z:-1400},...river,{x:river.at(-1)!.x,z:1400}];
     this.water=new RiverWater(visibleRiver,halfWidth);this.scene.add(this.water.mesh);this.applyQuality();
     const backdropMaterial=new THREE.MeshStandardNodeMaterial({roughness:1});
-    const outerLandscape=smoothstep(420,1000,positionLocal.x.abs().max(positionLocal.z.abs()));
-    const woodland=mix(color('#526e60'),color('#78816b'),mx_noise_float(positionLocal.mul(.012)).mul(.5).add(.5));
-    backdropMaterial.colorNode=mix(land.colorNode!,woodland,outerLandscape);
+    backdropMaterial.colorNode=mix(landBase,this.outerLandscapeColor(),smoothstep(420,520,positionLocal.x.abs().max(positionLocal.z.abs()))).mul(this.art.cloudShade());
     const backdrop=new THREE.Mesh(createBackdropGeometry(world.seed,river,halfWidth),backdropMaterial);
     backdrop.userData.ownedMaterial=true;backdrop.receiveShadow=true;this.terrain.add(backdrop);
-    const bankKit=new Kit();
-    for(let i=0;i<river.length-1;i++){
-      const a=river[i],b=river[i+1],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),angle=Math.atan2(dx,dz);
-      for(const side of [-1,1]){
-        bankKit.box((a.x+b.x)/2+side*(halfWidth+2),-.45,(a.z+b.z)/2,3,.9,len,this.art.get('#9b9e8b'),angle);
-        bankKit.box((a.x+b.x)/2+side*(halfWidth+8),.04,(a.z+b.z)/2,5,.12,len,this.art.get('#c2c2a6'),angle);
-      }
+    // Low-poly crowns give the wooded hills a broken silhouette; haze softens
+    // them with distance. One instanced draw, no shadows (outside the frustum).
+    const forest=backdropForestMatrices(backdrop.geometry,world.seed);
+    if(forest.length){
+      const crowns=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),this.art.get('#e9eee5',.95),forest.length);
+      const tones=['#4a6347','#58704c','#3f5843','#66784f'].map(c=>new THREE.Color(c));
+      forest.forEach((matrix,i)=>{crowns.setMatrixAt(i,matrix);crowns.setColorAt(i,tones[i%tones.length]);});
+      crowns.instanceMatrix.needsUpdate=true;crowns.computeBoundingSphere();this.terrain.add(crowns);
     }
-    // Low irregular stone shoulders break the ruler-straight bank edge.
-    for(let z=-395;z<400;z+=4.5)for(const side of [-1,1]){const stone=new THREE.IcosahedronGeometry(1,0),scale=1.2+(Math.sin(z*7+world.seed)*.5+.5)*1.5;stone.scale(scale,.65,scale*.8);stone.rotateY(z);stone.translate(this.riverX(river,z)+side*halfWidth,-.2,z);bankKit.add(stone,this.art.get(z%9<4.5?'#8c9b8b':'#b0b2a0'));}
+    const bankKit=new Kit();
+    // Sweep the same X-offset boundary used by land and water. Shared bend
+    // stations keep the wall and path continuous without overlapping boxes.
+    for(const side of [-1,1] as const){
+      bankKit.add(createRiverbankGeometry(river,halfWidth,side,0,1.4,-1.3,.04),this.art.get('#9b9e8b'));
+      bankKit.add(createRiverbankGeometry(river,halfWidth,side,0,1.6,.04,.18),this.art.get('#b0b2a0'));
+      bankKit.add(createRiverbankGeometry(river,halfWidth,side,5.5,10.5,-.02,.1),this.art.get('#c2c2a6'));
+    }
     this.terrain.add(bankKit.finish(false));
     const rng=random(world.seed+937);
-    const positions:Array<{x:number,z:number,s:number}>=[];
+    const positions:Array<{x:number,z:number,s:number,h?:number}>=[];
     // Groves leave clear meadows between them; the city gradually clears real
     // development footprints, while riverbank vegetation stays recognizable.
     for(let grove=0;grove<26;grove++){const cx=rng()*740-370,cz=rng()*740-370,radius=24+rng()*40;
@@ -398,7 +570,8 @@ export class CityRenderer {
     // A line of blossoms along the river creates a recognizable foreground rhythm.
     for(let z=-330;z<350;z+=24)positions.push({x:this.riverX(river,z)+halfWidth+17,z,s:2.6});
     for(let i=0;i<360;i++){const z=rng()*800-400,side=rng()>.5?1:-1;positions.push({x:this.riverX(river,z)+side*(halfWidth+21+rng()*28),z,s:1.8+rng()*2.5});}
-    this.treePoints=positions;
+    positions.push(...riverbankTreePoints(river,halfWidth));
+    this.treePoints=positions;this.treeClearanceKey='';
     // Small overlapping leaf masses give a broken canopy silhouette at both
     // observation distances, rather than a row of identical smooth spheres.
     const foliage=createFoliageGeometry('near');
@@ -412,6 +585,7 @@ export class CityRenderer {
     for(const batch of this.treeBatches)this.terrain.add(batch.trees,batch.trunks);
     this.updateTrees(world);
     this.buildMountains(rng);
+    this.buildSkyline(world.seed,river);
     const detail=new Kit();
     // Park benches along the riverside walk.
     for(let z=-150;z<300;z+=80){const x=this.riverX(river,z)+halfWidth+12;detail.box(x,.9,z,1.2,.15,3.1,this.art.get('#7a6754'));detail.box(x+.5,1.3,z,.12,.8,3.1,this.art.get('#7a6754'));}
@@ -425,6 +599,48 @@ export class CityRenderer {
       for(let i=0;i<=96;i++){const a=i/96*Math.PI*2,r=2500+ring*250,h=160+ring*32+Math.sin(a*5+phase)*38+Math.sin(a*11+phase*.3)*17+Math.sin(a*23+phase)*7;vertices.push(Math.cos(a)*r,-8,Math.sin(a)*r,Math.cos(a)*r,h,Math.sin(a)*r);if(i<96){const n=i*2;indices.push(n,n+2,n+1,n+1,n+2,n+3);}}
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const m=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});m.colorNode=mix(this.hillColor,mix(this.skyLow,this.skyHigh,.55),.2+ring*.24).mul(mx_noise_float(positionLocal.mul(.025)).mul(.055).add(.97));const mountain=new THREE.Mesh(g,m);mountain.userData.ownedMaterial=true;this.terrain.add(mountain);
     }
+  }
+  /** Distant land as a working landscape rather than one mottled lawn: a
+   * suburban roofscape continues the city past its edge, farmland fills the
+   * valley floor and forest climbs the hills. All of it sits behind range haze. */
+  private outerLandscapeColor(){
+    const p=positionLocal,edge=p.x.abs().max(p.z.abs());
+    // Field parcels on a slightly rotated grid, each with its own crop tone.
+    const u=p.x.mul(.92).add(p.z.mul(.39)).div(74),v=p.z.mul(.92).sub(p.x.mul(.39)).div(46);
+    const parcel=mx_noise_float(vec3(floor(u),floor(v),3.1).mul(.61)).mul(.5).add(.5);
+    const crops=mix(mix(color('#7d985c'),color('#a7a272'),smoothstep(.3,.62,parcel)),color('#5d7a4e'),smoothstep(.7,.86,parcel));
+    const fu=fract(u),fv=fract(v);
+    const hedge=smoothstep(.0,.05,fu.min(fu.oneMinus()).min(fv.min(fv.oneMinus())));
+    const fields=mix(color('#566b47'),crops,hedge.mul(.35).add(.65));
+    // Forest on higher ground and in irregular woods on the plain. A warped,
+    // multi-octave mask gives ragged woodland edges rather than smooth ovals.
+    const warp=vec2(mx_noise_float(vec2(p.x,p.z).mul(.02)),mx_noise_float(vec2(p.z,p.x).mul(.02).add(7.3))).mul(24);
+    const wp=vec2(p.x,p.z).add(warp);
+    const woods=mx_noise_float(wp.mul(.005)).mul(.7).add(mx_noise_float(wp.mul(.021)).mul(.3)).mul(.5).add(.5);
+    const forestMask=smoothstep(26,58,p.y).max(smoothstep(.58,.7,woods));
+    const crowns=mx_noise_float(p.mul(.21)).mul(.5).add(.5);
+    const canopy=mix(color('#4a6248'),color('#6c8053'),crowns.mul(crowns));
+    // Low dense roofs just outside the basin, thinning with distance: a block
+    // grid of individually toned roofs split by darker streets.
+    const town=smoothstep(1050,560,edge).mul(smoothstep(22,8,p.y)).mul(smoothstep(.4,.52,mx_noise_float(wp.mul(.004)).mul(.5).add(.5)));
+    const townP=vec2(p.x,p.z).add(warp.mul(.12));
+    const lot=townP.div(vec2(11,8)),lotCell=floor(lot),lotUv=fract(lot);
+    const tone=mx_noise_float(vec3(lotCell,1.7).mul(.83)).mul(.5).add(.5);
+    const roofPalette=mix(mix(color('#7d8288'),color('#a59d8c'),smoothstep(.25,.55,tone)),color('#8a5f4f'),smoothstep(.78,.9,tone));
+    const lotGap=smoothstep(.02,.12,lotUv.x.min(lotUv.x.oneMinus())).mul(smoothstep(.03,.15,lotUv.y.min(lotUv.y.oneMinus())));
+    const blocks=townP.div(vec2(66,48)),blockUv=fract(blocks);
+    const street=smoothstep(.0,.04,blockUv.x.min(blockUv.x.oneMinus())).mul(smoothstep(.0,.05,blockUv.y.min(blockUv.y.oneMinus())));
+    const roofs=mix(color('#62655f'),roofPalette,lotGap.mul(.25).add(.75).mul(street.mul(.6).add(.4)));
+    return mix(mix(fields,canopy,forestMask),roofs,town.mul(forestMask.oneMinus()));
+  }
+  private buildSkyline(seed:number,river:Point[]){
+    const material=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});
+    // World-space window cells: sparse warm lights after dusk, flat haze by day.
+    const cell=floor(vec3(positionLocal.x.add(positionLocal.z).mul(.31),positionLocal.y.mul(.29),0));
+    const lit=step(.48,mx_noise_float(cell.mul(.73))).mul(step(6,positionLocal.y));
+    material.colorNode=mix(this.skylineColor,color('#e8b878'),lit.mul(this.skylineNight).mul(.55)).mul(mx_noise_float(positionLocal.mul(.02)).mul(.06).add(.97));
+    const skyline=new THREE.Mesh(createSkylineGeometry(seed,river),material);
+    skyline.userData.ownedMaterial=true;this.terrain.add(skyline);
   }
   /** Instanced trees in 200 m cells so each cell can switch foliage detail by camera distance. */
   private createTreeBatches<T extends {x:number,z:number}>(points:readonly T[],colorOf:(p:T,local:number,index:number)=>THREE.Color):TreeBatch[]{
@@ -473,86 +689,239 @@ export class CityRenderer {
     paint(this.treeBatches,this.groveLook);paint(this.parkBatches,this.parkLook);
   }
   private updateTrees(world:World){
-    const hides=treeOcclusion(world,this.treePoints);
+    const clearanceKey=treeClearanceSignature(world);
+    if(clearanceKey===this.treeClearanceKey)return;
+    const nodes=new Map(world.nodes.map(n=>[n.id,n]));
+    const onPaving=createPavedGroundTest(world.ground??[]);
+    const maxCanopy=Math.max(0,...this.treePoints.map(p=>p.s*1.7+2));
+    const candidatesAt=createTreeClearanceGrid(world.buildings,world.roads,(world.rear_extensions??[]).slice(0,2),world.nodes,maxCanopy,kind=>roadWidth(kind)/2+(kind==='bridge'?2.5+maxCanopy:kind==='lane'?1.5:3.5),world.rail_alignments);
+    const railPaths=new Map((world.rail_alignments??[]).map(a=>[a.road_id,sampledRail(a)]));
     for(const batch of this.treeBatches){for(let local=0;local<batch.indices.length;local++){
       const i=batch.indices[local];
       const p=this.treePoints[i];
-      const hidden=hides(p);
-      dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
+      const candidates=candidatesAt(p);
+      let hidden=onPaving(p)||candidates.buildings.some(b=>{const dx=p.x-b.x,dz=p.z-b.z,c=Math.cos(b.rotation),s=Math.sin(b.rotation),localX=c*dx-s*dz,localZ=s*dx+c*dz,canopy=p.s*1.7+2;
+        return Math.abs(localX)<b.width/2+canopy&&localZ>-b.depth/2-canopy&&localZ<b.depth/2+canopy+(b.anchor?4:0);
+      });
+      if(!hidden)hidden=candidates.roads.some(r=>{const a=nodes.get(r.from),b=nodes.get(r.to);const path=railPaths.get(r.id),nearest=path?.at(path.distanceAt(p));return a&&b&&(nearest?Math.hypot(p.x-nearest.x,p.z-nearest.z):distanceToSegment(p,a,b))<roadWidth(r.kind)/2+(r.kind==='bridge'?2.5+2.38*p.s/1.8:r.kind==='lane'?1.5:3.5);});
+      if(!hidden)hidden=(world.rail_platforms??[]).some(platform=>overlapsStation(p,p.s*1.7+2,platform));
+      if(!hidden)hidden=candidates.rearExtensions.some(e=>{const dx=p.x-e.x,dz=p.z-e.z,c=Math.cos(e.rotation),s=Math.sin(e.rotation),canopy=p.s*1.7+2;return Math.abs(c*dx-s*dz)<e.width/2+canopy&&Math.abs(s*dx+c*dz)<e.depth/2+canopy;});
+      dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.set(hidden?0:p.s/1.8,hidden?0:p.s/1.8*(p.h??1),hidden?0:p.s/1.8);dummy.updateMatrix();batch.trunks.setMatrixAt(local,dummy.matrix);batch.trees.setMatrixAt(local,dummy.matrix);
     }
     batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();}
+    this.treeClearanceKey=clearanceKey;
   }
   private updateTreeDetail(){
     if(!this.treeNearGeometry||!this.treeFarGeometry)return;
     for(const batch of [...this.treeBatches,...this.parkBatches]){const distance=this.camera.position.distanceTo(batch.center),far=batch.far?distance>280:distance>330;if(far!==batch.far){batch.far=far;batch.trees.geometry=far?this.treeFarGeometry:this.treeNearGeometry;batch.trees.computeBoundingSphere();}}
   }
-  private rebuildRoads(world:World){
-    this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);this.roadGroups.clear();
+  private rebuildRoads(world:World,completedSignature=roadBatchSignatures(world).completed){
+    const copy=structuredClone({nodes:world.nodes,roads:world.roads,projects:world.projects,
+      expressway_profile:world.expressway_profile,road_decks:world.road_decks,rail_platforms:world.rail_platforms,terrain:world.terrain});
+    world={...world,...copy};
+    if(this.roadBuild||this.queuedRoadWorld){
+      // Keep one active coherent build and one latest input. Restarting an
+      // active job on every snapshot can prevent it from ever becoming visible.
+      this.queuedRoadWorld={world,signature:completedSignature};
+      return;
+    }
+    this.prepareRoads(world,completedSignature);
+  }
+  private cancelRoadBuild(){
+    if(this.roadBuild){const job=this.roadBuild;job.preparation?.return();job.kit.dispose();disposeGroup(job.construction);disposeGroup(job.station);}
+    this.roadBuild=null;this.queuedRoadWorld=null;
+  }
+  private updateRoads(){
+    if(!this.roadBuild){
+      if(this.queuedRoadWorld){
+        const next=this.queuedRoadWorld;this.queuedRoadWorld=null;
+        try{this.prepareRoads(next.world,next.signature);}
+        catch(error){this.roadSignature='';throw error;}
+      }
+      return;
+    }
+    const job=this.roadBuild;let built:THREE.Group|null=null;
+    try{
+      if(job.preparation){
+        const deadline=performance.now()+2;
+        for(let units=0;units<128;units++){
+          if(job.preparation.next().done){job.preparation=null;break;}
+          if(performance.now()>=deadline)break;
+        }
+        return;
+      }
+      const deadline=performance.now()+2;
+      let complete=false;
+      // Allow cheap slices to share a frame, but never drain a whole job here.
+      // A single primitive/merge slice may exceed this soft time budget.
+      for(let slices=0;slices<8;slices++){
+        if(job.kit.step()){complete=true;break;}
+        if(performance.now()>=deadline)break;
+      }
+      if(!complete)return;
+      built=job.kit.takeGroup()!;
+      const roads=new THREE.Group();roads.add(built);
+      // Detached candidates miss scene-wide style traversal during preparation.
+      for(const group of [roads,job.construction,job.station])group.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(m=>this.art.variant(m)):this.art.variant(o.material);});
+      this.retireGroup(this.roads);this.retireGroup(this.constructionRoads);this.retireGroup(this.station);
+      this.roads=roads;this.constructionRoads=job.construction;this.station=job.station;
+      this.scene.add(this.roads,this.constructionRoads,this.station);
+      if(job.lighting.data){
+        if(!this.streetLighting){this.streetLighting=new PersistentStreetLighting(this.art);this.scene.add(this.streetLighting.root);}
+        this.streetLighting.commit(job.lighting.data);
+        this.nearbyStreetLights?.setSources(job.lighting.data.sources);
+      }
+      this.infrastructure().commit(job.identities);
+    const bridgeNodes=new Map(job.world.nodes.map(n=>[n.id,n]));this.bridgeSpans=job.world.roads.filter(r=>r.kind==='bridge'&&r.stage==='open').flatMap(r=>{const a=bridgeNodes.get(r.from),b=bridgeNodes.get(r.to);return a&&b?[{a,b}]:[];});
+      this.committedRoadWorld=job.world;
+      this.trains.setWorld(trainWorldWithInfrastructure(this.worldState??job.world,job.world));
+      this.completedRoadSignature=job.signature;this.completedRoadSurfaces=job.surfaces;this.roadBuild=null;
+    }catch(error){if(built)disposeGroup(built);this.cancelRoadBuild();this.roadSignature='';throw error;}
+  }
+  private prepareRoads(world:World,completedSignature:string){
+    const kit=new StagedKit(),constructionKit=new Kit();
+    const construction=new THREE.Group(),station=new THREE.Group(),lighting:{data:StreetLightingData|null}={data:null};
+    const rebuildCompleted=completedSignature!==this.completedRoadSignature;
+    const surfaces=rebuildCompleted?new RoadSurfacePartition():(this.completedRoadSurfaces??new RoadSurfacePartition());
+    const preparation=this.populateRoads(world,rebuildCompleted,kit,constructionKit,construction,station,lighting,surfaces);
+    if(rebuildCompleted){
+      this.roadBuild={kit,construction,station,lighting,signature:completedSignature,surfaces,identities:this.infrastructure().capture(world),world,preparation};
+    }else{
+      try{
+        // Construction-only refreshes contain no preparation yields.
+        preparation.next();
+        kit.dispose();this.retireGroup(this.constructionRoads);
+        this.constructionRoads=construction;this.scene.add(construction);
+      }catch(error){kit.dispose();disposeGroup(construction);disposeGroup(station);throw error;}
+    }
+  }
+  private *populateRoads(world:World,rebuildCompleted:boolean,kit:StagedKit,constructionKit:Kit,
+    construction:THREE.Group,station:THREE.Group,lighting:{data:StreetLightingData|null},surfaces:RoadSurfacePartition):Generator<void,void,unknown>{
     const nodes=new Map(world.nodes.map(n=>[n.id,n]));
-    const kit=new Kit();
-    // Continuous pedestrian-scale river railings. Reserve openings for real
-    // bridges, including construction, and rebuild when infrastructure changes.
-    const bankMetal=this.art.get('#73827b',.66);
-    for(const side of [-1,1])for(let z=-390;z<390;z+=6){
-      const a={x:this.riverX(world.terrain.river,z)+side*(this.riverHalfWidth+5.4),z};
-      const b={x:this.riverX(world.terrain.river,z+6)+side*(this.riverHalfWidth+5.4),z:z+6};
-      const middle={x:(a.x+b.x)/2,z:z+3};
-      const opening=world.roads.some(road=>{if(road.kind!=='bridge')return false;const from=nodes.get(road.from),to=nodes.get(road.to);return from&&to&&distanceToSegment(middle,from,to)<10;});
-      if(opening)continue;
-      const length=Math.hypot(b.x-a.x,6),angle=Math.atan2(b.x-a.x,6);
-      kit.box(a.x,.73,a.z,.08,1.46,.08,bankMetal);
-      for(const y of [.64,1.28])kit.box(middle.x,y,middle.z,.055,.065,length,bankMetal,angle);
+    try{
+    if(rebuildCompleted){
+      // Continuous pedestrian-scale river railings. Reserve openings for real
+      // bridges, including construction, and rebuild when infrastructure changes.
+      const bankMetal=this.art.get('#73827b',.66);
+      for(const side of [-1,1])for(let z=-390;z<390;z+=6){
+        const a={x:this.riverX(world.terrain.river,z)+side*(this.riverHalfWidth+5.4),z};
+        const b={x:this.riverX(world.terrain.river,z+6)+side*(this.riverHalfWidth+5.4),z:z+6};
+        const middle={x:(a.x+b.x)/2,z:z+3};
+        const opening=world.roads.some(road=>{if(road.kind!=='bridge')return false;const from=nodes.get(road.from),to=nodes.get(road.to);return from&&to&&distanceToSegment(middle,from,to)<10;});
+        if(opening)continue;
+        const length=Math.hypot(b.x-a.x,6),angle=Math.atan2(b.x-a.x,6);
+        kit.box(a.x,.73,a.z,.08,1.46,.08,bankMetal);
+        for(const y of [.64,1.28])kit.box(middle.x,y,middle.z,.055,.065,length,bankMetal,angle);
+        yield;
+      }
     }
-    // Developed master-plan blocks are paved urban ground (concrete, gravel and
-    // service yards) rather than lawn; parcel paving and buildings sit above.
-    const groundTones=['#a7a59a','#9d9c92','#aaa69a','#a19f95'];
-    for(const patch of world.ground??[]){
-      if(patch.points.length<3)continue;
-      const shape=new THREE.Shape(patch.points.map(([x,z])=>new THREE.Vector2(x,-z)));
-      const geometry=new THREE.ShapeGeometry(shape);geometry.rotateX(-Math.PI/2);geometry.translate(0,.035,0);
-      kit.add(geometry,this.art.get(groundTones[patch.block%groundTones.length]));
+    const deckHeights=new Map((world.road_decks??[]).map(d=>[d.road_id,d.deck_height]));
+    const railAlignments=new Map((world.rail_alignments??[]).map(a=>[a.road_id,a]));
+    const crossings:CrossingDeck[]=world.roads.flatMap(road=>{
+      const alignment=railAlignments.get(road.id);
+      if(alignment)return alignment.samples.slice(1).map((s,i)=>({a:{x:alignment.samples[i][1],z:alignment.samples[i][2]},b:{x:s[1],z:s[2]},width:roadWidth(road.kind),height:1+RAIL_DECK}));
+      const a=nodes.get(road.from),b=nodes.get(road.to);
+      return a&&b?[{a,b,width:road.kind==='expressway'?(world.expressway_profile??CURRENT_EXPRESSWAY_PROFILE).width:roadWidth(road.kind),height:road.kind==='expressway'?(deckHeights.get(road.id)??EXPRESSWAY_DECK):road.kind==='rail'?1+RAIL_DECK:0}]:[];
+    });
+    const curves=new Map<number,RoadCurve>();
+    for(const alignment of world.rail_alignments??[])curves.set(alignment.road_id,sampledRail(alignment));
+    const deckById=new Map((world.road_decks??[]).map(d=>[d.road_id,d]));
+    for(const road of world.roads){
+      const a=nodes.get(road.from),b=nodes.get(road.to),deck=deckById.get(road.id);
+      if(a&&b&&deck){const [c,d]=deck.controls;curves.set(road.id,bezierRoad(a,{x:c[0],z:c[1]},{x:d[0],z:d[1]},b));}
     }
-    for(const road of world.roads){const a=nodes.get(road.from),b=nodes.get(road.to);if(a&&b)this.roadKit(kit,a,b,road);}
-    const junctions=new Map<number,{count:number,radius:number}>();
-    for(const road of world.roads.filter(r=>r.stage==='open'&&r.kind!=='rail'&&r.kind!=='bridge'&&r.kind!=='expressway'))for(const id of [road.from,road.to]){const entry=junctions.get(id)??{count:0,radius:0};entry.count++;entry.radius=Math.max(entry.radius,roadWidth(road.kind)/2+.3);junctions.set(id,entry);}
-    for(const [id,junction]of junctions){const node=nodes.get(id);if(node&&junction.count>1)kit.cylinder(node.x,.33,node.z,junction.radius,.07,this.art.get('#747f7b'),24);}
+    const markingTrims=rebuildCompleted?roadMarkingTrims(world):new Map<number,MarkingTrim>();
+    // Existing pavement owns its footprint before construction claims the remainder.
+    // Stable ordering also removes coplanar overlap between neighboring open roads.
+    const orderedRoads=[...world.roads].sort((a,b)=>a.id-b.id);
+    if(rebuildCompleted)for(const road of orderedRoads){
+      if(road.stage!=='open')continue;
+      const a=nodes.get(road.from),b=nodes.get(road.to);if(!a||!b)continue;
+      if(rebuildCompleted)this.roadKit(kit,a,b,road,deckHeights.get(road.id),crossings,curves.get(road.id),world.rail_platforms,markingTrims.get(road.id),surfaces,world.expressway_profile);
+      if(rebuildCompleted)yield;
+    }
+    if(rebuildCompleted){
+      const junctions=new Map<number,JunctionArm[]>();
+      for(const road of world.roads){
+        if(road.stage!=='open'||road.kind==='rail'||road.kind==='bridge'||road.kind==='expressway')continue;
+        const a=nodes.get(road.from),b=nodes.get(road.to);if(!a||!b)continue;
+        for(const [node,end] of [[a,b],[b,a]]){const arms=junctions.get(node.id)??[];arms.push({end,width:roadWidth(road.kind)});junctions.set(node.id,arms);}
+      }
+      for(const [id,arms] of junctions){
+        const node=nodes.get(id)!;const points=junctionFootprint(node,arms);
+        const pieces=surfaces.claim(points);
+        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.asphalt());
+        if(rebuildCompleted)yield;
+      }
+    }
+    const constructionSurfaces=surfaces.fork();
+    for(const road of orderedRoads){
+      if(road.stage==='open')continue;
+      const a=nodes.get(road.from),b=nodes.get(road.to);
+      if(a&&b)this.roadKit(constructionKit,a,b,road,deckHeights.get(road.id),crossings,curves.get(road.id),world.rail_platforms,undefined,constructionSurfaces,world.expressway_profile);
+      if(rebuildCompleted)yield;
+    }
     for(const project of world.projects.filter(p=>p.kind==='road'&&p.progress<1)){
       const a=nodes.get(project.from!),b=nodes.get(project.to!);if(!a||!b)continue;
       if(world.roads.some(r=>r.from===a.id&&r.to===b.id&&r.stage!=='open'))continue;
-      this.roadKit(kit,a,b,{id:project.id,from:a.id,to:b.id,kind:world.roads.find(r=>(r.from===a.id&&r.to===b.id)||(r.from===b.id&&r.to===a.id))?.kind??(Math.abs(a.x-b.x)>100?'bridge':'local'),stage:project.stage,progress:project.progress,connected:false,length:Math.hypot(a.x-b.x,a.z-b.z),lanes:1});
+      this.roadKit(constructionKit,a,b,{id:project.id,from:a.id,to:b.id,kind:world.roads.find(r=>(r.from===a.id&&r.to===b.id)||(r.from===b.id&&r.to===a.id))?.kind??(Math.abs(a.x-b.x)>100?'bridge':'local'),stage:project.stage,progress:project.progress,connected:false,length:Math.hypot(a.x-b.x,a.z-b.z),lanes:1},undefined,[],undefined,world.rail_platforms,undefined,constructionSurfaces,world.expressway_profile);
     }
-    for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
-    this.roads.add(kit.finish(),buildStreetLighting(world,this.art));
-    this.retireGroup(this.station);this.station=new THREE.Group();this.scene.add(this.station);
-    const stationNode=world.nodes.find(n=>n.kind==='station');
-    const stationProject=world.projects.find(p=>p.kind==='station');
-    if(stationNode){
-      const s=new Kit(),rail=world.roads.find(r=>r.kind==='rail'&&(r.from===stationNode.id||r.to===stationNode.id));
-      const other=rail?nodes.get(rail.from===stationNode.id?rail.to:rail.from):null;
-      const bearing=other?Math.atan2(other.x-stationNode.x,other.z-stationNode.z):0;
-      // The 47 m train stops alongside a platform aligned to its real corridor.
-      // Local z points down the line; the platform stays beside the tracks.
-      // Platform length follows the consist so the whole train sits alongside it.
-      const platformMid=TRAIN_HALF_LENGTH,platformLen=TRAIN_HALF_LENGTH*2;
-      s.box(5.2,1,platformMid,5.2,2,platformLen,this.art.get('#b9bbb1'));
-      s.box(2.9,2.08,platformMid,.45,.1,platformLen-1,this.art.get('#d3b962'));
-      if((stationProject?.progress??1)>.2){
-        s.box(5.5,6,platformMid,7,.22,platformLen+2,this.art.get('#546d6c'));
-        for(let d=3;d<=platformLen-3;d+=10.5){s.cylinder(6.7,3.95,d,.14,3.9,this.art.get('#d1d3c5'));s.box(5.4,5.55,d,3.8,.12,.12,this.art.get('#94a4a0'));s.box(4.7,5.7,d,1.7,.08,.3,this.art.get('#ffdda5',.5,true));}
+    construction.add(constructionKit.finish());
+    if(rebuildCompleted)yield;
+    if(rebuildCompleted){
+      for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
+      lighting.data=prepareStreetLighting(world);
+      if(rebuildCompleted)yield;
+      for(const layout of world.rail_platforms??[]){
+        const platform=buildStationPlatform(layout,this.art);
+        if(layout.construction_phase===4){
+        const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
+        const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,layout.surface_y+2.6,24);platform.add(board);
+        }
+        station.add(platform);
+        yield;
       }
-      for(const z of [12,34,56,78]){s.box(5.7,2.6,z,1.15,.15,3.1,this.art.get('#7a6754'));s.box(6.2,3,z,.13,.75,3.1,this.art.get('#7a6754'));}
-      s.box(5.6,2.85,43,1.1,1.7,1.1,this.art.get('#557777'));s.box(5.58,3.15,42.42,.72,.85,.04,this.art.get('#ceddd8',.35,true));
-      // Entry ramp and its small ticket shelter connect to the station node.
-      s.box(6,.6,-4,4.5,1.2,7,this.art.get('#aaa99e'));s.box(6,2.7,-6,3,3.2,2.4,this.art.get('#c9c8c1'));s.box(6,4.45,-6,3.8,.2,3.1,this.art.get('#59676a'));s.box(5.96,2.8,-7.23,1.5,1.4,.08,this.art.get('#52757a',.35));
-      for(const z of [2,platformMid,platformLen-3])s.box(5.2,-RAIL_DECK/2,z,2.4,RAIL_DECK,2.4,this.art.get('#9a9d93'));
-      s.box(9.4,-RAIL_DECK/2+.2,-2,2.6,RAIL_DECK+.4,8,this.art.get('#aaa99e'));
-      const platform=s.finish();platform.position.set(stationNode.x,RAIL_DECK,stationNode.z);platform.rotation.y=bearing;
-      const signMaterial=new THREE.MeshBasicNodeMaterial({map:signTexture('青葉川  AOBAGAWA'),color:'#fff4d9'});
-      const board=new THREE.Mesh(new THREE.BoxGeometry(.08,.72,3.4),signMaterial);board.userData.ownedMaterial=true;board.userData.ownedTexture=signMaterial.map;board.position.set(3.8,4.6,platformMid);platform.add(board);
-      this.station.add(platform);
+    }
+    }finally{constructionKit.dispose();}
+  }
+
+  private addGroundRoadSurface(kit:Kit,pieces:Point[][],material:THREE.Material){
+    for(const points of pieces){
+      kit.add(groundRoadSurfaceGeometry(points), material);
     }
   }
-  private roadKit(kit:Kit,a:Point,b:Point,r:Road){
+  private roadKit(kit:Kit,a:Point & {kind?:string},b:Point & {kind?:string},r:Road,deckHeight=EXPRESSWAY_DECK,crossings:readonly CrossingDeck[]=[],curve?:RoadCurve,platforms=this.worldState?.rail_platforms,markingTrim:MarkingTrim={start:0,end:0},surfaces?:RoadSurfacePartition,expresswayProfile=CURRENT_EXPRESSWAY_PROFILE){
+    if(r.kind==='rail'&&curve){
+      const open=r.stage==='open',end=curve.length*(open?1:THREE.MathUtils.clamp((r.progress-.12)/.88,0,1));
+      const y=1+RAIL_DECK,width=roadWidth('rail'),concrete=this.art.get('#9a9d93');
+      if(!open)for(let d=0;d<curve.length;d+=18){const p=curve.at(d);for(const side of [-1,1])kit.box(p.x+p.uz*side*5,.7,p.z-p.ux*side*5,.12,1.4,.12,this.art.get('#b79b73'));}
+      if(end<.01)return;
+      sweepRoad(kit,curve,0,end,0,y-.35,width+.6,.5,this.art.get('#a3a69c'));
+      sweepRoad(kit,curve,0,end,0,y,width,.3,this.art.get(open?'#747f7b':'#ac9a78'));
+      for(let d=11;d<end;d+=22){const p=curve.at(d),yaw=Math.atan2(p.ux,p.uz);
+        for(const side of [-1,1])kit.box(p.x+p.uz*side*2.4,y/2,p.z-p.ux*side*2.4,1.1,y,1.1,concrete,yaw);
+        kit.box(p.x,y-.55,p.z,width+1.2,.7,1.4,concrete,yaw);
+      }
+      for(const side of [-1,1])sweepRoad(kit,curve,0,end,side*RAIL_CENTER_OFFSET,y+.45,RAIL_HEAD_WIDTH,.17,this.art.get('#a3aca7',.4));
+      for(let d=0;d<end;d+=.75){const p=curve.at(d);kit.box(p.x,y+.29,p.z,2.2,.15,.24,this.art.get('#6d6457'),Math.atan2(p.ux,p.uz));}
+      if(open)addRailCorridor(kit,a,b,this.art,platforms,curve as RailPath);
+      return;
+    }
+    if(r.kind==='expressway'&&curve){
+      const open=r.stage==='open',end=curve.length*(open?1:THREE.MathUtils.clamp((r.progress-.12)/.88,0,1));
+      if(!open)for(let distance=0;distance<curve.length;distance+=18){const p=curve.at(distance);for(const side of [-1,1])kit.box(p.x+p.uz*side*5,.7,p.z-p.ux*side*5,.12,1.4,.12,this.art.get('#b79b73'));}
+      if(end<.01)return;
+      const width=expresswayProfile.width,y=deckHeight,concrete=this.art.get('#9a9d93');
+      sweepRoad(kit,curve,0,end,0,y-.35,width+.6,.5,this.art.get('#a3a69c'));
+      sweepRoad(kit,curve,0,end,0,y,width,.3,(open?this.art.asphalt():this.art.get('#ac9a78')));
+      for(const side of [-1,1])sweepRoad(kit,curve,0,end,side*(width/2+.25),y+.75,.3,1.3,this.art.get('#b8bbb2'));
+      for(let distance=14;distance<end;distance+=28){const p=curve.at(distance),angle=Math.atan2(p.ux,p.uz);
+        if(!expresswayPierClear(p,{x:p.x-p.ux,z:p.z-p.uz},{x:p.x+p.ux,z:p.z+p.uz},y,crossings))continue;
+        kit.box(p.x,y/2,p.z,2.2,y,2.2,concrete,angle);kit.box(p.x,y-.55,p.z,width+1.2,.7,1.4,concrete,angle);
+      }
+      if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete,metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y,curve,expresswayProfile);
+      return;
+    }
     if(r.stage!=='open'){
       const fullDx=b.x-a.x,fullDz=b.z-a.z,fullLength=Math.hypot(fullDx,fullDz),bearing=Math.atan2(fullDx,fullDz);
       // Survey stakes show the reserved corridor before any usable deck exists.
@@ -563,11 +932,12 @@ export class CityRenderer {
     }
     const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),angle=Math.atan2(dx,dz),mid={x:(a.x+b.x)/2,z:(a.z+b.z)/2},rail=r.kind==='rail',open=r.stage==='open',bridge=r.kind==='bridge';
     const expressway=r.kind==='expressway',lane=r.kind==='lane';
-    const width=roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?EXPRESSWAY_DECK:lane?.12:.15;
+    const width=expressway?expresswayProfile.width:roadWidth(r.kind),y=bridge?1.4:rail?1+RAIL_DECK:expressway?deckHeight:.15;
     if(rail||expressway){
       // Viaduct piers: single columns under the expressway, paired under rail.
       const spacing=expressway?28:22,pierColor=this.art.get('#9a9d93');
       for(let distance=spacing/2;distance<len;distance+=spacing){const t=distance/len,px=a.x+dx*t,pz=a.z+dz*t;
+        if(expressway&&!expresswayPierClear({x:px,z:pz},a,b,y,crossings))continue;
         if(expressway)kit.box(px,y/2,pz,2.2,y,2.2,pierColor,angle);
         else for(const side of [-1,1])kit.box(px+Math.cos(angle)*side*2.4,y/2,pz-Math.sin(angle)*side*2.4,1.1,y,1.1,pierColor,angle);
         kit.box(px,y-.55,pz,width+1.2,.7,1.4,pierColor,angle);
@@ -579,15 +949,23 @@ export class CityRenderer {
       const ramp=Math.min(12,len*.22),shape=new THREE.Shape();
       shape.moveTo(-len/2,.3);shape.lineTo(-len/2+ramp,2);shape.lineTo(len/2-ramp,2);shape.lineTo(len/2,.3);
       shape.lineTo(len/2,-.15);shape.lineTo(len/2-ramp,.8);shape.lineTo(-len/2+ramp,.8);shape.lineTo(-len/2,-.15);shape.closePath();
-      const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,this.art.get(open?'#747f7b':'#ac9a78'));
-    }else kit.box(mid.x,y,mid.z,width,.3,len,this.art.get(open?'#747f7b':'#ac9a78'),angle);
+      const deck=new THREE.ExtrudeGeometry(shape,{depth:width+2.8,bevelEnabled:false,steps:1});deck.setIndex(Array.from({length:deck.getAttribute('position').count},(_,i)=>i));deck.rotateY(-Math.PI/2);deck.translate((width+2.8)/2,0,0);deck.rotateY(angle);deck.translate(mid.x,0,mid.z);kit.add(deck,(open?this.art.asphalt():this.art.get('#ac9a78')));
+    }else if(surfaces&&!rail&&!expressway){
+      this.addGroundRoadSurface(kit,surfaces.claim(groundRoadFootprint(a,b,width)),(open?this.art.asphalt():this.art.get('#ac9a78')));
+    }else kit.box(mid.x,y,mid.z,width,.3,len,(open?this.art.asphalt():this.art.get('#ac9a78')),angle);
+    if(expressway){
+      if(open)addExpresswayFurniture(kit,a,b,{paint:this.art.get('#dedaca'),concrete:this.art.get('#9a9d93'),metal:this.art.get('#53696a'),lamp:this.art.get('#ead5a3',.5,true)},y,undefined,expresswayProfile);
+      return;
+    }
     if(rail){
-      for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*1.35,y+.45,mid.z-Math.sin(angle)*side*1.35,.14,.17,len,this.art.get('#a3aca7',.4),angle);
-      for(let distance=0;distance<len;distance+=2.5){const t=distance/len;kit.box(a.x+dx*t,y+.29,a.z+dz*t,5,.15,.4,this.art.get('#6d6457'),angle);}
+      if(open)addRailCorridor(kit,a,b,this.art,platforms);
+      for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*RAIL_CENTER_OFFSET,y+.45,mid.z-Math.sin(angle)*side*RAIL_CENTER_OFFSET,RAIL_HEAD_WIDTH,.17,len,this.art.get('#a3aca7',.4),angle);
+      for(let distance=0;distance<len;distance+=.75){const t=distance/len;kit.box(a.x+dx*t,y+.29,a.z+dz*t,2.2,.15,.24,this.art.get('#6d6457'),angle);}
     }else if(lane){
       // Lanes are shared-surface roji: no center line and no raised sidewalk.
     }else{
-      if(open&&(bridge||r.kind==='arterial')){for(let distance=8;distance<len-4;distance+=12){
+      if(open){if(bridge||r.kind==='arterial')for(let distance=8;distance<len-4;distance+=12){
+        if(!bridge&&(distance-2<markingTrim.start||distance+2>len-markingTrim.end))continue;
         if(bridge){
           // Split painted marks at ramp creases so neither end floats or sinks.
           const ramp=Math.min(12,len*.22),cuts=[distance-2,...[ramp,len-ramp].filter(v=>v>distance-2&&v<distance+2),distance+2];
@@ -598,10 +976,16 @@ export class CityRenderer {
           // Four-lane arterials: dashed lane dividers between the two lanes each way.
           if(r.kind==='arterial')for(const side of [-1,1])kit.box(a.x+dx*t+Math.cos(angle)*side*width/4,y+.19,a.z+dz*t-Math.sin(angle)*side*width/4,.14,.03,2.4,this.art.get('#dedaca'),angle);}
       }
-      // Arterials keep raised sidewalks; local streets are shared surfaces with
-      // painted edge lines, as on Tokyo residential streets.
-      if(!bridge&&r.kind==='arterial')for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),y+.15,mid.z-Math.sin(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),ARTERIAL_SIDEWALK,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
-      else if(!bridge&&open)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2-.45),y+.16,mid.z-Math.sin(angle)*side*(width/2-.45),.14,.03,Math.max(1,len-width),this.art.get('#dedaca'),angle);
+      // Open arterial sidewalks are committed separately by CitySidewalks.
+      // Local streets retain painted edges on their shared surface.
+      if(!bridge&&r.kind==='arterial'&&!open)for(const side of [-1,1])kit.box(mid.x+Math.cos(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),y+.15,mid.z-Math.sin(angle)*side*(width/2+ARTERIAL_SIDEWALK/2),ARTERIAL_SIDEWALK,.35,Math.max(1,len-width),this.art.get('#b4b8a6'),angle);
+      else if(!bridge&&open&&r.kind!=='arterial'){
+        const start=Math.max(width/2,markingTrim.start),end=Math.min(len-width/2,len-markingTrim.end);
+        if(end>start)for(const side of [-1,1]){
+          const t=(start+end)/(2*len);
+          kit.box(a.x+dx*t+Math.cos(angle)*side*(width/2-.45),y+.16,a.z+dz*t-Math.sin(angle)*side*(width/2-.45),.14,.03,end-start,this.art.get('#dedaca'),angle);
+        }
+      }
       }else{
         for(let distance=0;distance<len;distance+=12){const t=distance/len,x=a.x+dx*t,z=a.z+dz*t;kit.cylinder(x+width/2,y+.55,z,.25,.8,this.art.get('#c17d4f'),5);}
       }
@@ -614,53 +998,75 @@ export class CityRenderer {
         }
         for(const t of [.28,.55,.76])kit.box(a.x+dx*t,-1,a.z+dz*t,width*.8,5,2,this.art.get('#a2aa9e'));
       }
-      if(open&&len>25){for(let distance=12;distance<len-8;distance+=44){const t=distance/len,x=a.x+dx*t+Math.cos(angle)*(width/2+1.5),z=a.z+dz*t-Math.sin(angle)*(width/2+1.5);const baseY=bridge?bridgeDeckHeight(distance,len):0;kit.cylinder(x,baseY+3.5,z,.1,7,this.art.get('#53696a'),6);kit.box(x-.7,baseY+7,z,1.8,.2,.5,this.art.get('#ead5a3',.5,true));}}
+      // Ordinary streets use buildStreetLighting's shared fixtures and pools.
+      // Retain this separate bridge kit until its sloped deck has a light model.
+      if(open&&bridge&&len>25){for(let distance=12;distance<len-8;distance+=44){const t=distance/len,x=a.x+dx*t+Math.cos(angle)*(width/2+1.5),z=a.z+dz*t-Math.sin(angle)*(width/2+1.5);const baseY=bridgeDeckHeight(distance,len);kit.cylinder(x,baseY+3.5,z,.1,7,this.art.get('#53696a'),6);kit.box(x-.7,baseY+7,z,1.8,.2,.5,this.art.get('#ead5a3',.5,true));}}
     }
+  }
+  private updateBuildingBatches(){
+    let builtCount=0;
+    for(const [id,item] of this.objectQueue){
+      if(!this.infrastructure().canPresentBuilding(id))continue;
+      if(builtCount++>=2)break;
+      this.objectQueue.delete(id);
+      const group=item.source.createGroup();
+      this.chunks.set(id,group,item.source,item.building.stage!=='open');this.buildings.set(id,{source:item.source,signature:item.signature});
+    }
+    const pendingChunks=new Set<string>();
+    for(const [id,{building}] of this.objectQueue)if(this.infrastructure().canPresentBuilding(id))pendingChunks.add(buildingChunkKey(building.x,building.z));
+    this.chunks.update(pendingChunks);
   }
   private animate(){
     if(this.disposed)return;
     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
     const begin=performance.now();
-    for(let i=0;i<2&&this.objectQueue.size;i++){
-      const [id,item]=this.objectQueue.entries().next().value!;this.objectQueue.delete(id);
-      const group=item.source.createGroup();
-      this.chunks.set(id,group,item.source);this.buildings.set(id,{source:item.source,signature:item.signature});
-    }
-    const pendingChunks=new Set<string>();
-    for(const {building} of this.objectQueue.values())pendingChunks.add(buildingChunkKey(building.x,building.z));
-    this.chunks.update(pendingChunks);
+    const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
+    this.updateBuildingBatches();
+    this.sidewalks.update();
+    this.updateRoads();
     if(this.worldState)this.rearExtensions.flushCompleted(this.worldState);
+    this.updateActors(now);
     this.director.update(dt,now/1000);
     const activeLens=LENS_PRESETS[this.director.lens];
     this.lensFocalM.value=activeLens.focalLengthMm/1000;this.lensFNumber.value=activeLens.fNumber;
     this.updateTreeDetail();
-    this.updateActors(now);
     this.updateLight(dt);
-    const alpha=Math.min(1,(now-this.received)/this.interval);const time=Math.max(0,(this.motionTick-1+alpha)*.05);const waterDt=Math.max(0,Math.min(.1,time-this.waterTime));this.water?.update(waterDt,time,this.rain,this.style,1-this.daylight);this.umbrellas.update(this.umbrellaTuples.subarray(0,this.umbrellaCount*5),this.rain,time);this.art.time.value=time;this.waterTime=time;this.lastTick=this.motionTick;this.rainTime.value=time;this.rainLines.visible=this.rain>.1;this.rainOpacity.value=.035+this.rain*.13;this.rainLines.position.set(this.director.target.x,0,this.director.target.z);
+    const alpha=Math.min(1,(now-this.received)/this.interval);const time=Math.max(0,(this.motionTick-1+alpha)*.05);const waterDt=Math.max(0,Math.min(.1,time-this.waterTime));this.water?.update(waterDt,time,this.rain,this.style,1-this.daylight);this.umbrellas.update(this.umbrellaTuples.subarray(0,this.umbrellaCount*MOVEMENT_STRIDE),this.rain,time);this.art.time.value=time;this.waterTime=time;this.lastTick=this.motionTick;this.rainTime.value=time;this.rainLines.visible=this.rain>.1;this.rainOpacity.value=.035+this.rain*.13;this.rainLines.position.set(this.director.target.x,0,this.director.target.z);
     this.camera.updateMatrixWorld();
-    this.focusTargetView.copy(this.director.controls.target).applyMatrix4(this.camera.matrixWorldInverse);
+    this.focusTargetView.copy(this.director.focusTarget).applyMatrix4(this.camera.matrixWorldInverse);
     const focusTarget=focusDepthFromViewZ(this.focusTargetView.z,this.camera.near,this.camera.far);
     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
     this.pipeline?.render();
     const cost=performance.now()-begin;
-    if(this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.pendingCompiles===0)!==null)this.applyQuality();
-    this.frames.push(frameInterval);if(this.frames.length>120)this.frames.shift();
-    if(this.frame++%90===0&&this.onMetrics){const avg=this.frames.reduce((a,b)=>a+b,0)/this.frames.length;this.onMetrics({fps:1000/avg,frameMs:cost,calls:this.renderer.info.render.drawCalls,triangles:this.renderer.info.render.triangles,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,backend:this.renderer.backend.constructor.name,styleSwitch:this.styleSwitchMetrics?{...this.styleSwitchMetrics}:undefined,pendingBuildings:this.objectQueue.size,pendingChunks:this.chunks.pendingCount});}
+    if(!this.fixedReviewQuality&&this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
+    this.frame++;
+    this.frameTiming.record(now,cost,timingPhase,!document.hidden);
+    if(now-this.lastMetricsAt>=1000&&this.onMetrics){this.lastMetricsAt=now;const timing=this.frameTiming.snapshot();this.onMetrics({timing,fps:timing.fps,frameMs:cost,calls:this.renderer.info.render.drawCalls,triangles:this.renderer.info.render.triangles,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,backend:this.renderer.backend.constructor.name,styleSwitch:this.styleSwitchMetrics?{...this.styleSwitchMetrics}:undefined,pendingBuildings:this.objectQueue.size,pendingChunks:this.chunks.pendingCount,pendingSidewalks:this.sidewalks.pendingCount,pendingRoads:this.pendingRoads});}
   }
   private updateActors(now:number){
-    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;const dt=this.lastActorFrame?Math.min(.1,(now-this.lastActorFrame)/1000):1/60;this.lastActorFrame=now;this.buses.begin(now);this.fleet.begin();this.trainFleet.begin();const pedIds:number[]=[],trainIds:number[]=[];
-    for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=THREE.MathUtils.lerp(old.x,current.x,t),z=THREE.MathUtils.lerp(old.z,current.z,t);let h=current.h;const dh=Math.atan2(Math.sin(current.h-old.h),Math.cos(current.h-old.h));h=Math.PI/2-(old.h+dh*t);const lift=current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
-      if(current.k===0&&ped<2000){const offset=ped*5;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
-      else if(isRoadVehicle(current.k)){const vehicle=bridgeVehiclePose({x,z},h,2.7,this.bridgeSpans);this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,dt);}
-      else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+ROAD_SURFACE_Y,vehicle.pitch);}
-      else if(current.k===2&&train<this.trainFleet.capacity){this.trainFleet.add(id,x,z,h,RAIL_DECK,0,dt);trainIds[train]=id;train++;}
+    const t=Math.min(1,(now-this.received)/this.interval);let ped=0,train=0,bus=0;this.buses.begin(now);this.trains.begin();this.fleet.begin();const pedIds:number[]=[];
+    this.previous=this.current;this.current=this.movementPresentation.sample(now,this.infrastructure());
+    this.motionDelta=this.actorSampleAt?Math.max(.001,(now-this.actorSampleAt)/1000):.05;this.actorSampleAt=now;
+    const cameraPositions:number[]=[];
+    for(const [id,current]of this.current){const old=this.previous.get(id)??current,x=current.x,z=current.z,h=Math.PI/2-current.h;
+      const lift=current.k===0?pedestrianSurface(current.y,bridgeLift(current,this.bridgeSpans))-PEDESTRIAN_GROUND_SURFACE:current.k===2?0:bridgeLift({x,z},this.bridgeSpans);
+      let surfaceY=current.y;
+
+      if(current.k===0&&ped<2000){surfaceY=lift+PEDESTRIAN_GROUND_SURFACE;const offset=ped*MOVEMENT_STRIDE;this.umbrellaTuples[offset]=id;this.umbrellaTuples[offset+1]=x;this.umbrellaTuples[offset+2]=z;this.umbrellaTuples[offset+3]=Math.PI/2-h;this.umbrellaTuples[offset+4]=0;this.umbrellaTuples[offset+5]=lift;const moving=Math.hypot(current.x-old.x,current.z-old.z)>.01;const step=moving?Math.sin(this.motionTick*.31+id)*.045:0;dummy.position.set(x,1.05+step+lift,z);dummy.rotation.set(0,h,moving?step*.4:0);dummy.scale.setScalar(1);dummy.updateMatrix();this.pedestrians.setMatrixAt(ped,dummy.matrix);this.pedestrians.setColorAt(ped,personColors[id%personColors.length]);dummy.position.y=1.95+step+lift;dummy.updateMatrix();this.heads.setMatrixAt(ped,dummy.matrix);pedIds[ped]=id;ped++;}
+      else if(isRoadVehicle(current.k)){const vehicle=vehicleSurfacePose({x,z},h,2.7,this.bridgeSpans,current.y);surfaceY=vehicle.lift+ROAD_SURFACE_Y;this.fleet.add(id,current.k,x,z,h,vehicle.lift,vehicle.pitch,this.motionDelta);}
+      else if(current.k===3&&bus<2){const vehicle=bridgeVehiclePose({x,z},h,5.1,this.bridgeSpans);surfaceY=vehicle.lift+ROAD_SURFACE_Y;this.buses.set(bus++,id,x,z,h,this.worldState,vehicle.lift+ROAD_SURFACE_Y,vehicle.pitch);}
+      else if(current.k===2&&train<8){this.trains.add(id,x,z,h,RAIL_HEAD_Y,0,this.motionDelta,t);train++;}
+      else {this.current.delete(id);continue;}
+      cameraPositions.push(id,x,z,current.h,current.k,surfaceY);
     }
+    this.director.setPositions(new Float32Array(cameraPositions),this.movementPresentation.withheld(this.current));
     this.umbrellaCount=ped;
+    this.trains.finish(train);for(const {mesh,ids} of this.trains.pickable)this.actorIds.set(mesh,ids);
     this.buses.finish(bus);for(const mesh of this.buses.meshes)this.actorIds.set(mesh,this.buses.ids);
-    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);this.trainFleet.finish(train);for(const {mesh,ids} of this.trainFleet.pickable)this.actorIds.set(mesh,ids);
-    for(const [mesh,count]of [[this.pedestrians,ped],[this.heads,ped]] as const){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}
+    this.actorIds.set(this.pedestrians,pedIds);this.actorIds.set(this.heads,pedIds);this.fleet.finish();for(const {mesh,ids} of this.fleet.pickable)this.actorIds.set(mesh,ids);
+    for(const mesh of [this.pedestrians,this.heads]){mesh.count=ped;mesh.instanceMatrix.needsUpdate=true;}
     if(this.pedestrians.instanceColor)this.pedestrians.instanceColor.needsUpdate=true;
   }
   private updateLight(dt:number){
@@ -669,32 +1075,63 @@ export class CityRenderer {
     this.daylight=THREE.MathUtils.lerp(this.daylight,day,Math.min(1,dt*3));
     const top=new THREE.Color('#659bbd').lerp(new THREE.Color('#9aa5bd'),dusk*.5).lerp(new THREE.Color('#11253e'),1-this.daylight);
     const low=new THREE.Color('#d5ded3').lerp(new THREE.Color('#efb185'),dusk).lerp(new THREE.Color('#334860'),1-this.daylight);
+    // Steer the painted gradient toward Preetham scattering for this sun:
+    // deeper zenith and a warm sunward horizon at low sun. Painted colours
+    // still own night, dusk mood and the clouds; scattering only leads by day.
+    const solar=new THREE.Vector3(Math.cos(angle),Math.max(-.05,Math.sin(angle)),-.45).normalize();
+    const lead=this.daylight*.42;
+    if(lead>.01){
+      const zenith=skyRadiance(solar,new THREE.Vector3(0,1,0));
+      const toward=new THREE.Vector3(solar.x,0,solar.z).normalize().setY(.04);
+      const horizon=skyRadiance(solar,toward).lerp(skyRadiance(solar,toward.clone().set(-toward.x,.04,-toward.z)),.65);
+      top.lerp(zenith,lead);low.lerp(horizon,lead*.85);
+    }
     this.skyHigh.value.copy(top);this.skyLow.value.copy(low);this.skyCloudShade.value.set('#8ba5bc').lerp(new THREE.Color('#9c829b'),dusk*.7).lerp(new THREE.Color('#283c58'),1-this.daylight);this.hillColor.value.set('#577773').lerp(new THREE.Color('#747386'),dusk*.55).lerp(new THREE.Color('#20384a'),1-this.daylight);this.skyCloud.value.set('#fff3dc').lerp(new THREE.Color('#d29e91'),dusk*.5).lerp(new THREE.Color('#45526a'),1-this.daylight);
-    const atmosphere=this.scene.fog as THREE.FogExp2;
-    atmosphere.color.copy(top).lerp(low,.35);
-    // Clear air preserves facade contrast at neighborhood scale. Rain still
-    // veils the distant city; stylized skies retain a little more atmosphere.
-    const clearHaze=this.style==='miniature'?.00022:.0003;
-    atmosphere.density=clearHaze+this.rain*.00025;
+    this.skylineColor.value.set('#8193a1').lerp(new THREE.Color('#8a7f93'),dusk*.6).lerp(new THREE.Color('#1c2a3c'),1-this.daylight);this.skylineNight.value=1-this.daylight;
+    // Haze matches the horizon so hills, skyline and mountains recede into the
+    // sky. The range keeps the city itself clear (overview contrast, spec 05)
+    // while the backdrop gains aerial perspective. Rain pulls the veil closer.
+    this.hazeColor.value.copy(low).lerp(top,.25);
+    const veil=1-this.rain*.45;
+    this.hazeNear.value=HAZE_NEAR[this.style]*veil;this.hazeFar.value=HAZE_FAR[this.style]*veil;
+    // Morning mist peaks around 05:30-07:00 and burns off by mid-morning.
+    const morning=THREE.MathUtils.smoothstep(hour%24,4.5,5.8)*(1-THREE.MathUtils.smoothstep(hour%24,7,9.5));
+    this.mist.value=Math.min(.7,morning*.5+this.rain*.3);
     const solarY=Math.sin(angle)*450;this.sunDisc.position.set(Math.cos(angle)*1050,solarY*3,-480);this.sunDisc.visible=solarY>-25;this.moonDisc.position.set(-Math.cos(angle)*1050,-solarY*3,480);this.moonDisc.visible=solarY<25;
     const keyBlend=this.daylight*2-1;
     // Snap only the shadow camera's light-plane translation. The key's
     // direction and elevation still follow the clock, not camera movement.
-    this.sun.position.set(Math.cos(angle)*350*keyBlend,Math.max(30,Math.abs(Math.sin(angle))*450),-160*keyBlend);
+    // A lower key (about 50 degrees at 14:00) draws longer modelling shadows.
+    this.sun.position.set(Math.cos(angle)*350*keyBlend,Math.max(30,Math.abs(Math.sin(angle))*270),-160*keyBlend);
     const shadowCamera=this.sun.shadow.camera;
     snapShadowAnchor(this.director.controls.target,this.sun.position,
       shadowCamera.right-shadowCamera.left,shadowCamera.top-shadowCamera.bottom,
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
-    this.sun.intensity=.16+this.daylight*1.8;this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#fff1d9'),this.daylight);
+    this.sun.intensity=.16+this.daylight*2.05;
+    this.shaftStrength=dusk*THREE.MathUtils.smoothstep(this.daylight,.15,.6)*(1-this.rain);
+    this.shaftColor.value.set(dusk>.4?'#ffc58a':'#ffe2b4').multiplyScalar(this.shaftStrength*.45);this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
+    this.water?.setSun(v.copy(this.sun.position).sub(this.sun.target.position),new THREE.Color().copy(this.sun.color).multiplyScalar(this.sun.intensity*.5));
     // Soft urban bounce keeps opaque facades and lanes readable between local
-    // emitters. Preserve the daytime fill and ground tint so the sun continues
-    // to describe building orientation without flattening daytime massing.
-    this.hemi.intensity=1.05-this.daylight*.55;
+    // emitters. The visible sky is not an environment light: retain enough
+    // daytime fill to read shaded facades while the sun describes orientation.
+    this.hemi.intensity=1.05-this.daylight*.27;
     this.hemi.groundColor.set('#a0a09a').lerp(new THREE.Color('#748998'),this.daylight);
     // A painted moonlit fill keeps rooflines and quiet lanes readable between
     // pools of warm shop light; the sky itself can remain a deep midnight blue.
     this.hemi.color.set('#829eb9').lerp(new THREE.Color('#d8e6e7'),this.daylight);
+    // Ambient follows the live sky: warm at dusk, cool at noon, for both the
+    // toon (Anime) and standard (Miniature) paths. Standard surfaces also get
+    // a pre-filtered sky environment for reflections.
+    this.hemi.color.lerp(new THREE.Color().copy(top).lerp(low,.55),.4);
+    const environment=this.skyEnvironment?.update(this.renderer,performance.now(),[top,low,this.skyCloud.value]);
+    if(environment&&this.scene.environment!==environment)this.scene.environment=environment;
+    // The environment adds to the hemisphere fill on standard surfaces; trade
+    // some of that fill for sky-shaped ambient rather than stacking both.
+    this.scene.environmentIntensity=.1+this.daylight*.16;
+    if(this.style==='miniature')this.hemi.intensity*=.78;
+    this.art.sunDirection.value.copy(this.sun.position).sub(this.sun.target.position).normalize();
+    this.art.cloudShadow.value=.42*Math.max(0,this.daylight*2-1)*(1-dusk*.6)*(1-this.rain);
     if(this.frame%30===0){const target=this.director.target;
       const lit=this.worldState?.buildings.filter(b=>b.stage==='open'&&(b.anchor||b.kind==='shop'||b.kind==='cafe')).sort((a,b)=>Math.hypot(a.x-target.x,a.z-target.z)-Math.hypot(b.x-target.x,b.z-target.z)).slice(0,8)??[];
       for(let i=0;i<this.lanternLights.length;i++){const b=lit[i],lamp=this.lanternLights[i];lamp.userData.active=!!b;if(b)lamp.position.set(b.x+Math.sin(b.rotation)*(b.depth*.45+1.5),3.1,b.z+Math.cos(b.rotation)*(b.depth*.45+1.5));}
@@ -702,6 +1139,13 @@ export class CityRenderer {
     const activityHour=hour%24,lightBlend=Math.min(1,dt*.8);this.art.litHome.value=THREE.MathUtils.lerp(this.art.litHome.value,activityHour>=23||activityHour<5?.32:1,lightBlend);this.art.litOffice.value=THREE.MathUtils.lerp(this.art.litOffice.value,activityHour>=7&&activityHour<20?1:.1,lightBlend);this.art.litShop.value=THREE.MathUtils.lerp(this.art.litShop.value,activityHour>=6&&activityHour<23?1:.18,lightBlend);
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
+    // Hysteresis: rebuild the pipeline only when streets clearly get or lose a sheen.
+    const wetStreets=this.wetReflections?this.art.wet.value>.03:this.art.wet.value>.08;
+    if(wetStreets!==this.wetReflections&&this.pipeline){this.wetReflections=wetStreets;this.buildPipeline();}
+    // Golden-hour shafts: low sun, daylight, little rain.
+    const golden=this.lightShafts?this.shaftStrength>.02:this.shaftStrength>.06;
+    if(golden!==this.lightShafts&&this.pipeline){this.lightShafts=golden;this.buildPipeline();}
+    this.nearbyStreetLights.update(dt,this.director.target,1-this.daylight);
     if(this.shine)this.shine.strength.value=.06+(1-this.daylight)*.2;
     this.renderer.toneMappingExposure=1;
   }
@@ -721,9 +1165,9 @@ export class CityRenderer {
   private pointerUp=(e:PointerEvent)=>{
     if(Math.hypot(e.clientX-this.pointerStart.x,e.clientY-this.pointerStart.y)>4)return;
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
-    const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);if(!hits.length)return;const hit=hits[0],building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
+    const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);const hit=hits.find(candidate=>{for(let object:THREE.Object3D|null=candidate.object;object;object=object.parent)if(!object.visible)return false;return true;});if(!hit)return;const building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.retire(()=>this.fleet.dispose());this.retire(()=>this.trainFleet.dispose());this.disposePipeline();const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment;this.skyEnvironment=null;this.retire(()=>environment?.dispose());const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { disposeGroup } from '../web/src/render/kit';
-import { buildStreetLighting, streetLightPlacements } from '../web/src/render/street-lighting';
+import { buildStreetLighting, PersistentStreetLighting, prepareStreetLighting, streetLightPlacements } from '../web/src/render/street-lighting';
+import { roadWidth } from '../web/src/render/road-elevation';
 import type { World } from '../web/src/types';
 
 function streetWorld(segments:Array<{id:number;from:number;to:number;kind?:string;stage?:string;connected?:boolean}>,points:Array<{id:number;x:number;z:number}>):Pick<World,'nodes'|'roads'>{
@@ -41,7 +42,7 @@ describe('procedural street lighting',()=>{
       expect(length-along.at(-1)!).toBeGreaterThanOrEqual(10-1e-6);
       for(let i=1;i<along.length;i++)expect(along[i]-along[i-1]).toBeGreaterThanOrEqual(28-1e-6);
       for(let i=1;i<along.length;i++)expect(along[i]-along[i-1]).toBeLessThanOrEqual(34+1e-6);
-      const expectedOffset=(road.kind==='arterial'?16:6.5)/2+.65;
+      const expectedOffset=roadWidth(road.kind)/2+.65;
       expect(side.every((offset,index)=>Math.abs(Math.abs(offset)-expectedOffset)<1e-5&&Math.sign(offset)!==Math.sign(side[index-1]??-offset))).toBe(true);
       expect(lights.every(light=>light.y===.3&&Number.isFinite(light.heading))).toBe(true);
     }
@@ -99,6 +100,46 @@ describe('procedural street lighting',()=>{
     art.dispose();
   });
 
+  it('keeps four mesh and material identities while atomically replacing prepared placements',()=>{
+    const art=new ArtMaterials();
+    const first=streetWorld([{id:3,from:1,to:2}], [{id:1,x:0,z:0},{id:2,x:0,z:130}]);
+    const second=streetWorld([{id:4,from:1,to:2}], [{id:1,x:20,z:10},{id:2,x:20,z:210}]);
+    const lighting=new PersistentStreetLighting(art);
+    const meshes=[...lighting.meshes],materials=meshes.map(mesh=>mesh.material);
+    const firstData=prepareStreetLighting(first);
+    lighting.commit(firstData);
+    expect(lighting.meshes).toEqual(meshes);
+    expect(lighting.meshes.map(mesh=>mesh.count)).toEqual(Array(4).fill(firstData.count));
+    expect(lighting.root.userData.streetLightSources).toEqual(firstData.sources);
+
+    const secondData=prepareStreetLighting(second);
+    expect(secondData.count).toBeGreaterThan(firstData.count);
+    lighting.commit(secondData);
+    expect(lighting.meshes).toEqual(meshes);
+    expect(lighting.meshes.map(mesh=>mesh.material)).toEqual(materials);
+    expect(lighting.meshes.map(mesh=>mesh.count)).toEqual(Array(4).fill(secondData.count));
+    const matrix=new THREE.Matrix4();
+    for(let meshIndex=0;meshIndex<4;meshIndex++){
+      for(let index=0;index<secondData.count;index++){
+        lighting.meshes[meshIndex].getMatrixAt(index,matrix);
+        expect(matrix.elements).toEqual(Array.from(secondData.matrices[meshIndex].subarray(index*16,index*16+16)));
+      }
+    }
+
+    lighting.commit({count:0,matrices:[new Float32Array(),new Float32Array(),new Float32Array(),new Float32Array()],sources:[]});
+    expect(lighting.meshes.map(mesh=>mesh.count)).toEqual([0,0,0,0]);
+    expect(lighting.root.userData.streetLightSources).toEqual([]);
+    expect(lighting.meshes).toEqual(meshes);
+    const sharedDisposed=vi.fn(),ownedDisposed=[vi.fn(),vi.fn()];
+    (materials[0] as THREE.Material).addEventListener('dispose',sharedDisposed);
+    (materials[2] as THREE.Material).addEventListener('dispose',ownedDisposed[0]);
+    (materials[3] as THREE.Material).addEventListener('dispose',ownedDisposed[1]);
+    lighting.dispose();
+    expect(sharedDisposed).not.toHaveBeenCalled();
+    expect(ownedDisposed.map(listener=>listener.mock.calls.length)).toEqual([1,1]);
+    art.dispose();
+  });
+
   it('keeps warm pools above the street and inside each carriageway, with lamps at the pole tops',()=>{
     const world=streetWorld([
       {id:2,from:1,to:2},
@@ -122,9 +163,9 @@ describe('procedural street lighting',()=>{
       const road=world.roads.find(candidate=>candidate.id===placement.roadId)!;
       const a=world.nodes.find(node=>node.id===road.from)!,b=world.nodes.find(node=>node.id===road.to)!;
       const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),ux=dx/length,uz=dz/length;
-      const laneWidth=road.kind==='arterial'?14:9;
-      const transverseRadius=Math.min(1.8,laneWidth*.17);
-      const expectedOffset=laneWidth/2-transverseRadius-.08;
+      const carriagewayWidth=roadWidth(road.kind);
+      const transverseRadius=Math.min(1.8,carriagewayWidth*.17);
+      const expectedOffset=carriagewayWidth/2-transverseRadius-.08;
 
       pools.getMatrixAt(index,matrix);matrix.decompose(position,rotation,scale);
       expect(position.y).toBeCloseTo(.325,6); // 2.5 cm above the road deck
@@ -133,7 +174,7 @@ describe('procedural street lighting',()=>{
       const centerAlong=(position.x-a.x)*ux+(position.z-a.z)*uz;
       const centerSide=((position.x-a.x)*dz-(position.z-a.z)*dx)/length;
       expect(Math.abs(Math.abs(centerSide)-expectedOffset)).toBeLessThan(1e-5);
-      expect(Math.abs(centerSide)+scale.x).toBeLessThanOrEqual(laneWidth/2-.079);
+      expect(Math.abs(centerSide)+scale.x).toBeLessThanOrEqual(carriagewayWidth/2-.079);
       expect(centerAlong-scale.z).toBeGreaterThanOrEqual(-1e-5);
       expect(centerAlong+scale.z).toBeLessThanOrEqual(length+1e-5);
 
@@ -144,14 +185,22 @@ describe('procedural street lighting',()=>{
 
       const vertices=pools.geometry.getAttribute('position');
       const alongExtents:number[]=[];
+      const sideExtents:number[]=[];
       for(let vertex=0;vertex<vertices.count;vertex++){
         const point=new THREE.Vector3().fromBufferAttribute(vertices,vertex).applyMatrix4(matrix);
-        alongExtents.push((point.x-a.x)*ux+(point.z-a.z)*uz);
+        const along=(point.x-a.x)*ux+(point.z-a.z)*uz;
+        const side=(point.x-a.x)*dz-(point.z-a.z)*dx;
+        alongExtents.push(along);
+        sideExtents.push(side/length);
         expect(point.y).toBeCloseTo(.325,5);
-        expect(Math.abs(((point.x-a.x)*dz-(point.z-a.z)*dx)/length)).toBeLessThan(laneWidth/2);
+        expect(Math.abs(side/length)).toBeLessThanOrEqual(carriagewayWidth/2-0.079+1e-5);
       }
       expect(Math.max(...alongExtents)-Math.min(...alongExtents)).toBeCloseTo(8,5);
+      expect(Math.min(...alongExtents)).toBeGreaterThanOrEqual(-1e-5);
+      expect(Math.max(...alongExtents)).toBeLessThanOrEqual(length+1e-5);
+      expect(Math.max(...sideExtents)-Math.min(...sideExtents)).toBeCloseTo(2*transverseRadius,5);
       poles.getMatrixAt(index,matrix);matrix.decompose(position,rotation,scale);
+      expect(position.y).toBeCloseTo(road.kind==='arterial'?.475:0,6);
       const poleTop=position.y+5;
       lamps.getMatrixAt(index,matrix);matrix.decompose(position,rotation,scale);
       const lampTop=position.y+.06;

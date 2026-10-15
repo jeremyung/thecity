@@ -243,7 +243,7 @@ fn evaluate_exact_candidate(
 #[test]
 #[ignore = "bounded exact proposal scan for mature browser-review save"]
 fn diagnose_access_proposals_for_mature_browser_voids() {
-    let source = include_str!("../../validation/spine-experiment-browser-review-save.json");
+    let source = include_str!("../../tests/fixtures/access-joins/spine-experiment-browser-review-save.json");
     let mut engine = Engine::restore_json(source).expect("mature browser save restores");
     let start_save = engine.save_json();
     let initial_cursor = engine.state.interior_access_cursor;

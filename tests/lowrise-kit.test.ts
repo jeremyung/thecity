@@ -74,6 +74,24 @@ function materialGeometrySignature(root:THREE.Object3D,material:THREE.Material){
 }
 
 describe('integrated low-rise families',()=>{
+  it('exposes shop canopies beyond the wall while staying inside the parcel',()=>{
+    const art=new ArtMaterials();
+    try{for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      for(const kind of ['shop','cafe'] as const)for(const depth of [8,12]){
+        const b=building(kind,'open',{x:0,z:0,width:8,depth,floors:2});
+        const group=buildingKit(b,art);group.updateMatrixWorld(true);
+        const front=Math.max(6,depth*.84)/2;
+        const hit=new THREE.Raycaster(new THREE.Vector3(0,6,front+.3),new THREE.Vector3(0,-1,0)).intersectObject(group,true)[0];
+        expect(hit,'projecting canopy covers the frontage').toBeDefined();
+        expect(hit.point.y).toBeCloseTo(3.8,5);
+        expect((hit.object as THREE.Mesh).material===art.get('#527366')).toBe(true);
+        for(const point of parcelLocalPoints(group))expect(point.z).toBeLessThanOrEqual(depth/2+1e-5);
+        disposeGroup(group);
+      }
+    }}finally{art.dispose();}
+  });
+
   it('keeps real transformed geometry inside narrow rotated parcels across styles and roof profiles',()=>{
     const art=new ArtMaterials();
     for(const kind of ['home','shop','cafe'] as const)for(const [width,depth] of [[6,6],[8,10],[10,8],[13,12],[8.6,8],[11.65,8],[14,8]] as const){
@@ -245,7 +263,7 @@ describe('integrated low-rise families',()=>{
       const frontageW=Math.min(lowriseBuildingWidth(b,Math.max(6,b.width*.84),Math.max(6,b.depth*.84)),b.width-.2)*.96;
       const doorWidth=floors===1?1.25:Math.min(1.12,frontageW*.24);
       expect(door.some(point=>Math.abs(point.x)<doorWidth/2+.02&&point.y>.8&&point.y<3.2&&point.z>2.8),`${floors} floors centered door`).toBe(true);
-      const paneMaterials=floors===1?[art.get('#55757a',.25),art.get('#e9aa58',.42,true,'home')]:[art.get('#94a7a0',.3),art.get('#e9aa58',.42,true,'home')];
+      const paneMaterials=floors===1?[art.get('#55757a',.25),art.window('home')]:[art.get('#94a7a0',.3),art.window('home')];
       const panes=paneMaterials.flatMap(material=>localGeometryPoints(group,material)).filter(point=>point.y>=.65&&point.y<3.05&&point.z>2.5);
       expect(panes.some(point=>point.x< -doorWidth/2-.1),`${floors} floors left window`).toBe(true);
       expect(panes.some(point=>point.x> doorWidth/2+.1),`${floors} floors right window`).toBe(true);
@@ -307,7 +325,7 @@ describe('integrated low-rise families',()=>{
     const art=new ArtMaterials();
     for(const style of ['anime','miniature'] as const){
       art.setStyle(style);
-      const glow=art.get('#e9aa58',.42,true,'home');
+      const glow=art.window('home');
       for(const floors of [1,2,3] as const){
         const b=building('home','open',{width:10,depth:10,floors,appearance_seed:19,occupancy:5,vacant_days:0});
         const occupied=buildingKit(b,art);

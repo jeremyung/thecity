@@ -10,6 +10,22 @@ crate-type = ["cdylib", "rlib"]
 [features]
 # Opt-in diagnostic mutation API; never enabled for application builds.
 profiling = []
+# Isolated visual-review build; not enabled in the normal application.
+single-expressway-candidate = []
+compact-expressway-candidate = []
+# Isolated bounded frontage-aware street placement; default layout unchanged.
+street-placement-candidate = []
+# Isolated corner-frontage fitting evaluation; normal application stays unchanged.
+frontage-fit-candidate = []
+# Isolated joint front/rear parcel fitting with reserved walking passages.
+flag-passage-candidate = []
+# Isolated street subdivision guard against creating thin wedge blocks.
+block-proportion-candidate = []
+# Isolated parent-block access and passage-facing parcel evaluation.
+parent-passage-candidate = []
+
+# Two-tier station-fringe network; rear sites require reserved access.
+frontage-network-candidate = ["flag-passage-candidate"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

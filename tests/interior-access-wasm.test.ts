@@ -15,7 +15,7 @@ it.each([
   ['geometry-derived noncanonical branch', 'generalized-access-pending-save.json'],
 ])('WASM resumes %s and releases lots only after construction',(_label,fixture)=>{
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const engine=CityEngine.restore(readFileSync(new URL(`../validation/${fixture}`,import.meta.url),'utf8'));
+  const engine=CityEngine.restore(readFileSync(new URL(`./fixtures/access-joins/${fixture}`,import.meta.url),'utf8'));
   let resumed:CityEngine|undefined;
   try{
     let state=saved(engine);

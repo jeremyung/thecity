@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn shared_capture_start_preserves_live_checkpoint_and_continuation() {
-        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
         let mut control = Engine::restore_json(source).unwrap();
         let mut paired = Engine::restore_json(source).unwrap();
         let discovery = access_capture::capture(&control).unwrap();
@@ -169,7 +169,7 @@ mod tests {
                 .collect()
         }
         let city = Engine::restore_json(include_str!(
-            "../../validation/early-reservation-wasm-87231-save.json"
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
         ))
         .unwrap();
         let before = city.save_json();
@@ -210,7 +210,7 @@ mod tests {
 
     #[test]
     fn exhausted_face_sweep_survives_save_and_selects_another_interior() {
-        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
         let mut city = Engine::restore_json(source).unwrap();
         assert!(city.start_face_access());
         let mut job = city.live_access.take().unwrap();
@@ -259,7 +259,7 @@ mod tests {
         }
         validate_face_history(&history).unwrap();
         assert!(history.iter().map(Vec::len).sum::<usize>() <= MAX_HISTORY_ITEMS);
-        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
         let mut city = Engine::restore_json(source).unwrap();
         city.state.exhausted_access_faces = vec![vec![1, 2]];
         assert!(Engine::restore_json(&city.save_json()).is_err());
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn mature_live_job_admits_known_route_and_resumes_with_moving_actors() {
-        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
         let mut uninterrupted = Engine::restore_json(source).unwrap();
         assert!(uninterrupted.start_face_access());
         let mut resumed = Engine::restore_json(&uninterrupted.save_json()).unwrap();
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     fn real_steps_resume_deterministically_across_geometry_churn() {
-        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
         let mut uninterrupted = Engine::restore_json(source).unwrap();
         assert!(uninterrupted.start_face_access());
         let mut resumed = Engine::restore_json(&uninterrupted.save_json()).unwrap();
@@ -362,7 +362,7 @@ mod tests {
 
     #[test]
     fn legacy_preflight_restart_preserves_mature_city_and_is_deterministic() {
-        let source = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
         let mut city = Engine::restore_json(source).unwrap();
         assert!(city.start_face_access());
 

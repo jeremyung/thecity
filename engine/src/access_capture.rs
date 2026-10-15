@@ -279,7 +279,7 @@ mod tests {
     fn pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation() {
         let initial = Engine::new_legacy(41);
         let mature = Engine::restore_json(include_str!(
-            "../../validation/early-reservation-wasm-87231-save.json"
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
         ))
         .expect("mature save restores");
         let mut legacy = Engine::new_legacy(43);
@@ -383,7 +383,7 @@ mod tests {
     #[test]
     fn capture_matches_mature_frozen_projection_oracle() {
         let engine = Engine::restore_json(include_str!(
-            "../../validation/early-reservation-wasm-87231-save.json"
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
         ))
         .expect("mature save restores");
         let captured = capture(&engine).expect("mature graph is within the exact tracer cap");

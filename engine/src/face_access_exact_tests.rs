@@ -7,7 +7,7 @@ use crate::*;
 fn audit_largest_face_direct_access_candidate() {
     use serde_json::json;
 
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let source = Engine::restore_json(SAVE).expect("matching mature checkpoint restores");
     assert_eq!(source.state.tick, 242_000);
     assert_eq!(source.state.seed, 87_231);
@@ -249,7 +249,7 @@ fn end_node_id_for_test() -> u32 {
 }
 
 fn generalized_access_candidate_engine() -> (Engine, usize) {
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let mut engine = Engine::restore_json(SAVE).expect("mature checkpoint restores");
     let host_t = 0.72;
     let end = WorldPoint { x: 181.0, z: 15.0 };
@@ -344,7 +344,7 @@ fn generalized_access_candidate_engine() -> (Engine, usize) {
 
 #[test]
 fn explicit_angled_access_candidate_uses_branch_frontage_and_restores() {
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let source = Engine::restore_json(SAVE).expect("mature checkpoint restores");
     let before = source.save_json();
     let candidate = interior_access::AccessGeometryCandidate {
@@ -423,7 +423,7 @@ fn explicit_angled_access_candidate_uses_branch_frontage_and_restores() {
 fn map_known_branch_local_sensitivity() {
     use serde_json::json;
 
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     const HOST_ID: u32 = 3317;
     const BASE_T: f32 = 0.72;
     const BASE_END_X: f32 = 181.0;
@@ -694,7 +694,7 @@ fn diagnostic_rect_inside_face(rect: &geometry::OrientedRect, polygon: &[(f32, f
 #[ignore = "offline exhaustive prepared-page diagnostic on a mature face"]
 fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     let diagnostic_started = std::time::Instant::now();
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let source = Engine::restore_json(SAVE).expect("current mature checkpoint restores");
     let source_before = source.save_json();
     let ordinary = source
@@ -1351,7 +1351,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
     use serde_json::json;
     use std::collections::BTreeSet;
 
-    const SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let engine = Engine::restore_json(SAVE).expect("matching checkpoint restores");
     let before = engine.save_json();
     let ordinary: Vec<_> = engine
@@ -1967,7 +1967,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
 #[ignore = "mature graph preflight quota and JSON resume parity"]
 fn mature_graph_preflight_preserves_indexed_edges() {
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let roads = source
@@ -2359,7 +2359,7 @@ fn mature_target_containment_matches_reference() {
 fn mature_composed_face_trace_matches_reference() {
     use crate::road_face_trace::RoadFaceTrace;
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let roads = source
@@ -2533,7 +2533,7 @@ pub(super) fn frozen_target_viability_input(
 fn mature_target_viability_matches_engine() {
     use crate::face_target_viability::{FrozenViabilityContext, ViabilityQuery};
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let original_context = source.collision_context();
@@ -2641,7 +2641,7 @@ fn mature_face_sampling_matches_reference() {
     use crate::face_target_sampling::FaceSampler;
     use crate::face_target_viability::FrozenViabilityContext;
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let frozen = FrozenViabilityContext::new(frozen_target_viability_input(&source)).unwrap();
@@ -2722,7 +2722,7 @@ fn mature_target_ranking_matches_reference() {
     use crate::face_target_ranking::TargetRanking;
     use crate::face_target_viability::Segment;
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let context = source.collision_context();
@@ -2812,7 +2812,7 @@ fn mature_face_selection_matches_reference() {
     use crate::face_target_selection::FaceSelection;
     use crate::face_target_viability::FrozenViabilityContext;
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let context = FrozenViabilityContext::new(frozen_target_viability_input(&source)).unwrap();
@@ -2888,7 +2888,7 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
         road_face_trace::RoadFaceTrace,
     };
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let ordinary = source
@@ -3091,7 +3091,7 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
 #[ignore = "measure current synchronous frozen access input capture on mature fixture"]
 fn mature_access_capture_cost() {
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let mut durations = Vec::new();
@@ -3170,7 +3170,7 @@ fn mature_access_capture_cost() {
 fn mature_discovery_job_matches_reference() {
     use crate::access_discovery_job::{DiscoveryInput, DiscoveryJob};
     let source = Engine::restore_json(include_str!(
-        "../../validation/early-reservation-wasm-87231-save.json"
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
     .unwrap();
     let ordinary = source
@@ -3284,7 +3284,7 @@ fn mature_discovery_job_matches_reference() {
 fn mature_incremental_proposal_validation_matches_live_oracle() {
     use crate::access_proposal_validation::*;
     use crate::face_target_viability::Segment;
-    let source = Engine::restore_json(include_str!("../../validation/early-reservation-wasm-87231-save.json")).unwrap();
+    let source = Engine::restore_json(include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json")).unwrap();
     let segment = |from, to| source.node(from).zip(source.node(to)).map(|(a,b)| Segment { ax:a.x,az:a.z,bx:b.x,bz:b.z });
     let mut hosts = source.state.roads.iter().filter(|r| r.stage == "open" && r.connected && matches!(r.kind.as_str(), "local" | "arterial"))
         .filter_map(|r| segment(r.from,r.to).map(|segment| ProposalHost { id:r.id,from:r.from,to:r.to,segment })).collect::<Vec<_>>();
@@ -3356,7 +3356,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
 #[ignore = "composed discovery to ranked proposal pages on mature city"]
 fn mature_access_planning_job_matches_ranked_pages() {
     use crate::access_planning_job::AccessPlanningJob;
-    let source = Engine::restore_json(include_str!("../../validation/early-reservation-wasm-87231-save.json")).unwrap();
+    let source = Engine::restore_json(include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json")).unwrap();
     let reference = crate::access_reference::load();
     let mut expected = Vec::new();
     for rows in reference.ordered_bits.chunks(48) {

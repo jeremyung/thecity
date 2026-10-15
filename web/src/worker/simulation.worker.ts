@@ -1,11 +1,14 @@
 import { WORKER_PROTOCOL_VERSION, type Metrics, type WorkerInput, type WorkerOutput, type World } from "../types";
 import { ControlSequenceGate } from "./protocol";
+import { ensurePresentationWorld } from './presentation-order';
 
 type Engine = {
   free?(): void;
   step(ticks: number): void;
   snapshot(): string;
-  movements(): Float32Array;
+  presentation_revision(): string;
+  movement_packet(): Uint32Array;
+  train_doors(): Float32Array;
   inspect(id: number): string;
   save(): string;
   set_development_rate(rate: number): void;
@@ -33,7 +36,7 @@ const TICK_MS = 1000 / TICK_RATE;
 const MAX_STEPS_PER_TURN = 8;
 const WORLD_PUBLISH_MS = 500;
 const MAX_BACKLOG_TICKS = 160;
-const MOVEMENT_STRIDE = 5;
+
 const scope = globalThis as unknown as WorkerScope;
 
 /** A tiny transferable pool that also enforces the two-snapshot backpressure cap. */
@@ -158,6 +161,7 @@ let accumulator = 0;
 let lastFrameAt = 0;
 let lastWorldAt = 0;
 let lastRevision = -1;
+let lastPresentationRevision: string | undefined;
 let lastMetricsAt = 0;
 let metricsSampleAt = 0;
 let metricsSampleTick = 0;
@@ -190,13 +194,14 @@ function parseWorldSnapshot(json: string): World {
   const value: unknown = JSON.parse(json);
   if (!value || typeof value !== "object") throw new Error("Engine returned an invalid world snapshot");
   const world = value as Partial<World>;
-  if (world.schema_version !== 1 || !Number.isFinite(world.tick) || !Number.isFinite(world.revision) || !Number.isFinite(world.development_rate)) {
+  if (world.schema_version !== 1 || !Number.isFinite(world.tick) || !Number.isFinite(world.revision) || !Number.isFinite(world.development_rate)
+    || typeof world.presentation_revision !== 'string' || !world.presentation_revision) {
     throw new Error("Engine returned an invalid world snapshot");
   }
   return world as World;
 }
 
-function publishWorld(force = false): void {
+function publishWorld(force = false): World | undefined {
   if (!engine) return;
   const now = scope.performance.now();
   if (!force && now - lastWorldAt < WORLD_PUBLISH_MS) return;
@@ -206,6 +211,8 @@ function publishWorld(force = false): void {
   lastRevision = world.revision;
   previousTick = world.tick;
   post({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world });
+  lastPresentationRevision = world.presentation_revision;
+  return world;
 }
 
 function minuteAndDay(tick: number): { minute: number; day: number } {
@@ -216,11 +223,15 @@ function minuteAndDay(tick: number): { minute: number; day: number } {
 
 function publishMovement(): void {
   if (!engine) return;
-  const movement = engine.movements();
-  const neededBytes = movement.length * Float32Array.BYTES_PER_ELEMENT;
+  lastPresentationRevision = ensurePresentationWorld(
+    engine.presentation_revision(), lastPresentationRevision,
+    () => publishWorld(true)?.presentation_revision,
+  );
+  const packet = engine.movement_packet();
+  const neededBytes = packet.length * Uint32Array.BYTES_PER_ELEMENT;
   const buffer = movementBuffers.acquire(neededBytes);
   if (!buffer) return;
-  if (neededBytes > 0) new Float32Array(buffer, 0, movement.length).set(movement);
+  if (neededBytes > 0) new Uint32Array(buffer, 0, packet.length).set(packet);
   const tick = currentTick();
   const clock = minuteAndDay(tick);
   post({
@@ -228,8 +239,10 @@ function publishMovement(): void {
     protocolVersion: WORKER_PROTOCOL_VERSION,
     epoch,
     tick,
-    count: Math.floor(movement.length / MOVEMENT_STRIDE),
+    wordCount: packet.length,
+    trainDoors: engine.train_doors(),
     buffer,
+    presentationRevision: lastPresentationRevision,
     minute: clock.minute,
     day: clock.day,
   }, [buffer]);
@@ -312,6 +325,7 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
   const previousEngine = engineSlot.begin(epoch);
   movementBuffers.reset();
   lastRevision = -1;
+  lastPresentationRevision = undefined;
   lastWorldAt = 0;
   previousTick = 0;
   droppedWallMs = 0;
@@ -356,6 +370,7 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
     lastRevision = world.revision;
     lastWorldAt = scope.performance.now();
     post({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world });
+    lastPresentationRevision = world.presentation_revision;
     // A paused restore still needs its actors at the saved positions.
     publishMovement();
     startScheduler();
@@ -383,6 +398,7 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
         lastRevision = fallbackWorld.revision;
         lastWorldAt = scope.performance.now();
         post({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world: fallbackWorld });
+        lastPresentationRevision = fallbackWorld.presentation_revision;
         publishMovement();
         sendError(`Could not load that world. The current city is still running. ${reason}`);
         startScheduler();
