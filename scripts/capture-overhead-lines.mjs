@@ -1,4 +1,4 @@
-// Capture utility poles, street wiring and the rail overhead line in the real app (software WebGL).
+// Capture utility poles and street wiring beside the curved rail corridor in the real app (software WebGL).
 //
 // Usage: node scripts/capture-overhead-lines.mjs <save.json> <out-dir> [preview hour] [anime|miniature] [strip]
 // Requires `npx vite --host 127.0.0.1 --port 5173` running. As in
@@ -66,9 +66,12 @@ try {
     };
     const far = (p) => !station || Math.hypot(p.x - station.x, p.z - station.z) > 260;
     const poles = read('utility-pole-shafts').filter(far).sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
-    const masts = read('rail-overhead-masts').filter((p) => station && Math.hypot(p.x - station.x, p.z - station.z) > 60).sort((a, b) => Math.hypot(a.x - station.x, a.z - station.z) - Math.hypot(b.x - station.x, b.z - station.z));
+    // The street pole nearest the curved rail's midpoint frames where wiring meets the viaduct.
+    const samples = (w.rail_alignments ?? []).flatMap((a) => a.samples);
+    const bend = samples.length ? samples[Math.floor(samples.length / 2)] : null;
+    const railPole = bend ? read('utility-pole-shafts').sort((a, b) => Math.hypot(a.x - bend[1], a.z - bend[2]) - Math.hypot(b.x - bend[1], b.z - bend[2]))[0] : null;
     r.director.update = () => {};
-    return { diagnostics, tick: w.tick, steps, station, pole: poles[Math.floor(poles.length / 3)] ?? null, mast: masts[0] ?? null };
+    return { diagnostics, tick: w.tick, steps, station, pole: poles[Math.floor(poles.length / 3)] ?? null, rail: bend && { x: bend[1], z: bend[2], ux: bend[3], uz: bend[4] }, railPole: railPole ?? null, platform: (w.rail_platforms ?? [])[0] ?? null };
   }, hour);
 
   const views = [];
@@ -80,14 +83,19 @@ try {
     views.push({ name: 'local-street-reverse', target: [cx - ux * 40, 6, cz - uz * 40], position: [cx + ux * 14, 1.7, cz + uz * 14] });
     views.push({ name: 'local-street-above', target: [p.x, 5, p.z], position: [p.x + p.ix * 26 - ux * 22, 24, p.z + p.iz * 26 - uz * 22] });
   }
-  if (scene.mast) {
-    // Above the track, looking along the line past the mast; the corridor over the viaduct is clear.
-    const m = scene.mast, ux = -m.iz, uz = m.ix, tx = m.x + m.ix * 3.35, tz = m.z + m.iz * 3.35;
-    views.push({ name: 'rail-overhead', target: [tx + ux * 30, 11, tz + uz * 30], position: [tx - ux * 22 + m.ix * 2, 17, tz - uz * 22 + m.iz * 2] });
-    if (scene.station) {
-      const s = scene.station, toward = Math.sign((s.x - tx) * ux + (s.z - tz) * uz) || 1;
-      views.push({ name: 'station-approach', target: [s.x, 10, s.z], position: [s.x - ux * toward * 70 - m.ix * 3, 20, s.z - uz * toward * 70 - m.iz * 3] });
-    }
+  if (scene.rail) {
+    // Above the curved track, looking along it: the corridor's own catenary and the street wiring beside it.
+    const t = scene.rail;
+    views.push({ name: 'rail-curve', target: [t.x + t.ux * 30, 9, t.z + t.uz * 30], position: [t.x - t.ux * 24, 18, t.z - t.uz * 24] });
+  }
+  if (scene.railPole) {
+    const p = scene.railPole;
+    views.push({ name: 'rail-street', target: [p.x, 6, p.z], position: [p.x + p.ix * 14 + 10, 14, p.z + p.iz * 14 + 10] });
+  }
+  if (scene.platform) {
+    // Above the track behind the terminal, looking down the platform (+Z = (ux, uz) in the engine frame).
+    const p = scene.platform;
+    views.push({ name: 'station-approach', target: [p.x + p.ux * 40, 9, p.z + p.uz * 40], position: [p.x - p.ux * 28, 20, p.z - p.uz * 28] });
   }
   views.push({ name: 'overview', target: [0, 0, 0], position: [380, 420, -470] });
 
