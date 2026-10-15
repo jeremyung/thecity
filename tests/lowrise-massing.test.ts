@@ -57,7 +57,7 @@ describe('seeded compact low-rise massing',()=>{
     expect(lowriseMassing({...base,kind:'apartment'},8,8)).toBeNull();
     expect(lowriseMassing({...base,floors:4},8,8)).toBeNull();
     expect(lowriseMassing({...base,floors:0},8,8)).toBeNull();
-    expect(lowriseMassing({...base,width:5.99},5.99,8)).toBeNull();
+    expect(lowriseMassing({...base,width:4.99},4.99,8)).toBeNull();
     expect(lowriseMassing(base,Number.NaN,8)).toBeNull();
   });
 });

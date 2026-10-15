@@ -11,7 +11,7 @@ export interface BuildingMass {
 }
 
 export interface MidriseMassing {
-  family: 'walkup' | 'setback-office';
+  family: 'walkup' | 'terrace-apartment' | 'setback-office';
   masses: BuildingMass[];
 }
 
@@ -29,17 +29,42 @@ export function compactMidriseEnvelope(b: MidriseBuilding, width: number, depth:
  * Compose a deterministic midrise silhouette inside the supplied building
  * envelope. Floor counts and world-state dimensions remain authoritative; this
  * helper only provides visual mass groupings for the renderer.
+ * A planner-minimum 5 m apartment site leaves a 3.7 m body after side margins;
+ * retain the bounded midrise lifecycle and entrance on those narrow sites.
  */
 export function midriseMassing(b: MidriseBuilding, w: number, d: number): MidriseMassing | null {
   if (b.anchor || (b.kind !== 'apartment' && b.kind !== 'office')
       || !Number.isInteger(b.floors) || b.floors < 4 || b.floors > 11
-      || !Number.isFinite(w) || !Number.isFinite(d) || w < 6 || d < 6) {
+      || !Number.isFinite(w) || !Number.isFinite(d) || w < (b.kind === 'office' ? 3.2 : 3.7) || d < 6) {
     return null;
   }
 
   const seed = b.appearance_seed >>> 0;
   const side = (seed & 1) === 0 ? -1 : 1;
   if (b.kind === 'apartment') {
+    // A seeded minority uses a broad front terrace. Keep the lower body as a
+    // single full-width, full-depth slab so its street entrance stays centered;
+    // the top floor pulls back from +Z while remaining aligned to the rear.
+    if ((seed >>> 5) % 3 === 1) {
+      const terraceDepthRatio = 0.58 + ((seed >>> 3) % 9) * 0.01;
+      const terraceDepth = d * terraceDepthRatio;
+      return {
+        family: 'terrace-apartment',
+        masses: [
+          { x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors: b.floors - 1, role: 'main' },
+          {
+            x: 0,
+            z: -d / 2 + terraceDepth / 2,
+            width: w,
+            depth: terraceDepth,
+            baseFloor: b.floors - 1,
+            floors: 1,
+            role: 'main',
+          },
+        ],
+      };
+    }
+
     const coreRatio = 0.20 + ((seed >>> 2) % 5) * 0.01;
     const coreWidth = w * coreRatio;
     const mainWidth = w - coreWidth;
@@ -67,6 +92,26 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
           width: mainWidth * capWidthRatio,
           depth: d * capDepthRatio,
           baseFloor: lowerFloors, floors: 2, role: 'main',
+        },
+      ],
+    };
+  }
+
+  // A seeded minority of offices reads as a straight street-wall slab with a
+  // single, modest top-floor setback. Keep the office family identity shared.
+  if (seed % 3 === 0) {
+    const topWidthRatio = 0.85 + ((seed >>> 3) % 6) * 0.01;
+    const topDepthRatio = 0.86 + ((seed >>> 6) % 7) * 0.01;
+    const shiftX = side * w * (((seed >>> 9) % 5) - 2) * 0.008;
+    const shiftZ = d * (((seed >>> 12) % 5) - 2) * 0.008;
+    return {
+      family: 'setback-office',
+      masses: [
+        { x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors: b.floors - 1, role: 'main' },
+        {
+          x: shiftX, z: shiftZ,
+          width: w * topWidthRatio, depth: d * topDepthRatio,
+          baseFloor: b.floors - 1, floors: 1, role: 'main',
         },
       ],
     };

@@ -1,0 +1,145 @@
+{
+  "base": "fca58ca12ec8ad8fe10546b22004f883a2ea57e2",
+  "purpose": "Required test fixtures for the reconciled runtime checkpoint; large visual evidence is separate.",
+  "files": [
+    {
+      "path": "tests/fixtures/access-joins/early-reservation-wasm-87231-save.json",
+      "bytes": 2708001,
+      "sha256": "7b11eedbb4bb2dad512319c46bda8295a7eeabecafd14a197642176a6f7b7de6",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/founder-topology-wasm-87231-save.json",
+      "bytes": 2676446,
+      "sha256": "e564b67a66096d4ff1445c38d78ada1d9f2f1803e3870ddbd1f5e7e9f22879e7",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/generalized-access-pending-save.json",
+      "bytes": 2708745,
+      "sha256": "f85a16eea1aa4ffe55f46f1877c3780b5f69c23acbc50d1dde3b1596c1ff3d01",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/infill-oriented-continued.json",
+      "bytes": 2273663,
+      "sha256": "a8d9474d31c444ced3e8ca90af667151c4023b94a906127455bc05c006ec034a",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/interior-access-verified-87231.json.final.json",
+      "bytes": 2315653,
+      "sha256": "3bfcc0f482a3fb6b27659242d247229fa1beb186d96e9bbf5ca9d6a3ab7e7d69",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/interior-access-verified-87231.json.project-3736.pending.json",
+      "bytes": 2350995,
+      "sha256": "210c8b06315704ee63d6fed17e24011400c919f0a9e69b0eef674f2a6459e121",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/interior-access-verified-seed0.json.final.json",
+      "bytes": 2338977,
+      "sha256": "b6649274352b09b69bd8deda427851079e4c8e8b4faba5caaa5e60d8bc068e13",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/manifest.json",
+      "bytes": 2050875,
+      "sha256": "8739df85a250bbb478cfe4a0afc402f56fd8c5fb09730a7b5816edbc02bc0713",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/mature-world.activity-baseline.json",
+      "bytes": 2190609,
+      "sha256": "180de846844499a91156d4005db937ccc49b551a6a3c7e6c1cb3322188a09bb0",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/mature-world.bounded-selection.json",
+      "bytes": 2366846,
+      "sha256": "9bb4af0915f2950b7a066ebf43fa87a5010b33cb547904156866adcb12a4f69f",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/mature-world.cache-candidate.json",
+      "bytes": 2325018,
+      "sha256": "97fedf7da5158c66924c988654df6f4c49ce9521791b980992d0d180864d4f83",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/mature-world.json",
+      "bytes": 2264909,
+      "sha256": "8ddd6e9947f1bb34e36e745029fff47c25cf015f8de96a3d8bd1064dc208b6c2",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/mature-world.multiblock-candidate.json",
+      "bytes": 2244633,
+      "sha256": "58856486c54c7ddc55bbfb320b12fbf812d95bedbe9162b7fc41899d69828c8e",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/mature-world.ranked-blocks.json",
+      "bytes": 2461252,
+      "sha256": "1011789f9722e5b7bf6587a9a286f64c71b90aeba83c4cbc91ec00c7b8ee2b52",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/ranked-blocks-seed0.json",
+      "bytes": 2471282,
+      "sha256": "665555a8465daa9f4e05309ce7091d8c14878cb976aba4d031df4fc393ad46e2",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/spine-experiment-browser-review-save.json",
+      "bytes": 2967384,
+      "sha256": "470a799f5e3561b63ee314752c80331830971d4c4e90ca82ba13404a6052c678",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json",
+      "bytes": 2692756,
+      "sha256": "030ca925f965170a70c108b7439dc48f7eecb3875fba916b7d101ee00195ee77",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json",
+      "bytes": 2604705,
+      "sha256": "10b834b2a35dd102099d7a46d4b99f17217207402197f8c43852b4abe5a39801",
+      "testFixture": true
+    },
+    {
+      "path": "tests/fixtures/bus-seed5-legacy-queue.json",
+      "bytes": 2072030,
+      "sha256": "be42cb621d08e8c2d3b145f4d7810d8a3bd5f663e5fc430b6a1714bec6876eba",
+      "testFixture": true
+    },
+    {
+      "path": "validation/fixtures/seed0-block76-frontage.json",
+      "bytes": 2616,
+      "sha256": "c7b02c7178c54ce94894ff738178cdd79a1725fa0dd4b6c05c0b86d9516f4ae3",
+      "testFixture": true
+    },
+    {
+      "path": "validation/fixtures/seed0-parent-block-reserved.json",
+      "bytes": 6050,
+      "sha256": "1e22a621cb1921de6ea7dc90c3eb43a5f36dca0604e48e81d02bafaa4cf88e96",
+      "testFixture": true
+    },
+    {
+      "path": "validation/parent-block-access.json",
+      "bytes": 2940,
+      "sha256": "29be238ac3e9a86490dc4a7eda3970998619e1d792a73124417e1430f3d5c859",
+      "testFixture": true
+    },
+    {
+      "path": "validation/parent-passage-connection.json",
+      "bytes": 1469,
+      "sha256": "9ad48d627e7d1e7eb1f98ec46b530633b8c31551de1f941cefc7193c9ed6fd40",
+      "testFixture": true
+    }
+  ],
+  "archiveSHA256": "8c229253b8edc0979b86aebbfebce972ef95c3a9fa7d6720743566198c1aa83c"
+}

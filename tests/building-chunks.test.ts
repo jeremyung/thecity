@@ -50,6 +50,25 @@ function drain(chunks: BuildingChunks, pendingKeys?: ReadonlySet<string>, maxUpd
 afterEach(() => vi.restoreAllMocks());
 
 describe("BuildingChunks", () => {
+  it.each([false,true])("bounds contour work by ceiling/deadline and safely cancels a leased source (deadline=%s)", (deadline) => {
+    let clockCalls=0;
+    vi.spyOn(performance, "now").mockImplementation(()=>deadline ? clockCalls++*2 : 0);
+    const material=new THREE.MeshBasicMaterial(),ink=new THREE.LineBasicNodeMaterial();
+    const chunks=new BuildingChunks(m=>m,release=>release(),ink);
+    const {group,geometry}=largeIndexedBuilding(material,0);
+    const read=vi.spyOn(geometry.getAttribute('position'),'getX');
+    const dispose=vi.fn((g:THREE.Group)=>{g.traverse(o=>{if(o instanceof THREE.Mesh)o.geometry.dispose();});});
+    chunks.set(901,group,{createGroup:()=>{throw Error('unexpected regeneration');},disposeGroup:dispose});
+    expect(read).not.toHaveBeenCalled();
+    chunks.update();
+    expect(read).toHaveBeenCalledTimes(deadline ? 500 : 8000);
+    expect(chunks.root.children).toHaveLength(0);
+    expect(dispose).not.toHaveBeenCalled();
+    chunks.clear();expect(dispose).toHaveBeenCalledTimes(1);
+    chunks.clear();expect(dispose).toHaveBeenCalledTimes(1);
+    material.dispose();ink.dispose();
+  });
+
   it("reports only exact descriptors represented by committed chunks across replacement, moves, and clear", () => {
     const material = new THREE.MeshBasicMaterial();
     const chunks = new BuildingChunks((surface) => surface, (dispose) => dispose());
@@ -370,6 +389,7 @@ describe("BuildingChunks", () => {
   });
 
   it("re-resolves the current style at commit without recoloring staged geometry and honors current contour visibility", () => {
+    vi.spyOn(performance, "now").mockReturnValue(0);
     const sourceMaterial=new THREE.MeshBasicMaterial(),anime=new THREE.MeshBasicMaterial(),miniature=new THREE.MeshBasicMaterial();
     const ink=new THREE.LineBasicNodeMaterial(),group=new THREE.Group();group.position.set(230,0,10);
     const sourceGeometries:THREE.BufferGeometry[]=[];

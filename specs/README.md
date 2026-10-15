@@ -2,6 +2,10 @@
 
 A browser based, autonomous, watchable Tokyo inspired city grows from sparse settlement into a bounded metropolis. Rust compiled to WebAssembly owns the world; Three.js renders it with selectable artistic styles. Last Train, First Light ships first, followed by Little Tokyo. The viewer explores and watches rather than managing a game.
 
+## Locked visual references
+
+Compare the city against [Little Tokyo](https://github.com/jeremyung/thecity/releases/download/locked-concepts-2026-10-14/01-little-tokyo.png) and [Last Train, First Light](https://github.com/jeremyung/thecity/releases/download/locked-concepts-2026-10-14/04-last-train-first-light.png). These are concept targets, not screenshots of implemented fidelity. The [reference release](https://github.com/jeremyung/thecity/releases/tag/locked-concepts-2026-10-14) includes original-file hashes. Images live outside Git history; recordings and bulk historical evidence are not included.
+
 ## Reading order
 
 | Specification | Purpose |

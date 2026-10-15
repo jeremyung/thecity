@@ -68,6 +68,15 @@ describe('vehicle fleet', () => {
     const pick = fleet.pickable.filter(p => p.ids.length);
     expect(pick.flatMap(p => p.ids).sort()).toEqual([11, 12, 12]);
     const taxi = fleet.meshes.find(m => m.count === 1 && m.geometry.getAttribute('vstate').getZ(0) === 0)!;
+    const staticPosition = taxi.geometry.getAttribute('position') as THREE.InterleavedBufferAttribute;
+    const state = taxi.geometry.getAttribute('vstate') as THREE.InstancedBufferAttribute;
+    const tint = taxi.geometry.getAttribute('vtint') as THREE.InstancedBufferAttribute;
+    expect(staticPosition.data.stride).toBe(15);
+    expect(state).toBeInstanceOf(THREE.InstancedBufferAttribute);
+    expect(tint).toBeInstanceOf(THREE.InstancedBufferAttribute);
+    expect(state.usage).toBe(THREE.DynamicDrawUsage);
+    expect(tint.usage).toBe(THREE.DynamicDrawUsage);
+    expect(state.getZ(0)).toBe(0); // Instance updates stay in their own buffer.
     const matrix = new THREE.Matrix4(); taxi.getMatrixAt(0, matrix);
     expect(new THREE.Vector3().setFromMatrixPosition(matrix).y).toBeCloseTo(ROAD_SURFACE_Y + 1.5);
     for (let i = 0; i < 8; i++) fleet.add(100 + i, VEHICLE_KINDS.kei, i, 0, 0, 0, 0, 1 / 60);

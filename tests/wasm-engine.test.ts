@@ -2,12 +2,15 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
+import type { RailPlatform } from '../web/src/types';
+import { RAIL_PLATFORM_END } from '../web/src/render/rail-profile';
 
 type TransferState = 'home' | 'walking_to_station' | 'waiting_station' | 'riding_outbound' | 'working_external' | 'waiting_gateway' | 'riding_inbound' | 'walking_home';
 type EngineSnapshot = {
   seed: number;
   tick: number;
   stage: string;
+  rail_platforms: RailPlatform[];
   residents: Array<{ id: number; name: string; activity: string; transfer?: TransferState; train_id?: number | null; location_node?: number | null }>;
   trains: Array<{ id: number; route: number[]; progress: number; direction: number; passengers?: number; capacity?: number; station_waiting?: number; gateway_waiting?: number }>;
 };
@@ -61,8 +64,8 @@ function findOnboard(engine: CityEngine, maxBatches = 48): EngineSnapshot | null
 }
 
 function findMovement(movements: Float32Array, id: number) {
-  for (let offset = 0; offset < movements.length; offset += 5) {
-    if (movements[offset] === id) return [movements[offset + 1], movements[offset + 2], movements[offset + 3], movements[offset + 4]];
+  for (let offset = 0; offset < movements.length; offset += 6) {
+    if (movements[offset] === id) return [movements[offset + 1], movements[offset + 2], movements[offset + 3], movements[offset + 4], movements[offset + 5]];
   }
   return null;
 }
@@ -84,29 +87,37 @@ function sampleAccessPath(points: Array<{ x: number; z: number }>, distance: num
   return points[points.length - 1];
 }
 
-function expectQueuePlatform(movements: Float32Array, resident: EngineSave['residents'][number], state: EngineSave) {
+function expectQueuePlatform(movements: Float32Array, resident: EngineSave['residents'][number], state: EngineSave, platforms: RailPlatform[]) {
   const atStation = resident.transfer === 'waiting_station';
   const train = state.trains[0];
   const stationNode = state.nodes.find((node) => node.kind === 'station' && train.route.includes(node.id));
   expect(stationNode).toBeDefined();
   const terminalId = atStation ? stationNode!.id : train.route.find((nodeId) => nodeId !== stationNode!.id)!;
   const terminal = state.nodes.find((node) => node.id === terminalId);
-  const axisEnd = state.nodes.find((node) => node.id === train.route.find((nodeId) => nodeId !== stationNode!.id));
   expect(terminal).toBeDefined();
-  expect(axisEnd).toBeDefined();
-
-  const axisLength = Math.hypot(axisEnd!.x - stationNode!.x, axisEnd!.z - stationNode!.z);
-  const axisX = (axisEnd!.x - stationNode!.x) / axisLength;
-  const axisZ = (axisEnd!.z - stationNode!.z) / axisLength;
-  const direction = atStation ? 1 : -1;
-  const along = 12 + Math.floor(resident.queue_slot! / 8) * 2.4;
-  const across = 5.2 + (resident.queue_slot! % 8) * 1.3;
-  const expectedX = terminal!.x + axisX * direction * along - axisZ * across;
-  const expectedZ = terminal!.z + axisZ * direction * along + axisX * across;
+  const platform = platforms.find(p => p.node_id === terminalId);
+  expect(platform).toBeDefined();
+  // Queue slots follow the terminal tangent, not the chord between terminals.
+  const outwardX = platform!.ux, outwardZ = platform!.uz;
+  const normalX = outwardZ, normalZ = -outwardX;
+  const slot = resident.queue_slot!;
+  const expectedAcross = slot % 2 === 0 ? 3.6 : 4.5;
+  const expectedAlong = 2 + Math.floor(slot / 2) * 0.9;
   const movement = findMovement(movements, resident.id);
   expect(movement).not.toBeNull();
-  expect(Math.hypot(movement![0] - expectedX, movement![1] - expectedZ)).toBeLessThan(0.03);
+  const dx = movement![0] - platform!.x;
+  const dz = movement![1] - platform!.z;
+  const localX = dx * normalX + dz * normalZ;
+  const localZ = dx * outwardX + dz * outwardZ;
+  expect(localX).toBeGreaterThanOrEqual(2.6);
+  expect(localX).toBeLessThanOrEqual(7.8);
+  expect(localX + 0.45).toBeLessThanOrEqual(5.125);
+  expect(localZ).toBeGreaterThanOrEqual(-1);
+  expect(localZ).toBeLessThanOrEqual(RAIL_PLATFORM_END);
+  expect(localX).toBeCloseTo(expectedAcross, 2);
+  expect(localZ).toBeCloseTo(expectedAlong, 2);
   expect(movement![3]).toBe(0);
+  expect(movement![4]).toBe(8);
 
   const queuedAtSameTerminal = state.residents.filter((item) => item.transfer === resident.transfer && item.queue_slot !== null && item.queue_slot !== undefined);
   const positions = queuedAtSameTerminal.map((item) => findMovement(movements, item.id)).filter(Boolean) as number[][];
@@ -159,9 +170,9 @@ function expectConsistentBoarding(world: EngineSnapshot, state: EngineSave, move
     }
   }
 
-  expect(movements.length % 5).toBe(0);
+  expect(movements.length % 6).toBe(0);
   const movementIds: number[] = [];
-  for (let offset = 0; offset < movements.length; offset += 5) movementIds.push(movements[offset]);
+  for (let offset = 0; offset < movements.length; offset += 6) movementIds.push(movements[offset]);
   expect(new Set(movementIds).size).toBe(movementIds.length);
   for (const residentId of passengerIds) expect(movementIds).not.toContain(residentId);
   for (const trainId of trainIds) expect(movementIds.filter((id) => id === trainId)).toHaveLength(1);
@@ -236,18 +247,18 @@ describe('compiled WASM rail transfers', () => {
   it('places waiting rail residents at distinct station or gateway platform queue slots', () => {
     const engine = makeEngine();
     engine.set_development_rate(16);
-    const found = new Map<'waiting_station' | 'waiting_gateway', { resident: EngineSave['residents'][number]; state: EngineSave; movements: Float32Array }>();
+    const found = new Map<'waiting_station' | 'waiting_gateway', { resident: EngineSave['residents'][number]; state: EngineSave; movements: Float32Array; platforms: RailPlatform[] }>();
     for (let tick = 0; tick < 45_000 && found.size < 2; tick += 1_000) {
       engine.step(1_000);
       const state = saveState(engine);
       for (const transfer of ['waiting_station', 'waiting_gateway'] as const) {
         if (found.has(transfer)) continue;
         const resident = state.residents.find((item) => item.transfer === transfer && item.queue_slot !== null && item.queue_slot !== undefined);
-        if (resident) found.set(transfer, { resident, state, movements: engine.movements() });
+        if (resident) found.set(transfer, { resident, state, movements: engine.movements(), platforms: (JSON.parse(engine.snapshot()) as EngineSnapshot).rail_platforms });
       }
     }
     expect(Array.from(found.keys())).toEqual(expect.arrayContaining(['waiting_station', 'waiting_gateway']));
-    for (const { resident, state, movements } of found.values()) expectQueuePlatform(movements, resident, state);
+    for (const { resident, state, movements, platforms } of found.values()) expectQueuePlatform(movements, resident, state, platforms);
 
     const restored = CityEngine.restore(engine.save());
     engines.push(restored);

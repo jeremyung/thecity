@@ -146,7 +146,14 @@ export function claddingShade(kind: Cladding, strength: number): Vec3Node {
 export function claddingShadeBatched(strength: number): Vec3Node {
   const kind = float(attribute(CLADDING_ATTRIBUTE, 'float'));
   const pick = (index: number) => abs(kind.sub(index)).lessThan(.5);
-  const shade = select(pick(1), claddingPattern('siding'), select(pick(2), claddingPattern('tile'), select(pick(3), claddingPattern('alc'), select(pick(4), claddingPattern('concrete'), float(1)))));
+  // Keep derivative-based patterns outside conditional shader blocks. The
+  // shared shader serves every finish; evaluating all patterns before masking
+  // avoids backend-dependent darkening from conditional pattern evaluation.
+  const shade = float(1)
+    .add(claddingPattern('siding').sub(1).mul(float(pick(1))))
+    .add(claddingPattern('tile').sub(1).mul(float(pick(2))))
+    .add(claddingPattern('alc').sub(1).mul(float(pick(3))))
+    .add(claddingPattern('concrete').sub(1).mul(float(pick(4))));
   const masked = mix(float(1), shade, verticalMask().mul(strength));
   return vec3(masked, masked, masked);
 }

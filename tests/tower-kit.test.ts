@@ -31,11 +31,17 @@ function signature(root: THREE.Object3D): string[] {
 function expectFiniteGeometry(root: THREE.Object3D): void {
   for (const mesh of meshes(root)) {
     const position = mesh.geometry.getAttribute('position');
+    // Inspect every coordinate, but construct matcher diagnostics only once
+    // per mesh rather than three times per vertex on large tower profiles.
+    let invalid: { vertex: number; coordinates: number[] } | undefined;
     for (let i = 0; i < position.count; i++) {
-      expect(Number.isFinite(position.getX(i))).toBe(true);
-      expect(Number.isFinite(position.getY(i))).toBe(true);
-      expect(Number.isFinite(position.getZ(i))).toBe(true);
+      const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+        invalid = { vertex: i, coordinates: [x, y, z] };
+        break;
+      }
     }
+    expect(invalid, 'all geometry coordinates must be finite').toBeUndefined();
   }
 }
 

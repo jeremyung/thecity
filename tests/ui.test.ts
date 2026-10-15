@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import Controls, { activeBusToFollow, busLineLabel, ContrastToggle, LensControl, RecentEvents, type ControlsProps } from '../web/src/ui/Controls';
+import Controls, { RenderTimingNote, activeBusToFollow, busLineLabel, ContrastToggle, LensControl, RecentEvents, type ControlsProps } from '../web/src/ui/Controls';
 import type { World } from '../web/src/types';
 
 const world: World = {
@@ -250,4 +250,14 @@ describe('city controls', () => {
 
     expect(html).toContain('aria-label="Dismiss error message"');
   });
+});
+
+it('labels render sampling and reports frame and CPU percentiles separately',()=>{
+  const metrics={fps:0,frameMs:3,calls:1,triangles:12,textures:1,geometries:1,backend:'WebGPUBackend',timing:{samples:0,phase:'ready' as const,frameP95Ms:0,cpuP95Ms:0,maxFrameMs:0}};
+  expect(renderToStaticMarkup(React.createElement(RenderTimingNote,{metrics}))).toContain('Collecting frame timings');
+  const sampled=renderToStaticMarkup(React.createElement(RenderTimingNote,{metrics:{...metrics,fps:20,timing:{samples:120,phase:'ready',frameP95Ms:100,cpuP95Ms:8,maxFrameMs:300}}}));
+  expect(sampled).toContain('frame p95');
+  expect(sampled).toContain('CPU p95');
+  expect(sampled).toContain('longest frame');
+  expect(sampled).not.toContain('Collecting frame timings');
 });

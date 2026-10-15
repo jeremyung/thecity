@@ -6,7 +6,7 @@ import type { World } from '../web/src/types';
 
 it('develops compact gaps on existing streets through normal construction and resumes them', () => {
   initSync({ module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)) });
-  const engine = CityEngine.restore(readFileSync(new URL('../validation/infill-oriented-continued.json', import.meta.url), 'utf8'));
+  const engine = CityEngine.restore(readFileSync(new URL('./fixtures/access-joins/infill-oriented-continued.json', import.meta.url), 'utf8'));
   let resumed: CityEngine | undefined;
   try {
     const before: World = JSON.parse(engine.snapshot());

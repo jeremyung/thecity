@@ -2,9 +2,20 @@
 
 The City is an early browser simulation of a small Tokyo-inspired neighborhood. It runs a deterministic Rust simulation in WebAssembly and renders the same world with Three.js. You can leave it running, watch its streets change, explore by camera, and return to a locally saved city.
 
+## Locked visual references
+
+Compare the city against [Little Tokyo](https://github.com/jeremyung/thecity/releases/download/locked-concepts-2026-10-14/01-little-tokyo.png) and [Last Train, First Light](https://github.com/jeremyung/thecity/releases/download/locked-concepts-2026-10-14/04-last-train-first-light.png). These are concept targets, not screenshots of implemented fidelity. The [reference release](https://github.com/jeremyung/thecity/releases/tag/locked-concepts-2026-10-14) includes original-file hashes. Images live outside Git history; recordings and bulk historical evidence are not included.
+
 ## Run it locally
 
-Install Node.js and npm, then from the project directory run:
+Install Node.js 22 or newer, npm, and Rust. Before the first WASM build, install its target and matching bindings tool:
+
+```sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.108 --locked
+```
+
+Then from the project directory run:
 
 ```sh
 npm ci
@@ -12,12 +23,7 @@ npm run wasm
 npm run dev
 ```
 
-Open the local address printed by Vite. The WASM build also needs Rust with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` version `0.2.108`:
-
-```sh
-rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli --version 0.2.108 --locked
-```
+Open the local address printed by Vite.
 
 The build script uses `.tools/cargo` and `.tools/rustup` when a local `.tools/cargo/bin` installation is present; otherwise it uses the Rust tools on `PATH`. Run `npm run wasm` again after changing the Rust engine. The browser and WASM integration tests read the generated files under `public/wasm`.
 
@@ -25,7 +31,34 @@ The build script uses `.tools/cargo` and `.tools/rustup` when a local `.tools/ca
 
 The next milestone is the existing 800 m city: visual fidelity, normal loading and growth, and measured browser performance in both rendering styles. Larger maps and imports follow that acceptance gate. See [delivery priorities](specs/08-delivery.md#immediate-milestone-after-the-master-plan-review-2026-10-11). Backward save compatibility is not required; current saves must validate and resume correctly.
 
+The [updated living-city goal](validation/living-city-goal.md) incorporates the
+[multidimensional fidelity assessment](validation/fidelity-review-current.md#multidimensional-gap-assessment--2026-10-12).
+The bounded station-to-street correction is retained on three-seed support audits
+and sampled passenger traversal in both styles. Further station detailing stops.
+The bounded bank planting correction is also retained. The next primary decision
+is city-wide urban fabric: reduce excessive openness, street regularity and
+transport dominance, then evaluate neighborhood-scale improvements in matched
+ordinary views. Existing compact-crop coverage does not establish city-wide
+visual success. Preserve the bounded apartment, entrance, canopy and glazing
+changes with their validation limits.
+See the [latest learning record and priorities](validation/fidelity-review-current.md#consolidated-learning-record-and-priorities--2026-10-13)
+for the evidence, remaining gaps and stop conditions.
+Full lot counts, more travelers, extra textures or stronger blur alone do not
+establish fidelity.
+
+Open arterial sidewalks now rebuild incrementally and join around junctions. Frequent growth updates coalesce behind the active build to avoid repeated cancellation, with a short presentation delay. Developing-city checks cover both styles; continuous growth, fallback rendering and remaining road-surface seams are still under review. See [sidewalk validation](validation/sidewalk-junctions.md#live-staged-integration--2026-10-12). Ground junction heights and open-local markings are corrected; width-aware rounded junction footprints and connected arterial sidewalk corners are implemented, and intersection paint now clears adjoining carriageways. Full-city motion is still under review. See [surface checks](validation/ground-surface-artifacts.md#ground-junction-datum-and-open-local-streets--2026-10-12).
+
+Aggregate neighborhood errands now have saved outbound, visit and return phases,
+with local walking routes and household accounting. This is a candidate activity
+improvement under validation; see [daily activity evidence](validation/fidelity-review-current.md).
+Activity schema 5 rejects earlier saves; start a fresh world when importing an
+obsolete checkpoint.
+
 ## Checks
+
+Flat-roof material separation is under visual review: the roof field now remains
+visible inside pale parapet coping. See [candidate evidence](validation/roof-surface.md)
+for current browser checks and remaining acceptance limits.
 
 ```sh
 npm test
@@ -33,7 +66,7 @@ npm run test:engine
 npm run build
 ```
 
-`npm test` includes the compiled WASM integration tests, so build the WASM files first. To run just those checks, use `npm test tests/wasm.test.ts`.
+`npm test` includes compiled WASM integration tests and pinned regression saves. Run `npm run setup:fixtures` once (Python 3.9+) and build WASM first. Fixture downloads are verified against a committed hash manifest; conflicting local files are never overwritten. Offline setup: `npm run setup:fixtures -- --archive /path/to/test-fixtures.tar.gz`. To run just those checks, use `npm test tests/wasm.test.ts`.
 
 ## Graphics and sound
 
@@ -41,11 +74,55 @@ The renderer uses WebGPU where available and supports a WebGL2 fallback. If grap
 
 The city and its sound are generated by the app. There are no recorded clips or soundtrack files: city ambience and the lo-fi score are produced with the browser’s Web Audio API, while buildings, streets, water, rain and umbrellas are rendered from geometry and code. Each selected render-quality profile adapts reflection, shadow, and resolution budgets after sustained frame-time evidence, with hysteresis and cooldowns; this controller is not a substitute for device-specific performance validation.
 
+Growth rendering checkpoint: finished infrastructure is retained during
+construction-progress updates, and repeated box construction preserves exact
+geometry while reducing CPU setup cost. Street lamps now retain their instance objects across road rebuilds to avoid repeated shader preparation. A matched Miniature growth trace reduced repeated 190–245 ms render submissions to a 43.3 ms maximum; whole animation work still peaked at 49.2 ms. See [trace and limits](validation/backend-growth-attribution.md#persistent-lighting-matched-growth-trace--2026-10-12). Broader growth measurements remain pending; these
+changes do not satisfy the smooth-growth or artistic acceptance gates.
+See [road retention](validation/road-batch-retention.md) and
+[geometry measurements](validation/box-geometry-cost.md).
+
 ## Current scope
 
-The current prototype covers an 800 m by 800 m bounded district. The 2.4 km square domain described in the world growth specification is a proposed production target. The engine publishes a shared river half-width and keeps newly admitted parcels and roads outside the river bank buffer while continuing infill; earlier occupied parcels retain their coordinates and IDs. Water has animated surface movement and rainfall-driven ripples, but the prototype does not solve full-domain fluid dynamics. Roads grow from seeded street bearings and occasionally close blocks. Named commuters can walk to a station, board a capacity-limited train, work beyond the boundary, and return home. Neighborhood bus service connects active streets with up to two 24-seat buses, directional curb queues, actual boarding and alighting, and saved resident journeys. Buses can be inspected or followed; following a passenger tracks their bus while preserving the person’s identity. Mature neighborhoods continue through renovation and business turnover. Growing residential areas keep some vacant lots as fenced pocket parks, arterials gain street trees, and the protected reserve becomes a shrine grove. Walls carry seeded Tokyo cladding (siding, facing tile, ALC panel or formed concrete), and every window shows a furnished room whose light switches on and off with the time of day. Each neighborhood keeps a small shrine lot, and the station keeps an open plaza beside a scramble crossing. Trees change color through a compressed four-season year. Businesses put up blade signs and rooftop billboards, and a few station-area towers carry video walls; all names and brands are invented. Paused restores also publish the saved movement positions so visible actors match the checkpoint.
+Current saves now reject walking connectors that do not meet their route
+endpoints. Transit boarding/alighting and delivery-return connectors use the
+correct route end and outgoing lane. Older checkpoints containing incorrect
+connectors may be rejected; there is no automatic path migration. See the
+[validation checkpoint](validation/movement-support.md#saved-route-joins-and-delivery-returns).
+
+Movement protocol v5 carries exact road/platform dependencies and a presentation
+token. Actors wait for committed geometry, while follow-camera and audio positions
+use the presented actors. Initial browser growth and train-follow checks run;
+growth hitches and complete motion acceptance remain open. See
+[integration evidence](validation/movement-support.md#production-presentation-integration).
+
+The current prototype covers an 800 m by 800 m bounded district. The 2.4 km square domain described in the world growth specification is a proposed production target. The engine publishes a shared river half-width and keeps newly admitted parcels and roads outside the river bank buffer while continuing infill; earlier occupied parcels retain their coordinates and IDs. Water has animated surface movement and rainfall-driven ripples, but the prototype does not solve full-domain fluid dynamics. Roads grow from seeded street bearings and occasionally close blocks. Named commuters can walk to a station, board a capacity-limited train, work beyond the boundary, and return home. Neighborhood bus service connects active streets with up to two 24-seat buses, directional curb queues, actual boarding and alighting, and saved resident journeys. Buses can be inspected or followed; following a passenger tracks their bus while preserving the person’s identity. Mature neighborhoods continue through renovation and business turnover. Growing residential areas keep some vacant lots as fenced pocket parks, arterials gain street trees, and the protected reserve becomes a shrine grove. Walls carry seeded Tokyo cladding and windows show rooms with occupancy-driven lighting. Wired streets carry utility poles with sagging power and telecom lines, except arterials in the station district. Each neighborhood keeps a small shrine lot, and the station keeps an open plaza beside a scramble crossing. Trees change color through a compressed four-season year. Businesses put up blade signs and rooftop billboards, and a few station-area towers carry video walls; all names and brands are invented. Paused restores also publish the saved movement positions so visible actors match the checkpoint.
+
+The integrated train candidate combines the textured four-car commuter kit with
+per-car curved placement, committed-infrastructure admission and engine-driven
+platform-side doors. Track gauge, platform length, terminal approaches and
+pantograph contact follow shared dimensions. Physical car order stays fixed on
+reversal while cab lamps change ends. Focused native/WASM and mesh checks pass;
+station screenshots cover both styles, but visible boarding, full motion and
+concept-fidelity acceptance remain open. Tram infrastructure is outstanding.
+See [integration status and limits](validation/pr-scale-performance-review.md).
+
+Eligible mature station offices can close, demolish and rebuild taller in place;
+construction silhouette continuity and artistic acceptance remain unfinished.
+See [renewal evidence](validation/height-redevelopment.md).
 
 Building heights and uses now respond to the founding market, station catchment, and outer neighborhoods. Local balancing retains a mix of low-rise housing, commerce, and taller station blocks. Building batches preserve authored colors as vertex data while sharing compatible materials.
+
+Elevated roads now use master-plan cubic curves shared by deck geometry, barriers,
+markings and construction. Lot admission reserves the curved corridor; later
+construction does not alter earlier bends. Saved regional through-traffic now
+follows fully open boundary-to-boundary curves on both deck levels. Ramps, merges
+and close-up motion acceptance remain unfinished. This changes the plan digest, so older master-plan saves reject.
+See [curve validation](validation/expressway-curves.md) and the latest
+[boundary-tail correction](validation/expressway-boundary-curves.md).
+Route-level fairing now broadens tight interior bends before lot admission;
+see [current evidence and checkpoint](validation/expressway-fairing.md).
+
+Elevated stations now publish shared platform frames and saved walking-surface heights. Queue positions, stair access, pedestrian rendering and follow cameras use that contract. Close-up transit motion and artistic acceptance remain under review; see [station validation](validation/station-passengers.md). Older master-plan checkpoints are incompatible with the revised station layout.
 
 Visual fidelity is still under active review against the concept boards. The art gate remains open: architectural modules still repeat visibly, concept fidelity is incomplete, and sky, foliage, and water need further polish. Passing engine tests does not establish that the art is finished. The [visual release gate](specs/08-delivery.md#visual-quality-is-a-release-gate) covers composition, architecture, lighting, water, and both rendering styles.
 
@@ -55,19 +132,20 @@ The scope and numeric targets are still evolving; see [`specs/README.md`](specs/
 
 Run `node scripts/benchmark-engine.mjs` after rebuilding WASM to measure seeded engine throughput. Reports under `validation/` distinguish native/Node engine measurements from browser rendering. Before vertex-color batching, a mature-scene browser observation on an M2 Max at 817×753 showed 1,078 draw calls, about 3.50 million triangles, and 29 fps while paused. This was an uncontrolled observation, not a benchmark or a validated performance result; it does not establish mobile or GPU performance. Later camera views after batching showed 503–646 draws, but were not matched benchmark views; no frame-rate improvement is claimed. Engine throughput results do not establish renderer performance.
 
-[assets-manifest.json](assets-manifest.json) records the procedural geometry, signage, synthesized score, and ambience. Concept boards are design references; they are not used as scenery textures.
+[assets-manifest.json](assets-manifest.json) records the procedural geometry, signage, synthesized score, and ambience. Concept boards are design references; they are not used as scenery textures. [Everyday city studies](concepts/everyday-city-studies/README.md) extend the two locked styles with street, canal, night-traffic, delivery and shopfront references.
 
-Run `npm run audit:textures` to refresh `validation/texture-budget.json`, or `npm run check:textures` to fail on the proposed pilot texture limits. This inventories PNG/JPEG/WebP files under `public/art` and estimates RGBA8 storage with mipmaps; it does not measure GPU memory or count generated canvases, duplicate uploads, and render targets. The existing 1254-pixel plaster development candidate exceeds the 1024-pixel tile limit and intentionally fails this check until a smaller runtime derivative is prepared and reviewed. It is not used by the living-city renderer.
+Run `npm run audit:textures` to generate the local, ignored report `validation/texture-budget.json` (not a committed baseline), or `npm run check:textures` to fail on the proposed pilot texture limits. This inventories PNG/JPEG/WebP files under `public/art` and estimates RGBA8 storage with mipmaps; it does not measure GPU memory or count generated canvases, duplicate uploads, and render targets. The existing 1254-pixel plaster development candidate exceeds the 1024-pixel tile limit and intentionally fails this check until a smaller runtime derivative is prepared and reviewed. It is not used by the living-city renderer.
 
 Image generation is an offline asset-production option. The browser must never receive provider credentials. `scripts/generate-texture-pilot.mjs` reads `OPENROUTER_API_KEY` from ignored `.env.local`; do not use a `VITE_` prefix. The approved Tencent pilot is limited to four 1K candidates and $2, with a durable request ledger and no automatic retries. Candidates remain outside runtime assets pending visual review. The small-library policy and visual acceptance requirements are recorded in the [rendering specification](specs/05-rendering.md#small-generated-texture-library).
 
 ## Repository workflow
 
-Dependency lockfiles, source, specifications, concept references, and validation evidence are versioned. `node_modules`, `dist`, Rust build output, the local `.tools` toolchain, and generated `public/wasm` bindings are ignored. Rebuild WASM before starting a fresh checkout or running browser integration tests; generated binaries are not the source of truth.
+Dependency lockfiles, source, specifications, small test fixtures and curated validation reports are versioned. Large regression fixtures use a pinned download; locked concepts use the linked reference release. Historical captures and recordings are not part of this PR. `node_modules`, `dist`, Rust build output, the local `.tools` toolchain, and generated `public/wasm` bindings are ignored. Rebuild WASM before starting a fresh checkout or running browser integration tests; generated binaries are not the source of truth.
 
 Before committing engine changes, run:
 
 ```sh
+npm run setup:fixtures
 npm run test:engine -- --release
 npm run wasm
 npm test
@@ -76,3 +154,16 @@ git diff --check
 ```
 
 Historical validation saves are retained because native and browser regression tests load them directly. Reports describe the scope and limitations of each check; older passing reports do not supersede newer failures or prove visual acceptance.
+
+Gabled roofs now share bounded ceramic detail in both styles. A mature-city
+audit measures its geometry cost, and matched browser captures confirm normal
+loading; hardware performance and artistic acceptance remain open. See
+[roof validation](validation/ceramic-roof.md).
+
+Construction handoff checkpoint (2026-10-12): active construction uses isolated
+batches with bounded retirement of eligible committed geometry and background
+return to neighborhood batches. The mature renewal fixture improves entry from
+231 to3 update calls and reopening from463 to1; targeted WebGPU/WebGL recordings
+support the correction. Oversized sources retain the slower rebuild fallback.
+These measurements do not establish broad hardware or artistic acceptance.
+See [renewal validation](validation/height-redevelopment.md).

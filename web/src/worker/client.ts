@@ -1,7 +1,8 @@
+import { decodeMovementPacket, type MovementSupport } from '../movement-support';
 import { WORKER_PROTOCOL_VERSION, type Metrics, type WorkerInput, type WorkerOutput, type World } from "../types";
 
 type WorldListener = (world: World) => void;
-type MovementListener = (movement: Float32Array, tick: number, minute: number, day: number) => void;
+type MovementListener = (movement: Float32Array, tick: number, minute: number, day: number, trainDoors: Float32Array, support: ReadonlyMap<number, MovementSupport>) => void;
 type MetricsListener = (metrics: Metrics) => void;
 type ErrorListener = (error: Error) => void;
 type PendingRequest = {
@@ -23,6 +24,7 @@ export class SimulationClient {
   private disposed = false;
   private protocolFailed = false;
   private lastRevision = -1;
+  private lastPresentationRevision: string | undefined;
   private resyncPending = false;
   private pending = new Map<number, PendingRequest>();
   private nextControlSequence = 0;
@@ -61,6 +63,7 @@ export class SimulationClient {
     this.nextControlSequence = 0;
     this.lastAppliedControlSequence = 0;
     this.lastRevision = -1;
+    this.lastPresentationRevision = undefined;
     this.resyncPending = false;
     if (save !== undefined) {
       // Saved development pace is authoritative on restore. Other viewer
@@ -210,7 +213,7 @@ export class SimulationClient {
 
     switch (message.type) {
       case "world": {
-        if (message.world.schema_version !== 1) {
+        if (message.world.schema_version !== 1 || typeof message.world.presentation_revision !== "string" || !message.world.presentation_revision) {
           this.emitError(new Error(`Unsupported world schema ${message.world.schema_version}; requesting a fresh snapshot`));
           this.requestResync();
           return;
@@ -221,6 +224,7 @@ export class SimulationClient {
         }
         this.resyncPending = false;
         this.lastRevision = message.world.revision;
+        this.lastPresentationRevision = message.world.presentation_revision;
         if (this.restoreEpoch === message.epoch) {
           if (!this.restoreDevelopmentOverride) this.queuedControls.development = message.world.development_rate;
           this.restoreEpoch = null;
@@ -230,9 +234,20 @@ export class SimulationClient {
         break;
       }
       case "movement": {
-        const movement = new Float32Array(message.buffer, 0, message.count * 5);
         try {
-          this.callListeners(this.movementListeners, (listener) => listener(movement, message.tick, message.minute, message.day));
+          if (message.presentationRevision !== this.lastPresentationRevision || !message.presentationRevision) {
+            this.requestResync();
+            return;
+          }
+          if (!Number.isSafeInteger(message.wordCount) || message.wordCount < 2 || message.wordCount * Uint32Array.BYTES_PER_ELEMENT > message.buffer.byteLength) {
+            throw new Error("Movement support packet has an invalid word count");
+          }
+          const packet = new Uint32Array(message.buffer, 0, message.wordCount);
+          const decoded = decodeMovementPacket(packet);
+          this.callListeners(this.movementListeners, (listener) => listener(decoded.movement, message.tick, message.minute, message.day, message.trainDoors, decoded.support));
+        } catch (error) {
+          this.emitError(error instanceof Error ? error : new Error(String(error)));
+          this.requestResync();
         } finally {
           this.recycle(message.epoch, message.buffer);
         }

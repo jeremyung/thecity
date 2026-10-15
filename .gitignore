@@ -5,7 +5,7 @@ dist/
 engine/target/
 public/wasm/
 
-# Test runner output (curated validation evidence stays versioned)
+# Test runner output
 test-results/
 playwright-report/
 coverage/
@@ -21,3 +21,37 @@ __pycache__/
 
 # Agent worktrees and local state
 .claude/
+
+# Generated validation evidence stays local unless explicitly curated below.
+/validation/**
+!/validation/**/
+!/validation/**/*.md
+# Curated PR18 comparison evidence already retained on main.
+!/validation/building-surfaces-benchmark.json
+!/validation/captures/building-surfaces/**/*.png
+/concepts/**/*.png
+/concepts/**/*.jpg
+/concepts/**/*.jpeg
+/concepts/**/*.webp
+/engine/plan.svg
+
+# Large fixtures supplied by the evidence bundle. Small fixtures remain tracked.
+/tests/fixtures/access-joins/early-reservation-wasm-87231-save.json
+/tests/fixtures/access-joins/founder-topology-wasm-87231-save.json
+/tests/fixtures/access-joins/generalized-access-pending-save.json
+/tests/fixtures/access-joins/infill-oriented-continued.json
+/tests/fixtures/access-joins/interior-access-verified-87231.json.final.json
+/tests/fixtures/access-joins/interior-access-verified-87231.json.project-3736.pending.json
+/tests/fixtures/access-joins/interior-access-verified-seed0.json.final.json
+/tests/fixtures/access-joins/manifest.json
+/tests/fixtures/access-joins/mature-world.activity-baseline.json
+/tests/fixtures/access-joins/mature-world.bounded-selection.json
+/tests/fixtures/access-joins/mature-world.cache-candidate.json
+/tests/fixtures/access-joins/mature-world.json
+/tests/fixtures/access-joins/mature-world.multiblock-candidate.json
+/tests/fixtures/access-joins/mature-world.ranked-blocks.json
+/tests/fixtures/access-joins/ranked-blocks-seed0.json
+/tests/fixtures/access-joins/spine-experiment-browser-review-save.json
+/tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json
+/tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json
+/tests/fixtures/bus-seed5-legacy-queue.json

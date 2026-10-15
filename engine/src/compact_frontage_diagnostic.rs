@@ -10,7 +10,7 @@ use super::{geometry, site_active, Engine, Road};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-const MATURE_SAVE: &str = include_str!("../../validation/early-reservation-wasm-87231-save.json");
+const MATURE_SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
 const CROP: [f32; 4] = [50.0, 300.0, -350.0, -100.0];
 const ENDPOINT_CLEARANCE: f32 = 9.0;
 const MAX_STEPS: usize = 8;

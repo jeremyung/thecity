@@ -58,6 +58,11 @@ impl Engine {
         {
             return Err(RoadSplitError::IneligibleRoad);
         }
+        // A saved return leg is not in the active traveler array during dwell.
+        // Defer splitting its corridor until this bounded outing returns home.
+        if self.errand_references_road_edge(host.from, host.to) {
+            return Err(RoadSplitError::ActivePlan);
+        }
         if !t.is_finite() || !(0.0..1.0).contains(&t) {
             return Err(RoadSplitError::InvalidFraction);
         }

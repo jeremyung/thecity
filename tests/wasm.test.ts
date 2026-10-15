@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
 import type { World } from '../web/src/types';
+import { sampledRail } from '../web/src/render/rail-path';
 
 const engines: CityEngine[] = [];
 const makeEngine = (seed: number) => {
@@ -18,6 +19,7 @@ function snapshot(engine: CityEngine) {
 function savedState(engine: CityEngine) {
   return JSON.parse(engine.save()) as {
     next_id: number;
+    expressway_traffic: { trips: Array<{id:number;lane:number;direction:number;progress:number}> };
     nodes: Array<{ id: number; x: number; z: number; kind: string }>;
     roads: Array<{ id: number; from: number; to: number; kind: string; stage: string; connected: boolean; lanes: number }>;
     parcels: Array<{ id: number; access_node: number; protected: boolean; reservation: number | null }>;
@@ -141,19 +143,21 @@ describe('compiled city engine', () => {
     const seenIds = new Set<number>();
     let trainCount = 0;
 
-    expect(movement.length % 5).toBe(0);
-    for (let offset = 0; offset < movement.length; offset += 5) {
+    expect(movement.length % 6).toBe(0);
+    for (let offset = 0; offset < movement.length; offset += 6) {
       const id = movement[offset];
       const x = movement[offset + 1];
       const z = movement[offset + 2];
       const heading = movement[offset + 3];
       const kind = movement[offset + 4];
+      const surfaceY = movement[offset + 5];
       expect(Number.isInteger(id)).toBe(true);
       expect(id).toBeGreaterThan(0);
       expect(id).toBeLessThan(state.next_id);
       expect(seenIds.has(id)).toBe(false);
       seenIds.add(id);
       expect(Number.isFinite(x) && Number.isFinite(z) && Number.isFinite(heading)).toBe(true);
+      expect(Number.isFinite(surfaceY) && (surfaceY === -1 || surfaceY >= 0)).toBe(true);
       expect(x).toBeGreaterThanOrEqual(world.bounds.min_x);
       expect(x).toBeLessThanOrEqual(world.bounds.max_x);
       expect(z).toBeGreaterThanOrEqual(world.bounds.min_z);
@@ -177,6 +181,14 @@ describe('compiled city engine', () => {
         const offset=3+(resident!.queue_slot??0)*1.25;
         expect(x).toBeCloseTo(marker!.x+Math.cos(marker!.heading)*offset,3);
         expect(z).toBeCloseTo(marker!.z+Math.sin(marker!.heading)*offset,3);
+        continue;
+      }
+      if(kind===1&&!travelers.has(id)){
+        const trip=state.expressway_traffic.trips.find(trip=>trip.id===id);
+        expect(trip).toBeDefined();
+        expect([0,1]).toContain(trip!.lane);expect([-1,1]).toContain(trip!.direction);
+        expect(world.road_decks?.some(deck=>Math.abs(deck.deck_height+.15-surfaceY)<.001)).toBe(true);
+        // Full cubic lane/height and live replay checked in expressway-wasm.test.
         continue;
       }
       const isTrain = kind === 2;
@@ -210,6 +222,20 @@ describe('compiled city engine', () => {
       expect(road?.connected).toBe(true);
       expect(isTrain ? road?.kind : road?.kind !== 'rail').toBe(isTrain ? 'rail' : true);
 
+      const alignment = isTrain ? world.rail_alignments?.find(path => path.road_id === road!.id) : undefined;
+      if (alignment) {
+        const train = actor as (typeof state.trains)[number];
+        const path = sampledRail(alignment);
+        const routeDirection = road!.from === route[0] ? 1 : -1;
+        const point = path.at(routeDirection > 0 ? train.distance : path.length - train.distance);
+        expect(Math.hypot(x - point.x, z - point.z)).toBeLessThan(0.001);
+        const direction = routeDirection * train.direction;
+        const expected = Math.atan2(point.uz * direction, point.ux * direction);
+        const difference = Math.atan2(Math.sin(heading - expected), Math.cos(heading - expected));
+        expect(Math.abs(difference)).toBeLessThan(1e-5);
+        continue;
+      }
+
       const headingFrom = isTrain && (actor as (typeof state.trains)[number]).direction < 0 ? to : from;
       const headingTo = isTrain && (actor as (typeof state.trains)[number]).direction < 0 ? from : to;
       const expectedHeading = Math.atan2((headingTo as World['nodes'][number]).z - (headingFrom as World['nodes'][number]).z, (headingTo as World['nodes'][number]).x - (headingFrom as World['nodes'][number]).x);
@@ -219,7 +245,10 @@ describe('compiled city engine', () => {
 
     expect(seenIds.size).toBeGreaterThan(0);
     expect(trainCount).toBeGreaterThan(0);
-  });
+    // Ordinary 72,000-tick growth takes ~4.7s alone before assertions; allow
+    // integration-test headroom, as for the adjacent growth/replay tests.
+    // Browser worker/frame budgets are measured separately, not by this timeout.
+  }, 30_000);
 
   it('round-trips named residents and corridor trains while keeping presentation style client-side', () => {
     const engine = makeEngine(87_231);
@@ -306,7 +335,7 @@ describe('compiled city engine', () => {
     expect(counts.events).toBeLessThanOrEqual(10_000);
     expect(state.population).toBeLessThanOrEqual(30_000);
     const queuedResidents = state.residents.filter((resident) => resident.transfer === 'waiting_station' || resident.transfer === 'waiting_gateway' || resident.transfer === 'waiting_bus').length;
-    expect(world.stats.active_travelers).toBe(state.travelers.length + queuedResidents);
+    expect(world.stats.active_travelers).toBe(state.travelers.length + queuedResidents + state.expressway_traffic.trips.length);
 
     const restored = CityEngine.restore(engine.save());
     engines.push(restored);

@@ -1,5 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { RenderQualityController } from '../web/src/render/quality';
+import { RenderQualityController, renderQualitySettings } from '../web/src/render/quality';
+
+describe('matched review quality', () => {
+  it('keeps resolution, shadows and reflections identical across displays and adaptive histories', () => {
+    for (const profile of ['high', 'balanced'] as const) {
+      for (const level of [0, 1, 2] as const) {
+        for (const dpr of [1, 1.25, 2, 3]) {
+          expect(renderQualitySettings(profile, level, dpr, true)).toEqual({
+            pixelRatio: 1, shadowSize: 2048, reflectionScale: .35,
+          });
+        }
+      }
+    }
+  });
+  it('returns to the selected adaptive profile when the review lock is released', () => {
+    const controller = new RenderQualityController('balanced');
+    feed(controller, 60, 0, 30_000);
+    expect(controller.level).toBe(2);
+    expect(renderQualitySettings('balanced', controller.level, 2, true).pixelRatio).toBe(1);
+    controller.reset();
+    expect(renderQualitySettings('balanced', controller.level, 2, false)).toEqual({
+      pixelRatio: .8, shadowSize: 512, reflectionScale: .15,
+    });
+    expect(controller.snapshot().reason).toBe('startup');
+  });
+});
 
 function feed(controller: RenderQualityController, frameMs: number, start: number, end: number, step = 50): number[] {
   const changes: number[] = [];

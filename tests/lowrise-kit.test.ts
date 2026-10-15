@@ -75,6 +75,44 @@ function materialGeometrySignature(root:THREE.Object3D,material:THREE.Material){
 }
 
 describe('integrated low-rise families',()=>{
+  it('exposes shop canopies beyond the wall while staying inside the parcel',()=>{
+    const art=new ArtMaterials();
+    try{for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      for(const kind of ['shop','cafe'] as const)for(const depth of [8,12]){
+        const b=building(kind,'open',{x:0,z:0,width:8,depth,floors:2});
+        const group=buildingKit(b,art);group.updateMatrixWorld(true);
+        const front=Math.max(6,depth*.84)/2;
+        const hit=new THREE.Raycaster(new THREE.Vector3(0,6,front+.3),new THREE.Vector3(0,-1,0)).intersectObject(group,true)[0];
+        expect(hit,'projecting canopy covers the frontage').toBeDefined();
+        expect(hit.point.y).toBeCloseTo(3.8,5);
+        expect((hit.object as THREE.Mesh).material===art.get('#527366')).toBe(true);
+        for(const point of parcelLocalPoints(group))expect(point.z).toBeLessThanOrEqual(depth/2+1e-5);
+        disposeGroup(group);
+      }
+    }}finally{art.dispose();}
+  });
+
+  it('contains geometry on planner-admitted five-metre frontages through the lifecycle',()=>{
+    const art=new ArtMaterials();
+    try {
+      for(const kind of ['home','shop','cafe'] as const)for(const width of [5,5.4,5.99])
+      for(const depth of [7,12])for(const floors of [1,2,3])for(const seed of [1,8,23])
+      for(const stage of ['open','construction','renovation'] as const){
+        const b=building(kind,stage,{width,depth,floors,appearance_seed:seed,rotation:.63,progress:.65});
+        const group=buildingKit(b,art);
+        group.position.set(b.x,0,b.z);group.rotation.y=b.rotation;
+        const points=parcelLocalPoints(group);expectFinite(points);
+        const maxX=Math.max(...points.map(p=>Math.abs(p.x)));
+        const maxZ=Math.max(...points.map(p=>Math.abs(p.z)));
+        disposeGroup(group);
+        const context=`${kind} ${width}x${depth} ${floors} floors seed ${seed} ${stage}`;
+        expect(maxX,context).toBeLessThanOrEqual(width/2+1e-5);
+        expect(maxZ,context).toBeLessThanOrEqual(depth/2+1e-5);
+      }
+    } finally {art.dispose();}
+  });
+
   it('keeps real transformed geometry inside narrow rotated parcels across styles and roof profiles',()=>{
     const art=new ArtMaterials();
     for(const kind of ['home','shop','cafe'] as const)for(const [width,depth] of [[6,6],[8,10],[10,8],[13,12],[8.6,8],[11.65,8],[14,8]] as const){
@@ -186,12 +224,12 @@ describe('integrated low-rise families',()=>{
       for(const [name,group] of [['open',open],['construction',framing],['renovation',renovation]] as const){
         group.position.set(b.x,0,b.z);group.rotation.y=b.rotation;
         const points=geometryPoints(group);expectFinite(points);
-        for(const point of parcelLocalPoints(group)){
-          expect(point.x,`${kind} ${name}`).toBeGreaterThanOrEqual(-b.width/2-1e-5);
-          expect(point.x,`${kind} ${name}`).toBeLessThanOrEqual(b.width/2+1e-5);
-          expect(point.z,`${kind} ${name}`).toBeGreaterThanOrEqual(-b.depth/2-1e-5);
-          expect(point.z,`${kind} ${name}`).toBeLessThanOrEqual(b.depth/2+1e-5);
-        }
+        // Keep the full vertex scan and exact bounds; report the first
+        // offending point without allocating four matchers for every vertex.
+        const outside=parcelLocalPoints(group).find(point=>!(
+          point.x>=-b.width/2-1e-5 && point.x<=b.width/2+1e-5 &&
+          point.z>=-b.depth/2-1e-5 && point.z<=b.depth/2+1e-5));
+        expect(outside,`${kind} ${name} stays within parcel bounds`).toBeUndefined();
       }
       const builtWall=localGeometryPoints(framing,art.get(buildingPalette(b,art.palette).wall,.85,false,'ambient',claddingFor(b)));
       expect(builtWall.some(point=>point.y>1&&point.z>envelopeDepth*.25)).toBe(true);

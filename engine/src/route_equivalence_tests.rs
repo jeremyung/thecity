@@ -2,6 +2,25 @@ use super::*;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[test]
+fn bus_uses_collectors_while_walkers_keep_the_lane_shortcut() {
+    let mut engine = engine_with_graph(5, vec![
+        road(0, 0, 1, "lane", "open", true, 1.0),
+        road(1, 1, 4, "lane", "open", true, 1.0),
+        road(2, 0, 2, "local", "open", true, 3.0),
+        road(3, 2, 3, "arterial", "open", true, 3.0),
+        road(4, 3, 4, "bridge", "open", true, 3.0),
+        road(5, 0, 4, "expressway", "open", true, 4.0),
+    ]);
+    assert_eq!(engine.route(0, 4, false), vec![0, 1, 4]);
+    assert_eq!(engine.bus_route_avoiding(0, 4, &BTreeSet::new()), vec![0, 2, 3, 4]);
+    assert_eq!(engine.bus_route_avoiding(4, 0, &BTreeSet::new()), vec![4, 3, 2, 0]);
+    assert!(engine.bus_route_avoiding(0, 4, &BTreeSet::from([2])).is_empty());
+    engine.state.roads[3].stage = "construction".into();
+    assert!(engine.bus_route_avoiding(0, 4, &BTreeSet::new()).is_empty());
+    assert_eq!(engine.route(0, 4, false), vec![0, 1, 4]);
+}
+
+#[test]
 fn route_limit_accepts_complete_boundary_and_rejects_suffix() {
     let count = MAX_ROUTE_NODES as u32 + 1;
     let roads = (0..count - 1)

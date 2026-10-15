@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AudioDirector } from "../web/src/audio/director";
 import { saveWorld, loadWorld, parseViewerPreferences, saveViewerPreferences, loadViewerPreferences, validateWorldSave } from "../web/src/storage/saves";
 import { SimulationClient } from "../web/src/worker/client";
+import type { MovementSupport } from "../web/src/movement-support";
 import { capBacklog, EngineSlot, MovementBufferPool, PendingDevelopmentControl } from "../web/src/worker/simulation.worker";
 import { ControlSequenceGate } from "../web/src/worker/protocol";
 import { WORKER_PROTOCOL_VERSION, type WorkerOutput, type World } from "../web/src/types";
@@ -30,6 +31,7 @@ function sampleWorld(revision: number): World {
     minute_of_day: 360,
     development_rate: 4,
     revision,
+    presentation_revision: `g${revision}:0:0:0`,
     stage: "Founding",
     bounds: { min_x: -400, max_x: 400, min_z: -400, max_z: 400 },
     terrain: { river: [], protected: [], gateways: [] },
@@ -257,8 +259,8 @@ describe("simulation worker support", () => {
     const worker = FakeWorker.instances[0];
     const firstInit = worker.sent[0].message as { protocolVersion: number; epoch: number };
     const firstControl = worker.sent[1].message as { protocolVersion: number; epoch: number; sequence: number };
-    expect(firstInit).toMatchObject({ protocolVersion: 1, epoch: 1 });
-    expect(firstControl).toMatchObject({ protocolVersion: 1, epoch: 1, sequence: 1 });
+    expect(firstInit).toMatchObject({ protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1 });
+    expect(firstControl).toMatchObject({ protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, sequence: 1 });
 
     client.controls({ paused: true });
     client.controls({ speed: 4 });
@@ -267,8 +269,8 @@ describe("simulation worker support", () => {
       return { sequence: control.sequence, ...(control.paused !== undefined ? { paused: control.paused } : {}), ...(control.speed !== undefined ? { speed: control.speed } : {}) };
     });
     expect(controls.slice(-2)).toEqual([{ sequence: 2, paused: true }, { sequence: 3, paused: true, speed: 4 }]);
-    worker.emit({ type: "controlAck", protocolVersion: 1, epoch: 1, appliedSequence: 2, tick: 0 });
-    worker.emit({ type: "controlAck", protocolVersion: 1, epoch: 1, appliedSequence: 3, tick: 4 });
+    worker.emit({ type: "controlAck", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, appliedSequence: 2, tick: 0 });
+    worker.emit({ type: "controlAck", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, appliedSequence: 3, tick: 4 });
     client.init(5);
     const lastControl = worker.sent.filter(({ message }) => (message as { type?: string }).type === "control").at(-1)!.message as { epoch: number; sequence: number };
     expect(lastControl).toMatchObject({ epoch: 2, sequence: 1 });
@@ -299,8 +301,8 @@ describe("simulation worker support", () => {
     client.onError((error) => errors.push(error.message));
     client.init(9);
     const worker = FakeWorker.instances[0];
-    worker.emit({ type: "movement", protocolVersion: 2, epoch: 1, tick: 1, count: 1, buffer: new ArrayBuffer(20), minute: 360, day: 0 } as unknown as WorkerOutput);
-    expect(errors[0]).toContain("requires version 1");
+    worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION + 1, epoch: 1, tick: 1, wordCount: 2, buffer: new ArrayBuffer(8), presentationRevision: "g0:0:0:0", trainDoors: new Float32Array(), minute: 360, day: 0 } as unknown as WorkerOutput);
+    expect(errors[0]).toContain(`requires version ${WORKER_PROTOCOL_VERSION}`);
     expect(errors[0]).toContain("Reload the app");
     expect(worker.terminated).toBe(true);
     expect(worker.sent.some(({ message }) => (message as { type?: string }).type === "recycle")).toBe(false);
@@ -328,6 +330,51 @@ describe("simulation worker support", () => {
     expect(capBacklog(0, 12, 8)).toEqual({ backlog: 8, dropped: 4 });
   });
 
+  it("decodes movement support and delivers train doors alongside the same tick", () => {
+    vi.stubGlobal("Worker", FakeWorker);
+    const client = new SimulationClient(), listener = vi.fn();
+    client.subscribeMovement(listener); client.init(1);
+    const worker = FakeWorker.instances[0];
+    worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, world: sampleWorld(1) });
+    const packet = new Uint32Array(13);
+    const bits = (value: number) => new Uint32Array(new Float32Array([value]).buffer)[0];
+    packet.set([1, 1, 42, bits(0), bits(23.5), bits(0), 2, bits(-1), 1, 1, 1, 10, 30]);
+    const buffer = packet.buffer;
+    const trainDoors = new Float32Array([42, 1, .5]);
+    worker.emit({type:"movement", protocolVersion:WORKER_PROTOCOL_VERSION, epoch:1, tick:10, wordCount:packet.length, buffer, trainDoors, presentationRevision: sampleWorld(1).presentation_revision!, minute:360, day:0});
+    expect(listener).toHaveBeenCalledWith(expect.any(Float32Array), 10, 360, 0, trainDoors, new Map<number, MovementSupport>([[42, { resolved: true, roads: [10], platforms: [30] }]]));
+    expect(listener.mock.calls[0][0]).toEqual(new Float32Array([42, 0, 23.5, 0, 2, -1]));
+    expect(worker.sent.at(-1)?.message).toMatchObject({type:"recycle", buffer});
+    client.dispose();
+  });
+
+  it("rejects malformed word counts, emits an error, requests resync, and recycles", () => {
+    vi.stubGlobal("Worker", FakeWorker);
+    const client = new SimulationClient(), errors: string[] = [];
+    client.onError(error => errors.push(error.message));
+    client.init(1);
+    const worker = FakeWorker.instances[0];
+    worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, world: sampleWorld(1) });
+    const buffer = new ArrayBuffer(4);
+    worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, tick: 1, wordCount: 99, buffer, presentationRevision: sampleWorld(1).presentation_revision!, trainDoors: new Float32Array(), minute: 360, day: 0 });
+    expect(errors.join(" ")).toContain("invalid word count");
+    expect(worker.sent.some(({ message }) => (message as { type?: string }).type === "resync")).toBe(true);
+    expect(worker.sent.some(({ message }) => (message as { type?: string; buffer?: ArrayBuffer }).type === "recycle" && (message as { buffer?: ArrayBuffer }).buffer === buffer)).toBe(true);
+    client.dispose();
+  });
+
+  it("rejects movement from a stale presentation token and recycles it", () => {
+    vi.stubGlobal("Worker", FakeWorker);
+    const client = new SimulationClient(); client.init(1);
+    const worker = FakeWorker.instances[0];
+    worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, world: sampleWorld(1) });
+    const buffer = new ArrayBuffer(8);
+    worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, tick: 1, wordCount: 2, buffer, presentationRevision: "stale", trainDoors: new Float32Array(), minute: 360, day: 0 });
+    expect(worker.sent.some(({ message }) => (message as { type?: string }).type === "resync")).toBe(true);
+    expect(worker.sent.some(({ message }) => (message as { type?: string; buffer?: ArrayBuffer }).type === "recycle" && (message as { buffer?: ArrayBuffer }).buffer === buffer)).toBe(true);
+    client.dispose();
+  });
+
   it("rejects stale epochs and recycles stale movement buffers", () => {
     vi.stubGlobal("Worker", FakeWorker);
     const client = new SimulationClient();
@@ -339,8 +386,8 @@ describe("simulation worker support", () => {
 
     client.init(2);
     worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, world: sampleWorld(99) });
-    const staleBuffer = new ArrayBuffer(20);
-    worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, tick: 4, count: 1, buffer: staleBuffer, minute: 360, day: 0 });
+    const staleBuffer = new ArrayBuffer(24);
+    worker.emit({ type: "movement", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 1, tick: 4, wordCount: 2, buffer: staleBuffer, presentationRevision: sampleWorld(1).presentation_revision!, trainDoors: new Float32Array([42, 1, .5]), minute: 360, day: 0 });
     worker.emit({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch: 2, world: sampleWorld(2) });
 
     expect(seen).toEqual([1, 2]);

@@ -2,10 +2,24 @@ import * as THREE from 'three/webgpu';
 import { ArtMaterials } from './materials';
 import type { Building } from '../types';
 import type { Kit } from './kit';
+import type { BuildingMass } from './building-massing';
+
+/** Shared silhouette for finished towers, construction and top-down demolition. */
+export function towerMassing(b: Pick<Building, 'appearance_seed' | 'floors'>, w: number, d: number): BuildingMass[] {
+  const profile = (b.appearance_seed >>> 0) % 3;
+  const crownFloors = profile === 1 ? 3 : 2;
+  const shaftW = w * (profile === 2 ? .77 : .86), shaftD = d * (profile === 0 ? .79 : .87);
+  const x = profile === 2 ? -w * .07 : 0;
+  return [
+    { x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors: 3, role: 'main' },
+    { x, z: 0, width: shaftW, depth: shaftD, baseFloor: 3, floors: b.floors - 3 - crownFloors, role: 'main' },
+    { x, z: 0, width: shaftW * .83, depth: shaftD * .82, baseFloor: b.floors - crownFloors, floors: crownFloors, role: 'main' },
+  ];
+}
 
 /** A tower is a podium, a slender occupied shaft, and a recessed service crown.
  * Its floor count and footprint remain those of the authoritative building. */
-export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number, d: number, base: number, floor: number) {
+export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number, d: number, base: number, floor: number, finishedFloors = b.floors) {
   const seed = b.appearance_seed >>> 0, apartment = b.kind === 'apartment';
   const profile = seed % 3;
   // Apartment towers are tile-faced; office towers show formed concrete between their ribbons.
@@ -15,7 +29,8 @@ export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number,
   // Every pane shows a room; lights switch per room with the time of day.
   const glass = art.window(apartment ? 'home' : 'office');
   const silver = art.get('#becacd', .32);
-  const lobby = art.get('#e2bd7f', .45, true, 'shop');
+  const operational = b.stage === 'open' || b.stage === 'renovation';
+  const lobby = operational ? art.get('#e2bd7f', .45, true, 'shop') : glass;
   const podiumFloors = 3, crownFloors = profile === 1 ? 3 : 2;
   const shaftFloors = b.floors - podiumFloors - crownFloors;
   const shaftW = w * (profile === 2 ? .77 : .86), shaftD = d * (profile === 0 ? .79 : .87);
@@ -128,19 +143,23 @@ export function renderTower(kit: Kit, b: Building, art: ArtMaterials, w: number,
       }
     }
   };
-  bands(w, d, 0, podiumFloors);
-  bands(shaftW, shaftD, podiumFloors, shaftFloors, offsetX);
-  bands(shaftW * .83, shaftD * .82, podiumFloors + shaftFloors, crownFloors, offsetX);
+  for (const mass of towerMassing(b, w, d)) {
+    const installed = Math.max(0, Math.min(mass.floors, finishedFloors - mass.baseFloor));
+    if (installed > 0) bands(mass.width, mass.depth, mass.baseFloor, installed, mass.x);
+  }
   const podiumTop = base + podiumFloors * floor, top = base + b.floors * floor;
-  kit.box(0, podiumTop + .1, 0, w + .3, .22, d + .3, stone);
+  if (finishedFloors >= podiumFloors) kit.box(0, podiumTop + .1, 0, w + .3, .22, d + .3, stone);
+  if (finishedFloors >= b.floors) {
   kit.box(offsetX, top + .13, 0, shaftW * .86, .26, shaftD * .85, roof);
   // Rooftop mechanical screen and an occasional restrained aerial.
   kit.box(offsetX, top + .85, -shaftD * .13, shaftW * .42, 1.45, shaftD * .36, shadow);
   for (let row = 0; row < 5; row++) kit.box(offsetX, top + .28 + row * .27, shaftD * .052, shaftW * .43, .075, .08, frame);
   if (profile !== 1) {
     kit.box(offsetX + shaftW * .2, top + 2, -shaftD * .15, .12, 3.8, .12, silver);
-    kit.box(offsetX + shaftW * .2, top + 3.6, -shaftD * .15, .22, .16, .22, art.get('#b86a5b', .6, true));
+    kit.box(offsetX + shaftW * .2, top + 3.6, -shaftD * .15, .22, .16, .22, art.get('#b86a5b', .6, operational));
   }
+  }
+  if (finishedFloors < 2) return;
   // Double-height entry, canopy, and occupied ground-floor frontage.
   kit.box(0, base + 2, d / 2 + .18, Math.min(5, w * .36), 3.8, .2, shadow);
   kit.box(0, base + 2, d / 2 + .3, Math.min(3.8, w * .28), 3.5, .04, lobby);

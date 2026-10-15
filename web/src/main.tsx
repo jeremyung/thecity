@@ -14,8 +14,9 @@ import type { LensPresetId } from './camera/lens';
 import type { World, Style, Metrics } from './types';
 
 type Subject={id:number;name:string;kind:string;activity:string;destination?:string;history?:string[];passengers?:number;capacity?:number;station_waiting?:number;gateway_waiting?:number;line?:string;nextStop?:string;dwelling?:boolean;waiting?:number};
-function inspectedSubject(id:number,data:unknown,world:World|null):Subject{
+function inspectedSubject(id:number,data:unknown,world:World|null):Subject|null{
   const info=data as {entityType?:string;name?:string;activity?:string;kind?:string;destination?:number;history?:string[];passengers?:number;capacity?:number;station_waiting?:number;gateway_waiting?:number;line?:string|number;line_id?:number;next_stop?:number|null;dwelling?:boolean;waiting?:number};
+  if(info.entityType==='unknown')return null;
   const bus=info.entityType==='bus'||info.kind==='bus';
   const snapshotBus=bus?world?.buses?.find(entity=>entity.id===id):undefined;
   const lineId=info.line_id??snapshotBus?.line_id??(typeof info.line==='number'?info.line:undefined);
@@ -115,6 +116,7 @@ function CityExperience(){
   const [preferences,setPreferences]=useState(loadViewerPreferences);
   const [paused,setPaused]=useState(false),[speed,setSpeed]=useState(1),[style,setStyle]=useState<Style>(preferences.style),[mode,setMode]=useState<'watch'|'explore'|'overview'>('watch');
   const [preparingStyle,setPreparingStyle]=useState<Style|null>(null);
+  const [fixedReviewQuality,setFixedReviewQuality]=useState(false);
   const [preview,setPreview]=useState<number|null>(null),[sound,setSound]=useState(false),[musicLevel,setMusicLevel]=useState(preferences.musicLevel),[cityLevel,setCityLevel]=useState(preferences.cityLevel),[focus,setFocus]=useState(preferences.focus),[development,setDevelopment]=useState(1),[quality,setQuality]=useState(preferences.quality),[contrast,setContrast]=useState(preferences.contrast),[lens,setLens]=useState<LensPresetId>(preferences.lens);
   const [subject,setSubject]=useState<Subject|null>(null);
   const [selectedId,setSelectedId]=useState<number|null>(null),[metrics,setMetrics]=useState<RenderMetrics|null>(null),[sceneLabel,setSceneLabel]=useState('Along the river');
@@ -143,7 +145,7 @@ function CityExperience(){
     renderer.onError=error=>{if(disposed)return;graphicsStartup.complete();graphicsReady=false;setReady(false);styleSwitch.current++;setPreparingStyle(null);setError(`Graphics stopped: ${error.message}. Try Retry or the WebGL fallback.`);};
     client.onError(e=>{if(!disposed)setError(e.message);});
     client.subscribeWorld(w=>{if(disposed)return;const replaced=audioEpoch!==client.worldEpoch;if(replaced){audioEpoch=client.worldEpoch;setDevelopment(w.development_rate);}currentWorld.current=w;renderer.setWorld(w,replaced);setWorld(w);simReady=true;if(recoveryInitPending){const url=new URL(window.location.href);url.searchParams.delete('recover');window.history.replaceState(null,'',`${url.pathname}${url.search}${url.hash}`);recoveryInitPending=false;}isReady();});
-    client.subscribeMovement((data,tick,minute,day)=>{renderer.setMovement(data,tick,minute);if(currentWorld.current){currentWorld.current.tick=tick;currentWorld.current.minute_of_day=minute;currentWorld.current.day=day;}});
+    client.subscribeMovement((data,tick,minute,day,trainDoors,support)=>{renderer.setMovement(data,tick,minute,trainDoors,support);if(currentWorld.current){currentWorld.current.tick=tick;currentWorld.current.minute_of_day=minute;currentWorld.current.day=day;}});
     client.subscribeMetrics(m=>{latestMetrics=m;if(!disposed)setSimulationMetrics(m);});
     renderer.start(style).then(()=>{if(disposed)return;graphicsStartup.complete();graphicsReady=true;isReady();}).catch(e=>{graphicsStartup.complete();if(!disposed){styleSwitch.current++;setPreparingStyle(null);setError(`Graphics could not start: ${e instanceof Error?e.message:String(e)}. Try the WebGL fallback.`);}});
     void resolveStartupWorld(location.search,87231,loadWorld).then(startup=>{
@@ -199,6 +201,8 @@ function CityExperience(){
     <Controls achievableSpeed={simulationMetrics?.achievableSpeed} world={world} ready={ready} error={error} message={message} paused={paused} speed={speed} style={style} preparingStyle={preparingStyle} mode={mode} sceneLabel={sceneLabel} preview={preview} sound={sound} musicLevel={musicLevel} cityLevel={cityLevel} focus={focus} contrast={contrast} lens={lens} selected={world?.buildings.find(b=>b.id===selectedId)??null} metrics={metrics} subject={subject} development={development} quality={quality} onDismissError={()=>setError(null)}
       onDevelopment={value=>{setDevelopment(value);runtime.current?.client.controls({development:value});}}
       onQuality={value=>{setQuality(value);storePreferences({quality:value});runtime.current?.renderer.setQuality(value);}}
+      fixedReviewQuality={fixedReviewQuality}
+      onFixedReviewQuality={import.meta.env.DEV?value=>{runtime.current?.renderer.setFixedReviewQuality(value);setFixedReviewQuality(value);}:undefined}
       onPause={()=>{const value=!paused;setPaused(value);runtime.current?.client.controls({paused:value});runtime.current?.audio.setPaused(value);}}
       onSpeed={value=>{setSpeed(value);runtime.current?.client.controls({speed:value});}}
       onStyle={value=>{const request=++styleSwitch.current;const r=runtime.current;if(!r){setStyle(value);setPreparingStyle(null);storePreferences({style:value});return;}setPreparingStyle(value);void Promise.resolve().then(()=>r.renderer.setStyle(value)).then(()=>{if(request!==styleSwitch.current)return;setStyle(r.renderer.style);setPreparingStyle(null);storePreferences({style:r.renderer.style});}).catch(e=>{if(request!==styleSwitch.current)return;setPreparingStyle(null);setStyle(r.renderer.style);setError(`Could not prepare this rendering style: ${String(e)}`);});}}
@@ -212,6 +216,23 @@ function CityExperience(){
       onGraphicsRetry={()=>void recoverGraphics(new URLSearchParams(window.location.search).has('webgl'))} onGraphicsFallback={()=>void recoverGraphics(!new URLSearchParams(window.location.search).has('webgl'))}
       onReviewMature={import.meta.env.DEV?()=>void reviewMature():undefined} onSave={()=>void save()} onExport={()=>void exportCity()} onImport={file=>void importCity(file)} onResume={()=>void resume()} onNewWorld={seed=>void newWorld(seed)}
       onReviewSkyline={import.meta.env.DEV?()=>{if(!runtime.current?.renderer.director.reviewSkyline())notice('This city has no completed tall-building scene yet.');}:undefined}
+      onReviewBuilding={import.meta.env.DEV?id=>{if(!runtime.current?.renderer.director.reviewBuilding(id))notice('This building is not available to frame.');}:undefined}
+      onReviewStation={import.meta.env.DEV?()=>{const station=currentWorld.current?.nodes.find(n=>n.kind==='station');if(!station||!runtime.current?.renderer.director.reviewStation(station.id))notice('This station is not available to frame.');}:undefined}
+      onReviewWaterReflection={import.meta.env.DEV?()=>runtime.current?.renderer.toggleWaterReflectionForReview()??false:undefined}
+      onReviewStreetLights={import.meta.env.DEV?()=>runtime.current?.renderer.toggleStreetLightsForReview()??false:undefined}
+      onApplyCameraPose={import.meta.env.DEV?(position,target)=>runtime.current?.renderer.director.reviewPose(
+        {x:position[0],y:position[1],z:position[2]}, {x:target[0],y:target[1],z:target[2]})??false:undefined}
+      onReadCameraPose={import.meta.env.DEV?()=>{
+        const director=runtime.current?.renderer.director;
+        if(!director)return 'Camera unavailable';
+        const bounds=director.element.getBoundingClientRect();
+        return JSON.stringify({seed:currentWorld.current?.seed,tick:currentWorld.current?.tick,
+          position:director.camera.position.toArray(),target:director.target.toArray(),
+          lens:director.lens,fov:director.camera.fov,aspect:director.camera.aspect,
+          viewport:[bounds.width,bounds.height],style,previewHour:preview,
+          renderQuality:runtime.current?.renderer.reviewQualitySnapshot()},null,2);
+      }:undefined}
+      onReviewWaterfront={import.meta.env.DEV?(preset='overhead')=>{if(!runtime.current?.renderer.director.reviewWaterfront(preset))notice('This city has no river view yet.');}:undefined}
       onCloseInspector={()=>{setSelectedId(null);setSubject(null);runtime.current?.renderer.setSelected(null);runtime.current?.renderer.director.follow(null);}}
       onFollow={id=>{const r=runtime.current;if(!r)return;r.renderer.director.follow(id);if(!currentWorld.current?.buildings.some(b=>b.id===id)){void r.client.inspect(id).then(data=>{setSubject(inspectedSubject(id,data,currentWorld.current));setSelectedId(null);}).catch(()=>{});}}} />
   </main>;

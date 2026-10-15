@@ -16,6 +16,34 @@ function faces(g: THREE.BufferGeometry) {
 }
 
 describe('vehicle kit', () => {
+  it('interleaves all static vehicle vertex attributes into one lossless buffer', () => {
+    const g = buildVehicleGeometry('taxi');
+    const layout = [
+      ['position', 3, 0], ['normal', 3, 3], ['uv', 2, 6], ['vpart', 1, 8],
+      ['lateral', 1, 9], ['wheel', 4, 10], ['tinted', 1, 14],
+    ] as const;
+    const position = g.getAttribute('position');
+    expect(position).toBeInstanceOf(THREE.InterleavedBufferAttribute);
+    const data = (position as THREE.InterleavedBufferAttribute).data;
+    expect(data.stride).toBe(15);
+    expect(data.array).toHaveLength(position.count * data.stride);
+    for (const [name, size, offset] of layout) {
+      const attribute = g.getAttribute(name);
+      expect(attribute).toBeInstanceOf(THREE.InterleavedBufferAttribute);
+      const interleaved = attribute as THREE.InterleavedBufferAttribute;
+      expect(interleaved.data).toBe(data);
+      expect(interleaved.itemSize).toBe(size);
+      expect(interleaved.offset).toBe(offset);
+      expect(interleaved.count).toBe(position.count);
+      for (let vertex = 0; vertex < attribute.count; vertex++) {
+        for (let component = 0; component < size; component++) {
+          expect(attribute.getComponent(vertex, component)).toBe(data.array[vertex * data.stride + offset + component]);
+        }
+      }
+    }
+    g.dispose();
+  });
+
   it.each(bodies)('%s is an outward-wound, budgeted body at its manifest size', body => {
     const g = buildVehicleGeometry(body), spec = vehicleSpec(body);
     const tris = faces(g).filter(f => f.area > 1e-6);

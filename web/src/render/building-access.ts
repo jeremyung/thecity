@@ -27,18 +27,28 @@ export class BuildingAccessPaths {
     this.retire(() => disposeGroup(previous));
     const kit = new Kit();
     for (const path of paths) {
-      const [door, curb] = path.points;
-      const dx = curb.x - door.x, dz = curb.z - door.z;
-      const length = Math.hypot(dx, dz);
-      if (!Number.isFinite(length) || length < .05) continue;
-      // Meet the parcel's paving and the raised sidewalk without a floating
-      // strip. Slight overlap at both ends avoids seams at oblique viewpoints.
-      const rise = .425, angle = Math.atan2(dx, dz);
-      const geometry = new THREE.BoxGeometry(1.65, .09, Math.hypot(length, rise) + .18);
-      geometry.rotateX(-Math.atan2(rise, length));
-      geometry.rotateY(angle);
-      geometry.translate((door.x + curb.x) / 2, .2175, (door.z + curb.z) / 2);
-      kit.add(geometry, this.art.get('#b5b3a2'));
+      if (path.points.some(p => !Number.isFinite(p.x) || !Number.isFinite(p.z))) continue;
+      const points = path.points.filter((p, i) => i === 0 ||
+        Math.hypot(p.x - path.points[i - 1].x, p.z - path.points[i - 1].z) >= .05);
+      if (points.length < 2) continue;
+      const curb = points[points.length - 1];
+      let angle = 0;
+      for (let i = 1; i < points.length; i++) {
+        const start = points[i - 1], end = points[i];
+        const dx = end.x - start.x, dz = end.z - start.z;
+        const length = Math.hypot(dx, dz);
+        // Meet the parcel's paving and the raised sidewalk without a floating
+        // strip. Slight overlap at both ends avoids seams at oblique viewpoints.
+        // Interior passage legs stay at ground level; only the final leg ramps
+        // to the curb. Never replace bends with a shortcut through a front lot.
+        const rise = i === points.length - 1 ? .425 : 0;
+        angle = Math.atan2(dx, dz);
+        const geometry = new THREE.BoxGeometry(1.65, .09, Math.hypot(length, rise) + .18);
+        geometry.rotateX(-Math.atan2(rise, length));
+        geometry.rotateY(angle);
+        geometry.translate((start.x + end.x) / 2, .005 + rise / 2, (start.z + end.z) / 2);
+        kit.add(geometry, this.art.get('#b5b3a2'));
+      }
       // A small level landing joins the street edge even beside a junction,
       // where the long sidewalk strips stop short of the corner.
       kit.box(curb.x, .425, curb.z, 1.85, .1, 1.8, this.art.get('#b5b3a2'), angle);

@@ -1,5 +1,12 @@
 # World Growth and Infrastructure
 
+Height-renewal candidate (2026-10-12): mature unreferenced station offices can
+close, undergo demolition and rebuild taller in place. Fresh WASM growth and
+in-progress replay are verified for one seed; a four-seed, thirty-day sampled
+audit covers repeated renewal and final live/restore continuation. Housing
+relocation, lot assembly, skyline composition and visual acceptance remain open. See
+[candidate evidence](../validation/height-redevelopment.md).
+
 The city occupies a finite geographic basin. A seeded master plan fixes the skeleton of the mature city: transport corridors, arterials, local streets, lanes, blocks, and lots. Growth is the visible, demand-driven realization of that plan. Each road opens before its lots exist, each lot is built before it is occupied, and mature districts keep changing through renewal, lot assembly, and redevelopment.
 
 The previous model placed each building wherever a free rectangle cleared every road and parcel. That model topped out near 20% gross coverage with detached buildings, lawn gaps, and stranded block interiors. Its checkpoint log is archived in [growth history](../validation/growth-history-2026-10.md), and its planner is retired.
@@ -57,16 +64,16 @@ These are acceptance ranges for the generator, not runtime controllers. The rend
 
 The plan is generated deterministically from the seed and the engine version before simulation starts. It is pure data: it does not mutate world state and is never altered by camera, style, or rendering. Saves store the seed and the realized progress, and restore regenerates the same plan. Generation order:
 
-1. **Geography:** river polyline, banks, protected land, and the developable mask.
+1. **Geography:** river polyline, banks, protected land, and the developable mask. The current basin uses 33 deterministic samples through five coarse river anchors. Bank streets are 6.5 m neighborhood collectors following perpendicular 47 m offsets with shared joins; their sample density does not add collector rows. Curved boundaries exist before local street subdivision. Concave blocks are decomposed and convex-merged before parcel fitting, with no invented frontage along internal seams. Inset frontage is limited to the finite road segment it faces; sampled bank roads use arc-length frontage lookup.
 2. **Transport skeleton:**
    - A rail line crosses the basin with a dedicated corridor (about 18 m wide) and is elevated over arterials and the river.
    - Stations sit on the line, at least 400 m apart in the production domain; the prototype has one active station.
-   - An elevated expressway runs above one arterial row and one arterial column (Tokyo's Shuto pattern). It crosses the river only on a crossing row and never runs along the water. It is a separate grade-separated layer with its own nodes, has no at-grade junctions, and is never flattened into the street graph.
+   - An elevated expressway runs above one arterial row and one arterial column (Tokyo's Shuto pattern). It crosses the river only on a crossing row and never runs along the water. The east–west route is at 11 m and the north–south route at 20 m. Each has its own nodes, including separate nodes at their shared horizontal crossing. They pass over/under each other without a turn connection; no interchange ramps are implied. Neither is flattened into the street graph. Complete-route cubic controls are fixed before lot admission and included in the plan digest. Lots must clear the curved deck corridor (10.8 m half-width plus the conservative sampling-error bound). These fixed controls are exposed for realized roads even while neighboring sections are unbuilt; construction must not rebend an existing section. Before lot partitioning, the generator reserves a conservative continuous envelope around the sampled elevated routes. Newly cut edges confer no street access. The final curve-clearance check still rejects conflicting lots; the envelope is not an exact polygon union. See [reservation evidence](../validation/elevated-envelope.md).
    - Gateways connect the arterial and rail layers to the region.
 3. **Arterial lattice:** a quad lattice of major lines. Tokyo arterials are far apart, so only the two river-bank roads, the gateway row south of the rail corridor, the expressway row north of it and the expressway column are arterials. The other lattice lines are local collector streets, and every crossing row gets a bridge. Columns follow the river course as offset polylines, so bank arterials frame the river. Rows include every river bend and the rail corridor's frontage streets. Interior arterial junctions get seeded slopes (up to about 15°) and offsets (up to about 30 m), so arterials bend and run diagonally across the fabric. A convexity guard keeps every superblock convex. The river-bank roads, the rail corridor frontage and the outer ring stay fixed. Lattice edges are straight segments between shared junction nodes. Every lattice cell is a superblock or a reserved corridor band.
 4. **Local streets:** each superblock gets its own street orientation: the superblock's long axis turned by a seeded angle, up to about 35° in compact districts and nearly none in the station core. It is then subdivided by recursive street cuts (hierarchical domain splitting) along that orientation, so blocks meet arterials at angles. A polygon whose short side exceeds twice the district's minimum block depth is cut along its long axis; otherwise one longer than the district's maximum block length is cut across it. Each cut is tilted and offset by seeded jitter, and it ends where it meets an existing street, creating a T-junction. A cut is rejected if it would land within 14 m of an existing junction or leave a block below its minimum size. District patterns, from station distance and a seeded draw:
    - station core: nearly straight cuts and deep blocks, for larger mid-rise lots;
-   - compact: strongly jittered cuts and blocks at least 36 m deep;
+   - compact: strongly jittered cuts and blocks at least 36 m deep; keep the first subdivision as a local collector and use 4 m lanes for deeper subdivisions (candidate under visual validation, see [lane comparison](../validation/compact-lanes.md));
    - strips: long narrow blocks whose cross cuts are mostly lanes;
    - waterfront: coarse blocks.
 5. **Blocks:** each final polygon is a convex block. Inset every edge by its street's lot setback: half the carriageway plus the sidewalk on arterials, or a small margin on local streets and lanes. The result is the buildable block.
@@ -78,9 +85,9 @@ Plan generation must be bit-identical on every supported target. Plan decisions 
 
 Plan geometry is the authority for collisions. Lots from one partition are disjoint by construction, so they skip pairwise clearance tests. Generation must still validate that no lot overlaps any road right-of-way, rail corridor, river setback, or protected land, and that no two lots overlap at all.
 
-Deep blocks in compact and strip districts often get a dead-end roji: a 4 m alley from a local street about two-thirds of the way into the block, replacing the lots in its path.
+Deep blocks in compact and strip districts often get a dead-end roji: a 4 m alley from a local street about two-thirds of the way into the block. Reserve its corridor and terminal clearance before lot subdivision; partition the remaining usable land with frontage labels only along the actual alley. Do not delete whole intersected lots after partitioning. The current implementation is a candidate under visual validation; see `validation/roji-reservation.md`.
 
-Variety comes from district orientation, jittered cuts, T-junctions, roji, lot widths, flag lots, building families and heights. Future work: bent streets, dead-end roji, retained old diagonal roads, and lot assembly, all through the same partition contract.
+Variety comes from district orientation, jittered cuts, T-junctions, roji, lot widths, flag lots, building families and heights. Future work: bent streets, retained old diagonal roads, and lot assembly, all through the same partition contract.
 
 ## Growth: realizing the plan
 
@@ -147,7 +154,7 @@ Road project lifecycle:
 
 At-grade ordinary streets meet at explicit junctions. Elevated rail, the expressway, and bridges are separate layers and must not be flattened into street-face topology. Only completed, connected sections carry normal traffic. Work crews may use explicit construction access. A disconnected completed segment waits for its connection; travelers never teleport onto it.
 
-Road hierarchy, by rendered carriageway: `expressway` (20 m, elevated about 11 m above an arterial), `arterial` (16 m, four lanes, 2.5 m sidewalks; arterial bridges match), `local` (6.5 m shared surface with painted edge lines), `lane` (alley, 4 m, walking and deliveries, no through traffic). Also: `bridge`, `rail`, and `expressway` (elevated, grade-separated, no frontage). A buildable lot needs road access suitable for its use.
+Road hierarchy, by rendered carriageway: `expressway` (20 m wide, elevated at 11 m or 20 m according to its planned corridor), `arterial` (16 m, four lanes, 2.5 m sidewalks; arterial bridges match), `local` (6.5 m shared surface with painted edge lines), `lane` (alley, 4 m, walking and deliveries, no through traffic). Also: `bridge`, `rail`, and `expressway` (elevated, grade-separated, no frontage). A buildable lot needs road access suitable for its use.
 
 ## Rail and transit
 
@@ -204,3 +211,16 @@ At maturity, jobs and shops change occupants, buildings renovate, transit servic
 ## Implementation status (2026-10-11)
 
 The master plan, its growth realization, narrow streets, paved blocks, party-wall rendering, the elevated rail viaduct and the expressway are implemented. Three mature seeds measure 49.6–51.6% rendered coverage in compact crops and 39.9–42.2% in station crops, against 28.9% and 20.1% for the legacy planner. Evidence, captures and open items are in the [master-plan review](../validation/masterplan-review/README.md). Not yet implemented: lot assembly and height renewal, multi-station rail service, bus routes on arterials, distant low-rise LOD, and removal of the legacy planner.
+
+Elevated-route refinement: before deriving cubic controls, three fixed lateral
+fairing passes smooth the independent elevated nodes along the chosen arterial
+corridors. Longitudinal coordinates and outer interior anchors remain fixed;
+street nodes remain unchanged. Thus elevated routes need not pass exactly over
+each noisy street junction. Clearance and lot admission use the refined route,
+and separate deck curves cross spatially without requiring coincident nodes.
+See [measured validation](../validation/expressway-fairing.md).
+
+Regional expressway boundary tails continue the approaching interior bearing
+to the finite boundary; do not reset short end segments to cardinal axes.
+Curve admission and traffic use the resulting authoritative controls. A fixed
+seed corpus checks bounded endpoints, tangent continuity and sampled fold risk.

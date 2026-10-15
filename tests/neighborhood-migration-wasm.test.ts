@@ -5,7 +5,7 @@ import { CityEngine, initSync } from '../public/wasm/city_engine.js';
 
 it('retires a completed legacy block without losing its street classification or changing its geometry', () => {
   initSync({module:readFileSync(new URL('../public/wasm/city_engine_bg.wasm',import.meta.url))});
-  const raw=readFileSync(new URL('../validation/mature-world.activity-baseline.json',import.meta.url),'utf8');
+  const raw=readFileSync(new URL('./fixtures/access-joins/mature-world.activity-baseline.json',import.meta.url),'utf8');
   const old=JSON.parse(raw);
   expect(old.neighborhood_road_ids).toBeUndefined();
   expect(old.neighborhood_plan.next_segment).toBe(4);

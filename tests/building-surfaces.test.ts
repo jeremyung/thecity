@@ -90,6 +90,25 @@ describe('window panes', () => {
     art.dispose();
   });
 
+  it('keeps pane metadata on rotated boxes with nested mass offsets', () => {
+    const kit = new Kit(), art = new ArtMaterials();
+    kit.windowContext = { seed: 17, lived: 1 };
+    kit.withOffset(4, 3, -2, () => kit.withOffset(2, 0, 1, () =>
+      kit.box(1, 2, 3, 1.8, 2.2, .04, art.window('office'), Math.PI / 4)));
+    const group = kit.finish();
+    const mesh = group.children[0] as THREE.Mesh;
+    const info = mesh.geometry.getAttribute(WINDOW_ATTRIBUTE);
+    expect(info.count).toBe(mesh.geometry.getAttribute('position').count);
+    for (let i = 0; i < info.count; i++) {
+      expect([info.getX(i), info.getY(i), info.getZ(i), info.getW(i)])
+        .toEqual([Math.fround(paneSeed(17, 7, 5, 2)), 3, Math.fround(1.8), Math.fround(2.2)]);
+    }
+    mesh.geometry.computeBoundingBox();
+    expect(mesh.geometry.boundingBox!.getCenter(new THREE.Vector3()).toArray())
+      .toEqual([7, 5, 2]);
+    mesh.geometry.dispose(); art.dispose();
+  });
+
   it('packs the schedule with occupancy and tags clad walls with their kind', () => {
     const kit = new Kit(), art = new ArtMaterials();
     kit.windowContext = { seed: 9, lived: 1 };

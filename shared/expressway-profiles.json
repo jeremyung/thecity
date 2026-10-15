@@ -1,0 +1,4 @@
+{
+  "current": {"width":20,"lane_centers":[3.25,6.75],"inner_mark":0.8,"lane_mark":4.7,"outer_mark":8.65,"median_width":0.65},
+  "compact": {"width":16,"lane_centers":[2.425,5.675],"inner_mark":0.8,"lane_mark":4.05,"outer_mark":7.3,"median_width":0.65}
+}

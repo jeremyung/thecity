@@ -1,7 +1,7 @@
 import type { Point } from '../types';
 export type BridgeSpan={a:Point;b:Point};
 /** Elevated rail viaduct lift above the legacy at-grade rail height. */
-export const RAIL_DECK=6;
+export { RAIL_DECK } from './rail-profile';
 /** Expressway deck height above ground. */
 export const EXPRESSWAY_DECK=11;
 /** Rendered carriageway width by road kind. */
@@ -32,4 +32,26 @@ export function bridgeVehiclePose(point:Point,yaw:number,wheelbase:number,spans:
   const dx=Math.sin(yaw)*wheelbase/2,dz=Math.cos(yaw)*wheelbase/2;
   const front=bridgeLift({x:point.x+dx,z:point.z+dz},spans),back=bridgeLift({x:point.x-dx,z:point.z-dz},spans);
   return{lift:(front+back)/2,pitch:Math.atan2(front-back,wheelbase)};
+}
+
+/** A pier must not occupy a lower crossing's carriageway or rail clearance. */
+export type CrossingDeck = { a:Point; b:Point; height:number; width:number };
+export function expresswayPierClear(point:Point,a:Point,b:Point,height:number,crossings:readonly CrossingDeck[]){
+  const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
+  if(length<1)return false;
+  return !crossings.some(c=>{
+    if(c.height>=height)return false;
+    const cx=c.b.x-c.a.x,cz=c.b.z-c.a.z,cl=Math.hypot(cx,cz);
+    // Parallel streets below the viaduct keep their central pier reservation.
+    if(cl<1||Math.abs(dx*cz-dz*cx)/(length*cl)<.2)return false;
+    const t=Math.max(0,Math.min(1,((point.x-c.a.x)*cx+(point.z-c.a.z)*cz)/(cl*cl)));
+    return Math.hypot(point.x-c.a.x-t*cx,point.z-c.a.z-t*cz)<c.width/2+2;
+  });
+}
+
+
+/** Explicit engine road surface overrides any lower bridge beneath the vehicle.
+ * Existing car meshes use a .30m street surface as their vertical baseline. */
+export function vehicleSurfacePose(point:Point,yaw:number,wheelbase:number,spans:BridgeSpan[],surfaceY:number){
+  return surfaceY>=0?{lift:surfaceY-.3,pitch:0}:bridgeVehiclePose(point,yaw,wheelbase,spans);
 }

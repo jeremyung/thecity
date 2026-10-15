@@ -20,6 +20,17 @@ Core components:
 
 The represented population exceeds individual agents. Aggregate households and jobs generate bounded trip demand. Persistent residents contribute their trips once, without double-counting them in aggregate cohorts.
 
+Implementation candidate (2026-10-12): residual households now dispatch bounded
+local walking errands with saved outbound, dwelling and returning phases. Each
+outing represents one person; the home participant remains reserved until arrival
+home. Shop/cafe reservations and actual entrance routes precede admission. Current
+parameters cap128 outings and180m per outbound walking leg, with09:00–21:00
+admissions. These are calibration candidates, not acceptance targets. Broader
+job-derived demand, universal visitor accounting, fixed route-expansion budgets
+and multi-seed/browser acceptance remain outstanding. See the
+[daily activity review](../validation/fidelity-review-current.md).
+
+
 ### Housing occupancy and commercial activity
 
 Residential occupancy counts people housed in homes and apartments. It is not a universal measure of whether a building is in use: an operating shop, cafe, or office can have zero residential occupants. Commercial premises need explicit tenant/activity state. Construction stage, tenant activity, household occupancy, and transient visitors are distinct facts.
@@ -28,7 +39,7 @@ Demand, local development prerequisites, vacancy aging, and renewal must use the
 
 Business turnover is an explicit, seeded, bounded transition with a reason and history. A closed tenant can leave an empty premise eligible for reuse or renovation; reopening clears genuine vacancy age. Protect anchors and essential services. Do not create forced closures merely to manufacture visible change, and do not exempt all commerce permanently from renewal.
 
-Legacy saves that recorded only residential occupancy cannot reveal commercial vacancy. Migrate their open commercial stock as operating, normalize any former non-residential occupancy marker, and clear commercial vacancy age derived from the old ambiguous rule. Preserve household state and pending renovations. Version the activity representation explicitly, and make migration deterministic, idempotent, and independent of RNG advancement or elapsed time.
+Legacy saves that recorded only residential occupancy cannot reveal commercial vacancy. Backward save compatibility is not required (user decision, 2026-10-11); reject incompatible activity representations explicitly and offer a fresh world rather than inferring tenant history or building migrations. Current-format saves must preserve explicit tenant activity, household state and pending renovations, with deterministic live-versus-restored continuation. Version the activity representation explicitly.
 
 ## Clocks
 
@@ -100,3 +111,14 @@ A complete save includes state arrays, identifiers, pending projects, graph revi
 ## Evolution without runaway demand
 
 Use occupancy feedback, bounded external migration, project cooldowns, and moving-average demand. Require sustained pressure before approval and a lower threshold for cancellation to avoid oscillation. Construction capacity is finite. At saturation, population stabilizes while activities and limited renewal continue.
+
+
+### Walking surface contract — 2026-10-13
+
+Local streets and lanes are shared surfaces: pedestrian centers run0.72m inside
+the carriageway edge. Arterial walking centers use the raised sidewalk0.72m beyond
+the carriageway. Movement, route endpoints and building-access connectors share
+this offset calculation. A supported endpoint alone does not establish support
+through every junction or station approach; verify complete connectors against
+rendered surfaces. Current-format replay remains required; obsolete access paths
+may be rejected without migration.

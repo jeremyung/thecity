@@ -6,7 +6,11 @@ export function styleWarmup(scene:THREE.Scene,variant:(material:THREE.Material)=
   const prepared=scene.clone(false),keys=new Set<string>(),instances:THREE.InstancedMesh[]=[];
   scene.traverse(object=>{
     if(!(object instanceof THREE.Mesh))return;
-    const materials=Array.isArray(object.material)?object.material.map(variant):[variant(object.material)];
+    const original=Array.isArray(object.material)?object.material:[object.material];
+    const materials=original.map(variant);
+    // Shared water/sky nodes already render in both styles. Compiling them again
+    // runs viewport-copy hooks outside a render pass, with no valid framebuffer.
+    if(materials.every((material,index)=>material===original[index]))return;
     const layout=Object.entries(object.geometry.attributes as Record<string,THREE.BufferAttribute|THREE.InterleavedBufferAttribute>).map(([name,attribute])=>`${name}:${attribute.itemSize}:${attribute.normalized}`).sort().join(',');
     const instanced=object instanceof THREE.InstancedMesh;
     const key=`${materials.map(m=>m.uuid).join('/')}:${layout}:${instanced}:${instanced&&!!object.instanceColor}:${object.receiveShadow}`;
@@ -62,5 +66,27 @@ export async function compileStyleSamples(
   }finally{
     // Restore ownership for the caller's single disposal path, including cancel/error.
     for(const sample of samples)scene.add(sample);
+  }
+}
+
+/** Match the live scene attachments during synchronous compiler submission.
+ * compileAsync runs node update hooks (including viewport copies) before yielding.
+ * Restore immediately so animation never borrows the warmup target while awaiting GPU work.
+ * Caller must initialize the renderer before invoking this helper.
+ */
+export function compileForScenePass(
+  renderer: THREE.WebGPURenderer,
+  pass: {renderTarget: THREE.RenderTarget; getMRT(): ReturnType<THREE.WebGPURenderer['getMRT']> | null},
+  scene: THREE.Scene, camera: THREE.Camera, targetScene: THREE.Scene,
+): Promise<void> {
+  const target=renderer.getRenderTarget(),mrt=renderer.getMRT();
+  const face=renderer.getActiveCubeFace(),mip=renderer.getActiveMipmapLevel();
+  try {
+    renderer.setRenderTarget(pass.renderTarget);
+    renderer.setMRT(pass.getMRT());
+    return renderer.compileAsync(scene,camera,targetScene);
+  } finally {
+    renderer.setRenderTarget(target,face,mip);
+    renderer.setMRT(mrt);
   }
 }
