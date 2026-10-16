@@ -34,9 +34,28 @@ const defaultOutput = mode ? `.tools/wasm-${mode[0]}` : 'public/wasm';
 const outputIndex = process.argv.indexOf('--out-dir');
 const output = outputIndex < 0 ? defaultOutput : process.argv[outputIndex + 1];
 if (outputIndex >= 0) {
-  if (!output || !mode) throw new Error('--out-dir requires an isolated build mode and a directory.');
+  if (!output || !mode)
+    throw new Error('--out-dir requires an isolated build mode and a directory.');
   const withinTools = relative(resolve('.tools'), resolve(output));
-  if (!withinTools || withinTools.startsWith('..') || isAbsolute(withinTools)) throw new Error('Isolated output must be beneath .tools.');
+  if (!withinTools || withinTools.startsWith('..') || isAbsolute(withinTools))
+    throw new Error('Isolated output must be beneath .tools.');
 }
-run('cargo', ['build', '--manifest-path', 'engine/Cargo.toml', '--target', 'wasm32-unknown-unknown', '--release', '--locked', ...features]);
-run('wasm-bindgen', ['engine/target/wasm32-unknown-unknown/release/tokyo_city_engine.wasm', '--target', 'web', '--out-dir', output, '--out-name', 'city_engine']);
+run('cargo', [
+  'build',
+  '--manifest-path',
+  'engine/Cargo.toml',
+  '--target',
+  'wasm32-unknown-unknown',
+  '--release',
+  '--locked',
+  ...features,
+]);
+run('wasm-bindgen', [
+  'engine/target/wasm32-unknown-unknown/release/tokyo_city_engine.wasm',
+  '--target',
+  'web',
+  '--out-dir',
+  output,
+  '--out-name',
+  'city_engine',
+]);

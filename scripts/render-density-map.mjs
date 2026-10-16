@@ -8,10 +8,26 @@ const MAP_LEFT = 92;
 const MAP_TOP = 78;
 const WIDTH = 1000;
 const HEIGHT = 1080;
-const CONSTRUCTION_STAGES = new Set(['foundation', 'survey', 'clearing', 'structure', 'surface', 'finishing']);
+const CONSTRUCTION_STAGES = new Set([
+  'foundation',
+  'survey',
+  'clearing',
+  'structure',
+  'surface',
+  'finishing',
+]);
 const HOUSING_KINDS = new Set(['home', 'apartment']);
 const COMMERCIAL_KINDS = new Set(['shop', 'cafe', 'office']);
-const STATUS_NAMES = ['resident_occupied', 'empty_housing', 'active_commercial', 'vacant_commercial', 'commercial_unknown', 'renovation', 'construction', 'unknown'];
+const STATUS_NAMES = [
+  'resident_occupied',
+  'empty_housing',
+  'active_commercial',
+  'vacant_commercial',
+  'commercial_unknown',
+  'renovation',
+  'construction',
+  'unknown',
+];
 
 function buildingStatus(building) {
   if (building.stage === 'renovation') return 'renovation';
@@ -22,27 +38,39 @@ function buildingStatus(building) {
     if (building.business_active === false) return 'vacant_commercial';
     return 'commercial_unknown';
   }
-  if (!HOUSING_KINDS.has(building.kind) || !Number.isFinite(building.occupancy) || building.occupancy < 0) return 'unknown';
+  if (
+    !HOUSING_KINDS.has(building.kind) ||
+    !Number.isFinite(building.occupancy) ||
+    building.occupancy < 0
+  )
+    return 'unknown';
   return building.occupancy === 0 ? 'empty_housing' : 'resident_occupied';
 }
 
 function escapeXml(value) {
-  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
 }
 
 function mapPoint(point, bounds) {
   return {
-    x: MAP_LEFT + (point.x - bounds.min_x) / (bounds.max_x - bounds.min_x) * MAP_SIZE,
-    y: MAP_TOP + (bounds.max_z - point.z) / (bounds.max_z - bounds.min_z) * MAP_SIZE,
+    x: MAP_LEFT + ((point.x - bounds.min_x) / (bounds.max_x - bounds.min_x)) * MAP_SIZE,
+    y: MAP_TOP + ((bounds.max_z - point.z) / (bounds.max_z - bounds.min_z)) * MAP_SIZE,
   };
 }
 
 function riverPolygon(points, halfWidth, bounds) {
-  if (!Array.isArray(points) || points.length < 2 || !Number.isFinite(halfWidth) || halfWidth <= 0) return '';
+  if (!Array.isArray(points) || points.length < 2 || !Number.isFinite(halfWidth) || halfWidth <= 0)
+    return '';
   const offsets = points.map((point, index) => {
     const before = points[Math.max(0, index - 1)];
     const after = points[Math.min(points.length - 1, index + 1)];
-    const dx = after.x - before.x, dz = after.z - before.z;
+    const dx = after.x - before.x,
+      dz = after.z - before.z;
     const length = Math.hypot(dx, dz) || 1;
     const normal = { x: dz / length, z: -dx / length };
     return {
@@ -50,8 +78,20 @@ function riverPolygon(points, halfWidth, bounds) {
       b: mapPoint({ x: point.x - normal.x * halfWidth, z: point.z - normal.z * halfWidth }, bounds),
     };
   });
-  const pathPoints = [...offsets.map((item) => item.a), ...offsets.slice().reverse().map((item) => item.b)];
-  return pathPoints.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' ') + ' Z';
+  const pathPoints = [
+    ...offsets.map((item) => item.a),
+    ...offsets
+      .slice()
+      .reverse()
+      .map((item) => item.b),
+  ];
+  return (
+    pathPoints
+      .map(
+        (point, index) => `${index === 0 ? 'M' : 'L'}${point.x.toFixed(2)},${point.y.toFixed(2)}`,
+      )
+      .join(' ') + ' Z'
+  );
 }
 
 function floorColor(floors) {
@@ -70,8 +110,12 @@ function roadWidth(road) {
 
 export function renderDensityMap(snapshot, { source = 'validation/mature-world.json' } = {}) {
   const bounds = snapshot?.bounds;
-  if (!bounds || ![bounds.min_x, bounds.max_x, bounds.min_z, bounds.max_z].every(Number.isFinite)
-      || bounds.max_x <= bounds.min_x || bounds.max_z <= bounds.min_z) {
+  if (
+    !bounds ||
+    ![bounds.min_x, bounds.max_x, bounds.min_z, bounds.max_z].every(Number.isFinite) ||
+    bounds.max_x <= bounds.min_x ||
+    bounds.max_z <= bounds.min_z
+  ) {
     throw new TypeError('World snapshot requires finite, increasing bounds');
   }
   const scaleX = MAP_SIZE / (bounds.max_x - bounds.min_x);
@@ -79,9 +123,16 @@ export function renderDensityMap(snapshot, { source = 'validation/mature-world.j
   const nodes = new Map((snapshot.nodes ?? []).map((node) => [node.id, node]));
   const buildingList = Array.isArray(snapshot.buildings) ? snapshot.buildings : [];
   const roads = Array.isArray(snapshot.roads) ? snapshot.roads : [];
-  const validBuildings = buildingList.filter((b) => [b.x, b.z, b.width, b.depth, b.floors].every(Number.isFinite) && b.width > 0 && b.depth > 0 && b.floors > 0);
+  const validBuildings = buildingList.filter(
+    (b) =>
+      [b.x, b.z, b.width, b.depth, b.floors].every(Number.isFinite) &&
+      b.width > 0 &&
+      b.depth > 0 &&
+      b.floors > 0,
+  );
   const roadsWithEndpoints = roads.flatMap((road) => {
-    const from = nodes.get(road.from), to = nodes.get(road.to);
+    const from = nodes.get(road.from),
+      to = nodes.get(road.to);
     return from && to ? [{ road, from: mapPoint(from, bounds), to: mapPoint(to, bounds) }] : [];
   });
   const stations = (snapshot.nodes ?? []).filter((node) => node.kind === 'station');
@@ -94,22 +145,32 @@ export function renderDensityMap(snapshot, { source = 'validation/mature-world.j
     { name: '10+ floors', color: floorColor(10) },
   ];
   const river = riverPolygon(snapshot.terrain?.river, snapshot.terrain?.river_half_width, bounds);
-  const buildingShapes = validBuildings.map((building) => {
-    const topLeft = mapPoint({ x: building.x - building.width / 2, z: building.z + building.depth / 2 }, bounds);
-    const width = building.width * scaleX, height = building.depth * scaleZ;
-    const status = buildingStatus(building);
-    return `<rect class="building ${status}" x="${topLeft.x.toFixed(2)}" y="${topLeft.y.toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" fill="${floorColor(building.floors)}" data-id="${escapeXml(building.id)}" data-kind="${escapeXml(building.kind)}" data-floors="${escapeXml(building.floors)}" data-stage="${escapeXml(building.stage)}" data-status="${status}" data-business-active="${building.business_active === true ? 'true' : building.business_active === false ? 'false' : 'unknown'}"><title>${escapeXml(building.name)} · ${building.floors} floors · ${status} (${building.stage}) · nominal ${building.width} × ${building.depth} m envelope</title></rect>`;
-  }).join('\n');
-  const roadShapes = roadsWithEndpoints.map(({ road, from, to }) => {
-    const isRail = road.kind === 'rail';
-    const construction = road.stage !== 'open';
-    const klass = `road${isRail ? ' rail' : ''}${construction ? ' construction' : ''}`;
-    return `<path class="${klass}" d="M${from.x.toFixed(2)},${from.y.toFixed(2)} L${to.x.toFixed(2)},${to.y.toFixed(2)}" stroke-width="${roadWidth(road)}" data-id="${escapeXml(road.id)}" data-kind="${escapeXml(road.kind)}" data-stage="${escapeXml(road.stage)}"><title>${escapeXml(road.kind)} · ${road.stage} · ${Math.round(road.length)} m</title></path>`;
-  }).join('\n');
-  const stationShapes = stations.map((station) => {
-    const point = mapPoint(station, bounds);
-    return `<g class="station" transform="translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})" data-id="${escapeXml(station.id)}"><circle r="8"/><circle class="station-core" r="3"/><text x="11" y="-10">Station ${escapeXml(station.id)}</text></g>`;
-  }).join('\n');
+  const buildingShapes = validBuildings
+    .map((building) => {
+      const topLeft = mapPoint(
+        { x: building.x - building.width / 2, z: building.z + building.depth / 2 },
+        bounds,
+      );
+      const width = building.width * scaleX,
+        height = building.depth * scaleZ;
+      const status = buildingStatus(building);
+      return `<rect class="building ${status}" x="${topLeft.x.toFixed(2)}" y="${topLeft.y.toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" fill="${floorColor(building.floors)}" data-id="${escapeXml(building.id)}" data-kind="${escapeXml(building.kind)}" data-floors="${escapeXml(building.floors)}" data-stage="${escapeXml(building.stage)}" data-status="${status}" data-business-active="${building.business_active === true ? 'true' : building.business_active === false ? 'false' : 'unknown'}"><title>${escapeXml(building.name)} · ${building.floors} floors · ${status} (${building.stage}) · nominal ${building.width} × ${building.depth} m envelope</title></rect>`;
+    })
+    .join('\n');
+  const roadShapes = roadsWithEndpoints
+    .map(({ road, from, to }) => {
+      const isRail = road.kind === 'rail';
+      const construction = road.stage !== 'open';
+      const klass = `road${isRail ? ' rail' : ''}${construction ? ' construction' : ''}`;
+      return `<path class="${klass}" d="M${from.x.toFixed(2)},${from.y.toFixed(2)} L${to.x.toFixed(2)},${to.y.toFixed(2)}" stroke-width="${roadWidth(road)}" data-id="${escapeXml(road.id)}" data-kind="${escapeXml(road.kind)}" data-stage="${escapeXml(road.stage)}"><title>${escapeXml(road.kind)} · ${road.stage} · ${Math.round(road.length)} m</title></path>`;
+    })
+    .join('\n');
+  const stationShapes = stations
+    .map((station) => {
+      const point = mapPoint(station, bounds);
+      return `<g class="station" transform="translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})" data-id="${escapeXml(station.id)}"><circle r="8"/><circle class="station-core" r="3"/><text x="11" y="-10">Station ${escapeXml(station.id)}</text></g>`;
+    })
+    .join('\n');
   const minX = mapPoint({ x: bounds.min_x, z: bounds.max_z }, bounds).x;
   const maxX = mapPoint({ x: bounds.max_x, z: bounds.max_z }, bounds).x;
   const minY = MAP_TOP;
@@ -186,7 +247,9 @@ async function runCli(argv) {
       if (!argv[i + 1]) throw new Error('--output requires a path');
       outputPath = resolve(argv[++i]);
     } else if (argv[i] === '--help' || argv[i] === '-h') {
-      process.stdout.write('Usage: node scripts/render-density-map.mjs [save.json] [--output map.svg]\n');
+      process.stdout.write(
+        'Usage: node scripts/render-density-map.mjs [save.json] [--output map.svg]\n',
+      );
       return;
     } else if (argv[i].startsWith('-')) {
       throw new Error(`Unknown option: ${argv[i]}`);
@@ -204,17 +267,40 @@ async function runCli(argv) {
     const snapshot = JSON.parse(engine.snapshot());
     const rendered = renderDensityMap(snapshot, { source: relative(root, inputPath) });
     await writeFile(outputPath, rendered);
-    const buildingCount = (rendered.match(/class="building (?:resident_occupied|empty_housing|active_commercial|vacant_commercial|commercial_unknown|renovation|construction|unknown)"/g) ?? []).length;
+    const buildingCount = (
+      rendered.match(
+        /class="building (?:resident_occupied|empty_housing|active_commercial|vacant_commercial|commercial_unknown|renovation|construction|unknown)"/g,
+      ) ?? []
+    ).length;
     const roadCount = (rendered.match(/class="road(?: rail)?(?: construction)?"/g) ?? []).length;
-    const expectedRoadCount = (snapshot.roads ?? []).filter((road) => (snapshot.nodes ?? []).some((node) => node.id === road.from) && (snapshot.nodes ?? []).some((node) => node.id === road.to)).length;
-    if (buildingCount !== (snapshot.buildings ?? []).filter((b) => [b.x, b.z, b.width, b.depth, b.floors].every(Number.isFinite) && b.width > 0 && b.depth > 0 && b.floors > 0).length
-        || roadCount !== expectedRoadCount) {
+    const expectedRoadCount = (snapshot.roads ?? []).filter(
+      (road) =>
+        (snapshot.nodes ?? []).some((node) => node.id === road.from) &&
+        (snapshot.nodes ?? []).some((node) => node.id === road.to),
+    ).length;
+    if (
+      buildingCount !==
+        (snapshot.buildings ?? []).filter(
+          (b) =>
+            [b.x, b.z, b.width, b.depth, b.floors].every(Number.isFinite) &&
+            b.width > 0 &&
+            b.depth > 0 &&
+            b.floors > 0,
+        ).length ||
+      roadCount !== expectedRoadCount
+    ) {
       throw new Error(`SVG count check failed: buildings ${buildingCount}, roads ${roadCount}`);
     }
-    process.stdout.write(JSON.stringify({
-      output: relative(root, outputPath), seed: snapshot.seed, tick: snapshot.tick,
-      buildings: buildingCount, roads: roadCount, stations: (snapshot.nodes ?? []).filter((node) => node.kind === 'station').length,
-    }) + '\n');
+    process.stdout.write(
+      JSON.stringify({
+        output: relative(root, outputPath),
+        seed: snapshot.seed,
+        tick: snapshot.tick,
+        buildings: buildingCount,
+        roads: roadCount,
+        stations: (snapshot.nodes ?? []).filter((node) => node.kind === 'station').length,
+      }) + '\n',
+    );
   } finally {
     engine.free?.();
   }

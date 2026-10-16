@@ -1,5 +1,5 @@
 /** Physical still-camera lens presets shared by both city styles. */
-export type LensPresetId = "environment" | "neighborhood" | "detail";
+export type LensPresetId = 'environment' | 'neighborhood' | 'detail';
 
 export interface LensPreset {
   readonly id: LensPresetId;
@@ -13,9 +13,14 @@ export interface LensPreset {
 export const SENSOR_HEIGHT_MM = 24;
 
 export const LENS_PRESETS: Readonly<Record<LensPresetId, LensPreset>> = {
-  environment: { id: "environment", label: "Environment · 35 mm", focalLengthMm: 35, fNumber: 8 },
-  neighborhood: { id: "neighborhood", label: "Neighborhood · 50 mm", focalLengthMm: 50, fNumber: 5.6 },
-  detail: { id: "detail", label: "Detail · 85 mm", focalLengthMm: 85, fNumber: 4 },
+  environment: { id: 'environment', label: 'Environment · 35 mm', focalLengthMm: 35, fNumber: 8 },
+  neighborhood: {
+    id: 'neighborhood',
+    label: 'Neighborhood · 50 mm',
+    focalLengthMm: 50,
+    fNumber: 5.6,
+  },
+  detail: { id: 'detail', label: 'Detail · 85 mm', focalLengthMm: 85, fNumber: 4 },
 };
 
 function positiveFinite(name: string, value: number): void {
@@ -25,9 +30,12 @@ function positiveFinite(name: string, value: number): void {
 }
 
 /** Vertical field of view for a rectilinear lens, in degrees. */
-export function verticalFovDegrees(focalLengthMm: number, sensorHeightMm = SENSOR_HEIGHT_MM): number {
-  positiveFinite("focalLengthMm", focalLengthMm);
-  positiveFinite("sensorHeightMm", sensorHeightMm);
+export function verticalFovDegrees(
+  focalLengthMm: number,
+  sensorHeightMm = SENSOR_HEIGHT_MM,
+): number {
+  positiveFinite('focalLengthMm', focalLengthMm);
+  positiveFinite('sensorHeightMm', sensorHeightMm);
   return 2 * Math.atan(sensorHeightMm / (2 * focalLengthMm)) * (180 / Math.PI);
 }
 
@@ -63,33 +71,39 @@ export function signedCircleOfConfusionPixels(input: CircleOfConfusionInput): nu
     maxBlurPx,
     opticalModelScale = 1,
   } = input;
-  positiveFinite("objectDistanceM", objectDistanceM);
-  positiveFinite("focusDistanceM", focusDistanceM);
-  positiveFinite("focalLengthMm", focalLengthMm);
-  positiveFinite("fNumber", fNumber);
-  positiveFinite("sensorHeightMm", sensorHeightMm);
-  positiveFinite("viewportHeightPx", viewportHeightPx);
-  if (maxBlurPx !== undefined) positiveFinite("maxBlurPx", maxBlurPx);
-  positiveFinite("opticalModelScale", opticalModelScale);
+  positiveFinite('objectDistanceM', objectDistanceM);
+  positiveFinite('focusDistanceM', focusDistanceM);
+  positiveFinite('focalLengthMm', focalLengthMm);
+  positiveFinite('fNumber', fNumber);
+  positiveFinite('sensorHeightMm', sensorHeightMm);
+  positiveFinite('viewportHeightPx', viewportHeightPx);
+  if (maxBlurPx !== undefined) positiveFinite('maxBlurPx', maxBlurPx);
+  positiveFinite('opticalModelScale', opticalModelScale);
 
   const modeledObjectDistanceM = objectDistanceM * opticalModelScale;
   const modeledFocusDistanceM = focusDistanceM * opticalModelScale;
   const focalLengthM = focalLengthMm / 1000;
-  if (!Number.isFinite(modeledObjectDistanceM) || !Number.isFinite(modeledFocusDistanceM)
-      || modeledObjectDistanceM <= focalLengthM || modeledFocusDistanceM <= focalLengthM) {
-    throw new RangeError("objectDistanceM and focusDistanceM must exceed focal length");
+  if (
+    !Number.isFinite(modeledObjectDistanceM) ||
+    !Number.isFinite(modeledFocusDistanceM) ||
+    modeledObjectDistanceM <= focalLengthM ||
+    modeledFocusDistanceM <= focalLengthM
+  ) {
+    throw new RangeError('objectDistanceM and focusDistanceM must exceed focal length');
   }
 
-  const objectImageDistanceM = (focalLengthM * modeledObjectDistanceM) / (modeledObjectDistanceM - focalLengthM);
-  const focusImageDistanceM = (focalLengthM * modeledFocusDistanceM) / (modeledFocusDistanceM - focalLengthM);
+  const objectImageDistanceM =
+    (focalLengthM * modeledObjectDistanceM) / (modeledObjectDistanceM - focalLengthM);
+  const focusImageDistanceM =
+    (focalLengthM * modeledFocusDistanceM) / (modeledFocusDistanceM - focalLengthM);
   const apertureDiameterM = focalLengthM / fNumber;
-  const blurDiameterOnSensorM = apertureDiameterM
-    * Math.abs(objectImageDistanceM - focusImageDistanceM)
-    / objectImageDistanceM;
+  const blurDiameterOnSensorM =
+    (apertureDiameterM * Math.abs(objectImageDistanceM - focusImageDistanceM)) /
+    objectImageDistanceM;
   const blurDiameterOnSensorMm = blurDiameterOnSensorM * 1000;
   const uncappedPixels = (blurDiameterOnSensorMm / sensorHeightMm) * viewportHeightPx;
   if (![objectImageDistanceM, focusImageDistanceM, uncappedPixels].every(Number.isFinite)) {
-    throw new RangeError("optical values produce a non-finite circle of confusion");
+    throw new RangeError('optical values produce a non-finite circle of confusion');
   }
   const resolutionLimitPx = maxBlurPx ?? Math.min(64, viewportHeightPx * 0.25);
   const magnitude = Math.min(uncappedPixels, resolutionLimitPx, viewportHeightPx);
@@ -107,8 +121,11 @@ export function circleOfConfusionPixels(input: CircleOfConfusionInput): number {
  * pass-specific pixel radius budget is applied. Near/far classification must
  * continue to use the original signed diameter.
  */
-export function normalizedGatherRadiusFromDiameterPx(diameterPx: number, maxGatherRadiusPx: number): number {
-  if (!Number.isFinite(diameterPx)) throw new RangeError("diameterPx must be finite");
-  positiveFinite("maxGatherRadiusPx", maxGatherRadiusPx);
-  return Math.min(1, Math.abs(diameterPx) * 0.5 / maxGatherRadiusPx);
+export function normalizedGatherRadiusFromDiameterPx(
+  diameterPx: number,
+  maxGatherRadiusPx: number,
+): number {
+  if (!Number.isFinite(diameterPx)) throw new RangeError('diameterPx must be finite');
+  positiveFinite('maxGatherRadiusPx', maxGatherRadiusPx);
+  return Math.min(1, (Math.abs(diameterPx) * 0.5) / maxGatherRadiusPx);
 }

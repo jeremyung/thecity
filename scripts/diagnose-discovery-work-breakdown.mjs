@@ -4,7 +4,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { AccessDiscovery, initSync } from '../public/wasm/city_engine.js';
 
 initSync({ module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)) });
-const save = readFileSync(new URL('../validation/early-reservation-wasm-87231-save.json', import.meta.url), 'utf8');
+const save = readFileSync(
+  new URL('../validation/early-reservation-wasm-87231-save.json', import.meta.url),
+  'utf8',
+);
 const maxChunk = 65_536;
 
 function stageName(job) {
@@ -32,7 +35,8 @@ function run() {
     }
 
     // Locate the first work unit crossing this top-level stage boundary.
-    let low = 1, high = step.work_used;
+    let low = 1,
+      high = step.work_used;
     while (low < high) {
       const middle = low + Math.floor((high - low) / 2);
       const probe = AccessDiscovery.restore(before);
@@ -55,7 +59,12 @@ function run() {
   const descriptorCount = JSON.parse(job.advance(0)).descriptor_count ?? 2069;
   const descriptorBits = JSON.parse(job.descriptor_bits());
   job.free();
-  return { stages: workByStage, total_work: total, descriptor_count: descriptorBits.length, descriptor_count_reported: descriptorCount };
+  return {
+    stages: workByStage,
+    total_work: total,
+    descriptor_count: descriptorBits.length,
+    descriptor_count_reported: descriptorCount,
+  };
 }
 
 const result = run();
@@ -65,10 +74,16 @@ const report = {
   source_save: 'validation/early-reservation-wasm-87231-save.json',
   source_save_sha256: createHash('sha256').update(save).digest('hex'),
   wasm_binary: 'public/wasm/city_engine_bg.wasm',
-  wasm_sha256: createHash('sha256').update(readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url))).digest('hex'),
+  wasm_sha256: createHash('sha256')
+    .update(readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)))
+    .digest('hex'),
   chunk_work: maxChunk,
   ...result,
-  scope: 'WASM top-level stage accounting; binary-searches exact transition boundaries; does not alter discovery behavior'
+  scope:
+    'WASM top-level stage accounting; binary-searches exact transition boundaries; does not alter discovery behavior',
 };
-writeFileSync(new URL('../validation/access-discovery-wasm-work-breakdown.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
+writeFileSync(
+  new URL('../validation/access-discovery-wasm-work-breakdown.json', import.meta.url),
+  JSON.stringify(report, null, 2) + '\n',
+);
 console.log(JSON.stringify(report, null, 2));

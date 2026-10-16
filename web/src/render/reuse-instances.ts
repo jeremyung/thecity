@@ -3,10 +3,19 @@ import * as THREE from 'three/webgpu';
 /** Keep the GPU instance-buffer identity when a rebuilt static kit still fits.
  * Geometry ownership remains with the caller; only instance values are copied.
  */
-export function reuseInstances(previous: THREE.InstancedMesh | undefined, next: THREE.InstancedMesh): THREE.InstancedMesh {
-  if (!previous || previous.material !== next.material || previous.instanceMatrix.count < next.count
-      || Boolean(previous.instanceColor) !== Boolean(next.instanceColor)
-      || previous.morphTexture || next.morphTexture) return next;
+export function reuseInstances(
+  previous: THREE.InstancedMesh | undefined,
+  next: THREE.InstancedMesh,
+): THREE.InstancedMesh {
+  if (
+    !previous ||
+    previous.material !== next.material ||
+    previous.instanceMatrix.count < next.count ||
+    Boolean(previous.instanceColor) !== Boolean(next.instanceColor) ||
+    previous.morphTexture ||
+    next.morphTexture
+  )
+    return next;
   previous.count = next.count;
   previous.instanceMatrix.array.set(next.instanceMatrix.array.subarray(0, next.count * 16));
   previous.instanceMatrix.needsUpdate = true;

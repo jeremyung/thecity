@@ -9,4 +9,8 @@ export default class SignedCoCDepthOfFieldNode extends TempNode {
   dispose(): void;
 }
 /** Radius budget is per gather; sequential passes have wider combined support. */
-export function signedCoCDof(node: Node, signedCoC: Node | number, maxGatherRadiusPx?: Node | number): SignedCoCDepthOfFieldNode;
+export function signedCoCDof(
+  node: Node,
+  signedCoC: Node | number,
+  maxGatherRadiusPx?: Node | number,
+): SignedCoCDepthOfFieldNode;

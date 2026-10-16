@@ -7,8 +7,13 @@ it('does not use structural train or onboard-resident fallbacks for withheld mov
   director.followId = null;
   director.disposed = false;
   director.currentWorld = {
-    residents: [{ id: 50, train_id: 10 }], buildings: [], roads: [],
-    nodes: [{ id: 1, x: 0, z: 0 }, { id: 2, x: 100, z: 0 }],
+    residents: [{ id: 50, train_id: 10 }],
+    buildings: [],
+    roads: [],
+    nodes: [
+      { id: 1, x: 0, z: 0 },
+      { id: 2, x: 100, z: 0 },
+    ],
     trains: [{ id: 10, route: [1, 2], progress: 20, direction: 1 }],
   };
   const position = new Vector3();

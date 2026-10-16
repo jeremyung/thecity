@@ -6,6 +6,6 @@
  * Ordinary DOF must continue to use its own style-specific scale.
  */
 export function miniatureOpticalScale(focusDepth: number): number {
-  if (!Number.isFinite(focusDepth) || focusDepth <= 0) return .01;
-  return Math.min(.01, 1.2 / focusDepth);
+  if (!Number.isFinite(focusDepth) || focusDepth <= 0) return 0.01;
+  return Math.min(0.01, 1.2 / focusDepth);
 }

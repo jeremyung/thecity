@@ -12,7 +12,9 @@
     "check:textures": "node scripts/audit-texture-budget.mjs --check",
     "test": "vitest run",
     "test:engine": "node scripts/test-engine.mjs",
-    "setup:fixtures": "python3 scripts/setup-test-fixtures.py"
+    "setup:fixtures": "python3 scripts/setup-test-fixtures.py",
+    "format": "prettier --write \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml",
+    "format:check": "prettier --check \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --check"
   },
   "dependencies": {
     "lucide-react": "0.577.0",
@@ -26,6 +28,7 @@
     "@types/react-dom": "19.2.2",
     "@types/three": "0.183.1",
     "esbuild": "^0.28.1",
+    "prettier": "3.9.10",
     "typescript": "5.9.3",
     "vite": "^7.3.7",
     "vitest": "^4.1.11"

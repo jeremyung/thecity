@@ -35,24 +35,28 @@ function building(kind, seed, floors) {
 
 function inspectGroup(group, spec) {
   group.updateMatrixWorld(true);
-  const bounds = new (globalThis.THREE.Box3)().setFromObject(group);
+  const bounds = new globalThis.THREE.Box3().setFromObject(group);
   let vertices = 0;
   const hash = createHash('sha256');
   for (const child of group.children) {
     const positions = child.geometry.attributes.position.array;
     vertices += positions.length / 3;
     for (const value of positions) {
-      if (!Number.isFinite(value)) throw new Error(`${spec.kind}/${spec.seed} has non-finite geometry`);
+      if (!Number.isFinite(value))
+        throw new Error(`${spec.kind}/${spec.seed} has non-finite geometry`);
     }
     hash.update(Buffer.from(positions.buffer, positions.byteOffset, positions.byteLength));
   }
   const tolerance = 1e-5;
-  const withinParcel = bounds.min.x >= -spec.width / 2 - tolerance
-    && bounds.max.x <= spec.width / 2 + tolerance
-    && bounds.min.z >= -spec.depth / 2 - tolerance
-    && bounds.max.z <= spec.depth / 2 + tolerance;
+  const withinParcel =
+    bounds.min.x >= -spec.width / 2 - tolerance &&
+    bounds.max.x <= spec.width / 2 + tolerance &&
+    bounds.min.z >= -spec.depth / 2 - tolerance &&
+    bounds.max.z <= spec.depth / 2 + tolerance;
   if (!withinParcel) {
-    throw new Error(`${spec.kind}/${spec.seed} escaped parcel bounds (${bounds.min.x},${bounds.max.x},${bounds.min.z},${bounds.max.z})`);
+    throw new Error(
+      `${spec.kind}/${spec.seed} escaped parcel bounds (${bounds.min.x},${bounds.max.x},${bounds.min.z},${bounds.max.z})`,
+    );
   }
   return {
     vertices,
@@ -73,7 +77,10 @@ await rm(cache, { recursive: true, force: true });
 await mkdir(cache, { recursive: true });
 try {
   await build({
-    entryPoints: [resolve(root, 'web/src/render/kit.ts'), resolve(root, 'web/src/render/materials.ts')],
+    entryPoints: [
+      resolve(root, 'web/src/render/kit.ts'),
+      resolve(root, 'web/src/render/materials.ts'),
+    ],
     outdir: cache,
     bundle: true,
     format: 'esm',
@@ -98,24 +105,39 @@ try {
   for (const spec of specs) {
     const first = buildingKit(spec, art);
     const result = inspectGroup(first, spec);
-    first.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+    first.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.geometry.dispose();
+    });
 
     const second = buildingKit(spec, art);
     const repeated = inspectGroup(second, spec);
-    second.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
-    if (result.geometrySha256 !== repeated.geometrySha256) throw new Error(`${spec.kind}/${spec.seed} geometry was not deterministic`);
+    second.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.geometry.dispose();
+    });
+    if (result.geometrySha256 !== repeated.geometrySha256)
+      throw new Error(`${spec.kind}/${spec.seed} geometry was not deterministic`);
 
-    cases.push({ kind: spec.kind, seed: spec.appearance_seed, floors: spec.floors, width: spec.width, depth: spec.depth, ...result, deterministicRepeat: true });
+    cases.push({
+      kind: spec.kind,
+      seed: spec.appearance_seed,
+      floors: spec.floors,
+      width: spec.width,
+      depth: spec.depth,
+      ...result,
+      deterministicRepeat: true,
+    });
   }
   const homePlans = cases.filter((item) => item.kind === 'home');
-  if (homePlans[0].geometrySha256 === homePlans[1].geometrySha256) throw new Error('Seeded home plans did not vary');
+  if (homePlans[0].geometrySha256 === homePlans[1].geometrySha256)
+    throw new Error('Seeded home plans did not vary');
   art.dispose();
 
   const proof = {
     check: 'architectural geometry bounds and deterministic variation',
     source: 'web/src/render/kit.ts',
     checkedAt: new Date().toISOString(),
-    policy: 'Open architectural geometry must have finite vertices and remain inside its parcel footprint; repeated appearance seeds must reproduce identical geometry.',
+    policy:
+      'Open architectural geometry must have finite vertices and remain inside its parcel footprint; repeated appearance seeds must reproduce identical geometry.',
     cases,
     summary: {
       caseCount: cases.length,

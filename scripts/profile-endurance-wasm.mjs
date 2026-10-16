@@ -33,27 +33,49 @@ try {
   const world = JSON.parse(snapshot.value);
   const state = JSON.parse(save.value);
   const counts = {
-    buildings: world.buildings.length, roads: world.roads.length,
-    parcels: world.parcels.length, projects: state.projects.length,
+    buildings: world.buildings.length,
+    roads: world.roads.length,
+    parcels: world.parcels.length,
+    projects: state.projects.length,
     pendingProjects: state.projects.filter((p) => p.progress < 1).length,
-    travelers: state.travelers.length, events: state.events.length,
+    travelers: state.travelers.length,
+    events: state.events.length,
     population: state.population,
   };
-  for (const [key, cap] of Object.entries({ buildings: 2000, roads: 5000,
-    parcels: 4000, projects: 76, pendingProjects: 12, travelers: 2000,
-    events: 10000, population: 30000 })) assert.ok(counts[key] <= cap, key);
-  const queued = state.residents.filter((r) => ['waiting_station', 'waiting_gateway', 'waiting_bus'].includes(r.transfer)).length;
+  for (const [key, cap] of Object.entries({
+    buildings: 2000,
+    roads: 5000,
+    parcels: 4000,
+    projects: 76,
+    pendingProjects: 12,
+    travelers: 2000,
+    events: 10000,
+    population: 30000,
+  }))
+    assert.ok(counts[key] <= cap, key);
+  const queued = state.residents.filter((r) =>
+    ['waiting_station', 'waiting_gateway', 'waiting_bus'].includes(r.transfer),
+  ).length;
   assert.equal(world.stats.active_travelers, counts.travelers + queued);
   const hash = (value) => createHash('sha256').update(value).digest('hex');
   const report = {
     scope: 'Node WASM endurance timings; no rendering or browser performance claim',
-    node: process.version, seed: 1204, developmentRate: 60, ticks: 300000,
+    node: process.version,
+    seed: 1204,
+    developmentRate: 60,
+    ticks: 300000,
     nodeExecArgv: process.execArgv,
-    wasmSha256: hash(wasm), finalSaveSha256: hash(save.value),
-    saveBytes: Buffer.byteLength(save.value), counts, roundTripExact: true,
+    wasmSha256: hash(wasm),
+    finalSaveSha256: hash(save.value),
+    saveBytes: Buffer.byteLength(save.value),
+    counts,
+    roundTripExact: true,
     simulationMs: batches.reduce((sum, batch) => sum + batch.ms, 0),
-    snapshotMs: snapshot.ms, saveMs: save.ms, restoreMs: restore.ms,
-    resaveMs: resave.ms, batches,
+    snapshotMs: snapshot.ms,
+    saveMs: save.ms,
+    restoreMs: restore.ms,
+    resaveMs: resave.ms,
+    batches,
   };
   writeFileSync(output, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ ...report, batches: undefined }, null, 2));

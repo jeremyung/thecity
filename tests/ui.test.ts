@@ -1,7 +1,15 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import Controls, { RenderTimingNote, activeBusToFollow, busLineLabel, ContrastToggle, LensControl, RecentEvents, type ControlsProps } from '../web/src/ui/Controls';
+import Controls, {
+  RenderTimingNote,
+  activeBusToFollow,
+  busLineLabel,
+  ContrastToggle,
+  LensControl,
+  RecentEvents,
+  type ControlsProps,
+} from '../web/src/ui/Controls';
 import type { World } from '../web/src/types';
 
 const world: World = {
@@ -17,7 +25,13 @@ const world: World = {
   bounds: { min_x: -10, max_x: 10, min_z: -10, max_z: 10 },
   terrain: { river: [], protected: [], gateways: [] },
   weather: { kind: 'clear', intensity: 0 },
-  nodes: [], roads: [], parcels: [], buildings: [], projects: [], trains: [], events: [],
+  nodes: [],
+  roads: [],
+  parcels: [],
+  buildings: [],
+  projects: [],
+  trains: [],
+  events: [],
   stats: { population: 0, active_travelers: 0, buildings: 0, active_projects: 0 },
 };
 
@@ -116,7 +130,9 @@ describe('city controls', () => {
   it('announces style preparation while keeping the applied style selected', () => {
     const html = renderControls({ style: 'anime', preparingStyle: 'miniature' });
 
-    expect(html).toContain('role="status" aria-live="polite" aria-atomic="true">Preparing Miniature…</span>');
+    expect(html).toContain(
+      'role="status" aria-live="polite" aria-atomic="true">Preparing Miniature…</span>',
+    );
     expect(html).toMatch(/aria-pressed="true"[^>]*>Anime<\/button>/);
     expect(html).toMatch(/aria-pressed="false"[^>]*>Miniature<\/button>/);
 
@@ -126,15 +142,35 @@ describe('city controls', () => {
   });
 
   it('stacks readable event labels and humanizes event reasons', () => {
-    const html = renderToStaticMarkup(React.createElement(RecentEvents, { events: [
-      { id: 1, tick: 12, entity_id: 1, kind: 'ResidentTripArrived', reason: 'A resident is walking_to_bus toward Riverside Station' },
-      { id: 2, tick: 11, entity_id: 1, kind: 'NewUnrecognizedLongEventKind', reason: 'walking_to_bus' },
-    ] }));
+    const html = renderToStaticMarkup(
+      React.createElement(RecentEvents, {
+        events: [
+          {
+            id: 1,
+            tick: 12,
+            entity_id: 1,
+            kind: 'ResidentTripArrived',
+            reason: 'A resident is walking_to_bus toward Riverside Station',
+          },
+          {
+            id: 2,
+            tick: 11,
+            entity_id: 1,
+            kind: 'NewUnrecognizedLongEventKind',
+            reason: 'walking_to_bus',
+          },
+        ],
+      }),
+    );
 
     expect(html).toContain('class="recent-events"');
     expect(html).toContain('class="event-kind"');
-    expect(html).toContain('<span class="event-kind">Resident arrived</span><span class="event-reason">A resident is walking to bus toward Riverside Station</span>');
-    expect(html).toContain('<span class="event-kind">New Unrecognized Long Event Kind</span><span class="event-reason">Walking to bus</span>');
+    expect(html).toContain(
+      '<span class="event-kind">Resident arrived</span><span class="event-reason">A resident is walking to bus toward Riverside Station</span>',
+    );
+    expect(html).toContain(
+      '<span class="event-kind">New Unrecognized Long Event Kind</span><span class="event-reason">Walking to bus</span>',
+    );
   });
 
   it('explains when the simulation cannot sustain the requested fast-forward speed', () => {
@@ -149,14 +185,18 @@ describe('city controls', () => {
 
     const high = renderControls({ contrast: 'high' });
     expect(high).toContain('data-contrast="high"');
-    const checkbox = renderToStaticMarkup(React.createElement(ContrastToggle, { contrast: 'high', onContrast: vi.fn() }));
+    const checkbox = renderToStaticMarkup(
+      React.createElement(ContrastToggle, { contrast: 'high', onContrast: vi.fn() }),
+    );
     expect(checkbox).toContain('type="checkbox" checked=""');
     expect(checkbox).toContain('High contrast controls');
   });
 
   it('offers the three focal-length presets in a compact accessible camera setting', () => {
     const onLens = vi.fn();
-    const html = renderToStaticMarkup(React.createElement(LensControl, { lens: 'neighborhood', onLens }));
+    const html = renderToStaticMarkup(
+      React.createElement(LensControl, { lens: 'neighborhood', onLens }),
+    );
     expect(html).toContain('Camera lens');
     expect(html).toContain('aria-label="Camera lens"');
     expect(html).toContain('35 mm');
@@ -176,7 +216,15 @@ describe('city controls', () => {
   });
 
   it('shows the followed subject and an accessible follow action', () => {
-    const html = renderControls({ subject: { id: 91, name: 'River crossing', kind: 'train', activity: 'Evening service', destination: 'Station' } });
+    const html = renderControls({
+      subject: {
+        id: 91,
+        name: 'River crossing',
+        kind: 'train',
+        activity: 'Evening service',
+        destination: 'Station',
+      },
+    });
 
     expect(html).toContain('aria-label="Following subject"');
     expect(html).toContain('River crossing');
@@ -188,7 +236,19 @@ describe('city controls', () => {
     expect(activeBusToFollow(world)).toBeNull();
     const busWorld: World = {
       ...world,
-      buses: [{ id: 60, line_id: 8, progress: 18, direction: 1, dwelling: false, passengers: 4, capacity: 18, next_stop: 2, waiting: 3 }],
+      buses: [
+        {
+          id: 60,
+          line_id: 8,
+          progress: 18,
+          direction: 1,
+          dwelling: false,
+          passengers: 4,
+          capacity: 18,
+          next_stop: 2,
+          waiting: 3,
+        },
+      ],
       bus_lines: [{ id: 8, stops: [1, 2], route: [1, 2], active: false }],
     };
     expect(activeBusToFollow(busWorld)).toBeNull();
@@ -204,14 +264,29 @@ describe('city controls', () => {
 
     expect(busLineLabel(busWorld, 591)).toBe('Neighborhood line 1');
     expect(busLineLabel(busWorld, 591, '591')).toBe('Neighborhood line 1');
-    expect(busLineLabel({ ...busWorld, bus_lines: [{ ...busWorld.bus_lines![0], name: 'Riverside' }] }, 591)).toBe('Riverside');
+    expect(
+      busLineLabel(
+        { ...busWorld, bus_lines: [{ ...busWorld.bus_lines![0], name: 'Riverside' }] },
+        591,
+      ),
+    ).toBe('Riverside');
   });
 
   it('shows bus line, next stop, load, dwell and waiting details in the followed subject panel', () => {
-    const html = renderControls({ subject: {
-      id: 60, name: 'Neighborhood Bus', kind: 'bus', activity: 'in_service',
-      line: 'Neighborhood line 1', nextStop: 'Kanda Station', passengers: 4, capacity: 18, dwelling: true, waiting: 3,
-    } });
+    const html = renderControls({
+      subject: {
+        id: 60,
+        name: 'Neighborhood Bus',
+        kind: 'bus',
+        activity: 'in_service',
+        line: 'Neighborhood line 1',
+        nextStop: 'Kanda Station',
+        passengers: 4,
+        capacity: 18,
+        dwelling: true,
+        waiting: 3,
+      },
+    });
     expect(html).toContain('Follow this bus');
     expect(html).toContain('Neighborhood line 1');
     expect(html).toContain('Next stop · Kanda Station');
@@ -221,18 +296,25 @@ describe('city controls', () => {
   });
 
   it('humanizes followed activity and bounds recent subject history to three lines', () => {
-    const html = renderControls({ subject: {
-      id: 92,
-      name: 'Yuki Tanaka',
-      kind: 'train',
-      activity: 'at_station',
-      destination_name: 'Kanda Station',
-      history: ['oldest_entry', 'boards the evening service', 'leaves the station', 'returns to the platform'],
-      passengers: 3,
-      capacity: 8,
-      station_waiting: 5,
-      gateway_waiting: 2,
-    } });
+    const html = renderControls({
+      subject: {
+        id: 92,
+        name: 'Yuki Tanaka',
+        kind: 'train',
+        activity: 'at_station',
+        destination_name: 'Kanda Station',
+        history: [
+          'oldest_entry',
+          'boards the evening service',
+          'leaves the station',
+          'returns to the platform',
+        ],
+        passengers: 3,
+        capacity: 8,
+        station_waiting: 5,
+        gateway_waiting: 2,
+      },
+    });
 
     expect(html).toContain('Yuki Tanaka');
     expect(html).toContain('At Station · Kanda Station');
@@ -252,10 +334,29 @@ describe('city controls', () => {
   });
 });
 
-it('labels render sampling and reports frame and CPU percentiles separately',()=>{
-  const metrics={fps:0,frameMs:3,calls:1,triangles:12,textures:1,geometries:1,backend:'WebGPUBackend',timing:{samples:0,phase:'ready' as const,frameP95Ms:0,cpuP95Ms:0,maxFrameMs:0}};
-  expect(renderToStaticMarkup(React.createElement(RenderTimingNote,{metrics}))).toContain('Collecting frame timings');
-  const sampled=renderToStaticMarkup(React.createElement(RenderTimingNote,{metrics:{...metrics,fps:20,timing:{samples:120,phase:'ready',frameP95Ms:100,cpuP95Ms:8,maxFrameMs:300}}}));
+it('labels render sampling and reports frame and CPU percentiles separately', () => {
+  const metrics = {
+    fps: 0,
+    frameMs: 3,
+    calls: 1,
+    triangles: 12,
+    textures: 1,
+    geometries: 1,
+    backend: 'WebGPUBackend',
+    timing: { samples: 0, phase: 'ready' as const, frameP95Ms: 0, cpuP95Ms: 0, maxFrameMs: 0 },
+  };
+  expect(renderToStaticMarkup(React.createElement(RenderTimingNote, { metrics }))).toContain(
+    'Collecting frame timings',
+  );
+  const sampled = renderToStaticMarkup(
+    React.createElement(RenderTimingNote, {
+      metrics: {
+        ...metrics,
+        fps: 20,
+        timing: { samples: 120, phase: 'ready', frameP95Ms: 100, cpuP95Ms: 8, maxFrameMs: 300 },
+      },
+    }),
+  );
   expect(sampled).toContain('frame p95');
   expect(sampled).toContain('CPU p95');
   expect(sampled).toContain('longest frame');

@@ -24,7 +24,9 @@ export class CitySidewalks {
     private readonly retire: (dispose: () => void) => void,
   ) {}
 
-  get pendingCount(): 0 | 1 { return this.job || this.queued ? 1 : 0; }
+  get pendingCount(): 0 | 1 {
+    return this.job || this.queued ? 1 : 0;
+  }
 
   setWorld(world: SidewalkWorld): void {
     const snapshot = this.snapshot(world);
@@ -119,13 +121,19 @@ export class CitySidewalks {
 
   private snapshot(world: SidewalkWorld): SidewalkWorld {
     const roads = world.roads
-      .filter(r => r.kind !== 'rail' && r.kind !== 'expressway')
-      .map(r => ({ id: r.id, from: r.from, to: r.to, kind: r.kind, stage: r.stage === 'open' ? 'open' : 'closed' }))
+      .filter((r) => r.kind !== 'rail' && r.kind !== 'expressway')
+      .map((r) => ({
+        id: r.id,
+        from: r.from,
+        to: r.to,
+        kind: r.kind,
+        stage: r.stage === 'open' ? 'open' : 'closed',
+      }))
       .sort((a, b) => a.id - b.id);
-    const endpointIds = new Set(roads.flatMap(r => [r.from, r.to]));
+    const endpointIds = new Set(roads.flatMap((r) => [r.from, r.to]));
     const nodes = world.nodes
-      .filter(n => endpointIds.has(n.id))
-      .map(n => ({ id: n.id, x: n.x, z: n.z, kind: n.kind }))
+      .filter((n) => endpointIds.has(n.id))
+      .map((n) => ({ id: n.id, x: n.x, z: n.z, kind: n.kind }))
       .sort((a, b) => a.id - b.id);
     // Sidewalk generation reads only id/x/z from nodes and id/from/to/kind/stage from roads.
     return { nodes: nodes as WorldNode[], roads: roads as Road[] };

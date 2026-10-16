@@ -18,7 +18,9 @@ describe('renderer startup frame lifecycle', () => {
     const { startup, stopLoop, setPhase, onError } = lifecycle();
     const render = vi.fn();
     let ready = false;
-    void startup.promise.then(() => { ready = true; });
+    void startup.promise.then(() => {
+      ready = true;
+    });
     await Promise.resolve();
     expect(ready).toBe(false);
     startup.runFrame(render);
@@ -35,7 +37,9 @@ describe('renderer startup frame lifecycle', () => {
     const { startup, stopLoop, setPhase, onError } = lifecycle();
     const failure = new Error('pipeline submission failed');
 
-    startup.runFrame(() => { throw failure; });
+    startup.runFrame(() => {
+      throw failure;
+    });
 
     await expect(startup.promise).rejects.toBe(failure);
     expect(stopLoop).toHaveBeenCalledOnce();
@@ -49,7 +53,9 @@ describe('renderer startup frame lifecycle', () => {
     await expect(startup.promise).resolves.toBeUndefined();
     const failure = new Error('later render failed');
 
-    startup.runFrame(() => { throw failure; });
+    startup.runFrame(() => {
+      throw failure;
+    });
 
     expect(stopLoop).toHaveBeenCalledOnce();
     expect(setPhase).toHaveBeenCalledWith('frame-error');

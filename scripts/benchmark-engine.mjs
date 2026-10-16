@@ -31,7 +31,12 @@ function quantileReport(samples) {
     maxMs: sorted.at(-1),
     meanMs: total / sorted.length,
     ticksPerSecond: 1_000 / (total / sorted.length),
-    budget50ms: { p50: percentile(sorted, 0.5) / 50, p95: percentile(sorted, 0.95) / 50, p99: percentile(sorted, 0.99) / 50, max: sorted.at(-1) / 50 },
+    budget50ms: {
+      p50: percentile(sorted, 0.5) / 50,
+      p95: percentile(sorted, 0.95) / 50,
+      p99: percentile(sorted, 0.99) / 50,
+      max: sorted.at(-1) / 50,
+    },
   };
 }
 
@@ -49,7 +54,10 @@ for (; ticks < 24_000; ticks += 1_000) {
     parcels: world.parcels.length,
     residents: world.residents?.length ?? 0,
     trains: world.trains.length,
-    onboardResidents: world.residents?.filter((resident) => resident.train_id !== null && resident.train_id !== undefined).length ?? 0,
+    onboardResidents:
+      world.residents?.filter(
+        (resident) => resident.train_id !== null && resident.train_id !== undefined,
+      ).length ?? 0,
     trainPassengers: world.trains.reduce((sum, train) => sum + (train.passengers ?? 0), 0),
     trainCapacity: world.trains.reduce((sum, train) => sum + (train.capacity ?? 0), 0),
     stationWaiting: world.trains.reduce((sum, train) => sum + (train.station_waiting ?? 0), 0),
@@ -85,7 +93,10 @@ peakRssBytes = Math.max(peakRssBytes, process.memoryUsage().rss);
 const finalWorld = JSON.parse(engine.snapshot());
 const finalState = JSON.parse(engine.save());
 const wasmPeakBytes = wasm.memory.buffer.byteLength;
-const onboardResidents = finalWorld.residents?.filter((resident) => resident.train_id !== null && resident.train_id !== undefined) ?? [];
+const onboardResidents =
+  finalWorld.residents?.filter(
+    (resident) => resident.train_id !== null && resident.train_id !== undefined,
+  ) ?? [];
 const transferStates = (finalWorld.residents ?? []).reduce((counts, resident) => {
   const state = resident.transfer ?? 'untracked';
   counts[state] = (counts[state] ?? 0) + 1;
@@ -131,8 +142,14 @@ const output = {
       onboardResidents: onboardResidents.length,
       trainPassengers: finalWorld.trains.reduce((sum, train) => sum + (train.passengers ?? 0), 0),
       trainCapacity: finalWorld.trains.reduce((sum, train) => sum + (train.capacity ?? 0), 0),
-      stationWaiting: finalWorld.trains.reduce((sum, train) => sum + (train.station_waiting ?? 0), 0),
-      gatewayWaiting: finalWorld.trains.reduce((sum, train) => sum + (train.gateway_waiting ?? 0), 0),
+      stationWaiting: finalWorld.trains.reduce(
+        (sum, train) => sum + (train.station_waiting ?? 0),
+        0,
+      ),
+      gatewayWaiting: finalWorld.trains.reduce(
+        (sum, train) => sum + (train.gateway_waiting ?? 0),
+        0,
+      ),
       transferStates,
       travelers: finalState.travelers?.length ?? 0,
       projects: finalState.projects.length,

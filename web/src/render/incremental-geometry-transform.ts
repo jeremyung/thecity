@@ -38,16 +38,17 @@ export class IncrementalGeometryTransform {
     this.normalMatrix = new THREE.Matrix3().getNormalMatrix(this.matrix);
     this.count = schema.count;
     this.indexed = schema.indexed;
-    this.attributeNames = schema.keys.filter(name => !(linearColor && name === 'color'));
+    this.attributeNames = schema.keys.filter((name) => !(linearColor && name === 'color'));
     this.indexCount = schema.indexed ? schema.indexCount : schema.count;
     this.colorValues = linearColor ? [linearColor.r, linearColor.g, linearColor.b] : null;
-    if (this.colorValues?.some(value => !Number.isFinite(value))) throw new TypeError('Linear color must be finite');
+    if (this.colorValues?.some((value) => !Number.isFinite(value)))
+      throw new TypeError('Linear color must be finite');
 
     const output = new THREE.BufferGeometry();
     this.output = output;
     output.name = source.name;
     output.drawRange = { ...source.drawRange };
-    output.groups = source.groups.map(group => ({ ...group }));
+    output.groups = source.groups.map((group) => ({ ...group }));
     output.userData = { ...source.userData };
 
     for (const name of schema.keys) {
@@ -76,13 +77,20 @@ export class IncrementalGeometryTransform {
       const IndexType = schema.count > 65534 ? Uint32Array : Uint16Array;
       output.setIndex(new THREE.BufferAttribute(new IndexType(this.indexCount), 1));
     }
-
   }
 
-  get done(): boolean { return this.completed; }
-  get result(): THREE.BufferGeometry | null { return this.completed && !this.cancelled ? this.output : null; }
-  get processedVertices(): number { return this.vertexCursor; }
-  get processedIndices(): number { return this.indexCursor; }
+  get done(): boolean {
+    return this.completed;
+  }
+  get result(): THREE.BufferGeometry | null {
+    return this.completed && !this.cancelled ? this.output : null;
+  }
+  get processedVertices(): number {
+    return this.vertexCursor;
+  }
+  get processedIndices(): number {
+    return this.indexCursor;
+  }
 
   /** Read and transform no more than each supplied quota. */
   step(maxVertices: number, maxIndices: number): boolean {
@@ -110,22 +118,38 @@ export class IncrementalGeometryTransform {
       targetPosition.setXYZ(i, this.point.x, this.point.y, this.point.z);
       // BufferGeometry.computeBoundingBox reads the stored attribute values;
       // include Float32/normalized quantization exactly the same way.
-      const px = targetPosition.getX(i), py = targetPosition.getY(i), pz = targetPosition.getZ(i);
-      this.minX = Math.min(this.minX, px); this.minY = Math.min(this.minY, py); this.minZ = Math.min(this.minZ, pz);
-      this.maxX = Math.max(this.maxX, px); this.maxY = Math.max(this.maxY, py); this.maxZ = Math.max(this.maxZ, pz);
+      const px = targetPosition.getX(i),
+        py = targetPosition.getY(i),
+        pz = targetPosition.getZ(i);
+      this.minX = Math.min(this.minX, px);
+      this.minY = Math.min(this.minY, py);
+      this.minZ = Math.min(this.minZ, pz);
+      this.maxX = Math.max(this.maxX, px);
+      this.maxY = Math.max(this.maxY, py);
+      this.maxZ = Math.max(this.maxZ, pz);
 
       const normal = source.getAttribute('normal') as THREE.BufferAttribute | undefined;
       if (normal) {
         this.point.fromBufferAttribute(normal, i).applyNormalMatrix(normalMatrix);
         assertFiniteVector(this.point, 'Transformed normals must be finite');
-        (output.getAttribute('normal') as THREE.BufferAttribute).setXYZ(i, this.point.x, this.point.y, this.point.z);
+        (output.getAttribute('normal') as THREE.BufferAttribute).setXYZ(
+          i,
+          this.point.x,
+          this.point.y,
+          this.point.z,
+        );
       }
 
       const tangent = source.getAttribute('tangent') as THREE.BufferAttribute | undefined;
       if (tangent) {
         this.point.fromBufferAttribute(tangent, i).transformDirection(matrix);
         assertFiniteVector(this.point, 'Transformed tangents must be finite');
-        (output.getAttribute('tangent') as THREE.BufferAttribute).setXYZ(i, this.point.x, this.point.y, this.point.z);
+        (output.getAttribute('tangent') as THREE.BufferAttribute).setXYZ(
+          i,
+          this.point.x,
+          this.point.y,
+          this.point.z,
+        );
       }
 
       if (this.colorValues) {
@@ -178,7 +202,10 @@ export class IncrementalGeometryTransform {
       new THREE.Vector3(this.maxX, this.maxY, this.maxZ),
     );
     this.output!.boundingBox = box;
-    this.output!.boundingSphere = new THREE.Sphere(box.getCenter(new THREE.Vector3()), box.getSize(new THREE.Vector3()).length() * 0.5);
+    this.output!.boundingSphere = new THREE.Sphere(
+      box.getCenter(new THREE.Vector3()),
+      box.getSize(new THREE.Vector3()).length() * 0.5,
+    );
   }
 
   private releaseSources(): void {
@@ -190,40 +217,67 @@ export class IncrementalGeometryTransform {
   }
 }
 
-type TypedArrayConstructor = { new(length: number): THREE.TypedArray };
+type TypedArrayConstructor = { new (length: number): THREE.TypedArray };
 
-function validateGeometry(geometry: THREE.BufferGeometry): { keys: string[]; attributes: Record<string, THREE.BufferAttribute>; count: number; indexed: boolean; indexCount: number } {
+function validateGeometry(geometry: THREE.BufferGeometry): {
+  keys: string[];
+  attributes: Record<string, THREE.BufferAttribute>;
+  count: number;
+  indexed: boolean;
+  indexCount: number;
+} {
   if (!geometry?.isBufferGeometry) throw new TypeError('Geometry must be a BufferGeometry');
-  if (Object.keys(geometry.morphAttributes).length || geometry.morphTargetsRelative) throw new TypeError('Morph attributes are unsupported');
+  if (Object.keys(geometry.morphAttributes).length || geometry.morphTargetsRelative)
+    throw new TypeError('Morph attributes are unsupported');
   const keys = Object.keys(geometry.attributes).sort();
   if (!keys.includes('position')) throw new TypeError('Geometry has no position attribute');
   const attributes: Record<string, THREE.BufferAttribute> = {};
   let count = -1;
   for (const name of keys) {
-    const attribute = geometry.getAttribute(name) as THREE.BufferAttribute & { isInterleavedBufferAttribute?: boolean };
-    if (!attribute?.isBufferAttribute || attribute.isInterleavedBufferAttribute) throw new TypeError(`Attribute ${name} must be a non-interleaved BufferAttribute`);
-    if (attribute.itemSize < 1 || attribute.array.length !== attribute.count * attribute.itemSize) throw new TypeError(`Attribute ${name} has an invalid layout`);
+    const attribute = geometry.getAttribute(name) as THREE.BufferAttribute & {
+      isInterleavedBufferAttribute?: boolean;
+    };
+    if (!attribute?.isBufferAttribute || attribute.isInterleavedBufferAttribute)
+      throw new TypeError(`Attribute ${name} must be a non-interleaved BufferAttribute`);
+    if (attribute.itemSize < 1 || attribute.array.length !== attribute.count * attribute.itemSize)
+      throw new TypeError(`Attribute ${name} has an invalid layout`);
     if (count < 0) count = attribute.count;
     if (attribute.count !== count) throw new TypeError('Attributes have different vertex counts');
-    if ((name === 'position' || name === 'normal' || name === 'tangent') && attribute.itemSize < 3) throw new TypeError(`${name} needs at least three components`);
+    if ((name === 'position' || name === 'normal' || name === 'tangent') && attribute.itemSize < 3)
+      throw new TypeError(`${name} needs at least three components`);
     attributes[name] = attribute;
   }
   const index = geometry.index;
-  if (index && (!index.isBufferAttribute || index.itemSize !== 1 || index.count % 3 !== 0)) throw new TypeError('Geometry has an invalid triangle index');
-  if (!index && count % 3 !== 0) throw new TypeError('Geometry has an incomplete unindexed triangle');
-  return { keys, attributes, count: Math.max(0, count), indexed: index !== null, indexCount: index?.count ?? 0 };
+  if (index && (!index.isBufferAttribute || index.itemSize !== 1 || index.count % 3 !== 0))
+    throw new TypeError('Geometry has an invalid triangle index');
+  if (!index && count % 3 !== 0)
+    throw new TypeError('Geometry has an incomplete unindexed triangle');
+  return {
+    keys,
+    attributes,
+    count: Math.max(0, count),
+    indexed: index !== null,
+    indexCount: index?.count ?? 0,
+  };
 }
 
-function copyTuple(source: THREE.BufferAttribute, target: THREE.BufferAttribute, index: number): void {
+function copyTuple(
+  source: THREE.BufferAttribute,
+  target: THREE.BufferAttribute,
+  index: number,
+): void {
   const from = index * source.itemSize;
   const to = index * target.itemSize;
-  for (let component = 0; component < source.itemSize; component++) target.array[to + component] = source.array[from + component];
+  for (let component = 0; component < source.itemSize; component++)
+    target.array[to + component] = source.array[from + component];
 }
 
 function validateQuota(value: number, name: string): void {
-  if (!Number.isSafeInteger(value) || value < 0) throw new RangeError(`${name} must be a nonnegative safe integer`);
+  if (!Number.isSafeInteger(value) || value < 0)
+    throw new RangeError(`${name} must be a nonnegative safe integer`);
 }
 
 function assertFiniteVector(value: THREE.Vector3, message: string): void {
-  if (!Number.isFinite(value.x) || !Number.isFinite(value.y) || !Number.isFinite(value.z)) throw new TypeError(message);
+  if (!Number.isFinite(value.x) || !Number.isFinite(value.y) || !Number.isFinite(value.z))
+    throw new TypeError(message);
 }

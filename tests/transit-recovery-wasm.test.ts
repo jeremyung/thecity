@@ -4,8 +4,12 @@ import { expect, it } from 'vitest';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
 
 it('alights a real bus rider at the curb, persists the wait, and resumes when connected', () => {
-  initSync({ module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)) });
-  const state = JSON.parse(readFileSync(new URL('./fixtures/bus-seed5-legacy-queue.json', import.meta.url), 'utf8'));
+  initSync({
+    module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)),
+  });
+  const state = JSON.parse(
+    readFileSync(new URL('./fixtures/bus-seed5-legacy-queue.json', import.meta.url), 'utf8'),
+  );
   const resident = state.residents.find((r: { id: number }) => r.id === 46);
   const stop = state.nodes.find((n: { id: number }) => n.id === 6);
   // Deliberately disconnect the final walking leg; leave the existing bus line
@@ -20,7 +24,8 @@ it('alights a real bus rider at the curb, persists the wait, and resumes when co
   const inspect = () => JSON.parse(engine.inspect(46));
   const position = (e: CityEngine) => {
     const data = e.movements();
-    for (let i = 0; i < data.length; i += 6) if (data[i] === 46) return Array.from(data.slice(i, i + 6));
+    for (let i = 0; i < data.length; i += 6)
+      if (data[i] === 46) return Array.from(data.slice(i, i + 6));
     return undefined;
   };
   try {
@@ -44,31 +49,51 @@ it('alights a real bus rider at the curb, persists the wait, and resumes when co
     expect(tuple[2]).toBeCloseTo(waiting.pending_alight.wait_position.z, 4);
     expect(tuple[4]).toBe(0);
     const saved = JSON.parse(engine.save());
-    expect(saved.buses.every((bus: { passengers: number[] }) => !bus.passengers.includes(46))).toBe(true);
+    expect(saved.buses.every((bus: { passengers: number[] }) => !bus.passengers.includes(46))).toBe(
+      true,
+    );
     replay = CityEngine.restore(engine.save());
     expect(position(replay)).toEqual(tuple);
-    for (let i = 0; i < 5; i++) { engine.step(40); replay.step(40); }
+    for (let i = 0; i < 5; i++) {
+      engine.step(40);
+      replay.step(40);
+    }
     expect(replay.save()).toBe(engine.save());
     expect(position(engine)).toEqual(tuple);
 
     // Synthetic reconnection isolates recovery from procedural growth policy.
     const repaired = JSON.parse(engine.save());
-    repaired.roads.push({ id: repaired.next_id++, from: 6, to: destination, kind: 'local',
-      stage: 'open', progress: 1, connected: true, length: Math.hypot(18, 18), lanes: 1 });
+    repaired.roads.push({
+      id: repaired.next_id++,
+      from: 6,
+      to: destination,
+      kind: 'local',
+      stage: 'open',
+      progress: 1,
+      connected: true,
+      length: Math.hypot(18, 18),
+      lanes: 1,
+    });
     repaired.access_geometry_revision++;
     connected = CityEngine.restore(JSON.stringify(repaired));
     connectedReplay = CityEngine.restore(connected.save());
-    connected.step(1); connectedReplay.step(1);
+    connected.step(1);
+    connectedReplay.step(1);
     expect(connectedReplay.save()).toBe(connected.save());
     const resumedState = JSON.parse(connected.save());
     const resumed = resumedState.residents.find((r: { id: number }) => r.id === 46);
     expect(resumed.transfer).toBe('walking_from_bus');
     expect(resumed.pending_alight).toBeUndefined();
     const walker = resumedState.travelers.find((t: { resident: number }) => t.resident === 46);
-    expect(walker.origin_access.points[0]).toEqual(saved.residents.find((r: { id: number }) => r.id === 46).pending_alight.wait_position);
+    expect(walker.origin_access.points[0]).toEqual(
+      saved.residents.find((r: { id: number }) => r.id === 46).pending_alight.wait_position,
+    );
     // Heading may turn toward the new route; position must remain continuous.
     expect(position(connected)?.slice(0, 3)).toEqual(tuple.slice(0, 3));
   } finally {
-    connectedReplay?.free(); connected?.free(); replay?.free(); engine.free();
+    connectedReplay?.free();
+    connected?.free();
+    replay?.free();
+    engine.free();
   }
 }, 60000);

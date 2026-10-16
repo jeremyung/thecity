@@ -11,14 +11,21 @@ export type AudioWorld = {
   buses?: Array<{ id: number; x: number; z: number; speed?: number }>;
   pedestrians?: number;
   construction: Array<{ id: number; x: number; z: number }>;
-  events?: Array<{ id: number; tick: number; kind: string; entity_id: number; x?: number; z?: number }>;
+  events?: Array<{
+    id: number;
+    tick: number;
+    kind: string;
+    entity_id: number;
+    x?: number;
+    z?: number;
+  }>;
   worldKey?: number | string;
   tick?: number;
   developmentRate?: number;
   playbackRate?: number;
 };
 
-type EmitterKind = "train" | "traffic" | "bus" | "construction";
+type EmitterKind = 'train' | 'traffic' | 'bus' | 'construction';
 
 type Emitter = {
   id: number;
@@ -40,12 +47,18 @@ type Emitter = {
   noise: AudioBufferSourceNode;
 };
 
-type OpeningEvent = NonNullable<AudioWorld["events"]>[number] & {
-  kind: "RoadOpened" | "BuildingOpened" | "BusinessOpened" | "BusinessReopened";
+type OpeningEvent = NonNullable<AudioWorld['events']>[number] & {
+  kind: 'RoadOpened' | 'BuildingOpened' | 'BusinessOpened' | 'BusinessReopened';
 };
-type AudioEvent = NonNullable<AudioWorld["events"]>[number];
+type AudioEvent = NonNullable<AudioWorld['events']>[number];
 type CueEvent = AudioEvent & {
-  kind: "TrainStationStop" | "BusStop" | "RoadOpened" | "BuildingOpened" | "BusinessOpened" | "BusinessReopened";
+  kind:
+    | 'TrainStationStop'
+    | 'BusStop'
+    | 'RoadOpened'
+    | 'BuildingOpened'
+    | 'BusinessOpened'
+    | 'BusinessReopened';
 };
 
 const MAX_EMITTERS = 32;
@@ -54,13 +67,22 @@ const BUS_CUE_COOLDOWN_SECONDS = 8;
 const clamp01 = (value: number) => Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 function isCueEvent(event: AudioEvent): event is CueEvent {
-  return event.kind === "TrainStationStop" || event.kind === "BusStop"
-    || event.kind === "RoadOpened" || event.kind === "BuildingOpened"
-    || event.kind === "BusinessOpened" || event.kind === "BusinessReopened";
+  return (
+    event.kind === 'TrainStationStop' ||
+    event.kind === 'BusStop' ||
+    event.kind === 'RoadOpened' ||
+    event.kind === 'BuildingOpened' ||
+    event.kind === 'BusinessOpened' ||
+    event.kind === 'BusinessReopened'
+  );
 }
 function isOpeningEvent(event: CueEvent): event is OpeningEvent {
-  return event.kind === "RoadOpened" || event.kind === "BuildingOpened"
-    || event.kind === "BusinessOpened" || event.kind === "BusinessReopened";
+  return (
+    event.kind === 'RoadOpened' ||
+    event.kind === 'BuildingOpened' ||
+    event.kind === 'BusinessOpened' ||
+    event.kind === 'BusinessReopened'
+  );
 }
 
 /** Procedural, user-initiated city ambience and a small original lo-fi score. */
@@ -114,20 +136,23 @@ export class AudioDirector {
 
   /** Call directly from a user gesture such as the sound button. */
   async enable(): Promise<void> {
-    if (this.disposed) throw new Error("Audio director has been disposed");
+    if (this.disposed) throw new Error('Audio director has been disposed');
     if (!this.context) this.createGraph();
     const context = this.context;
-    if (!context) throw new Error("Web Audio is unavailable in this browser");
+    if (!context) throw new Error('Web Audio is unavailable in this browser');
 
-    if (context.state !== "running") {
+    if (context.state !== 'running') {
       try {
         await context.resume();
       } catch (error) {
-        throw new Error("Could not resume Web Audio. Try enabling sound again from the sound control.", { cause: error });
+        throw new Error(
+          'Could not resume Web Audio. Try enabling sound again from the sound control.',
+          { cause: error },
+        );
       }
     }
-    if (this.disposed) throw new Error("Audio director was disposed while sound was starting");
-    if (context.state !== "running") throw new Error("Web Audio did not enter the running state");
+    if (this.disposed) throw new Error('Audio director was disposed while sound was starting');
+    if (context.state !== 'running') throw new Error('Web Audio did not enter the running state');
     this.applyLevels(0.15);
     if (!this.hidden && this.scheduler === null) {
       this.nextStep = context.currentTime + 0.08;
@@ -157,7 +182,7 @@ export class AudioDirector {
       this.setParam(this.master?.gain, 0, 0.2);
       this.hideTimer = window.setTimeout(() => {
         this.hideTimer = null;
-        if (this.hidden && context.state === "running") void context.suspend();
+        if (this.hidden && context.state === 'running') void context.suspend();
       }, 260);
     } else {
       void this.enable().catch(() => {
@@ -181,7 +206,9 @@ export class AudioDirector {
     this.setParam(this.windGain?.gain, 0.018 + zoom * 0.012, 1.1);
     const pedestrianDensity = Math.sqrt(clamp(world.pedestrians ?? 0, 0, 64) / 64);
     this.setParam(this.pedestrianGain?.gain, 0.022 * pedestrianDensity, 0.9);
-    const riverDistance = Number.isFinite(world.riverDistance) ? Math.max(0, world.riverDistance!) : Infinity;
+    const riverDistance = Number.isFinite(world.riverDistance)
+      ? Math.max(0, world.riverDistance!)
+      : Infinity;
     const riverDistance3d = Math.hypot(riverDistance, Math.max(0, world.camera.y));
     const waterAttenuation = Number.isFinite(riverDistance3d)
       ? 1 / (1 + riverDistance3d * 0.025 + riverDistance3d * riverDistance3d * 0.00016)
@@ -198,7 +225,15 @@ export class AudioDirector {
     const forwardZ = forwardLength > 1e-4 ? forward!.z / forwardLength : -1;
     const rightX = -forwardZ;
     const rightZ = forwardX;
-    const selected: Array<{ id: number; x: number; y: number; z: number; speed: number; kind: EmitterKind; distanceSq: number }> = [];
+    const selected: Array<{
+      id: number;
+      x: number;
+      y: number;
+      z: number;
+      speed: number;
+      kind: EmitterKind;
+      distanceSq: number;
+    }> = [];
     const rangeSq = 190 * 190;
     for (const e of this.emitters) e.seen = false;
 
@@ -208,21 +243,45 @@ export class AudioDirector {
       const dy = 2.75 - camY;
       const distanceSq = dx * dx + dy * dy + dz * dz;
       if (distanceSq > rangeSq) continue;
-      selected.push({ id: train.id, x: train.x, y: 2.75, z: train.z, speed: train.speed ?? 0, kind: "train", distanceSq });
+      selected.push({
+        id: train.id,
+        x: train.x,
+        y: 2.75,
+        z: train.z,
+        speed: train.speed ?? 0,
+        kind: 'train',
+        distanceSq,
+      });
     }
     for (const vehicle of world.traffic ?? []) {
       const dx = vehicle.x - camX;
       const dz = vehicle.z - camZ;
       const distanceSq = dx * dx + camY * camY + dz * dz;
       if (distanceSq > rangeSq) continue;
-      selected.push({ id: vehicle.id, x: vehicle.x, y: 0, z: vehicle.z, speed: vehicle.speed ?? 0, kind: "traffic", distanceSq });
+      selected.push({
+        id: vehicle.id,
+        x: vehicle.x,
+        y: 0,
+        z: vehicle.z,
+        speed: vehicle.speed ?? 0,
+        kind: 'traffic',
+        distanceSq,
+      });
     }
     for (const bus of world.buses ?? []) {
       const dx = bus.x - camX;
       const dz = bus.z - camZ;
       const distanceSq = dx * dx + camY * camY + dz * dz;
       if (distanceSq > rangeSq) continue;
-      selected.push({ id: bus.id, x: bus.x, y: 0, z: bus.z, speed: bus.speed ?? 0, kind: "bus", distanceSq });
+      selected.push({
+        id: bus.id,
+        x: bus.x,
+        y: 0,
+        z: bus.z,
+        speed: bus.speed ?? 0,
+        kind: 'bus',
+        distanceSq,
+      });
     }
     for (const site of world.construction) {
       const dx = site.x - camX;
@@ -230,14 +289,24 @@ export class AudioDirector {
       const dy = -camY;
       const distanceSq = dx * dx + dy * dy + dz * dz;
       if (distanceSq > rangeSq) continue;
-      selected.push({ id: site.id, x: site.x, y: 0, z: site.z, speed: 0, kind: "construction", distanceSq });
+      selected.push({
+        id: site.id,
+        x: site.x,
+        y: 0,
+        z: site.z,
+        speed: 0,
+        kind: 'construction',
+        distanceSq,
+      });
     }
     selected.sort((a, b) => a.distanceSq - b.distanceSq);
 
     const limit = Math.min(MAX_EMITTERS, selected.length);
     for (let i = 0; i < limit; i++) {
       const target = selected[i];
-      let emitter = this.emitters.find((item) => item.kind === target.kind && item.id === target.id);
+      let emitter = this.emitters.find(
+        (item) => item.kind === target.kind && item.id === target.id,
+      );
       if (!emitter) emitter = this.emitters.find((item) => !item.seen);
       if (!emitter) continue;
       const isNew = emitter.kind !== target.kind || emitter.id !== target.id;
@@ -247,25 +316,34 @@ export class AudioDirector {
       emitter.z = target.z;
       emitter.speed = target.speed;
       emitter.distanceSq = target.distanceSq;
-      const sourceLevel = target.kind === "train" ? 0.105 : target.kind === "traffic" ? 0.038 : target.kind === "bus" ? 0.052 : 0.055;
-      emitter.level = (1 / (1 + Math.sqrt(target.distanceSq) * 0.075 + target.distanceSq * 0.0011)) * sourceLevel;
+      const sourceLevel =
+        target.kind === 'train'
+          ? 0.105
+          : target.kind === 'traffic'
+            ? 0.038
+            : target.kind === 'bus'
+              ? 0.052
+              : 0.055;
+      emitter.level =
+        (1 / (1 + Math.sqrt(target.distanceSq) * 0.075 + target.distanceSq * 0.0011)) * sourceLevel;
       emitter.seen = true;
       if (isNew) this.configureEmitter(emitter);
 
-      const attenuation = 1 / (1 + Math.sqrt(target.distanceSq) * 0.075 + target.distanceSq * 0.0011);
+      const attenuation =
+        1 / (1 + Math.sqrt(target.distanceSq) * 0.075 + target.distanceSq * 0.0011);
       const pan = clamp(((target.x - camX) * rightX + (target.z - camZ) * rightZ) / 32, -1, 1);
       this.setParam(emitter.pan.pan, pan, 0.8);
-      if (target.kind === "train") {
+      if (target.kind === 'train') {
         const speedPitch = clamp(Math.abs(target.speed), 0, 1) * 11;
         this.setParam(emitter.hum.frequency, 58 + speedPitch, 0.55);
         this.setParam(emitter.secondary.frequency, 88 + speedPitch * 1.24, 0.55);
         this.setParam(emitter.filter.frequency, 310 + attenuation * 530, 0.6);
-      } else if (target.kind === "traffic") {
+      } else if (target.kind === 'traffic') {
         const speedPitch = clamp(Math.abs(target.speed), 0, 1) * 18;
         this.setParam(emitter.hum.frequency, 62 + speedPitch, 0.75);
         this.setParam(emitter.secondary.frequency, 94 + speedPitch * 1.35, 0.75);
         this.setParam(emitter.filter.frequency, 250 + attenuation * 380, 0.8);
-      } else if (target.kind === "bus") {
+      } else if (target.kind === 'bus') {
         // Low, slow twin engine harmonics and a soft filtered tire wash keep
         // buses distinct from the brighter, lighter traffic voice.
         const speedPitch = clamp(Math.abs(target.speed), 0, 1) * 11;
@@ -299,13 +377,29 @@ export class AudioDirector {
     const context = this.context;
     if (context) {
       for (const emitter of this.emitters) {
-        try { emitter.noise.stop(); } catch { /* already stopped */ }
-        try { emitter.hum.stop(); } catch { /* already stopped */ }
-        try { emitter.secondary.stop(); } catch { /* already stopped */ }
+        try {
+          emitter.noise.stop();
+        } catch {
+          /* already stopped */
+        }
+        try {
+          emitter.hum.stop();
+        } catch {
+          /* already stopped */
+        }
+        try {
+          emitter.secondary.stop();
+        } catch {
+          /* already stopped */
+        }
       }
       for (const node of this.musicNodes) {
         if (node instanceof OscillatorNode || node instanceof AudioBufferSourceNode) {
-          try { node.stop(); } catch { /* already stopped */ }
+          try {
+            node.stop();
+          } catch {
+            /* already stopped */
+          }
         }
       }
       void context.close();
@@ -354,7 +448,7 @@ export class AudioDirector {
     bedNoise.buffer = this.noiseBuffer;
     bedNoise.loop = true;
     const bedFilter = context.createBiquadFilter();
-    bedFilter.type = "lowpass";
+    bedFilter.type = 'lowpass';
     bedFilter.frequency.value = 550;
     const bedGain = context.createGain();
     bedGain.gain.value = 0.07;
@@ -366,7 +460,7 @@ export class AudioDirector {
     // Reuse the existing generated city noise as a short, spatial activity
     // texture when a street or building opens; events allocate no sources.
     const openingFilter = context.createBiquadFilter();
-    openingFilter.type = "bandpass";
+    openingFilter.type = 'bandpass';
     openingFilter.frequency.value = 620;
     openingFilter.Q.value = 0.48;
     const openingGain = context.createGain();
@@ -378,10 +472,10 @@ export class AudioDirector {
     rainSource.buffer = this.noiseBuffer;
     rainSource.loop = true;
     const rainFilter = context.createBiquadFilter();
-    rainFilter.type = "highpass";
+    rainFilter.type = 'highpass';
     rainFilter.frequency.value = 950;
     const rainTone = context.createBiquadFilter();
-    rainTone.type = "lowpass";
+    rainTone.type = 'lowpass';
     rainTone.frequency.value = 7200;
     const rainGain = context.createGain();
     rainGain.gain.value = 0;
@@ -391,12 +485,12 @@ export class AudioDirector {
     this.rainGain = rainGain;
 
     const wind = context.createOscillator();
-    wind.type = "sine";
+    wind.type = 'sine';
     wind.frequency.value = 0.08;
     const windGain = context.createGain();
     windGain.gain.value = 0.025;
     const windTone = context.createBiquadFilter();
-    windTone.type = "lowpass";
+    windTone.type = 'lowpass';
     windTone.frequency.value = 180;
     wind.connect(windGain).connect(windTone).connect(bus);
     wind.start();
@@ -409,7 +503,7 @@ export class AudioDirector {
     water.buffer = this.noiseBuffer;
     water.loop = true;
     const waterFilter = context.createBiquadFilter();
-    waterFilter.type = "lowpass";
+    waterFilter.type = 'lowpass';
     waterFilter.frequency.value = 360;
     waterFilter.Q.value = 0.35;
     const waterGain = context.createGain();
@@ -423,7 +517,7 @@ export class AudioDirector {
     pedestrianSource.buffer = this.noiseBuffer;
     pedestrianSource.loop = true;
     const pedestrianFilter = context.createBiquadFilter();
-    pedestrianFilter.type = "bandpass";
+    pedestrianFilter.type = 'bandpass';
     pedestrianFilter.frequency.value = 420;
     pedestrianFilter.Q.value = 0.42;
     const pedestrianGain = context.createGain();
@@ -436,14 +530,14 @@ export class AudioDirector {
     // Fixed sine voices provide a quiet nonverbal station cue without creating
     // one-shot sources in response to an event stream.
     const cueFilter = context.createBiquadFilter();
-    cueFilter.type = "lowpass";
+    cueFilter.type = 'lowpass';
     cueFilter.frequency.value = 1_450;
     const cueGain = context.createGain();
     cueGain.gain.value = 0;
     cueFilter.connect(cueGain).connect(bus);
     for (const frequency of [659.25, 987.77]) {
       const cue = context.createOscillator();
-      cue.type = "sine";
+      cue.type = 'sine';
       cue.frequency.value = frequency;
       cue.connect(cueFilter);
       cue.start();
@@ -465,10 +559,10 @@ export class AudioDirector {
     this.musicVoiceGains = [];
     for (let index = 0; index < chordVoices.length; index++) {
       const oscillator = context.createOscillator();
-      oscillator.type = index === 3 ? "sine" : "triangle";
+      oscillator.type = index === 3 ? 'sine' : 'triangle';
       oscillator.frequency.value = chordVoices[index].osc;
       const filter = context.createBiquadFilter();
-      filter.type = "lowpass";
+      filter.type = 'lowpass';
       filter.frequency.value = 900;
       const gain = context.createGain();
       gain.gain.value = 0;
@@ -480,10 +574,10 @@ export class AudioDirector {
     }
 
     const bass = context.createOscillator();
-    bass.type = "triangle";
+    bass.type = 'triangle';
     bass.frequency.value = 73.42;
     const bassFilter = context.createBiquadFilter();
-    bassFilter.type = "lowpass";
+    bassFilter.type = 'lowpass';
     bassFilter.frequency.value = 190;
     const bassGain = context.createGain();
     bassGain.gain.value = 0;
@@ -494,10 +588,10 @@ export class AudioDirector {
     this.bassGain = bassGain;
 
     const lead = context.createOscillator();
-    lead.type = "sine";
+    lead.type = 'sine';
     lead.frequency.value = 440;
     const leadFilter = context.createBiquadFilter();
-    leadFilter.type = "lowpass";
+    leadFilter.type = 'lowpass';
     leadFilter.frequency.value = 1200;
     const leadGain = context.createGain();
     leadGain.gain.value = 0;
@@ -508,7 +602,7 @@ export class AudioDirector {
     this.leadGain = leadGain;
 
     const kick = context.createOscillator();
-    kick.type = "sine";
+    kick.type = 'sine';
     kick.frequency.value = 52;
     const kickGain = context.createGain();
     kickGain.gain.value = 0;
@@ -522,7 +616,7 @@ export class AudioDirector {
     drumNoise.buffer = this.noiseBuffer;
     drumNoise.loop = true;
     const snareFilter = context.createBiquadFilter();
-    snareFilter.type = "bandpass";
+    snareFilter.type = 'bandpass';
     snareFilter.frequency.value = 1900;
     snareFilter.Q.value = 0.7;
     const snareGain = context.createGain();
@@ -530,7 +624,7 @@ export class AudioDirector {
     drumNoise.connect(snareFilter).connect(snareGain).connect(bus);
 
     const hatFilter = context.createBiquadFilter();
-    hatFilter.type = "highpass";
+    hatFilter.type = 'highpass';
     hatFilter.frequency.value = 6500;
     const hatGain = context.createGain();
     hatGain.gain.value = 0;
@@ -550,7 +644,7 @@ export class AudioDirector {
       const outputGain = context.createGain();
       outputGain.gain.value = 0;
       const filter = context.createBiquadFilter();
-      filter.type = "lowpass";
+      filter.type = 'lowpass';
       filter.frequency.value = 480;
       const noiseGain = context.createGain();
       noiseGain.gain.value = 0.28;
@@ -559,16 +653,16 @@ export class AudioDirector {
       const secondaryGain = context.createGain();
       secondaryGain.gain.value = 0.15;
       const hum = context.createOscillator();
-      hum.type = "triangle";
+      hum.type = 'triangle';
       hum.frequency.value = 58;
       const secondary = context.createOscillator();
-      secondary.type = "sine";
+      secondary.type = 'sine';
       secondary.frequency.value = 90;
       const noise = context.createBufferSource();
       noise.buffer = buffer;
       noise.loop = true;
       const filteredNoise = context.createBiquadFilter();
-      filteredNoise.type = "bandpass";
+      filteredNoise.type = 'bandpass';
       filteredNoise.frequency.value = 310;
       filteredNoise.Q.value = 0.7;
 
@@ -602,15 +696,15 @@ export class AudioDirector {
   }
 
   private configureEmitter(emitter: Emitter): void {
-    if (emitter.kind === "train") {
+    if (emitter.kind === 'train') {
       emitter.noiseGain.gain.value = 0.22;
       emitter.humGain.gain.value = 0.65;
       emitter.secondaryGain.gain.value = 0.16;
-    } else if (emitter.kind === "traffic") {
+    } else if (emitter.kind === 'traffic') {
       emitter.noiseGain.gain.value = 0.26;
       emitter.humGain.gain.value = 0.32;
       emitter.secondaryGain.gain.value = 0.09;
-    } else if (emitter.kind === "bus") {
+    } else if (emitter.kind === 'bus') {
       emitter.noiseGain.gain.value = 0.32;
       emitter.humGain.gain.value = 0.48;
       emitter.secondaryGain.gain.value = 0.2;
@@ -623,7 +717,7 @@ export class AudioDirector {
 
   private scheduleMusic(): void {
     const context = this.context;
-    if (!context || context.state !== "running" || this.hidden) return;
+    if (!context || context.state !== 'running' || this.hidden) return;
     const bpm = 82;
     const stepLength = 60 / bpm / 4;
     const horizon = context.currentTime + 0.14;
@@ -653,13 +747,18 @@ export class AudioDirector {
         const oscillator = this.musicVoiceOscs[i];
         const gain = this.musicVoiceGains[i].gain;
         oscillator.frequency.setTargetAtTime(chord[i], time, 0.09);
-        gain.setTargetAtTime((night ? 0.011 : dawn ? 0.021 : 0.026) * (i === 3 ? 0.48 : 1), time, 0.25);
+        gain.setTargetAtTime(
+          (night ? 0.011 : dawn ? 0.021 : 0.026) * (i === 3 ? 0.48 : 1),
+          time,
+          0.25,
+        );
       }
       this.setAudioParam(this.bassOsc?.frequency, chord[0] / 2, time, 0.12);
     }
 
     // Sparse lofi backbeat: soft kick and brushed noise, with open space between hits.
-    if (stepInBar === 0 || stepInBar === 8) this.pulse(this.kickGain?.gain, time, stepInBar === 0 ? 0.11 : 0.075, 0.17);
+    if (stepInBar === 0 || stepInBar === 8)
+      this.pulse(this.kickGain?.gain, time, stepInBar === 0 ? 0.11 : 0.075, 0.17);
     if (stepInBar === 4 || stepInBar === 12) this.pulse(this.snareGain?.gain, time, 0.035, 0.11);
     if (stepInBar === 2 || stepInBar === 6 || stepInBar === 10 || stepInBar === 14) {
       this.pulse(this.hatGain?.gain, time, 0.012, 0.035);
@@ -673,7 +772,12 @@ export class AudioDirector {
       const motif = [A4, Fs4, E4, D4, Fs4, A4, B4, A4];
       const note = motif[(bar * 2 + (stepInBar === 14 ? 1 : 0)) % motif.length];
       this.setAudioParam(this.leadOsc?.frequency, note, time, 0.04);
-      this.pulse(this.leadGain?.gain, time, this.currentHour > 21 || this.currentHour < 6 ? 0.006 : 0.011, 0.28);
+      this.pulse(
+        this.leadGain?.gain,
+        time,
+        this.currentHour > 21 || this.currentHour < 6 ? 0.006 : 0.011,
+        0.28,
+      );
     }
   }
 
@@ -704,7 +808,10 @@ export class AudioDirector {
   }
 
   private updateEventCues(world: AudioWorld): void {
-    const tickRewound = Number.isFinite(world.tick) && this.lastWorldTick !== null && world.tick! < this.lastWorldTick;
+    const tickRewound =
+      Number.isFinite(world.tick) &&
+      this.lastWorldTick !== null &&
+      world.tick! < this.lastWorldTick;
     const changedWorld = !this.hasWorldKey || world.worldKey !== this.worldKey || tickRewound;
     if (changedWorld) {
       this.hasWorldKey = true;
@@ -723,7 +830,11 @@ export class AudioDirector {
     this.lastWorldTick = tick!;
     if (previousTick === null) return;
 
-    const canCue = !this.paused && !this.hidden && (world.developmentRate ?? 1) <= 1 && (world.playbackRate ?? 1) <= 1;
+    const canCue =
+      !this.paused &&
+      !this.hidden &&
+      (world.developmentRate ?? 1) <= 1 &&
+      (world.playbackRate ?? 1) <= 1;
     const now = this.context?.currentTime ?? 0;
     let selected: CueEvent | null = null;
     for (const event of world.events ?? []) {
@@ -731,9 +842,16 @@ export class AudioDirector {
       this.rememberEvent(event.id);
       // Event publication can lag behind movement snapshots. Keep a short
       // two-second tick window while still rejecting history and future ticks.
-      if (selected || event.tick < tick! - 40 || event.tick > tick! || !isCueEvent(event) || !canCue) continue;
+      if (
+        selected ||
+        event.tick < tick! - 40 ||
+        event.tick > tick! ||
+        !isCueEvent(event) ||
+        !canCue
+      )
+        continue;
       if (now - this.lastCueTime < 2.2) continue;
-      if (event.kind === "BusStop") {
+      if (event.kind === 'BusStop') {
         const lastBusCue = this.lastBusCueTimes.get(event.entity_id);
         if (lastBusCue !== undefined && now - lastBusCue < BUS_CUE_COOLDOWN_SECONDS) continue;
       } else if (isOpeningEvent(event) && !this.isOpeningCueInRange(world, event)) {
@@ -742,12 +860,13 @@ export class AudioDirector {
       selected = event;
     }
     if (!selected) return;
-    if (selected.kind === "BusStop") {
+    if (selected.kind === 'BusStop') {
       this.playBusCue(now);
       this.lastBusCueTimes.delete(selected.entity_id);
       this.lastBusCueTimes.set(selected.entity_id, now);
-      if (this.lastBusCueTimes.size > 64) this.lastBusCueTimes.delete(this.lastBusCueTimes.keys().next().value!);
-    } else if (selected.kind === "TrainStationStop") {
+      if (this.lastBusCueTimes.size > 64)
+        this.lastBusCueTimes.delete(this.lastBusCueTimes.keys().next().value!);
+    } else if (selected.kind === 'TrainStationStop') {
       this.playStationCue(now);
     } else if (isOpeningEvent(selected)) {
       this.playOpeningCue(world, selected, now);
@@ -838,13 +957,22 @@ export class AudioDirector {
     param.setTargetAtTime(value, this.context.currentTime, Math.max(0.01, seconds));
   }
 
-  private setAudioParam(param: AudioParam | undefined, value: number, time: number, smoothing: number): void {
+  private setAudioParam(
+    param: AudioParam | undefined,
+    value: number,
+    time: number,
+    smoothing: number,
+  ): void {
     if (!param) return;
     param.setTargetAtTime(value, time, smoothing);
   }
 
   private createNoiseBuffer(context: AudioContext, duration: number): AudioBuffer {
-    const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate);
+    const buffer = context.createBuffer(
+      1,
+      Math.ceil(context.sampleRate * duration),
+      context.sampleRate,
+    );
     const samples = buffer.getChannelData(0);
     let last = 0;
     // Slightly brown the noise so the city bed feels soft under the music.

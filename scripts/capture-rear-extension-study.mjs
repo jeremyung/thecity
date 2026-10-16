@@ -1,15 +1,28 @@
 import { chromium } from '@playwright/test';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-await mkdir('.tools/rear-extension-review',{recursive:true});
-await mkdir('validation/screenshots/rear-extension',{recursive:true});
-await writeFile('.tools/rear-extension-review/three.ts',"export * from 'three/webgpu';\n");
-const before=JSON.parse(await readFile('.tools/rear-extension-review/scheduler-snapshot.json','utf8'));
-const after=JSON.parse(await readFile('.tools/rear-extension-review/completed-snapshot.json','utf8'));
-const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+await mkdir('.tools/rear-extension-review', { recursive: true });
+await mkdir('validation/screenshots/rear-extension', { recursive: true });
+await writeFile('.tools/rear-extension-review/three.ts', "export * from 'three/webgpu';\n");
+const before = JSON.parse(
+  await readFile('.tools/rear-extension-review/scheduler-snapshot.json', 'utf8'),
+);
+const after = JSON.parse(
+  await readFile('.tools/rear-extension-review/completed-snapshot.json', 'utf8'),
+);
+const browser = await chromium.launch({
+  headless: true,
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+});
 try {
- const page=await browser.newPage({viewport:{width:1440,height:720},deviceScaleFactor:1});
- page.on('pageerror',error=>console.error(error.message));
- await page.route('**/annex-review.html',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta charset="UTF-8"><style>body{margin:0;background:#e0ded6;font:14px system-ui;color:#343d3f}header{position:absolute;top:20px;left:24px}footer{position:absolute;bottom:12px;left:24px}.labels{position:absolute;top:70px;display:flex;width:100%}.labels span{width:33.333%;padding-left:24px;box-sizing:border-box}canvas{display:block}</style><header>Rear annex · asset inspection · same camera, lighting and building</header><div class="labels"><span>Original</span><span>Construction</span><span>Completed</span></div><footer>Production geometry and engine snapshots · isolated studio lighting · software WebGL · not a full-city beauty or performance acceptance</footer><script type="module">
+  const page = await browser.newPage({
+    viewport: { width: 1440, height: 720 },
+    deviceScaleFactor: 1,
+  });
+  page.on('pageerror', (error) => console.error(error.message));
+  await page.route('**/annex-review.html', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: `<!doctype html><meta charset="UTF-8"><style>body{margin:0;background:#e0ded6;font:14px system-ui;color:#343d3f}header{position:absolute;top:20px;left:24px}footer{position:absolute;bottom:12px;left:24px}.labels{position:absolute;top:70px;display:flex;width:100%}.labels span{width:33.333%;padding-left:24px;box-sizing:border-box}canvas{display:block}</style><header>Rear annex · asset inspection · same camera, lighting and building</header><div class="labels"><span>Original</span><span>Construction</span><span>Completed</span></div><footer>Production geometry and engine snapshots · isolated studio lighting · software WebGL · not a full-city beauty or performance acceptance</footer><script type="module">
 import * as THREE from '/.tools/rear-extension-review/three.ts';
 import { ArtMaterials } from '/web/src/render/materials.ts';
 import { buildExtendedBuilding } from '/web/src/render/extended-building.ts';
@@ -39,13 +52,26 @@ window.draw=async(before,after,id,style)=>{
  document.querySelector('header').textContent='Rear annex · '+host.kind+' '+id+' · '+style+' · same camera and lighting';
  return {id,style,original,finalDepth:final.depth};
 };window.ready=true;
-</script>`}));
- await page.goto('http://127.0.0.1:5173/annex-review.html');
- await page.waitForFunction(()=>window.ready,null,{timeout:60000});
- const records=[];
- for(const id of [1343,1369]) for(const style of ['anime','miniature']) {
-   records.push(await page.evaluate(async({before,after,id,style})=>window.draw(before,after,id,style),{before,after,id,style}));
-   await page.screenshot({path:`validation/screenshots/rear-extension/${id}-${style}.png`});
- }
- await writeFile('.tools/rear-extension-review/capture-record.json',JSON.stringify(records,null,2));
-} finally {await browser.close();}
+</script>`,
+    }),
+  );
+  await page.goto('http://127.0.0.1:5173/annex-review.html');
+  await page.waitForFunction(() => window.ready, null, { timeout: 60000 });
+  const records = [];
+  for (const id of [1343, 1369])
+    for (const style of ['anime', 'miniature']) {
+      records.push(
+        await page.evaluate(
+          async ({ before, after, id, style }) => window.draw(before, after, id, style),
+          { before, after, id, style },
+        ),
+      );
+      await page.screenshot({ path: `validation/screenshots/rear-extension/${id}-${style}.png` });
+    }
+  await writeFile(
+    '.tools/rear-extension-review/capture-record.json',
+    JSON.stringify(records, null, 2),
+  );
+} finally {
+  await browser.close();
+}

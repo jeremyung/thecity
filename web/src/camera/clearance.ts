@@ -48,15 +48,15 @@ function validatePoint(name: string, point: CameraPoint3): void {
 }
 
 function validateBox(box: CameraObstacleBox): void {
-  finite("obstacle.center.x", box.center.x);
-  finite("obstacle.center.z", box.center.z);
-  finite("obstacle.rotation", box.rotation);
-  finite("obstacle.width", box.width);
-  finite("obstacle.depth", box.depth);
-  finite("obstacle.minY", box.minY);
-  finite("obstacle.maxY", box.maxY);
+  finite('obstacle.center.x', box.center.x);
+  finite('obstacle.center.z', box.center.z);
+  finite('obstacle.rotation', box.rotation);
+  finite('obstacle.width', box.width);
+  finite('obstacle.depth', box.depth);
+  finite('obstacle.minY', box.minY);
+  finite('obstacle.maxY', box.maxY);
   if (box.width <= 0 || box.depth <= 0 || box.minY > box.maxY) {
-    throw new RangeError("obstacle dimensions must be positive and minY must not exceed maxY");
+    throw new RangeError('obstacle dimensions must be positive and minY must not exceed maxY');
   }
 }
 
@@ -104,8 +104,17 @@ function horizontalInterval(
   return enter <= exit ? { enter, exit } : null;
 }
 
-function verticalInterval(startY: number, endY: number, minY: number, maxY: number): Interval | null {
-  return segmentBoxInterval(startY - (minY + maxY) / 2, endY - (minY + maxY) / 2, (maxY - minY) / 2);
+function verticalInterval(
+  startY: number,
+  endY: number,
+  minY: number,
+  maxY: number,
+): Interval | null {
+  return segmentBoxInterval(
+    startY - (minY + maxY) / 2,
+    endY - (minY + maxY) / 2,
+    (maxY - minY) / 2,
+  );
 }
 
 /** Exact 2D swept-footprint test against an oriented, locally expanded box. */
@@ -115,11 +124,11 @@ export function segmentIntersectsOrientedBoxXZ(
   box: CameraObstacleBox,
   safetyMarginM = 0,
 ): boolean {
-  validatePoint("start", start);
-  validatePoint("end", end);
+  validatePoint('start', start);
+  validatePoint('end', end);
   validateBox(box);
-  finite("safetyMarginM", safetyMarginM);
-  if (safetyMarginM < 0) throw new RangeError("safetyMarginM must not be negative");
+  finite('safetyMarginM', safetyMarginM);
+  if (safetyMarginM < 0) throw new RangeError('safetyMarginM must not be negative');
   return horizontalInterval(start, end, box, safetyMarginM) !== null;
 }
 
@@ -134,13 +143,13 @@ export function cameraPathClearance(
   obstacles: readonly CameraObstacleBox[],
   options: CameraClearanceOptions = {},
 ): CameraPathClearance {
-  validatePoint("start", start);
-  validatePoint("end", end);
+  validatePoint('start', start);
+  validatePoint('end', end);
   const terrainY = options.terrainY ?? 0;
   const safetyMarginM = options.safetyMarginM ?? 2;
-  finite("terrainY", terrainY);
-  finite("safetyMarginM", safetyMarginM);
-  if (safetyMarginM < 0) throw new RangeError("safetyMarginM must not be negative");
+  finite('terrainY', terrainY);
+  finite('safetyMarginM', safetyMarginM);
+  if (safetyMarginM < 0) throw new RangeError('safetyMarginM must not be negative');
 
   let requiredCameraHeight = terrainY + safetyMarginM;
   // A closed terrain half-space uses the same tangency-as-collision rule as
@@ -152,8 +161,16 @@ export function cameraPathClearance(
     if (!horizontal) continue;
     requiredCameraHeight = Math.max(requiredCameraHeight, box.maxY + safetyMarginM);
 
-    const vertical = verticalInterval(start.y, end.y, box.minY - safetyMarginM, box.maxY + safetyMarginM);
-    if (vertical && Math.max(horizontal.enter, vertical.enter) <= Math.min(horizontal.exit, vertical.exit)) {
+    const vertical = verticalInterval(
+      start.y,
+      end.y,
+      box.minY - safetyMarginM,
+      box.maxY + safetyMarginM,
+    );
+    if (
+      vertical &&
+      Math.max(horizontal.enter, vertical.enter) <= Math.min(horizontal.exit, vertical.exit)
+    ) {
       collides = true;
     }
   }

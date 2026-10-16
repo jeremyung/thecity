@@ -35,8 +35,16 @@ try {
       const snapshot = before.engine.snapshot();
       assert.equal(after.engine.save(), saved, `Save diverged at batch ${batch}`);
       assert.equal(after.engine.snapshot(), snapshot, `Snapshot diverged at batch ${batch}`);
-      assert.deepEqual(after.engine.movements(), before.engine.movements(), `Movement diverged at batch ${batch}`);
-      checkpoints.push({ tick: batch * 2000, saveSha256: hash(saved), snapshotSha256: hash(snapshot) });
+      assert.deepEqual(
+        after.engine.movements(),
+        before.engine.movements(),
+        `Movement diverged at batch ${batch}`,
+      );
+      checkpoints.push({
+        tick: batch * 2000,
+        saveSha256: hash(saved),
+        snapshotSha256: hash(snapshot),
+      });
       console.log(`Replay equal at tick ${batch * 2000}`);
     }
   }
@@ -48,20 +56,42 @@ try {
       run.engine.step(2000);
       assert.equal(restored.save(), run.engine.save());
       assert.equal(restored.snapshot(), run.engine.snapshot());
-    } finally { restored.free(); }
+    } finally {
+      restored.free();
+    }
   }
   assert.equal(before.engine.save(), after.engine.save());
   const summary = (run) => {
     const sorted = [...run.samples].sort((a, b) => a - b);
-    return { wasmSha256: run.wasmSha256, totalStepMs: run.samples.reduce((a, b) => a + b, 0),
-      p50BatchMs: sorted[74], p95BatchMs: sorted[142], maxBatchMs: sorted[149], batchMs: run.samples };
+    return {
+      wasmSha256: run.wasmSha256,
+      totalStepMs: run.samples.reduce((a, b) => a + b, 0),
+      p50BatchMs: sorted[74],
+      p95BatchMs: sorted[142],
+      maxBatchMs: sorted[149],
+      batchMs: run.samples,
+    };
   };
-  const report = { workload: { seed: 1204, developmentRate: 60, batches: 150, ticksPerBatch: 2000 },
+  const report = {
+    workload: { seed: 1204, developmentRate: 60, batches: 150, ticksPerBatch: 2000 },
     runtime: { node: process.version, platform: process.platform, arch: process.arch },
     note: 'Alternating sequential Node/WASM runs on a shared host; not browser performance. All checkpoints compare complete save, snapshot, and movement output.',
-    checkpoints, restoredContinuationEqual: true, before: summary(before), after: summary(after) };
-  writeFileSync('validation/collision-wasm-replay-comparison.json', `${JSON.stringify(report, null, 2)}\n`);
-  console.log(JSON.stringify({ beforeStepMs: report.before.totalStepMs, afterStepMs: report.after.totalStepMs, checkpoints: checkpoints.length }));
+    checkpoints,
+    restoredContinuationEqual: true,
+    before: summary(before),
+    after: summary(after),
+  };
+  writeFileSync(
+    'validation/collision-wasm-replay-comparison.json',
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
+  console.log(
+    JSON.stringify({
+      beforeStepMs: report.before.totalStepMs,
+      afterStepMs: report.after.totalStepMs,
+      checkpoints: checkpoints.length,
+    }),
+  );
 } finally {
   before.engine.free();
   after.engine.free();

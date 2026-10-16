@@ -3,7 +3,7 @@ import {
   type CameraClearanceOptions,
   type CameraObstacleBox,
   type CameraPoint3,
-} from "./clearance";
+} from './clearance';
 
 export interface AutomaticCameraPathOptions extends CameraClearanceOptions {
   /** Extra separation above the computed clearance plane, in world metres. */
@@ -12,7 +12,7 @@ export interface AutomaticCameraPathOptions extends CameraClearanceOptions {
 
 export interface AutomaticCameraPath {
   /** `lifted` paths rise above every obstacle touched by their horizontal sweep. */
-  readonly kind: "straight" | "lifted";
+  readonly kind: 'straight' | 'lifted';
   /** Waypoints after the current or recovered start; contains 1–3 finite points. */
   readonly waypoints: readonly CameraPoint3[];
   readonly correctedDestination: CameraPoint3;
@@ -33,7 +33,8 @@ function samePoint(a: CameraPoint3, b: CameraPoint3): boolean {
 }
 
 function checkedEpsilon(value: number): number {
-  if (!Number.isFinite(value) || value <= 0) throw new RangeError("epsilonM must be finite and positive");
+  if (!Number.isFinite(value) || value <= 0)
+    throw new RangeError('epsilonM must be finite and positive');
   return value;
 }
 
@@ -69,7 +70,7 @@ export function planAutomaticCameraPath(
   const direct = cameraPathClearance(routeStart, requestedEnd, obstacles, clearanceOptions);
   if (!direct.collides) {
     return {
-      kind: "straight",
+      kind: 'straight',
       waypoints: [requestedEnd],
       correctedDestination: requestedEnd,
       recoverStart,
@@ -78,7 +79,12 @@ export function planAutomaticCameraPath(
   }
 
   const swept = cameraPathClearance(routeStart, requestedEnd, obstacles, clearanceOptions);
-  const endPointClearance = cameraPathClearance(requestedEnd, requestedEnd, obstacles, clearanceOptions);
+  const endPointClearance = cameraPathClearance(
+    requestedEnd,
+    requestedEnd,
+    obstacles,
+    clearanceOptions,
+  );
   const correctedDestination = point(
     requestedEnd.x,
     endPointClearance.collides
@@ -86,12 +92,13 @@ export function planAutomaticCameraPath(
       : requestedEnd.y,
     requestedEnd.z,
   );
-  const travelHeight = Math.max(
-    routeStart.y,
-    correctedDestination.y,
-    swept.requiredCameraHeight,
-    terrainY + safetyMarginM,
-  ) + epsilonM;
+  const travelHeight =
+    Math.max(
+      routeStart.y,
+      correctedDestination.y,
+      swept.requiredCameraHeight,
+      terrainY + safetyMarginM,
+    ) + epsilonM;
 
   const candidates = [
     point(routeStart.x, travelHeight, routeStart.z),
@@ -103,7 +110,7 @@ export function planAutomaticCameraPath(
   for (const candidate of candidates) {
     if (samePoint(previous, candidate)) continue;
     const segment = cameraPathClearance(previous, candidate, obstacles, clearanceOptions);
-    if (segment.collides) throw new Error("Unable to construct a clear automatic camera path");
+    if (segment.collides) throw new Error('Unable to construct a clear automatic camera path');
     waypoints.push(candidate);
     previous = candidate;
   }
@@ -112,10 +119,10 @@ export function planAutomaticCameraPath(
   // final waypoint is raised. Otherwise the same candidate sequence ends at
   // the requested pose. The maximum remains three points by construction.
   if (waypoints.length < 1 || waypoints.length > 3) {
-    throw new Error("Automatic camera path must contain between one and three waypoints");
+    throw new Error('Automatic camera path must contain between one and three waypoints');
   }
   return {
-    kind: "lifted",
+    kind: 'lifted',
     waypoints,
     correctedDestination,
     recoverStart,

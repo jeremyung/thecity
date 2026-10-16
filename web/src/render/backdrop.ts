@@ -100,9 +100,10 @@ export function createBackdropGeometry(
       if (edgeDistance > BASIN_EDGE) {
         const basinBlend = smoothstep(HILLS_BEGIN, HILLS_FULL, edgeDistance);
         const nearestRiverX = riverXAt(z);
-        const bankBlend = nearestRiverX === null
-          ? 1
-          : smoothstep(riverWidth, riverWidth + 220, Math.abs(x - nearestRiverX));
+        const bankBlend =
+          nearestRiverX === null
+            ? 1
+            : smoothstep(riverWidth, riverWidth + 220, Math.abs(x - nearestRiverX));
         elevation += hillHeightAt(x, z) * basinBlend * bankBlend;
       }
 

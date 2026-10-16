@@ -37,7 +37,11 @@ export class Umbrellas {
 
     const getMaterial = (hex: string) => {
       if (materialForColor) return materialForColor(hex);
-      const material = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.82, metalness: 0 });
+      const material = new THREE.MeshStandardMaterial({
+        color: hex,
+        roughness: 0.82,
+        metalness: 0,
+      });
       this.ownedMaterials.add(material);
       return material;
     };
@@ -82,7 +86,15 @@ export class Umbrellas {
         count++;
         while (index > 0) {
           const parent = (index - 1) >>> 1;
-          if (!worse(this.priorities[index], this.sourceIds[index], this.priorities[parent], this.sourceIds[parent])) break;
+          if (
+            !worse(
+              this.priorities[index],
+              this.sourceIds[index],
+              this.priorities[parent],
+              this.sourceIds[parent],
+            )
+          )
+            break;
           swap(this.sourceIds, this.sourceOffsets, this.priorities, index, parent);
           index = parent;
         }
@@ -96,8 +108,25 @@ export class Umbrellas {
           if (left >= count) break;
           const right = left + 1;
           let worstChild = left;
-          if (right < count && worse(this.priorities[right], this.sourceIds[right], this.priorities[left], this.sourceIds[left])) worstChild = right;
-          if (!worse(this.priorities[worstChild], this.sourceIds[worstChild], this.priorities[index], this.sourceIds[index])) break;
+          if (
+            right < count &&
+            worse(
+              this.priorities[right],
+              this.sourceIds[right],
+              this.priorities[left],
+              this.sourceIds[left],
+            )
+          )
+            worstChild = right;
+          if (
+            !worse(
+              this.priorities[worstChild],
+              this.sourceIds[worstChild],
+              this.priorities[index],
+              this.sourceIds[index],
+            )
+          )
+            break;
           swap(this.sourceIds, this.sourceOffsets, this.priorities, index, worstChild);
           index = worstChild;
         }
@@ -168,7 +197,11 @@ export class Umbrellas {
   }
 }
 
-function makeInstanced(geometry: THREE.BufferGeometry, material: THREE.Material, capacity: number): THREE.InstancedMesh {
+function makeInstanced(
+  geometry: THREE.BufferGeometry,
+  material: THREE.Material,
+  capacity: number,
+): THREE.InstancedMesh {
   const mesh = new THREE.InstancedMesh(geometry, material, capacity);
   mesh.count = 0;
   mesh.castShadow = false;
@@ -200,11 +233,19 @@ function makeCanopyGeometry(): THREE.BufferGeometry {
     const next = (ring + 1) * segments;
     for (let i = 0; i < segments; i++) {
       const following = (i + 1) % segments;
-      indices.push(base + i, next + i, base + following, base + following, next + i, next + following);
+      indices.push(
+        base + i,
+        next + i,
+        base + following,
+        base + following,
+        next + i,
+        next + following,
+      );
     }
   }
   const inner = (rings.length - 1) * segments;
-  for (let i = 0; i < segments; i++) indices.push(inner + i, topIndex, inner + ((i + 1) % segments));
+  for (let i = 0; i < segments; i++)
+    indices.push(inner + i, topIndex, inner + ((i + 1) % segments));
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
@@ -224,13 +265,25 @@ function stablePriority(id: number): number {
 }
 
 function worse(aPriority: number, aId: number, bPriority: number, bId: number): boolean {
-  return aPriority > bPriority || aPriority === bPriority && aId > bId;
+  return aPriority > bPriority || (aPriority === bPriority && aId > bId);
 }
 
-function swap(ids: Float64Array, offsets: Int32Array, priorities: Float64Array, first: number, second: number): void {
-  let value = ids[first]; ids[first] = ids[second]; ids[second] = value;
-  const offset = offsets[first]; offsets[first] = offsets[second]; offsets[second] = offset;
-  value = priorities[first]; priorities[first] = priorities[second]; priorities[second] = value;
+function swap(
+  ids: Float64Array,
+  offsets: Int32Array,
+  priorities: Float64Array,
+  first: number,
+  second: number,
+): void {
+  let value = ids[first];
+  ids[first] = ids[second];
+  ids[second] = value;
+  const offset = offsets[first];
+  offsets[first] = offsets[second];
+  offsets[second] = offset;
+  value = priorities[first];
+  priorities[first] = priorities[second];
+  priorities[second] = value;
 }
 
 function stableColor(id: number): number {

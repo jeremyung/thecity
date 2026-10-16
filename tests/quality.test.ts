@@ -7,7 +7,9 @@ describe('matched review quality', () => {
       for (const level of [0, 1, 2] as const) {
         for (const dpr of [1, 1.25, 2, 3]) {
           expect(renderQualitySettings(profile, level, dpr, true)).toEqual({
-            pixelRatio: 1, shadowSize: 2048, reflectionScale: .35,
+            pixelRatio: 1,
+            shadowSize: 2048,
+            reflectionScale: 0.35,
           });
         }
       }
@@ -20,13 +22,21 @@ describe('matched review quality', () => {
     expect(renderQualitySettings('balanced', controller.level, 2, true).pixelRatio).toBe(1);
     controller.reset();
     expect(renderQualitySettings('balanced', controller.level, 2, false)).toEqual({
-      pixelRatio: .8, shadowSize: 512, reflectionScale: .15,
+      pixelRatio: 0.8,
+      shadowSize: 512,
+      reflectionScale: 0.15,
     });
     expect(controller.snapshot().reason).toBe('startup');
   });
 });
 
-function feed(controller: RenderQualityController, frameMs: number, start: number, end: number, step = 50): number[] {
+function feed(
+  controller: RenderQualityController,
+  frameMs: number,
+  start: number,
+  end: number,
+  step = 50,
+): number[] {
   const changes: number[] = [];
   for (let now = start; now <= end; now += step) {
     const level = controller.record(frameMs, now);
@@ -40,12 +50,20 @@ describe('RenderQualityController', () => {
     const quality = new RenderQualityController('high');
     quality.record(34, 0);
     expect(feed(quality, 34, 50, 1_950)).toEqual([]);
-    expect(quality.snapshot(1_950)).toMatchObject({ level: 0, reason: 'startup', warmupRemainingMs: 50 });
+    expect(quality.snapshot(1_950)).toMatchObject({
+      level: 0,
+      reason: 'startup',
+      warmupRemainingMs: 50,
+    });
 
     expect(feed(quality, 34, 2_000, 5_300)).toEqual([]); // Less than the slow dwell.
     expect(quality.level).toBe(0);
     expect(feed(quality, 34, 5_350, 6_000)).toEqual([1]);
-    expect(quality.snapshot(6_000)).toMatchObject({ level: 1, reason: 'cooldown', cooldownRemainingMs: expect.any(Number) });
+    expect(quality.snapshot(6_000)).toMatchObject({
+      level: 1,
+      reason: 'cooldown',
+      cooldownRemainingMs: expect.any(Number),
+    });
   });
 
   it('does not drop quality for one hitch or frames excluded by a visibility gap', () => {
@@ -60,7 +78,11 @@ describe('RenderQualityController', () => {
     feed(quality, 30, 7_050, 9_000);
     expect(quality.snapshot(9_000).slowForMs).toBeGreaterThan(0);
     quality.record(30, 9_300); // A throttled/background gap clears dwell evidence.
-    expect(quality.snapshot(9_300)).toMatchObject({ reason: 'gap', slowForMs: 0, recoveryForMs: 0 });
+    expect(quality.snapshot(9_300)).toMatchObject({
+      reason: 'gap',
+      slowForMs: 0,
+      recoveryForMs: 0,
+    });
     expect(quality.level).toBe(0);
   });
 
@@ -75,7 +97,12 @@ describe('RenderQualityController', () => {
       const frameMs = frame++ % 2 === 0 ? 14 : 20;
       expect(quality.record(frameMs, now)).toBeNull();
     }
-    expect(quality.snapshot(now)).toMatchObject({ level: 0, slowForMs: 0, recoveryForMs: 0, reason: 'stable' });
+    expect(quality.snapshot(now)).toMatchObject({
+      level: 0,
+      slowForMs: 0,
+      recoveryForMs: 0,
+      reason: 'stable',
+    });
   });
 
   it('restores one quality level only after sustained near-target performance and observes cooldown', () => {
@@ -157,9 +184,17 @@ describe('RenderQualityController', () => {
     const dwellBefore = quality.snapshot(2_400).slowForMs;
     expect(dwellBefore).toBeGreaterThan(0);
     quality.record(28, 2_416, false);
-    expect(quality.snapshot(2_416)).toMatchObject({ reason: 'ineligible', slowForMs: 0, smoothedFrameMs: null });
+    expect(quality.snapshot(2_416)).toMatchObject({
+      reason: 'ineligible',
+      slowForMs: 0,
+      smoothedFrameMs: null,
+    });
     quality.record(28, 2_500);
     quality.record(28, 1_000);
-    expect(quality.snapshot(1_000)).toMatchObject({ reason: 'clock-reset', level: 0, slowForMs: 0 });
+    expect(quality.snapshot(1_000)).toMatchObject({
+      reason: 'clock-reset',
+      level: 0,
+      slowForMs: 0,
+    });
   });
 });

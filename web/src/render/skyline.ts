@@ -27,8 +27,9 @@ function riverXAt(river: ReadonlyArray<SkylineRiverPoint>, z: number): number | 
   const sorted = [...river].sort((a, b) => a.z - b.z);
   if (z <= sorted[0].z) return sorted[0].x;
   for (let i = 0; i < sorted.length - 1; i += 1) {
-    const a = sorted[i], b = sorted[i + 1];
-    if (z <= b.z) return b.z === a.z ? a.x : a.x + (b.x - a.x) * (z - a.z) / (b.z - a.z);
+    const a = sorted[i],
+      b = sorted[i + 1];
+    if (z <= b.z) return b.z === a.z ? a.x : a.x + ((b.x - a.x) * (z - a.z)) / (b.z - a.z);
   }
   return sorted[sorted.length - 1].x;
 }
@@ -39,16 +40,26 @@ function riverXAt(river: ReadonlyArray<SkylineRiverPoint>, z: number): number | 
  * skyline the concepts show; nothing here has parcels, routing or growth.
  * Positions are world coordinates so the material can derive window cells.
  */
-export function createSkylineGeometry(seed: number, river: ReadonlyArray<SkylineRiverPoint>): THREE.BufferGeometry {
+export function createSkylineGeometry(
+  seed: number,
+  river: ReadonlyArray<SkylineRiverPoint>,
+): THREE.BufferGeometry {
   const random = mulberry(seed ^ 0x5a17c3e1);
   const positions: number[] = [];
   const indices: number[] = [];
   const box = (x: number, z: number, width: number, depth: number, height: number, yaw: number) => {
     const base = positions.length / 3;
-    const c = Math.cos(yaw), s = Math.sin(yaw);
+    const c = Math.cos(yaw),
+      s = Math.sin(yaw);
     for (const y of [-8, height]) {
-      for (const [dx, dz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
-        const lx = dx * width / 2, lz = dz * depth / 2;
+      for (const [dx, dz] of [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ]) {
+        const lx = (dx * width) / 2,
+          lz = (dz * depth) / 2;
         positions.push(x + lx * c - lz * s, y, z + lx * s + lz * c);
       }
     }
@@ -65,7 +76,7 @@ export function createSkylineGeometry(seed: number, river: ReadonlyArray<Skyline
   const placed: Array<{ x: number; z: number; r: number }> = [];
   const start = random() * Math.PI * 2;
   for (let cluster = 0; cluster < CLUSTERS; cluster += 1) {
-    const centre = start + cluster * Math.PI * 2 / CLUSTERS + (random() - 0.5) * 0.7;
+    const centre = start + (cluster * Math.PI * 2) / CLUSTERS + (random() - 0.5) * 0.7;
     const spread = 0.2 + random() * 0.16;
     // Peaks must clear the 100-140 m hill crest at 1.7 km from street height.
     const peak = 190 + random() * 120;
@@ -87,7 +98,8 @@ export function createSkylineGeometry(seed: number, river: ReadonlyArray<Skyline
       // Taller towers gather at each cluster's centre, as around a terminal.
       const core = 1 - Math.abs(offset);
       const height = 30 + peak * core * core * (0.45 + random() * 0.55) + random() * 22;
-      const width = 14 + random() * 22, depth = width * (0.6 + random() * 0.6);
+      const width = 14 + random() * 22,
+        depth = width * (0.6 + random() * 0.6);
       const r = Math.hypot(width, depth) / 2 + 1;
       if (placed.some((p) => Math.hypot(p.x - x, p.z - z) < p.r + r)) continue;
       placed.push({ x, z, r });

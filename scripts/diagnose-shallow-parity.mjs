@@ -6,9 +6,10 @@ const wasm = readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.m
 initSync({ module: wasm });
 const input = 'validation/spine-ranking-seed-87231-by-sites-false.json';
 const engine = CityEngine.restore(readFileSync(input, 'utf8'));
-const hash64 = value => {
+const hash64 = (value) => {
   let hash = 0xcbf29ce484222325n;
-  for (const byte of Buffer.from(value)) hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
+  for (const byte of Buffer.from(value))
+    hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
   return hash.toString(16).padStart(16, '0');
 };
 const oldSave = JSON.parse(engine.save());
@@ -18,9 +19,18 @@ const rows = [];
 const summarize = () => {
   const raw = engine.save();
   const save = JSON.parse(raw);
-  const newShallow = save.parcels.filter(p => !initialIds.has(p.id) && p.depth === 8);
-  const latest = newShallow.slice(-3).map(({ id, x, z, width, depth, road_id, access_node }) =>
-    ({ id, x, z, width, depth, road_id, access_node }));
+  const newShallow = save.parcels.filter((p) => !initialIds.has(p.id) && p.depth === 8);
+  const latest = newShallow
+    .slice(-3)
+    .map(({ id, x, z, width, depth, road_id, access_node }) => ({
+      id,
+      x,
+      z,
+      width,
+      depth,
+      road_id,
+      access_node,
+    }));
   return {
     tick: save.tick,
     parcel_count: save.parcels.length,
@@ -34,7 +44,11 @@ const summarize = () => {
     save_hash: hash64(raw),
   };
 };
-rows.push({ event: 'start', ...summarize(), wasm_sha256: createHash('sha256').update(wasm).digest('hex') });
+rows.push({
+  event: 'start',
+  ...summarize(),
+  wasm_sha256: createHash('sha256').update(wasm).digest('hex'),
+});
 for (let i = 0; i < 100; i++) {
   engine.step(200);
   const row = summarize();
@@ -43,6 +57,11 @@ for (let i = 0; i < 100; i++) {
     writeFileSync(`/tmp/shallow-wasm-${row.tick}.json`, engine.save());
   }
 }
-writeFileSync('validation/shallow-wasm-trace.jsonl', rows.map(row => JSON.stringify(row)).join('\n') + '\n');
-console.log(JSON.stringify({ wasmSha256: rows[0].wasm_sha256, checkpoints: rows.length, final: rows.at(-1) }));
+writeFileSync(
+  'validation/shallow-wasm-trace.jsonl',
+  rows.map((row) => JSON.stringify(row)).join('\n') + '\n',
+);
+console.log(
+  JSON.stringify({ wasmSha256: rows[0].wasm_sha256, checkpoints: rows.length, final: rows.at(-1) }),
+);
 engine.free();

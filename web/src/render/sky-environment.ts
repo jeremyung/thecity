@@ -20,10 +20,16 @@ export class SkyEnvironment {
   /** Returns the current environment texture, refreshing it if the sky moved. */
   update(renderer: THREE.WebGPURenderer, now: number, colors: THREE.Color[]): THREE.Texture | null {
     const next = colors.flatMap((c) => [c.r, c.g, c.b]);
-    const drift = next.reduce((max, value, i) => Math.max(max, Math.abs(value - (this.signature[i] ?? -1))), 0);
+    const drift = next.reduce(
+      (max, value, i) => Math.max(max, Math.abs(value - (this.signature[i] ?? -1))),
+      0,
+    );
     if (this.target && (drift < 0.02 || now - this.lastAt < 1500)) return this.target.texture;
     this.generator ??= new THREE.PMREMGenerator(renderer);
-    this.target = this.generator.fromScene(this.scene, 0.04, 1, 2000, { size: 128, renderTarget: this.target });
+    this.target = this.generator.fromScene(this.scene, 0.04, 1, 2000, {
+      size: 128,
+      renderTarget: this.target,
+    });
     this.signature = next;
     this.lastAt = now;
     return this.target.texture;

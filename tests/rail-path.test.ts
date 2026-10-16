@@ -14,9 +14,9 @@ describe('authoritative rail path', () => {
       const path = sampledRail(alignment);
       for (const [distance, x, z, ux, uz] of alignment.probes) {
         const p = path.at(distance);
-        expect(Math.hypot(p.x - x, p.z - z)).toBeLessThan(.0001);
-        expect(Math.hypot(p.ux - ux, p.uz - uz)).toBeLessThan(.0001);
-        expect(Math.abs(path.distanceAt(p) - distance)).toBeLessThan(.0001);
+        expect(Math.hypot(p.x - x, p.z - z)).toBeLessThan(0.0001);
+        expect(Math.hypot(p.ux - ux, p.uz - uz)).toBeLessThan(0.0001);
+        expect(Math.abs(path.distanceAt(p) - distance)).toBeLessThan(0.0001);
       }
     }
   });
@@ -29,12 +29,13 @@ describe('authoritative rail path', () => {
       expect(path.at(path.length + 100).z).toBeCloseTo(last[2], 6);
       let greatestTurn = 0;
       for (let distance = 24; distance < path.length - 24; distance += 5) {
-        const front = path.at(distance + 16), rear = path.at(distance - 16);
+        const front = path.at(distance + 16),
+          rear = path.at(distance - 16);
         greatestTurn = Math.max(greatestTurn, Math.hypot(front.ux - rear.ux, front.uz - rear.uz));
       }
-      expect(greatestTurn).toBeGreaterThan(.01);
-      expect(Math.abs(path.at(47).uz)).toBeLessThan(.0001);
-      expect(Math.abs(path.at(path.length - 47).uz)).toBeLessThan(.0001);
+      expect(greatestTurn).toBeGreaterThan(0.01);
+      expect(Math.abs(path.at(47).uz)).toBeLessThan(0.0001);
+      expect(Math.abs(path.at(path.length - 47).uz)).toBeLessThan(0.0001);
     }
   });
 });

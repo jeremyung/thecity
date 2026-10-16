@@ -4,10 +4,27 @@ import { boxGeometry } from './box-geometry';
 import { IncrementalGeometryMerge } from './incremental-geometry-merge';
 
 type Primitive =
-  | { kind: 'box'; args: [number, number, number, number, number, number, number]; material: THREE.Material; offset: THREE.Vector3; order: number }
-  | { kind: 'cylinder' | 'cone'; args: [number, number, number, number, number, number]; material: THREE.Material; segments: number; offset: THREE.Vector3; order: number };
+  | {
+      kind: 'box';
+      args: [number, number, number, number, number, number, number];
+      material: THREE.Material;
+      offset: THREE.Vector3;
+      order: number;
+    }
+  | {
+      kind: 'cylinder' | 'cone';
+      args: [number, number, number, number, number, number];
+      material: THREE.Material;
+      segments: number;
+      offset: THREE.Vector3;
+      order: number;
+    };
 type Part = { geometry: THREE.BufferGeometry; owned: boolean; order: number };
-type MaterialJob = { material: THREE.Material; parts: Part[]; merger: IncrementalGeometryMerge | null };
+type MaterialJob = {
+  material: THREE.Material;
+  parts: Part[];
+  merger: IncrementalGeometryMerge | null;
+};
 
 /** Kit whose primitive construction and per-material concatenation can be advanced in bounded calls. */
 export class StagedKit extends Kit {
@@ -27,26 +44,78 @@ export class StagedKit extends Kit {
     this.assertQueue();
     const previous = this.stagedOffset;
     this.stagedOffset = previous.clone().add(new THREE.Vector3(x, y, z));
-    try { return build(); } finally { this.stagedOffset = previous; }
+    try {
+      return build();
+    } finally {
+      this.stagedOffset = previous;
+    }
   }
 
-  override box(x: number, y: number, z: number, w: number, h: number, d: number, mat: THREE.Material, rotation = 0): void {
-    this.enqueue({ kind: 'box', args: [x, y, z, w, h, d, rotation], material: mat, offset: this.stagedOffset.clone(), order: this.nextOrder++ });
+  override box(
+    x: number,
+    y: number,
+    z: number,
+    w: number,
+    h: number,
+    d: number,
+    mat: THREE.Material,
+    rotation = 0,
+  ): void {
+    this.enqueue({
+      kind: 'box',
+      args: [x, y, z, w, h, d, rotation],
+      material: mat,
+      offset: this.stagedOffset.clone(),
+      order: this.nextOrder++,
+    });
   }
-  override cylinder(x: number, y: number, z: number, r: number, h: number, mat: THREE.Material, segments = 8): void {
-    this.enqueue({ kind: 'cylinder', args: [x, y, z, r, h, 0], material: mat, segments, offset: this.stagedOffset.clone(), order: this.nextOrder++ });
+  override cylinder(
+    x: number,
+    y: number,
+    z: number,
+    r: number,
+    h: number,
+    mat: THREE.Material,
+    segments = 8,
+  ): void {
+    this.enqueue({
+      kind: 'cylinder',
+      args: [x, y, z, r, h, 0],
+      material: mat,
+      segments,
+      offset: this.stagedOffset.clone(),
+      order: this.nextOrder++,
+    });
   }
-  override cone(x: number, y: number, z: number, radius: number, h: number, mat: THREE.Material, segments = 6): void {
-    this.enqueue({ kind: 'cone', args: [x, y, z, radius, h, 0], material: mat, segments, offset: this.stagedOffset.clone(), order: this.nextOrder++ });
+  override cone(
+    x: number,
+    y: number,
+    z: number,
+    radius: number,
+    h: number,
+    mat: THREE.Material,
+    segments = 6,
+  ): void {
+    this.enqueue({
+      kind: 'cone',
+      args: [x, y, z, radius, h, 0],
+      material: mat,
+      segments,
+      offset: this.stagedOffset.clone(),
+      order: this.nextOrder++,
+    });
   }
   override add(geo: THREE.BufferGeometry, mat: THREE.Material): void {
     this.assertQueue();
-    if (this.stagedOffset.lengthSq()) geo.translate(this.stagedOffset.x, this.stagedOffset.y, this.stagedOffset.z);
+    if (this.stagedOffset.lengthSq())
+      geo.translate(this.stagedOffset.x, this.stagedOffset.y, this.stagedOffset.z);
     const list = this.stagedParts.get(mat) ?? [];
     list.push({ geometry: geo, owned: true, order: this.nextOrder++ });
     this.stagedParts.set(mat, list);
   }
-  override finish(_cast = true): THREE.Group { throw new Error('StagedKit.finish() is synchronous; use step() and takeGroup()'); }
+  override finish(_cast = true): THREE.Group {
+    throw new Error('StagedKit.finish() is synchronous; use step() and takeGroup()');
+  }
 
   /** Process up to 128 queued primitives, or advance exactly one material merge step. */
   step(): boolean {
@@ -63,14 +132,23 @@ export class StagedKit extends Kit {
       this.commands = [];
       this.commandIndex = 0;
       this.phase = 'merge';
-      this.jobs = [...this.stagedParts].map(([material, parts]) => ({ material, parts: parts.sort((a, b) => a.order - b.order), merger: null }));
+      this.jobs = [...this.stagedParts].map(([material, parts]) => ({
+        material,
+        parts: parts.sort((a, b) => a.order - b.order),
+        merger: null,
+      }));
       this.stagedParts.clear();
-      if (!this.jobs.length) { this.phase = 'complete'; this.output = new THREE.Group(); return true; }
+      if (!this.jobs.length) {
+        this.phase = 'complete';
+        this.output = new THREE.Group();
+        return true;
+      }
       // Construction calls stay exclusive to this step, even when the last primitive was reached.
       return false;
     }
     const job = this.jobs[this.jobIndex];
-    if (!job.merger) job.merger = new IncrementalGeometryMerge(job.parts.map(part => part.geometry));
+    if (!job.merger)
+      job.merger = new IncrementalGeometryMerge(job.parts.map((part) => part.geometry));
     const done = job.merger.step(12000, 36000);
     if (done) {
       const geometry = job.merger.result!;
@@ -82,7 +160,11 @@ export class StagedKit extends Kit {
       job.parts = [];
       job.merger = null;
       this.jobIndex++;
-      if (this.jobIndex >= this.jobs.length) { this.jobs = []; this.phase = 'complete'; return true; }
+      if (this.jobIndex >= this.jobs.length) {
+        this.jobs = [];
+        this.phase = 'complete';
+        return true;
+      }
     }
     return false;
   }
@@ -100,7 +182,8 @@ export class StagedKit extends Kit {
     this.phase = 'disposed';
     this.commands = [];
     this.commandIndex = 0;
-    for (const parts of this.stagedParts.values()) for (const part of parts) if (part.owned) part.geometry.dispose();
+    for (const parts of this.stagedParts.values())
+      for (const part of parts) if (part.owned) part.geometry.dispose();
     this.stagedParts.clear();
     for (const job of this.jobs) {
       job.merger?.dispose();
@@ -109,7 +192,9 @@ export class StagedKit extends Kit {
     }
     this.jobs = [];
     if (this.output) {
-      this.output.traverse(object => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+      this.output.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      });
       this.output.removeFromParent();
       this.output = null;
     }
@@ -122,18 +207,37 @@ export class StagedKit extends Kit {
     if (!this.stagedParts.has(command.material)) this.stagedParts.set(command.material, []);
     this.commands.push(command);
   }
-  private assertQueue() { if (this.phase !== 'queue' || this.started) throw new Error('StagedKit no longer accepts geometry'); }
+  private assertQueue() {
+    if (this.phase !== 'queue' || this.started)
+      throw new Error('StagedKit no longer accepts geometry');
+  }
   private construct(command: Primitive) {
     const [x, y, z] = command.args;
     let geometry: THREE.BufferGeometry;
-    if (command.kind === 'box') geometry = boxGeometry(x, y, z, command.args[3], command.args[4], command.args[5], command.args[6]);
+    if (command.kind === 'box')
+      geometry = boxGeometry(
+        x,
+        y,
+        z,
+        command.args[3],
+        command.args[4],
+        command.args[5],
+        command.args[6],
+      );
     else {
-      geometry = command.kind === 'cylinder'
-        ? new THREE.CylinderGeometry(command.args[3], command.args[3], command.args[4], command.segments)
-        : new THREE.ConeGeometry(command.args[3], command.args[4], command.segments);
+      geometry =
+        command.kind === 'cylinder'
+          ? new THREE.CylinderGeometry(
+              command.args[3],
+              command.args[3],
+              command.args[4],
+              command.segments,
+            )
+          : new THREE.ConeGeometry(command.args[3], command.args[4], command.segments);
       geometry.translate(x, y, z);
     }
-    if (command.offset.lengthSq()) geometry.translate(command.offset.x, command.offset.y, command.offset.z);
+    if (command.offset.lengthSq())
+      geometry.translate(command.offset.x, command.offset.y, command.offset.z);
     const list = this.stagedParts.get(command.material) ?? [];
     list.push({ geometry, owned: true, order: command.order });
     this.stagedParts.set(command.material, list);

@@ -17,7 +17,8 @@ export function createWaterNormalData(size = 256, seed = 0x2f6e2b1): Uint8Array 
   };
   const waves: Array<{ kx: number; ky: number; amplitude: number; phase: number }> = [];
   while (waves.length < 72) {
-    const kx = Math.round((random() * 2 - 1) * 32), ky = Math.round((random() * 2 - 1) * 32);
+    const kx = Math.round((random() * 2 - 1) * 32),
+      ky = Math.round((random() * 2 - 1) * 32);
     const k = Math.hypot(kx, ky);
     // No very long components: a few dominant waves read as parallel bands.
     if (k < 5 || k > 34) continue;
@@ -27,26 +28,29 @@ export function createWaterNormalData(size = 256, seed = 0x2f6e2b1): Uint8Array 
   let maxSlope = 0;
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
-      let dx = 0, dy = 0;
+      let dx = 0,
+        dy = 0;
       for (const wave of waves) {
-        const angle = Math.PI * 2 * (wave.kx * x + wave.ky * y) / size + wave.phase;
+        const angle = (Math.PI * 2 * (wave.kx * x + wave.ky * y)) / size + wave.phase;
         const derivative = Math.cos(angle) * wave.amplitude * Math.PI * 2;
         dx += derivative * wave.kx;
         dy += derivative * wave.ky;
       }
       const i = (y * size + x) * 2;
-      slopes[i] = dx; slopes[i + 1] = dy;
+      slopes[i] = dx;
+      slopes[i + 1] = dy;
       maxSlope = Math.max(maxSlope, Math.abs(dx), Math.abs(dy));
     }
   }
   const data = new Uint8Array(size * size * 4);
   const scale = 1.6 / maxSlope;
   for (let i = 0; i < size * size; i += 1) {
-    const nx = -slopes[i * 2] * scale, nz = -slopes[i * 2 + 1] * scale;
+    const nx = -slopes[i * 2] * scale,
+      nz = -slopes[i * 2 + 1] * scale;
     const length = Math.hypot(nx, 1, nz);
-    data[i * 4] = Math.round((nx / length * 0.5 + 0.5) * 255);
-    data[i * 4 + 1] = Math.round((nz / length * 0.5 + 0.5) * 255);
-    data[i * 4 + 2] = Math.round((1 / length * 0.5 + 0.5) * 255);
+    data[i * 4] = Math.round(((nx / length) * 0.5 + 0.5) * 255);
+    data[i * 4 + 1] = Math.round(((nz / length) * 0.5 + 0.5) * 255);
+    data[i * 4 + 2] = Math.round(((1 / length) * 0.5 + 0.5) * 255);
     data[i * 4 + 3] = 255;
   }
   return data;

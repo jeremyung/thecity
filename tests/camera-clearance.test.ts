@@ -7,7 +7,12 @@ import {
 } from '../web/src/camera/clearance';
 
 const box: CameraObstacleBox = {
-  center: { x: 0, z: 0 }, rotation: 0, width: 10, depth: 4, minY: 0, maxY: 24,
+  center: { x: 0, z: 0 },
+  rotation: 0,
+  width: 10,
+  depth: 4,
+  minY: 0,
+  maxY: 24,
 };
 
 describe('camera path clearance geometry', () => {
@@ -42,64 +47,67 @@ describe('camera path clearance geometry', () => {
 
   it('reports roof clearance separately from obstacle-volume collision', () => {
     const lowPath = { start: { x: -12, y: 8, z: 0 }, end: { x: 12, y: 8, z: 0 } };
-    expect(cameraPathClearance(lowPath.start, lowPath.end, [box], { terrainY: -1, safetyMarginM: 2 }))
-      .toEqual({ requiredCameraHeight: 26, collides: true });
+    expect(
+      cameraPathClearance(lowPath.start, lowPath.end, [box], { terrainY: -1, safetyMarginM: 2 }),
+    ).toEqual({ requiredCameraHeight: 26, collides: true });
 
     const elevated = { start: { x: -12, y: 30, z: 0 }, end: { x: 12, y: 30, z: 0 } };
-    expect(cameraPathClearance(elevated.start, elevated.end, [box], { safetyMarginM: 2 }))
-      .toEqual({ requiredCameraHeight: 26, collides: false });
+    expect(cameraPathClearance(elevated.start, elevated.end, [box], { safetyMarginM: 2 })).toEqual({
+      requiredCameraHeight: 26,
+      collides: false,
+    });
 
-    const empty = cameraPathClearance(lowPath.start, lowPath.end, [], { terrainY: -3, safetyMarginM: 2 });
+    const empty = cameraPathClearance(lowPath.start, lowPath.end, [], {
+      terrainY: -3,
+      safetyMarginM: 2,
+    });
     expect(empty).toEqual({ requiredCameraHeight: -1, collides: false });
   });
 
   it('treats the flat terrain safety plane as a collision boundary', () => {
-    const below = cameraPathClearance(
-      { x: 0, y: -2, z: 0 }, { x: 8, y: -2, z: 0 }, [],
-      { terrainY: -1, safetyMarginM: 1 },
-    );
+    const below = cameraPathClearance({ x: 0, y: -2, z: 0 }, { x: 8, y: -2, z: 0 }, [], {
+      terrainY: -1,
+      safetyMarginM: 1,
+    });
     expect(below).toEqual({ requiredCameraHeight: 0, collides: true });
 
-    const above = cameraPathClearance(
-      { x: 0, y: 2, z: 0 }, { x: 8, y: 2, z: 0 }, [],
-      { terrainY: -1, safetyMarginM: 1 },
-    );
+    const above = cameraPathClearance({ x: 0, y: 2, z: 0 }, { x: 8, y: 2, z: 0 }, [], {
+      terrainY: -1,
+      safetyMarginM: 1,
+    });
     expect(above).toEqual({ requiredCameraHeight: 0, collides: false });
 
-    const tangent = cameraPathClearance(
-      { x: 0, y: 0, z: 0 }, { x: 0, y: 4, z: 0 }, [],
-      { terrainY: -1, safetyMarginM: 1 },
-    );
+    const tangent = cameraPathClearance({ x: 0, y: 0, z: 0 }, { x: 0, y: 4, z: 0 }, [], {
+      terrainY: -1,
+      safetyMarginM: 1,
+    });
     expect(tangent.collides).toBe(true);
 
-    const descending = cameraPathClearance(
-      { x: 0, y: 4, z: 0 }, { x: 0, y: -2, z: 0 }, [],
-      { terrainY: -1, safetyMarginM: 1 },
-    );
+    const descending = cameraPathClearance({ x: 0, y: 4, z: 0 }, { x: 0, y: -2, z: 0 }, [], {
+      terrainY: -1,
+      safetyMarginM: 1,
+    });
     expect(descending.collides).toBe(true);
   });
 
   it('detects an ascending segment that begins inside a building volume', () => {
-    const result = cameraPathClearance(
-      { x: 0, y: 12, z: 0 },
-      { x: 0, y: 40, z: 0 },
-      [box],
-      { safetyMarginM: 0 },
-    );
+    const result = cameraPathClearance({ x: 0, y: 12, z: 0 }, { x: 0, y: 40, z: 0 }, [box], {
+      safetyMarginM: 0,
+    });
     expect(result.collides).toBe(true);
     expect(result.requiredCameraHeight).toBe(24);
   });
 
   it('rejects invalid geometry and keeps all reported values finite', () => {
-    expect(() => segmentIntersectsOrientedBoxXZ(
-      { x: Number.NaN, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }, box,
-    )).toThrow(RangeError);
-    expect(() => cameraPathClearance(
-      { x: 0, y: 4, z: 0 }, { x: 1, y: 4, z: 1 }, [{ ...box, rotation: Infinity }],
-    )).toThrow(RangeError);
-    const result = cameraPathClearance(
-      { x: -20, y: 30, z: 0 }, { x: 20, y: 30, z: 0 }, [box],
-    );
+    expect(() =>
+      segmentIntersectsOrientedBoxXZ({ x: Number.NaN, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }, box),
+    ).toThrow(RangeError);
+    expect(() =>
+      cameraPathClearance({ x: 0, y: 4, z: 0 }, { x: 1, y: 4, z: 1 }, [
+        { ...box, rotation: Infinity },
+      ]),
+    ).toThrow(RangeError);
+    const result = cameraPathClearance({ x: -20, y: 30, z: 0 }, { x: 20, y: 30, z: 0 }, [box]);
     expect(Number.isFinite(result.requiredCameraHeight)).toBe(true);
     expect(result.collides).toBe(false);
   });

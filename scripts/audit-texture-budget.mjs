@@ -52,15 +52,22 @@ function collectAssetPaths(value, into = new Set()) {
 
 function pngDimensions(buffer) {
   const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-  if (buffer.length < 24 || !buffer.subarray(0, 8).equals(signature) || buffer.toString('ascii', 12, 16) !== 'IHDR') {
+  if (
+    buffer.length < 24 ||
+    !buffer.subarray(0, 8).equals(signature) ||
+    buffer.toString('ascii', 12, 16) !== 'IHDR'
+  ) {
     throw new Error('invalid PNG signature or missing IHDR header');
   }
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
 
 function jpegDimensions(buffer) {
-  if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) throw new Error('invalid JPEG SOI marker');
-  const startOfFrame = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8)
+    throw new Error('invalid JPEG SOI marker');
+  const startOfFrame = new Set([
+    0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
+  ]);
   let offset = 2;
   while (offset < buffer.length) {
     while (offset < buffer.length && buffer[offset] !== 0xff) offset++;
@@ -68,7 +75,7 @@ function jpegDimensions(buffer) {
     if (offset >= buffer.length) break;
     const marker = buffer[offset++];
     if (marker === 0xd9 || marker === 0xda) break;
-    if (marker >= 0xd0 && marker <= 0xd7 || marker === 0x01) continue;
+    if ((marker >= 0xd0 && marker <= 0xd7) || marker === 0x01) continue;
     if (offset + 2 > buffer.length) break;
     const length = buffer.readUInt16BE(offset);
     if (length < 2 || offset + length > buffer.length) throw new Error('truncated JPEG segment');
@@ -82,7 +89,11 @@ function jpegDimensions(buffer) {
 }
 
 function webpDimensions(buffer) {
-  if (buffer.length < 30 || buffer.toString('ascii', 0, 4) !== 'RIFF' || buffer.toString('ascii', 8, 12) !== 'WEBP') {
+  if (
+    buffer.length < 30 ||
+    buffer.toString('ascii', 0, 4) !== 'RIFF' ||
+    buffer.toString('ascii', 8, 12) !== 'WEBP'
+  ) {
     throw new Error('invalid WebP RIFF header');
   }
   let offset = 12;
@@ -97,14 +108,23 @@ function webpDimensions(buffer) {
         height: 1 + buffer[payload + 7] + (buffer[payload + 8] << 8) + (buffer[payload + 9] << 16),
       };
     }
-    if (kind === 'VP8 ' && size >= 10 && buffer[payload + 3] === 0x9d && buffer[payload + 4] === 0x01 && buffer[payload + 5] === 0x2a) {
+    if (
+      kind === 'VP8 ' &&
+      size >= 10 &&
+      buffer[payload + 3] === 0x9d &&
+      buffer[payload + 4] === 0x01 &&
+      buffer[payload + 5] === 0x2a
+    ) {
       return {
         width: buffer.readUInt16LE(payload + 6) & 0x3fff,
         height: buffer.readUInt16LE(payload + 8) & 0x3fff,
       };
     }
     if (kind === 'VP8L' && size >= 5 && buffer[payload] === 0x2f) {
-      const b1 = buffer[payload + 1], b2 = buffer[payload + 2], b3 = buffer[payload + 3], b4 = buffer[payload + 4];
+      const b1 = buffer[payload + 1],
+        b2 = buffer[payload + 2],
+        b3 = buffer[payload + 3],
+        b4 = buffer[payload + 4];
       return {
         width: 1 + b1 + ((b2 & 0x3f) << 8),
         height: 1 + ((b2 >> 6) & 0x03) + (b3 << 2) + ((b4 & 0x0f) << 10),
@@ -123,7 +143,9 @@ function dimensionsFor(buffer, ext) {
 }
 
 function mipChainRgba8Bytes(width, height) {
-  let w = width, h = height, bytes = 0;
+  let w = width,
+    h = height,
+    bytes = 0;
   while (true) {
     bytes += w * h * 4;
     if (w === 1 && h === 1) break;
@@ -137,8 +159,9 @@ async function walk(directory) {
   const found = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) found.push(...await walk(absolute));
-    else if (entry.isFile() && supportedExtensions.has(path.extname(entry.name).toLowerCase())) found.push(absolute);
+    if (entry.isDirectory()) found.push(...(await walk(absolute)));
+    else if (entry.isFile() && supportedExtensions.has(path.extname(entry.name).toLowerCase()))
+      found.push(absolute);
   }
   return found;
 }
@@ -146,18 +169,25 @@ async function walk(directory) {
 async function companionMetadata(file) {
   const ext = path.extname(file);
   const candidate = `${file.slice(0, -ext.length)}.json`;
-  try { return JSON.parse(await readFile(candidate, 'utf8')); }
-  catch (error) {
+  try {
+    return JSON.parse(await readFile(candidate, 'utf8'));
+  } catch (error) {
     if (error?.code === 'ENOENT') return null;
     throw error;
   }
 }
 
-export async function auditTextureBudget({ directory = textureRoot, manifestFile = manifestPath } = {}) {
+export async function auditTextureBudget({
+  directory = textureRoot,
+  manifestFile = manifestPath,
+} = {}) {
   const manifest = JSON.parse(await readFile(manifestFile, 'utf8'));
   const runtimePaths = collectAssetPaths(manifest.runtime_media);
-  const candidateByPath = new Map((manifest.development_material_candidates ?? [])
-    .map(item => [normalizedAssetPath(item.file), item]).filter(([file]) => file));
+  const candidateByPath = new Map(
+    (manifest.development_material_candidates ?? [])
+      .map((item) => [normalizedAssetPath(item.file), item])
+      .filter(([file]) => file),
+  );
   const files = (await walk(directory)).sort();
   const assets = [];
   let totalKnownDecodedBytes = 0;
@@ -174,14 +204,22 @@ export async function auditTextureBudget({ directory = textureRoot, manifestFile
       format: ext.slice(1).toUpperCase(),
       fileBytes: stat.length,
       runtimeListed: runtimePaths.has(relative),
-      developmentCandidate: candidate ? { id: candidate.id ?? null, usage: candidate.usage ?? null } : null,
+      developmentCandidate: candidate
+        ? { id: candidate.id ?? null, usage: candidate.usage ?? null }
+        : null,
       metadataRole: metadata?.role ?? null,
       budgetClass: role,
       budgetMaxSide: sideBudgets[role],
     };
     try {
       const { width, height } = dimensionsFor(stat, ext);
-      if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) throw new Error('image header reported invalid dimensions');
+      if (
+        !Number.isSafeInteger(width) ||
+        !Number.isSafeInteger(height) ||
+        width <= 0 ||
+        height <= 0
+      )
+        throw new Error('image header reported invalid dimensions');
       const decodedMipBytes = mipChainRgba8Bytes(width, height);
       totalKnownDecodedBytes += decodedMipBytes;
       asset.width = width;
@@ -196,14 +234,16 @@ export async function auditTextureBudget({ directory = textureRoot, manifestFile
     assets.push(asset);
   }
 
-  const unknown = assets.filter(asset => asset.status === 'unsupported-or-invalid');
-  const sideViolations = assets.filter(asset => asset.status === 'side-budget-exceeded');
+  const unknown = assets.filter((asset) => asset.status === 'unsupported-or-invalid');
+  const sideViolations = assets.filter((asset) => asset.status === 'side-budget-exceeded');
   const totalExceeded = totalKnownDecodedBytes > totalBudgetBytes;
   return {
     schemaVersion: 1,
-    audit: 'texture file dimensions and estimated RGBA8 mip-chain storage; this is a lower-bound source-file inventory, not measured GPU memory',
+    audit:
+      'texture file dimensions and estimated RGBA8 mip-chain storage; this is a lower-bound source-file inventory, not measured GPU memory',
     scannedDirectory: path.relative(root, directory).split(path.sep).join('/'),
-    decodedEstimate: 'RGBA8, complete mip chain through 1x1, each mip dimension floored and clamped to 1',
+    decodedEstimate:
+      'RGBA8, complete mip chain through 1x1, each mip dimension floored and clamped to 1',
     limitations: [
       'Each source image is counted once; per-style clones, simultaneous copies, canvas-generated textures, render targets, driver alignment and device-specific formats are not measured or inferred.',
       'RGBA8 mip estimates are a consistent planning proxy and may differ from actual GPU allocation or mip-generation policy.',
@@ -216,8 +256,8 @@ export async function auditTextureBudget({ directory = textureRoot, manifestFile
     },
     summary: {
       assetCount: assets.length,
-      runtimeListedCount: assets.filter(asset => asset.runtimeListed).length,
-      developmentCandidateCount: assets.filter(asset => asset.developmentCandidate).length,
+      runtimeListedCount: assets.filter((asset) => asset.runtimeListed).length,
+      developmentCandidateCount: assets.filter((asset) => asset.developmentCandidate).length,
       unsupportedOrInvalidCount: unknown.length,
       sideBudgetViolationCount: sideViolations.length,
       knownEstimatedDecodedMipBytes: totalKnownDecodedBytes,
@@ -249,7 +289,7 @@ async function main() {
   if (options.check && !report.summary.passesProposedBudget) process.exitCode = 1;
 }
 
-main().catch(error => {
+main().catch((error) => {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
 });

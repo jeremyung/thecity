@@ -5,17 +5,33 @@ import { streamedTexture } from '../web/src/render/vehicle-materials';
 /** Stand-in for ArtMaterials' dispose hooks. */
 function fakeArt() {
   const disposers: Array<() => void> = [];
-  return { onDispose: (release: () => void) => { disposers.push(release); }, dispose: () => disposers.splice(0).forEach(release => release()) };
+  return {
+    onDispose: (release: () => void) => {
+      disposers.push(release);
+    },
+    dispose: () => disposers.splice(0).forEach((release) => release()),
+  };
 }
 
 /** A loader that holds each request until the test delivers it. */
 function heldLoader() {
-  const pending: Array<{ url: string; onLoad: (bitmap: ImageBitmap) => void; onError: () => void }> = [];
-  return { pending, load: (url: string, onLoad: (bitmap: ImageBitmap) => void, onError: () => void) => { pending.push({ url, onLoad, onError }); } };
+  const pending: Array<{
+    url: string;
+    onLoad: (bitmap: ImageBitmap) => void;
+    onError: () => void;
+  }> = [];
+  return {
+    pending,
+    load: (url: string, onLoad: (bitmap: ImageBitmap) => void, onError: () => void) => {
+      pending.push({ url, onLoad, onError });
+    },
+  };
 }
 
 function bitmap() {
-  return { width: 4, height: 2, close: vi.fn() } as unknown as ImageBitmap & { close: ReturnType<typeof vi.fn> };
+  return { width: 4, height: 2, close: vi.fn() } as unknown as ImageBitmap & {
+    close: ReturnType<typeof vi.fn>;
+  };
 }
 
 function disposeSpy(texture: THREE.Texture) {
@@ -26,9 +42,17 @@ function disposeSpy(texture: THREE.Texture) {
 
 describe('streamed vehicle textures', () => {
   it('installs a bitmap that loads first, then frees it and closes the bitmap on dispose', () => {
-    const art = fakeArt(), loader = heldLoader();
-    const node = streamedTexture('/atlas.png', THREE.SRGBColorSpace, art, [1, 2, 3, 255], loader.load);
-    const placeholder = node.value as THREE.Texture, placeholderDisposed = disposeSpy(placeholder);
+    const art = fakeArt(),
+      loader = heldLoader();
+    const node = streamedTexture(
+      '/atlas.png',
+      THREE.SRGBColorSpace,
+      art,
+      [1, 2, 3, 255],
+      loader.load,
+    );
+    const placeholder = node.value as THREE.Texture,
+      placeholderDisposed = disposeSpy(placeholder);
     const image = bitmap();
     loader.pending[0].onLoad(image);
     const loaded = node.value as THREE.Texture;
@@ -46,9 +70,17 @@ describe('streamed vehicle textures', () => {
   });
 
   it('closes a bitmap that arrives after dispose without creating or installing a texture', () => {
-    const art = fakeArt(), loader = heldLoader();
-    const node = streamedTexture('/mask.png', THREE.NoColorSpace, art, [255, 0, 0, 255], loader.load);
-    const placeholder = node.value as THREE.Texture, placeholderDisposed = disposeSpy(placeholder);
+    const art = fakeArt(),
+      loader = heldLoader();
+    const node = streamedTexture(
+      '/mask.png',
+      THREE.NoColorSpace,
+      art,
+      [255, 0, 0, 255],
+      loader.load,
+    );
+    const placeholder = node.value as THREE.Texture,
+      placeholderDisposed = disposeSpy(placeholder);
     art.dispose();
     expect(placeholderDisposed).toHaveBeenCalledTimes(1);
 
@@ -62,18 +94,31 @@ describe('streamed vehicle textures', () => {
     expect(placeholderDisposed).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps a recovered renderer\'s textures apart from the retired one\'s late loads', () => {
+  it("keeps a recovered renderer's textures apart from the retired one's late loads", () => {
     const loader = heldLoader();
     const retiredArt = fakeArt();
-    const retired = streamedTexture('/atlas.png', THREE.SRGBColorSpace, retiredArt, [200, 200, 200, 255], loader.load);
+    const retired = streamedTexture(
+      '/atlas.png',
+      THREE.SRGBColorSpace,
+      retiredArt,
+      [200, 200, 200, 255],
+      loader.load,
+    );
     retiredArt.dispose();
     // Graphics recovery builds a fresh ArtMaterials, which requests the art again.
     const freshArt = fakeArt();
-    const fresh = streamedTexture('/atlas.png', THREE.SRGBColorSpace, freshArt, [200, 200, 200, 255], loader.load);
+    const fresh = streamedTexture(
+      '/atlas.png',
+      THREE.SRGBColorSpace,
+      freshArt,
+      [200, 200, 200, 255],
+      loader.load,
+    );
     const freshPlaceholder = fresh.value;
     expect(loader.pending).toHaveLength(2);
 
-    const late = bitmap(), current = bitmap();
+    const late = bitmap(),
+      current = bitmap();
     loader.pending[0].onLoad(late);
     expect(late.close).toHaveBeenCalledTimes(1);
     expect(fresh.value).toBe(freshPlaceholder);
@@ -87,12 +132,25 @@ describe('streamed vehicle textures', () => {
   });
 
   it('keeps the placeholder when the art fails to load, and without a decoder', () => {
-    const art = fakeArt(), loader = heldLoader();
-    const node = streamedTexture('/missing.png', THREE.SRGBColorSpace, art, [200, 200, 200, 255], loader.load);
+    const art = fakeArt(),
+      loader = heldLoader();
+    const node = streamedTexture(
+      '/missing.png',
+      THREE.SRGBColorSpace,
+      art,
+      [200, 200, 200, 255],
+      loader.load,
+    );
     const placeholder = node.value;
     loader.pending[0].onError();
     expect(node.value).toBe(placeholder);
-    const headless = streamedTexture('/atlas.png', THREE.SRGBColorSpace, art, [200, 200, 200, 255], null);
+    const headless = streamedTexture(
+      '/atlas.png',
+      THREE.SRGBColorSpace,
+      art,
+      [200, 200, 200, 255],
+      null,
+    );
     expect((headless.value as THREE.DataTexture).image.width).toBe(1);
     art.dispose();
   });

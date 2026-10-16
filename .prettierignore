@@ -1,0 +1,8 @@
+public/
+dist/
+validation/
+art-workshop/
+concepts/
+tests/fixtures/
+*.json
+*.md

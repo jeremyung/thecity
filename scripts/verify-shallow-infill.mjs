@@ -14,23 +14,46 @@ try {
   for (let i = 0; i < 100; i++) engine.step(200);
   const after = JSON.parse(engine.snapshot());
   assert.equal(after.tick - before.tick, 20000);
-  const oldIds = new Set(before.parcels.map(p => p.id));
-  const added = after.parcels.filter(p => !oldIds.has(p.id) && p.depth === 8);
+  const oldIds = new Set(before.parcels.map((p) => p.id));
+  const added = after.parcels.filter((p) => !oldIds.has(p.id) && p.depth === 8);
   assert.ok(added.length > 0, 'new shallow plots must be admitted');
-  const ids = new Set(added.map(p => p.id));
-  const buildings = after.buildings.filter(b => ids.has(b.parcel_id) && b.stage === 'open');
+  const ids = new Set(added.map((p) => p.id));
+  const buildings = after.buildings.filter((b) => ids.has(b.parcel_id) && b.stage === 'open');
   assert.equal(buildings.length, added.length, 'shallow construction completes');
-  for (const parcel of added) assert.ok(after.roads.some(r => r.connected && r.stage === 'open' &&
-    (r.from === parcel.access_node || r.to === parcel.access_node)), 'connected access');
+  for (const parcel of added)
+    assert.ok(
+      after.roads.some(
+        (r) =>
+          r.connected &&
+          r.stage === 'open' &&
+          (r.from === parcel.access_node || r.to === parcel.access_node),
+      ),
+      'connected access',
+    );
   const saved = engine.save();
   restored = CityEngine.restore(saved);
   assert.equal(restored.save(), saved);
-  engine.step(400); restored.step(400);
+  engine.step(400);
+  restored.step(400);
   assert.equal(engine.save(), restored.save());
-  const report = { wasmSha256: createHash('sha256').update(wasm).digest('hex'), input,
-    startTick: before.tick, endTick: after.tick, newShallowParcels: added.length,
-    openShallowBuildings: buildings.length, roadDelta: after.roads.length - before.roads.length,
-    connectedAccess: true, canonicalRestore: true, replayTicks: 400 };
-  writeFileSync('validation/initial-repo-shallow-wasm.json', JSON.stringify(report, null, 2) + '\n');
+  const report = {
+    wasmSha256: createHash('sha256').update(wasm).digest('hex'),
+    input,
+    startTick: before.tick,
+    endTick: after.tick,
+    newShallowParcels: added.length,
+    openShallowBuildings: buildings.length,
+    roadDelta: after.roads.length - before.roads.length,
+    connectedAccess: true,
+    canonicalRestore: true,
+    replayTicks: 400,
+  };
+  writeFileSync(
+    'validation/initial-repo-shallow-wasm.json',
+    JSON.stringify(report, null, 2) + '\n',
+  );
   console.log(JSON.stringify(report));
-} finally { restored?.free(); engine.free(); }
+} finally {
+  restored?.free();
+  engine.free();
+}

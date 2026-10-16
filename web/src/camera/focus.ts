@@ -7,7 +7,12 @@ export function focusDepthFromViewZ(viewZ: number, near = 0.1, far = 3_500): num
 }
 
 /** Exponential damping with a rate in inverse seconds, independent of frame rate. */
-export function dampFocusDepth(current: number, target: number, deltaSeconds: number, rate = 8): number {
+export function dampFocusDepth(
+  current: number,
+  target: number,
+  deltaSeconds: number,
+  rate = 8,
+): number {
   if (!Number.isFinite(target)) return Number.isFinite(current) ? current : 0;
   if (!Number.isFinite(current)) return target;
   const dt = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;

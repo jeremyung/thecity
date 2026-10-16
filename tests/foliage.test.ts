@@ -19,7 +19,8 @@ describe('authored tree geometry', () => {
   it('keeps cross-card crowns broad, bounded, and within the foliage triangle budget', () => {
     const near = createFoliageGeometry('near');
     const far = createFoliageGeometry('far');
-    near.computeBoundingBox(); far.computeBoundingBox();
+    near.computeBoundingBox();
+    far.computeBoundingBox();
     expect(triangles(near)).toBeGreaterThan(0);
     expect(triangles(near)).toBeLessThan(1_000);
     expect(triangles(far)).toBeLessThan(triangles(near));
@@ -41,8 +42,10 @@ describe('authored tree geometry', () => {
         expect(uv.getY(i)).toBeLessThanOrEqual(1);
       }
     }
-    expectFinite(near); expectFinite(far);
-    near.dispose(); far.dispose();
+    expectFinite(near);
+    expectFinite(far);
+    near.dispose();
+    far.dispose();
   });
 
   it('uses deterministic neutral vertex colors across UV-mapped cards', () => {
@@ -57,14 +60,17 @@ describe('authored tree geometry', () => {
     expect(Array.from(firstColors.array)).not.toEqual(Array.from(otherColors.array));
 
     for (let i = 0; i < firstColors.count; i++) {
-      for (const component of [firstColors.getX(i), firstColors.getY(i), firstColors.getZ(i)]) expect(Number.isFinite(component)).toBe(true);
+      for (const component of [firstColors.getX(i), firstColors.getY(i), firstColors.getZ(i)])
+        expect(Number.isFinite(component)).toBe(true);
     }
     const uv = first.getAttribute('uv');
     expect(uv.count).toBe(firstColors.count);
     const firstRgb = [firstColors.getX(0), firstColors.getY(0), firstColors.getZ(0)];
     expect(Math.min(...firstRgb)).toBeGreaterThan(0.1);
     expect(Math.max(...firstRgb) - Math.min(...firstRgb)).toBeLessThan(0.2);
-    first.dispose(); second.dispose(); other.dispose();
+    first.dispose();
+    second.dispose();
+    other.dispose();
   });
 
   it('builds a tapered, branched trunk in the authored 0–4.6m local range', () => {

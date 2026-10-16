@@ -21,11 +21,12 @@ export function riverbankTreePoints(river: readonly Point[], halfWidth: number) 
       if (z > end) break;
       const segment = river.findIndex((p, i) => i > 0 && z <= p.z);
       if (segment < 1) continue;
-      const a = river[segment - 1], b = river[segment];
-      const x = a.x + (b.x - a.x) * (z - a.z) / (b.z - a.z);
+      const a = river[segment - 1],
+        b = river[segment];
+      const x = a.x + ((b.x - a.x) * (z - a.z)) / (b.z - a.z);
       const bankX = x + side * (halfWidth + 2.7);
       if (Math.abs(bankX) + 2.38 > 400) continue;
-      points.push({ x: bankX, z, s: 1.8, h: 1.7 + (hash >>> 8) % 1000 / 1000 * 0.9 });
+      points.push({ x: bankX, z, s: 1.8, h: 1.7 + (((hash >>> 8) % 1000) / 1000) * 0.9 });
     }
   }
   return points;

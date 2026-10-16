@@ -1,16 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { compactMidriseEnvelope, midriseMassing, type BuildingMass } from '../web/src/render/building-massing';
+import {
+  compactMidriseEnvelope,
+  midriseMassing,
+  type BuildingMass,
+} from '../web/src/render/building-massing';
 
-function building(overrides: Partial<{
-  kind: string;
-  floors: number;
-  width: number;
-  depth: number;
-  appearance_seed: number;
-  anchor: boolean;
-}> = {}) {
+function building(
+  overrides: Partial<{
+    kind: string;
+    floors: number;
+    width: number;
+    depth: number;
+    appearance_seed: number;
+    anchor: boolean;
+  }> = {},
+) {
   return {
-    kind: 'apartment', floors: 7, width: 18, depth: 14, appearance_seed: 2468, anchor: false,
+    kind: 'apartment',
+    floors: 7,
+    width: 18,
+    depth: 14,
+    appearance_seed: 2468,
+    anchor: false,
     ...overrides,
   };
 }
@@ -31,11 +42,12 @@ function expectInsideEnvelope(masses: BuildingMass[], width: number, depth: numb
 function expectSupported(masses: BuildingMass[]) {
   for (const upper of masses.filter((mass) => mass.baseFloor > 0)) {
     const supports = masses.filter((lower) => lower.baseFloor + lower.floors === upper.baseFloor);
-    const containedBySupport = supports.some((lower) =>
-      upper.x - upper.width / 2 >= lower.x - lower.width / 2 - 1e-8
-      && upper.x + upper.width / 2 <= lower.x + lower.width / 2 + 1e-8
-      && upper.z - upper.depth / 2 >= lower.z - lower.depth / 2 - 1e-8
-      && upper.z + upper.depth / 2 <= lower.z + lower.depth / 2 + 1e-8,
+    const containedBySupport = supports.some(
+      (lower) =>
+        upper.x - upper.width / 2 >= lower.x - lower.width / 2 - 1e-8 &&
+        upper.x + upper.width / 2 <= lower.x + lower.width / 2 + 1e-8 &&
+        upper.z - upper.depth / 2 >= lower.z - lower.depth / 2 - 1e-8 &&
+        upper.z + upper.depth / 2 <= lower.z + lower.depth / 2 + 1e-8,
     );
     expect(containedBySupport).toBe(true);
   }
@@ -46,8 +58,14 @@ describe('footprint-bounded midrise massing', () => {
     const input = building({ width: 40, depth: 32 });
     expect(compactMidriseEnvelope(input, 33.6, 26.88)).toEqual({ width: 38.4, depth: 30.2 });
     // Keep the existing envelope on narrow lots instead of shrinking their bodies.
-    expect(compactMidriseEnvelope(building({ width: 8, depth: 8 }), 6.72, 6.72)).toEqual({ width: 6.72, depth: 6.72 });
-    expect(compactMidriseEnvelope(building({ width: 14, depth: 12 }), 11.76, 10.08)).toEqual({ width: 12.4, depth: 10.2 });
+    expect(compactMidriseEnvelope(building({ width: 8, depth: 8 }), 6.72, 6.72)).toEqual({
+      width: 6.72,
+      depth: 6.72,
+    });
+    expect(compactMidriseEnvelope(building({ width: 14, depth: 12 }), 11.76, 10.08)).toEqual({
+      width: 12.4,
+      depth: 10.2,
+    });
   });
 
   it('leaves anchors, low-rise, towers, and undersized lots at their exact input dimensions', () => {
@@ -59,7 +77,8 @@ describe('footprint-bounded midrise massing', () => {
       building({ width: 40, depth: 7.99 }),
     ];
     for (const input of cases) {
-      const width = input.width * .84, depth = input.depth * .84;
+      const width = input.width * 0.84,
+        depth = input.depth * 0.84;
       expect(compactMidriseEnvelope(input, width, depth)).toEqual({ width, depth });
     }
   });
@@ -68,39 +87,48 @@ describe('footprint-bounded midrise massing', () => {
     for (const kind of ['apartment', 'office']) {
       for (let floors = 4; floors <= 11; floors++) {
         for (let seed = 0; seed < 64; seed++) {
-          const width = 6 + seed % 19;
-          const depth = 6 + (seed * 7) % 23;
-          const result = midriseMassing(building({ kind, floors, appearance_seed: Math.imul(seed, 2654435761) >>> 0 }), width, depth)!;
+          const width = 6 + (seed % 19);
+          const depth = 6 + ((seed * 7) % 23);
+          const result = midriseMassing(
+            building({ kind, floors, appearance_seed: Math.imul(seed, 2654435761) >>> 0 }),
+            width,
+            depth,
+          )!;
           expectInsideEnvelope(result.masses, width, depth);
           expectSupported(result.masses);
-          expect(Math.max(...result.masses.map(mass => mass.baseFloor + mass.floors))).toBe(floors);
+          expect(Math.max(...result.masses.map((mass) => mass.baseFloor + mass.floors))).toBe(
+            floors,
+          );
         }
       }
     }
   });
 
   it('fits compact apartment slabs around a continuous service bay and centered entry', () => {
-    for (const width of [7.5, 8, 10, 16]) for (const floors of [4, 5, 6, 7]) {
-      for (const seed of [0, 1, 2, 3]) {
-        const input = building({ floors, appearance_seed: seed });
-        const result = midriseMassing(input, width, 12)!;
-        const eligible = floors <= 6 && width - Math.min(2.4, Math.max(1.8, width * .2)) >= 6;
-        expect(result.family === 'slab-apartment').toBe(eligible);
-        if (!eligible) continue;
-        expectInsideEnvelope(result.masses, width, 12);
-        const main = result.masses.find(mass => mass.role === 'main')!;
-        const core = result.masses.find(mass => mass.role === 'core')!;
-        expect(main.baseFloor).toBe(0);
-        expect(main.floors).toBe(floors);
-        expect(core.floors).toBe(floors);
-        expect(main.width * main.depth + core.width * core.depth).toBeCloseTo(width * 12);
-        // Existing authoritative entry at x=0 remains inside the dwelling wing.
-        expect(main.x - main.width / 2).toBeLessThan(-.62);
-        expect(main.x + main.width / 2).toBeGreaterThan(.62);
-        expect(midriseMassing(input, width, 12)).toEqual(result);
+    for (const width of [7.5, 8, 10, 16])
+      for (const floors of [4, 5, 6, 7]) {
+        for (const seed of [0, 1, 2, 3]) {
+          const input = building({ floors, appearance_seed: seed });
+          const result = midriseMassing(input, width, 12)!;
+          const eligible = floors <= 6 && width - Math.min(2.4, Math.max(1.8, width * 0.2)) >= 6;
+          expect(result.family === 'slab-apartment').toBe(eligible);
+          if (!eligible) continue;
+          expectInsideEnvelope(result.masses, width, 12);
+          const main = result.masses.find((mass) => mass.role === 'main')!;
+          const core = result.masses.find((mass) => mass.role === 'core')!;
+          expect(main.baseFloor).toBe(0);
+          expect(main.floors).toBe(floors);
+          expect(core.floors).toBe(floors);
+          expect(main.width * main.depth + core.width * core.depth).toBeCloseTo(width * 12);
+          // Existing authoritative entry at x=0 remains inside the dwelling wing.
+          expect(main.x - main.width / 2).toBeLessThan(-0.62);
+          expect(main.x + main.width / 2).toBeGreaterThan(0.62);
+          expect(midriseMassing(input, width, 12)).toEqual(result);
+        }
       }
-    }
-    expect(midriseMassing(building({ floors: 5, appearance_seed: 0 }), 10, 7)!.family).toBe('walkup');
+    expect(midriseMassing(building({ floors: 5, appearance_seed: 0 }), 10, 7)!.family).toBe(
+      'walkup',
+    );
   });
 
   it('composes apartment walk-ups with a full-height side core and supported two-floor setback', () => {
@@ -112,9 +140,12 @@ describe('footprint-bounded midrise massing', () => {
     expect(result.family).toBe('walkup');
     expect(core.baseFloor).toBe(0);
     expect(core.floors).toBe(7);
-    expect(core.width / 18).toBeGreaterThanOrEqual(.2);
-    expect(core.width / 18).toBeLessThanOrEqual(.24);
-    expect(main.map((mass) => [mass.baseFloor, mass.floors])).toEqual([[0, 5], [5, 2]]);
+    expect(core.width / 18).toBeGreaterThanOrEqual(0.2);
+    expect(core.width / 18).toBeLessThanOrEqual(0.24);
+    expect(main.map((mass) => [mass.baseFloor, mass.floors])).toEqual([
+      [0, 5],
+      [5, 2],
+    ]);
     expect(main[1].width).toBeLessThan(main[0].width);
     expect(main[1].depth).toBeLessThan(main[0].depth);
     expect(main[1].x).not.toBe(main[0].x);
@@ -140,13 +171,21 @@ describe('footprint-bounded midrise massing', () => {
       expect(result.family).toBe('terrace-apartment');
       expect(result.masses).toHaveLength(2);
       const [body, top] = result.masses;
-      expect(body).toMatchObject({ x: 0, z: 0, width: 18, depth: 14, baseFloor: 0, floors: 6, role: 'main' });
+      expect(body).toMatchObject({
+        x: 0,
+        z: 0,
+        width: 18,
+        depth: 14,
+        baseFloor: 0,
+        floors: 6,
+        role: 'main',
+      });
       expect(body.x - body.width / 2).toBeLessThanOrEqual(0);
       expect(body.x + body.width / 2).toBeGreaterThanOrEqual(0);
       expect(body.z + body.depth / 2).toBe(14 / 2);
       expect(top).toMatchObject({ x: 0, width: 18, baseFloor: 6, floors: 1, role: 'main' });
-      expect(top.depth / body.depth).toBeGreaterThanOrEqual(.58);
-      expect(top.depth / body.depth).toBeLessThanOrEqual(.66);
+      expect(top.depth / body.depth).toBeGreaterThanOrEqual(0.58);
+      expect(top.depth / body.depth).toBeLessThanOrEqual(0.66);
       expect(top.z - top.depth / 2).toBeCloseTo(-14 / 2, 10); // Back stays aligned.
       expect(top.z + top.depth / 2).toBeLessThan(body.z + body.depth / 2); // Front has a broad terrace.
       expectInsideEnvelope(result.masses, 18, 14);
@@ -163,7 +202,15 @@ describe('footprint-bounded midrise massing', () => {
       const crown = result.masses[result.masses.length - 1];
 
       expect(result.family).toBe('setback-office');
-      expect(podium).toMatchObject({ x: 0, z: 0, width: 22, depth: 16, baseFloor: 0, floors: 2, role: 'main' });
+      expect(podium).toMatchObject({
+        x: 0,
+        z: 0,
+        width: 22,
+        depth: 16,
+        baseFloor: 0,
+        floors: 2,
+        role: 'main',
+      });
       expect(crown.baseFloor + crown.floors).toBe(floors);
       expect(crown.floors).toBe(2);
       expect(crown.width).toBeLessThan(shaft?.width ?? podium.width);
@@ -196,26 +243,39 @@ describe('footprint-bounded midrise massing', () => {
         expect(result.family).toBe('setback-office');
         expect(result.masses).toHaveLength(2);
         const [lower, top] = result.masses;
-        expect(lower).toMatchObject({ x: 0, z: 0, width: 24, depth: 18, baseFloor: 0, floors: floors - 1, role: 'main' });
+        expect(lower).toMatchObject({
+          x: 0,
+          z: 0,
+          width: 24,
+          depth: 18,
+          baseFloor: 0,
+          floors: floors - 1,
+          role: 'main',
+        });
         expect(top.baseFloor).toBe(floors - 1);
         expect(top.floors).toBe(1);
-        expect(top.width / lower.width).toBeGreaterThanOrEqual(.85);
-        expect(top.width / lower.width).toBeLessThanOrEqual(.90);
-        expect(top.depth / lower.depth).toBeGreaterThanOrEqual(.86);
-        expect(top.depth / lower.depth).toBeLessThanOrEqual(.92);
+        expect(top.width / lower.width).toBeGreaterThanOrEqual(0.85);
+        expect(top.width / lower.width).toBeLessThanOrEqual(0.9);
+        expect(top.depth / lower.depth).toBeGreaterThanOrEqual(0.86);
+        expect(top.depth / lower.depth).toBeLessThanOrEqual(0.92);
         expectInsideEnvelope(result.masses, 24, 18);
         expectSupported(result.masses);
 
         // Each occupied floor has exactly one complete main footprint. This
         // proves the vertical tiers meet without gaps or same-floor overlap.
         for (let floor = 0; floor < floors; floor++) {
-          const active = result.masses.filter(mass => floor >= mass.baseFloor && floor < mass.baseFloor + mass.floors);
+          const active = result.masses.filter(
+            (mass) => floor >= mass.baseFloor && floor < mass.baseFloor + mass.floors,
+          );
           expect(active).toHaveLength(1);
-          expect(active[0].width * active[0].depth).toBeCloseTo(floor < floors - 1 ? 24 * 18 : top.width * top.depth, 8);
+          expect(active[0].width * active[0].depth).toBeCloseTo(
+            floor < floors - 1 ? 24 * 18 : top.width * top.depth,
+            8,
+          );
         }
       }
     }
-    expect(slabCount).toBe(seedCount / 3 * 8);
+    expect(slabCount).toBe((seedCount / 3) * 8);
   });
 
   it('uses bounded seed-stable variation for core side and setbacks', () => {
@@ -223,8 +283,9 @@ describe('footprint-bounded midrise massing', () => {
     const repeat = midriseMassing(building({ appearance_seed: 2468 }), 18, 14)!;
     const oppositeSide = midriseMassing(building({ appearance_seed: 2469 }), 18, 14)!;
     expect(repeat).toEqual(first);
-    expect(oppositeSide.masses.find((mass) => mass.role === 'core')!.x)
-      .toBe(-first.masses.find((mass) => mass.role === 'core')!.x);
+    expect(oppositeSide.masses.find((mass) => mass.role === 'core')!.x).toBe(
+      -first.masses.find((mass) => mass.role === 'core')!.x,
+    );
     expect(oppositeSide.masses).not.toEqual(first.masses);
     expectInsideEnvelope(oppositeSide.masses, 18, 14);
     expectSupported(oppositeSide.masses);

@@ -6,8 +6,18 @@
  * Nonnegative values are absolute walking or vehicle road-surface heights from the engine.
  */
 export const MOVEMENT_STRIDE = 6;
-export const PEDESTRIAN_GROUND_SURFACE = .27;
-export const MOVEMENT_KINDS = { person: 0, compact: 1, train: 2, bus: 3, kei: 4, taxi: 5, van: 6, truck: 7, mail: 8 } as const;
+export const PEDESTRIAN_GROUND_SURFACE = 0.27;
+export const MOVEMENT_KINDS = {
+  person: 0,
+  compact: 1,
+  train: 2,
+  bus: 3,
+  kei: 4,
+  taxi: 5,
+  van: 6,
+  truck: 7,
+  mail: 8,
+} as const;
 
 /** Recognize the stable movement wire values, including every road vehicle. */
 export function isMovementKind(kind: number): boolean {

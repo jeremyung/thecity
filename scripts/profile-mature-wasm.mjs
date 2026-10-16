@@ -29,14 +29,17 @@ const inspectorSession = new inspector.Session();
 inspectorSession.connect();
 function inspectorPost(method, params = {}) {
   return new Promise((resolvePromise, rejectPromise) => {
-    inspectorSession.post(method, params, (error, result) => error ? rejectPromise(error) : resolvePromise(result));
+    inspectorSession.post(method, params, (error, result) =>
+      error ? rejectPromise(error) : resolvePromise(result),
+    );
   });
 }
 
 function summarizeCpuProfile(profile) {
   const nodes = new Map(profile.nodes.map((node) => [node.id, node]));
   const parents = new Map();
-  for (const node of profile.nodes) for (const child of node.children ?? []) parents.set(child, node.id);
+  for (const node of profile.nodes)
+    for (const child of node.children ?? []) parents.set(child, node.id);
   const self = new Map();
   const inclusive = new Map();
   let totalSampledUs = 0;
@@ -79,7 +82,8 @@ function summarizeCpuProfile(profile) {
       [/rect_segment_distance/, 'engine/src/geometry.rs:130'],
     ];
     sourceReference = references.find(([pattern]) => pattern.test(name))?.[1] ?? null;
-    if (/compiler_builtins|hypotf/.test(name)) source = 'Rust compiler_builtins/libm (WASM symbol; source line not available)';
+    if (/compiler_builtins|hypotf/.test(name))
+      source = 'Rust compiler_builtins/libm (WASM symbol; source line not available)';
     else if (sourceReference) source = `${sourceReference} (WASM symbol)`;
     else if (/wasm-function/.test(name)) source = 'WASM (unresolved symbol)';
     else if (/wasm:\/\//.test(url)) source = 'WASM symbol (source line not available)';
@@ -92,10 +96,11 @@ function summarizeCpuProfile(profile) {
       sourceReference,
       samples: stats.samples,
       timeMs: stats.timeUs / 1000,
-      shareOfProfilePercent: totalSampledUs ? stats.timeUs * 100 / totalSampledUs : 0,
+      shareOfProfilePercent: totalSampledUs ? (stats.timeUs * 100) / totalSampledUs : 0,
     };
   };
-  const rank = (map) => [...map.entries()].map(([id, stats]) => frame(id, stats)).sort((a, b) => b.timeMs - a.timeMs);
+  const rank = (map) =>
+    [...map.entries()].map(([id, stats]) => frame(id, stats)).sort((a, b) => b.timeMs - a.timeMs);
   return {
     sampleCount: profile.samples.length,
     totalSampledMs: totalSampledUs / 1000,
@@ -131,17 +136,22 @@ function distribution(values) {
   const sorted = [...values].sort((a, b) => a - b);
   return {
     samples: sorted.length,
-    p50Ms: percentile(sorted, .5),
-    p90Ms: percentile(sorted, .9),
-    p95Ms: percentile(sorted, .95),
-    p99Ms: percentile(sorted, .99),
+    p50Ms: percentile(sorted, 0.5),
+    p90Ms: percentile(sorted, 0.9),
+    p95Ms: percentile(sorted, 0.95),
+    p99Ms: percentile(sorted, 0.99),
     maxMs: sorted.at(-1),
     meanMs: sorted.reduce((sum, value) => sum + value, 0) / sorted.length,
   };
 }
 
 function batchPhase(name, rows) {
-  return { name, firstBatch: rows[0]?.batch ?? null, lastBatch: rows.at(-1)?.batch ?? null, ...distribution(rows.map((row) => row.elapsedMs)) };
+  return {
+    name,
+    firstBatch: rows[0]?.batch ?? null,
+    lastBatch: rows.at(-1)?.batch ?? null,
+    ...distribution(rows.map((row) => row.elapsedMs)),
+  };
 }
 
 engine.set_development_rate(developmentRate);
@@ -198,10 +208,15 @@ const restored = CityEngine.restore(savedText);
 const restoreMs = performance.now() - restoreStartedAt;
 const restoreSaveEqual = restored.save() === savedText;
 const restoreSnapshotEqual = restored.snapshot() === finalSnapshotText;
-const restoreMovementEqual = Array.from(restored.movements()).join(',') === Array.from(engine.movements()).join(',');
+const restoreMovementEqual =
+  Array.from(restored.movements()).join(',') === Array.from(engine.movements()).join(',');
 
-const queuedResidents = finalState.residents.filter((resident) =>
-  resident.transfer === 'waiting_station' || resident.transfer === 'waiting_gateway' || resident.transfer === 'waiting_bus').length;
+const queuedResidents = finalState.residents.filter(
+  (resident) =>
+    resident.transfer === 'waiting_station' ||
+    resident.transfer === 'waiting_gateway' ||
+    resident.transfer === 'waiting_bus',
+).length;
 const counts = countSummary(finalWorld, finalState);
 const invariants = {
   buildingsWithinCap: counts.buildings <= 2_000,
@@ -212,7 +227,8 @@ const invariants = {
   travelersWithinCap: counts.travelers <= 2_000,
   eventsWithinCap: counts.events <= 10_000,
   populationWithinCap: finalState.population <= 30_000,
-  activeTravelersMatchActors: finalWorld.stats.active_travelers === finalState.travelers.length + queuedResidents,
+  activeTravelersMatchActors:
+    finalWorld.stats.active_travelers === finalState.travelers.length + queuedResidents,
   restoreSaveEqual,
   restoreSnapshotEqual,
   restoreMovementEqual,
@@ -223,39 +239,87 @@ const continuationStartedAt = performance.now();
 engine.step(batchTicks);
 restored.step(batchTicks);
 const continuationMs = performance.now() - continuationStartedAt;
-const continuationEqual = engine.save() === restored.save() && engine.snapshot() === restored.snapshot();
+const continuationEqual =
+  engine.save() === restored.save() && engine.snapshot() === restored.snapshot();
 invariants.continuationEqualAfterOneBatch = continuationEqual;
 const wasmPeakBytes = wasm.memory.buffer.byteLength;
 peakRssBytes = Math.max(peakRssBytes, process.memoryUsage().rss);
 
-const failedInvariants = Object.entries(invariants).filter(([, passed]) => !passed).map(([name]) => name);
+const failedInvariants = Object.entries(invariants)
+  .filter(([, passed]) => !passed)
+  .map(([name]) => name);
 const output = {
   profile: 'mature-wasm-collection-caps',
   context: {
     command: 'node scripts/profile-mature-wasm.mjs',
     testEquivalentWorkload: 'seed 1204, development rate 60, 150 batches × 2000 synchronous ticks',
     concurrentFullTestRun: false,
-    runtime: { node: process.version, platform: process.platform, arch: process.arch, cpu: cpus()[0]?.model ?? 'unknown', logicalCpus: cpus().length, totalMemoryBytes: totalmem() },
+    runtime: {
+      node: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      cpu: cpus()[0]?.model ?? 'unknown',
+      logicalCpus: cpus().length,
+      totalMemoryBytes: totalmem(),
+    },
     sourceWasmSha256: createHash('sha256').update(wasmBytes).digest('hex'),
-    timingNote: 'simulation timings in this file are from the profiling run; compare only to unprofiledBaselineReference because Inspector sampling adds overhead.',
+    timingNote:
+      'simulation timings in this file are from the profiling run; compare only to unprofiledBaselineReference because Inspector sampling adds overhead.',
   },
   unprofiledBaselineReference: {
-    workload: 'same seed 1204, development rate 60, 150 × 2000 synchronous ticks; standalone run without Node Inspector active',
+    workload:
+      'same seed 1204, development rate 60, 150 × 2000 synchronous ticks; standalone run without Node Inspector active',
     elapsedMs: 56_746.903458,
-    batchDurationMs: { samples: 150, p50Ms: 468.716583, p90Ms: 563.756083, p95Ms: 611.569167, p99Ms: 772.681583, maxMs: 935.756333, meanMs: 376.355471 },
-    steadyMaturityBatches61to150Ms: { samples: 90, p50Ms: 518.07175, p90Ms: 586.044167, p95Ms: 712.505417, p99Ms: 935.756333, maxMs: 935.756333, meanMs: 522.611196 },
+    batchDurationMs: {
+      samples: 150,
+      p50Ms: 468.716583,
+      p90Ms: 563.756083,
+      p95Ms: 611.569167,
+      p99Ms: 772.681583,
+      maxMs: 935.756333,
+      meanMs: 376.355471,
+    },
+    steadyMaturityBatches61to150Ms: {
+      samples: 90,
+      p50Ms: 518.07175,
+      p90Ms: 586.044167,
+      p95Ms: 712.505417,
+      p99Ms: 935.756333,
+      maxMs: 935.756333,
+      meanMs: 522.611196,
+    },
     sourceWasmSha256: '3b37a8ea30fdf52f54bd4b577ba98fc540ec58c8cc34c41d431971c56a2bb7b6',
   },
-  configuration: { seed, developmentRate, batchCount, batchTicks, totalTicks: batchCount * batchTicks, snapshotSampleEveryBatches: sampleEveryBatches },
+  configuration: {
+    seed,
+    developmentRate,
+    batchCount,
+    batchTicks,
+    totalTicks: batchCount * batchTicks,
+    snapshotSampleEveryBatches: sampleEveryBatches,
+  },
   simulation: {
     elapsedMs: simulationElapsedMs,
     batchDurationMs: distribution(batchDurations),
     phases: [
-      batchPhase('founding-and-early-growth', batchDurations.slice(0, 30).map((elapsedMs, index) => ({ batch: index + 1, elapsedMs }))),
-      batchPhase('mature-buildout', batchDurations.slice(30, 60).map((elapsedMs, index) => ({ batch: index + 31, elapsedMs }))),
-      batchPhase('steady-maturity', batchDurations.slice(60).map((elapsedMs, index) => ({ batch: index + 61, elapsedMs }))),
+      batchPhase(
+        'founding-and-early-growth',
+        batchDurations.slice(0, 30).map((elapsedMs, index) => ({ batch: index + 1, elapsedMs })),
+      ),
+      batchPhase(
+        'mature-buildout',
+        batchDurations.slice(30, 60).map((elapsedMs, index) => ({ batch: index + 31, elapsedMs })),
+      ),
+      batchPhase(
+        'steady-maturity',
+        batchDurations.slice(60).map((elapsedMs, index) => ({ batch: index + 61, elapsedMs })),
+      ),
     ],
-    batches: batchDurations.map((elapsedMs, index) => ({ batch: index + 1, endTick: (index + 1) * batchTicks, elapsedMs })),
+    batches: batchDurations.map((elapsedMs, index) => ({
+      batch: index + 1,
+      endTick: (index + 1) * batchTicks,
+      elapsedMs,
+    })),
     sparseSnapshots: snapshots,
   },
   functionProfile: {
@@ -265,16 +329,40 @@ const output = {
       lastBatch: profileLastBatch,
       firstTickExclusive: (profileFirstBatch - 1) * batchTicks,
       lastTickInclusive: profileLastBatch * batchTicks,
-      stageAtStart: snapshots.find((snapshot) => snapshot.batch === profileFirstBatch - 1)?.counts.stage ?? 'Maturity',
+      stageAtStart:
+        snapshots.find((snapshot) => snapshot.batch === profileFirstBatch - 1)?.counts.stage ??
+        'Maturity',
       developmentRate,
       intervalUs: profilerIntervalUs,
-      wallDurationMs: profilerStartedAt == null || profilerStoppedAt == null ? null : profilerStoppedAt - profilerStartedAt,
+      wallDurationMs:
+        profilerStartedAt == null || profilerStoppedAt == null
+          ? null
+          : profilerStoppedAt - profilerStartedAt,
     },
     ...summarizeCpuProfile(cpuProfile),
   },
-  serialization: { finalSnapshotMs, saveMs, restoreMs, continuationMs, restoreSaveEqual, restoreSnapshotEqual, restoreMovementEqual, continuationEqual },
-  memory: { wasmStartBytes, wasmPeakBytes, processRssSampledPeakBytes: peakRssBytes, rssSamplingIntervalBatches: 1 },
-  finalCounts: { ...counts, savedPopulation: finalState.population, queuedResidents, seed: finalState.seed },
+  serialization: {
+    finalSnapshotMs,
+    saveMs,
+    restoreMs,
+    continuationMs,
+    restoreSaveEqual,
+    restoreSnapshotEqual,
+    restoreMovementEqual,
+    continuationEqual,
+  },
+  memory: {
+    wasmStartBytes,
+    wasmPeakBytes,
+    processRssSampledPeakBytes: peakRssBytes,
+    rssSamplingIntervalBatches: 1,
+  },
+  finalCounts: {
+    ...counts,
+    savedPopulation: finalState.population,
+    queuedResidents,
+    seed: finalState.seed,
+  },
   invariants,
   allInvariantsPass: failedInvariants.length === 0,
   failedInvariants,
@@ -284,10 +372,24 @@ const output = {
       'development_day scans buildings for activity/vacancy and housing arrivals and advances projects; sync_residents returns immediately once the resident vector reaches MAX_RESIDENTS=800, so it does not keep scanning residents during this profile’s mature phase.',
       'step_one evaluates growth every 40 ticks, and mature growth may run the bounded progressive frontage scan every 160 ticks (up to 24 roads and 48 sites per evaluation). It also updates resident/delivery schedules every 200 ticks, advances travelers/trains/buses every tick, and advances the district measurement cursor every tick. These are source-grounded candidates, not isolated costs.',
     ],
-    validationCost: 'restore_json invokes engine.validate twice while rebuilding/canonicalizing a save; step_one does not call engine.validate. The measured ~231ms restore time is small relative to the ~56.7s stepping run, so validation is not the observed stepping hotspot.',
-    evidenceFiles: ['engine/src/lib.rs:step', 'engine/src/lib.rs:step_one', 'engine/src/lib.rs:development_day', 'engine/src/lib.rs:evaluate_growth', 'engine/src/lib.rs:try_progressive_frontage_infill', 'engine/src/lib.rs:advance_travelers', 'engine/src/lib.rs:advance_district_measurement', 'engine/src/lib.rs:sync_residents', 'engine/src/lib.rs:restore_json', 'engine/src/lib.rs:validate'],
-    samplingProfilerCheck: 'Node Inspector sampled only batches 61–150; the resulting self/inclusive rankings and symbol-resolved frame names are included in functionProfile.',
-    caveat: 'Sampling is statistical and adds runtime overhead. It identifies sampled CPU work in this steady-maturity window, not a guaranteed optimization or browser frame-time improvement.',
+    validationCost:
+      'restore_json invokes engine.validate twice while rebuilding/canonicalizing a save; step_one does not call engine.validate. The measured ~231ms restore time is small relative to the ~56.7s stepping run, so validation is not the observed stepping hotspot.',
+    evidenceFiles: [
+      'engine/src/lib.rs:step',
+      'engine/src/lib.rs:step_one',
+      'engine/src/lib.rs:development_day',
+      'engine/src/lib.rs:evaluate_growth',
+      'engine/src/lib.rs:try_progressive_frontage_infill',
+      'engine/src/lib.rs:advance_travelers',
+      'engine/src/lib.rs:advance_district_measurement',
+      'engine/src/lib.rs:sync_residents',
+      'engine/src/lib.rs:restore_json',
+      'engine/src/lib.rs:validate',
+    ],
+    samplingProfilerCheck:
+      'Node Inspector sampled only batches 61–150; the resulting self/inclusive rankings and symbol-resolved frame names are included in functionProfile.',
+    caveat:
+      'Sampling is statistical and adds runtime overhead. It identifies sampled CPU work in this steady-maturity window, not a guaranteed optimization or browser frame-time improvement.',
   },
   limitations: [
     'This is a synchronous public-WASM engine workload without rendering, worker scheduling, or browser frame pacing.',
@@ -297,15 +399,25 @@ const output = {
 };
 
 const outArg = process.argv.find((argument) => argument.startsWith('--out='));
-const outPath = resolve(root, outArg ? outArg.slice('--out='.length) : 'validation/mature-wasm-profile.json');
+const outPath = resolve(
+  root,
+  outArg ? outArg.slice('--out='.length) : 'validation/mature-wasm-profile.json',
+);
 const profileOutArg = process.argv.find((argument) => argument.startsWith('--profile-out='));
-const profileOutPath = resolve(root, profileOutArg ? profileOutArg.slice('--profile-out='.length) : 'validation/mature-wasm-steady-profile.cpuprofile');
+const profileOutPath = resolve(
+  root,
+  profileOutArg
+    ? profileOutArg.slice('--profile-out='.length)
+    : 'validation/mature-wasm-steady-profile.cpuprofile',
+);
 const profileText = JSON.stringify(cpuProfile);
 writeFileSync(profileOutPath, `${profileText}\n`);
 output.functionProfile.artifact = profileOutPath;
 output.functionProfile.artifactBytes = Buffer.byteLength(profileText);
 writeFileSync(outPath, `${JSON.stringify(output, null, 2)}\n`);
-process.stdout.write(`${JSON.stringify({ output: outPath, profile: profileOutPath, elapsedMs: simulationElapsedMs, batchDurationMs: output.simulation.batchDurationMs, profileScope: output.functionProfile.scope, sampleCount: output.functionProfile.sampleCount, selfTimeTop: output.functionProfile.selfTimeTop.slice(0, 12), inclusiveTimeTop: output.functionProfile.inclusiveTimeTop.slice(0, 12), finalCounts: output.finalCounts, serialization: output.serialization, allInvariantsPass: output.allInvariantsPass, failedInvariants }, null, 2)}\n`);
+process.stdout.write(
+  `${JSON.stringify({ output: outPath, profile: profileOutPath, elapsedMs: simulationElapsedMs, batchDurationMs: output.simulation.batchDurationMs, profileScope: output.functionProfile.scope, sampleCount: output.functionProfile.sampleCount, selfTimeTop: output.functionProfile.selfTimeTop.slice(0, 12), inclusiveTimeTop: output.functionProfile.inclusiveTimeTop.slice(0, 12), finalCounts: output.finalCounts, serialization: output.serialization, allInvariantsPass: output.allInvariantsPass, failedInvariants }, null, 2)}\n`,
+);
 engine.free();
 restored.free();
 if (!output.allInvariantsPass) process.exitCode = 1;

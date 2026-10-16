@@ -10,7 +10,9 @@ const rate = Number(rateArg ?? 16);
 const target = Number(tickArg ?? 242000);
 const interval = Number(intervalArg ?? 1000);
 if (![seed, rate, target, interval].every(Number.isSafeInteger) || interval < 1 || target < 0) {
-  throw new Error('Usage: node scripts/compare-replay-targets.mjs [seed rate targetTicks intervalTicks]');
+  throw new Error(
+    'Usage: node scripts/compare-replay-targets.mjs [seed rate targetTicks intervalTicks]',
+  );
 }
 
 const env = { ...process.env };
@@ -19,13 +21,32 @@ if (existsSync('.tools/cargo/bin')) {
   env.RUSTUP_HOME = resolve('.tools/rustup');
   env.PATH = `${resolve('.tools/cargo/bin')}:${env.PATH}`;
 }
-const command = spawnSync('cargo', [
-  'run', '--quiet', '--locked', '--release', '--manifest-path', 'engine/Cargo.toml',
-  '--example', 'replay-trace', '--', String(seed), String(rate), String(target), String(interval),
-], { encoding: 'utf8', env, maxBuffer: 128 * 1024 * 1024 });
+const command = spawnSync(
+  'cargo',
+  [
+    'run',
+    '--quiet',
+    '--locked',
+    '--release',
+    '--manifest-path',
+    'engine/Cargo.toml',
+    '--example',
+    'replay-trace',
+    '--',
+    String(seed),
+    String(rate),
+    String(target),
+    String(interval),
+  ],
+  { encoding: 'utf8', env, maxBuffer: 128 * 1024 * 1024 },
+);
 if (command.error) throw command.error;
-if (command.status !== 0) throw new Error(`native trace failed (${command.status}):\n${command.stderr}`);
-const native = command.stdout.trim().split('\n').map((line) => JSON.parse(line));
+if (command.status !== 0)
+  throw new Error(`native trace failed (${command.status}):\n${command.stderr}`);
+const native = command.stdout
+  .trim()
+  .split('\n')
+  .map((line) => JSON.parse(line));
 
 initSync({ module: readFileSync(resolve('public/wasm/city_engine_bg.wasm')) });
 const wasm = new CityEngine(seed);
@@ -35,7 +56,8 @@ function compact() {
   const saved = wasm.save();
   const state = JSON.parse(saved);
   const exactU64 = (key) => saved.match(new RegExp(`"${key}":(\\d+)`))?.[1] ?? null;
-  const slim = (entries, fields) => entries.map((entry) => Object.fromEntries(fields.map((field) => [field, entry[field]])));
+  const slim = (entries, fields) =>
+    entries.map((entry) => Object.fromEntries(fields.map((field) => [field, entry[field]])));
   return {
     structures: {
       tick: snapshot.tick,
@@ -43,9 +65,44 @@ function compact() {
       population: snapshot.stats.population,
       nodes: slim(snapshot.nodes, ['id', 'x', 'z', 'kind']),
       roads: slim(snapshot.roads, ['id', 'from', 'to', 'kind', 'stage', 'connected', 'length']),
-      parcels: slim(snapshot.parcels, ['id', 'x', 'z', 'width', 'depth', 'access_node', 'protected', 'reservation']),
-      buildings: slim(snapshot.buildings, ['id', 'parcel_id', 'x', 'z', 'width', 'depth', 'floors', 'kind', 'stage', 'progress', 'capacity', 'occupancy', 'built_day', 'anchor']),
-      projects: slim(snapshot.projects, ['id', 'kind', 'from', 'to', 'parcel_id', 'stage', 'progress', 'duration', 'reason', 'started_tick']),
+      parcels: slim(snapshot.parcels, [
+        'id',
+        'x',
+        'z',
+        'width',
+        'depth',
+        'access_node',
+        'protected',
+        'reservation',
+      ]),
+      buildings: slim(snapshot.buildings, [
+        'id',
+        'parcel_id',
+        'x',
+        'z',
+        'width',
+        'depth',
+        'floors',
+        'kind',
+        'stage',
+        'progress',
+        'capacity',
+        'occupancy',
+        'built_day',
+        'anchor',
+      ]),
+      projects: slim(snapshot.projects, [
+        'id',
+        'kind',
+        'from',
+        'to',
+        'parcel_id',
+        'stage',
+        'progress',
+        'duration',
+        'reason',
+        'started_tick',
+      ]),
       development_rate: snapshot.development_rate,
     },
     internal: {
@@ -73,7 +130,9 @@ while (elapsed < target) {
 }
 wasm.free();
 
-function isNumeric(value) { return typeof value === 'number' && Number.isFinite(value); }
+function isNumeric(value) {
+  return typeof value === 'number' && Number.isFinite(value);
+}
 function collectDiffs(a, b, path = '$', out = [], tol = 1e-4, limit = 12) {
   if (out.length >= limit) return out;
   if (isNumeric(a) && isNumeric(b)) {
@@ -82,14 +141,17 @@ function collectDiffs(a, b, path = '$', out = [], tol = 1e-4, limit = 12) {
   }
   if (Object.is(a, b)) return out;
   if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) out.push({ path: `${path}.length`, native: a.length, wasm: b.length });
-    for (let i = 0; i < Math.min(a.length, b.length) && out.length < limit; i++) collectDiffs(a[i], b[i], `${path}[${i}]`, out, tol, limit);
+    if (a.length !== b.length)
+      out.push({ path: `${path}.length`, native: a.length, wasm: b.length });
+    for (let i = 0; i < Math.min(a.length, b.length) && out.length < limit; i++)
+      collectDiffs(a[i], b[i], `${path}[${i}]`, out, tol, limit);
     return out;
   }
   if (a && b && typeof a === 'object' && typeof b === 'object') {
     const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
     for (const key of keys) {
-      if (!(key in a) || !(key in b)) out.push({ path: `${path}.${key}`, native: a[key], wasm: b[key] });
+      if (!(key in a) || !(key in b))
+        out.push({ path: `${path}.${key}`, native: a[key], wasm: b[key] });
       else collectDiffs(a[key], b[key], `${path}.${key}`, out, tol, limit);
       if (out.length >= limit) break;
     }
@@ -104,7 +166,9 @@ let structuralEqualWithinFloatToleranceThrough = 0;
 for (let i = 0; i < Math.min(native.length, wasmTrace.length); i++) {
   const diffs = collectDiffs(native[i].structures, wasmTrace[i].structures);
   if (diffs.length) {
-    const entityMatch = diffs[0].path.match(/^\$\.(nodes|roads|parcels|buildings|projects)\[(\d+)\]/);
+    const entityMatch = diffs[0].path.match(
+      /^\$\.(nodes|roads|parcels|buildings|projects)\[(\d+)\]/,
+    );
     let entityDetails = null;
     if (entityMatch) {
       const [, collection, rawIndex] = entityMatch;
@@ -124,11 +188,21 @@ for (let i = 0; i < Math.min(native.length, wasmTrace.length); i++) {
         })),
       };
     }
-    first = { index: i, tick: native[i].structures.tick, structuralDiffs: diffs,
-      internalDiffs: collectDiffs(native[i].internal, wasmTrace[i].internal), entityDetails,
-      previousCheckpoint: i > 0 ? { tick: native[i - 1].structures.tick,
-        structuralDiffs: collectDiffs(native[i - 1].structures, wasmTrace[i - 1].structures),
-        internalDiffs: collectDiffs(native[i - 1].internal, wasmTrace[i - 1].internal) } : null };
+    first = {
+      index: i,
+      tick: native[i].structures.tick,
+      structuralDiffs: diffs,
+      internalDiffs: collectDiffs(native[i].internal, wasmTrace[i].internal),
+      entityDetails,
+      previousCheckpoint:
+        i > 0
+          ? {
+              tick: native[i - 1].structures.tick,
+              structuralDiffs: collectDiffs(native[i - 1].structures, wasmTrace[i - 1].structures),
+              internalDiffs: collectDiffs(native[i - 1].internal, wasmTrace[i - 1].internal),
+            }
+          : null,
+    };
     break;
   }
   structuralEqualWithinFloatToleranceThrough = native[i].structures.tick;
@@ -146,7 +220,10 @@ try {
     roadCount: candidate.roads?.length,
     sameSeed: candidate.seed === seed,
     sameTick: candidate.tick === target,
-    freshWasmCounts: { buildings: lastWasm.structures.buildings.length, roads: lastWasm.structures.roads.length },
+    freshWasmCounts: {
+      buildings: lastWasm.structures.buildings.length,
+      roads: lastWasm.structures.roads.length,
+    },
   };
 } catch (error) {
   candidateComparison = { unavailable: String(error) };
@@ -154,10 +231,20 @@ try {
 
 const result = {
   generatedAt: new Date().toISOString(),
-  parameters: { seed, developmentRate: rate, targetTick: target, checkpointInterval: interval, floatTolerance: 1e-4 },
+  parameters: {
+    seed,
+    developmentRate: rate,
+    targetTick: target,
+    checkpointInterval: interval,
+    floatTolerance: 1e-4,
+  },
   artifactHashes: {
-    engineLibSha256: createHash('sha256').update(readFileSync(resolve('engine/src/lib.rs'))).digest('hex'),
-    publicWasmSha256: createHash('sha256').update(readFileSync(resolve('public/wasm/city_engine_bg.wasm'))).digest('hex'),
+    engineLibSha256: createHash('sha256')
+      .update(readFileSync(resolve('engine/src/lib.rs')))
+      .digest('hex'),
+    publicWasmSha256: createHash('sha256')
+      .update(readFileSync(resolve('public/wasm/city_engine_bg.wasm')))
+      .digest('hex'),
   },
   nativeProfile: {
     platform: `${process.platform}-${process.arch}`,
@@ -169,14 +256,36 @@ const result = {
   structuralEqualWithinFloatToleranceThrough,
   firstDivergence: first,
   finalCounts: {
-    native: { buildings: lastNative.structures.buildings.length, roads: lastNative.structures.roads.length, projects: lastNative.structures.projects.length, population: lastNative.structures.population },
-    wasm: { buildings: lastWasm.structures.buildings.length, roads: lastWasm.structures.roads.length, projects: lastWasm.structures.projects.length, population: lastWasm.structures.population },
+    native: {
+      buildings: lastNative.structures.buildings.length,
+      roads: lastNative.structures.roads.length,
+      projects: lastNative.structures.projects.length,
+      population: lastNative.structures.population,
+    },
+    wasm: {
+      buildings: lastWasm.structures.buildings.length,
+      roads: lastWasm.structures.roads.length,
+      projects: lastWasm.structures.projects.length,
+      population: lastWasm.structures.population,
+    },
   },
   finalInternalDiffs: collectDiffs(lastNative.internal, lastWasm.internal),
   existingCandidate: candidateComparison,
-  interpretation: 'Numeric geometry/progress fields are treated as equal within 1e-4; IDs, categories, and array order are compared exactly. The first reported mismatch is bounded by the checkpoint interval and does not prove where a latent branch began. When RNG and cursors still match, inspect candidate eligibility and ordering before attributing a later site difference to a stale build or to floating-point ties.',
+  interpretation:
+    'Numeric geometry/progress fields are treated as equal within 1e-4; IDs, categories, and array order are compared exactly. The first reported mismatch is bounded by the checkpoint interval and does not prove where a latent branch began. When RNG and cursors still match, inspect candidate eligibility and ordering before attributing a later site difference to a stale build or to floating-point ties.',
 };
 const output = resolve('validation/replay-target-diagnostic.json');
 writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
 console.log(`Wrote ${output}`);
-console.log(JSON.stringify({ firstDivergence: result.firstDivergence, finalCounts: result.finalCounts, finalInternalDiffs: result.finalInternalDiffs, existingCandidate: candidateComparison }, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      firstDivergence: result.firstDivergence,
+      finalCounts: result.finalCounts,
+      finalInternalDiffs: result.finalInternalDiffs,
+      existingCandidate: candidateComparison,
+    },
+    null,
+    2,
+  ),
+);

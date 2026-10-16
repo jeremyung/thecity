@@ -6,38 +6,91 @@ import type { World } from '../web/src/types';
 
 function world(ground: NonNullable<World['ground']>, progress = 0): World {
   return {
-    schema_version: 1, engine_version: 'test', seed: 17, tick: 1, day: 1,
-    minute_of_day: 360, development_rate: 1, revision: 1, stage: 'running',
+    schema_version: 1,
+    engine_version: 'test',
+    seed: 17,
+    tick: 1,
+    day: 1,
+    minute_of_day: 360,
+    development_rate: 1,
+    revision: 1,
+    stage: 'running',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
     terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 }, nodes: [],
-    roads: [{ id: 1, from: 1, to: 2, kind: 'local', stage: 'building', progress, connected: false, length: 10, lanes: 1 }],
-    parcels: [], buildings: [], ground,
-    projects: [], trains: [], events: [], stats: { population: 0, active_travelers: 0, buildings: 0, active_projects: 0 },
+    weather: { kind: 'clear', intensity: 0 },
+    nodes: [],
+    roads: [
+      {
+        id: 1,
+        from: 1,
+        to: 2,
+        kind: 'local',
+        stage: 'building',
+        progress,
+        connected: false,
+        length: 10,
+        lanes: 1,
+      },
+    ],
+    parcels: [],
+    buildings: [],
+    ground,
+    projects: [],
+    trains: [],
+    events: [],
+    stats: { population: 0, active_travelers: 0, buildings: 0, active_projects: 0 },
   };
 }
 
-const patch = (x: number, block = 0) => ({ block, points: [[x, 0], [x + 8, 0], [x + 8, 8], [x, 8]] as [number, number][] });
+const patch = (x: number, block = 0) => ({
+  block,
+  points: [
+    [x, 0],
+    [x + 8, 0],
+    [x + 8, 8],
+    [x, 8],
+  ] as [number, number][],
+});
 
 function rendererHarness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
   renderer.worldState = null;
-  renderer.hour = 0; renderer.rain = 0; renderer.terrainSeed = 17; renderer.worldTick = 0;
-  renderer.roadSignature = ''; renderer.groundSignature = '';
-  renderer.scene = new THREE.Scene(); renderer.ground = new THREE.Group(); renderer.scene.add(renderer.ground);
-  renderer.buildings = new Map(); renderer.objectQueue = new Map(); renderer.chunks = { remove: vi.fn() };
+  renderer.hour = 0;
+  renderer.rain = 0;
+  renderer.terrainSeed = 17;
+  renderer.worldTick = 0;
+  renderer.roadSignature = '';
+  renderer.groundSignature = '';
+  renderer.scene = new THREE.Scene();
+  renderer.ground = new THREE.Group();
+  renderer.scene.add(renderer.ground);
+  renderer.buildings = new Map();
+  renderer.objectQueue = new Map();
+  renderer.chunks = { remove: vi.fn() };
   const materials = new Map<string, THREE.Material>();
-  renderer.art = { get: (tone: string) => materials.get(tone) ?? (materials.set(tone, new THREE.MeshBasicMaterial({ color: tone })), materials.get(tone)!) };
+  renderer.art = {
+    get: (tone: string) =>
+      materials.get(tone) ??
+      (materials.set(tone, new THREE.MeshBasicMaterial({ color: tone })), materials.get(tone)!),
+  };
   // This harness isolates road/ground publication; park geometry and seasonal
   // painting have their own tests and need the full foliage/material setup.
-  renderer.rebuildParks = vi.fn(); renderer.paintSeason = vi.fn();
+  renderer.rebuildParks = vi.fn();
+  renderer.paintSeason = vi.fn();
   renderer.director = { world: vi.fn() };
   renderer.sidewalks = { setWorld: vi.fn() };
-  renderer.buses = { setWorld: vi.fn() }; renderer.trains = { setWorld: vi.fn() };
-  renderer.accessPaths = { setWorld: vi.fn() }; renderer.rearExtensions = { setWorld: vi.fn() };
-  renderer.updateTrees = vi.fn(); renderer.rebuildRoads = vi.fn();
-  renderer.pendingCompiles = 0; renderer.retiredResources = [];
-  return renderer as Pick<CityRenderer, 'setWorld'> & { rebuildRoads: ReturnType<typeof vi.fn>; updateTrees: ReturnType<typeof vi.fn> };
+  renderer.buses = { setWorld: vi.fn() };
+  renderer.trains = { setWorld: vi.fn() };
+  renderer.accessPaths = { setWorld: vi.fn() };
+  renderer.rearExtensions = { setWorld: vi.fn() };
+  renderer.updateTrees = vi.fn();
+  renderer.rebuildRoads = vi.fn();
+  renderer.pendingCompiles = 0;
+  renderer.retiredResources = [];
+  return renderer as Pick<CityRenderer, 'setWorld'> & {
+    rebuildRoads: ReturnType<typeof vi.fn>;
+    updateTrees: ReturnType<typeof vi.fn>;
+  };
 }
 
 describe('progressive ground renderer isolation', () => {
@@ -84,8 +137,15 @@ describe('progressive ground renderer isolation', () => {
 describe('ground surface geometry', () => {
   it('places polygon surfaces at the configured height and batches patches by at most four materials', () => {
     const materials = new Map<string, THREE.Material>();
-    const art = { get: (tone: string) => materials.get(tone) ?? (materials.set(tone, new THREE.MeshBasicMaterial({ color: tone })), materials.get(tone)!) } as any;
-    const group = buildGroundSurfaces(Array.from({ length: 12 }, (_, i) => patch(i * 10, i)), art);
+    const art = {
+      get: (tone: string) =>
+        materials.get(tone) ??
+        (materials.set(tone, new THREE.MeshBasicMaterial({ color: tone })), materials.get(tone)!),
+    } as any;
+    const group = buildGroundSurfaces(
+      Array.from({ length: 12 }, (_, i) => patch(i * 10, i)),
+      art,
+    );
 
     expect(group.children).toHaveLength(4);
     for (const child of group.children as THREE.Mesh[]) {

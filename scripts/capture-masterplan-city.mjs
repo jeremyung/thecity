@@ -26,19 +26,35 @@ const browser = await chromium.launch({
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
 try {
-  const page = await browser.newPage({ viewport: { width: 1400, height: 900 }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({
+    viewport: { width: 1400, height: 900 },
+    deviceScaleFactor: 1,
+  });
   page.on('pageerror', (error) => console.error(error.message));
-  page.on('console', (message) => { if (message.type() === 'error' || message.type() === 'warning') console.error(message.text()); });
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') console.error(message.text());
+  });
   await page.goto('http://127.0.0.1:5173/?webgl=1', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.querySelector('canvas')?.dataset.graphicsPhase === 'first-frame-submitted', null, { timeout: 120000 });
+  await page.waitForFunction(
+    () => document.querySelector('canvas')?.dataset.graphicsPhase === 'first-frame-submitted',
+    null,
+    { timeout: 120000 },
+  );
   const expected = JSON.parse(saved);
-  await page.evaluate(([s, save]) => {
-    const c = window.__city;
-    c.renderer.renderer.setAnimationLoop(null);
-    c.client.controls({ paused: true });
-    c.client.init(s, save);
-  }, [seed, saved]);
-  await page.waitForFunction((count) => window.__city?.world?.buildings.length === count, expected.buildings.length, { timeout: 60000 });
+  await page.evaluate(
+    ([s, save]) => {
+      const c = window.__city;
+      c.renderer.renderer.setAnimationLoop(null);
+      c.client.controls({ paused: true });
+      c.client.init(s, save);
+    },
+    [seed, saved],
+  );
+  await page.waitForFunction(
+    (count) => window.__city?.world?.buildings.length === count,
+    expected.buildings.length,
+    { timeout: 60000 },
+  );
 
   const world = await page.evaluate(() => {
     const r = window.__city.renderer;
@@ -50,19 +66,42 @@ try {
     const pipeline = r.pipeline;
     r.pipeline = null;
     let steps = 0;
-    while ((r.objectQueue.size || r.chunks.pendingCount) && steps < 40000) { r.animate(); steps++; }
+    while ((r.objectQueue.size || r.chunks.pendingCount) && steps < 40000) {
+      r.animate();
+      steps++;
+    }
     r.pipeline = pipeline;
     const w = r.worldState;
     const station = w.nodes.find((n) => n.kind === 'station');
     const market = w.nodes.find((n) => n.kind === 'market');
-    return { tick: w.tick, buildings: w.buildings.length, steps, station, market, queued: r.objectQueue.size, chunks: r.chunks.pendingCount };
+    return {
+      tick: w.tick,
+      buildings: w.buildings.length,
+      steps,
+      station,
+      market,
+      queued: r.objectQueue.size,
+      chunks: r.chunks.pendingCount,
+    };
   });
 
   const views = [
     { name: 'overview', target: [0, 0, 0], position: [380, 420, -470] },
-    { name: 'neighborhood', target: [world.market.x + 120, 4, world.market.z + 60], position: [world.market.x + 300, 150, world.market.z - 120] },
-    { name: 'station', target: [world.station.x, 8, world.station.z], position: [world.station.x + 140, 95, world.station.z - 150] },
-    { name: 'street', target: [world.market.x + 70, 6, world.market.z + 40], position: [world.market.x + 115, 28, world.market.z - 10] },
+    {
+      name: 'neighborhood',
+      target: [world.market.x + 120, 4, world.market.z + 60],
+      position: [world.market.x + 300, 150, world.market.z - 120],
+    },
+    {
+      name: 'station',
+      target: [world.station.x, 8, world.station.z],
+      position: [world.station.x + 140, 95, world.station.z - 150],
+    },
+    {
+      name: 'street',
+      target: [world.market.x + 70, 6, world.market.z + 40],
+      position: [world.market.x + 115, 28, world.market.z - 10],
+    },
   ];
   const captured = [];
   for (const view of views) {
@@ -77,7 +116,10 @@ try {
     await page.screenshot({ path: file });
     captured.push({ ...view, file });
   }
-  await writeFile(join(outDir, 'capture.json'), `${JSON.stringify({ source: savePath, backend: 'software WebGL (swiftshader)', method: 'post pipeline detached while draining geometry queues; restored for captures', performanceEvidence: false, previewHour: 15, depthOfField: false, world, views: captured }, null, 2)}\n`);
+  await writeFile(
+    join(outDir, 'capture.json'),
+    `${JSON.stringify({ source: savePath, backend: 'software WebGL (swiftshader)', method: 'post pipeline detached while draining geometry queues; restored for captures', performanceEvidence: false, previewHour: 15, depthOfField: false, world, views: captured }, null, 2)}\n`,
+  );
   console.log(JSON.stringify(world));
 } finally {
   await browser.close();

@@ -6,12 +6,17 @@ import { pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 
 const root = resolve(import.meta.dirname, '..');
-const inputPath = resolve(process.argv[2] ?? 'validation/early-reservation-wasm-87231-snapshot.json');
+const inputPath = resolve(
+  process.argv[2] ?? 'validation/early-reservation-wasm-87231-snapshot.json',
+);
 const outputPath = resolve(process.argv[3] ?? 'validation/building-outline-comparison.json');
 const cache = resolve(root, 'node_modules/.cache', `thecity-outline-compare-${process.pid}`);
 const inputBytes = await readFile(inputPath);
 const world = JSON.parse(inputBytes.toString('utf8'));
-if (!Array.isArray(world.buildings) || world.buildings.length !== 850) throw new Error(`Expected mature 850-building fixture; received ${world.buildings?.length ?? 'no buildings'}`);
+if (!Array.isArray(world.buildings) || world.buildings.length !== 850)
+  throw new Error(
+    `Expected mature 850-building fixture; received ${world.buildings?.length ?? 'no buildings'}`,
+  );
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 const codeFiles = [
   'web/src/render/kit.ts',
@@ -21,10 +26,23 @@ const codeFiles = [
   'web/src/render/materials.ts',
 ];
 
-globalThis.document = { createElement(name) {
-  if (name !== 'canvas') throw new Error(`Unexpected DOM element request: ${name}`);
-  return { width: 0, height: 0, getContext: () => ({ fillRect() {}, strokeRect() {}, fillText() {}, beginPath() {}, ellipse() {}, fill() {} }) };
-} };
+globalThis.document = {
+  createElement(name) {
+    if (name !== 'canvas') throw new Error(`Unexpected DOM element request: ${name}`);
+    return {
+      width: 0,
+      height: 0,
+      getContext: () => ({
+        fillRect() {},
+        strokeRect() {},
+        fillText() {},
+        beginPath() {},
+        ellipse() {},
+        fill() {},
+      }),
+    };
+  },
+};
 
 function frozenLegacyOutlines(THREE, group) {
   const values = [];
@@ -39,7 +57,8 @@ function frozenLegacyOutlines(THREE, group) {
       const dy = points.getY(i + 1) - points.getY(i);
       const dz = points.getZ(i + 1) - points.getZ(i);
       if (dx * dx + dy * dy + dz * dz < 12.25) continue;
-      for (let j = 0; j < 2; j++) values.push(points.getX(i + j), points.getY(i + j), points.getZ(i + j));
+      for (let j = 0; j < 2; j++)
+        values.push(points.getX(i + j), points.getY(i + j), points.getZ(i + j));
     }
     edges.dispose();
   });
@@ -54,9 +73,14 @@ await rm(cache, { recursive: true, force: true });
 await mkdir(cache, { recursive: true });
 try {
   const bundle = await build({
-    entryPoints: codeFiles.map((file) => resolve(root, file)), outdir: cache,
-    bundle: true, format: 'esm', platform: 'node', packages: 'external',
-    logLevel: 'silent', metafile: true,
+    entryPoints: codeFiles.map((file) => resolve(root, file)),
+    outdir: cache,
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    packages: 'external',
+    logLevel: 'silent',
+    metafile: true,
   });
   const THREE = await import('three/webgpu');
   const [{ buildingKit, disposeGroup }, { ArtMaterials }, { BuildingChunks }] = await Promise.all([
@@ -65,10 +89,19 @@ try {
     import(pathToFileURL(resolve(cache, 'building-chunks.js')).href),
   ]);
   const art = new ArtMaterials();
-  const chunks = new BuildingChunks((material) => art.buildingBatch(material), (dispose) => dispose(), art.contours);
-  const referenceHash = createHash('sha256'), optimizedHash = createHash('sha256');
-  let authoredMs = 0, legacyOutlinesMs = 0, optimizedSetMs = 0;
-  let referenceFloats = 0, optimizedFloats = 0, perBuildingMismatches = 0;
+  const chunks = new BuildingChunks(
+    (material) => art.buildingBatch(material),
+    (dispose) => dispose(),
+    art.contours,
+  );
+  const referenceHash = createHash('sha256'),
+    optimizedHash = createHash('sha256');
+  let authoredMs = 0,
+    legacyOutlinesMs = 0,
+    optimizedSetMs = 0;
+  let referenceFloats = 0,
+    optimizedFloats = 0,
+    perBuildingMismatches = 0;
   const mismatchIds = [];
 
   for (const building of world.buildings) {
@@ -85,15 +118,26 @@ try {
     updateHash(referenceHash, legacy);
 
     const setStart = performance.now();
-    chunks.set(building.id, group, { createGroup() { throw new Error('Factory not used in outline-only comparison'); }, disposeGroup });
+    chunks.set(building.id, group, {
+      createGroup() {
+        throw new Error('Factory not used in outline-only comparison');
+      },
+      disposeGroup,
+    });
     optimizedSetMs += performance.now() - setStart;
     const optimized = chunks.sources.get(building.id).contours;
     optimizedFloats += optimized.length;
     updateHash(optimizedHash, optimized);
 
-    const sameBytes = legacy.length === optimized.length && Buffer.from(legacy.buffer, legacy.byteOffset, legacy.byteLength)
-      .equals(Buffer.from(optimized.buffer, optimized.byteOffset, optimized.byteLength));
-    if (!sameBytes) { perBuildingMismatches++; mismatchIds.push(building.id); }
+    const sameBytes =
+      legacy.length === optimized.length &&
+      Buffer.from(legacy.buffer, legacy.byteOffset, legacy.byteLength).equals(
+        Buffer.from(optimized.buffer, optimized.byteOffset, optimized.byteLength),
+      );
+    if (!sameBytes) {
+      perBuildingMismatches++;
+      mismatchIds.push(building.id);
+    }
   }
 
   const hashBeforeFinish = referenceHash.digest('hex');
@@ -103,34 +147,62 @@ try {
     .filter((file) => file.startsWith('web/src/render/'))
     .sort();
   const transitiveSourceHashes = {};
-  for (const file of transitiveCode) transitiveSourceHashes[file] = sha256(await readFile(resolve(root, file)));
+  for (const file of transitiveCode)
+    transitiveSourceHashes[file] = sha256(await readFile(resolve(root, file)));
   const report = {
     title: 'Mature fixture building outline byte-parity comparison',
     measuredAt: new Date().toISOString(),
     fixture: {
-      file: inputPath.replace(`${root}/`, ''), sha256: sha256(inputBytes), bytes: inputBytes.byteLength,
-      seed: world.seed, tick: world.tick, buildings: world.buildings.length,
+      file: inputPath.replace(`${root}/`, ''),
+      sha256: sha256(inputBytes),
+      bytes: inputBytes.byteLength,
+      seed: world.seed,
+      tick: world.tick,
+      buildings: world.buildings.length,
     },
     transitiveSourceHashes,
     oracle: {
-      description: 'Frozen pre-optimization BuildingChunks.outlines algorithm: EdgesGeometry(geometry, 42), apply world matrix, omit edge pairs where world-space squared length is below 12.25, append each retained pair to Float32Array.',
-      edgeAngleDegrees: 42, minimumEdgeLengthMeters: 3.5, thresholdComparison: 'strictly less than 12.25 m² is omitted',
+      description:
+        'Frozen pre-optimization BuildingChunks.outlines algorithm: EdgesGeometry(geometry, 42), apply world matrix, omit edge pairs where world-space squared length is below 12.25, append each retained pair to Float32Array.',
+      edgeAngleDegrees: 42,
+      minimumEdgeLengthMeters: 3.5,
+      thresholdComparison: 'strictly less than 12.25 m² is omitted',
     },
     output: {
-      legacyReference: { floatCount: referenceFloats, byteCount: referenceFloats * Float32Array.BYTES_PER_ELEMENT, orderedFloat32Sha256: hashBeforeFinish },
-      optimized: { floatCount: optimizedFloats, byteCount: optimizedFloats * Float32Array.BYTES_PER_ELEMENT, orderedFloat32Sha256: hashAfterOptimization },
-      orderedBytesIdentical: referenceFloats === optimizedFloats && hashBeforeFinish === hashAfterOptimization && perBuildingMismatches === 0,
-      perBuildingMismatches, mismatchBuildingIds: mismatchIds,
+      legacyReference: {
+        floatCount: referenceFloats,
+        byteCount: referenceFloats * Float32Array.BYTES_PER_ELEMENT,
+        orderedFloat32Sha256: hashBeforeFinish,
+      },
+      optimized: {
+        floatCount: optimizedFloats,
+        byteCount: optimizedFloats * Float32Array.BYTES_PER_ELEMENT,
+        orderedFloat32Sha256: hashAfterOptimization,
+      },
+      orderedBytesIdentical:
+        referenceFloats === optimizedFloats &&
+        hashBeforeFinish === hashAfterOptimization &&
+        perBuildingMismatches === 0,
+      perBuildingMismatches,
+      mismatchBuildingIds: mismatchIds,
     },
     timing: {
       mode: 'one Node process, same generated groups; legacy reference first, optimized BuildingChunks.set second for each building',
       units: 'milliseconds',
-      nodeWallMs: { buildingKitGeneration: authoredMs, frozenLegacyOutlineReference: legacyOutlinesMs, optimizedSetOutlinePath: optimizedSetMs },
+      nodeWallMs: {
+        buildingKitGeneration: authoredMs,
+        frozenLegacyOutlineReference: legacyOutlinesMs,
+        optimizedSetOutlinePath: optimizedSetMs,
+      },
       note: 'The optimized path timing includes BuildingChunks.set bookkeeping as well as outline extraction; timings are single-run CPU wall time and not browser frame pacing or GPU performance.',
     },
     environment: {
-      platform: process.platform, architecture: process.arch, node: process.version,
-      threeVersion: JSON.parse(await readFile(resolve(root, 'node_modules/three/package.json'), 'utf8')).version,
+      platform: process.platform,
+      architecture: process.arch,
+      node: process.version,
+      threeVersion: JSON.parse(
+        await readFile(resolve(root, 'node_modules/three/package.json'), 'utf8'),
+      ).version,
       sourceModulesFromEsbuildMetafile: transitiveCode,
     },
     limitations: [
@@ -140,9 +212,12 @@ try {
       'Both hash streams preserve world/building order and each source contour float order; mismatching building IDs are listed if parity fails.',
     ],
   };
-  if (!report.output.orderedBytesIdentical) throw new Error(`Contour outputs differ: ${JSON.stringify(report.output)}`);
+  if (!report.output.orderedBytesIdentical)
+    throw new Error(`Contour outputs differ: ${JSON.stringify(report.output)}`);
   await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`);
-  process.stdout.write(`${JSON.stringify({ outputPath, fixture: report.fixture, transitiveSourceHashes, output: report.output, timing: report.timing }, null, 2)}\n`);
+  process.stdout.write(
+    `${JSON.stringify({ outputPath, fixture: report.fixture, transitiveSourceHashes, output: report.output, timing: report.timing }, null, 2)}\n`,
+  );
   chunks.clear();
   art.dispose();
 } finally {

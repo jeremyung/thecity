@@ -9,7 +9,16 @@ if (!process.argv[2]) {
 const wasm = readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url));
 initSync({ module: wasm });
 const source = readFileSync(process.argv[2], 'utf8');
-const path = ['live_access_checkpoint', 'planning', 'discovery', 'stage', 'Trace', 'trace', 'stage', 'Preflight'];
+const path = [
+  'live_access_checkpoint',
+  'planning',
+  'discovery',
+  'stage',
+  'Trace',
+  'trace',
+  'stage',
+  'Preflight',
+];
 const preflightOf = (save) => path.reduce((value, key) => value[key], save);
 const expectedWorld = JSON.parse(source);
 const sourceSchema = preflightOf(expectedWorld).schema;
@@ -36,7 +45,11 @@ try {
   assert.deepEqual(actualWorld, expectedWorld);
 
   const roundtrip = CityEngine.restore(migrated);
-  try { assert.equal(roundtrip.save(), migrated); } finally { roundtrip.free(); }
+  try {
+    assert.equal(roundtrip.save(), migrated);
+  } finally {
+    roundtrip.free();
+  }
   for (let i = 0; i < 24; i++) {
     first.step(1);
     second.step(1);
@@ -56,10 +69,23 @@ try {
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const report = {
   scope: 'Node WASM legacy preflight migration, not browser UI',
-  sourceSchema, sourceSha256: sha256(source), wasmSha256: sha256(wasm),
-  worldFieldsPreserved: true, migratedRoundtripExact: true,
-  deterministicContinuationTicks: 24, futureAndCorruptCurrentRejected: true,
-  frozenNodes, frozenEdges,
+  sourceSchema,
+  sourceSha256: sha256(source),
+  wasmSha256: sha256(wasm),
+  worldFieldsPreserved: true,
+  migratedRoundtripExact: true,
+  deterministicContinuationTicks: 24,
+  futureAndCorruptCurrentRejected: true,
+  frozenNodes,
+  frozenEdges,
 };
-writeFileSync(new URL(sourceSchema === 1 ? '../validation/legacy-preflight-wasm.json' : '../validation/legacy-preflight-schema2-wasm.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
+writeFileSync(
+  new URL(
+    sourceSchema === 1
+      ? '../validation/legacy-preflight-wasm.json'
+      : '../validation/legacy-preflight-schema2-wasm.json',
+    import.meta.url,
+  ),
+  JSON.stringify(report, null, 2) + '\n',
+);
 console.log(JSON.stringify(report, null, 2));
