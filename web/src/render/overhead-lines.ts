@@ -1,3 +1,4 @@
+import { instanceCapacity, reuseInstances } from './reuse-instances';
 import * as THREE from 'three/webgpu';
 import { attribute, cameraPosition, cameraProjectionMatrix, clamp, color, cross, float, int, max, normalize, positionLocal, screenSize, smoothstep, varying, vec3, vec4 } from 'three/tsl';
 import type { ArtMaterials } from './materials';
@@ -412,13 +413,14 @@ function wireMaterial(art:ArtMaterials,key:string,fade:readonly [number,number])
 }
 
 function instanced(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,count:number,castShadow=false){
-  const mesh=new THREE.InstancedMesh(geometry,material,Math.max(1,count));
+  const mesh=new THREE.InstancedMesh(geometry,material,instanceCapacity(count));
   mesh.name=name;mesh.count=count;mesh.castShadow=castShadow;mesh.receiveShadow=true;
   return mesh;
 }
 
-/** Build the street wiring layer: instanced poles and per-cell wire ribbons. The rail catenary is drawn with the rail corridor. */
-export function buildOverheadLines(world:OverheadWorld,art:ArtMaterials,trees:readonly PlantedTree[]=[]):THREE.Group{
+/** Build street wiring. Reusable pole meshes are adopted from `previous`;
+ * the caller retires the leftover group. Rail catenary belongs to its corridor. */
+export function buildOverheadLines(world:OverheadWorld,art:ArtMaterials,trees:readonly PlantedTree[]=[],previous?:THREE.Group):THREE.Group{
   const root=new THREE.Group();root.name='overhead-lines';
   const {poles,spans}=streetWiring(world,trees);
   const dummy=new THREE.Object3D();
@@ -446,7 +448,11 @@ export function buildOverheadLines(world:OverheadWorld,art:ArtMaterials,trees:re
       for(const index of [0,1,2]){const p=conductorPoint(pole,index);dummy.position.set(p.x,p.y-.08,p.z);dummy.updateMatrix();insulators.setMatrixAt(insulator++,dummy.matrix);}
       if(pole.transformer){dummy.position.set(pole.x+pole.ix*.42,pole.height-2.7,pole.z+pole.iz*.42);dummy.updateMatrix();cans.setMatrixAt(transformer++,dummy.matrix);}
     }
-    for(const mesh of [shafts,topArms,lowArms,insulators,cans]){mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();root.add(mesh);}
+    for(const mesh of [shafts,topArms,lowArms,insulators,cans]){mesh.instanceMatrix.needsUpdate=true;const old=previous?.getObjectByName(mesh.name);
+      const retained=reuseInstances(old instanceof THREE.InstancedMesh?old:undefined,mesh);
+      // Pole primitives are fixed by role, so their old geometry is identical.
+      if(retained!==mesh)mesh.geometry.dispose();
+      retained.computeBoundingSphere();root.add(retained);}
   }
 
   const cells=new Map<string,WireBuilder>();

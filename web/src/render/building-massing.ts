@@ -11,7 +11,7 @@ export interface BuildingMass {
 }
 
 export interface MidriseMassing {
-  family: 'walkup' | 'terrace-apartment' | 'setback-office';
+  family: 'slab-apartment' | 'walkup' | 'terrace-apartment' | 'terrace-home' | 'setback-office';
   masses: BuildingMass[];
 }
 
@@ -61,6 +61,23 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
             floors: 1,
             role: 'main',
           },
+        ],
+      };
+    }
+
+    // Compact apartment blocks can carry their dwelling bays continuously to
+    // the roof. Reserve a circulation/service bay and at least two 3 m rooms;
+    // taller or narrower blocks retain the established setback family.
+    const slabCoreWidth = Math.min(2.4, Math.max(1.8, w * .2));
+    if (b.floors <= 6 && w - slabCoreWidth >= 6 && d >= 8) {
+      const mainWidth = w - slabCoreWidth;
+      return {
+        family: 'slab-apartment',
+        masses: [
+          { x: side * (w / 2 - slabCoreWidth / 2), z: 0,
+            width: slabCoreWidth, depth: d, baseFloor: 0, floors: b.floors, role: 'core' },
+          { x: -side * slabCoreWidth / 2, z: 0,
+            width: mainWidth, depth: d, baseFloor: 0, floors: b.floors, role: 'main' },
         ],
       };
     }

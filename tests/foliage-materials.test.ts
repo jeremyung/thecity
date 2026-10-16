@@ -25,7 +25,8 @@ describe('foliage material variants',()=>{
       expect(miniature).toBeInstanceOf(THREE.MeshStandardNodeMaterial);
       expect(anime.vertexColors).toBe(true);
       expect(miniature.vertexColors).toBe(true);
-      expect(anime.alphaMap).toBe(miniature.alphaMap);
+      expect(anime.opacityNode).toBe(miniature.opacityNode);
+      expect(anime.opacityNode?.isNode).toBe(true);
       expect(anime.alphaTest).toBe(.38);
       expect(miniature.alphaTest).toBe(.38);
       expect(anime.alphaToCoverage).toBe(true);

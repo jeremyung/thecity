@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { float, floor, fwidth, color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty } from 'three/tsl';
+import { float, floor, fwidth, color, materialColor, positionWorld, positionView, smoothstep, positionLocal, instanceIndex, vec3, sin, mx_noise_float, uniform, mix, vertexColor, normalWorld, cameraPosition, reflect, texture, varyingProperty, attribute } from 'three/tsl';
 import type { Style } from '../types';
 import type { BuildingBatchSurface } from './building-chunks';
 import { paintedSurfaceTint } from './painted-surface';
@@ -78,7 +78,8 @@ export class ArtMaterials {
       if(hex==='#fffffe'){
         anime.vertexColors=true;miniature.vertexColors=true;
         this.leafMask??=foliageMask();
-        for(const material of [anime,miniature]){material.alphaMap=this.leafMask;material.alphaTest=.38;material.alphaToCoverage=true;material.side=THREE.DoubleSide;}
+        const leafCoverage=mix(texture(this.leafMask).g,float(1),attribute('canopyCore','float'));
+        for(const material of [anime,miniature]){material.opacityNode=leafCoverage;material.alphaTest=.38;material.alphaToCoverage=true;material.side=THREE.DoubleSide;}
         // Standard shading preserves the miniature's material response, but
         // shadowed cards can collapse to black. Keep a small, night-aware fill
         // and multiply by the same per-tree tint as the diffuse pass; without
@@ -252,9 +253,9 @@ export class ArtMaterials {
       const wear=mx_noise_float(p.mul(.028)).mul(.07);
       const puddle=ArtMaterials.puddles(positionWorld.x,positionWorld.z).mul(this.wet);
       const wetness=mix(float(1),float(.8),this.wet.mul(.6).add(puddle.mul(.4)));
-      const albedo=color('#747f7b').mul(grain.add(wear).add(1)).mul(mix(float(1),float(.87),patch)).mul(crack.oneMinus()).mul(wetness).mul(this.cloudShade());
-      const anime=new THREE.MeshToonNodeMaterial({color:'#747f7b',gradientMap:this.bands});
-      const miniature=new THREE.MeshStandardNodeMaterial({color:'#747f7b',roughness:.9});
+      const albedo=color('#535b5d').mul(grain.add(wear).add(1)).mul(mix(float(1),float(.87),patch)).mul(crack.oneMinus()).mul(wetness).mul(this.cloudShade());
+      const anime=new THREE.MeshToonNodeMaterial({color:'#535b5d',gradientMap:this.bands});
+      const miniature=new THREE.MeshStandardNodeMaterial({color:'#535b5d',roughness:.9});
       anime.colorNode=albedo;miniature.colorNode=albedo;
       miniature.roughnessNode=mix(mix(float(.9),float(.5),this.wet),float(.08),puddle);
       return{anime,miniature};

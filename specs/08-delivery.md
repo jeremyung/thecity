@@ -2,7 +2,31 @@
 
 Build a complete small slice before increasing city size. Visual quality and simulation correctness need separate measurements; WASM improves neither automatically.
 
-## Milestones
+## Current acceptance milestones — 2026-10-15
+
+This sequence governs the next work and supersedes older work-selection sequencing below. The original delivery slices remain scope requirements, not proof of current completion. The complete [goal text](../validation/living-city-goal.md) retains the architecture and full living-city objective.
+
+PR19 is merged as an engineering checkpoint. No milestone below is declared visually accepted by that merge. Work on one primary milestone; later systems may support it when necessary.
+
+| Order | Milestone / status | Required visible result and exit gate |
+| --- | --- | --- |
+| 1 | Camera, shaders and rendering — **active, not accepted** | Reference-led optics, focus, material response, lighting/shadows, atmosphere/water and stable moving images. Evaluate both styles, DOF off/on, day/night/weather and measured frame cost; local scene screen then three seeds/stages and user review. |
+| 2 | Convincing reference neighborhood — **pending, not accepted** | A normally generated scene whose streets, buildings, materials, frontage and planting work together toward the locked concepts. Improve credible proportions, surface construction, facade/roof character and purposeful ground transitions. Local matched visual screen, then three-seed/stage/style validation and user review. |
+| 3 | Consistent city character — **pending** | Quality extends across residential/commercial, station and waterfront scenes without repetitive kits, arbitrary clutter or displaced gaps. Preserve coherent layout, access and infrastructure. |
+| 4 | Cinematic presentation across the city — **pending** | Lighting, landscape, water, skyline/horizon and camera approach both concepts; stable in motion and day/night, distinct styles, no fog/blur masking. Geometry/material and presentation gains are assessed separately. |
+| 5 | Complete living experience / release — **pending** | Purposeful activity, coherent growth/renewal, camera/audio and production-scheduler, multi-hour, save/replay and performance gates pass, with user acceptance against concepts. All original release scope remains. |
+
+### Work selection and stopping rules
+
+The primary rendering pass explicitly includes texture quality: screen-space resolution, texel density, UV scale/repetition, filtering/mips, normal/roughness response and facade/roof/road readability. Report whether each visible defect needs texture, shader, geometry or lighting work. Cities: Skylines is a comparative material/cohesion benchmark, not a replacement for the locked art direction. Targeted texture replacement/generation requires visible benefit and measured browser memory/download cost.
+
+User steering prioritizes camera, shaders and rendering now. Select the largest visible mismatch within that primary workstream; architecture remains required but does not gate this presentation pass. Record intentionally changed camera/lens controls and retain a fixed-camera comparison when evaluating optics. Assess streets, architecture, materials and frontage as a complete neighborhood. Correctness work remains required but bounded to demonstrated blockers; it must not indefinitely defer visual progress. For every intervention, name its visible flaw, evidenced structural cause, bounded reusable change, expected scene-level gain and stop condition. First compare the affected ordinary neighborhood plus nearby weak views. If there is no meaningful scene gain, stop before broad validation. A promising result then needs matched interior/frontage/station/waterfront/overview views across three seeds, developing/mature stages and both styles, with numerical camera/lens/light/weather/resolution/quality recorded and DOF-off evidence. Reuse state where possible; explain growth-history changes when generation changes. Include normal camera motion and full acceptance checks before delivery.
+
+Counts, parcel coverage and passing tests are supporting diagnostics. They cannot substitute for a better scene. Keep implemented, technically validated and visually accepted status separate. After two unsuccessful variants, reconsider the intervention rather than extending a fitting or embellishment loop. Defer unrelated refactors, new simulation systems and texture batches unless they unblock the named visual outcome.
+
+The isolated reserved-access correction remains unaccepted. Its second fallback restores some mass in the seed5 loss view but has not established an ordinary-neighborhood aesthetic gain. Preserve its code/evidence and outstanding correctness work; do not start a third fitting variant as the next aesthetic milestone. Next primary investigation: camera/lens behavior and the shader/rendering pipeline against the concepts, using unchanged saved worlds. The daylight comparison and subsequent local screens are closed; inspect the checkpoint and material-study outcomes before selecting the next substantial scene-level intervention. See `validation/reference-aesthetic-direction.md` for source evidence and scope.
+
+## Original delivery slices (scope retained)
 
 ### One Rendered Waterfront
 

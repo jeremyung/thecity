@@ -19,7 +19,14 @@ export class BuildingAccessPaths {
       const b = buildings.get(path.building_id);
       return b && ['open', 'renovation', 'vacant'].includes(b.stage);
     });
-    const signature = JSON.stringify(paths);
+    const roads = new Map(world.roads.map(road => [road.id, road]));
+    // Shared streets have no raised sidewalk. Keep their landings just above
+    // the 0.3m carriageway, rather than introducing a 17.5cm step into it.
+    const landingCenter = (roadId: number) => {
+      const kind = roads.get(roadId)?.kind;
+      return kind === 'local' || kind === 'lane' ? .255 : .425;
+    };
+    const signature = JSON.stringify(paths.map(path => [path, landingCenter(path.road_id)]));
     if (signature === this.signature) return;
     this.signature = signature;
     const previous = this.paving;
@@ -41,7 +48,7 @@ export class BuildingAccessPaths {
         // strip. Slight overlap at both ends avoids seams at oblique viewpoints.
         // Interior passage legs stay at ground level; only the final leg ramps
         // to the curb. Never replace bends with a shortcut through a front lot.
-        const rise = i === points.length - 1 ? .425 : 0;
+        const rise = i === points.length - 1 ? landingCenter(path.road_id) : 0;
         angle = Math.atan2(dx, dz);
         const geometry = new THREE.BoxGeometry(1.65, .09, Math.hypot(length, rise) + .18);
         geometry.rotateX(-Math.atan2(rise, length));
@@ -51,7 +58,7 @@ export class BuildingAccessPaths {
       }
       // A small level landing joins the street edge even beside a junction,
       // where the long sidewalk strips stop short of the corner.
-      kit.box(curb.x, .425, curb.z, 1.85, .1, 1.8, this.art.get('#b5b3a2'), angle);
+      kit.box(curb.x, landingCenter(path.road_id), curb.z, 1.85, .1, 1.8, this.art.get('#b5b3a2'), angle);
     }
     this.paving = kit.finish(false);
     this.root.add(this.paving);

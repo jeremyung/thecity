@@ -1,3 +1,4 @@
+import { retainWatchSubjects, selectWatchSubject } from './watch-selection';
 import { SkylineClusterCache } from './skyline-cluster';
 import { chooseStreetWatchPosition } from './watch-visibility';
 import { MOVEMENT_STRIDE } from '../movement';
@@ -5,7 +6,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { LENS_PRESETS, verticalFovDegrees, type LensPresetId } from "./lens";
 import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from "./clearance";
-import { chooseTrainFollowPosition, chooseBuildingFollowPosition } from './follow-visibility';
+import { chooseTrainFollowPosition, chooseBuildingFollowPosition, chooseFrontageWatchPosition } from './follow-visibility';
 import { RAIL_HEAD_Y } from '../render/rail-profile';
 import { planAutomaticCameraPath } from "./automatic-path";
 import type { BusLineView, BusView, Point, Project, World } from "../types";
@@ -84,12 +85,14 @@ export class CameraDirector {
   private currentWorld: World | null = null;
   /** Conservative full-parcel obstruction envelopes, rebuilt on each snapshot. */
   private cameraObstacles: CameraObstacleBox[] = [];
+  /** Parcel-scale sight proxies exclude the travel envelope's safety apron. */
+  private sightObstacles: CameraObstacleBox[] = [];
   private obstacleSignature = "";
   private obstacleRevision = 0;
   private automaticRoute: AutomaticRoute | null = null;
   private settledAutomaticPose: SettledAutomaticPose | null = null;
   private anchors: Anchor[] = [];
-  private lastVisit = new Map<string, number>();
+  private tourVisited = new Set<string>();
   private selectedAnchor: Anchor | null = null;
   private skylineTransition: SkylineTransition | null = null;
   private desiredTarget = new THREE.Vector3(50, 0, 20);
@@ -120,6 +123,7 @@ export class CameraDirector {
   private baselineFootprint = 0;
   private overviewInitialized = false;
   private framingAspect = 0;
+  private founderWatchShot: { id: string; revision: number; distance: number; radius: number; center: THREE.Vector3; target: THREE.Vector3; position: THREE.Vector3 } | null = null;
   private streetWatchShot: { id: string; revision: number; distance: number; visible: boolean; roadId?: number; originTarget: THREE.Vector3; target: THREE.Vector3; position: THREE.Vector3; forward: {x:number;z:number} } | null = null;
   private extent: Extent = { x: 50, z: 20, span: 120 };
   private revealSeconds = 0;
@@ -204,9 +208,10 @@ export class CameraDirector {
     const initializeWatchPose = firstWorld || replacedWorld;
     if (initializeWatchPose) {
       this.followFocusValid = false;
+      this.founderWatchShot = null;
       this.streetWatchShot = null;
       this.selectedAnchor = null;
-      this.lastVisit.clear();
+      this.tourVisited.clear();
       this.growthAge = 0;
       this.lastRevealAt = -Infinity;
       this.baselineFootprint = 0;
@@ -224,10 +229,11 @@ export class CameraDirector {
       this.settledAutomaticPose = null;
     }
     this.cameraObstacles = obstacles;
+    this.sightObstacles = obstacles.map((box, index) => ({ ...box,
+      width: world.buildings[index].width, depth: world.buildings[index].depth,
+    }));
     this.anchors = this.buildAnchors(world);
-    for (const id of this.lastVisit.keys()) {
-      if (!this.anchors.some((anchor) => anchor.id === id)) this.lastVisit.delete(id);
-    }
+    for (const id of this.tourVisited) if (!this.anchors.some(anchor => anchor.id === id)) this.tourVisited.delete(id);
     this.extent = this.developedExtent(world);
     if (this.baselineFootprint === 0) this.baselineFootprint = this.extent.span;
 
@@ -269,7 +275,7 @@ export class CameraDirector {
       streetClosed = true;
     }
     if ((obstacleRevisionChanged || streetClosed) && this.currentMode === "watch" && this.followId === null
-      && this.revealSeconds === 0 && this.selectedAnchor && (streetClosed || this.selectedAnchor.streetForward)) {
+      && this.revealSeconds === 0 && this.selectedAnchor && (streetClosed || this.selectedAnchor.streetForward || this.selectedAnchor.id.startsWith("founder:"))) {
       this.setAnchorPose(this.selectedAnchor, this.anchorDistance(this.selectedAnchor));
     }
     if (this.currentMode === "watch" && this.selectedAnchor && !this.anchors.some((anchor) => anchor.id === this.selectedAnchor?.id)) {
@@ -301,7 +307,9 @@ export class CameraDirector {
 
     if (this.followId !== null) {
       this.updateFollow(step);
-      this.applyPose(step, this.followId === null ? this.blendSeconds : 0.38);
+      // updateFollow can return to Watch when the subject exceeds its grace period.
+      const returnedToWatch = this.followId === null;
+      this.applyPose(step, returnedToWatch ? this.blendSeconds : 0.38);
       return;
     }
 
@@ -392,7 +400,7 @@ export class CameraDirector {
     this.followFocusValid = false;
     this.followMovementPresent = false;
     this.selectedAnchor = anchor;
-    this.lastVisit.set(anchor.id, this.elapsed);
+    this.tourVisited.add(anchor.id);
     this.holdSeconds = 0;
     this.holdDuration = 45 + this.hash(anchor.id) % 46;
     this.revealSeconds = 0;
@@ -594,7 +602,8 @@ export class CameraDirector {
     this.mediaQuery?.removeEventListener?.("change", this.onReducedMotionChange);
     this.mediaQuery?.removeListener?.(this.onReducedMotionChange);
     this.anchors = [];
-    this.lastVisit.clear();
+    this.tourVisited.clear();
+    this.founderWatchShot = null;
   }
 
   private takeManualControl(): void {
@@ -942,20 +951,12 @@ export class CameraDirector {
     const world = this.currentWorld;
     const night = Boolean(world && (world.minute_of_day >= 21 * 60 || world.minute_of_day < 5 * 60));
     const rainy = world?.weather.kind === "rain" && world.weather.intensity > 0.2;
-    let best: Anchor | null = null;
-    let bestScore = -Infinity;
-    for (const anchor of this.anchors) {
-      if (anchor.id === this.selectedAnchor?.id && this.anchors.length > 1) continue;
-      const visit = this.lastVisit.get(anchor.id) ?? -3600;
-      const recency = Math.max(-1.4, Math.min(0, (this.elapsed - visit - 50) / 180));
-      const timeBonus = (night && anchor.suitability === "night" ? 1.5 : 0) + (rainy && anchor.suitability === "rain" ? 1.2 : 0);
-      const score = anchor.importance + anchor.activity * 0.35 + recency + timeBonus;
-      if (score > bestScore) { best = anchor; bestScore = score; }
-    }
-    if (!best) return;
-    if (this.selectedAnchor) this.lastVisit.set(this.selectedAnchor.id, this.elapsed);
+    const selection = selectWatchSubject(this.anchors, this.selectedAnchor?.id, this.tourVisited, night, rainy);
+    if (!selection) return;
+    const best = selection.subject;
+    if (selection.restart) this.tourVisited.clear();
+    this.tourVisited.add(best.id);
     this.selectedAnchor = best;
-    this.lastVisit.set(best.id, this.elapsed);
     this.holdSeconds = 0;
     this.holdDuration = 45 + this.hash(best.id) % 46;
     this.blendSeconds = this.reducedMotion ? 0.5 : 5.5;
@@ -997,6 +998,33 @@ export class CameraDirector {
   private setAnchorPose(anchor: Anchor, distance: number): void {
     this.desiredTarget.set(anchor.x, anchor.targetY ?? 0, anchor.z);
     this.desiredPosition.copy(this.desiredTarget).addScaledVector(anchor.cameraDirection ?? WATCH_DIRECTION, distance);
+    if (anchor.id.startsWith("founder:")) {
+      const building = this.currentWorld?.buildings.find(item => `founder:${item.id}` === anchor.id);
+      if (building) {
+        // Frame the actual shop, not a riverward ground point behind its neighbors.
+        const height = building.floors * 3.25;
+        const target = new THREE.Vector3(building.x, height / 2, building.z);
+        const radius = Math.hypot(building.width / 2, building.depth / 2, height / 2);
+        const previous = this.founderWatchShot;
+        if (!previous || previous.id !== anchor.id || previous.revision !== this.obstacleRevision
+          || Math.abs(previous.distance - distance) > .01 || Math.abs(previous.radius - radius) > .01
+          || previous.center.distanceTo(target) > .01) {
+          const neighbors = this.sightObstacles.filter(box => Math.hypot(box.center.x - building.x, box.center.z - building.z) > .01);
+          const probes = [target, new THREE.Vector3(target.x, 1, target.z), new THREE.Vector3(target.x, height, target.z)];
+          const clear = probes.every(point => !cameraPathClearance(point, this.desiredPosition, neighbors,
+            { terrainY: 0, safetyMarginM: .3 }).collides);
+          const shot = clear ? { position: this.desiredPosition } : chooseFrontageWatchPosition(
+            target, building.width, building.depth, height, building.rotation, distance, this.sightObstacles);
+          this.founderWatchShot = { id: anchor.id, revision: this.obstacleRevision, distance, radius, center: target.clone(), target,
+            position: new THREE.Vector3(shot.position.x, shot.position.y, shot.position.z) };
+          // Preserve the original river-context composition when already clear.
+          if (clear) this.founderWatchShot.target.copy(this.desiredTarget);
+        }
+        this.desiredTarget.copy(this.founderWatchShot!.target);
+        this.desiredPosition.copy(this.founderWatchShot!.position);
+        return;
+      }
+    }
     if (!anchor.streetForward) return;
     const previous = this.streetWatchShot;
     if (!previous || previous.id !== anchor.id || previous.revision !== this.obstacleRevision
@@ -1327,12 +1355,7 @@ export class CameraDirector {
     const skyline = this.buildSkylineAnchor(world, connectedNodes, parcelAccess);
     if (skyline) add(skyline);
 
-    anchors.sort((a, b) => b.importance + b.activity * 0.2 - (a.importance + a.activity * 0.2));
-    const bounded = anchors.slice(0, MAX_ANCHORS);
-    // Keep one real skyline composition available in a mature city even when
-    // station, crossing and district anchors fill the rest of the budget.
-    if (skyline && !bounded.includes(skyline)) bounded[MAX_ANCHORS - 1] = skyline;
-    return bounded;
+    return retainWatchSubjects(anchors, MAX_ANCHORS);
   }
 
   /** Aim from a real nearby street or river edge toward an existing tall-building cluster. */

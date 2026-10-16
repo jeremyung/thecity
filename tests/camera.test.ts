@@ -440,6 +440,53 @@ describe("CameraDirector", () => {
     expect(director.reviewWaterfront()).toBe(false);
   });
 
+  it("reframes a held founder when neighboring growth blocks its view", () => {
+    const world = makeWorld(); world.buildings = [makeBuilding(10, 0, 0)];
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1.5, .1, 2000), makeElement());
+    director.world(world);
+    const initial = director.camera.position.clone();
+    const next = { ...world, tick: 1, buildings: [...world.buildings,
+      { ...makeBuilding(11, 30, 30), anchor: false, floors: 16, width: 28, depth: 28 }] };
+    director.world(next);
+    const pose = director as unknown as { desiredPosition: THREE.Vector3 };
+    expect(pose.desiredPosition.distanceTo(initial)).toBeGreaterThan(5);
+    expect(director.label).toBe('Home 10');
+    director.dispose();
+  });
+
+  it("separates sightline footprints from travel safety aprons", () => {
+    const world = makeWorld();
+    world.buildings = [
+      { ...makeBuilding(113, -31.894, -207.1536), width: 9.75268, depth: 10.535443 },
+      { ...makeBuilding(731, -43.07999, -208.82758), anchor: false, width: 14.86827, depth: 11.691514, floors: 3, rotation: -1.4944199 },
+    ];
+    const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1.5, .1, 2000), makeElement());
+    director.world(world);
+    const bounds = director as unknown as { cameraObstacles: import('../web/src/camera/clearance').CameraObstacleBox[]; sightObstacles: import('../web/src/camera/clearance').CameraObstacleBox[] };
+    const probe = { x: -34.819804, y: 2, z: -201.8858785 };
+    expect(cameraPathClearance(probe, probe, [bounds.cameraObstacles[1]], { safetyMarginM: .3 }).collides).toBe(true);
+    expect(cameraPathClearance(probe, probe, [bounds.sightObstacles[1]], { safetyMarginM: .3 }).collides).toBe(false);
+    expect(bounds.cameraObstacles[1].width).toBeCloseTo(14.86827 + 2.4);
+    expect(bounds.cameraObstacles[1].depth).toBeCloseTo(11.691514 + 5.2);
+    director.dispose();
+  });
+
+  it("keeps a founder visible when a tall neighbor blocks the default Watch direction", () => {
+    const world = makeWorld();
+    world.buildings = [makeBuilding(10, 0, 0), { ...makeBuilding(11, 30, 30), anchor: false, floors: 16, width: 28, depth: 28 }];
+    const camera = new THREE.PerspectiveCamera(42, 1.5, .1, 2000);
+    const director = new CameraDirector(camera, makeElement());
+    director.world(world);
+    expect(director.label).toBe("Home 10");
+    const neighbor = { center: { x: 30, z: 30 }, width: 28, depth: 28, rotation: 0, minY: 0, maxY: 60 };
+    const oldPosition = new THREE.Vector3(.65, .28, .7).normalize().multiplyScalar(78);
+    expect(cameraPathClearance({ x: 0, y: 3.25, z: 0 }, oldPosition, [neighbor],
+      { terrainY: 0, safetyMarginM: .3 }).collides).toBe(true);
+    expect(cameraPathClearance({ x: 0, y: 3.25, z: 0 }, camera.position, [neighbor],
+      { terrainY: 0, safetyMarginM: .3 }).collides).toBe(false);
+    director.dispose();
+  });
+
   it("opens the actual seed 87231 WASM world directly on a readable founding shop", () => {
     const wasm = readFileSync(new URL("../public/wasm/city_engine_bg.wasm", import.meta.url));
     initSync({ module: wasm });
@@ -1014,7 +1061,7 @@ describe("CameraDirector", () => {
       expect(founder!.frameRadius).toBeLessThan(30);
 
       const distance = director.camera.position.distanceTo(director.target);
-      expect(distance).toBeGreaterThanOrEqual(78);
+      expect(distance).toBeGreaterThanOrEqual(78 - 1e-9);
       expect(distance).toBeLessThan(135);
       camera.lookAt(director.target);
       camera.updateMatrixWorld(true);
@@ -1207,6 +1254,8 @@ describe("CameraDirector", () => {
     const director = new CameraDirector(new THREE.PerspectiveCamera(42, 1.5, 0.1, 2_000), makeElement());
     director.world(world);
     director.setMode("explore");
+    // Selection may already open on the skyline; test easing from a distinct safe pose.
+    expect(director.reviewPose({x:-120,y:150,z:100},{x:0,y:0,z:0})).toBe(true);
     const modeChanges: string[] = [];
     director.onModeChange = (mode) => modeChanges.push(mode);
     const before = director.target.clone();

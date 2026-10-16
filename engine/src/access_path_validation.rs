@@ -3,6 +3,10 @@ use crate::Engine;
 impl Engine {
     /// A finite polyline is not sufficient: it must actually meet the route
     /// where the traveler enters/leaves it. Reject, rather than repair, saves.
+    /// The 1 cm tolerance covers numeric roundoff within the current format, not
+    /// compatibility with older walking policies. Policy changes require an
+    /// explicit save-schema decision and updated regression fixtures; silently
+    /// snapping a connector would also change its length and saved progress.
     pub(crate) fn validate_access_route_joins(&self) -> Result<(), String> {
         for traveler in &self.state.travelers {
             for (at_start, path) in [(true, &traveler.origin_access), (false, &traveler.destination_access)] {

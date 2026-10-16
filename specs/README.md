@@ -50,3 +50,6 @@ External morphology research: [PLATEAU findings and bounded pilot](../validation
 - [Image generation prompts](../concepts/prompts.txt)
 
 Concept boards illustrate atmosphere and development stages. They are not executable rendering designs or evidence that the city develops within one day.
+
+
+Current work follows the [reference-led acceptance milestones](08-delivery.md#current-acceptance-milestones--2026-10-15) and the [complete living-city goal](../validation/living-city-goal.md). These preserve the original scope while prioritizing whole-neighborhood aesthetic realism.

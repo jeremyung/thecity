@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from '../web/src/camera/clearance';
-import { chooseTrainFollowPosition, chooseBuildingFollowPosition } from '../web/src/camera/follow-visibility';
+import { chooseTrainFollowPosition, chooseBuildingFollowPosition, chooseFrontageWatchPosition } from '../web/src/camera/follow-visibility';
 
 const target: CameraPoint3 = { x: 0, y: 12, z: 0 };
 
@@ -101,5 +101,17 @@ describe('train follow visibility', () => {
 
     expect(result.visible).toBe(false);
     expectWithinBounds(result.position);
+  });
+});
+
+
+describe('frontage Watch visibility', () => {
+  it.each([0, Math.PI / 2, -Math.PI / 3])('faces the entrance after rotation %s', rotation => {
+    const center = { x: 20, y: 3.25, z: -40 };
+    const shot = chooseFrontageWatchPosition(center, 10, 12, 6.5, rotation, 78, []);
+    expect(shot.visible).toBe(true);
+    const dx = shot.position.x-center.x, dz = shot.position.z-center.z;
+    expect(dx*Math.sin(rotation)+dz*Math.cos(rotation)).toBeGreaterThan(60);
+    expect((shot.position.y-center.y)/Math.hypot(dx,dz)).toBeCloseTo(.65);
   });
 });

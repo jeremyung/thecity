@@ -95,13 +95,22 @@ describe('midrise construction facade continuity', () => {
     art.dispose();
   });
 
-  it('keeps rooftop details off the admitted facade until the full mass height is installed', () => {
+  it('installs the flat roof membrane only at full height and retains it after opening', () => {
     const art = new ArtMaterials();
-    const early = buildingKit(midrise('office', 'structure', .77, 24, 19), art);
-    const complete = buildingKit(midrise('office', 'surface', .92, 24, 19), art);
-    const roofMaterials = ['#48575a', '#59676a', '#555d60', '#625d55'].map((color) => art.get(color));
-    expect(roofMaterials.flatMap((material) => boxesFor(early, material))).toHaveLength(0);
-    expect(roofMaterials.flatMap((material) => boxesFor(complete, material)).length).toBeGreaterThan(0);
-    disposeGroup(early); disposeGroup(complete); art.dispose();
+    try { for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      const early = buildingKit(midrise('office', 'structure', .77, 24, 19), art);
+      const complete = buildingKit(midrise('office', 'surface', .92, 24, 19), art);
+      const open = buildingKit(midrise('office', 'open', 1, 24, 19), art);
+      const membranes = ['#8b908b'].map(color => art.get(color,.92));
+      const fields=(root:THREE.Object3D)=>membranes.flatMap(material=>boxesFor(root,material)).sort();
+      expect(fields(early)).toHaveLength(0);
+      const installed=fields(complete);
+      expect(installed.length).toBeGreaterThan(0);
+      expect(installed).toEqual(fields(open));
+      // The membrane belongs above the eighth floor, never on a partial tier.
+      for(const box of installed)expect(Number(box.split(':')[2])/1000).toBeGreaterThanOrEqual(.58+8*3.25);
+      disposeGroup(early);disposeGroup(complete);disposeGroup(open);
+    }}finally{art.dispose();}
   });
 });

@@ -4,6 +4,7 @@ import { ArtMaterials, shopSignLabel } from './materials';
 import { compactMidriseEnvelope, midriseMassing, type BuildingMass, type MidriseMassing } from './building-massing';
 import { lowriseBuildingWidth, lowriseMassing, type LowriseMass, type LowriseMassing } from './lowrise-massing';
 import { buildingPalette } from './building-palette';
+import { broadHomeMassing } from './broad-home-massing';
 import { renderTower, towerMassing } from './tower-kit';
 import { renderDemolition } from './demolition-kit';
 import { addCeramicRoofDetail } from './ceramic-roof';
@@ -121,7 +122,8 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   const d = envelope.depth;
   const w = lowriseBuildingWidth(b, envelope.width, d);
   const floors = Math.max(1, b.floors);
-  const lowrise = lowriseMassing(b, w, d);
+  const broadHome = broadHomeMassing(b, w, d);
+  const lowrise = broadHome ? null : lowriseMassing(b, w, d);
   const kit = new Kit();
   kit.windowContext = { seed, lived: windowLived(b) };
   const height = Math.max(3.25, floors * floor);
@@ -144,7 +146,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   const isOpen = b.stage === 'open';
   const renovating = b.stage === 'renovation';
   const foundation = .3;
-  const midrise = midriseMassing(b, w, d);
+  const midrise = broadHome ?? midriseMassing(b, w, d);
 
   // Occupied parcels have a small domestic/service edge rather than reading as
   // freestanding blocks on an uninterrupted lawn. Keep paths and planting
@@ -178,7 +180,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   }
 
   // Foundation plinth and entry steps keep the small buildings grounded.
-  kit.box(0, foundation / 2, 0, lowrise ? Math.min(w + .65, b.width - .08) : w + .65, foundation, lowrise ? Math.min(d + .65, b.depth - .08) : d + .65, concrete);
+  kit.box(0, foundation / 2, 0, (lowrise || broadHome) ? Math.min(w + .65, b.width - .08) : w + .65, foundation, (lowrise || broadHome) ? Math.min(d + .65, b.depth - .08) : d + .65, concrete);
   if (isShop || isHome) {
     const stepDepth = lowrise ? Math.min(.8, Math.max(.24, (b.depth - d) / 2 + .22)) : .8;
     const stepZ = lowrise ? Math.min(d / 2 + .35, b.depth / 2 - stepDepth / 2 - .04) : d / 2 + .35;
@@ -353,7 +355,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
     }
 
     if (floors <= 3 && (isHome || isShop || (isApartment && pick(seed, 3) !== 0))) {
-      renderGabledRoof(kit, w, d, top, roof, roofTile, trim, iron, dark, seed, b.width);
+      renderGabledRoof(kit, w, d, top, roof, roofTile, trim, iron, dark, seed, b.width, wall);
     } else {
       renderFlatRoof(kit, { w, d, top, roof, trim, concrete, iron, paleConcrete, seed, art });
     }
@@ -458,12 +460,13 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
         }
       }else{
         const core=layout.masses.find(candidate=>candidate.role==='core');
-        const omitSideWindows=core&&layout.family==='walkup'?(core.x>mass.x?1:-1):undefined;
-        const entryX=mass.baseFloor===0&&Math.abs(mass.x)<=mass.width/2?-mass.x:undefined;
-        renderUrbanFacade(kit,b,art,{w:mass.width,d:mass.depth,base:massBase,top:massTop,floor,floors:mass.floors,baseFloor:mass.baseFloor,balconyStyle:layout.family==='terrace-apartment'?'continuous':undefined,omitSideWindows,entryX,parcelD:b.depth,massOffsetZ:mass.z,parcelW:b.width,massOffsetX:mass.x,wood,dark,glass,lightGlass,trim,glow,iron,concrete,paleConcrete,isApartment:b.kind==='apartment'});
+        const omitSideWindows=core?(core.x>mass.x?1:-1):undefined;
+        const terraceEntry=layout.family==='terrace-home'&&mass.baseFloor>0;
+        const entryX=(mass.baseFloor===0||terraceEntry)&&Math.abs(mass.x)<=mass.width/2?-mass.x:undefined;
+        renderUrbanFacade(kit,b,art,{w:mass.width,d:mass.depth,base:massBase,top:massTop,floor,floors:mass.floors,baseFloor:mass.baseFloor,balconyStyle:(layout.family==='terrace-apartment'||layout.family==='slab-apartment')?'continuous':undefined,omitSideWindows,entryX,terraceEntry,parcelD:b.depth,massOffsetZ:mass.z,parcelW:b.width,massOffsetX:mass.x,wood,dark,glass,lightGlass,trim,glow,iron,concrete,paleConcrete,isApartment:b.kind==='apartment'||layout.family==='terrace-home'});
         // Only the podium/main facade owns the building entrance. Upper office
         // tiers use their global floor index and never repeat a ground trim.
-        if(mass.baseFloor===0){
+        if(mass.baseFloor===0||terraceEntry){
           const doorX=-mass.x;
           if(Math.abs(doorX)<mass.width*.32){
             renderMidriseEntry(kit,doorX,mass.depth,massBase,dark,glass,trim,concrete);
@@ -479,7 +482,7 @@ function renderMidriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:MidriseMas
     if(lower.baseFloor+lower.floors!==upper.baseFloor || lower.baseFloor+lower.floors>installedThrough || upper.baseFloor+upper.floors>installedThrough)continue;
     const y=base+upper.baseFloor*floor-.045;
     const plate=.12, overlap=.08;
-    if(layout.family==='terrace-apartment'){
+    if(layout.family==='terrace-apartment'||layout.family==='terrace-home'){
       const front=lower.z+lower.depth/2-.06;
       const rear=upper.z+upper.depth/2;
       const width=lower.width-.12;
@@ -676,12 +679,13 @@ function renderLowriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:LowriseMas
     kit.box(0,base+frontage.floors*floor/2,-.06,frontage.width,frontage.floors*floor,frontage.depth-.12,wall);
     if(b.kind==='home'){
       renderHouseFacade(kit,b,art,{w:frontage.width,d:frontage.depth,base,top,floor,wood,dark,glass,lightGlass,trim,glow,iron,green,ivory:art.get('#eee1c1'),concrete,entrySide:1,quietSides:layout.quietSides,frontOnly:true,centerEntry:true,lowriseDetail:true,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x)});
-      if(isModernHomeVariant(b))renderModernHomeRearWindows(kit,frontage,{base,floor,dark,lightGlass:windowPane(art,b),trim,concrete});
+
     }else{
       renderShopFront(kit,b,art,{w:frontage.width,d:frontage.depth,top,base,wood,dark,glass,trim,glow,green,ivory:art.get('#eee1c1'),lantern,concrete,quietSides:layout.quietSides,frontBoundary:frontage.depth/2,frontWidthBoundary:b.width/2,sideBoundary:b.width/2-Math.abs(frontage.x),canopyBoundary:b.depth/2-frontage.z-.04,centerDoor:true});
     }
   });
-  renderLowriseRoof(kit,frontage,top,roof,roofTile,trim,iron,dark,seed,b.width,b.depth);
+  renderLowriseServiceElevation(kit,frontage,{base,floor,pane:art.window('home'),trim,concrete,dark,iron});
+  renderLowriseRoof(kit,frontage,top,roof,flatRoofMembrane(art),roofTile,trim,iron,dark,seed,b.width,b.depth,wall);
 
   // A single-storey rear utility volume joins the main wall but keeps its own
   // roofline; its louver and service door sit on the quiet rear elevation.
@@ -695,7 +699,7 @@ function renderLowriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:LowriseMas
   kit.box(service.x+service.width*.27,base+2.18,rearZ-.035,.28,.2,.035,dark);
   for(let slat=-1;slat<=1;slat++)kit.box(service.x+service.width*.27+slat*.085,base+2.18,rearZ-.06,.025,.17,.025,trim);
   if(isModernHomeVariant(b))renderModernHomeCondenser(kit,service,layout.quietSides[0],base,paleConcrete,dark,iron,trim);
-  renderLowriseRoof(kit,service,serviceTop,roof,roofTile,trim,iron,dark,seed>>>3,b.width,b.depth);
+  renderLowriseRoof(kit,service,serviceTop,roof,flatRoofMembrane(art),roofTile,trim,iron,dark,seed>>>3,b.width,b.depth,serviceWall);
 
   // A shallow eave marks the frontage without adding another full-height
   // corner element to the compact silhouette.
@@ -706,21 +710,38 @@ function renderLowriseOpen(kit:Kit,b:Building,art:ArtMaterials,layout:LowriseMas
   void paleConcrete;void glow;void lantern;
 }
 
-/** Compact rear utility windows add scale to selected homes without repeating the front composition. */
-function renderModernHomeRearWindows(kit:Kit,mass:LowriseMass,m:{base:number;floor:number;dark:THREE.Material;lightGlass:THREE.Material;trim:THREE.Material;concrete:THREE.Material}){
-  const {base,floor,dark,lightGlass,trim,concrete}=m;
-  const rear= -mass.depth/2;
-  const windowW=Math.min(1.38,mass.width*.16),windowH=1.16;
+/** Rear rooms and roof drainage complete the occupied low-rise elevation.
+ * The attached one-storey service wing owns ground-level openings; upper rooms
+ * remain above its roof. All details stay within the original parcel envelope. */
+function renderLowriseServiceElevation(kit:Kit,mass:LowriseMass,m:{base:number;floor:number;pane:THREE.Material;trim:THREE.Material;concrete:THREE.Material;dark:THREE.Material;iron:THREE.Material}){
+  const {base,floor,pane,trim,concrete,dark,iron}=m;
+  const rear=mass.z-mass.depth/2;
+  const bays=Math.max(1,Math.floor(mass.width/3.2));
+  const pitch=(mass.width-.8)/bays;
+  const windowW=Math.min(1.8,pitch-.45),windowH=1.35;
   for(let level=1;level<mass.floors;level++){
-    const y=base+level*floor+1.62;
-    for(const x of [-mass.width*.22,mass.width*.22]){
-      // Rearward is negative Z. The pane stands clearly outside the dark frame,
-      // while the service-wing roof remains well below the first upper window.
-      kit.box(x,y,rear-.015,windowW+.14,windowH+.16,.13,dark);
-      kit.box(x,y,rear-.095,windowW,windowH,.035,lightGlass);
-      kit.box(x,y,rear-.12,.045,windowH,.025,trim);
-      kit.box(x,y-windowH/2-.1,rear-.1,windowW+.22,.1,.22,concrete);
+    const y=base+level*floor+1.65;
+    for(let bay=0;bay<bays;bay++){
+      const x=mass.x-mass.width/2+.4+pitch*(bay+.5);
+      kit.box(x,y,rear-.015,windowW+.16,windowH+.18,.13,dark);
+      kit.box(x,y,rear-.095,windowW,windowH,.035,pane);
+      kit.box(x,y,rear-.125,.045,windowH,.025,trim);
+      kit.box(x,y-windowH/2-.09,rear-.10,windowW+.22,.1,.20,concrete);
+      // A shallow metal hood follows each opening, not a balcony slab.
+      kit.box(x,y+windowH/2+.12,rear-.13,windowW+.28,.07,.28,iron);
     }
+  }
+  const top=base+mass.floors*floor;
+  // Downpipes are tied to the roof edge, avoiding the centered service wing.
+  for(const side of [-1,1]){
+    const x=mass.x+side*(mass.width/2-.20);
+    const pipeZ=rear-.11;
+    kit.cylinder(x,(base+top)/2,pipeZ,.045,top-base,iron,6);
+    for(let level=0;level<mass.floors;level++)kit.box(x,base+level*floor+.5,pipeZ,.13,.06,.13,trim);
+  }
+  // The existing gable sheds to front/rear; flat and shed roofs retain coping.
+  if(mass.roof==='gable'){
+    kit.box(mass.x,top-.06,rear-.14,mass.width-.16,.13,.18,iron);
   }
 }
 
@@ -738,10 +759,10 @@ function renderModernHomeCondenser(kit:Kit,service:LowriseMass,side:-1|1,base:nu
   kit.box(pipeX,base+1.5,centerZ-.3,.045,.045,.18,trim);
 }
 
-function renderLowriseRoof(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Material,tiles:THREE.Material,trim:THREE.Material,iron:THREE.Material,dark:THREE.Material,seed:number,parcelW:number,parcelD:number){
+function renderLowriseRoof(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Material,membrane:THREE.Material,tiles:THREE.Material,trim:THREE.Material,iron:THREE.Material,dark:THREE.Material,seed:number,parcelW:number,parcelD:number,gableWall:THREE.Material){
   kit.withOffset(mass.x,0,mass.z,()=>{
     if(mass.roof==='gable'){
-      renderLowriseGable(kit,mass,top,roof,tiles,trim,iron,dark,seed,parcelW/2-Math.abs(mass.x),parcelD/2-mass.z,parcelD/2+mass.z);
+      renderLowriseGable(kit,mass,top,roof,tiles,trim,iron,dark,seed,parcelW/2-Math.abs(mass.x),parcelD/2-mass.z,parcelD/2+mass.z,gableWall);
     }else if(mass.roof==='shed'){
       const slope=new THREE.BoxGeometry(Math.min(mass.width-.24,2*(parcelW/2-Math.abs(mass.x))),.14,Math.min(mass.depth-.24,parcelD/2-mass.z+parcelD/2+mass.z));
       slope.rotateX(.075);
@@ -749,7 +770,7 @@ function renderLowriseRoof(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Materi
       kit.add(slope,roof);
       kit.box(0,top+.2,0,Math.min(mass.width*.9,2*(parcelW/2-Math.abs(mass.x))),.08,.12,trim);
     }else{
-      kit.box(0,top+.08,0,mass.width-.1,.16,mass.depth-.1,roof);
+      kit.box(0,top+.08,0,mass.width-.1,.16,mass.depth-.1,membrane);
       for(const z of [-mass.depth/2+.09,mass.depth/2-.09])kit.box(0,top+.28,z,mass.width-.12,.4,.12,trim);
       for(const x of [-mass.width/2+.09,mass.width/2-.09])kit.box(x,top+.28,0,.12,.4,mass.depth-.12,trim);
       // A small raised roof hatch breaks the flat parapet without implying an
@@ -760,15 +781,35 @@ function renderLowriseRoof(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Materi
   });
 }
 
-function renderLowriseGable(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Material,tiles:THREE.Material,trim:THREE.Material,iron:THREE.Material,dark:THREE.Material,seed:number,halfX:number,frontLimit:number,backLimit:number){
+function renderLowriseGable(kit:Kit,mass:LowriseMass,top:number,roof:THREE.Material,tiles:THREE.Material,trim:THREE.Material,iron:THREE.Material,dark:THREE.Material,seed:number,halfX:number,frontLimit:number,backLimit:number,gableWall:THREE.Material){
   const half=Math.min(mass.depth/2+.16,frontLimit,backLimit);
   const roofW=Math.min(mass.width+.32,Math.max(.4,halfX*2));
-  const rise=Math.min(1.15,half*.32),angle=Math.atan2(rise,half),slopeLength=Math.hypot(half,rise);
+  const rise=Math.min(2.6,half*.42),angle=Math.atan2(rise,half),slopeLength=Math.hypot(half,rise);
   for(const side of [-1,1]){
     const panel=new THREE.BoxGeometry(roofW,.18,slopeLength);
     panel.rotateX(side*angle);panel.translate(0,top+rise/2,side*half/2);kit.add(panel,roof);
     kit.box(0,top-.015,side*half,roofW,.13,.1,trim);
   }
+  // Close both gable ends with the facade material. The slope continues
+  // above the wall edge into the eave; the infill stops at the body footprint.
+  const wallHalf=mass.depth/2, eaveRise=rise*(1-wallHalf/half);
+  const positions:number[]=[];
+  for(const side of [-1,1]){
+    const x=side*mass.width/2;
+    const a=[x,top, -wallHalf],b=[x,top,wallHalf];
+    const c=[x,top+eaveRise,wallHalf],d=[x,top+rise,0],e=[x,top+eaveRise,-wallHalf];
+    for(const triangle of [[a,b,c],[a,c,d],[a,d,e]]){
+      const vertices=side>0?[triangle[0],triangle[2],triangle[1]]:triangle;
+      positions.push(...vertices.flat());
+    }
+  }
+  const infill=new THREE.BufferGeometry();
+  infill.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  infill.setIndex(Array.from({length:positions.length/3},(_,i)=>i));
+  const uv:number[]=[];
+  for(let i=0;i<positions.length;i+=3)uv.push((positions[i+2]+wallHalf)/mass.depth,(positions[i+1]-top)/rise);
+  infill.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  infill.computeVertexNormals();kit.add(infill,gableWall);
   addCeramicRoofDetail(kit,{width:roofW,halfDepth:half,rise,top,roof,tile:roof});
   kit.box(0,top+rise+.12,0,roofW,.22,.22,roof);
   if(pick(seed,4)===0)kit.box(0,top+rise+.2,0,Math.min(.6,roofW*.2),.08,.28,tiles);
@@ -1182,7 +1223,7 @@ function windowPane(art: ArtMaterials, b: Pick<Building, 'kind'>) { return art.w
 
 function renderUrbanFacade(
   kit: Kit, b: Building, art: ArtMaterials,
-  m: { w: number; d: number; base: number; top: number; floor: number; floors: number; baseFloor?: number; balconyStyle?: 'continuous'; omitSideWindows?:1|-1; entryX?:number; parcelD?:number; massOffsetZ?:number; parcelW?:number; massOffsetX?:number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; lightGlass: THREE.Material; trim: THREE.Material; glow: THREE.Material; iron: THREE.Material; concrete: THREE.Material; paleConcrete: THREE.Material; isApartment: boolean },
+  m: { w: number; d: number; base: number; top: number; floor: number; floors: number; baseFloor?: number; balconyStyle?: 'continuous'; omitSideWindows?:1|-1; entryX?:number; terraceEntry?:boolean; parcelD?:number; massOffsetZ?:number; parcelW?:number; massOffsetX?:number; wood: THREE.Material; dark: THREE.Material; glass: THREE.Material; lightGlass: THREE.Material; trim: THREE.Material; glow: THREE.Material; iron: THREE.Material; concrete: THREE.Material; paleConcrete: THREE.Material; isApartment: boolean },
 ) {
   const { w, d, base, floor, floors, wood, dark, trim, iron, concrete, paleConcrete, isApartment } = m;
   const pane = windowPane(art, b);
@@ -1192,7 +1233,7 @@ function renderUrbanFacade(
     const y = base + f * floor + 1.95;
     for (const side of [1, -1]) {
       const z = side * (d / 2 + .07);
-      const doorOpening=baseFloor+f===0&&side===1&&m.entryX!==undefined;
+      const doorOpening=(baseFloor+f===0||(m.terraceEntry&&f===0))&&side===1&&m.entryX!==undefined;
       if (b.kind === 'office') {
         // Offices use one calm curtain-wall ribbon per floor. Slim mullions and
         // opaque spandrels create a civic rhythm distinct from apartment bays.
@@ -1303,7 +1344,7 @@ function renderUrbanFacade(
 }
 
 function renderGabledRoof(
-  kit: Kit, w: number, d: number, top: number, roof: THREE.Material, tiles: THREE.Material, trim: THREE.Material, iron: THREE.Material, dark: THREE.Material, seed: number, parcelWidth: number,
+  kit: Kit, w: number, d: number, top: number, roof: THREE.Material, tiles: THREE.Material, trim: THREE.Material, iron: THREE.Material, dark: THREE.Material, seed: number, parcelWidth: number, wall: THREE.Material,
 ) {
   const half = d / 2 + .58;
   const rise = THREE.MathUtils.clamp(half * .48, .82, 2.1);
@@ -1324,20 +1365,44 @@ function renderGabledRoof(
   }
   addCeramicRoofDetail(kit,{width:roofW,halfDepth:half,rise,top,roof,tile:roof,surfaceOffset:.15});
   kit.box(0, top + rise + .12, 0, Math.min(roofW + .12, parcelWidth), .26, .3, roof);
-  // Gable-end fascia frames a small attic vent and painted end boards.
+  // Close the end walls perpendicular to the ridge. The previous trim sat
+  // on the eave faces and left both triangular roof volumes open.
+  const endHalf = d / 2, eaveRise = rise * (1 - endHalf / half);
   for (const side of [-1, 1]) {
-    kit.box(0, top + rise * .5, side * (d / 2 + .32), w * .88, .13, .12, trim);
-    kit.box(0, top + rise * .61, side * (d / 2 + .38), .52, .4, .08, dark);
-    kit.box(0, top + rise * .61, side * (d / 2 + .43), .34, .08, .035, iron);
+    const shape = new THREE.Shape();
+    shape.moveTo(-endHalf, 0); shape.lineTo(endHalf, 0);
+    shape.lineTo(endHalf, eaveRise); shape.lineTo(0, rise);
+    shape.lineTo(-endHalf, eaveRise); shape.closePath();
+    const infill = new THREE.ShapeGeometry(shape);
+    // Shape x becomes world z; front faces point outward on each gable end.
+    infill.rotateY(side * Math.PI / 2);
+    infill.translate(side * w / 2, top, 0);
+    if (!infill.index) infill.setIndex(Array.from({length:infill.getAttribute('position').count},(_,i)=>i));
+    kit.add(infill, wall);
+    for (const slopeSide of [-1, 1]) {
+      const fascia = new THREE.BoxGeometry(.10, .14, slopeLength);
+      fascia.rotateX(slopeSide * angle);
+      fascia.translate(side * (roofW / 2 - .05), top + rise / 2, slopeSide * half / 2);
+      kit.add(fascia, trim);
+    }
+    kit.box(side * (w / 2 + .04), top + rise * .48, 0, .08, .40, .52, dark);
+    kit.box(side * (w / 2 + .09), top + rise * .48, 0, .035, .08, .34, iron);
   }
   // Compact soil-colored tile accent varies by seed while the palette remains finite.
   if (pick(seed, 4) === 0) kit.box(0, top + rise + .31, 0, .8, .1, .42, tiles);
 }
 
+/** Flat waterproof fields are distinct from dark ceramic/metal pitched roofs.
+ * One shared finish keeps roof fields batchable across appearance seeds. */
+function flatRoofMembrane(art: ArtMaterials): THREE.Material {
+  return art.get('#8b908b', .92);
+}
+
 function renderFlatRoof(
   kit: Kit, m: { w: number; d: number; top: number; roof: THREE.Material; trim: THREE.Material; concrete: THREE.Material; iron: THREE.Material; paleConcrete: THREE.Material; seed: number; art: ArtMaterials },
 ) {
-  const { w, d, top, roof, trim, concrete, iron, paleConcrete, seed, art } = m;
+  const { w, d, top, trim, concrete, iron, paleConcrete, seed, art } = m;
+  const roof = flatRoofMembrane(art);
   kit.box(0, top + .22, 0, w + .45, .42, d + .45, roof);
   // Keep the waterproof roof field visible. A full-width pale trim slab here
   // used to cover it, making every roof read as the same concrete platform.

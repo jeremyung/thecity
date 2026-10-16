@@ -33,6 +33,27 @@ export function createFoliageGeometry(detail: 'near' | 'far', seed = 0x41b2a7): 
     }
   }
 
+  // Interior leaf masses provide continuous coverage at distance; the
+  // existing cutout cards retain a broken silhouette around this small core.
+  for (const [x,y,z,sx,sy,sz] of [
+    [0,3.45,0,.95,.85,.85],[-.65,3.3,.15,.8,.72,.75],
+    [.6,3.35,.3,.82,.76,.75],[.1,3.45,-.65,.8,.72,.75],
+    [-.15,4.0,0,.7,.65,.65],
+  ]) {
+    const core=new THREE.SphereGeometry(1,8,4);
+    core.scale(sx,sy,sz);core.translate(x,y,z);
+    const positions=core.getAttribute('position'),colors:number[]=[];
+    for(let i=0;i<positions.count;i++) {
+      const shade=foliageColor(positions.getY(i),lower,middle,crown,alternate[0]).multiplyScalar(.72);
+      colors.push(shade.r,shade.g,shade.b);
+    }
+    // Core coverage bypasses the leaf mask; keep its unused UVs in range.
+    core.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(positions.count*2).fill(.5),2));
+    core.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+    core.setAttribute('canopyCore',new THREE.Float32BufferAttribute(new Float32Array(positions.count).fill(1),1));
+    parts.push(core);
+  }
+
   const merged = mergeGeometries(parts, false);
   for (const geometry of parts) geometry.dispose();
   if (!merged) throw new Error(`Could not merge ${detail} foliage clusters`);
@@ -118,6 +139,7 @@ function makeLeafCard(
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));
+  geometry.setAttribute('canopyCore',new THREE.Float32BufferAttribute([0,0,0,0],1));
   geometry.setIndex([0, 2, 1, 0, 3, 2]);
   const normals:number[]=[];
   for(const point of [leftBottom,rightBottom,rightTop,leftTop]){

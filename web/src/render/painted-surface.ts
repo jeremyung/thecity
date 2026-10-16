@@ -14,5 +14,11 @@ export function paintedSurfaceTint() {
   // Fade unresolved strokes towards their mean rather than letting distant
   // walls sparkle as the camera moves. Horizontal paving keeps a quieter wash.
   const surfacePigment = mix(vec3(1), pigment, normalWorld.y.abs().oneMinus().mul(.8).add(.2));
-  return surfacePigment.mul(mix(.97, strokes.mul(.18).add(.88), strokeVisibility));
+  const wallTint = surfacePigment.mul(mix(.97, strokes.mul(.18).add(.88), strokeVisibility));
+  // Roofs and paving need neutral, fine surface variation, not the facade's
+  // broad colour wash. Fade subpixel grain to its mean at aerial distances.
+  const grainPosition = positionWorld.mul(2);
+  const grainVisibility = smoothstep(.35, 1.25, fwidth(grainPosition).length()).oneMinus();
+  const horizontalTint = vec3(mx_noise_float(grainPosition).mul(.025).mul(grainVisibility).add(.97));
+  return mix(wallTint, horizontalTint, smoothstep(.75, .95, normalWorld.y.abs()));
 }

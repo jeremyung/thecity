@@ -79,6 +79,30 @@ describe('footprint-bounded midrise massing', () => {
     }
   });
 
+  it('fits compact apartment slabs around a continuous service bay and centered entry', () => {
+    for (const width of [7.5, 8, 10, 16]) for (const floors of [4, 5, 6, 7]) {
+      for (const seed of [0, 1, 2, 3]) {
+        const input = building({ floors, appearance_seed: seed });
+        const result = midriseMassing(input, width, 12)!;
+        const eligible = floors <= 6 && width - Math.min(2.4, Math.max(1.8, width * .2)) >= 6;
+        expect(result.family === 'slab-apartment').toBe(eligible);
+        if (!eligible) continue;
+        expectInsideEnvelope(result.masses, width, 12);
+        const main = result.masses.find(mass => mass.role === 'main')!;
+        const core = result.masses.find(mass => mass.role === 'core')!;
+        expect(main.baseFloor).toBe(0);
+        expect(main.floors).toBe(floors);
+        expect(core.floors).toBe(floors);
+        expect(main.width * main.depth + core.width * core.depth).toBeCloseTo(width * 12);
+        // Existing authoritative entry at x=0 remains inside the dwelling wing.
+        expect(main.x - main.width / 2).toBeLessThan(-.62);
+        expect(main.x + main.width / 2).toBeGreaterThan(.62);
+        expect(midriseMassing(input, width, 12)).toEqual(result);
+      }
+    }
+    expect(midriseMassing(building({ floors: 5, appearance_seed: 0 }), 10, 7)!.family).toBe('walkup');
+  });
+
   it('composes apartment walk-ups with a full-height side core and supported two-floor setback', () => {
     const input = building({ floors: 7 });
     const result = midriseMassing(input, 18, 14)!;

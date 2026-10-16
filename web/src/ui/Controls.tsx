@@ -1,3 +1,4 @@
+import { DEFAULT_TILT_SHIFT, type TiltShiftSettings } from '../camera/tilt-shift';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   AudioLines,
@@ -41,6 +42,8 @@ export interface ControlsProps {
   musicLevel: number;
   cityLevel: number;
   focus: boolean;
+  tiltShift?: TiltShiftSettings;
+  onTiltShift?: (settings:Partial<TiltShiftSettings>)=>void;
   contrast: 'standard' | 'high';
   lens: LensPresetId;
   selected: Building | null;
@@ -192,6 +195,22 @@ export function ContrastToggle({ contrast, onContrast }: { contrast: 'standard' 
   return <label className="contrast-toggle"><input type="checkbox" checked={contrast === 'high'} onChange={(event) => onContrast(event.currentTarget.checked ? 'high' : 'standard')} /><span>High contrast controls</span></label>;
 }
 
+export function TiltShiftControl({tiltShift,onChange,focus,onFocus}:{tiltShift:Readonly<TiltShiftSettings>;onChange?:(settings:Partial<TiltShiftSettings>)=>void;focus:boolean;onFocus:()=>void}) {
+  return <>{onChange && <fieldset className="tilt-shift-controls">
+            <legend>Camera effects</legend>
+            <label><input type="checkbox" checked={focus} onChange={onFocus} /> Camera blur</label>
+            {!focus && <p className="camera-blur-note">Blur is off. Your tilt-shift settings are kept.</p>}
+            <label><input type="checkbox" checked={tiltShift.enabled} onChange={e=>onChange({enabled:e.target.checked})} /> Tilted focus plane</label>
+            {tiltShift.enabled && <>
+              <label>Focus position <input aria-label="Tilt-shift focus position" type="range" min="0.1" max="0.9" step="0.01" value={tiltShift.position} onChange={e=>onChange({position:Number(e.target.value)})} /></label>
+              <label>Band angle <input aria-label="Tilt-shift band angle" type="range" min="-90" max="90" step="1" value={tiltShift.angle} onChange={e=>onChange({angle:Number(e.target.value)})} /></label>
+              <label>Band width <input aria-label="Tilt-shift band width" type="range" min="0.1" max="2" step="0.05" value={tiltShift.width} onChange={e=>onChange({width:Number(e.target.value)})} /></label>
+              <label>Plane tilt <input aria-label="Tilt-shift plane tilt" type="range" min="0" max="80" step="1" value={tiltShift.tilt} onChange={e=>onChange({tilt:Number(e.target.value)})} /></label>
+              <label>Blur limit <input aria-label="Tilt-shift blur limit" type="range" min="0" max="32" step="1" value={tiltShift.blur} onChange={e=>onChange({blur:Number(e.target.value)})} /></label>
+            </>}
+          </fieldset>}</>;
+}
+
 export function LensControl({ lens, onLens }: { lens: LensPresetId; onLens: (lens: LensPresetId) => void }) {
   return <label className="quality-control lens-control"><span>Camera lens</span><select aria-label="Camera lens" value={lens} onChange={(event) => onLens(event.target.value as LensPresetId)}>
     {(Object.values(LENS_PRESETS) as typeof LENS_PRESETS[LensPresetId][]).map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
@@ -214,7 +233,7 @@ export function busLineLabel(world: World | null, lineId: number | undefined, re
 export default function Controls(props: ControlsProps) {
   const {
     world, ready, error, message, paused, speed, achievableSpeed, development, style, preparingStyle, mode, sceneLabel, preview, sound,
-    musicLevel, cityLevel, focus, contrast, lens, selected, subject, quality, metrics, onPause, onSpeed, onDevelopment,
+    musicLevel, cityLevel, focus, tiltShift=DEFAULT_TILT_SHIFT, onTiltShift, contrast, lens, selected, subject, quality, metrics, onPause, onSpeed, onDevelopment,
     onStyle, onMode, onPreview, onSound, onLevels, onFocus, onContrast, onLens, onSave, onResume, onNewWorld,
     onCloseInspector, onFollow, onQuality, onReviewMature, onReviewSkyline, onReviewStation, onReviewWaterfront, onDismissError, onGraphicsRetry, onGraphicsFallback, onExport, onImport,
   } = props;
@@ -419,7 +438,7 @@ export default function Controls(props: ControlsProps) {
             <button type="button" className={`dock-pill${style === 'anime' ? ' is-active' : ''}`} aria-pressed={style === 'anime'} onClick={() => onStyle('anime')}>Anime</button>
             <button type="button" className={`dock-pill${style === 'miniature' ? ' is-active' : ''}`} aria-pressed={style === 'miniature'} onClick={() => onStyle('miniature')}>Miniature</button>
           </div></div>
-          <button type="button" className={`visual-focus-toggle${focus ? ' is-active' : ''}`} aria-pressed={focus} onClick={onFocus}><Focus size={17} />Depth of field<span>{focus ? 'On' : 'Off'}</span></button>
+          <TiltShiftControl tiltShift={tiltShift} onChange={onTiltShift} focus={focus} onFocus={onFocus} />
           <label className="visual-light-control"><span className="panel-kicker">LIGHTING PREVIEW</span><input type="range" aria-label="Preview lighting by hour" min="0" max="24" step="1" value={preview ?? (world ? Math.floor(world.minute_of_day / 60) : 12)} onChange={(event) => onPreview(Number(event.target.value))} /><span className="light-preview__ends"><span>00:00</span><strong>{preview === null ? 'LIVE' : hourTime(preview)}</strong><span>24:00</span></span></label>
           {preview !== null && <button type="button" className="visual-return-live" onClick={() => onPreview(null)}><RotateCcw size={15} />Return to live lighting</button>}
         </section>
@@ -473,6 +492,7 @@ export default function Controls(props: ControlsProps) {
           </>}
           <ContrastToggle contrast={contrast} onContrast={onContrast} />
           <LensControl lens={lens} onLens={onLens} />
+          <TiltShiftControl tiltShift={tiltShift} onChange={onTiltShift} focus={focus} onFocus={onFocus} />
           <p className="lens-note">Focal length changes framing. Focus remains unchanged.</p>
           <RecentEvents events={events} />
           {world?.trains[0] && <button className="follow-button train-follow" onClick={() => onFollow(world.trains[0].id)}><Eye size={15} />Follow a train</button>}
