@@ -1157,7 +1157,8 @@ mod tests {
         use serde_json::json;
         use std::path::Path;
 
-        const SAVE_PATH: &str = "../validation/early-reservation-wasm-87231-save.json";
+        const SAVE_PATH: &str =
+            "../tests/fixtures/validation/early-reservation-wasm-87231-save.json";
         const REPORT_PATH: &str = "../validation/early-reservation-wasm-87231-report.json";
         const OUTPUT_PATH: &str = "../validation/early-reservation-wasm-87231-topology.json";
 
@@ -1235,7 +1236,7 @@ mod tests {
         );
 
         let audit = json!({
-            "checkpoint": "validation/early-reservation-wasm-87231-save.json",
+            "checkpoint": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
             "checkpoint_sha256": save_sha256,
             "source": "public WASM at seed 87231, rate 16, tick 242000; restored natively for read-only graph audit",
             "tick": engine.tick(),

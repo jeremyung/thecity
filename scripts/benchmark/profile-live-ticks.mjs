@@ -7,7 +7,10 @@ import { chromium } from '@playwright/test';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const BASE_URL = process.env.LIVE_TICK_BASE_URL ?? 'http://127.0.0.1:5173';
-const FIXTURE_PATH = resolve(ROOT, 'validation/early-reservation-wasm-87231-save.json');
+const FIXTURE_PATH = resolve(
+  ROOT,
+  'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+);
 const WASM_PATH = resolve(ROOT, 'public/wasm/city_engine_bg.wasm');
 const REPORT_PATH = resolve(
   process.env.LIVE_TICK_REPORT_PATH ?? 'validation/live-tick-profile.json',
@@ -74,7 +77,7 @@ async function main() {
     activeBrowser = browser;
     page = await browser.newPage();
     const fixtureResponse = await withTimeout(
-      page.goto(`${BASE_URL}/validation/early-reservation-wasm-87231-save.json`, {
+      page.goto(`${BASE_URL}/tests/fixtures/validation/early-reservation-wasm-87231-save.json`, {
         waitUntil: 'domcontentloaded',
       }),
       STARTUP_TIMEOUT_MS,
@@ -344,7 +347,7 @@ async function main() {
         wasm_module_url: `${BASE_URL}/wasm/city_engine.js`,
       },
       fixture: {
-        path: 'validation/early-reservation-wasm-87231-save.json',
+        path: 'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
         seed: fixture.seed,
         start_tick: fixture.tick,
         bytes_utf8: Buffer.byteLength(fixtureText, 'utf8'),

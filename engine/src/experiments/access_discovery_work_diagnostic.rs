@@ -65,7 +65,7 @@ mod tests {
         let job = DiscoveryJob::new(input).unwrap();
         let (stages, total, descriptor_count) = run_breakdown(job);
         let report = serde_json::json!({
-            "source_save": "validation/early-reservation-wasm-87231-save.json",
+            "source_save": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
             "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
             "chunk_work": CHUNK,
             "stages": stages,

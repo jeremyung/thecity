@@ -3,7 +3,7 @@ import json
 import math
 from pathlib import Path
 
-report = json.loads(Path('validation/density-void-audit.json').read_text())
+report = json.loads(Path('tests/fixtures/validation/density-void-audit.json').read_text())
 world = json.loads(Path(report['input']).read_text())
 nodes = {n['id']: n for n in world['nodes']}
 svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1000" viewBox="0 0 1080 1000">',

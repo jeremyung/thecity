@@ -256,7 +256,9 @@ function roadSummary(save, parcel, frontage) {
 }
 
 async function main() {
-  const inputPath = resolve(process.argv[2] ?? 'validation/early-reservation-wasm-87231-save.json');
+  const inputPath = resolve(
+    process.argv[2] ?? 'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+  );
   const outputPath = resolve(
     process.argv[3] ?? 'validation/parcel-envelope-infill-feasibility.json',
   );

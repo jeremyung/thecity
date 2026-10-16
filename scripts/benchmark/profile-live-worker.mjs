@@ -9,7 +9,10 @@ import { createHash } from 'node:crypto';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const BASE_URL = process.env.LIVE_WORKER_BASE_URL ?? 'http://127.0.0.1:5173';
-const FIXTURE_PATH = resolve(ROOT, 'validation/early-reservation-wasm-87231-save.json');
+const FIXTURE_PATH = resolve(
+  ROOT,
+  'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+);
 const REPORT_PATH = resolve(ROOT, 'validation/live-worker-profile.json');
 const PROTOCOL_VERSION = 1;
 const STARTUP_TIMEOUT_MS = Number(process.env.LIVE_WORKER_STARTUP_TIMEOUT_MS ?? 30_000);
@@ -157,7 +160,7 @@ async function main() {
     // A JSON document gives us the app origin without launching the viewer or
     // its own second simulation worker. The worker under test is loaded directly.
     const fixtureResponse = await withTimeout(
-      page.goto(`${BASE_URL}/validation/early-reservation-wasm-87231-save.json`, {
+      page.goto(`${BASE_URL}/tests/fixtures/validation/early-reservation-wasm-87231-save.json`, {
         waitUntil: 'domcontentloaded',
       }),
       STARTUP_TIMEOUT_MS,
@@ -516,7 +519,7 @@ async function main() {
         .update(readFileSync(resolve(ROOT, 'public/wasm/city_engine_bg.wasm')))
         .digest('hex'),
       fixture: {
-        path: 'validation/early-reservation-wasm-87231-save.json',
+        path: 'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
         seed: SEED,
         tick_before: fixtureSave.tick,
         bytes: Buffer.byteLength(fixture, 'utf8'),

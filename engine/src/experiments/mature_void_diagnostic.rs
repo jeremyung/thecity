@@ -266,9 +266,10 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     let start_save = engine.save_json();
     let initial_cursor = engine.state.interior_access_cursor;
     let initial_id = engine.state.next_id;
-    let audit: serde_json::Value =
-        serde_json::from_str(include_str!("../../../validation/density-void-audit.json"))
-            .expect("UI void mask audit");
+    let audit: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../tests/fixtures/validation/density-void-audit.json"
+    ))
+    .expect("UI void mask audit");
     let regions = audit["top3VoidComponents"].as_array().unwrap();
     let samples = [
         VoidSample {

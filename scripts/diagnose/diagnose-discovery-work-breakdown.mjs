@@ -7,7 +7,10 @@ initSync({
   module: readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)),
 });
 const save = readFileSync(
-  new URL('../../validation/early-reservation-wasm-87231-save.json', import.meta.url),
+  new URL(
+    '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+    import.meta.url,
+  ),
   'utf8',
 );
 const maxChunk = 65_536;
@@ -73,7 +76,7 @@ const result = run();
 assert.equal(result.total_work, 6_233_215);
 assert.equal(result.descriptor_count, 2_069);
 const report = {
-  source_save: 'validation/early-reservation-wasm-87231-save.json',
+  source_save: 'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
   source_save_sha256: createHash('sha256').update(save).digest('hex'),
   wasm_binary: 'public/wasm/city_engine_bg.wasm',
   wasm_sha256: createHash('sha256')

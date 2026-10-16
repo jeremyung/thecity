@@ -8,11 +8,15 @@ initSync({
   module: readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)),
 });
 const save = readFileSync(
-  new URL('../../validation/early-reservation-wasm-87231-save.json', import.meta.url),
+  new URL(
+    '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+    import.meta.url,
+  ),
   'utf8',
 );
 const referencePath =
-  process.env.ACCESS_REFERENCE_PATH || '../../validation/access-descriptor-reference.json';
+  process.env.ACCESS_REFERENCE_PATH ||
+  '../../tests/fixtures/validation/access-descriptor-reference.json';
 const referenceText = readFileSync(new URL(referencePath, import.meta.url), 'utf8');
 const reference = JSON.parse(referenceText);
 const runs = [];

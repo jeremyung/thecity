@@ -654,9 +654,12 @@ function CityExperience() {
   }
   async function reviewMature() {
     try {
-      const response = await fetch('/validation/early-reservation-wasm-87231-save.json', {
-        cache: 'no-store',
-      });
+      const response = await fetch(
+        '/tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+        {
+          cache: 'no-store',
+        },
+      );
       if (!response.ok) throw new Error('The local review fixture is unavailable.');
       await importCity(
         new File([await response.text()], 'early-reservation-wasm-87231-save.json', {

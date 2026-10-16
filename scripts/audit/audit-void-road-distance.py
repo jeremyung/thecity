@@ -5,7 +5,7 @@ Run from the repository root:
   python3 scripts/audit/audit-void-road-distance.py
 
 This is a read-only diagnostic. It uses the exact 2 m raster runs saved in
-validation/density-void-audit.json and endpoint geometry in that report's save.
+tests/fixtures/validation/density-void-audit.json and endpoint geometry in that report's save.
 It does not infer street spacing from road segment lengths.
 """
 
@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-REPORT_PATH = ROOT / "validation/density-void-audit.json"
+REPORT_PATH = ROOT / "tests/fixtures/validation/density-void-audit.json"
 
 
 def sha256(path: Path) -> str:

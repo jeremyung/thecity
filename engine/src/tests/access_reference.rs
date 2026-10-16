@@ -40,7 +40,7 @@ pub(crate) struct DescriptorReference {
 
 pub(crate) fn load() -> DescriptorReference {
     let stored: StoredReference = serde_json::from_str(include_str!(
-        "../../../validation/access-descriptor-reference.json"
+        "../../../tests/fixtures/validation/access-descriptor-reference.json"
     ))
     .unwrap();
     assert_eq!(stored.schema, 1);
@@ -128,7 +128,7 @@ fn export_candidate_descriptor_sequence_for_cross_target_review() {
         }
     }
     let mut stored: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/access-descriptor-reference.json"
+        "../../../tests/fixtures/validation/access-descriptor-reference.json"
     ))
     .unwrap();
     stored["descriptor_count"] = serde_json::json!(bits.len());

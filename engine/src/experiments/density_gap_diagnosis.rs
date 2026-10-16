@@ -417,7 +417,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         })
         .collect::<Vec<_>>();
     let report = json!({
-        "checkpoint": "validation/early-reservation-wasm-87231-save.json",
+        "checkpoint": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
         "checkpoint_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
         "seed": engine.state.seed,
         "tick": engine.state.tick,

@@ -142,6 +142,6 @@ fn incremental_descriptors_match_frozen_mature_reference() {
         .join("../validation/access-descriptor-incremental-check.json");
     std::fs::write(path, serde_json::to_vec_pretty(&serde_json::json!({
         "scope": "native descriptor preparation parity; not production scheduling or browser timing",
-        "reference": "validation/access-descriptor-reference.json", "runs": runs
+        "reference": "tests/fixtures/validation/access-descriptor-reference.json", "runs": runs
     })).unwrap()).unwrap();
 }

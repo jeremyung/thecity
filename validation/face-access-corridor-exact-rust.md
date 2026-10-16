@@ -1,6 +1,6 @@
 # Exact access-corridor check for the largest mature face
 
-This diagnostic tests the geometry reported by the 2 m raster audit against the engine’s current Rust predicates. It uses the public checkpoint `validation/early-reservation-wasm-87231-save.json` (seed 87231, tick 242000, SHA-256 `f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e`). The world is restored into an in-memory engine; no source save or production world is mutated.
+This diagnostic tests the geometry reported by the 2 m raster audit against the engine’s current Rust predicates. It uses the public checkpoint `tests/fixtures/validation/early-reservation-wasm-87231-save.json` (seed 87231, tick 242000, SHA-256 `f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e`). The world is restored into an in-memory engine; no source save or production world is mutated.
 
 The face has 22,936.24 m² of polygon area and 12,400 m² of raster-classified free component. The engine’s current exact proposal enumerator examined 4,944 candidates (206 eligible ordinary roads × 24 proposals per host) and produced zero proposals in this world. The scan is tied to this checkpoint and its fixed proposal recipe; it does not establish that all conceivable street alignments fail.
 

@@ -5,7 +5,10 @@ import { CityEngine, initSync } from '../../public/wasm/city_engine.js';
 
 const wasm = readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url));
 const source = readFileSync(
-  new URL('../../validation/early-reservation-wasm-87231-save.json', import.meta.url),
+  new URL(
+    '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+    import.meta.url,
+  ),
   'utf8',
 );
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');

@@ -9,7 +9,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const savePath = resolve(root, 'validation/early-reservation-wasm-87231-save.json');
+const savePath = resolve(root, 'tests/fixtures/validation/early-reservation-wasm-87231-save.json');
 const outputPath = resolve(root, 'validation/face-access-corridor-diagnostic.json');
 const mapPath = resolve(root, 'validation/face-access-corridor-map.svg');
 const STEP = 2;

@@ -4,7 +4,10 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { CityEngine, initSync } from '../../public/wasm/city_engine.js';
 const sha = (value) => createHash('sha256').update(value).digest('hex');
-const input = readFileSync('validation/early-reservation-wasm-87231-save.json', 'utf8');
+const input = readFileSync(
+  'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+  'utf8',
+);
 const wasm = readFileSync('public/wasm/city_engine_bg.wasm');
 initSync({ module: wasm });
 const engine = CityEngine.restore(input);

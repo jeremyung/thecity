@@ -23,7 +23,10 @@ const decode = (bits) => {
 const begin = performance.now();
 const world = new AccessProposalWorld(
   readFileSync(
-    new URL('../../validation/early-reservation-wasm-87231-save.json', import.meta.url),
+    new URL(
+      '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+      import.meta.url,
+    ),
     'utf8',
   ),
 );

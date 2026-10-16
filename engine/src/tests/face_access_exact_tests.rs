@@ -524,7 +524,7 @@ fn map_known_branch_local_sensitivity() {
         .fold(f64::NEG_INFINITY, f64::max);
     let report = json!({
         "diagnostic": "local exact-evaluator sensitivity map; not production candidate generation",
-        "source_save": "validation/early-reservation-wasm-87231-save.json",
+        "source_save": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
         "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
         "tick": engine.state.tick,
         "seed": engine.state.seed,
@@ -989,7 +989,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     if std::env::var_os("EXPORT_ACCESS_REFERENCE").is_some() {
         let reference = serde_json::json!({
             "schema": 1,
-            "source_save": "validation/early-reservation-wasm-87231-save.json",
+            "source_save": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
             "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
             "seed": source.state.seed,
             "tick": source.state.tick,
@@ -1013,13 +1013,13 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
             "tie_index_contract": "Underlying exhaustive output uses global ordinal as u8; page() resets tie_index to ordinal within the 48-item page. Geometry/order bits above exclude this paging detail."
         });
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../validation/access-descriptor-reference.json");
+            .join("../tests/fixtures/validation/access-descriptor-reference.json");
         std::fs::write(path, serde_json::to_vec_pretty(&reference).unwrap()).unwrap();
     }
     {
         let reference = serde_json::json!({
             "schema": 1,
-            "source_save": "validation/early-reservation-wasm-87231-save.json",
+            "source_save": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
             "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
             "seed": source.state.seed, "tick": source.state.tick,
             "faces": reference_faces,
@@ -1035,7 +1035,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
             }).collect::<Vec<_>>()
         });
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../validation/face-target-reference.json");
+            .join("../tests/fixtures/validation/face-target-reference.json");
         if export_targets {
             std::fs::write(path, serde_json::to_vec_pretty(&reference).unwrap()).unwrap();
         } else {
@@ -1237,7 +1237,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     let opened_tick = opened_tick.expect("discovered access road opens within 20,000 normal ticks");
     let report = serde_json::json!({
         "diagnostic": "exhaustive prepared-page search on a mature road face; diagnostic only",
-        "source_save": "validation/early-reservation-wasm-87231-save.json",
+        "source_save": "tests/fixtures/validation/early-reservation-wasm-87231-save.json",
         "source_save_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
         "seed": source.state.seed,
         "tick": source.state.tick,
@@ -2269,7 +2269,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
 fn mature_target_containment_matches_reference() {
     use crate::face_target_containment::{PointContainment, ValidatedPolygon};
     let reference: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/face-target-reference.json"
+        "../../../tests/fixtures/validation/face-target-reference.json"
     ))
     .unwrap();
     let faces: Vec<road_faces::RoadFace> =
@@ -2558,7 +2558,7 @@ fn mature_target_viability_matches_engine() {
         context_bytes.len()
     );
     let reference: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/face-target-reference.json"
+        "../../../tests/fixtures/validation/face-target-reference.json"
     ))
     .unwrap();
     let faces: Vec<road_faces::RoadFace> =
@@ -2660,7 +2660,7 @@ fn mature_face_sampling_matches_reference() {
     .unwrap();
     let frozen = FrozenViabilityContext::new(frozen_target_viability_input(&source)).unwrap();
     let reference: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/face-target-reference.json"
+        "../../../tests/fixtures/validation/face-target-reference.json"
     ))
     .unwrap();
     let faces: Vec<road_faces::RoadFace> =
@@ -2743,7 +2743,7 @@ fn mature_target_ranking_matches_reference() {
     .unwrap();
     let context = source.collision_context();
     let reference: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/face-target-reference.json"
+        "../../../tests/fixtures/validation/face-target-reference.json"
     ))
     .unwrap();
     let sample = reference["face_samples"]
@@ -2835,7 +2835,7 @@ fn mature_face_selection_matches_reference() {
     .unwrap();
     let context = FrozenViabilityContext::new(frozen_target_viability_input(&source)).unwrap();
     let reference: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/face-target-reference.json"
+        "../../../tests/fixtures/validation/face-target-reference.json"
     ))
     .unwrap();
     let faces: Vec<road_faces::RoadFace> =
@@ -3398,7 +3398,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
     let context = ProposalValidationContext::new(captured).unwrap();
     let reference = crate::tests::access_reference::load();
     let accepted_fixture: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../validation/accepted-access-candidate.json"
+        "../../../tests/fixtures/validation/accepted-access-candidate.json"
     ))
     .unwrap();
     let regression_bits: [u32; 4] =
