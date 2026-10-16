@@ -11,27 +11,46 @@ use crate::masterplan::P;
 /// graph. Keep the two outer interior anchors and longitudinal coordinates.
 /// Fixed Jacobi passes avoid order-dependent updates and unbounded convergence.
 pub(crate) fn fair_route(points: &mut [P], along_x: bool) {
-    if points.len() < 5 { return; }
+    if points.len() < 5 {
+        return;
+    }
     let axis = |p: P| if along_x { p.x } else { p.z };
     let lateral = |p: P| if along_x { p.z } else { p.x };
     for _ in 0..3 {
         let before = points.to_vec();
-        for i in 2..points.len()-2 {
-            let span = axis(before[i+1]) - axis(before[i-1]);
-            if span.abs() < 1.0e-6 { continue; }
-            let t = (axis(before[i])-axis(before[i-1])) / span;
-            let value = 0.5*lateral(before[i])
-                + 0.5*((1.0-t)*lateral(before[i-1])+t*lateral(before[i+1]));
-            if along_x { points[i].z=value; } else { points[i].x=value; }
+        for i in 2..points.len() - 2 {
+            let span = axis(before[i + 1]) - axis(before[i - 1]);
+            if span.abs() < 1.0e-6 {
+                continue;
+            }
+            let t = (axis(before[i]) - axis(before[i - 1])) / span;
+            let value = 0.5 * lateral(before[i])
+                + 0.5 * ((1.0 - t) * lateral(before[i - 1]) + t * lateral(before[i + 1]));
+            if along_x {
+                points[i].z = value;
+            } else {
+                points[i].x = value;
+            }
         }
     }
     // The short regional tails continue the new interior bearing exactly.
-    for (end, outer, inner) in [(0,1,2),(points.len()-1,points.len()-2,points.len()-3)] {
-        let span=axis(points[outer])-axis(points[inner]);
-        if span.abs() < 1.0e-6 { continue; }
-        let value=lateral(points[outer])+(lateral(points[outer])-lateral(points[inner]))
-            *(axis(points[end])-axis(points[outer]))/span;
-        if along_x { points[end].z=value; } else { points[end].x=value; }
+    for (end, outer, inner) in [
+        (0, 1, 2),
+        (points.len() - 1, points.len() - 2, points.len() - 3),
+    ] {
+        let span = axis(points[outer]) - axis(points[inner]);
+        if span.abs() < 1.0e-6 {
+            continue;
+        }
+        let value = lateral(points[outer])
+            + (lateral(points[outer]) - lateral(points[inner]))
+                * (axis(points[end]) - axis(points[outer]))
+                / span;
+        if along_x {
+            points[end].z = value;
+        } else {
+            points[end].x = value;
+        }
     }
 }
 
@@ -171,9 +190,14 @@ mod tests {
     #[test]
     fn fair_route_keeps_longitudinal_coordinates_and_outer_interior_anchors() {
         let mut route = vec![
-            p(-20.0, -8.0), p(-10.0, -4.0), p(0.0, 9.0),
-            p(10.0, -7.0), p(20.0, 8.0), p(30.0, -6.0),
-            p(40.0, 5.0), p(50.0, 2.0),
+            p(-20.0, -8.0),
+            p(-10.0, -4.0),
+            p(0.0, 9.0),
+            p(10.0, -7.0),
+            p(20.0, 8.0),
+            p(30.0, -6.0),
+            p(40.0, 5.0),
+            p(50.0, 2.0),
         ];
         let original = route.clone();
         fair_route(&mut route, true);
@@ -189,9 +213,14 @@ mod tests {
     #[test]
     fn fair_route_extends_both_boundary_tails_on_the_interior_bearings() {
         let mut route = vec![
-            p(-20.0, 5.0), p(-10.0, 2.0), p(0.0, 0.0),
-            p(10.0, 8.0), p(20.0, -5.0), p(30.0, 4.0),
-            p(40.0, 7.0), p(50.0, 9.0),
+            p(-20.0, 5.0),
+            p(-10.0, 2.0),
+            p(0.0, 0.0),
+            p(10.0, 8.0),
+            p(20.0, -5.0),
+            p(30.0, 4.0),
+            p(40.0, 7.0),
+            p(50.0, 9.0),
         ];
         fair_route(&mut route, true);
 
@@ -208,9 +237,14 @@ mod tests {
     #[test]
     fn fair_route_is_equivalent_when_the_route_order_is_reversed() {
         let original = vec![
-            p(-30.0, -7.0), p(-20.0, -3.0), p(-10.0, 8.0),
-            p(0.0, -6.0), p(10.0, 9.0), p(20.0, -5.0),
-            p(30.0, 4.0), p(40.0, 6.0),
+            p(-30.0, -7.0),
+            p(-20.0, -3.0),
+            p(-10.0, 8.0),
+            p(0.0, -6.0),
+            p(10.0, 9.0),
+            p(20.0, -5.0),
+            p(30.0, 4.0),
+            p(40.0, 6.0),
         ];
         let mut forward = original.clone();
         let mut reverse: Vec<_> = original.iter().copied().rev().collect();

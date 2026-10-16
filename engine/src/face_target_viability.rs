@@ -164,7 +164,9 @@ impl ViabilityQuery {
         context: Arc<FrozenViabilityContext>,
         road: Segment,
     ) -> Result<Self, ViabilityError> {
-        if !valid_segment(road) { return Err(ViabilityError::NonFiniteInput); }
+        if !valid_segment(road) {
+            return Err(ViabilityError::NonFiniteInput);
+        }
         let mut query = Self::new(rect, context)?;
         query.state.extra_road = Some(road);
         Ok(query)
@@ -175,8 +177,13 @@ impl ViabilityQuery {
     }
 
     fn open_road(&self, index: usize) -> Segment {
-        self.context.input.open_roads.get(index).copied()
-            .or(self.state.extra_road).expect("validated open-road cursor")
+        self.context
+            .input
+            .open_roads
+            .get(index)
+            .copied()
+            .or(self.state.extra_road)
+            .expect("validated open-road cursor")
     }
 
     pub(crate) fn restore(
@@ -405,9 +412,7 @@ impl ViabilityQuery {
                     self.state.phase = Phase::OpenRoadCenter;
                     self.state.cursor = 0;
                 }
-                Phase::OpenRoadCenter
-                    if self.state.cursor == self.open_road_count() =>
-                {
+                Phase::OpenRoadCenter if self.state.cursor == self.open_road_count() => {
                     self.state.phase = Phase::PendingRoadCenter;
                     self.state.cursor = 0;
                 }
@@ -423,7 +428,8 @@ impl ViabilityQuery {
 }
 
 fn valid_segment(segment: Segment) -> bool {
-    [segment.ax, segment.az, segment.bx, segment.bz].iter()
+    [segment.ax, segment.az, segment.bx, segment.bz]
+        .iter()
         .all(|value| value.is_finite() && value.abs() <= MAX_ABS_COORDINATE)
 }
 
@@ -495,7 +501,9 @@ fn validate_checkpoint(
         Phase::River => context.input.river_segments.len(),
         Phase::Parcels => context.input.parcel_footprints.len(),
         Phase::Reservations => context.input.reserved_lots.len(),
-        Phase::OpenRoadRect | Phase::OpenRoadCenter => context.input.open_roads.len() + usize::from(state.extra_road.is_some()),
+        Phase::OpenRoadRect | Phase::OpenRoadCenter => {
+            context.input.open_roads.len() + usize::from(state.extra_road.is_some())
+        }
         Phase::PendingRoadRect | Phase::PendingRoadCenter => context.input.pending_roads.len(),
         Phase::NeighborhoodSegments => context.input.neighborhood_segments.len(),
         Phase::BoundsAndProtected | Phase::NeighborhoodInterior | Phase::Done => {
@@ -611,7 +619,9 @@ mod tests {
                     input.open_roads.push(branch);
                     let appended = FrozenViabilityContext::new(input.clone()).unwrap();
                     let rectangle = rect(0.0, z, 12.0, 12.0, 0.35);
-                    let mut extra = ViabilityQuery::new_with_extra_road(rectangle, context.clone(), branch).unwrap();
+                    let mut extra =
+                        ViabilityQuery::new_with_extra_road(rectangle, context.clone(), branch)
+                            .unwrap();
                     let mut expected = ViabilityQuery::new(rectangle, appended).unwrap();
                     assert_eq!(extra.advance(0).work_used, 0);
                     loop {
@@ -620,8 +630,14 @@ mod tests {
                         assert_eq!(a, b);
                         assert_eq!(extra.result(), expected.result());
                         let saved = serde_json::to_string(&extra.checkpoint()).unwrap();
-                        extra = ViabilityQuery::restore(serde_json::from_str(&saved).unwrap(), context.clone()).unwrap();
-                        if a.done { break; }
+                        extra = ViabilityQuery::restore(
+                            serde_json::from_str(&saved).unwrap(),
+                            context.clone(),
+                        )
+                        .unwrap();
+                        if a.done {
+                            break;
+                        }
                     }
                     assert_eq!(extra.result(), Some(oracle(rectangle, &input)));
                 }
@@ -633,8 +649,18 @@ mod tests {
     fn extra_branch_rejects_invalid_geometry_and_cursor() {
         let context = FrozenViabilityContext::new(empty_input()).unwrap();
         let rectangle = rect(0.0, 30.0, 12.0, 12.0, 0.0);
-        assert!(ViabilityQuery::new_with_extra_road(rectangle, context.clone(), seg(f32::NAN, 0.0, 1.0, 1.0)).is_err());
-        let query = ViabilityQuery::new_with_extra_road(rectangle, context.clone(), seg(-30.0, 0.0, 30.0, 0.0)).unwrap();
+        assert!(ViabilityQuery::new_with_extra_road(
+            rectangle,
+            context.clone(),
+            seg(f32::NAN, 0.0, 1.0, 1.0)
+        )
+        .is_err());
+        let query = ViabilityQuery::new_with_extra_road(
+            rectangle,
+            context.clone(),
+            seg(-30.0, 0.0, 30.0, 0.0),
+        )
+        .unwrap();
         let mut cp = query.checkpoint();
         cp.phase = Phase::OpenRoadRect;
         cp.cursor = 2;

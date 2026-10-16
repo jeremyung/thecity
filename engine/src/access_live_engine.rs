@@ -1,6 +1,8 @@
 //! Tick-boundary integration of frozen discovery and fresh admission.
-use crate::{access_capture, access_live::LiveAccess, access_planning_job::AccessPlanningJob,
-    access_proposal_capture, Engine, WorldPoint, MAX_PARCELS, MAX_SEGMENTS};
+use crate::{
+    access_capture, access_live::LiveAccess, access_planning_job::AccessPlanningJob,
+    access_proposal_capture, Engine, WorldPoint, MAX_PARCELS, MAX_SEGMENTS,
+};
 
 const WORK_PER_TICK: usize = 4096;
 const SEARCH_INTERVAL_TICKS: u64 = 1200;
@@ -18,7 +20,9 @@ pub(crate) fn validate_face_history(history: &[Vec<u32>]) -> Result<(), String> 
 }
 
 fn remember_exhausted_face(history: &mut Vec<Vec<u32>>, identity: &[u32]) {
-    if history.iter().any(|previous| previous == identity) { return; }
+    if history.iter().any(|previous| previous == identity) {
+        return;
+    }
     let mut items: usize = history.iter().map(Vec::len).sum();
     while history.len() >= MAX_HISTORY_FACES || items + identity.len() > MAX_HISTORY_ITEMS {
         items -= history.remove(0).len();
@@ -33,21 +37,43 @@ impl Engine {
             && self.state.neighborhood_plan.is_none()
             && self.state.demand > 0.8
             && self.project_admission_available()
-            && self.state.roads.len().saturating_add(self.state.projects.len()).saturating_add(3) <= MAX_SEGMENTS
+            && self
+                .state
+                .roads
+                .len()
+                .saturating_add(self.state.projects.len())
+                .saturating_add(3)
+                <= MAX_SEGMENTS
             && self.state.parcels.len().saturating_add(2) <= MAX_PARCELS
             && self.state.next_id.checked_add(5).is_some()
-            && !self.state.projects.iter().any(|p| p.kind == "road" && p.progress < 1.0)
+            && !self
+                .state
+                .projects
+                .iter()
+                .any(|p| p.kind == "road" && p.progress < 1.0)
     }
 
     /// Atomic input capture is outside the incremental work counter. Discovery
     /// never holds references into mutable engine storage and never restarts
     /// merely because the geometry revision changes during its search.
     fn start_face_access(&mut self) -> bool {
-        if !self.face_access_admission_available() { return false; }
-        let Ok((discovery, proposal)) = access_capture::capture_pair(self) else { return false; };
-        let Some(revision) = self.access_geometry_revision_token() else { return false; };
-        let Ok(job) = AccessPlanningJob::new_excluding(discovery, proposal, revision,
-            self.state.exhausted_access_faces.clone()) else { return false; };
+        if !self.face_access_admission_available() {
+            return false;
+        }
+        let Ok((discovery, proposal)) = access_capture::capture_pair(self) else {
+            return false;
+        };
+        let Some(revision) = self.access_geometry_revision_token() else {
+            return false;
+        };
+        let Ok(job) = AccessPlanningJob::new_excluding(
+            discovery,
+            proposal,
+            revision,
+            self.state.exhausted_access_faces.clone(),
+        ) else {
+            return false;
+        };
         self.live_access = Some(LiveAccess::new(job));
         true
     }
@@ -60,11 +86,24 @@ impl Engine {
             return;
         }
         if self.live_access.is_none() {
-            if self.state.tick < self.state.next_face_access_tick { return; }
-            self.state.next_face_access_tick = self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
-            let roads = self.state.roads.iter().filter(|r| r.stage == "open" && r.connected
-                && matches!(r.kind.as_str(), "local" | "arterial")).count();
-            if roads < 40 || !self.start_face_access() { return; }
+            if self.state.tick < self.state.next_face_access_tick {
+                return;
+            }
+            self.state.next_face_access_tick =
+                self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
+            let roads = self
+                .state
+                .roads
+                .iter()
+                .filter(|r| {
+                    r.stage == "open"
+                        && r.connected
+                        && matches!(r.kind.as_str(), "local" | "arterial")
+                })
+                .count();
+            if roads < 40 || !self.start_face_access() {
+                return;
+            }
         }
         let mut job = self.live_access.take().expect("started access job");
         if let Some(revision) = job.validation_revision() {
@@ -75,9 +114,14 @@ impl Engine {
         let used = job.advance(WORK_PER_TICK);
         if job.needs_validation().is_some() {
             if self.face_access_admission_available() {
-                match (access_proposal_capture::capture(self), self.access_geometry_revision_token()) {
+                match (
+                    access_proposal_capture::capture(self),
+                    self.access_geometry_revision_token(),
+                ) {
                     (Ok(input), Some(revision)) => {
-                        if job.begin_validation(input, revision).is_err() { job.reject_or_consume(); }
+                        if job.begin_validation(input, revision).is_err() {
+                            job.reject_or_consume();
+                        }
                     }
                     _ => job.reject_or_consume(),
                 }
@@ -90,10 +134,18 @@ impl Engine {
         if let Some((proposal, revision)) = job.ready_proposal() {
             if self.access_geometry_revision_token() == Some(revision)
                 && self.face_access_admission_available()
-                && self.admit_interior_access(proposal.host_id, proposal.host_t,
-                    WorldPoint { x: proposal.end_x, z: proposal.end_z }, proposal.selected_lots.clone())
+                && self.admit_interior_access(
+                    proposal.host_id,
+                    proposal.host_t,
+                    WorldPoint {
+                        x: proposal.end_x,
+                        z: proposal.end_z,
+                    },
+                    proposal.selected_lots.clone(),
+                )
             {
-                self.state.next_face_access_tick = self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
+                self.state.next_face_access_tick =
+                    self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
                 return;
             }
             job.reject_or_consume();
@@ -110,7 +162,8 @@ impl Engine {
                     self.state.exhausted_access_faces.clear();
                 }
             }
-            self.state.next_face_access_tick = self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
+            self.state.next_face_access_tick =
+                self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
         } else {
             self.live_access = Some(job);
         }
@@ -123,7 +176,9 @@ mod tests {
 
     #[test]
     fn shared_capture_start_preserves_live_checkpoint_and_continuation() {
-        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+        let source = include_str!(
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+        );
         let mut control = Engine::restore_json(source).unwrap();
         let mut paired = Engine::restore_json(source).unwrap();
         let discovery = access_capture::capture(&control).unwrap();
@@ -210,7 +265,9 @@ mod tests {
 
     #[test]
     fn exhausted_face_sweep_survives_save_and_selects_another_interior() {
-        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+        let source = include_str!(
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+        );
         let mut city = Engine::restore_json(source).unwrap();
         assert!(city.start_face_access());
         let mut job = city.live_access.take().unwrap();
@@ -218,8 +275,12 @@ mod tests {
         // without mutating geometry or reserving any IDs.
         for _ in 0..100_000 {
             job.advance(WORK_PER_TICK);
-            if job.needs_validation().is_some() { job.reject_or_consume(); }
-            if job.is_exhausted() { break; }
+            if job.needs_validation().is_some() {
+                job.reject_or_consume();
+            }
+            if job.is_exhausted() {
+                break;
+            }
         }
         assert!(job.is_exhausted() && !job.failed());
         let first = job.selected_face_identity().unwrap().to_vec();
@@ -235,7 +296,9 @@ mod tests {
         let job = city.live_access.as_mut().unwrap();
         for _ in 0..100_000 {
             job.advance(WORK_PER_TICK);
-            if job.needs_validation().is_some() || job.is_exhausted() { break; }
+            if job.needs_validation().is_some() || job.is_exhausted() {
+                break;
+            }
         }
         assert!(!job.failed());
         assert_ne!(job.selected_face_identity().unwrap(), first.as_slice());
@@ -259,7 +322,9 @@ mod tests {
         }
         validate_face_history(&history).unwrap();
         assert!(history.iter().map(Vec::len).sum::<usize>() <= MAX_HISTORY_ITEMS);
-        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+        let source = include_str!(
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+        );
         let mut city = Engine::restore_json(source).unwrap();
         city.state.exhausted_access_faces = vec![vec![1, 2]];
         assert!(Engine::restore_json(&city.save_json()).is_err());
@@ -269,7 +334,9 @@ mod tests {
 
     #[test]
     fn mature_live_job_admits_known_route_and_resumes_with_moving_actors() {
-        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+        let source = include_str!(
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+        );
         let mut uninterrupted = Engine::restore_json(source).unwrap();
         assert!(uninterrupted.start_face_access());
         let mut resumed = Engine::restore_json(&uninterrupted.save_json()).unwrap();
@@ -287,10 +354,17 @@ mod tests {
                 resumed = Engine::restore_json(&resumed.save_json()).unwrap();
             }
         }
-        assert!(uninterrupted.state.pending_interior_access.is_some(), "live job failed to admit after {steps} slices");
+        assert!(
+            uninterrupted.state.pending_interior_access.is_some(),
+            "live job failed to admit after {steps} slices"
+        );
         assert_eq!(uninterrupted.save_json(), resumed.save_json());
         uninterrupted.validate().unwrap();
-        let plan = uninterrupted.state.pending_interior_access.as_ref().unwrap();
+        let plan = uninterrupted
+            .state
+            .pending_interior_access
+            .as_ref()
+            .unwrap();
         assert_eq!(plan.host_road_id, 3317);
         assert_eq!(plan.selected_lots.len(), 2);
         let branch_id = plan.branch_road_id;
@@ -303,9 +377,18 @@ mod tests {
             if index % 97 == 0 {
                 resumed = Engine::restore_json(&resumed.save_json()).unwrap();
             }
-            let branch = uninterrupted.state.roads.iter().find(|r| r.id == branch_id).unwrap();
-            let frontages = uninterrupted.state.parcel_frontages.iter()
-                .filter(|f| f.road_id == branch_id).count();
+            let branch = uninterrupted
+                .state
+                .roads
+                .iter()
+                .find(|r| r.id == branch_id)
+                .unwrap();
+            let frontages = uninterrupted
+                .state
+                .parcel_frontages
+                .iter()
+                .filter(|f| f.road_id == branch_id)
+                .count();
             if branch.stage != "open" {
                 assert_eq!(frontages, 0, "dependent lots must wait for road opening");
             } else {
@@ -315,14 +398,19 @@ mod tests {
                 break;
             }
         }
-        assert!(opened, "admitted road must complete through ordinary construction");
+        assert!(
+            opened,
+            "admitted road must complete through ordinary construction"
+        );
         assert_eq!(uninterrupted.save_json(), resumed.save_json());
         uninterrupted.validate().unwrap();
     }
 
     #[test]
     fn real_steps_resume_deterministically_across_geometry_churn() {
-        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+        let source = include_str!(
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+        );
         let mut uninterrupted = Engine::restore_json(source).unwrap();
         assert!(uninterrupted.start_face_access());
         let mut resumed = Engine::restore_json(&uninterrupted.save_json()).unwrap();
@@ -353,8 +441,14 @@ mod tests {
             }
         }
 
-        assert!(steps < 10_000, "real-step live job exceeded the bounded fixture run");
-        assert_ne!(uninterrupted.access_geometry_revision_token(), initial_geometry_revision);
+        assert!(
+            steps < 10_000,
+            "real-step live job exceeded the bounded fixture run"
+        );
+        assert_ne!(
+            uninterrupted.access_geometry_revision_token(),
+            initial_geometry_revision
+        );
         assert_eq!(uninterrupted.save_json(), resumed.save_json());
         uninterrupted.validate().unwrap();
         resumed.validate().unwrap();
@@ -362,7 +456,9 @@ mod tests {
 
     #[test]
     fn legacy_preflight_restart_preserves_mature_city_and_is_deterministic() {
-        let source = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+        let source = include_str!(
+            "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+        );
         let mut city = Engine::restore_json(source).unwrap();
         assert!(city.start_face_access());
 

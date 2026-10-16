@@ -15,8 +15,18 @@ fn face_filter_accepts_inside_plan_and_rejects_external_branch_or_lot() {
         length: 100.0,
         lanes: 2,
     };
-    let from = Node { id: 10, x: 0.0, z: 0.0, kind: "junction".into() };
-    let to = Node { id: 11, x: 100.0, z: 0.0, kind: "junction".into() };
+    let from = Node {
+        id: 10,
+        x: 0.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let to = Node {
+        id: 11,
+        x: 100.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
     let proposal = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
             site_area: 2_000_000,
@@ -55,29 +65,68 @@ fn face_filter_accepts_inside_plan_and_rejects_external_branch_or_lot() {
 
     let mut external_branch = proposal.clone();
     external_branch.end_z = 120.0;
-    assert!(!proposal_fits_face(&external_branch, &host, &from, &to, &polygon));
+    assert!(!proposal_fits_face(
+        &external_branch,
+        &host,
+        &from,
+        &to,
+        &polygon
+    ));
 
     let mut external_lot = proposal;
     external_lot.selected_lots[0].x = 110.0;
-    assert!(!proposal_fits_face(&external_lot, &host, &from, &to, &polygon));
+    assert!(!proposal_fits_face(
+        &external_lot,
+        &host,
+        &from,
+        &to,
+        &polygon
+    ));
 }
 
 #[test]
 fn face_filter_keeps_only_contained_lots_and_requires_two_sites() {
     let polygon = vec![(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)];
     let host = Road {
-        id: 1, from: 10, to: 11, kind: "local".into(), stage: "open".into(),
-        progress: 1.0, connected: true, length: 100.0, lanes: 2,
+        id: 1,
+        from: 10,
+        to: 11,
+        kind: "local".into(),
+        stage: "open".into(),
+        progress: 1.0,
+        connected: true,
+        length: 100.0,
+        lanes: 2,
     };
-    let from = Node { id: 10, x: 0.0, z: 0.0, kind: "junction".into() };
-    let to = Node { id: 11, x: 100.0, z: 0.0, kind: "junction".into() };
+    let from = Node {
+        id: 10,
+        x: 0.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let to = Node {
+        id: 11,
+        x: 100.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
     let lot = |x, z| interior_access::InteriorAccessLot {
-        x, z, width: 10.0, depth: 10.0, rotation: 0.0, along: 0.5, side: 1,
+        x,
+        z,
+        width: 10.0,
+        depth: 10.0,
+        rotation: 0.0,
+        along: 0.5,
+        side: 1,
     };
     let proposal = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
-            site_area: 3_000_000, road_length_mm: 48_000, host_id: 1,
-            fraction_index: 1, side_index: 1, length_index: 1,
+            site_area: 3_000_000,
+            road_length_mm: 48_000,
+            host_id: 1,
+            fraction_index: 1,
+            side_index: 1,
+            length_index: 1,
         },
         host_id: 1,
         host_t: 0.5,
@@ -91,7 +140,11 @@ fn face_filter_keeps_only_contained_lots_and_requires_two_sites() {
     assert!(retained.selected_lots.iter().all(|lot| {
         rect_within_face(
             geometry::OrientedRect {
-                x: lot.x, z: lot.z, width: lot.width, depth: lot.depth, rotation: lot.rotation,
+                x: lot.x,
+                z: lot.z,
+                width: lot.width,
+                depth: lot.depth,
+                rotation: lot.rotation,
             },
             &polygon,
         )
@@ -118,11 +171,7 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
     let eligible = [1, 2, 3, 4].into_iter().collect();
     let order = ordered_face_boundary_hosts(1, std::slice::from_ref(&face), &eligible);
     assert_eq!(order, vec![1, 2, 3, 4]);
-    let bounded = order
-        .iter()
-        .take(2)
-        .copied()
-        .collect::<Vec<_>>();
+    let bounded = order.iter().take(2).copied().collect::<Vec<_>>();
     assert_eq!(bounded, vec![1, 2]);
     assert_eq!(bounded, vec![1, 2]);
     assert_eq!(
@@ -133,20 +182,60 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
 
     // The newly opened bottom edge's proposal heads out of the bounded face.
     let bottom = Road {
-        id: 1, from: 10, to: 20, kind: "local".into(), stage: "open".into(),
-        progress: 1.0, connected: true, length: 100.0, lanes: 2,
+        id: 1,
+        from: 10,
+        to: 20,
+        kind: "local".into(),
+        stage: "open".into(),
+        progress: 1.0,
+        connected: true,
+        length: 100.0,
+        lanes: 2,
     };
-    let bottom_a = Node { id: 10, x: 0.0, z: 0.0, kind: "junction".into() };
-    let bottom_b = Node { id: 20, x: 100.0, z: 0.0, kind: "junction".into() };
+    let bottom_a = Node {
+        id: 10,
+        x: 0.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let bottom_b = Node {
+        id: 20,
+        x: 100.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
     let blocked = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
-            site_area: 2_000_000, road_length_mm: 48_000, host_id: 1,
-            fraction_index: 1, side_index: 1, length_index: 1,
+            site_area: 2_000_000,
+            road_length_mm: 48_000,
+            host_id: 1,
+            fraction_index: 1,
+            side_index: 1,
+            length_index: 1,
         },
-        host_id: 1, host_t: 0.5, end_x: 50.0, end_z: -80.0,
+        host_id: 1,
+        host_t: 0.5,
+        end_x: 50.0,
+        end_z: -80.0,
         selected_lots: vec![
-            interior_access::InteriorAccessLot { x: 30.0, z: -40.0, width: 12.0, depth: 12.0, rotation: 0.0, along: 0.25, side: -1 },
-            interior_access::InteriorAccessLot { x: 70.0, z: -40.0, width: 12.0, depth: 12.0, rotation: 0.0, along: 0.75, side: 1 },
+            interior_access::InteriorAccessLot {
+                x: 30.0,
+                z: -40.0,
+                width: 12.0,
+                depth: 12.0,
+                rotation: 0.0,
+                along: 0.25,
+                side: -1,
+            },
+            interior_access::InteriorAccessLot {
+                x: 70.0,
+                z: -40.0,
+                width: 12.0,
+                depth: 12.0,
+                rotation: 0.0,
+                along: 0.75,
+                side: 1,
+            },
         ],
     };
     assert!(retain_face_lots(&blocked, &bottom, &bottom_a, &bottom_b, &polygon).is_none());
@@ -154,20 +243,60 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
     // The next boundary edge is a viable inward-facing frontage for the same
     // newly bounded face. This is the production scan's alternate-host path.
     let right = Road {
-        id: 2, from: 20, to: 30, kind: "local".into(), stage: "open".into(),
-        progress: 1.0, connected: true, length: 100.0, lanes: 2,
+        id: 2,
+        from: 20,
+        to: 30,
+        kind: "local".into(),
+        stage: "open".into(),
+        progress: 1.0,
+        connected: true,
+        length: 100.0,
+        lanes: 2,
     };
-    let right_a = Node { id: 20, x: 100.0, z: 0.0, kind: "junction".into() };
-    let right_b = Node { id: 30, x: 100.0, z: 100.0, kind: "junction".into() };
+    let right_a = Node {
+        id: 20,
+        x: 100.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let right_b = Node {
+        id: 30,
+        x: 100.0,
+        z: 100.0,
+        kind: "junction".into(),
+    };
     let usable = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
-            site_area: 2_000_000, road_length_mm: 48_000, host_id: 2,
-            fraction_index: 1, side_index: 1, length_index: 1,
+            site_area: 2_000_000,
+            road_length_mm: 48_000,
+            host_id: 2,
+            fraction_index: 1,
+            side_index: 1,
+            length_index: 1,
         },
-        host_id: 2, host_t: 0.5, end_x: 20.0, end_z: 50.0,
+        host_id: 2,
+        host_t: 0.5,
+        end_x: 20.0,
+        end_z: 50.0,
         selected_lots: vec![
-            interior_access::InteriorAccessLot { x: 70.0, z: 35.0, width: 12.0, depth: 12.0, rotation: std::f32::consts::FRAC_PI_2, along: 0.25, side: 1 },
-            interior_access::InteriorAccessLot { x: 70.0, z: 65.0, width: 12.0, depth: 12.0, rotation: std::f32::consts::FRAC_PI_2, along: 0.75, side: 1 },
+            interior_access::InteriorAccessLot {
+                x: 70.0,
+                z: 35.0,
+                width: 12.0,
+                depth: 12.0,
+                rotation: std::f32::consts::FRAC_PI_2,
+                along: 0.25,
+                side: 1,
+            },
+            interior_access::InteriorAccessLot {
+                x: 70.0,
+                z: 65.0,
+                width: 12.0,
+                depth: 12.0,
+                rotation: std::f32::consts::FRAC_PI_2,
+                along: 0.75,
+                side: 1,
+            },
         ],
     };
     let selected = retain_face_lots(&usable, &right, &right_a, &right_b, &polygon)
@@ -178,7 +307,9 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
 
 #[test]
 fn face_candidate_window_round_robins_over_boundary_with_global_budget() {
-    let host_sides = (100..124).map(|id| (id, if id % 2 == 0 { 1 } else { -1 })).collect::<Vec<_>>();
+    let host_sides = (100..124)
+        .map(|id| (id, if id % 2 == 0 { 1 } else { -1 }))
+        .collect::<Vec<_>>();
     let first = round_robin_face_candidates(&host_sides);
     let second = round_robin_face_candidates(&host_sides);
     assert_eq!(first, second, "candidate allocation is deterministic");
@@ -211,7 +342,10 @@ fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;
-    engine.state.projects.retain(|project| project.progress >= 1.0);
+    engine
+        .state
+        .projects
+        .retain(|project| project.progress >= 1.0);
     let host_id = engine
         .state
         .roads
@@ -222,7 +356,12 @@ fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
                 && matches!(road.kind.as_str(), "local" | "arterial")
         })
         .map(|road| road.id)
-        .find(|host_id| !engine.propose_interior_access_for_host(*host_id).proposals.is_empty())
+        .find(|host_id| {
+            !engine
+                .propose_interior_access_for_host(*host_id)
+                .proposals
+                .is_empty()
+        })
         .expect("fixture has a feasible access host");
 
     let legacy = engine.propose_interior_access_for_host(host_id);
@@ -247,8 +386,12 @@ fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
 #[test]
 fn face_containment_rejects_segment_and_lot_crossing_concave_notch() {
     let concave = vec![
-        (0.0, 0.0), (100.0, 0.0), (100.0, 40.0),
-        (40.0, 40.0), (40.0, 100.0), (0.0, 100.0),
+        (0.0, 0.0),
+        (100.0, 0.0),
+        (100.0, 40.0),
+        (40.0, 40.0),
+        (40.0, 100.0),
+        (0.0, 100.0),
     ];
     let start = WorldPoint { x: 10.0, z: 90.0 };
     let end = WorldPoint { x: 90.0, z: 10.0 };
@@ -269,25 +412,87 @@ fn face_containment_rejects_segment_and_lot_crossing_concave_notch() {
 #[test]
 fn shallow_or_fully_served_faces_do_not_qualify_for_access() {
     let thin_face = vec![(0.0, 0.0), (100.0, 0.0), (100.0, 20.0), (0.0, 20.0)];
-    let bottom_a = Node { id: 1, x: 0.0, z: 0.0, kind: "junction".into() };
-    let bottom_b = Node { id: 2, x: 100.0, z: 0.0, kind: "junction".into() };
-    let top_a = Node { id: 3, x: 0.0, z: 20.0, kind: "junction".into() };
-    let top_b = Node { id: 4, x: 100.0, z: 20.0, kind: "junction".into() };
-    let bottom = Road {
-        id: 1, from: 1, to: 2, kind: "local".into(), stage: "open".into(),
-        progress: 1.0, connected: true, length: 100.0, lanes: 2,
+    let bottom_a = Node {
+        id: 1,
+        x: 0.0,
+        z: 0.0,
+        kind: "junction".into(),
     };
-    let top = Road { id: 2, from: 4, to: 3, ..bottom.clone() };
+    let bottom_b = Node {
+        id: 2,
+        x: 100.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let top_a = Node {
+        id: 3,
+        x: 0.0,
+        z: 20.0,
+        kind: "junction".into(),
+    };
+    let top_b = Node {
+        id: 4,
+        x: 100.0,
+        z: 20.0,
+        kind: "junction".into(),
+    };
+    let bottom = Road {
+        id: 1,
+        from: 1,
+        to: 2,
+        kind: "local".into(),
+        stage: "open".into(),
+        progress: 1.0,
+        connected: true,
+        length: 100.0,
+        lanes: 2,
+    };
+    let top = Road {
+        id: 2,
+        from: 4,
+        to: 3,
+        ..bottom.clone()
+    };
     let roads = vec![(&bottom, &bottom_a, &bottom_b), (&top, &top_b, &top_a)];
     assert!(!face_has_unserved_interior(&thin_face, &roads, &[]));
 
     let roomy = vec![(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)];
-    let left_a = Node { id: 5, x: 0.0, z: 100.0, kind: "junction".into() };
-    let left_b = Node { id: 6, x: 0.0, z: 0.0, kind: "junction".into() };
-    let right_a = Node { id: 7, x: 100.0, z: 0.0, kind: "junction".into() };
-    let right_b = Node { id: 8, x: 100.0, z: 100.0, kind: "junction".into() };
-    let left = Road { id: 3, from: 5, to: 6, ..bottom.clone() };
-    let right = Road { id: 4, from: 7, to: 8, ..bottom.clone() };
+    let left_a = Node {
+        id: 5,
+        x: 0.0,
+        z: 100.0,
+        kind: "junction".into(),
+    };
+    let left_b = Node {
+        id: 6,
+        x: 0.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let right_a = Node {
+        id: 7,
+        x: 100.0,
+        z: 0.0,
+        kind: "junction".into(),
+    };
+    let right_b = Node {
+        id: 8,
+        x: 100.0,
+        z: 100.0,
+        kind: "junction".into(),
+    };
+    let left = Road {
+        id: 3,
+        from: 5,
+        to: 6,
+        ..bottom.clone()
+    };
+    let right = Road {
+        id: 4,
+        from: 7,
+        to: 8,
+        ..bottom.clone()
+    };
     let perimeter = vec![
         (&bottom, &bottom_a, &bottom_b),
         (&top, &top_b, &top_a),
@@ -301,7 +506,11 @@ fn shallow_or_fully_served_faces_do_not_qualify_for_access() {
         depth: 96.0,
         rotation: 0.0,
     };
-    assert!(!face_has_unserved_interior(&roomy, &perimeter, &[covering_parcel]));
+    assert!(!face_has_unserved_interior(
+        &roomy,
+        &perimeter,
+        &[covering_parcel]
+    ));
 }
 
 const FACE_SAMPLE_GRID_SIDE: usize = 16;
@@ -320,13 +529,11 @@ fn point_in_or_on_polygon(point: WorldPoint, polygon: &[(f32, f32)]) -> bool {
     for index in 0..polygon.len() {
         let (ax, az) = polygon[index];
         let (bx, bz) = polygon[(index + 1) % polygon.len()];
-        if geometry::point_segment_distance(point.x, point.z, ax, az, bx, bz)
-            <= FACE_POINT_EPSILON
+        if geometry::point_segment_distance(point.x, point.z, ax, az, bx, bz) <= FACE_POINT_EPSILON
         {
             return true;
         }
-        if (az > point.z) != (bz > point.z)
-            && point.x < (bx - ax) * (point.z - az) / (bz - az) + ax
+        if (az > point.z) != (bz > point.z) && point.x < (bx - ax) * (point.z - az) / (bz - az) + ax
         {
             inside = !inside;
         }
@@ -520,11 +727,7 @@ fn ordered_face_boundary_hosts(
     ordered
 }
 
-fn inward_sides_for_face(
-    host_from: &Node,
-    host_to: &Node,
-    polygon: &[(f32, f32)],
-) -> Vec<i8> {
+fn inward_sides_for_face(host_from: &Node, host_to: &Node, polygon: &[(f32, f32)]) -> Vec<i8> {
     let dx = host_to.x - host_from.x;
     let dz = host_to.z - host_from.z;
     let length = dx.hypot(dz);
@@ -561,9 +764,7 @@ fn inward_sides_for_face(
     }
 }
 
-fn round_robin_face_candidates(
-    host_sides: &[(u32, i8)],
-) -> Vec<interior_access::AccessCandidate> {
+fn round_robin_face_candidates(host_sides: &[(u32, i8)]) -> Vec<interior_access::AccessCandidate> {
     let mut unique = Vec::new();
     let mut seen = std::collections::BTreeSet::new();
     for &(host_id, side) in host_sides {
@@ -578,7 +779,10 @@ fn round_robin_face_candidates(
     let per_pair = FACE_ACCESS_MAX_PROPOSALS / unique.len();
     let extra = FACE_ACCESS_MAX_PROPOSALS % unique.len();
     let quotas = (0..unique.len())
-        .map(|index| (per_pair + usize::from(index < extra)).min(interior_access::FRACTIONS.len() * interior_access::LENGTHS.len()))
+        .map(|index| {
+            (per_pair + usize::from(index < extra))
+                .min(interior_access::FRACTIONS.len() * interior_access::LENGTHS.len())
+        })
         .collect::<Vec<_>>();
     let max_rounds = quotas.iter().copied().max().unwrap_or(0);
     let mut candidates = Vec::with_capacity(FACE_ACCESS_MAX_PROPOSALS.min(unique.len() * 12));
@@ -591,8 +795,8 @@ fn round_robin_face_candidates(
             // Spread a partial allocation over the complete 3×4 fraction /
             // length grid instead of spending every host's share at the first
             // short length and first quarter point.
-            let local = round * interior_access::FRACTIONS.len() * interior_access::LENGTHS.len()
-                / quota;
+            let local =
+                round * interior_access::FRACTIONS.len() * interior_access::LENGTHS.len() / quota;
             candidates.push(interior_access::AccessCandidate {
                 host_id,
                 fraction_index: (local / interior_access::LENGTHS.len()) as u8,
@@ -620,19 +824,53 @@ fn point_to_rect_distance(point: WorldPoint, rect: geometry::OrientedRect) -> f3
 
 #[test]
 fn point_to_oriented_rect_distance_matches_local_axes_at_zero_right_and_oblique_angles() {
-    let rect = geometry::OrientedRect { x: 0.0, z: 0.0, width: 20.0, depth: 4.0, rotation: 0.0 };
-    assert_eq!(point_to_rect_distance(WorldPoint { x: 8.0, z: 0.0 }, rect), 0.0);
-    assert_eq!(point_to_rect_distance(WorldPoint { x: 0.0, z: 4.0 }, rect), 2.0);
+    let rect = geometry::OrientedRect {
+        x: 0.0,
+        z: 0.0,
+        width: 20.0,
+        depth: 4.0,
+        rotation: 0.0,
+    };
+    assert_eq!(
+        point_to_rect_distance(WorldPoint { x: 8.0, z: 0.0 }, rect),
+        0.0
+    );
+    assert_eq!(
+        point_to_rect_distance(WorldPoint { x: 0.0, z: 4.0 }, rect),
+        2.0
+    );
 
-    let right_angle = geometry::OrientedRect { rotation: std::f32::consts::FRAC_PI_2, ..rect };
-    assert_eq!(point_to_rect_distance(WorldPoint { x: 0.0, z: -8.0 }, right_angle), 0.0);
-    assert_eq!(point_to_rect_distance(WorldPoint { x: 4.0, z: 0.0 }, right_angle), 2.0);
+    let right_angle = geometry::OrientedRect {
+        rotation: std::f32::consts::FRAC_PI_2,
+        ..rect
+    };
+    assert_eq!(
+        point_to_rect_distance(WorldPoint { x: 0.0, z: -8.0 }, right_angle),
+        0.0
+    );
+    assert_eq!(
+        point_to_rect_distance(WorldPoint { x: 4.0, z: 0.0 }, right_angle),
+        2.0
+    );
 
     let angle = 0.71_f32;
-    let oblique = geometry::OrientedRect { rotation: angle, ..rect };
+    let oblique = geometry::OrientedRect {
+        rotation: angle,
+        ..rect
+    };
     let world_x = angle.cos() * 13.0;
     let world_z = -angle.sin() * 13.0;
-    assert!((point_to_rect_distance(WorldPoint { x: world_x, z: world_z }, oblique) - 3.0).abs() < 1e-5);
+    assert!(
+        (point_to_rect_distance(
+            WorldPoint {
+                x: world_x,
+                z: world_z
+            },
+            oblique
+        ) - 3.0)
+            .abs()
+            < 1e-5
+    );
 }
 
 fn face_has_unserved_interior(
@@ -643,10 +881,22 @@ fn face_has_unserved_interior(
     if polygon.len() < 3 {
         return false;
     }
-    let min_x = polygon.iter().map(|point| point.0).fold(f32::INFINITY, f32::min);
-    let max_x = polygon.iter().map(|point| point.0).fold(f32::NEG_INFINITY, f32::max);
-    let min_z = polygon.iter().map(|point| point.1).fold(f32::INFINITY, f32::min);
-    let max_z = polygon.iter().map(|point| point.1).fold(f32::NEG_INFINITY, f32::max);
+    let min_x = polygon
+        .iter()
+        .map(|point| point.0)
+        .fold(f32::INFINITY, f32::min);
+    let max_x = polygon
+        .iter()
+        .map(|point| point.0)
+        .fold(f32::NEG_INFINITY, f32::max);
+    let min_z = polygon
+        .iter()
+        .map(|point| point.1)
+        .fold(f32::INFINITY, f32::min);
+    let max_z = polygon
+        .iter()
+        .map(|point| point.1)
+        .fold(f32::NEG_INFINITY, f32::max);
     if ![min_x, max_x, min_z, max_z].into_iter().all(f32::is_finite)
         || max_x <= min_x
         || max_z <= min_z
@@ -672,9 +922,9 @@ fn face_has_unserved_interior(
             if !away_from_roads {
                 continue;
             }
-            let away_from_parcels = parcels.iter().all(|rect| {
-                point_to_rect_distance(point, *rect) >= FACE_MIN_PARCEL_CLEARANCE
-            });
+            let away_from_parcels = parcels
+                .iter()
+                .all(|rect| point_to_rect_distance(point, *rect) >= FACE_MIN_PARCEL_CLEARANCE);
             if away_from_parcels {
                 unserved += 1;
                 if unserved >= FACE_MIN_UNSERVED_SAMPLES {
@@ -740,7 +990,9 @@ impl Engine {
                 z: parcel.z,
                 width: parcel.width,
                 depth: parcel.depth,
-                rotation: parcel.rotation.unwrap_or_else(|| self.frontage_rotation(parcel.id)),
+                rotation: parcel
+                    .rotation
+                    .unwrap_or_else(|| self.frontage_rotation(parcel.id)),
             })
             .collect::<Vec<_>>();
         let incident_faces = faces
@@ -766,16 +1018,20 @@ impl Engine {
             .iter()
             .map(|road| (road.id, *road))
             .collect::<std::collections::BTreeMap<_, _>>();
-        let eligible_ids = host_by_id.keys().copied().collect::<std::collections::BTreeSet<_>>();
+        let eligible_ids = host_by_id
+            .keys()
+            .copied()
+            .collect::<std::collections::BTreeSet<_>>();
         let mut host_sides = Vec::new();
         for face in &faces {
-            for host_id in ordered_face_boundary_hosts(
-                road_id,
-                std::slice::from_ref(face),
-                &eligible_ids,
-            ) {
-                let Some(host) = host_by_id.get(&host_id).copied() else { continue };
-                let (Some(host_from), Some(host_to)) = (self.node(host.from), self.node(host.to)) else {
+            for host_id in
+                ordered_face_boundary_hosts(road_id, std::slice::from_ref(face), &eligible_ids)
+            {
+                let Some(host) = host_by_id.get(&host_id).copied() else {
+                    continue;
+                };
+                let (Some(host_from), Some(host_to)) = (self.node(host.from), self.node(host.to))
+                else {
                     continue;
                 };
                 for side in inward_sides_for_face(host_from, host_to, &face.polygon) {
@@ -802,12 +1058,19 @@ impl Engine {
             },
         );
         for (&host_id, &candidate_count) in &scanned_by_host {
-            let Some(host) = host_by_id.get(&host_id).copied() else { continue };
-            let (Some(host_from), Some(host_to)) = (self.node(host.from), self.node(host.to)) else {
+            let Some(host) = host_by_id.get(&host_id).copied() else {
+                continue;
+            };
+            let (Some(host_from), Some(host_to)) = (self.node(host.from), self.node(host.to))
+            else {
                 continue;
             };
             let mut retained_count = 0usize;
-            for proposal in scan.proposals.iter().filter(|proposal| proposal.host_id == host_id) {
+            for proposal in scan
+                .proposals
+                .iter()
+                .filter(|proposal| proposal.host_id == host_id)
+            {
                 let retained = faces.iter().find_map(|face| {
                     retain_face_lots(proposal, host, host_from, host_to, &face.polygon)
                 });
@@ -825,10 +1088,26 @@ impl Engine {
         }
         if std::env::var_os("FACE_ACCESS_DEBUG").is_some() {
             for face in &faces {
-                let min_x = face.polygon.iter().map(|p| p.0).fold(f32::INFINITY, f32::min);
-                let max_x = face.polygon.iter().map(|p| p.0).fold(f32::NEG_INFINITY, f32::max);
-                let min_z = face.polygon.iter().map(|p| p.1).fold(f32::INFINITY, f32::min);
-                let max_z = face.polygon.iter().map(|p| p.1).fold(f32::NEG_INFINITY, f32::max);
+                let min_x = face
+                    .polygon
+                    .iter()
+                    .map(|p| p.0)
+                    .fold(f32::INFINITY, f32::min);
+                let max_x = face
+                    .polygon
+                    .iter()
+                    .map(|p| p.0)
+                    .fold(f32::NEG_INFINITY, f32::max);
+                let min_z = face
+                    .polygon
+                    .iter()
+                    .map(|p| p.1)
+                    .fold(f32::INFINITY, f32::min);
+                let max_z = face
+                    .polygon
+                    .iter()
+                    .map(|p| p.1)
+                    .fold(f32::NEG_INFINITY, f32::max);
                 eprintln!("face trigger={road_id} bbox=({min_x:.1},{min_z:.1})-({max_x:.1},{max_z:.1}) vertices={} area={:.1}", face.polygon.len(), face.area);
             }
             eprintln!("face access trigger={road_id} host(candidate,geometry_valid,face_valid)={host_diagnostics:?} total_candidates={} feasible_proposals={}", candidate_window.len(), proposals.len());
@@ -859,7 +1138,12 @@ fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
         .collect::<Vec<_>>();
     let host = host_ids
         .into_iter()
-        .find(|host| engine.propose_interior_access_for_host(*host).proposals.is_empty())
+        .find(|host| {
+            engine
+                .propose_interior_access_for_host(*host)
+                .proposals
+                .is_empty()
+        })
         .expect("mature fixture has an ordinary host with no feasible access geometry");
     let before = engine.save_json();
     let cursor = engine.state.interior_access_cursor;
@@ -893,13 +1177,32 @@ fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
         selected_lots: vec![reserved],
     });
     let (a, b) = (
-        Node { id: 7, x: 0.0, z: 0.0, kind: "junction".into() },
-        Node { id: 8, x: 0.0, z: -100.0, kind: "junction".into() },
+        Node {
+            id: 7,
+            x: 0.0,
+            z: 0.0,
+            kind: "junction".into(),
+        },
+        Node {
+            id: 8,
+            x: 0.0,
+            z: -100.0,
+            kind: "junction".into(),
+        },
     );
     let x = -342.42465;
     let z = -3.5753856;
-    let legacy_axis = geometry::OrientedRect { x, z, width: 14.0, depth: 12.0, rotation: 0.0 };
-    let rendered = geometry::OrientedRect { rotation: std::f32::consts::FRAC_PI_2, ..legacy_axis };
+    let legacy_axis = geometry::OrientedRect {
+        x,
+        z,
+        width: 14.0,
+        depth: 12.0,
+        rotation: 0.0,
+    };
+    let rendered = geometry::OrientedRect {
+        rotation: std::f32::consts::FRAC_PI_2,
+        ..legacy_axis
+    };
     assert!(engine.interior_plan_allows_parcel(&legacy_axis, false));
     assert!(!engine.interior_plan_allows_parcel(&rendered, false));
     assert!(!engine.interior_plan_allows_frontage_candidate(&a, &b, x, z, 14.0, 12.0, -1));
@@ -932,7 +1235,10 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     let plan = engine.state.pending_interior_access.clone().unwrap();
     assert_eq!(engine.road_opening_access_branch, Some(plan.branch_road_id));
     let completions_before = engine.interior_access_completions;
-    assert!(!engine.state.neighborhood_road_ids.contains(&plan.host_road_id));
+    assert!(!engine
+        .state
+        .neighborhood_road_ids
+        .contains(&plan.host_road_id));
     let branch = engine
         .state
         .roads
@@ -954,12 +1260,19 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     // present. Its centerline must be part of the collision context, in
     // addition to the explicit selected-lot reservation.
     let context = engine.collision_context();
-    let (Some(branch_a), Some(branch_b)) = (engine.node(branch.from), engine.node(branch.to)) else {
+    let (Some(branch_a), Some(branch_b)) = (engine.node(branch.from), engine.node(branch.to))
+    else {
         panic!("pending branch endpoints exist");
     };
     assert!(context.pending_roads.iter().any(|road| {
-        (road.ax == branch_a.x && road.az == branch_a.z && road.bx == branch_b.x && road.bz == branch_b.z)
-            || (road.bx == branch_a.x && road.bz == branch_a.z && road.ax == branch_b.x && road.az == branch_b.z)
+        (road.ax == branch_a.x
+            && road.az == branch_a.z
+            && road.bx == branch_b.x
+            && road.bz == branch_b.z)
+            || (road.bx == branch_a.x
+                && road.bz == branch_a.z
+                && road.ax == branch_b.x
+                && road.az == branch_b.z)
     }));
     let branch_midpoint = geometry::OrientedRect {
         x: (branch_a.x + branch_b.x) * 0.5,
@@ -987,7 +1300,9 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
             .iter()
             .find(|parcel| parcel.id == frontage.parcel_id)
             .unwrap();
-        let rendered_rotation = parcel.rotation.unwrap_or_else(|| engine.frontage_rotation(parcel.id));
+        let rendered_rotation = parcel
+            .rotation
+            .unwrap_or_else(|| engine.frontage_rotation(parcel.id));
         let rect = geometry::OrientedRect {
             x: parcel.x,
             z: parcel.z,
@@ -995,7 +1310,10 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
             depth: parcel.depth,
             rotation: rendered_rotation,
         };
-        assert!(geometry::rect_segment_distance(&rect, branch_a.x, branch_a.z, branch_b.x, branch_b.z) >= 5.0);
+        assert!(
+            geometry::rect_segment_distance(&rect, branch_a.x, branch_a.z, branch_b.x, branch_b.z)
+                >= 5.0
+        );
         for lot in &plan.selected_lots {
             let reserved = geometry::OrientedRect {
                 x: lot.x,
@@ -1008,7 +1326,9 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         }
     }
 
-    engine.validate().expect("pending opening-time plan is valid");
+    engine
+        .validate()
+        .expect("pending opening-time plan is valid");
     let save = engine.save_json();
     let mut resumed = Engine::restore_json(&save).expect("pending opening-time plan restores");
     resumed.road_opening_access_experiment = true;
@@ -1046,7 +1366,9 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         .iter()
         .any(|road| road.id == plan.branch_road_id && road.stage == "open"));
     assert_eq!(engine.save_json(), resumed.save_json());
-    engine.validate().expect("completed child road and lots preserve invariants");
+    engine
+        .validate()
+        .expect("completed child road and lots preserve invariants");
     assert_eq!(engine.interior_access_completions, completions_before + 1);
     let opened_branch = engine
         .state
@@ -1057,7 +1379,12 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     assert_eq!(opened_branch.stage, "open");
     assert!(opened_branch.connected);
     assert_eq!(
-        engine.state.parcel_frontages.iter().filter(|frontage| frontage.road_id == plan.branch_road_id).count(),
+        engine
+            .state
+            .parcel_frontages
+            .iter()
+            .filter(|frontage| frontage.road_id == plan.branch_road_id)
+            .count(),
         plan.selected_lots.len()
     );
 }
@@ -1082,113 +1409,190 @@ fn road_opening_access_matched_seeds() {
             .collect()
     };
     for (seed, enabled) in cases {
-            let started = std::time::Instant::now();
-            let mut engine = Engine::new_legacy(seed);
-            engine.set_development_rate(16);
-            engine.district_policy_experiment = false;
-            engine.early_access_experiment = false;
-            engine.road_opening_access_experiment = enabled;
-            for _ in 0..121 {
-                engine.step(2_000);
-            }
-            assert_eq!(engine.state.tick, 242_000);
-            if let Err(error) = engine.validate() {
-                if let Some(plan) = &engine.state.pending_interior_access {
-                    let context = engine.collision_context();
-                    eprintln!("invalid pending plan at tick {}: {error}; plan={plan:?}", engine.state.tick);
-                    for (index, lot) in plan.selected_lots.iter().enumerate() {
-                        let rect = geometry::OrientedRect {
-                            x: lot.x,
-                            z: lot.z,
-                            width: lot.width,
-                            depth: lot.depth,
-                            rotation: lot.rotation,
-                        };
-                        eprintln!("lot {index}: ({:.3},{:.3}) {}x{} rot {:.3}, geometric_clear={}, overlaps_prior={}",
+        let started = std::time::Instant::now();
+        let mut engine = Engine::new_legacy(seed);
+        engine.set_development_rate(16);
+        engine.district_policy_experiment = false;
+        engine.early_access_experiment = false;
+        engine.road_opening_access_experiment = enabled;
+        for _ in 0..121 {
+            engine.step(2_000);
+        }
+        assert_eq!(engine.state.tick, 242_000);
+        if let Err(error) = engine.validate() {
+            if let Some(plan) = &engine.state.pending_interior_access {
+                let context = engine.collision_context();
+                eprintln!(
+                    "invalid pending plan at tick {}: {error}; plan={plan:?}",
+                    engine.state.tick
+                );
+                for (index, lot) in plan.selected_lots.iter().enumerate() {
+                    let rect = geometry::OrientedRect {
+                        x: lot.x,
+                        z: lot.z,
+                        width: lot.width,
+                        depth: lot.depth,
+                        rotation: lot.rotation,
+                    };
+                    eprintln!("lot {index}: ({:.3},{:.3}) {}x{} rot {:.3}, geometric_clear={}, overlaps_prior={}",
                             lot.x, lot.z, lot.width, lot.depth, lot.rotation,
                             engine.oriented_parcel_geometry_clear_with_context_mode(&rect, &context, true),
                             plan.selected_lots[..index].iter().any(|other| geometry::rects_overlap(&rect, &geometry::OrientedRect { x: other.x, z: other.z, width: other.width, depth: other.depth, rotation: other.rotation }, 2.0)));
-                        if !engine.oriented_parcel_geometry_clear_with_context_mode(&rect, &context, true) {
-                            let (min_x, min_z, max_x, max_z) = rect.bounds();
-                            let parcel_hits = context.parcel_footprints.iter().enumerate()
-                                .filter(|(_, other)| geometry::rects_overlap(&rect, other, 2.0))
-                                .map(|(i, other)| (i, other.x, other.z, other.width, other.depth, other.rotation))
-                                .collect::<Vec<_>>();
-                            let open_hits = context.open_roads.iter().enumerate()
-                                .filter(|(_, road)| geometry::rect_segment_distance(&rect, road.ax, road.az, road.bx, road.bz) < 5.0)
-                                .map(|(i, road)| (i, road.ax, road.az, road.bx, road.bz, geometry::rect_segment_distance(&rect, road.ax, road.az, road.bx, road.bz)))
-                                .collect::<Vec<_>>();
-                            let pending_hits = context.pending_roads.iter().enumerate()
-                                .filter(|(_, road)| geometry::rect_segment_distance(&rect, road.ax, road.az, road.bx, road.bz) < 7.0)
-                                .map(|(i, road)| (i, road.ax, road.az, road.bx, road.bz, geometry::rect_segment_distance(&rect, road.ax, road.az, road.bx, road.bz)))
-                                .collect::<Vec<_>>();
-                            eprintln!("lot {index} reject detail: bounds=({min_x},{min_z},{max_x},{max_z}) river_ok={} parcels={parcel_hits:?} open_roads={open_hits:?} pending_roads={pending_hits:?} neighborhood_clear={}",
+                    if !engine
+                        .oriented_parcel_geometry_clear_with_context_mode(&rect, &context, true)
+                    {
+                        let (min_x, min_z, max_x, max_z) = rect.bounds();
+                        let parcel_hits = context
+                            .parcel_footprints
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, other)| geometry::rects_overlap(&rect, other, 2.0))
+                            .map(|(i, other)| {
+                                (
+                                    i,
+                                    other.x,
+                                    other.z,
+                                    other.width,
+                                    other.depth,
+                                    other.rotation,
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        let open_hits = context
+                            .open_roads
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, road)| {
+                                geometry::rect_segment_distance(
+                                    &rect, road.ax, road.az, road.bx, road.bz,
+                                ) < 5.0
+                            })
+                            .map(|(i, road)| {
+                                (
+                                    i,
+                                    road.ax,
+                                    road.az,
+                                    road.bx,
+                                    road.bz,
+                                    geometry::rect_segment_distance(
+                                        &rect, road.ax, road.az, road.bx, road.bz,
+                                    ),
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        let pending_hits = context
+                            .pending_roads
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, road)| {
+                                geometry::rect_segment_distance(
+                                    &rect, road.ax, road.az, road.bx, road.bz,
+                                ) < 7.0
+                            })
+                            .map(|(i, road)| {
+                                (
+                                    i,
+                                    road.ax,
+                                    road.az,
+                                    road.bx,
+                                    road.bz,
+                                    geometry::rect_segment_distance(
+                                        &rect, road.ax, road.az, road.bx, road.bz,
+                                    ),
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        eprintln!("lot {index} reject detail: bounds=({min_x},{min_z},{max_x},{max_z}) river_ok={} parcels={parcel_hits:?} open_roads={open_hits:?} pending_roads={pending_hits:?} neighborhood_clear={}",
                                 engine.parcel_clear_of_river(rect.x, rect.z, rect.width, rect.depth),
                                 engine.neighborhood_corridor_clear_for_parcel(rect.x, rect.z, max_x - min_x, max_z - min_z));
-                        }
                     }
                 }
-                let tag = format!("seed-{seed}-enabled-{enabled}-invalid");
-                std::fs::write(validation_dir.join(format!("road-opening-access-{tag}-save.json")), engine.save_json()).unwrap();
-                panic!("experiment result preserves invariants: {error}");
             }
+            let tag = format!("seed-{seed}-enabled-{enabled}-invalid");
+            std::fs::write(
+                validation_dir.join(format!("road-opening-access-{tag}-save.json")),
+                engine.save_json(),
+            )
+            .unwrap();
+            panic!("experiment result preserves invariants: {error}");
+        }
 
-            let open_buildings: Vec<_> = engine
-                .state
-                .buildings
-                .iter()
-                .filter(|building| building.stage == "open")
-                .collect();
-            let housing: Vec<_> = open_buildings.iter().copied().filter(|b| is_housing(b)).collect();
-            let commerce: Vec<_> = open_buildings.iter().copied().filter(|b| is_commercial(b)).collect();
-            let connected_roads: Vec<_> = engine.state.roads.iter()
-                .filter(|road| road.stage == "open" && road.connected).collect();
-            let ordinary_roads: Vec<_> = connected_roads.iter()
-                .filter(|road| !matches!(road.kind.as_str(), "rail" | "bridge")).collect();
-            let summary = json!({
-                "seed": seed,
-                "development_rate": 16,
-                "tick": engine.state.tick,
-                "road_opening_access_enabled": enabled,
-                "early_access_scheduler_enabled": false,
-                "district_policy_enabled": false,
-                "buildings_open": open_buildings.len(),
-                "housing_open": housing.len(),
-                "housing_occupancy": housing.iter().map(|b| b.occupancy as u64).sum::<u64>(),
-                "housing_capacity": housing.iter().map(|b| b.capacity as u64).sum::<u64>(),
-                "commercial_open": commerce.len(),
-                "commercial_active": commerce.iter().filter(|b| b.business_active).count(),
-                "commercial_active_capacity": commerce.iter().filter(|b| b.business_active).map(|b| b.capacity as u64).sum::<u64>(),
-                "envelope_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth) as f64).sum::<f64>(),
-                "floor_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
-                "parcel_count": engine.state.parcels.len(),
-                "connected_open_roads": connected_roads.len(),
-                "ordinary_road_records": ordinary_roads.len(),
-                "ordinary_road_length_m": ordinary_roads.iter().map(|r| r.length as f64).sum::<f64>(),
-                "access_attempts": engine.road_opening_access_attempts,
-                "access_admissions": engine.road_opening_access_admissions,
-                "access_completions": engine.interior_access_completions,
-                "pending_access_lots": engine.state.pending_interior_access.as_ref().map_or(0, |p| p.selected_lots.len()),
-                "demand": engine.state.demand,
-                "population": engine.state.population,
-                "elapsed_seconds": started.elapsed().as_secs_f64(),
-            });
-            eprintln!("road-opening-access-experiment {summary}");
-            let save = engine.save_json();
-            let tag = format!("seed-{seed}-enabled-{enabled}");
-            std::fs::write(validation_dir.join(format!("road-opening-access-{tag}-save.json")), &save)
-                .expect("write native save");
-            std::fs::write(validation_dir.join(format!("road-opening-access-{tag}-snapshot.json")), engine.snapshot_json())
-                .expect("write native snapshot");
-            let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
-            resumed.road_opening_access_experiment = enabled;
-            resumed.early_access_experiment = false;
-            resumed.district_policy_experiment = false;
-            assert_eq!(resumed.save_json(), save);
-            engine.step(2_000);
-            resumed.step(2_000);
-            assert_eq!(engine.save_json(), resumed.save_json());
-            rows.push(summary);
+        let open_buildings: Vec<_> = engine
+            .state
+            .buildings
+            .iter()
+            .filter(|building| building.stage == "open")
+            .collect();
+        let housing: Vec<_> = open_buildings
+            .iter()
+            .copied()
+            .filter(|b| is_housing(b))
+            .collect();
+        let commerce: Vec<_> = open_buildings
+            .iter()
+            .copied()
+            .filter(|b| is_commercial(b))
+            .collect();
+        let connected_roads: Vec<_> = engine
+            .state
+            .roads
+            .iter()
+            .filter(|road| road.stage == "open" && road.connected)
+            .collect();
+        let ordinary_roads: Vec<_> = connected_roads
+            .iter()
+            .filter(|road| !matches!(road.kind.as_str(), "rail" | "bridge"))
+            .collect();
+        let summary = json!({
+            "seed": seed,
+            "development_rate": 16,
+            "tick": engine.state.tick,
+            "road_opening_access_enabled": enabled,
+            "early_access_scheduler_enabled": false,
+            "district_policy_enabled": false,
+            "buildings_open": open_buildings.len(),
+            "housing_open": housing.len(),
+            "housing_occupancy": housing.iter().map(|b| b.occupancy as u64).sum::<u64>(),
+            "housing_capacity": housing.iter().map(|b| b.capacity as u64).sum::<u64>(),
+            "commercial_open": commerce.len(),
+            "commercial_active": commerce.iter().filter(|b| b.business_active).count(),
+            "commercial_active_capacity": commerce.iter().filter(|b| b.business_active).map(|b| b.capacity as u64).sum::<u64>(),
+            "envelope_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth) as f64).sum::<f64>(),
+            "floor_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
+            "parcel_count": engine.state.parcels.len(),
+            "connected_open_roads": connected_roads.len(),
+            "ordinary_road_records": ordinary_roads.len(),
+            "ordinary_road_length_m": ordinary_roads.iter().map(|r| r.length as f64).sum::<f64>(),
+            "access_attempts": engine.road_opening_access_attempts,
+            "access_admissions": engine.road_opening_access_admissions,
+            "access_completions": engine.interior_access_completions,
+            "pending_access_lots": engine.state.pending_interior_access.as_ref().map_or(0, |p| p.selected_lots.len()),
+            "demand": engine.state.demand,
+            "population": engine.state.population,
+            "elapsed_seconds": started.elapsed().as_secs_f64(),
+        });
+        eprintln!("road-opening-access-experiment {summary}");
+        let save = engine.save_json();
+        let tag = format!("seed-{seed}-enabled-{enabled}");
+        std::fs::write(
+            validation_dir.join(format!("road-opening-access-{tag}-save.json")),
+            &save,
+        )
+        .expect("write native save");
+        std::fs::write(
+            validation_dir.join(format!("road-opening-access-{tag}-snapshot.json")),
+            engine.snapshot_json(),
+        )
+        .expect("write native snapshot");
+        let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
+        resumed.road_opening_access_experiment = enabled;
+        resumed.early_access_experiment = false;
+        resumed.district_policy_experiment = false;
+        assert_eq!(resumed.save_json(), save);
+        engine.step(2_000);
+        resumed.step(2_000);
+        assert_eq!(engine.save_json(), resumed.save_json());
+        rows.push(summary);
     }
     std::fs::write(
         validation_dir.join("road-opening-access-experiment.json"),
@@ -1232,86 +1636,97 @@ fn face_conditioned_road_opening_access_matched_seeds() {
             .collect::<Vec<_>>()
     };
     for (seed, enabled) in cases {
-            let started = std::time::Instant::now();
-            let mut engine = Engine::new_legacy(seed);
-            engine.set_development_rate(16);
-            engine.district_policy_experiment = false;
-            engine.early_access_experiment = false;
-            engine.road_opening_access_experiment = enabled;
-            engine.face_conditioned_access_experiment = enabled;
-            for _ in 0..121 {
-                engine.step(2_000);
-            }
-            assert_eq!(engine.tick(), 242_000);
-            engine.validate().expect("face-conditioned treatment preserves invariants");
-
-            let open_buildings = engine
-                .state
-                .buildings
-                .iter()
-                .filter(|building| building.stage == "open")
-                .collect::<Vec<_>>();
-            let housing = open_buildings.iter().filter(|building| is_housing(building)).collect::<Vec<_>>();
-            let commerce = open_buildings.iter().filter(|building| is_commercial(building)).collect::<Vec<_>>();
-            let connected_roads = engine
-                .state
-                .roads
-                .iter()
-                .filter(|road| road.stage == "open" && road.connected)
-                .collect::<Vec<_>>();
-            let ordinary_roads = connected_roads
-                .iter()
-                .filter(|road| matches!(road.kind.as_str(), "local" | "arterial"))
-                .collect::<Vec<_>>();
-            let summary = json!({
-                "seed": seed,
-                "development_rate": 16,
-                "tick": engine.tick(),
-                "face_conditioned_access_enabled": enabled,
-                "district_policy_enabled": false,
-                "early_access_scheduler_enabled": false,
-                "open_buildings": open_buildings.len(),
-                "open_housing_buildings": housing.len(),
-                "housing_occupancy": housing.iter().map(|b| b.occupancy as u64).sum::<u64>(),
-                "housing_capacity": housing.iter().map(|b| b.capacity as u64).sum::<u64>(),
-                "open_commercial_buildings": commerce.len(),
-                "active_commercial_buildings": commerce.iter().filter(|b| b.business_active).count(),
-                "active_commercial_capacity": commerce.iter().filter(|b| b.business_active).map(|b| b.capacity as u64).sum::<u64>(),
-                "nominal_envelope_area_m2": open_buildings.iter().map(|b| (b.width * b.depth) as f64).sum::<f64>(),
-                "floor_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
-                "parcels": engine.state.parcels.len(),
-                "connected_open_roads": connected_roads.len(),
-                "ordinary_open_roads": ordinary_roads.len(),
-                "ordinary_road_length_m": ordinary_roads.iter().map(|road| road.length as f64).sum::<f64>(),
-                "attempts": engine.road_opening_access_attempts,
-                "admissions": engine.road_opening_access_admissions,
-                "completions": engine.interior_access_completions,
-                "pending_selected_lots": engine.state.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
-                "pending_branch_id": engine.state.pending_interior_access.as_ref().map(|plan| plan.branch_road_id),
-                "demand": engine.state.demand,
-                "population": engine.state.population,
-                "elapsed_seconds": started.elapsed().as_secs_f64(),
-            });
-            eprintln!("face-conditioned-access-experiment {summary}");
-            let tag = format!("seed-{seed}-enabled-{enabled}-round-robin-boundary");
-            let save = engine.save_json();
-            std::fs::write(validation_dir.join(format!("face-access-{tag}-save.json")), &save)
-                .expect("write native save");
-            std::fs::write(
-                validation_dir.join(format!("face-access-{tag}-snapshot.json")),
-                engine.snapshot_json(),
-            )
-            .expect("write native snapshot");
-            let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
-            resumed.road_opening_access_experiment = enabled;
-            resumed.face_conditioned_access_experiment = enabled;
-            resumed.early_access_experiment = false;
-            resumed.district_policy_experiment = false;
-            assert_eq!(resumed.save_json(), save);
+        let started = std::time::Instant::now();
+        let mut engine = Engine::new_legacy(seed);
+        engine.set_development_rate(16);
+        engine.district_policy_experiment = false;
+        engine.early_access_experiment = false;
+        engine.road_opening_access_experiment = enabled;
+        engine.face_conditioned_access_experiment = enabled;
+        for _ in 0..121 {
             engine.step(2_000);
-            resumed.step(2_000);
-            assert_eq!(engine.save_json(), resumed.save_json());
-            rows.push(summary);
+        }
+        assert_eq!(engine.tick(), 242_000);
+        engine
+            .validate()
+            .expect("face-conditioned treatment preserves invariants");
+
+        let open_buildings = engine
+            .state
+            .buildings
+            .iter()
+            .filter(|building| building.stage == "open")
+            .collect::<Vec<_>>();
+        let housing = open_buildings
+            .iter()
+            .filter(|building| is_housing(building))
+            .collect::<Vec<_>>();
+        let commerce = open_buildings
+            .iter()
+            .filter(|building| is_commercial(building))
+            .collect::<Vec<_>>();
+        let connected_roads = engine
+            .state
+            .roads
+            .iter()
+            .filter(|road| road.stage == "open" && road.connected)
+            .collect::<Vec<_>>();
+        let ordinary_roads = connected_roads
+            .iter()
+            .filter(|road| matches!(road.kind.as_str(), "local" | "arterial"))
+            .collect::<Vec<_>>();
+        let summary = json!({
+            "seed": seed,
+            "development_rate": 16,
+            "tick": engine.tick(),
+            "face_conditioned_access_enabled": enabled,
+            "district_policy_enabled": false,
+            "early_access_scheduler_enabled": false,
+            "open_buildings": open_buildings.len(),
+            "open_housing_buildings": housing.len(),
+            "housing_occupancy": housing.iter().map(|b| b.occupancy as u64).sum::<u64>(),
+            "housing_capacity": housing.iter().map(|b| b.capacity as u64).sum::<u64>(),
+            "open_commercial_buildings": commerce.len(),
+            "active_commercial_buildings": commerce.iter().filter(|b| b.business_active).count(),
+            "active_commercial_capacity": commerce.iter().filter(|b| b.business_active).map(|b| b.capacity as u64).sum::<u64>(),
+            "nominal_envelope_area_m2": open_buildings.iter().map(|b| (b.width * b.depth) as f64).sum::<f64>(),
+            "floor_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
+            "parcels": engine.state.parcels.len(),
+            "connected_open_roads": connected_roads.len(),
+            "ordinary_open_roads": ordinary_roads.len(),
+            "ordinary_road_length_m": ordinary_roads.iter().map(|road| road.length as f64).sum::<f64>(),
+            "attempts": engine.road_opening_access_attempts,
+            "admissions": engine.road_opening_access_admissions,
+            "completions": engine.interior_access_completions,
+            "pending_selected_lots": engine.state.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
+            "pending_branch_id": engine.state.pending_interior_access.as_ref().map(|plan| plan.branch_road_id),
+            "demand": engine.state.demand,
+            "population": engine.state.population,
+            "elapsed_seconds": started.elapsed().as_secs_f64(),
+        });
+        eprintln!("face-conditioned-access-experiment {summary}");
+        let tag = format!("seed-{seed}-enabled-{enabled}-round-robin-boundary");
+        let save = engine.save_json();
+        std::fs::write(
+            validation_dir.join(format!("face-access-{tag}-save.json")),
+            &save,
+        )
+        .expect("write native save");
+        std::fs::write(
+            validation_dir.join(format!("face-access-{tag}-snapshot.json")),
+            engine.snapshot_json(),
+        )
+        .expect("write native snapshot");
+        let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
+        resumed.road_opening_access_experiment = enabled;
+        resumed.face_conditioned_access_experiment = enabled;
+        resumed.early_access_experiment = false;
+        resumed.district_policy_experiment = false;
+        assert_eq!(resumed.save_json(), save);
+        engine.step(2_000);
+        resumed.step(2_000);
+        assert_eq!(engine.save_json(), resumed.save_json());
+        rows.push(summary);
     }
     let report_name = if let Some(seed) = diagnostic_seed {
         format!("face-conditioned-access-seed-{seed}-round-robin-diagnostic.json")

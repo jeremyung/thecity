@@ -326,14 +326,9 @@ fn candidates_for_face_mode(
                     continue;
                 }
                 let direct = (delta.0 / distance, delta.1 / distance);
-                let sides = crate::access_math::rotate_clearance_sides(
-                    delta.0, delta.1, distance, 15.0,
-                );
-                let candidates = [
-                    sides[0],
-                    sides[1],
-                    direct,
-                ];
+                let sides =
+                    crate::access_math::rotate_clearance_sides(delta.0, delta.1, distance, 15.0);
+                let candidates = [sides[0], sides[1], direct];
                 for direction in candidates {
                     if dot(inward, direction) <= 0.0
                         || !junction_angle_ok((host_dx / host_len, host_dz / host_len), direction)
@@ -355,12 +350,18 @@ fn candidates_for_face_mode(
                     // to their separate quota-stepped proposal validator.
                     let target_length = target_along + FRONTAGE_TARGET_MARGIN_M;
                     let safe_length = (ray_length - FACE_EDGE_MARGIN_M).min(MAX_BRANCH_M);
-                    if !exhaustive && (target_length > safe_length
-                        || !parcel_footprints.iter().all(|parcel| {
-                            crate::geometry::rect_segment_distance(parcel, start.0, start.1,
-                                start.0 + direction.0 * target_length,
-                                start.1 + direction.1 * target_length) >= PARCEL_HOST_CLEARANCE_M
-                        })) {
+                    if !exhaustive
+                        && (target_length > safe_length
+                            || !parcel_footprints.iter().all(|parcel| {
+                                crate::geometry::rect_segment_distance(
+                                    parcel,
+                                    start.0,
+                                    start.1,
+                                    start.0 + direction.0 * target_length,
+                                    start.1 + direction.1 * target_length,
+                                ) >= PARCEL_HOST_CLEARANCE_M
+                            }))
+                    {
                         continue;
                     }
                     headings.push((direction, target_length));
@@ -720,12 +721,11 @@ pub(crate) fn host_split_samples(
                 .then_with(|| left.0.total_cmp(&right.0))
         });
         let fragmented = free.len() > 1;
-        let selected = free.into_iter().take(MAX_INTERVAL_SPLITS).collect::<Vec<_>>();
-        split_samples.extend(
-            selected
-                .iter()
-                .map(|(start, end)| (start + end) * 0.5),
-        );
+        let selected = free
+            .into_iter()
+            .take(MAX_INTERVAL_SPLITS)
+            .collect::<Vec<_>>();
+        split_samples.extend(selected.iter().map(|(start, end)| (start + end) * 0.5));
         // Preserve all historical midpoint candidates and their order. Use
         // the two remaining slots for deterministic obstacle-edge positions,
         // preferring the widest selected spans and falling through when an
@@ -733,8 +733,7 @@ pub(crate) fn host_split_samples(
         if fragmented {
             let midpoint_count = split_samples.len();
             let spans = selected.iter().copied().collect::<Vec<_>>();
-            let added_edges =
-                append_fragmented_edge_samples(&mut split_samples, &spans, host_len);
+            let added_edges = append_fragmented_edge_samples(&mut split_samples, &spans, host_len);
             debug_assert_eq!(split_samples.len(), midpoint_count + added_edges);
         }
     }
@@ -1024,29 +1023,72 @@ mod tests {
 
     #[test]
     fn fourth_split_stays_inside_free_interval_away_from_parcel_end() {
-        let host = BoundaryHost { road_id: 1, from: 1, to: 2, ax: 0.0, az: 0.0, bx: 100.0, bz: 0.0 };
-        let parcel = crate::geometry::OrientedRect { x: 85.0, z: 0.0, width: 10.0, depth: 10.0, rotation: 0.0 };
+        let host = BoundaryHost {
+            road_id: 1,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        };
+        let parcel = crate::geometry::OrientedRect {
+            x: 85.0,
+            z: 0.0,
+            width: 10.0,
+            depth: 10.0,
+            rotation: 0.0,
+        };
         let samples = host_split_samples(host, &[], &[parcel]);
         // Parcel starts at 80m; its projection margin ends the free span at 78m.
         assert_eq!(samples[3], 78.0 - (78.0 - 10.0) / 6.0);
-        assert!(crate::geometry::rect_segment_distance(&parcel, samples[3], 0.0, samples[3], 24.0) >= PARCEL_HOST_CLEARANCE_M);
+        assert!(
+            crate::geometry::rect_segment_distance(&parcel, samples[3], 0.0, samples[3], 24.0)
+                >= PARCEL_HOST_CLEARANCE_M
+        );
     }
 
     #[test]
     fn edge_splits_hug_host_end_clearance_and_clear_parcels() {
-        let host = BoundaryHost { road_id: 1, from: 1, to: 2, ax: 0.0, az: 0.0, bx: 100.0, bz: 0.0 };
+        let host = BoundaryHost {
+            road_id: 1,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        };
         // Both ends bounded by host end clearance: 1m inside each.
         let open = host_split_samples(host, &[], &[]);
-        assert_eq!(open[..MAX_INTERVAL_SPLITS], [30.0, 50.0, 70.0, 90.0 - 80.0 / 6.0]);
+        assert_eq!(
+            open[..MAX_INTERVAL_SPLITS],
+            [30.0, 50.0, 70.0, 90.0 - 80.0 / 6.0]
+        );
         assert_eq!(open[MAX_INTERVAL_SPLITS..], [11.0, 89.0]);
         // Far end bounded by a parcel projection: inset leaves parcel clearance.
-        let parcel = crate::geometry::OrientedRect { x: 85.0, z: 0.0, width: 10.0, depth: 10.0, rotation: 0.0 };
+        let parcel = crate::geometry::OrientedRect {
+            x: 85.0,
+            z: 0.0,
+            width: 10.0,
+            depth: 10.0,
+            rotation: 0.0,
+        };
         let blocked = host_split_samples(host, &[], &[parcel]);
         assert_eq!(blocked[MAX_INTERVAL_SPLITS..], [11.0, 75.0]);
-        assert!(crate::geometry::rect_segment_distance(&parcel, 75.0, 0.0, 75.0, 24.0) >= PARCEL_HOST_CLEARANCE_M);
+        assert!(
+            crate::geometry::rect_segment_distance(&parcel, 75.0, 0.0, 75.0, 24.0)
+                >= PARCEL_HOST_CLEARANCE_M
+        );
         // A 12m span keeps the 1m host-end sample but omits the 3m parcel-end
         // sample, which would land on the 3m quartile offset.
-        let long_parcel = crate::geometry::OrientedRect { x: 61.0, z: 0.0, width: 74.0, depth: 10.0, rotation: 0.0 };
+        let long_parcel = crate::geometry::OrientedRect {
+            x: 61.0,
+            z: 0.0,
+            width: 74.0,
+            depth: 10.0,
+            rotation: 0.0,
+        };
         let short = host_split_samples(host, &[], &[long_parcel]);
         assert_eq!(short[MAX_INTERVAL_SPLITS..], [11.0]);
     }
@@ -1063,8 +1105,16 @@ mod tests {
             bz: 0.0,
         };
         let nodes = [
-            CandidateNode { id: 5, x: 35.0, z: 0.0 },
-            CandidateNode { id: 6, x: 60.0, z: 0.0 },
+            CandidateNode {
+                id: 5,
+                x: 35.0,
+                z: 0.0,
+            },
+            CandidateNode {
+                id: 6,
+                x: 60.0,
+                z: 0.0,
+            },
         ];
         let samples = host_split_samples(host, &nodes, &[]);
         assert_eq!(&samples[..3], &[75.5, 22.0, 47.5]);
@@ -1090,7 +1140,11 @@ mod tests {
         };
         let samples = host_split_samples(
             host,
-            &[CandidateNode { id: 5, x: 50.0, z: 0.0 }],
+            &[CandidateNode {
+                id: 5,
+                x: 50.0,
+                z: 0.0,
+            }],
             &[],
         );
         assert_eq!(&samples[..2], &[29.5, 70.5]);
@@ -1153,9 +1207,10 @@ mod tests {
         assert!(midpoint_ray_clear(split_points[3]));
 
         let scan = candidates_for_face_with_work(&face, &[host], &[node], &blockers, &[]);
-        assert!(scan.candidates.iter().any(|candidate| {
-            (candidate.host_t - split_points[3] / 100.0).abs() < 1.0e-6
-        }));
+        assert!(scan
+            .candidates
+            .iter()
+            .any(|candidate| { (candidate.host_t - split_points[3] / 100.0).abs() < 1.0e-6 }));
         assert!(!scan.candidates.iter().any(|candidate| {
             (candidate.host_t - split_points[0] / 100.0).abs() < 1.0e-6
                 || (candidate.host_t - split_points[1] / 100.0).abs() < 1.0e-6
@@ -1171,9 +1226,18 @@ mod tests {
         let midpoint_prefix = samples.clone();
         let added = append_fragmented_edge_samples(&mut samples, &selected, 100.0);
         assert_eq!(&samples[..], &[11.0, 27.0, 55.0, 43.0, 67.0]);
-        assert_eq!(&samples[..midpoint_prefix.len()], midpoint_prefix.as_slice());
+        assert_eq!(
+            &samples[..midpoint_prefix.len()],
+            midpoint_prefix.as_slice()
+        );
         assert_eq!(added, MAX_EDGE_SPLITS);
-        assert_eq!(samples.iter().filter(|sample| (**sample - 11.0).abs() < 1.0).count(), 1);
+        assert_eq!(
+            samples
+                .iter()
+                .filter(|sample| (**sample - 11.0).abs() < 1.0)
+                .count(),
+            1
+        );
         assert!(samples.len() <= MAX_SPLITS_PER_HOST);
     }
 
@@ -1184,35 +1248,99 @@ mod tests {
         let face = RoadFace {
             identity: vec![10, 11, 12, 13, 14, 15],
             vertex_ids: vec![10, 11, 12, 11, 13, 14, 15],
-            polygon: vec![(0.0, 0.0), (50.0, 0.0), (50.0, 40.0), (50.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)],
+            polygon: vec![
+                (0.0, 0.0),
+                (50.0, 0.0),
+                (50.0, 40.0),
+                (50.0, 0.0),
+                (100.0, 0.0),
+                (100.0, 100.0),
+                (0.0, 100.0),
+            ],
             area: 10_000.0,
             boundary_edge_ids: vec![1, 5, 5, 6, 2, 3, 4],
             contains_proposed_edge: false,
         };
-        let hosts = [BoundaryHost { road_id: 5, from: 11, to: 12, ax: 50.0, az: 0.0, bx: 50.0, bz: 40.0 }];
+        let hosts = [BoundaryHost {
+            road_id: 5,
+            from: 11,
+            to: 12,
+            ax: 50.0,
+            az: 0.0,
+            bx: 50.0,
+            bz: 40.0,
+        }];
         let scan = candidates_for_face_with_work(&face, &hosts, &[], &[], &[]);
-        assert!(scan.candidates.iter().any(|c| c.end_x < 49.0), "west side: {scan:?}");
-        assert!(scan.candidates.iter().any(|c| c.end_x > 51.0), "east side: {scan:?}");
+        assert!(
+            scan.candidates.iter().any(|c| c.end_x < 49.0),
+            "west side: {scan:?}"
+        );
+        assert!(
+            scan.candidates.iter().any(|c| c.end_x > 51.0),
+            "east side: {scan:?}"
+        );
         assert!(scan.work_units <= MAX_PROPOSALS_PER_EVALUATION);
     }
 
     #[test]
     fn unreachable_targets_do_not_change_bounded_candidate_slots() {
-        let face = RoadFace { identity: vec![1,2,3,4], vertex_ids: vec![1,2,3,4], polygon: vec![(0.0,0.0),(100.0,0.0),(100.0,300.0),(0.0,300.0)], area: 30_000.0, boundary_edge_ids: vec![1,2,3,4], contains_proposed_edge: false };
-        let hosts = [BoundaryHost { road_id:1, from:1, to:2, ax:0.0, az:0.0, bx:100.0, bz:0.0 }];
-        let baseline = candidates_for_face_with_work(&face,&hosts,&[],&[],&[]);
-        let distant = candidates_for_face_with_work(&face,&hosts,&[],&[],&[(50.0,200.0)]);
-        assert_eq!(baseline,distant);
+        let face = RoadFace {
+            identity: vec![1, 2, 3, 4],
+            vertex_ids: vec![1, 2, 3, 4],
+            polygon: vec![(0.0, 0.0), (100.0, 0.0), (100.0, 300.0), (0.0, 300.0)],
+            area: 30_000.0,
+            boundary_edge_ids: vec![1, 2, 3, 4],
+            contains_proposed_edge: false,
+        };
+        let hosts = [BoundaryHost {
+            road_id: 1,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        }];
+        let baseline = candidates_for_face_with_work(&face, &hosts, &[], &[], &[]);
+        let distant = candidates_for_face_with_work(&face, &hosts, &[], &[], &[(50.0, 200.0)]);
+        assert_eq!(baseline, distant);
     }
 
     #[test]
     fn blocked_target_slots_leave_room_for_clear_corner_tangents() {
-        let face = RoadFace { identity: vec![1,2,3,4], vertex_ids: vec![1,2,3,4], polygon: vec![(0.0,0.0),(100.0,0.0),(100.0,100.0),(0.0,100.0)], area: 10_000.0, boundary_edge_ids: vec![1,2,3,4], contains_proposed_edge: false };
-        let hosts = [BoundaryHost { road_id:1, from:1, to:2, ax:0.0, az:0.0, bx:100.0, bz:0.0 }];
-        let blocker = crate::geometry::OrientedRect { x:30.0,z:18.0,width:18.0,depth:8.0,rotation:0.0 };
-        let scan = candidates_for_face_with_work(&face,&hosts,&[],&[blocker],&[(30.0,40.0)]);
-        assert!(scan.candidates.iter().any(|c| (c.host_t-0.3).abs()<1e-6 && (c.end_x-30.0).abs()>1.0), "blocked split must retain a tangent: {:?}",scan);
-        assert!(scan.work_units<=MAX_PROPOSALS_PER_EVALUATION);
+        let face = RoadFace {
+            identity: vec![1, 2, 3, 4],
+            vertex_ids: vec![1, 2, 3, 4],
+            polygon: vec![(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)],
+            area: 10_000.0,
+            boundary_edge_ids: vec![1, 2, 3, 4],
+            contains_proposed_edge: false,
+        };
+        let hosts = [BoundaryHost {
+            road_id: 1,
+            from: 1,
+            to: 2,
+            ax: 0.0,
+            az: 0.0,
+            bx: 100.0,
+            bz: 0.0,
+        }];
+        let blocker = crate::geometry::OrientedRect {
+            x: 30.0,
+            z: 18.0,
+            width: 18.0,
+            depth: 8.0,
+            rotation: 0.0,
+        };
+        let scan = candidates_for_face_with_work(&face, &hosts, &[], &[blocker], &[(30.0, 40.0)]);
+        assert!(
+            scan.candidates
+                .iter()
+                .any(|c| (c.host_t - 0.3).abs() < 1e-6 && (c.end_x - 30.0).abs() > 1.0),
+            "blocked split must retain a tangent: {:?}",
+            scan
+        );
+        assert!(scan.work_units <= MAX_PROPOSALS_PER_EVALUATION);
     }
 
     #[test]

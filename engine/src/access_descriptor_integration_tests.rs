@@ -20,10 +20,35 @@ fn incremental_descriptors_match_frozen_mature_reference() {
         let construction_us = started.elapsed().as_micros();
         assert_eq!(search.advance(0).work_used, 0);
         assert!(search.descriptors().is_none());
-        let mut uninterrupted = DescriptorSearch::new(&reference.face, &reference.hosts, &reference.nodes, &reference.parcels, &reference.targets).unwrap();
+        let mut uninterrupted = DescriptorSearch::new(
+            &reference.face,
+            &reference.hosts,
+            &reference.nodes,
+            &reference.parcels,
+            &reference.targets,
+        )
+        .unwrap();
         while !uninterrupted.advance(4096).done {}
-        let uninterrupted_bits = uninterrupted.descriptors().unwrap().iter().map(|c| [c.host_id,c.host_t.to_bits(),c.end_x.to_bits(),c.end_z.to_bits()]).collect::<Vec<_>>();
-        for (i,(a,b)) in uninterrupted_bits.iter().zip(&reference.ordered_bits).enumerate() { assert_eq!(a,b,"uninterrupted {i}"); }
+        let uninterrupted_bits = uninterrupted
+            .descriptors()
+            .unwrap()
+            .iter()
+            .map(|c| {
+                [
+                    c.host_id,
+                    c.host_t.to_bits(),
+                    c.end_x.to_bits(),
+                    c.end_z.to_bits(),
+                ]
+            })
+            .collect::<Vec<_>>();
+        for (i, (a, b)) in uninterrupted_bits
+            .iter()
+            .zip(&reference.ordered_bits)
+            .enumerate()
+        {
+            assert_eq!(a, b, "uninterrupted {i}");
+        }
         let initial = serde_json::to_vec(&search.checkpoint()).unwrap();
         search = DescriptorSearch::restore(serde_json::from_slice(&initial).unwrap()).unwrap();
         let mut total_work = 0usize;
@@ -46,7 +71,11 @@ fn incremental_descriptors_match_frozen_mature_reference() {
                 let bytes = serde_json::to_vec(&search.checkpoint()).unwrap();
                 max_checkpoint_bytes = max_checkpoint_bytes.max(bytes.len());
                 let decoded = serde_json::from_slice(&bytes).unwrap();
-                assert_eq!(serde_json::to_value(search.checkpoint()).unwrap(), serde_json::to_value(&decoded).unwrap(), "checkpoint JSON values at work {total_work}");
+                assert_eq!(
+                    serde_json::to_value(search.checkpoint()).unwrap(),
+                    serde_json::to_value(&decoded).unwrap(),
+                    "checkpoint JSON values at work {total_work}"
+                );
                 search = DescriptorSearch::restore(decoded).unwrap_or_else(|error| {
                     let saved: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
                     panic!("restore failed at phase {}, work {total_work}, quotas {quotas:?}: {error:?}", saved["phase"]);

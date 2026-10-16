@@ -118,9 +118,11 @@ impl LiveAccess {
         input: ProposalValidationInput,
         revision: u64,
     ) -> Result<(), LiveAccessError> {
-        let candidate = self.needs_validation().ok_or(LiveAccessError::InvalidState)?;
-        let context = ProposalValidationContext::new(input)
-            .map_err(|_| LiveAccessError::InvalidState)?;
+        let candidate = self
+            .needs_validation()
+            .ok_or(LiveAccessError::InvalidState)?;
+        let context =
+            ProposalValidationContext::new(input).map_err(|_| LiveAccessError::InvalidState)?;
         self.validator = Some(ProposalValidator::new(context.clone(), candidate));
         self.validation_context = Some(context);
         self.validation_revision = Some(revision);
@@ -229,8 +231,8 @@ impl LiveAccess {
         if checkpoint.schema != CHECKPOINT_SCHEMA || checkpoint.stale_retries > MAX_STALE_RETRIES {
             return Err(LiveAccessError::InvalidCheckpoint);
         }
-        let planning = AccessPlanningJob::restore(checkpoint.planning)
-            .map_err(|error| match error {
+        let planning =
+            AccessPlanningJob::restore(checkpoint.planning).map_err(|error| match error {
                 PlanningError::InvalidCheckpoint | PlanningError::SnapshotMismatch => {
                     LiveAccessError::InvalidCheckpoint
                 }
@@ -239,7 +241,8 @@ impl LiveAccess {
         let page_len = planning.ready_page().map_or(0, <[_]>::len);
         if checkpoint.proposal_cursor > page_len
             || checkpoint.approved.is_some() && checkpoint.validator.is_some()
-            || checkpoint.validation_context_input.is_some() != checkpoint.validation_revision.is_some()
+            || checkpoint.validation_context_input.is_some()
+                != checkpoint.validation_revision.is_some()
             || checkpoint.validation_context_input.is_some()
                 != (checkpoint.validator.is_some() || checkpoint.approved.is_some())
         {
@@ -420,7 +423,10 @@ mod tests {
                 assert!(job.is_exhausted());
                 return;
             }
-            assert!(used > 0 || job.planning.ready_page().is_some(), "active live access job made no progress");
+            assert!(
+                used > 0 || job.planning.ready_page().is_some(),
+                "active live access job made no progress"
+            );
         }
         panic!("empty discovery exceeded the bounded test loop");
     }
@@ -465,8 +471,17 @@ mod tests {
             let id = index as u32 + 11;
             let segment = Segment { ax, az, bx, bz };
             edges.push(RoadFaceEdge { id, from, to });
-            hosts.push(ProposalHost { id, from, to, segment });
-            roads.push(ProposalRoad { id, is_open: true, segment: Some(segment) });
+            hosts.push(ProposalHost {
+                id,
+                from,
+                to,
+                segment,
+            });
+            roads.push(ProposalRoad {
+                id,
+                is_open: true,
+                segment: Some(segment),
+            });
             open_roads.push(segment);
         }
         let viability = FrozenViabilityInput {
@@ -475,19 +490,38 @@ mod tests {
             open_roads,
             pending_roads: Vec::new(),
             river_segments: vec![Segment {
-                ax: 500.0, az: -400.0, bx: 500.0, bz: 400.0,
+                ax: 500.0,
+                az: -400.0,
+                bx: 500.0,
+                bz: 400.0,
             }],
             neighborhood_segments: Vec::new(),
             neighborhood_interior: None,
         };
         (
-            DiscoveryInput { graph_nodes, graph_edges: edges, all_nodes, viability: viability.clone() },
+            DiscoveryInput {
+                graph_nodes,
+                graph_edges: edges,
+                all_nodes,
+                viability: viability.clone(),
+            },
             ProposalValidationInput {
-                hosts, nodes, roads, projects: Vec::<ProposalProject>::new(), viability,
+                hosts,
+                nodes,
+                roads,
+                projects: Vec::<ProposalProject>::new(),
+                viability,
                 gates: AdmissionGates {
-                    demand: 1.0, has_pending_interior_plan: false, has_neighborhood_plan: false,
-                    road_count: 4, project_count: 0, parcel_count: 0, frontage_count: 0,
-                    next_id: 100, project_admission_available: true, pending_access_branch: None,
+                    demand: 1.0,
+                    has_pending_interior_plan: false,
+                    has_neighborhood_plan: false,
+                    road_count: 4,
+                    project_count: 0,
+                    parcel_count: 0,
+                    frontage_count: 0,
+                    next_id: 100,
+                    project_admission_available: true,
+                    pending_access_branch: None,
                 },
             },
         )
@@ -495,7 +529,8 @@ mod tests {
 
     fn run_offers(quota: usize, resume_interval: usize) -> Vec<(u32, f32, f32, f32)> {
         let (discovery, validation) = square_inputs();
-        let mut job = LiveAccess::new(AccessPlanningJob::new(discovery, validation.clone(), 77).unwrap());
+        let mut job =
+            LiveAccess::new(AccessPlanningJob::new(discovery, validation.clone(), 77).unwrap());
         let mut offers = Vec::new();
         let mut work_since_save = 0;
         for _ in 0..3_000_000 {
@@ -507,14 +542,20 @@ mod tests {
                     work_since_save += used;
                     if resume_interval > 0 && work_since_save >= resume_interval {
                         let encoded = serde_json::to_vec(&job.checkpoint()).unwrap();
-                        job = LiveAccess::restore(serde_json::from_slice(&encoded).unwrap()).unwrap();
+                        job =
+                            LiveAccess::restore(serde_json::from_slice(&encoded).unwrap()).unwrap();
                         work_since_save = 0;
                     }
                 }
                 if let Some((proposal, revision)) = job.ready_proposal() {
                     assert_eq!(revision, 77);
                     assert_eq!(proposal.host_id, candidate.host_id);
-                    offers.push((proposal.host_id, proposal.host_t, proposal.end_x, proposal.end_z));
+                    offers.push((
+                        proposal.host_id,
+                        proposal.host_t,
+                        proposal.end_x,
+                        proposal.end_z,
+                    ));
                     job.reject_or_consume();
                 }
             } else {
@@ -529,7 +570,10 @@ mod tests {
                 if job.is_exhausted() {
                     return offers;
                 }
-                assert!(used > 0 || job.planning.ready_page().is_some(), "active live access job made no progress");
+                assert!(
+                    used > 0 || job.planning.ready_page().is_some(),
+                    "active live access job made no progress"
+                );
             }
         }
         panic!("live access sequence exceeded the bounded test loop")
@@ -538,20 +582,28 @@ mod tests {
     #[test]
     fn fresh_revalidation_offer_sequence_is_quota_invariant_and_resumable() {
         let expected = run_offers(48, 0);
-        assert!(!expected.is_empty(), "synthetic square should produce an offer");
+        assert!(
+            !expected.is_empty(),
+            "synthetic square should produce an offer"
+        );
         assert_eq!(run_offers(7, 4096), expected);
     }
 
     #[test]
     fn stale_validation_retries_twice_then_skips_candidate() {
         let (discovery, validation) = square_inputs();
-        let mut job = LiveAccess::new(AccessPlanningJob::new(discovery, validation.clone(), 77).unwrap());
+        let mut job =
+            LiveAccess::new(AccessPlanningJob::new(discovery, validation.clone(), 77).unwrap());
         for _ in 0..1_000_000 {
-            if job.needs_validation().is_some() { break; }
+            if job.needs_validation().is_some() {
+                break;
+            }
             let used = job.advance(48);
             assert!(used > 0 || job.planning.ready_page().is_some());
         }
-        let original = job.needs_validation().expect("synthetic face yields candidates");
+        let original = job
+            .needs_validation()
+            .expect("synthetic face yields candidates");
         for retry in 1..=2 {
             job.begin_validation(validation.clone(), 77).unwrap();
             assert!(job.discard_stale_validation());
@@ -569,21 +621,30 @@ mod tests {
     #[test]
     fn restore_rejects_forged_approved_lot_even_when_finite() {
         let (discovery, validation) = square_inputs();
-        let mut job = LiveAccess::new(AccessPlanningJob::new(discovery, validation.clone(), 77).unwrap());
+        let mut job =
+            LiveAccess::new(AccessPlanningJob::new(discovery, validation.clone(), 77).unwrap());
         for _ in 0..1_000_000 {
-            if job.needs_validation().is_some() { break; }
+            if job.needs_validation().is_some() {
+                break;
+            }
             job.advance(48);
         }
-        let candidate = job.needs_validation().expect("synthetic face yields candidates");
+        let candidate = job
+            .needs_validation()
+            .expect("synthetic face yields candidates");
         job.begin_validation(validation, 77).unwrap();
         for _ in 0..100_000 {
             job.advance_validation(48);
-            if job.ready_proposal().is_some() { break; }
+            if job.ready_proposal().is_some() {
+                break;
+            }
             if job.needs_validation().is_some() {
                 job.begin_validation(square_inputs().1, 77).unwrap();
             }
         }
-        let (proposal, _) = job.ready_proposal().expect("synthetic fixture has a valid offer");
+        let (proposal, _) = job
+            .ready_proposal()
+            .expect("synthetic fixture has a valid offer");
         assert_eq!(proposal.host_id, candidate.host_id);
         let mut checkpoint = job.checkpoint();
         checkpoint.approved.as_mut().unwrap().selected_lots[0].x += 0.25;

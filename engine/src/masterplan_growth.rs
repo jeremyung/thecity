@@ -57,7 +57,12 @@ impl PlanRuntime {
         for (index, lot) in plan.lots.iter().enumerate() {
             lots_by_road[lot.road].push(index);
         }
-        Self { rail_paths: crate::rail_runtime::paths(&plan), expressway_network: crate::expressway_traffic::Network::from_plan(&plan), plan, lots_by_road }
+        Self {
+            rail_paths: crate::rail_runtime::paths(&plan),
+            expressway_network: crate::expressway_traffic::Network::from_plan(&plan),
+            plan,
+            lots_by_road,
+        }
     }
 }
 
@@ -110,7 +115,8 @@ impl Engine {
 
     /// Founding conditions for a master-plan world.
     pub(crate) fn initialize_masterplan_world(&mut self, initial_plan: Option<MasterPlan>) {
-        let plan = initial_plan.unwrap_or_else(|| masterplan::generate(&self.masterplan_geography()));
+        let plan =
+            initial_plan.unwrap_or_else(|| masterplan::generate(&self.masterplan_geography()));
         self.state.masterplan = Some(MasterplanProgress {
             node_ids: vec![0; plan.nodes.len()],
             road_ids: vec![0; plan.roads.len()],
@@ -128,7 +134,12 @@ impl Engine {
             self.realize_plan_road(road, "open", 1.0);
         }
         if let Some(node) = self.plan_node_id(plan.founding_market) {
-            if let Some(node) = self.state.nodes.iter_mut().find(|candidate| candidate.id == node) {
+            if let Some(node) = self
+                .state
+                .nodes
+                .iter_mut()
+                .find(|candidate| candidate.id == node)
+            {
                 node.kind = "market".into();
             }
         }
@@ -206,8 +217,7 @@ impl Engine {
             parcel_id: None,
             stage: "platform".into(),
             progress: 0.0,
-            reason: "A rail stop is planned where the arterial grid meets the rail corridor"
-                .into(),
+            reason: "A rail stop is planned where the arterial grid meets the rail corridor".into(),
             duration: 8.0,
             started_tick: 0,
         });
@@ -278,7 +288,13 @@ impl Engine {
         else {
             return;
         };
-        let Some(road) = self.state.roads.iter().find(|road| road.id == road_id).cloned() else {
+        let Some(road) = self
+            .state
+            .roads
+            .iter()
+            .find(|road| road.id == road_id)
+            .cloned()
+        else {
             return;
         };
         if road.stage != "open" {
@@ -301,10 +317,16 @@ impl Engine {
             let lot = runtime.plan.lots[lot_index];
             let dx = b.x - a.x;
             let dz = b.z - a.z;
-            let entrance=lot.passage.map_or(P{x:lot.x,z:lot.z},|points|points[2]);
-            let along =
-                (((entrance.x - a.x) * dx + (entrance.z - a.z) * dz) / (dx * dx + dz * dz)).clamp(0.0, 1.0);
-            let side_point = if lot.passage_rotation().is_some() { entrance } else { P{x:lot.x,z:lot.z} };
+            let entrance = lot
+                .passage
+                .map_or(P { x: lot.x, z: lot.z }, |points| points[2]);
+            let along = (((entrance.x - a.x) * dx + (entrance.z - a.z) * dz) / (dx * dx + dz * dz))
+                .clamp(0.0, 1.0);
+            let side_point = if lot.passage_rotation().is_some() {
+                entrance
+            } else {
+                P { x: lot.x, z: lot.z }
+            };
             let side = if dx * (side_point.z - a.z) - dz * (side_point.x - a.x) >= 0.0 {
                 1
             } else {
@@ -317,8 +339,15 @@ impl Engine {
                 District::Compact | District::Strips => 0.84,
                 District::Waterfront => 0.8,
             };
-            let parcel_id =
-                self.add_parcel(lot.x, lot.z, lot.width, lot.depth, access, suitability, false);
+            let parcel_id = self.add_parcel(
+                lot.x,
+                lot.z,
+                lot.width,
+                lot.depth,
+                access,
+                suitability,
+                false,
+            );
             if parcel_id == 0 {
                 break;
             }
@@ -351,7 +380,9 @@ impl Engine {
             });
             // Direct frontage follows the realized segment (split junctions
             // are not bit-exactly collinear). Passage lots keep their own facing.
-            let facing = lot.passage_rotation().unwrap_or_else(||self.frontage_rotation(parcel_id));
+            let facing = lot
+                .passage_rotation()
+                .unwrap_or_else(|| self.frontage_rotation(parcel_id));
             if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
                 parcel.rotation = Some(facing);
             }
@@ -379,7 +410,8 @@ impl Engine {
     /// Surface only realized building sites, not the stock of released parcels.
     /// Building records survive vacancy/renewal, so their ground does too.
     pub(crate) fn masterplan_ground(&self) -> Vec<crate::GroundPatch> {
-        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref()) else {
+        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref())
+        else {
             return Vec::new();
         };
         let developed: std::collections::BTreeSet<u32> = self
@@ -409,19 +441,28 @@ impl Engine {
     /// Deck elevations for realized expressway roads, derived from the
     /// regenerated plan and its persisted road ID mapping.
     pub(crate) fn masterplan_road_decks(&self) -> Vec<crate::RoadDeckView> {
-        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref()) else {
+        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref())
+        else {
             return Vec::new();
         };
-        runtime.plan.roads.iter().enumerate().filter_map(|(index, road)| {
-            if road.kind != RoadKind::Expressway {
-                return None;
-            }
-            let road_id = *progress.road_ids.get(index)?;
-            let controls = road.curve?;
-            (road_id != 0).then_some(crate::RoadDeckView {
-                road_id, deck_height: road.deck_height, controls: controls.map(|p| [p.x, p.z]),
+        runtime
+            .plan
+            .roads
+            .iter()
+            .enumerate()
+            .filter_map(|(index, road)| {
+                if road.kind != RoadKind::Expressway {
+                    return None;
+                }
+                let road_id = *progress.road_ids.get(index)?;
+                let controls = road.curve?;
+                (road_id != 0).then_some(crate::RoadDeckView {
+                    road_id,
+                    deck_height: road.deck_height,
+                    controls: controls.map(|p| [p.x, p.z]),
+                })
             })
-        }).collect()
+            .collect()
     }
 
     /// Keep visible construction state on pre-added plan road records.
@@ -439,7 +480,8 @@ impl Engine {
         for (from, to, stage, progress) in updates {
             if let Some(road) = self.state.roads.iter_mut().find(|road| {
                 road.stage != "open"
-                    && ((road.from == from && road.to == to) || (road.from == to && road.to == from))
+                    && ((road.from == from && road.to == to)
+                        || (road.from == to && road.to == from))
             }) {
                 road.stage = stage;
                 road.progress = progress;
@@ -462,7 +504,8 @@ impl Engine {
             .iter()
             .find(|road| {
                 road.stage != "open"
-                    && ((road.from == from && road.to == to) || (road.from == to && road.to == from))
+                    && ((road.from == from && road.to == to)
+                        || (road.from == to && road.to == from))
             })
             .map(|road| road.id)
         else {
@@ -483,7 +526,12 @@ impl Engine {
             return true;
         }
         self.recompute_connectivity();
-        if self.state.roads.iter().any(|r| r.id == road_id && r.connected) {
+        if self
+            .state
+            .roads
+            .iter()
+            .any(|r| r.id == road_id && r.connected)
+        {
             let label = match kind.as_str() {
                 "arterial" => "An arterial",
                 "lane" => "A narrow lane",
@@ -520,15 +568,30 @@ impl Engine {
 
     /// Bounded growth evaluation for master-plan worlds.
     pub(crate) fn masterplan_growth(&mut self) {
-        let active = self.state.projects.iter().filter(|p| p.progress < 1.0).count();
+        let active = self
+            .state
+            .projects
+            .iter()
+            .filter(|p| p.progress < 1.0)
+            .count();
         if active >= MAX_PROJECTS {
             return;
         }
         let day = (self.state.tick / TICKS_PER_DAY) as u32;
         self.start_transit_infrastructure();
 
-        let open = self.state.buildings.iter().filter(|b| b.stage == "open").count();
-        let vacant = self.state.buildings.iter().filter(|b| site_vacant(b)).count();
+        let open = self
+            .state
+            .buildings
+            .iter()
+            .filter(|b| b.stage == "open")
+            .count();
+        let vacant = self
+            .state
+            .buildings
+            .iter()
+            .filter(|b| site_vacant(b))
+            .count();
         let vacancy = vacant as f32 / open.max(1) as f32;
         let available = self.available_masterplan_parcels();
 
@@ -548,7 +611,13 @@ impl Engine {
 
         if available < RELEASED_PARCEL_TARGET
             && self.active_projects("road") < MAX_ACTIVE_ROAD_PROJECTS
-            && self.state.projects.iter().filter(|p| p.progress < 1.0).count() < MAX_PROJECTS
+            && self
+                .state
+                .projects
+                .iter()
+                .filter(|p| p.progress < 1.0)
+                .count()
+                < MAX_PROJECTS
         {
             self.start_masterplan_road();
         }
@@ -558,7 +627,11 @@ impl Engine {
     /// street-facing lots beside the planned station form its plaza, and each
     /// residential neighborhood keeps one ordinary lot for a shrine. Spacing
     /// and caps make the choice deterministic in release order.
-    fn open_space_for_released_lot(&self, lot: &PlanLot, plan: &MasterPlan) -> Option<&'static str> {
+    fn open_space_for_released_lot(
+        &self,
+        lot: &PlanLot,
+        plan: &MasterPlan,
+    ) -> Option<&'static str> {
         if lot.flag {
             return None;
         }
@@ -568,7 +641,11 @@ impl Engine {
                 .iter()
                 .filter(move |p| p.open_space.as_deref() == Some(kind))
         };
-        if let Some(station) = plan.nodes.iter().find(|node| node.kind == NodeKind::Station) {
+        if let Some(station) = plan
+            .nodes
+            .iter()
+            .find(|node| node.kind == NodeKind::Station)
+        {
             let distance = (lot.x - station.p.x).hypot(lot.z - station.p.z);
             if distance <= STATION_PLAZA_RADIUS {
                 return (reserved("plaza").count() < MAX_STATION_PLAZA_LOTS).then_some("plaza");
@@ -633,7 +710,11 @@ impl Engine {
             *id != 0
                 && (plan.roads[index].a == plan.station || plan.roads[index].b == plan.station)
                 && plan.roads[index].kind.is_street()
-                && self.state.roads.iter().any(|r| r.id == *id && r.stage == "open")
+                && self
+                    .state
+                    .roads
+                    .iter()
+                    .any(|r| r.id == *id && r.stage == "open")
         });
         let population = self.state.population;
         let mut best: Option<(f32, usize)> = None;
@@ -697,7 +778,9 @@ impl Engine {
             _ => 3.5,
         } + random_unit(&mut self.state.rng_growth) * 2.0;
         let reason = match kind {
-            RoadKind::Arterial => "An arterial section is built to carry growing neighborhood traffic",
+            RoadKind::Arterial => {
+                "An arterial section is built to carry growing neighborhood traffic"
+            }
             RoadKind::Bridge => "A bridge links the two banks as both neighborhoods grow",
             RoadKind::Lane => "A narrow lane opens the block for small frontage lots",
             _ => "A local street opens new frontage beside growing demand",
@@ -793,8 +876,18 @@ impl Engine {
         let roll = random_unit(&mut self.state.rng_growth);
         let station_core = lot.district == District::StationCore && self.state.station_online;
         // A small tower cluster on the largest served station-core lots.
-        let towers = self.state.buildings.iter().filter(|b| b.floors >= 14).count();
-        if station_core && !lot.flag && lot.width * lot.depth >= 280.0 && towers < MAX_STATION_TOWERS && roll < 0.2 {
+        let towers = self
+            .state
+            .buildings
+            .iter()
+            .filter(|b| b.floors >= 14)
+            .count();
+        if station_core
+            && !lot.flag
+            && lot.width * lot.depth >= 280.0
+            && towers < MAX_STATION_TOWERS
+            && roll < 0.2
+        {
             let floors = 16 + (roll * 90.0) as u8 % 17;
             let kind = if roll < 0.11 { "office" } else { "apartment" };
             return (kind, floors as u16 * 5, floors);
@@ -858,8 +951,18 @@ mod tests {
     }
 
     fn summary(engine: &Engine) -> String {
-        let open = engine.state.buildings.iter().filter(|b| b.stage == "open").count();
-        let roads = engine.state.roads.iter().filter(|r| r.stage == "open").count();
+        let open = engine
+            .state
+            .buildings
+            .iter()
+            .filter(|b| b.stage == "open")
+            .count();
+        let roads = engine
+            .state
+            .roads
+            .iter()
+            .filter(|r| r.stage == "open")
+            .count();
         let footprint: f32 = engine
             .state
             .buildings
@@ -884,17 +987,41 @@ mod tests {
     fn founding_opens_gateway_streets_and_founder() {
         let engine = Engine::new(87231);
         assert!(engine.masterplan_active());
-        assert!(engine.state.roads.iter().any(|r| r.kind == "arterial" && r.connected));
-        assert!(engine.state.buildings.iter().any(|b| b.anchor && b.stage == "open"));
-        assert!(engine.state.parcels.len() >= 4, "founding row releases lots");
+        assert!(engine
+            .state
+            .roads
+            .iter()
+            .any(|r| r.kind == "arterial" && r.connected));
+        assert!(engine
+            .state
+            .buildings
+            .iter()
+            .any(|b| b.anchor && b.stage == "open"));
+        assert!(
+            engine.state.parcels.len() >= 4,
+            "founding row releases lots"
+        );
         let ground = engine.masterplan_ground();
-        let developed_parcels: std::collections::BTreeSet<u32> = engine.state.buildings
-            .iter().map(|building| building.parcel_id).collect();
-        let mapped_developed = engine.state.masterplan.as_ref().unwrap().lot_parcels.iter()
+        let developed_parcels: std::collections::BTreeSet<u32> = engine
+            .state
+            .buildings
+            .iter()
+            .map(|building| building.parcel_id)
+            .collect();
+        let mapped_developed = engine
+            .state
+            .masterplan
+            .as_ref()
+            .unwrap()
+            .lot_parcels
+            .iter()
             .filter(|parcel| **parcel != 0 && developed_parcels.contains(parcel))
             .count();
         assert_eq!(ground.len(), mapped_developed);
-        assert!(ground.len() < engine.state.parcels.len(), "released vacant parcels stay unpaved");
+        assert!(
+            ground.len() < engine.state.parcels.len(),
+            "released vacant parcels stay unpaved"
+        );
         engine.validate().unwrap();
     }
 
@@ -903,16 +1030,28 @@ mod tests {
         let mut engine = grown(87231, 6_000);
         let before = engine.masterplan_ground();
         assert!(!before.is_empty(), "normal growth realizes buildings");
-        let built_parcels: std::collections::BTreeSet<u32> = engine.state.buildings
-            .iter().map(|building| building.parcel_id).collect();
-        let expected = engine.state.masterplan.as_ref().unwrap().lot_parcels.iter()
+        let built_parcels: std::collections::BTreeSet<u32> = engine
+            .state
+            .buildings
+            .iter()
+            .map(|building| building.parcel_id)
+            .collect();
+        let expected = engine
+            .state
+            .masterplan
+            .as_ref()
+            .unwrap()
+            .lot_parcels
+            .iter()
             .filter(|parcel| **parcel != 0 && built_parcels.contains(parcel))
             .count();
         assert_eq!(before.len(), expected);
 
         let restored = Engine::restore_json(&engine.save_json()).unwrap();
-        assert_eq!(serde_json::to_value(&before).unwrap(),
-            serde_json::to_value(restored.masterplan_ground()).unwrap());
+        assert_eq!(
+            serde_json::to_value(&before).unwrap(),
+            serde_json::to_value(restored.masterplan_ground()).unwrap()
+        );
 
         {
             let building = engine
@@ -924,12 +1063,23 @@ mod tests {
             building.occupancy = 0;
             building.vacant_days = 500;
         }
-        assert_eq!(serde_json::to_value(&before).unwrap(),
-            serde_json::to_value(engine.masterplan_ground()).unwrap(), "vacancy retains developed ground");
-        engine.state.buildings.iter_mut().find(|building| building.stage == "open")
-            .unwrap().stage = "demolished".into();
-        assert_eq!(serde_json::to_value(&before).unwrap(),
-            serde_json::to_value(engine.masterplan_ground()).unwrap(), "retained demolition record preserves ground");
+        assert_eq!(
+            serde_json::to_value(&before).unwrap(),
+            serde_json::to_value(engine.masterplan_ground()).unwrap(),
+            "vacancy retains developed ground"
+        );
+        engine
+            .state
+            .buildings
+            .iter_mut()
+            .find(|building| building.stage == "open")
+            .unwrap()
+            .stage = "demolished".into();
+        assert_eq!(
+            serde_json::to_value(&before).unwrap(),
+            serde_json::to_value(engine.masterplan_ground()).unwrap(),
+            "retained demolition record preserves ground"
+        );
     }
 
     #[test]
@@ -944,7 +1094,10 @@ mod tests {
                 let length2 = dx * dx + dz * dz;
                 let t = if length2 > 0.0 {
                     ((point.x - a.x) * dx + (point.z - a.z) * dz) / length2
-                } else { 0.0 }.clamp(0.0, 1.0);
+                } else {
+                    0.0
+                }
+                .clamp(0.0, 1.0);
                 // The existing rectangle fitter samples 2 cm inside its front/back
                 // slices; allow 5 cm at boundary corners, not interior gaps.
                 if (point.x - a.x - t * dx).hypot(point.z - a.z - t * dz) <= 0.05 {
@@ -962,20 +1115,47 @@ mod tests {
         for seed in [1, 7, 87231, 99173] {
             let plan = masterplan::generate(&Geography {
                 seed,
-                river: [P { x: -112.0, z: -400.0 }, P { x: -98.0, z: -190.0 }, P { x: -112.0, z: 20.0 },
-                    P { x: -94.0, z: 210.0 }, P { x: -109.0, z: 400.0 }].to_vec(),
+                river: [
+                    P {
+                        x: -112.0,
+                        z: -400.0,
+                    },
+                    P {
+                        x: -98.0,
+                        z: -190.0,
+                    },
+                    P { x: -112.0, z: 20.0 },
+                    P { x: -94.0, z: 210.0 },
+                    P {
+                        x: -109.0,
+                        z: 400.0,
+                    },
+                ]
+                .to_vec(),
                 river_clearance: RIVER_HALF_WIDTH + RIVER_BANK_BUFFER,
                 protected: (-350.0, -350.0, -260.0, -270.0),
             });
             assert_eq!(plan.lot_ground.len(), plan.lots.len(), "seed {seed}");
             for (lot, polygon) in plan.lots.iter().zip(&plan.lot_ground) {
                 assert!(polygon.len() >= 3, "seed {seed}: degenerate ground cell");
-                let ux = P { x: lot.facing.z * lot.width * 0.5, z: -lot.facing.x * lot.width * 0.5 };
-                let uz = P { x: lot.facing.x * lot.depth * 0.5, z: lot.facing.z * lot.depth * 0.5 };
+                let ux = P {
+                    x: lot.facing.z * lot.width * 0.5,
+                    z: -lot.facing.x * lot.width * 0.5,
+                };
+                let uz = P {
+                    x: lot.facing.x * lot.depth * 0.5,
+                    z: lot.facing.z * lot.depth * 0.5,
+                };
                 for sx in [-1.0, 1.0] {
                     for sz in [-1.0, 1.0] {
-                        let corner = P { x: lot.x + ux.x * sx + uz.x * sz, z: lot.z + ux.z * sx + uz.z * sz };
-                        assert!(contains(polygon, corner), "seed {seed}: parcel outside ground polygon");
+                        let corner = P {
+                            x: lot.x + ux.x * sx + uz.x * sz,
+                            z: lot.z + ux.z * sx + uz.z * sz,
+                        };
+                        assert!(
+                            contains(polygon, corner),
+                            "seed {seed}: parcel outside ground polygon"
+                        );
                     }
                 }
             }
@@ -990,8 +1170,16 @@ mod tests {
         engine.validate().unwrap();
         // Every parcel with a building is reachable.
         for building in engine.state.buildings.iter().filter(|b| b.stage == "open") {
-            let parcel = engine.state.parcels.iter().find(|p| p.id == building.parcel_id).unwrap();
-            assert!(engine.node_connected(parcel.access_node), "inaccessible building");
+            let parcel = engine
+                .state
+                .parcels
+                .iter()
+                .find(|p| p.id == building.parcel_id)
+                .unwrap();
+            assert!(
+                engine.node_connected(parcel.access_node),
+                "inaccessible building"
+            );
         }
         // No parcel overlaps another.
         let rects: Vec<geometry::OrientedRect> = engine
@@ -1026,12 +1214,20 @@ mod tests {
     fn generated_rear_passage_survives_renovation_and_replay() {
         for seed in [87231, 0, 5] {
             let mut engine = grown(seed, 40_000);
-            let id = engine.state.buildings.iter().find(|b| {
-                b.stage == "open" && crate::is_commercial(b)
-                    && !engine.errand_references_building(b.id)
-                    && engine.masterplan_lot_for_parcel(b.parcel_id)
-                        .is_some_and(|lot| lot.passage.is_some())
-            }).expect("generated rear commercial site").id;
+            let id = engine
+                .state
+                .buildings
+                .iter()
+                .find(|b| {
+                    b.stage == "open"
+                        && crate::is_commercial(b)
+                        && !engine.errand_references_building(b.id)
+                        && engine
+                            .masterplan_lot_for_parcel(b.parcel_id)
+                            .is_some_and(|lot| lot.passage.is_some())
+                })
+                .expect("generated rear commercial site")
+                .id;
             // Arrange vacancy on real generated geometry. This exercises renewal,
             // not the separate policy that decides when a business closes.
             for building in &mut engine.state.buildings {
@@ -1046,8 +1242,19 @@ mod tests {
             assert!(before.1.len() > 2);
             let saved = engine.save_json();
             let mut restored = Engine::restore_json(&saved).unwrap();
-            for city in [&mut engine, &mut restored] { city.renewal(3); }
-            assert_eq!(engine.state.buildings.iter().find(|b| b.id == id).unwrap().stage, "renovation");
+            for city in [&mut engine, &mut restored] {
+                city.renewal(3);
+            }
+            assert_eq!(
+                engine
+                    .state
+                    .buildings
+                    .iter()
+                    .find(|b| b.id == id)
+                    .unwrap()
+                    .stage,
+                "renovation"
+            );
             // Restore while the building is actually undergoing work, then use
             // the production fixed-step scheduler through completion.
             restored = Engine::restore_json(&engine.save_json()).unwrap();
@@ -1060,9 +1267,20 @@ mod tests {
                 assert_eq!(before.0, after.0);
                 assert_eq!(before.1.len(), after.1.len());
                 for (a, b) in before.1.iter().zip(&after.1) {
-                    assert_eq!((a.x.to_bits(), a.z.to_bits()), (b.x.to_bits(), b.z.to_bits()));
+                    assert_eq!(
+                        (a.x.to_bits(), a.z.to_bits()),
+                        (b.x.to_bits(), b.z.to_bits())
+                    );
                 }
-                if engine.state.buildings.iter().find(|b| b.id == id).unwrap().stage == "open" {
+                if engine
+                    .state
+                    .buildings
+                    .iter()
+                    .find(|b| b.id == id)
+                    .unwrap()
+                    .stage
+                    == "open"
+                {
                     reopened = true;
                     break;
                 }
@@ -1087,12 +1305,22 @@ mod tests {
         let snapshot = engine.snapshot();
         let restored = Engine::restore_json(&engine.save_json()).unwrap();
         assert_eq!(snapshot.road_decks, restored.snapshot().road_decks);
-        assert_eq!(snapshot.road_decks.len(), engine.plan_runtime().plan.expressway.len());
+        assert_eq!(
+            snapshot.road_decks.len(),
+            engine.plan_runtime().plan.expressway.len()
+        );
         for deck in &snapshot.road_decks {
-            let road = snapshot.roads.iter().find(|road| road.id == deck.road_id).unwrap();
+            let road = snapshot
+                .roads
+                .iter()
+                .find(|road| road.id == deck.road_id)
+                .unwrap();
             assert_eq!(road.kind, "expressway");
             let plan_index = engine.plan_road_index(deck.road_id).unwrap();
-            assert_eq!(deck.deck_height, engine.plan_runtime().plan.roads[plan_index].deck_height);
+            assert_eq!(
+                deck.deck_height,
+                engine.plan_runtime().plan.roads[plan_index].deck_height
+            );
             assert_eq!(
                 deck.controls,
                 engine.plan_runtime().plan.roads[plan_index]
@@ -1101,8 +1329,14 @@ mod tests {
                     .map(|p| [p.x, p.z])
             );
         }
-        assert!(snapshot.road_decks.iter().any(|deck| deck.deck_height == 11.0));
-        assert!(snapshot.road_decks.iter().any(|deck| deck.deck_height == 20.0));
+        assert!(snapshot
+            .road_decks
+            .iter()
+            .any(|deck| deck.deck_height == 11.0));
+        assert!(snapshot
+            .road_decks
+            .iter()
+            .any(|deck| deck.deck_height == 20.0));
     }
 
     #[test]
@@ -1124,7 +1358,10 @@ mod tests {
         let later = engine.snapshot().road_decks;
         assert!(later.len() > first.len());
         for deck in first {
-            assert_eq!(&deck, later.iter().find(|d| d.road_id == deck.road_id).unwrap());
+            assert_eq!(
+                &deck,
+                later.iter().find(|d| d.road_id == deck.road_id).unwrap()
+            );
         }
     }
 
@@ -1132,8 +1369,14 @@ mod tests {
     #[test]
     #[ignore]
     fn long_run() {
-        let ticks: u32 = std::env::var("MASTERPLAN_TICKS").ok().and_then(|s| s.parse().ok()).unwrap_or(240_000);
-        let seed: u32 = std::env::var("MASTERPLAN_SEED").ok().and_then(|s| s.parse().ok()).unwrap_or(87231);
+        let ticks: u32 = std::env::var("MASTERPLAN_TICKS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(240_000);
+        let seed: u32 = std::env::var("MASTERPLAN_SEED")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(87231);
         let mut engine = Engine::new(seed);
         engine.set_development_rate(16);
         let started = std::time::Instant::now();
@@ -1142,7 +1385,11 @@ mod tests {
             engine.step(2_000);
             done += 2_000;
             if done % 20_000 == 0 {
-                eprintln!("{} ({:.1}s)", summary(&engine), started.elapsed().as_secs_f32());
+                eprintln!(
+                    "{} ({:.1}s)",
+                    summary(&engine),
+                    started.elapsed().as_secs_f32()
+                );
             }
         }
         engine.validate().unwrap();

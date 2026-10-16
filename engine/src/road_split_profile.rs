@@ -333,7 +333,10 @@ fn export_stress_fixture_if_requested() {
     });
     let path = std::env::var_os("ROAD_SPLIT_PROFILE_OUTPUT")
         .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation/road-split-profile-stress.json"));
+        .unwrap_or_else(|| {
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../validation/road-split-profile-stress.json")
+        });
     std::fs::write(
         &path,
         serde_json::to_vec(&fixture).expect("profile fixture serializes"),
@@ -450,21 +453,19 @@ fn profile_atomic_open_road_split_cost() {
         25,
     );
     if std::env::var_os("ROAD_SPLIT_PROFILE_ALL_AFFECTED").is_some() {
-        let (base, host_id) = make_case(
-            MAX_TRAVELERS,
-            MAX_ROUTE_NODES,
-            MAX_SEGMENTS - 1,
-            true,
-            true,
-        );
+        let (base, host_id) =
+            make_case(MAX_TRAVELERS, MAX_ROUTE_NODES, MAX_SEGMENTS - 1, true, true);
         base.validate().expect("all-affected profile case is valid");
         let saved = base.save_json();
         let samples = 25;
         let mut durations = Vec::with_capacity(samples);
         for _ in 0..samples {
-            let mut engine = Engine::restore_json(&saved).expect("all-affected profile fixture restores");
+            let mut engine =
+                Engine::restore_json(&saved).expect("all-affected profile fixture restores");
             let start = Instant::now();
-            engine.try_split_open_road(host_id, 0.5).expect("all-affected split succeeds");
+            engine
+                .try_split_open_road(host_id, 0.5)
+                .expect("all-affected split succeeds");
             durations.push(start.elapsed());
         }
         durations.sort_unstable();

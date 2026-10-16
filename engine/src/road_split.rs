@@ -102,8 +102,12 @@ impl Engine {
             node_index.entry(node.id).or_insert(node);
         }
         let prospective_split_node_id = expected_next_id;
-        let a = node_index.get(&a_id).ok_or(RoadSplitError::IneligibleRoad)?;
-        let b = node_index.get(&b_id).ok_or(RoadSplitError::IneligibleRoad)?;
+        let a = node_index
+            .get(&a_id)
+            .ok_or(RoadSplitError::IneligibleRoad)?;
+        let b = node_index
+            .get(&b_id)
+            .ok_or(RoadSplitError::IneligibleRoad)?;
         let dx = b.x - a.x;
         let dz = b.z - a.z;
         let length = dx.hypot(dz);
@@ -136,7 +140,8 @@ impl Engine {
             .iter()
             .filter(|road| road.id != host_road_id)
             .any(|road| {
-                let (Some(from), Some(to)) = (node_index.get(&road.from), node_index.get(&road.to)) else {
+                let (Some(from), Some(to)) = (node_index.get(&road.from), node_index.get(&road.to))
+                else {
                     return true;
                 };
                 point_segment_distance(split_x, split_z, from.x, from.z, to.x, to.z) < 0.5
@@ -159,7 +164,8 @@ impl Engine {
             if !frontage.along.is_finite() || !(0.0..=1.0).contains(&frontage.along) {
                 return Err(RoadSplitError::UnsafeFrontage);
             }
-            let parcel = parcel_index.get(&frontage.parcel_id)
+            let parcel = parcel_index
+                .get(&frontage.parcel_id)
                 .ok_or(RoadSplitError::UnsafeFrontage)?;
             let (new_half, along) = if frontage.along < t {
                 (false, frontage.along / t)

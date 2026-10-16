@@ -301,18 +301,55 @@ impl Route {
 }
 
 impl Engine {
-    pub(crate) fn append_expressway_movement_rows(&self, out: &mut Vec<crate::movement_support::Row>, include_support: bool) {
-        let Some(runtime) = self.plan.as_ref() else { return };
+    pub(crate) fn append_expressway_movement_rows(
+        &self,
+        out: &mut Vec<crate::movement_support::Row>,
+        include_support: bool,
+    ) {
+        let Some(runtime) = self.plan.as_ref() else {
+            return;
+        };
         for trip in &self.state.expressway_traffic.trips {
-            let Some(route) = runtime.expressway_network.routes.get(trip.route_index) else { continue };
-            let Some((point, heading, height)) = route.sample(trip.progress, trip.direction, trip.lane) else { continue };
-            let road_ids = if include_support { self.state.masterplan.as_ref().map(|progress| route.segments.iter()
-                .filter_map(|segment| progress.road_ids.get(segment.road_index).copied())
-                .collect::<Vec<_>>()).unwrap_or_default() } else { Vec::new() };
-            let resolved = include_support && road_ids.len() == route.segments.len() && road_ids.iter().all(|id| *id != 0)
+            let Some(route) = runtime.expressway_network.routes.get(trip.route_index) else {
+                continue;
+            };
+            let Some((point, heading, height)) =
+                route.sample(trip.progress, trip.direction, trip.lane)
+            else {
+                continue;
+            };
+            let road_ids = if include_support {
+                self.state
+                    .masterplan
+                    .as_ref()
+                    .map(|progress| {
+                        route
+                            .segments
+                            .iter()
+                            .filter_map(|segment| {
+                                progress.road_ids.get(segment.road_index).copied()
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            let resolved = include_support
+                && road_ids.len() == route.segments.len()
+                && road_ids.iter().all(|id| *id != 0)
                 && route_is_open(self, route);
-            out.push(crate::movement_support::Row { actor_id: trip.id, x: point.x, z: point.z, heading, kind: 1, surface_y: height,
-                resolved, road_ids: if resolved { road_ids } else { Vec::new() }, platform_node_ids: Vec::new() });
+            out.push(crate::movement_support::Row {
+                actor_id: trip.id,
+                x: point.x,
+                z: point.z,
+                heading,
+                kind: 1,
+                surface_y: height,
+                resolved,
+                road_ids: if resolved { road_ids } else { Vec::new() },
+                platform_node_ids: Vec::new(),
+            });
         }
     }
 
@@ -338,13 +375,10 @@ impl Engine {
                 }
             }
             state.trips.retain(|trip| {
-                network
-                    .routes
-                    .get(trip.route_index)
-                    .is_some_and(|route| {
-                        route_active.get(trip.route_index).copied().unwrap_or(false)
-                            && trip.progress < route.length
-                    })
+                network.routes.get(trip.route_index).is_some_and(|route| {
+                    route_active.get(trip.route_index).copied().unwrap_or(false)
+                        && trip.progress < route.length
+                })
             });
         }
         if self.state.tick < self.state.expressway_traffic.next_departure_tick {
@@ -356,7 +390,8 @@ impl Engine {
         } else {
             NIGHT_DEPARTURE_INTERVAL_TICKS
         };
-        self.state.expressway_traffic.next_departure_tick = self.state.tick.saturating_add(interval);
+        self.state.expressway_traffic.next_departure_tick =
+            self.state.tick.saturating_add(interval);
         if self.state.expressway_traffic.trips.len() >= MAX_EXPRESSWAY_TRIPS {
             return;
         }
@@ -371,7 +406,9 @@ impl Engine {
         let route_index = (0..route_count)
             .map(|offset| (sequence as usize + offset) % route_count)
             .find(|&index| route_active.get(index).copied().unwrap_or(false));
-        let Some(route_index) = route_index else { return; };
+        let Some(route_index) = route_index else {
+            return;
+        };
         let direction = if (sequence / route_count as u32) % 2 == 0 {
             1
         } else {
@@ -439,8 +476,7 @@ impl Engine {
             let route = network
                 .and_then(|n| n.routes.get(trip.route_index))
                 .ok_or("expressway trip route is invalid")?;
-            if trip.progress < 0.0 || trip.progress >= route.length || !route_is_open(self, route)
-            {
+            if trip.progress < 0.0 || trip.progress >= route.length || !route_is_open(self, route) {
                 return Err("expressway trip is outside an open connected route".into());
             }
             if self.state.nodes.iter().any(|actor| actor.id == trip.id)
@@ -458,7 +494,10 @@ impl Engine {
         }
         if traffic.next_departure_tick == 0
             || traffic.next_departure_tick
-                > self.state.tick.saturating_add(NIGHT_DEPARTURE_INTERVAL_TICKS)
+                > self
+                    .state
+                    .tick
+                    .saturating_add(NIGHT_DEPARTURE_INTERVAL_TICKS)
         {
             return Err("invalid expressway departure deadline".into());
         }
@@ -479,8 +518,16 @@ impl Engine {
             .routes
             .get(trip.route_index)?;
         let masterplan = self.state.masterplan.as_ref()?;
-        let from_index = if trip.direction > 0 { route.from_node } else { route.to_node };
-        let to_index = if trip.direction > 0 { route.to_node } else { route.from_node };
+        let from_index = if trip.direction > 0 {
+            route.from_node
+        } else {
+            route.to_node
+        };
+        let to_index = if trip.direction > 0 {
+            route.to_node
+        } else {
+            route.from_node
+        };
         let origin = *masterplan.node_ids.get(from_index)?;
         let destination = *masterplan.node_ids.get(to_index)?;
         Some(serde_json::json!({
@@ -552,14 +599,30 @@ mod tests {
                 let road_plan = plan.roads[segment.road_index];
                 let mapping = &engine.state.masterplan.as_ref().unwrap().node_ids;
                 let (from, to) = (mapping[road_plan.a], mapping[road_plan.b]);
-                let id = engine.add_road(from, to, "expressway", if open { "open" } else { "construction" }, if open { 1.0 } else { 0.2 });
+                let id = engine.add_road(
+                    from,
+                    to,
+                    "expressway",
+                    if open { "open" } else { "construction" },
+                    if open { 1.0 } else { 0.2 },
+                );
                 engine.state.masterplan.as_mut().unwrap().road_ids[segment.road_index] = id;
-            } else if let Some(road) = engine.state.roads.iter_mut().find(|road| road.id == road_id) {
+            } else if let Some(road) = engine
+                .state
+                .roads
+                .iter_mut()
+                .find(|road| road.id == road_id)
+            {
                 road.stage = if open { "open" } else { "construction" }.into();
                 road.progress = if open { 1.0 } else { 0.2 };
             }
             let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
-            if let Some(road) = engine.state.roads.iter_mut().find(|road| road.id == road_id) {
+            if let Some(road) = engine
+                .state
+                .roads
+                .iter_mut()
+                .find(|road| road.id == road_id)
+            {
                 road.connected = open;
             }
         }
@@ -581,7 +644,10 @@ mod tests {
             }
             engine.step(80);
         }
-        assert!(!engine.state.expressway_traffic.trips.is_empty(), "seed 3 did not dispatch expressway traffic within 60,000 ticks");
+        assert!(
+            !engine.state.expressway_traffic.trips.is_empty(),
+            "seed 3 did not dispatch expressway traffic within 60,000 ticks"
+        );
         engine
     }
 
@@ -608,12 +674,17 @@ mod tests {
             assert!(forward.0.x.is_finite() && forward.0.z.is_finite() && forward.1.is_finite());
             assert!(forward.2 > 0.0);
             let lane_gap = (forward.0.x - reverse.0.x).hypot(forward.0.z - reverse.0.z);
-            assert!((lane_gap - crate::expressway_profile::active().lane_centers[0] * 2.0).abs() < 0.02);
+            assert!(
+                (lane_gap - crate::expressway_profile::active().lane_centers[0] * 2.0).abs() < 0.02
+            );
             let middle = route.length * 0.5;
-            let middle_segment = route.segments.iter()
+            let middle_segment = route
+                .segments
+                .iter()
                 .find(|segment| middle <= segment.start_distance + segment.length)
                 .unwrap();
-            let (center_point, tangent, _) = middle_segment.sample(middle - middle_segment.start_distance);
+            let (center_point, tangent, _) =
+                middle_segment.sample(middle - middle_segment.start_distance);
             let forward_cross = tangent.x * (forward.0.z - center_point.z)
                 - tangent.z * (forward.0.x - center_point.x);
             let reverse_cross = tangent.x * (reverse.0.z - center_point.z)
@@ -640,8 +711,20 @@ mod tests {
         set_route_open(&mut engine, 0, false);
         let one_road = route.segments[0].road_index;
         let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[one_road];
-        engine.state.roads.iter_mut().find(|r| r.id == road_id).unwrap().stage = "open".into();
-        engine.state.roads.iter_mut().find(|r| r.id == road_id).unwrap().connected = true;
+        engine
+            .state
+            .roads
+            .iter_mut()
+            .find(|r| r.id == road_id)
+            .unwrap()
+            .stage = "open".into();
+        engine
+            .state
+            .roads
+            .iter_mut()
+            .find(|r| r.id == road_id)
+            .unwrap()
+            .connected = true;
         engine.state.tick = engine.state.expressway_traffic.next_departure_tick;
         engine.advance_expressway_traffic();
         assert!(engine.state.expressway_traffic.trips.is_empty());
@@ -662,26 +745,52 @@ mod tests {
         for index in 0..MAX_EXPRESSWAY_TRIPS {
             let id = full.id();
             full.state.expressway_traffic.trips.push(Trip {
-                id, route_index, direction: if index % 2 == 0 { 1 } else { -1 },
-                lane: ((index / 2) % 2) as u8, progress: 100.0,
+                id,
+                route_index,
+                direction: if index % 2 == 0 { 1 } else { -1 },
+                lane: ((index / 2) % 2) as u8,
+                progress: 100.0,
             });
         }
         let deadline = full.state.expressway_traffic.next_departure_tick;
         full.state.tick = deadline;
         full.advance_expressway_traffic();
-        assert_eq!(full.state.expressway_traffic.trips.len(), MAX_EXPRESSWAY_TRIPS);
+        assert_eq!(
+            full.state.expressway_traffic.trips.len(),
+            MAX_EXPRESSWAY_TRIPS
+        );
         assert!(full.state.expressway_traffic.next_departure_tick > full.state.tick);
     }
 
     #[test]
     fn regional_chain_readiness_does_not_use_ground_connectivity() {
         let (mut disconnected_ground, _) = ready_engine();
-        let route = disconnected_ground.plan.as_ref().unwrap().expressway_network.routes[0].clone();
+        let route = disconnected_ground
+            .plan
+            .as_ref()
+            .unwrap()
+            .expressway_network
+            .routes[0]
+            .clone();
         for segment in &route.segments {
-            let road_id = disconnected_ground.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
-            disconnected_ground.state.roads.iter_mut().find(|road| road.id == road_id).unwrap().connected = false;
+            let road_id = disconnected_ground
+                .state
+                .masterplan
+                .as_ref()
+                .unwrap()
+                .road_ids[segment.road_index];
+            disconnected_ground
+                .state
+                .roads
+                .iter_mut()
+                .find(|road| road.id == road_id)
+                .unwrap()
+                .connected = false;
         }
-        disconnected_ground.state.tick = disconnected_ground.state.expressway_traffic.next_departure_tick;
+        disconnected_ground.state.tick = disconnected_ground
+            .state
+            .expressway_traffic
+            .next_departure_tick;
         disconnected_ground.advance_expressway_traffic();
         assert_eq!(disconnected_ground.state.expressway_traffic.trips.len(), 1);
 
@@ -694,17 +803,41 @@ mod tests {
 
         let (mut wrong_endpoints, _) = ready_engine();
         let segment = &route.segments[route.segments.len() / 2];
-        let road_id = wrong_endpoints.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
-        let other_node = wrong_endpoints.state.nodes.iter().find(|node| node.id != wrong_endpoints.state.masterplan.as_ref().unwrap().node_ids[segment.from_node]).unwrap().id;
-        wrong_endpoints.state.roads.iter_mut().find(|road| road.id == road_id).unwrap().from = other_node;
+        let road_id =
+            wrong_endpoints.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
+        let other_node = wrong_endpoints
+            .state
+            .nodes
+            .iter()
+            .find(|node| {
+                node.id
+                    != wrong_endpoints.state.masterplan.as_ref().unwrap().node_ids
+                        [segment.from_node]
+            })
+            .unwrap()
+            .id;
+        wrong_endpoints
+            .state
+            .roads
+            .iter_mut()
+            .find(|road| road.id == road_id)
+            .unwrap()
+            .from = other_node;
         wrong_endpoints.state.tick = wrong_endpoints.state.expressway_traffic.next_departure_tick;
         wrong_endpoints.advance_expressway_traffic();
         assert!(wrong_endpoints.state.expressway_traffic.trips.is_empty());
 
         let (mut missing_middle, _) = ready_engine();
         let segment = &route.segments[route.segments.len() / 2];
-        let road_id = missing_middle.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
-        missing_middle.state.roads.iter_mut().find(|road| road.id == road_id).unwrap().stage = "construction".into();
+        let road_id =
+            missing_middle.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
+        missing_middle
+            .state
+            .roads
+            .iter_mut()
+            .find(|road| road.id == road_id)
+            .unwrap()
+            .stage = "construction".into();
         missing_middle.state.tick = missing_middle.state.expressway_traffic.next_departure_tick;
         missing_middle.advance_expressway_traffic();
         assert!(missing_middle.state.expressway_traffic.trips.is_empty());
@@ -716,7 +849,11 @@ mod tests {
         let route = engine.plan.as_ref().unwrap().expressway_network.routes[route_index].clone();
         let id = engine.id();
         engine.state.expressway_traffic.trips.push(Trip {
-            id, route_index, direction: 1, lane: 0, progress: route.length - 0.5,
+            id,
+            route_index,
+            direction: 1,
+            lane: 0,
+            progress: route.length - 0.5,
         });
         engine.state.expressway_traffic.next_departure_tick = u64::MAX;
         engine.advance_expressway_traffic();
@@ -726,7 +863,9 @@ mod tests {
         let reverse = route.sample(route.length * 0.5, -1, 0).unwrap();
         assert!((forward.2 - reverse.2).abs() < f32::EPSILON);
         let lane_gap = (forward.0.x - reverse.0.x).hypot(forward.0.z - reverse.0.z);
-        assert!((lane_gap - crate::expressway_profile::active().lane_centers[0] * 2.0).abs() < 0.02);
+        assert!(
+            (lane_gap - crate::expressway_profile::active().lane_centers[0] * 2.0).abs() < 0.02
+        );
     }
 
     #[test]
@@ -739,15 +878,24 @@ mod tests {
         let mut opposing = live.state.expressway_traffic.trips[0].clone();
         opposing.id = live.id();
         opposing.direction = -opposing.direction;
-        let route_length = live.plan.as_ref().unwrap().expressway_network.routes[opposing.route_index].length;
+        let route_length =
+            live.plan.as_ref().unwrap().expressway_network.routes[opposing.route_index].length;
         opposing.progress = route_length - opposing.progress;
         live.state.expressway_traffic.trips.push(opposing);
         let movement = live.movement_buffer();
         assert_eq!(movement.len() % 6, 0);
         let first = live.state.expressway_traffic.trips[0].id as f32;
         let second = live.state.expressway_traffic.trips[1].id as f32;
-        let first_offset = movement.chunks_exact(6).position(|entry| entry[0] == first).unwrap() * 6;
-        let second_offset = movement.chunks_exact(6).position(|entry| entry[0] == second).unwrap() * 6;
+        let first_offset = movement
+            .chunks_exact(6)
+            .position(|entry| entry[0] == first)
+            .unwrap()
+            * 6;
+        let second_offset = movement
+            .chunks_exact(6)
+            .position(|entry| entry[0] == second)
+            .unwrap()
+            * 6;
         assert!((movement[first_offset + 5] - movement[second_offset + 5]).abs() < f32::EPSILON);
         let spacing = (movement[first_offset + 1] - movement[second_offset + 1])
             .hypot(movement[first_offset + 2] - movement[second_offset + 2]);
@@ -787,7 +935,8 @@ mod tests {
 
         let trip = &engine.state.expressway_traffic.trips[0];
         let route = &engine.plan.as_ref().unwrap().expressway_network.routes[trip.route_index];
-        let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[route.segments[0].road_index];
+        let road_id =
+            engine.state.masterplan.as_ref().unwrap().road_ids[route.segments[0].road_index];
         let mut closed_road = baseline;
         for road in closed_road["roads"].as_array_mut().unwrap() {
             if road["id"] == serde_json::json!(road_id) {

@@ -1,5 +1,5 @@
-use crate::*;
 use crate::geometry::{distance_coords, point_segment_distance, OrientedRect};
+use crate::*;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -37,14 +37,21 @@ fn rle_cells(region: &serde_json::Value) -> BTreeSet<(i32, i32)> {
 }
 
 fn cell_for(point: WorldPoint) -> (i32, i32) {
-    ((point.x / 2.0).floor() as i32, (point.z / 2.0).floor() as i32)
+    (
+        (point.x / 2.0).floor() as i32,
+        (point.z / 2.0).floor() as i32,
+    )
 }
 
 fn segment_hits_mask(start: WorldPoint, end: WorldPoint, cells: &BTreeSet<(i32, i32)>) -> bool {
     let length = distance_coords(start.x, start.z, end.x, end.z);
     let samples = (length * 2.0).ceil() as usize;
     (0..=samples).any(|index| {
-        let t = if samples == 0 { 0.0 } else { index as f32 / samples as f32 };
+        let t = if samples == 0 {
+            0.0
+        } else {
+            index as f32 / samples as f32
+        };
         cells.contains(&cell_for(WorldPoint {
             x: start.x + (end.x - start.x) * t,
             z: start.z + (end.z - start.z) * t,
@@ -76,7 +83,14 @@ fn evaluate_exact_candidate(
     side: i8,
     length: f32,
     context: &CollisionContext,
-) -> (Reject, Option<(WorldPoint, WorldPoint, Vec<interior_access::InteriorAccessLot>)>) {
+) -> (
+    Reject,
+    Option<(
+        WorldPoint,
+        WorldPoint,
+        Vec<interior_access::InteriorAccessLot>,
+    )>,
+) {
     let (Some(host_a), Some(host_b)) = (engine.node(host.from), engine.node(host.to)) else {
         return (Reject::HostMargin, None);
     };
@@ -111,9 +125,8 @@ fn evaluate_exact_candidate(
     if corridor_crosses_protected(start.x, start.z, end.x, end.z) {
         return (Reject::Protected, None);
     }
-    if !engine.road_corridor_clear_of_parcels_with_context(
-        start.x, start.z, end.x, end.z, context,
-    ) {
+    if !engine.road_corridor_clear_of_parcels_with_context(start.x, start.z, end.x, end.z, context)
+    {
         return (Reject::ParcelCorridor, None);
     }
     let split_x = start.x;
@@ -156,9 +169,8 @@ fn evaluate_exact_candidate(
             let (Some(a), Some(b)) = (engine.node(road.from), engine.node(road.to)) else {
                 return false;
             };
-            geometry::segments_distance_coords(
-                start.x, start.z, end.x, end.z, a.x, a.z, b.x, b.z,
-            ) >= 8.0
+            geometry::segments_distance_coords(start.x, start.z, end.x, end.z, a.x, a.z, b.x, b.z)
+                >= 8.0
         });
     let projects_clear = engine
         .state
@@ -172,9 +184,8 @@ fn evaluate_exact_candidate(
             let (Some(a), Some(b)) = (engine.node(from), engine.node(to)) else {
                 return false;
             };
-            geometry::segments_distance_coords(
-                start.x, start.z, end.x, end.z, a.x, a.z, b.x, b.z,
-            ) >= 8.0
+            geometry::segments_distance_coords(start.x, start.z, end.x, end.z, a.x, a.z, b.x, b.z)
+                >= 8.0
         });
     if !road_clear || !projects_clear {
         return (Reject::ExistingRoadOrProject, None);
@@ -233,7 +244,12 @@ fn evaluate_exact_candidate(
         return (Reject::TooFewLots, Some((start, end, lots)));
     }
     if engine.state.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
-        || engine.state.parcel_frontages.len().saturating_add(lots.len()) > MAX_PARCELS
+        || engine
+            .state
+            .parcel_frontages
+            .len()
+            .saturating_add(lots.len())
+            > MAX_PARCELS
     {
         return (Reject::Capacity, Some((start, end, lots)));
     }
@@ -243,31 +259,40 @@ fn evaluate_exact_candidate(
 #[test]
 #[ignore = "bounded exact proposal scan for mature browser-review save"]
 fn diagnose_access_proposals_for_mature_browser_voids() {
-    let source = include_str!("../../tests/fixtures/access-joins/spine-experiment-browser-review-save.json");
+    let source =
+        include_str!("../../tests/fixtures/access-joins/spine-experiment-browser-review-save.json");
     let mut engine = Engine::restore_json(source).expect("mature browser save restores");
     let start_save = engine.save_json();
     let initial_cursor = engine.state.interior_access_cursor;
     let initial_id = engine.state.next_id;
-    let audit: serde_json::Value = serde_json::from_str(include_str!(
-        "../../validation/density-void-audit.json"
-    ))
-    .expect("UI void mask audit");
+    let audit: serde_json::Value =
+        serde_json::from_str(include_str!("../../validation/density-void-audit.json"))
+            .expect("UI void mask audit");
     let regions = audit["top3VoidComponents"].as_array().unwrap();
     let samples = [
         VoidSample {
             label: "east-south",
             bbox: [91.0, 297.0, -351.0, -103.0],
-            point: WorldPoint { x: 175.0, z: -223.0 },
+            point: WorldPoint {
+                x: 175.0,
+                z: -223.0,
+            },
         },
         VoidSample {
             label: "west-north",
             bbox: [-369.0, -249.0, 133.0, 305.0],
-            point: WorldPoint { x: -314.85, z: 201.27 },
+            point: WorldPoint {
+                x: -314.85,
+                z: 201.27,
+            },
         },
         VoidSample {
             label: "west-center",
             bbox: [-323.0, -187.0, -35.0, 43.0],
-            point: WorldPoint { x: -253.33, z: 4.54 },
+            point: WorldPoint {
+                x: -253.33,
+                z: 4.54,
+            },
         },
     ];
 
@@ -297,7 +322,9 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
         proposals.extend(scan.proposals);
         cursor = scan.next_cursor;
         calls += 1;
-        if cursor == start_cursor || calls > candidate_count.div_ceil(interior_access::MAX_PROPOSALS_PER_EVALUATION) + 1 {
+        if cursor == start_cursor
+            || calls > candidate_count.div_ceil(interior_access::MAX_PROPOSALS_PER_EVALUATION) + 1
+        {
             break;
         }
     }
@@ -308,16 +335,13 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     let mut fixed_rejections = BTreeMap::<String, usize>::new();
     let mut fixed_accepted = Vec::new();
     for host in engine.state.roads.iter().filter(|road| {
-        road.stage == "open"
-            && road.connected
-            && matches!(road.kind.as_str(), "local" | "arterial")
+        road.stage == "open" && road.connected && matches!(road.kind.as_str(), "local" | "arterial")
     }) {
         for fraction in interior_access::FRACTIONS {
             for side in interior_access::SIDES {
                 for length in interior_access::LENGTHS {
-                    let (reason, candidate) = evaluate_exact_candidate(
-                        &engine, host, fraction, side, length, &context,
-                    );
+                    let (reason, candidate) =
+                        evaluate_exact_candidate(&engine, host, fraction, side, length, &context);
                     *fixed_rejections.entry(format!("{reason:?}")).or_default() += 1;
                     if let Some((start, end, lots)) = candidate {
                         if reason == Reject::Accepted {
@@ -364,15 +388,20 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
                         let dz = b.z - a.z;
                         let nx = -dz / host_length * side as f32;
                         let nz = dx / host_length * side as f32;
-                        let start = WorldPoint { x: a.x + dx * t, z: a.z + dz * t };
-                        let end = WorldPoint { x: start.x + nx * length, z: start.z + nz * length };
+                        let start = WorldPoint {
+                            x: a.x + dx * t,
+                            z: a.z + dz * t,
+                        };
+                        let end = WorldPoint {
+                            x: start.x + nx * length,
+                            z: start.z + nz * length,
+                        };
                         if !segment_hits_mask(start, end, &mask) {
                             continue;
                         }
                         targeted += 1;
-                        let (reason, candidate) = evaluate_exact_candidate(
-                            &engine, host, t, side, length, &context,
-                        );
+                        let (reason, candidate) =
+                            evaluate_exact_candidate(&engine, host, t, side, length, &context);
                         *counts.entry(format!("{reason:?}")).or_default() += 1;
                         if reason != Reject::Accepted {
                             rejected_examples.push((
@@ -446,17 +475,26 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
                     x: a.x + (b.x - a.x) * proposal.host_t,
                     z: a.z + (b.z - a.z) * proposal.host_t,
                 };
-                let end = WorldPoint { x: proposal.end_x, z: proposal.end_z };
+                let end = WorldPoint {
+                    x: proposal.end_x,
+                    z: proposal.end_z,
+                };
                 let corridor_distance = point_segment_distance(
-                    region.point.x, region.point.z, start.x, start.z, end.x, end.z,
+                    region.point.x,
+                    region.point.z,
+                    start.x,
+                    start.z,
+                    end.x,
+                    end.z,
                 );
                 let closest_lot = proposal
                     .selected_lots
                     .iter()
                     .map(|lot| WorldPoint { x: lot.x, z: lot.z })
                     .min_by(|left, right| {
-                        distance_coords(left.x, left.z, region.point.x, region.point.z)
-                            .total_cmp(&distance_coords(right.x, right.z, region.point.x, region.point.z))
+                        distance_coords(left.x, left.z, region.point.x, region.point.z).total_cmp(
+                            &distance_coords(right.x, right.z, region.point.x, region.point.z),
+                        )
                     });
                 let nearest_lot_distance = closest_lot.map_or(f32::INFINITY, |lot| {
                     distance_coords(lot.x, lot.z, region.point.x, region.point.z)
@@ -494,32 +532,53 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
             left["nearest_lot_distance_to_sample_m"]
                 .as_f64()
                 .unwrap_or(f64::INFINITY)
-                .total_cmp(&right["nearest_lot_distance_to_sample_m"].as_f64().unwrap_or(f64::INFINITY))
+                .total_cmp(
+                    &right["nearest_lot_distance_to_sample_m"]
+                        .as_f64()
+                        .unwrap_or(f64::INFINITY),
+                )
         });
         let bbox_proposals = proposals
             .iter()
             .filter(|proposal| {
-                proposal.selected_lots.iter().any(|lot| {
-                    inside_bbox(WorldPoint { x: lot.x, z: lot.z }, region.bbox)
-                })
+                proposal
+                    .selected_lots
+                    .iter()
+                    .any(|lot| inside_bbox(WorldPoint { x: lot.x, z: lot.z }, region.bbox))
             })
             .count();
         let masked_lot_proposals = proposals
             .iter()
             .filter(|proposal| {
-                proposal.selected_lots.iter().any(|lot| {
-                    mask.contains(&cell_for(WorldPoint { x: lot.x, z: lot.z }))
-                })
+                proposal
+                    .selected_lots
+                    .iter()
+                    .any(|lot| mask.contains(&cell_for(WorldPoint { x: lot.x, z: lot.z })))
             })
             .count();
         let corridor_near_sample = proposals
             .iter()
             .filter(|proposal| {
-                let road = engine.state.roads.iter().find(|road| road.id == proposal.host_id).unwrap();
+                let road = engine
+                    .state
+                    .roads
+                    .iter()
+                    .find(|road| road.id == proposal.host_id)
+                    .unwrap();
                 let a = engine.node(road.from).unwrap();
                 let b = engine.node(road.to).unwrap();
-                let start = WorldPoint { x: a.x + (b.x - a.x) * proposal.host_t, z: a.z + (b.z - a.z) * proposal.host_t };
-                point_segment_distance(region.point.x, region.point.z, start.x, start.z, proposal.end_x, proposal.end_z) <= 20.0
+                let start = WorldPoint {
+                    x: a.x + (b.x - a.x) * proposal.host_t,
+                    z: a.z + (b.z - a.z) * proposal.host_t,
+                };
+                point_segment_distance(
+                    region.point.x,
+                    region.point.z,
+                    start.x,
+                    start.z,
+                    proposal.end_x,
+                    proposal.end_z,
+                ) <= 20.0
             })
             .count();
         region_reports.push(json!({
@@ -537,16 +596,22 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     let best = proposals
         .iter()
         .max_by(|a, b| a.score.compare(b.score))
-        .map(|p| json!({
-            "host_id": p.host_id,
-            "host_t": p.host_t,
-            "length_m": p.score.road_length_mm as f32 / 1000.0,
-            "lot_count": p.selected_lots.len(),
-            "area_m2": p.score.site_area as f32 / 10_000.0,
-            "score": [p.score.site_area, p.score.road_length_mm]
-        }));
+        .map(|p| {
+            json!({
+                "host_id": p.host_id,
+                "host_t": p.host_t,
+                "length_m": p.score.road_length_mm as f32 / 1000.0,
+                "lot_count": p.selected_lots.len(),
+                "area_m2": p.score.site_area as f32 / 10_000.0,
+                "score": [p.score.site_area, p.score.road_length_mm]
+            })
+        });
     engine.state.interior_access_cursor = initial_cursor;
-    assert_eq!(engine.save_json(), start_save, "read-only proposal scan changed world state");
+    assert_eq!(
+        engine.save_json(),
+        start_save,
+        "read-only proposal scan changed world state"
+    );
     let report = json!({
         "input": "validation/spine-experiment-browser-review-save.json",
         "tick": engine.state.tick,

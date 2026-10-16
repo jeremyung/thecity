@@ -395,7 +395,10 @@ impl Engine {
         self.record(
             "NeighborhoodSpineOpened",
             spine_road_id,
-            format!("A shared neighborhood spine opens with {} connected frontage sites", layout.lots.len()),
+            format!(
+                "A shared neighborhood spine opens with {} connected frontage sites",
+                layout.lots.len()
+            ),
         );
         true
     }

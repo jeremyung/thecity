@@ -297,12 +297,10 @@ impl DiscoveryJob {
                 valid_selected_identity(checkpoint.selected_face_identity.as_deref())
                     && checkpoint.selected_face_identity.is_some()
             }
-            StageCheckpoint::Done(_) | StageCheckpoint::Failed(_) => {
-                checkpoint
-                    .selected_face_identity
-                    .as_deref()
-                    .is_none_or(|identity| valid_selected_identity(Some(identity)))
-            }
+            StageCheckpoint::Done(_) | StageCheckpoint::Failed(_) => checkpoint
+                .selected_face_identity
+                .as_deref()
+                .is_none_or(|identity| valid_selected_identity(Some(identity))),
             _ => checkpoint.selected_face_identity.is_none(),
         };
         if !selected_matches_stage {
@@ -1031,10 +1029,9 @@ fn validate_excluded_faces(faces: &[Vec<u32>]) -> Result<(), DiscoveryError> {
         || faces
             .iter()
             .any(|identity| identity.len() < 3 || identity.len() > MAX_FACE_IDENTITY_LEN)
-        || faces
-            .iter()
-            .fold(0usize, |total, identity| total.saturating_add(identity.len()))
-            > MAX_EXCLUDED_FACE_IDS
+        || faces.iter().fold(0usize, |total, identity| {
+            total.saturating_add(identity.len())
+        }) > MAX_EXCLUDED_FACE_IDS
     {
         return Err(DiscoveryError::InputTooLarge);
     }
@@ -1049,9 +1046,7 @@ fn validate_selected_identity(identity: Option<&[u32]>) -> Result<(), DiscoveryE
 }
 
 fn valid_selected_identity(identity: Option<&[u32]>) -> bool {
-    identity.is_some_and(|identity| {
-        (3..=MAX_FACE_IDENTITY_LEN).contains(&identity.len())
-    })
+    identity.is_some_and(|identity| (3..=MAX_FACE_IDENTITY_LEN).contains(&identity.len()))
 }
 
 fn valid_graph(nodes: &[RoadFaceNode], edges: &[RoadFaceEdge]) -> bool {
@@ -1568,8 +1563,7 @@ mod tests {
         let restored = DiscoveryJob::restore(serde_json::from_slice(&bytes).unwrap()).unwrap();
         assert_eq!(restored.selected_face_identity(), Some(&[1, 2, 3, 4][..]));
 
-        let excluded =
-            DiscoveryJob::new_excluding(input(true), vec![vec![1, 2, 3, 4]]).unwrap();
+        let excluded = DiscoveryJob::new_excluding(input(true), vec![vec![1, 2, 3, 4]]).unwrap();
         let mut excluded = excluded;
         for _ in 0..100_000 {
             let step = excluded.advance(16);
@@ -1584,11 +1578,8 @@ mod tests {
     #[test]
     fn exclusions_are_capped_at_construction_and_restore() {
         assert_eq!(
-            DiscoveryJob::new_excluding(
-                input(false),
-                vec![vec![1; MAX_FACE_IDENTITY_LEN + 1]],
-            )
-            .err(),
+            DiscoveryJob::new_excluding(input(false), vec![vec![1; MAX_FACE_IDENTITY_LEN + 1]],)
+                .err(),
             Some(DiscoveryError::InputTooLarge)
         );
         let mut checkpoint = DiscoveryJob::new(input(false)).unwrap().checkpoint();
@@ -1667,9 +1658,14 @@ mod tests {
                 0 => invalid.graph_edges[0].to = u32::MAX,
                 1 => invalid.graph_edges.push(invalid.graph_edges[0]),
                 2 => invalid.graph_nodes.push(invalid.graph_nodes[0]),
-                _ => { invalid.all_nodes.pop(); },
+                _ => {
+                    invalid.all_nodes.pop();
+                }
             }
-            assert_eq!(DiscoveryJob::new(invalid).err(), Some(DiscoveryError::InvalidInput));
+            assert_eq!(
+                DiscoveryJob::new(invalid).err(),
+                Some(DiscoveryError::InvalidInput)
+            );
         }
         let mut job = DiscoveryJob::new(input(true)).unwrap();
         for _ in 0..4 {

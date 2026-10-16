@@ -29,25 +29,41 @@ pub(crate) fn sampled(seed: u32) -> [P; SAMPLES] {
 /// paths with reversals or tight hairpins.
 pub(crate) fn bank_alignment(course: &[P], signed_offset: f32) -> Vec<P> {
     assert!(course.len() >= 2);
-    let normals: Vec<P> = course.windows(2).map(|pair| {
-        let dx = pair[1].x - pair[0].x;
-        let dz = pair[1].z - pair[0].z;
-        assert!(dz > 0.0, "river stations must increase");
-        let length = (dx * dx + dz * dz).sqrt();
-        P { x: dz / length, z: -dx / length }
-    }).collect();
-    course.iter().enumerate().map(|(i, p)| {
-        if i == 0 || i == course.len() - 1 {
-            let n = normals[if i == 0 { 0 } else { normals.len() - 1 }];
-            // Offset supporting line evaluated at the original end station.
-            P { x: p.x + signed_offset / n.x, z: p.z }
-        } else {
-            let a = normals[i - 1];
-            let b = normals[i];
-            let scale = signed_offset / (1.0 + a.x * b.x + a.z * b.z);
-            P { x: p.x + (a.x + b.x) * scale, z: p.z + (a.z + b.z) * scale }
-        }
-    }).collect()
+    let normals: Vec<P> = course
+        .windows(2)
+        .map(|pair| {
+            let dx = pair[1].x - pair[0].x;
+            let dz = pair[1].z - pair[0].z;
+            assert!(dz > 0.0, "river stations must increase");
+            let length = (dx * dx + dz * dz).sqrt();
+            P {
+                x: dz / length,
+                z: -dx / length,
+            }
+        })
+        .collect();
+    course
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            if i == 0 || i == course.len() - 1 {
+                let n = normals[if i == 0 { 0 } else { normals.len() - 1 }];
+                // Offset supporting line evaluated at the original end station.
+                P {
+                    x: p.x + signed_offset / n.x,
+                    z: p.z,
+                }
+            } else {
+                let a = normals[i - 1];
+                let b = normals[i];
+                let scale = signed_offset / (1.0 + a.x * b.x + a.z * b.z);
+                P {
+                    x: p.x + (a.x + b.x) * scale,
+                    z: p.z + (a.z + b.z) * scale,
+                }
+            }
+        })
+        .collect()
 }
 
 #[test]
@@ -65,11 +81,13 @@ fn bank_alignment_preserves_perpendicular_clearance() {
                 assert!(edge[1].z > edge[0].z, "bank folds at seed {seed}");
                 for water in river.windows(2) {
                     let distance = crate::segments_distance_coords(
-                        edge[0].x, edge[0].z, edge[1].x, edge[1].z,
-                        water[0].x, water[0].z, water[1].x, water[1].z,
+                        edge[0].x, edge[0].z, edge[1].x, edge[1].z, water[0].x, water[0].z,
+                        water[1].x, water[1].z,
                     );
-                    assert!(distance >= 47.0 - 0.001,
-                        "seed {seed}, offset {offset}: distance {distance}");
+                    assert!(
+                        distance >= 47.0 - 0.001,
+                        "seed {seed}, offset {offset}: distance {distance}"
+                    );
                 }
             }
         }

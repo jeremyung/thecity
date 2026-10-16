@@ -75,9 +75,20 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
     assert_eq!(engine.early_block_reservation_admissions, 1);
     assert_eq!(engine.early_block_reservation_noops, 0);
     let plan = engine.state.neighborhood_plan.as_ref().unwrap();
-    assert_eq!(plan.next_segment, 0, "reservation must not start road work immediately");
-    assert!(engine.state.projects.iter().any(|project| project.kind == "building"));
-    assert!(!engine.state.projects.iter().any(|project| project.kind == "road"));
+    assert_eq!(
+        plan.next_segment, 0,
+        "reservation must not start road work immediately"
+    );
+    assert!(engine
+        .state
+        .projects
+        .iter()
+        .any(|project| project.kind == "building"));
+    assert!(!engine
+        .state
+        .projects
+        .iter()
+        .any(|project| project.kind == "road"));
     engine.validate().unwrap();
 
     // Save at the actual reservation tick. Restoration keeps the pending
@@ -90,9 +101,12 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
     assert_eq!(engine.save_json(), resumed.save_json());
     assert!(engine.early_block_reservation_duration_ticks > 0);
     assert!(engine.state.neighborhood_plan.is_some());
-    assert!(engine.state.buildings.iter().any(|building| {
-        building.parcel_id == existing_building_parcel && building.stage == "open"
-    }), "the pre-existing building project should finish during reservation");
+    assert!(
+        engine.state.buildings.iter().any(|building| {
+            building.parcel_id == existing_building_parcel && building.stage == "open"
+        }),
+        "the pre-existing building project should finish during reservation"
+    );
     engine.validate().unwrap();
 }
 
@@ -108,7 +122,15 @@ fn early_reservation_records_noop_when_existing_plan_guards_reject_candidate() {
     assert_eq!(engine.early_block_reservation_admissions, 0);
     assert_eq!(engine.early_block_reservation_noops, 1);
     assert!(engine.state.neighborhood_plan.is_none());
-    assert_eq!(engine.state.projects.iter().filter(|project| project.kind == "road").count(), 0);
+    assert_eq!(
+        engine
+            .state
+            .projects
+            .iter()
+            .filter(|project| project.kind == "road")
+            .count(),
+        0
+    );
 }
 
 fn run_matched_seeds(seeds: &[u32], report_file: &str) {
@@ -129,19 +151,42 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                 engine.step(2_000);
             }
             assert_eq!(engine.state.tick, 242_000);
-            engine.validate().expect("experiment result preserves invariants");
+            engine
+                .validate()
+                .expect("experiment result preserves invariants");
             assert!(engine.state.nodes.iter().all(|node| {
-                node.x.is_finite() && node.z.is_finite() && (MIN..=MAX).contains(&node.x) && (MIN..=MAX).contains(&node.z)
+                node.x.is_finite()
+                    && node.z.is_finite()
+                    && (MIN..=MAX).contains(&node.x)
+                    && (MIN..=MAX).contains(&node.z)
             }));
             assert!(engine.state.buildings.len() <= MAX_BUILDINGS);
             assert!(engine.state.parcels.len() <= MAX_PARCELS);
             assert!(engine.state.roads.len() + engine.state.projects.len() <= MAX_SEGMENTS);
-            assert!(engine.state.projects.iter().filter(|project| project.progress < 1.0).count() <= MAX_PROJECTS);
+            assert!(
+                engine
+                    .state
+                    .projects
+                    .iter()
+                    .filter(|project| project.progress < 1.0)
+                    .count()
+                    <= MAX_PROJECTS
+            );
             let mut recomputed = Engine::restore_json(&engine.save_json()).unwrap();
             recomputed.recompute_connectivity();
             assert_eq!(
-                engine.state.roads.iter().map(|road| (road.id, road.connected)).collect::<Vec<_>>(),
-                recomputed.state.roads.iter().map(|road| (road.id, road.connected)).collect::<Vec<_>>(),
+                engine
+                    .state
+                    .roads
+                    .iter()
+                    .map(|road| (road.id, road.connected))
+                    .collect::<Vec<_>>(),
+                recomputed
+                    .state
+                    .roads
+                    .iter()
+                    .map(|road| (road.id, road.connected))
+                    .collect::<Vec<_>>(),
                 "saved road connectivity matches the authoritative graph"
             );
 
@@ -200,8 +245,11 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
 
             let tag = format!("seed-{seed}-enabled-{enabled}");
             let save = engine.save_json();
-            std::fs::write(validation_dir.join(format!("early-block-reservation-{tag}-save.json")), &save)
-                .expect("write native save");
+            std::fs::write(
+                validation_dir.join(format!("early-block-reservation-{tag}-save.json")),
+                &save,
+            )
+            .expect("write native save");
             std::fs::write(
                 validation_dir.join(format!("early-block-reservation-{tag}-snapshot.json")),
                 engine.snapshot_json(),
@@ -244,5 +292,8 @@ fn early_block_reservation_matched_seeds() {
 #[test]
 #[ignore = "additional matched seeds for early coordinated-block reservation"]
 fn early_block_reservation_additional_seeds() {
-    run_matched_seeds(&[7, 41, 2026], "early-block-reservation-additional-seeds.json");
+    run_matched_seeds(
+        &[7, 41, 2026],
+        "early-block-reservation-additional-seeds.json",
+    );
 }

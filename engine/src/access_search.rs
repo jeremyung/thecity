@@ -891,7 +891,10 @@ fn validate_checkpoint(cp: &Checkpoint) -> Result<(), SearchError> {
                     return Err(SearchError::InvalidCursor);
                 }
             }
-            if cp.edge_samples.windows(2).any(|pair| (pair[0] - pair[1]).abs() < 1.0)
+            if cp
+                .edge_samples
+                .windows(2)
+                .any(|pair| (pair[0] - pair[1]).abs() < 1.0)
                 || cp.edge_samples.iter().any(|edge| {
                     cp.selected_spans.iter().any(|selected| {
                         let midpoint = (selected.start + selected.end) * 0.5;
@@ -1275,17 +1278,19 @@ mod tests {
             })
             .collect::<Vec<_>>();
         assert_eq!(
-            expected.iter().map(|sample| sample.along_m).collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|sample| sample.along_m)
+                .collect::<Vec<_>>(),
             [29.5, 70.5, 11.0, 46.0]
         );
 
         for quota in [1, 7] {
             let mut search = AccessHostPreparation::new(&face, &[host], &nodes, &[]).unwrap();
             while !search.advance(quota).done {
-                let checkpoint: Checkpoint = serde_json::from_slice(
-                    &serde_json::to_vec(&search.checkpoint()).unwrap(),
-                )
-                .unwrap();
+                let checkpoint: Checkpoint =
+                    serde_json::from_slice(&serde_json::to_vec(&search.checkpoint()).unwrap())
+                        .unwrap();
                 search = AccessHostPreparation::restore(checkpoint).unwrap();
             }
             assert_eq!(search.split_samples().unwrap(), expected.as_slice());
@@ -1320,10 +1325,8 @@ mod tests {
             saw_edge_phase |= search.checkpoint.phase == Phase::SelectEdges;
             saw_terminal_edge_cursor |= search.checkpoint.phase == Phase::SelectEdges
                 && search.checkpoint.edge_span_cursor == search.checkpoint.selected_spans.len();
-            let checkpoint: Checkpoint = serde_json::from_slice(
-                &serde_json::to_vec(&search.checkpoint()).unwrap(),
-            )
-            .unwrap();
+            let checkpoint: Checkpoint =
+                serde_json::from_slice(&serde_json::to_vec(&search.checkpoint()).unwrap()).unwrap();
             search = AccessHostPreparation::restore(checkpoint).unwrap();
         }
         assert!(saw_edge_phase);

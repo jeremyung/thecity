@@ -1058,8 +1058,13 @@ mod tests {
         for old_version in [2, 3] {
             let mut value: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
             value["activity_schema_version"] = serde_json::json!(old_version);
-            let error = Engine::restore_json(&value.to_string()).err().expect("legacy activity saves are rejected");
-            assert!(error.contains("unsupported business activity schema"), "{error}");
+            let error = Engine::restore_json(&value.to_string())
+                .err()
+                .expect("legacy activity saves are rejected");
+            assert!(
+                error.contains("unsupported business activity schema"),
+                "{error}"
+            );
         }
     }
 

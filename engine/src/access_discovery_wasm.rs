@@ -25,14 +25,17 @@ impl AccessDiscovery {
 
     /// Fixed logical work, independent of host timing; hard cap limits one call.
     pub fn advance(&mut self, requested_work: u32) -> String {
-        let step = self.inner.advance((requested_work as usize).min(MAX_ADVANCE_WORK));
+        let step = self
+            .inner
+            .advance((requested_work as usize).min(MAX_ADVANCE_WORK));
         let (count, error) = match self.inner.descriptors() {
             Some(Ok(output)) => (Some(output.len()), None),
             Some(Err(error)) => (None, Some(format!("{error:?}"))),
             None => (None, None),
         };
         serde_json::json!({"work_used":step.work_used,"done":step.done,
-            "descriptor_count":count,"error":error}).to_string()
+            "descriptor_count":count,"error":error})
+        .to_string()
     }
 
     /// Explicit persistence boundary; do not serialize this on every tick.
@@ -51,10 +54,22 @@ impl AccessDiscovery {
     /// Exact Float32 bit tuples make cross-runtime parity independently testable.
     /// Export only at completion; this is a diagnostic boundary, not a tick path.
     pub fn descriptor_bits(&self) -> Result<String, JsValue> {
-        let output = self.inner.descriptors()
+        let output = self
+            .inner
+            .descriptors()
             .ok_or_else(|| JsValue::from_str("discovery is unfinished"))?
             .map_err(|e| JsValue::from_str(&format!("discovery: {e:?}")))?;
-        let bits: Vec<_> = output.iter().map(|c| [c.host_id,c.host_t.to_bits(),c.end_x.to_bits(),c.end_z.to_bits()]).collect();
+        let bits: Vec<_> = output
+            .iter()
+            .map(|c| {
+                [
+                    c.host_id,
+                    c.host_t.to_bits(),
+                    c.end_x.to_bits(),
+                    c.end_z.to_bits(),
+                ]
+            })
+            .collect();
         Ok(serde_json::to_string(&bits).expect("integer descriptor bits"))
     }
 }
@@ -81,15 +96,23 @@ impl AccessProposalWorld {
     pub fn query(&self, candidate_json: &str) -> Result<AccessProposalCheck, JsValue> {
         let candidate = serde_json::from_str(candidate_json)
             .map_err(|e| JsValue::from_str(&format!("candidate JSON: {e}")))?;
-        Ok(AccessProposalCheck { inner: crate::access_proposal_validation::ProposalValidator::new(self.context.clone(), candidate) })
+        Ok(AccessProposalCheck {
+            inner: crate::access_proposal_validation::ProposalValidator::new(
+                self.context.clone(),
+                candidate,
+            ),
+        })
     }
 
     /// A checkpoint is bound to this world's immutable context fingerprint.
     pub fn restore_query(&self, checkpoint_json: &str) -> Result<AccessProposalCheck, JsValue> {
         let checkpoint = serde_json::from_str(checkpoint_json)
             .map_err(|e| JsValue::from_str(&format!("proposal JSON: {e}")))?;
-        let inner = crate::access_proposal_validation::ProposalValidator::restore(checkpoint,self.context.clone())
-            .map_err(|e| JsValue::from_str(&format!("proposal checkpoint: {e:?}")))?;
+        let inner = crate::access_proposal_validation::ProposalValidator::restore(
+            checkpoint,
+            self.context.clone(),
+        )
+        .map_err(|e| JsValue::from_str(&format!("proposal checkpoint: {e:?}")))?;
         Ok(AccessProposalCheck { inner })
     }
 }
@@ -102,7 +125,9 @@ pub struct AccessProposalCheck {
 #[wasm_bindgen]
 impl AccessProposalCheck {
     pub fn advance(&mut self, requested_work: u32) -> String {
-        let step = self.inner.advance((requested_work as usize).min(MAX_ADVANCE_WORK));
+        let step = self
+            .inner
+            .advance((requested_work as usize).min(MAX_ADVANCE_WORK));
         serde_json::json!({"work_used":step.work_used,"done":step.done}).to_string()
     }
 
@@ -114,7 +139,10 @@ impl AccessProposalCheck {
         match self.inner.outcome() {
             None => serde_json::json!({"done":false}),
             Some(Ok(proposal)) => serde_json::json!({"done":true,"proposal":proposal}),
-            Some(Err(reason)) => serde_json::json!({"done":true,"proposal":null,"rejection":format!("{reason:?}")}),
-        }.to_string()
+            Some(Err(reason)) => {
+                serde_json::json!({"done":true,"proposal":null,"rejection":format!("{reason:?}")})
+            }
+        }
+        .to_string()
     }
 }

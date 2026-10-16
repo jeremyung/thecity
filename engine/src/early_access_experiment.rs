@@ -21,7 +21,9 @@ fn early_access_scheduling_matched_seeds() {
                 engine.step(2_000);
             }
             assert_eq!(engine.state.tick, 242_000);
-            engine.validate().expect("experiment result preserves invariants");
+            engine
+                .validate()
+                .expect("experiment result preserves invariants");
 
             let open_buildings: Vec<_> = engine
                 .state
@@ -55,14 +57,9 @@ fn early_access_scheduling_matched_seeds() {
                 .sum();
             let floor_area_proxy_m2: f64 = open_buildings
                 .iter()
-                .map(|building| {
-                    (building.width * building.depth * building.floors as f32) as f64
-                })
+                .map(|building| (building.width * building.depth * building.floors as f32) as f64)
                 .sum();
-            let road_length_m: f64 = ordinary_roads
-                .iter()
-                .map(|road| road.length as f64)
-                .sum();
+            let road_length_m: f64 = ordinary_roads.iter().map(|road| road.length as f64).sum();
             let summary = json!({
                 "seed": seed,
                 "development_rate": 16,
@@ -98,8 +95,11 @@ fn early_access_scheduling_matched_seeds() {
 
             let save = engine.save_json();
             let tag = format!("seed-{seed}-enabled-{enabled}");
-            std::fs::write(validation_dir.join(format!("early-access-{tag}-save.json")), &save)
-                .expect("write native save");
+            std::fs::write(
+                validation_dir.join(format!("early-access-{tag}-save.json")),
+                &save,
+            )
+            .expect("write native save");
             std::fs::write(
                 validation_dir.join(format!("early-access-{tag}-snapshot.json")),
                 engine.snapshot_json(),

@@ -10,7 +10,8 @@ use super::{geometry, site_active, Engine, Road};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-const MATURE_SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+const MATURE_SAVE: &str =
+    include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
 const CROP: [f32; 4] = [50.0, 300.0, -350.0, -100.0];
 const ENDPOINT_CLEARANCE: f32 = 9.0;
 const MAX_STEPS: usize = 8;
@@ -675,7 +676,10 @@ fn compact_frontage_width_comparison_at_crop_host() {
             && project.progress < 1.0
             && project.parcel_id == Some(admitted.id)
     });
-    assert!(construction_started, "admitted narrow parcel starts ordinary construction");
+    assert!(
+        construction_started,
+        "admitted narrow parcel starts ordinary construction"
+    );
     println!(
         "normal admission: parcel={} at ({:.5},{:.5}) size={}x{} host={} along={:.5} side={} access={}; save/resume matches after step(80); building_construction_started_on_witness={construction_started}",
         admitted.id,

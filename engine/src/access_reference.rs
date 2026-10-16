@@ -104,20 +104,36 @@ fn offline_search_matches_frozen_mature_descriptor_sequence() {
 fn export_candidate_descriptor_sequence_for_cross_target_review() {
     let reference = load();
     let search = crate::access_candidates::PreparedAccessSearch::prepare(
-        &reference.face, &reference.hosts, &reference.nodes,
-        &reference.parcels, &reference.targets,
+        &reference.face,
+        &reference.hosts,
+        &reference.nodes,
+        &reference.parcels,
+        &reference.targets,
     );
     let mut cursor = 0;
     let mut bits = Vec::new();
     loop {
         let page = search.page(cursor);
-        bits.extend(page.candidates.iter().map(|c| [c.host_id, c.host_t.to_bits(), c.end_x.to_bits(), c.end_z.to_bits()]));
+        bits.extend(page.candidates.iter().map(|c| {
+            [
+                c.host_id,
+                c.host_t.to_bits(),
+                c.end_x.to_bits(),
+                c.end_z.to_bits(),
+            ]
+        }));
         cursor = page.next_cursor;
-        if page.exhausted { break; }
+        if page.exhausted {
+            break;
+        }
     }
-    let mut stored: serde_json::Value = serde_json::from_str(include_str!("../../validation/access-descriptor-reference.json")).unwrap();
+    let mut stored: serde_json::Value = serde_json::from_str(include_str!(
+        "../../validation/access-descriptor-reference.json"
+    ))
+    .unwrap();
     stored["descriptor_count"] = serde_json::json!(bits.len());
     stored["ordered_descriptor_bits"] = serde_json::json!(bits);
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation/access-descriptor-candidate.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../validation/access-descriptor-candidate.json");
     std::fs::write(path, serde_json::to_string_pretty(&stored).unwrap() + "\n").unwrap();
 }

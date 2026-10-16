@@ -267,12 +267,13 @@ impl FaceSelection {
                 Phase::NextExclusion => {
                     self.state.excluded_index += 1;
                     self.state.excluded_identity_cursor = 0;
-                    self.state.phase = if self.state.excluded_index >= self.excluded_identities.len() {
-                        self.state.excluded_index = 0;
-                        Phase::CopyPolygon
-                    } else {
-                        Phase::CheckExclusions
-                    };
+                    self.state.phase =
+                        if self.state.excluded_index >= self.excluded_identities.len() {
+                            self.state.excluded_index = 0;
+                            Phase::CopyPolygon
+                        } else {
+                            Phase::CheckExclusions
+                        };
                     work_used += 1;
                 }
                 Phase::SkipExcludedFace => {
@@ -589,8 +590,8 @@ fn validate_state(
                 return Err(fail());
             }
             if state.phase == Phase::NextExclusion {
-                let length_mismatch = state.excluded_identity_cursor == common
-                    && candidate.len() != identity.len();
+                let length_mismatch =
+                    state.excluded_identity_cursor == common && candidate.len() != identity.len();
                 if !mismatch && !length_mismatch {
                     return Err(fail());
                 }
@@ -862,20 +863,17 @@ mod tests {
         ];
         let excluded = vec![vec![1, 2, 3, 4], vec![90, 91, 92]];
         let one = run(
-            FaceSelection::new_excluding(faces.clone(), context(false), excluded.clone())
-                .unwrap(),
+            FaceSelection::new_excluding(faces.clone(), context(false), excluded.clone()).unwrap(),
             1,
             true,
         );
         let seven = run(
-            FaceSelection::new_excluding(faces.clone(), context(false), excluded.clone())
-                .unwrap(),
+            FaceSelection::new_excluding(faces.clone(), context(false), excluded.clone()).unwrap(),
             7,
             true,
         );
         let uninterrupted = run(
-            FaceSelection::new_excluding(faces.clone(), context(false), excluded)
-                .unwrap(),
+            FaceSelection::new_excluding(faces.clone(), context(false), excluded).unwrap(),
             7,
             false,
         );
@@ -883,12 +881,7 @@ mod tests {
         assert_eq!(seven, uninterrupted);
 
         assert_eq!(
-            FaceSelection::new_excluding(
-                faces.clone(),
-                context(false),
-                vec![vec![1, 2]],
-            )
-            .err(),
+            FaceSelection::new_excluding(faces.clone(), context(false), vec![vec![1, 2]],).err(),
             Some(SelectionError::InvalidExclusion)
         );
         assert_eq!(
@@ -900,13 +893,10 @@ mod tests {
             .err(),
             Some(SelectionError::InvalidExclusion)
         );
-        let mut checkpoint = FaceSelection::new_excluding(
-            faces,
-            context(false),
-            vec![vec![1, 2, 3]],
-        )
-        .unwrap()
-        .checkpoint();
+        let mut checkpoint =
+            FaceSelection::new_excluding(faces, context(false), vec![vec![1, 2, 3]])
+                .unwrap()
+                .checkpoint();
         checkpoint.excluded_identities[0].clear();
         assert_eq!(
             FaceSelection::restore(checkpoint, context(false)).err(),

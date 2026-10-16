@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 mod neighborhood_demand;
 mod neighborhood_errands;
 
-#[cfg(all(test, feature="parent-passage-candidate"))]
+#[cfg(all(test, feature = "parent-passage-candidate"))]
 mod parent_passage_tests;
 
 #[cfg(test)]
@@ -14,6 +14,7 @@ mod presentation_revision_tests;
 mod access_bend_diagnostic;
 mod access_candidates;
 mod access_capture;
+mod access_connector;
 #[cfg(test)]
 mod access_density_diagnostic;
 #[cfg(test)]
@@ -27,6 +28,9 @@ mod access_discovery_work_diagnostic;
 mod access_live;
 mod access_live_engine;
 mod access_math;
+mod access_path_validation;
+#[cfg(test)]
+mod access_path_validation_tests;
 mod access_planning_job;
 mod access_proposal_capture;
 mod access_proposal_validation;
@@ -47,6 +51,8 @@ mod district_density;
 #[cfg(test)]
 mod district_density_integration_tests;
 mod district_policy;
+mod expressway_profile;
+mod expressway_traffic;
 #[cfg(test)]
 mod face_access_exact_tests;
 mod face_target_containment;
@@ -57,9 +63,6 @@ mod face_target_viability;
 mod frontage;
 mod frontier;
 mod geometry;
-mod river_course;
-mod rail_alignment;
-mod rail_runtime;
 mod height_redevelopment;
 #[cfg(test)]
 mod height_redevelopment_tests;
@@ -67,15 +70,13 @@ mod height_redevelopment_tests;
 mod initial_depth_diagnostic;
 mod interior_access;
 mod masterplan;
-mod access_connector;
 mod masterplan_growth;
-#[cfg(test)]
-mod skyline_allocation_diagnostic;
 #[cfg(test)]
 mod masterplan_replay_tests;
 mod masterplan_validation;
 #[cfg(test)]
 mod mature_planner_trace_tests;
+mod movement_support;
 mod neighborhood_admission;
 mod neighborhood_spine;
 mod network_split;
@@ -83,17 +84,14 @@ mod node_coincidence_index;
 #[cfg(test)]
 mod partial_block_diagnostic;
 mod project_scoring;
+mod rail_alignment;
 mod rail_platform;
+mod rail_runtime;
 #[cfg(test)]
 mod rear_extension_diagnostic;
 mod rear_extensions;
+mod river_course;
 mod road_curve;
-mod expressway_traffic;
-mod expressway_profile;
-mod movement_support;
-mod access_path_validation;
-#[cfg(test)]
-mod access_path_validation_tests;
 mod road_face_bridges;
 mod road_face_preflight;
 mod road_face_topology;
@@ -106,15 +104,17 @@ mod road_split;
 mod road_split_profile;
 #[cfg(test)]
 mod route_equivalence_tests;
+#[cfg(test)]
+mod skyline_allocation_diagnostic;
 mod spine_blocks;
 mod spine_plan;
 #[cfg(test)]
 mod spine_ranking_experiment_tests;
 #[cfg(test)]
 mod spine_replay_tests;
-mod transit_recovery;
 #[cfg(test)]
 mod transit_access_tests;
+mod transit_recovery;
 
 const SCHEMA_VERSION: u32 = 1;
 const ACTIVITY_SCHEMA_VERSION: u8 = 5;
@@ -587,7 +587,10 @@ fn vehicle_name(body: u8) -> &'static str {
 
 /// Where an access path meets the road, on a 10 cm grid, as a queue key.
 fn driveway_mouth(point: WorldPoint) -> (i32, i32) {
-    ((point.x * 10.0).round() as i32, (point.z * 10.0).round() as i32)
+    (
+        (point.x * 10.0).round() as i32,
+        (point.z * 10.0).round() as i32,
+    )
 }
 
 /// Park a car that reached the end of its route at the kerb end of its final
@@ -1325,8 +1328,10 @@ impl Engine {
             Some(value) => format!("g{value}"),
             None => format!("t{}", self.state.tick),
         };
-        format!("{generation}:{}:{}:{}", platform_phase,
-            self.state.station_ready as u8, self.state.station_online as u8)
+        format!(
+            "{generation}:{}:{}:{}",
+            platform_phase, self.state.station_ready as u8, self.state.station_online as u8
+        )
     }
 
     /// New world grown from the seeded master plan.
@@ -1340,7 +1345,11 @@ impl Engine {
         Self::construct(seed, false, None)
     }
 
-    fn construct(seed: u32, masterplan: bool, initial_plan: Option<masterplan::MasterPlan>) -> Self {
+    fn construct(
+        seed: u32,
+        masterplan: bool,
+        initial_plan: Option<masterplan::MasterPlan>,
+    ) -> Self {
         let seed64 = (seed as u64).wrapping_add(0x9e3779b97f4a7c15).max(1);
         let mut engine = Self {
             plan: None,
@@ -1490,8 +1499,8 @@ impl Engine {
                 _ => VEHICLE_VAN,
             };
         }
-        let station_trip = station
-            .is_some_and(|s| t.destination == s || t.route.first() == Some(&s));
+        let station_trip =
+            station.is_some_and(|s| t.destination == s || t.route.first() == Some(&s));
         if h % 10 == 0 || (station_trip && h % 3 == 0) {
             VEHICLE_TAXI
         } else if h % 10 < 5 {
@@ -1502,7 +1511,11 @@ impl Engine {
     }
 
     fn station_node(&self) -> Option<u32> {
-        self.state.nodes.iter().find(|n| n.kind == "station").map(|n| n.id)
+        self.state
+            .nodes
+            .iter()
+            .find(|n| n.kind == "station")
+            .map(|n| n.id)
     }
 
     fn node(&self, id: u32) -> Option<&Node> {
@@ -1741,8 +1754,11 @@ impl Engine {
         }
     }
     fn frontage_rotation(&self, parcel_id: u32) -> f32 {
-        if cfg!(feature="parent-passage-candidate") {
-            if let Some(rotation)=self.masterplan_lot_for_parcel(parcel_id).and_then(|lot|lot.passage_rotation()) {
+        if cfg!(feature = "parent-passage-candidate") {
+            if let Some(rotation) = self
+                .masterplan_lot_for_parcel(parcel_id)
+                .and_then(|lot| lot.passage_rotation())
+            {
                 return rotation;
             }
         }
@@ -1941,14 +1957,17 @@ impl Engine {
             x: building.x + building.rotation.sin() * (building.depth * 0.5 + 0.2),
             z: building.z + building.rotation.cos() * (building.depth * 0.5 + 0.2),
         };
-        let mut points=vec![door];
-        if cfg!(feature="flag-passage-candidate") || cfg!(feature="parent-passage-candidate") {
-            if let Some(passage)=self.masterplan_lot_for_parcel(parcel.id).and_then(|lot|lot.passage) {
-                points.extend(passage.into_iter().map(|p|WorldPoint{x:p.x,z:p.z}));
+        let mut points = vec![door];
+        if cfg!(feature = "flag-passage-candidate") || cfg!(feature = "parent-passage-candidate") {
+            if let Some(passage) = self
+                .masterplan_lot_for_parcel(parcel.id)
+                .and_then(|lot| lot.passage)
+            {
+                points.extend(passage.into_iter().map(|p| WorldPoint { x: p.x, z: p.z }));
             }
         }
         points.push(frontage_walk);
-        points.dedup_by(|a,b|(a.x-b.x).hypot(a.z-b.z)<0.01);
+        points.dedup_by(|a, b| (a.x - b.x).hypot(a.z - b.z) < 0.01);
         Some((road.id, points))
     }
     fn rail_axis(&self) -> Option<(u32, u32, f32, f32)> {
@@ -2736,9 +2755,9 @@ impl Engine {
                 || parcel.reservation.is_some()
                 || built.contains(&parcel.id)
                 || !POCKET_PARK_AREA.contains(&(parcel.width * parcel.depth))
-                || parks.iter().any(|&(x, z)| {
-                    (x - parcel.x).hypot(z - parcel.z) < POCKET_PARK_SPACING
-                })
+                || parks
+                    .iter()
+                    .any(|&(x, z)| (x - parcel.x).hypot(z - parcel.z) < POCKET_PARK_SPACING)
                 || !self.node_connected(parcel.access_node)
                 || !self.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
                 || self.is_station_tower_lot(parcel)
@@ -8029,7 +8048,8 @@ impl Engine {
             .sum();
         for (home_id, occupancy, home_node) in homes {
             let current = *current_by_home.get(&home_id).unwrap_or(&0);
-            let available = occupancy.saturating_sub(self.aggregate_participants_at_home(home_id) as u16);
+            let available =
+                occupancy.saturating_sub(self.aggregate_participants_at_home(home_id) as u16);
             for ordinal in current..available {
                 if self.state.residents.len() >= MAX_RESIDENTS {
                     return;
@@ -8462,7 +8482,8 @@ impl Engine {
     }
 
     fn bus_queue_position(&self, node_id: u32, direction: i8, slot: u16) -> Option<WorldPoint> {
-        self.bus_queue_position_with_edge(node_id, direction, slot).map(|(point, _)| point)
+        self.bus_queue_position_with_edge(node_id, direction, slot)
+            .map(|(point, _)| point)
     }
 
     fn bus_queue_position_with_edge(
@@ -8493,10 +8514,16 @@ impl Engine {
         let other = self.node(other_id)?;
         let length = distance(node, other).max(1.0);
         let along = 3.0 + slot as f32 * 1.25;
-        Some((WorldPoint {
-            x: node.x + (other.x - node.x) / length * along - (other.z - node.z) / length * BUS_STOP_KERB,
-            z: node.z + (other.z - node.z) / length * along + (other.x - node.x) / length * BUS_STOP_KERB,
-        }, [node_id, other_id]))
+        Some((
+            WorldPoint {
+                x: node.x + (other.x - node.x) / length * along
+                    - (other.z - node.z) / length * BUS_STOP_KERB,
+                z: node.z
+                    + (other.z - node.z) / length * along
+                    + (other.x - node.x) / length * BUS_STOP_KERB,
+            },
+            [node_id, other_id],
+        ))
     }
 
     fn bus_stop_views(&self, line: &BusLine) -> Vec<BusStopView> {
@@ -9144,11 +9171,13 @@ impl Engine {
         // match the full-road scan. This index lives only for this immutable
         // query; road openings and splits cannot leave a stale route cache.
         let mut adjacency = Vec::with_capacity(self.state.roads.len() * 2);
-        for (index, road) in self.state.roads.iter().enumerate().filter(|(_, road)| {
-            road.connected
-                && road.stage == "open"
-                && eligible(road)
-        }) {
+        for (index, road) in self
+            .state
+            .roads
+            .iter()
+            .enumerate()
+            .filter(|(_, road)| road.connected && road.stage == "open" && eligible(road))
+        {
             adjacency.push((road.from, index));
             if road.to != road.from {
                 adjacency.push((road.to, index));
@@ -9226,28 +9255,45 @@ impl Engine {
                 _ => None,
             };
             let Some(path) = path else { continue };
-            let (Some(start), Some(end)) = (path.points.first(), path.points.last()) else { continue };
+            let (Some(start), Some(end)) = (path.points.first(), path.points.last()) else {
+                continue;
+            };
             let length = path.length();
             // Leaving the start: further along is ahead. Approaching the end: closer is ahead.
-            lanes.entry((t.access_phase, true, driveway_mouth(*start))).or_default().push((index, -t.access_progress, length));
-            lanes.entry((t.access_phase, false, driveway_mouth(*end))).or_default().push((index, length - t.access_progress, length));
+            lanes
+                .entry((t.access_phase, true, driveway_mouth(*start)))
+                .or_default()
+                .push((index, -t.access_progress, length));
+            lanes
+                .entry((t.access_phase, false, driveway_mouth(*end)))
+                .or_default()
+                .push((index, length - t.access_progress, length));
         }
         let mut entry_busy = BTreeSet::new();
         for ((phase, at_start, point), list) in &mut lanes {
-            list.sort_by(|a, b| a.1.total_cmp(&b.1).then(travelers[a.0].id.cmp(&travelers[b.0].id)));
+            list.sort_by(|a, b| {
+                a.1.total_cmp(&b.1)
+                    .then(travelers[a.0].id.cmp(&travelers[b.0].id))
+            });
             for pair in list.windows(2) {
                 let ((lead, lead_rank, _), (follower, _, length)) = (pair[0], pair[1]);
                 let gap = vehicle_gap(
                     Self::vehicle_body(&travelers[lead], station),
                     Self::vehicle_body(&travelers[follower], station),
                 );
-                let allowed = if *at_start { -lead_rank - gap } else { length - (lead_rank + gap) };
+                let allowed = if *at_start {
+                    -lead_rank - gap
+                } else {
+                    length - (lead_rank + gap)
+                };
                 limit[follower] = limit[follower].min(allowed);
             }
             // Arrival paths start at the road: the mouth is busy until the last car clears it.
             if *phase == 2 && *at_start {
                 let last = &travelers[list.last().unwrap().0];
-                if last.access_progress < vehicle_length(Self::vehicle_body(last, station)) + VEHICLE_QUEUE_MARGIN {
+                if last.access_progress
+                    < vehicle_length(Self::vehicle_body(last, station)) + VEHICLE_QUEUE_MARGIN
+                {
                     entry_busy.insert(*point);
                 }
             }
@@ -9271,8 +9317,10 @@ impl Engine {
                 0 => {
                     skip_road[index] = true;
                     if let Some(path) = &traveler.origin_access {
-                        let next = traveler.access_progress + traveler.speed / TICKS_PER_SECOND as f32;
-                        traveler.access_progress = next.min(driveway_limit[index].max(traveler.access_progress));
+                        let next =
+                            traveler.access_progress + traveler.speed / TICKS_PER_SECOND as f32;
+                        traveler.access_progress =
+                            next.min(driveway_limit[index].max(traveler.access_progress));
                         if traveler.access_progress >= path.length() {
                             traveler.access_phase = 1;
                             traveler.access_progress = 0.0;
@@ -9285,8 +9333,10 @@ impl Engine {
                 2 => {
                     skip_road[index] = true;
                     if let Some(path) = &traveler.destination_access {
-                        let next = traveler.access_progress + traveler.speed / TICKS_PER_SECOND as f32;
-                        traveler.access_progress = next.min(driveway_limit[index].max(traveler.access_progress));
+                        let next =
+                            traveler.access_progress + traveler.speed / TICKS_PER_SECOND as f32;
+                        traveler.access_progress =
+                            next.min(driveway_limit[index].max(traveler.access_progress));
                         if traveler.access_progress >= path.length() {
                             arrivals.push(traveler.clone());
                         }
@@ -9300,11 +9350,19 @@ impl Engine {
                     // any signal can stop it short of the mouth it already reached.
                     let at_kerb = traveler.kind == 1
                         && traveler.edge_index + 1 == traveler.route_lengths.len()
-                        && traveler.route_lengths.last().is_some_and(|&len| traveler.edge_progress >= len.max(1.0));
+                        && traveler
+                            .route_lengths
+                            .last()
+                            .is_some_and(|&len| traveler.edge_progress >= len.max(1.0));
                     if traveler.edge_index >= traveler.route_lengths.len() || at_kerb {
                         // A car waits at the kerb while another is still at the driveway mouth.
-                        let mouth = traveler.destination_access.as_ref().and_then(|path| path.points.first()).map(|p| driveway_mouth(*p));
-                        let held = traveler.kind == 1 && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
+                        let mouth = traveler
+                            .destination_access
+                            .as_ref()
+                            .and_then(|path| path.points.first())
+                            .map(|p| driveway_mouth(*p));
+                        let held = traveler.kind == 1
+                            && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
                         if held {
                             // Still a road traveler: drawn, and queued ahead of its followers.
                             // (Saves from before kerb holding kept the car past its route.)
@@ -9495,7 +9553,9 @@ impl Engine {
                 continue;
             }
             if let Some(r) = t.route.get(t.edge_index..=t.edge_index + 1) {
-                let entry = lane_tail.entry((r[0], r[1])).or_insert((f32::INFINITY, VEHICLE_COMPACT));
+                let entry = lane_tail
+                    .entry((r[0], r[1]))
+                    .or_insert((f32::INFINITY, VEHICLE_COMPACT));
                 if t.edge_progress < entry.0 {
                     *entry = (t.edge_progress, Self::vehicle_body(t, station));
                 }
@@ -9515,7 +9575,10 @@ impl Engine {
             if t.kind == 1 {
                 // Stop a queue gap behind the last car into the next lane, not at the node.
                 let edge_len = t.route_lengths[t.edge_index].max(1.0);
-                let next_lane = t.route.get(t.edge_index + 1..=t.edge_index + 2).map(|r| (r[0], r[1]));
+                let next_lane = t
+                    .route
+                    .get(t.edge_index + 1..=t.edge_index + 2)
+                    .map(|r| (r[0], r[1]));
                 if let Some(tail) = next_lane.and_then(|lane| lane_tail.get(&lane)) {
                     let gap = vehicle_gap(tail.1, body);
                     if tail.0 < gap {
@@ -9531,7 +9594,10 @@ impl Engine {
                     t.edge_progress += remaining;
                     break;
                 }
-                let next_lane = t.route.get(t.edge_index + 1..=t.edge_index + 2).map(|r| (r[0], r[1]));
+                let next_lane = t
+                    .route
+                    .get(t.edge_index + 1..=t.edge_index + 2)
+                    .map(|r| (r[0], r[1]));
                 if t.kind == 1 {
                     if let Some(tail) = next_lane.and_then(|lane| lane_tail.get(&lane)) {
                         if tail.0 < vehicle_gap(tail.1, body) {
@@ -9546,12 +9612,23 @@ impl Engine {
                 t.edge_progress = 0.0;
                 if t.kind == 1 {
                     if let Some(lane) = next_lane {
-                        lane_tail.insert(lane, (remaining.min(t.route_lengths.get(t.edge_index).copied().unwrap_or(0.0)), body));
+                        lane_tail.insert(
+                            lane,
+                            (
+                                remaining
+                                    .min(t.route_lengths.get(t.edge_index).copied().unwrap_or(0.0)),
+                                body,
+                            ),
+                        );
                     }
                 }
             }
             if t.edge_index >= t.route_lengths.len() {
-                let mouth = t.destination_access.as_ref().and_then(|path| path.points.first()).map(|p| driveway_mouth(*p));
+                let mouth = t
+                    .destination_access
+                    .as_ref()
+                    .and_then(|path| path.points.first())
+                    .map(|p| driveway_mouth(*p));
                 let held = t.kind == 1 && mouth.is_some_and(|m| driveway_entry_busy.contains(&m));
                 // A held car waits at the kerb end of its last lane and retries
                 // admission each tick as it tries to advance past the end.
@@ -9659,7 +9736,13 @@ impl Engine {
                 returning.activity = "delivery_return".into();
                 returning.wait_ticks = 0;
                 returning.origin_access = returning.origin_building.and_then(|building| {
-                    self.building_access_path(building, &returning.route, true, returning.id, returning.kind)
+                    self.building_access_path(
+                        building,
+                        &returning.route,
+                        true,
+                        returning.id,
+                        returning.kind,
+                    )
                 });
                 returning.destination_access = None;
                 returning.access_phase = if returning.origin_access.is_some() {
@@ -10274,8 +10357,7 @@ impl Engine {
             }
             if train.dwell_ticks > 0 {
                 train.dwell_ticks -= 1;
-                let at_station = train.direction >= 0
-                    && train.distance <= TRAIN_HALF_LENGTH + 0.01;
+                let at_station = train.direction >= 0 && train.distance <= TRAIN_HALF_LENGTH + 0.01;
                 let dwell_total = if at_station {
                     TRAIN_STATION_DWELL_TICKS
                 } else {
@@ -10638,7 +10720,19 @@ impl Engine {
         self.state.tick
     }
     pub fn movement_buffer(&self) -> Vec<f32> {
-        self.movement_rows(false).into_iter().flat_map(|row| [row.actor_id as f32, row.x, row.z, row.heading, row.kind as f32, row.surface_y]).collect()
+        self.movement_rows(false)
+            .into_iter()
+            .flat_map(|row| {
+                [
+                    row.actor_id as f32,
+                    row.x,
+                    row.z,
+                    row.heading,
+                    row.kind as f32,
+                    row.surface_y,
+                ]
+            })
+            .collect()
     }
     /// Versioned movement poses and their same-traversal infrastructure support.
     pub fn movement_packet(&self) -> Vec<u32> {
@@ -10670,12 +10764,22 @@ impl Engine {
                 {
                     let support = if include_support {
                         path.and_then(|path| self.access_movement_support(t, path))
-                    } else { None };
+                    } else {
+                        None
+                    };
                     let resolved = support.is_some();
                     let (road_ids, platform_node_ids) = support.unwrap_or_default();
-                    out.push(movement_support::Row { actor_id: t.id, x: point.x, z: point.z, heading,
-                        kind: Self::vehicle_body(t, station) as u32, surface_y,
-                        resolved, road_ids, platform_node_ids });
+                    out.push(movement_support::Row {
+                        actor_id: t.id,
+                        x: point.x,
+                        z: point.z,
+                        heading,
+                        kind: Self::vehicle_body(t, station) as u32,
+                        surface_y,
+                        resolved,
+                        road_ids,
+                        platform_node_ids,
+                    });
                 }
                 continue;
             }
@@ -10698,10 +10802,33 @@ impl Engine {
             x += lateral.0;
             z += lateral.1;
             let heading = (b.z - a.z).atan2(b.x - a.x);
-            let road_ids = if include_support { self.state.roads.iter().find(|r| r.stage == "open" && r.connected && r.kind != "rail" && ((r.from == a.id && r.to == b.id) || (r.from == b.id && r.to == a.id))).map(|r| vec![r.id]).unwrap_or_default() } else { Vec::new() };
-            out.push(movement_support::Row { actor_id: t.id, x, z, heading,
-                kind: Self::vehicle_body(t, station) as u32, surface_y: -1.0,
-                resolved: road_ids.len() == 1, road_ids, platform_node_ids: Vec::new() });
+            let road_ids = if include_support {
+                self.state
+                    .roads
+                    .iter()
+                    .find(|r| {
+                        r.stage == "open"
+                            && r.connected
+                            && r.kind != "rail"
+                            && ((r.from == a.id && r.to == b.id)
+                                || (r.from == b.id && r.to == a.id))
+                    })
+                    .map(|r| vec![r.id])
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            out.push(movement_support::Row {
+                actor_id: t.id,
+                x,
+                z,
+                heading,
+                kind: Self::vehicle_body(t, station) as u32,
+                surface_y: -1.0,
+                resolved: road_ids.len() == 1,
+                road_ids,
+                platform_node_ids: Vec::new(),
+            });
         }
         if let Some((station, gateway)) = self.rail_terminals() {
             for (at_station, node_id) in [(true, station), (false, gateway)] {
@@ -10730,9 +10857,22 @@ impl Engine {
                             x: node.x,
                             z: node.z,
                         });
-                    let rail_ids: Vec<u32> = if include_support { self.platform_support_road(node_id).into_iter().collect() } else { Vec::new() };
-                    out.push(movement_support::Row { actor_id: resident.id, x: position.x, z: position.z, heading: 0.0, kind: 0, surface_y: 8.0,
-                        resolved: rail_ids.len() == 1, road_ids: rail_ids, platform_node_ids: vec![node_id] });
+                    let rail_ids: Vec<u32> = if include_support {
+                        self.platform_support_road(node_id).into_iter().collect()
+                    } else {
+                        Vec::new()
+                    };
+                    out.push(movement_support::Row {
+                        actor_id: resident.id,
+                        x: position.x,
+                        z: position.z,
+                        heading: 0.0,
+                        kind: 0,
+                        surface_y: 8.0,
+                        resolved: rail_ids.len() == 1,
+                        road_ids: rail_ids,
+                        platform_node_ids: vec![node_id],
+                    });
                 }
             }
         }
@@ -10751,14 +10891,38 @@ impl Engine {
                 continue;
             };
             let direction = self.bus_trip_direction(resident).unwrap_or(1);
-            let Some((position, edge)) = self.bus_queue_position_with_edge(stop, direction, slot) else {
+            let Some((position, edge)) = self.bus_queue_position_with_edge(stop, direction, slot)
+            else {
                 continue;
             };
-            let road_ids: Vec<u32> = if include_support { self.state.roads.iter()
-                .find(|r| r.stage == "open" && r.connected && r.kind != "rail"
-                    && ((r.from == edge[0] && r.to == edge[1]) || (r.from == edge[1] && r.to == edge[0])))
-                .map(|r| r.id).into_iter().collect() } else { Vec::new() };
-            out.push(movement_support::Row { actor_id: resident.id, x: position.x, z: position.z, heading: 0.0, kind: 0, surface_y: -1.0, resolved: road_ids.len() == 1, road_ids, platform_node_ids: Vec::new() });
+            let road_ids: Vec<u32> = if include_support {
+                self.state
+                    .roads
+                    .iter()
+                    .find(|r| {
+                        r.stage == "open"
+                            && r.connected
+                            && r.kind != "rail"
+                            && ((r.from == edge[0] && r.to == edge[1])
+                                || (r.from == edge[1] && r.to == edge[0]))
+                    })
+                    .map(|r| r.id)
+                    .into_iter()
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            out.push(movement_support::Row {
+                actor_id: resident.id,
+                x: position.x,
+                z: position.z,
+                heading: 0.0,
+                kind: 0,
+                surface_y: -1.0,
+                resolved: road_ids.len() == 1,
+                road_ids,
+                platform_node_ids: Vec::new(),
+            });
         }
         let mut pending_alights: Vec<&Resident> = self
             .state
@@ -10772,17 +10936,36 @@ impl Engine {
                 continue;
             };
             let surface_y = if pending.transfer_after_route == "walking_home"
-                    && self.rail_terminals().is_some_and(|(station, gateway)| {
-                        pending.stop_node == station || pending.stop_node == gateway
-                    })
-                {
-                    8.0
-                } else {
-                    -1.0
-                };
-            let rail_ids: Vec<u32> = if include_support { self.platform_support_road(pending.stop_node).into_iter().collect() } else { Vec::new() };
+                && self.rail_terminals().is_some_and(|(station, gateway)| {
+                    pending.stop_node == station || pending.stop_node == gateway
+                }) {
+                8.0
+            } else {
+                -1.0
+            };
+            let rail_ids: Vec<u32> = if include_support {
+                self.platform_support_road(pending.stop_node)
+                    .into_iter()
+                    .collect()
+            } else {
+                Vec::new()
+            };
             let resolved = surface_y == 8.0 && rail_ids.len() == 1;
-            out.push(movement_support::Row { actor_id: resident.id, x: pending.wait_position.x, z: pending.wait_position.z, heading: 0.0, kind: 0, surface_y, resolved, road_ids: rail_ids, platform_node_ids: if resolved { vec![pending.stop_node] } else { Vec::new() } });
+            out.push(movement_support::Row {
+                actor_id: resident.id,
+                x: pending.wait_position.x,
+                z: pending.wait_position.z,
+                heading: 0.0,
+                kind: 0,
+                surface_y,
+                resolved,
+                road_ids: rail_ids,
+                platform_node_ids: if resolved {
+                    vec![pending.stop_node]
+                } else {
+                    Vec::new()
+                },
+            });
         }
         for t in &self.state.trains {
             if t.route.len() < 2 {
@@ -10799,20 +10982,71 @@ impl Engine {
             };
             let x = point.x;
             let z = point.z;
-            let road_ids: Vec<u32> = if include_support { t.route.windows(2).filter_map(|edge| self.state.roads.iter()
-                .find(|r| r.kind == "rail" && r.stage == "open" && r.connected && ((r.from == edge[0] && r.to == edge[1]) || (r.from == edge[1] && r.to == edge[0])))
-                .map(|r| r.id)).collect() } else { Vec::new() };
-            out.push(movement_support::Row { actor_id: t.id, x, z, heading, kind: 2, surface_y: -1.0, resolved: road_ids.len() == t.route.len() - 1, road_ids, platform_node_ids: Vec::new() });
+            let road_ids: Vec<u32> = if include_support {
+                t.route
+                    .windows(2)
+                    .filter_map(|edge| {
+                        self.state
+                            .roads
+                            .iter()
+                            .find(|r| {
+                                r.kind == "rail"
+                                    && r.stage == "open"
+                                    && r.connected
+                                    && ((r.from == edge[0] && r.to == edge[1])
+                                        || (r.from == edge[1] && r.to == edge[0]))
+                            })
+                            .map(|r| r.id)
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            out.push(movement_support::Row {
+                actor_id: t.id,
+                x,
+                z,
+                heading,
+                kind: 2,
+                surface_y: -1.0,
+                resolved: road_ids.len() == t.route.len() - 1,
+                road_ids,
+                platform_node_ids: Vec::new(),
+            });
         }
         if let Some(line) = &self.state.bus_line {
             for bus in &self.state.buses {
                 let Some(((x, z, heading), edge)) = self.bus_pose_with_edge(line, bus) else {
                     continue;
                 };
-                let road_ids: Vec<u32> = if include_support { self.state.roads.iter()
-                    .find(|r| r.stage == "open" && r.connected && r.kind != "rail" && ((r.from == edge[0] && r.to == edge[1]) || (r.from == edge[1] && r.to == edge[0])))
-                    .map(|r| r.id).into_iter().collect() } else { Vec::new() };
-                out.push(movement_support::Row { actor_id: bus.id, x, z, heading, kind: 3, surface_y: -1.0, resolved: road_ids.len() == 1, road_ids, platform_node_ids: Vec::new() });
+                let road_ids: Vec<u32> = if include_support {
+                    self.state
+                        .roads
+                        .iter()
+                        .find(|r| {
+                            r.stage == "open"
+                                && r.connected
+                                && r.kind != "rail"
+                                && ((r.from == edge[0] && r.to == edge[1])
+                                    || (r.from == edge[1] && r.to == edge[0]))
+                        })
+                        .map(|r| r.id)
+                        .into_iter()
+                        .collect()
+                } else {
+                    Vec::new()
+                };
+                out.push(movement_support::Row {
+                    actor_id: bus.id,
+                    x,
+                    z,
+                    heading,
+                    kind: 3,
+                    surface_y: -1.0,
+                    resolved: road_ids.len() == 1,
+                    road_ids,
+                    platform_node_ids: Vec::new(),
+                });
             }
         }
         // Expressway route provenance uses plan-road indices; it is resolved in
@@ -10838,7 +11072,9 @@ impl Engine {
     }
 
     fn rail_length_for_doors(&self) -> f32 {
-        self.state.roads.iter()
+        self.state
+            .roads
+            .iter()
             .find(|road| road.kind == "rail" && road.stage == "open" && road.connected)
             .map(|road| road.length)
             .unwrap_or(0.0)
@@ -10917,11 +11153,14 @@ impl Engine {
                 }
                 let nx = -heading.sin();
                 let nz = heading.cos();
-                return Some(((
-                    a.x + (b.x - a.x) * f + nx * KERB_LANE,
-                    a.z + (b.z - a.z) * f + nz * KERB_LANE,
-                    heading,
-                ), [a.id, b.id]));
+                return Some((
+                    (
+                        a.x + (b.x - a.x) * f + nx * KERB_LANE,
+                        a.z + (b.z - a.z) * f + nz * KERB_LANE,
+                        heading,
+                    ),
+                    [a.id, b.id],
+                ));
             }
             offset += length;
         }
@@ -10956,7 +11195,9 @@ impl Engine {
         (nx * lateral, nz * lateral)
     }
     pub fn inspect_json(&self, id: u32) -> String {
-        if let Some(value) = self.inspect_expressway_trip(id) { return value.to_string(); }
+        if let Some(value) = self.inspect_expressway_trip(id) {
+            return value.to_string();
+        }
         let value = if let Some(b) = self.state.buildings.iter().find(|b| b.id == id) {
             serde_json::json!({"entityType":"building","id":b.id,"name":b.name,"kind":b.kind,"stage":b.stage,"occupancy":b.occupancy,"capacity":b.capacity,"history":b.history})
         } else if let Some(r) = self.state.roads.iter().find(|r| r.id == id) {
@@ -11059,7 +11300,7 @@ impl Engine {
                 Some(BuildingAccessView {
                     building_id: building.id,
                     road_id,
-                    points: access.iter().map(|p|Point { x:p.x,z:p.z }).collect(),
+                    points: access.iter().map(|p| Point { x: p.x, z: p.z }).collect(),
                 })
             })
             .collect()
@@ -11250,7 +11491,7 @@ impl Engine {
             stats: Stats {
                 population: self.state.population,
                 active_travelers: (self.state.travelers.len()
-                + self.state.expressway_traffic.trips.len()
+                    + self.state.expressway_traffic.trips.len()
                     + self.state.pending_alight_ids.len()
                     + self.rail_waiting_count(true)
                     + self.rail_waiting_count(false)
@@ -11290,7 +11531,10 @@ impl Engine {
             ));
         }
         if state.activity_schema_version != ACTIVITY_SCHEMA_VERSION {
-            return Err(format!("unsupported business activity schema {}; start a fresh world", state.activity_schema_version));
+            return Err(format!(
+                "unsupported business activity schema {}; start a fresh world",
+                state.activity_schema_version
+            ));
         }
         // Validate frozen checkpoint shapes and timeline before replaying any
         // saved prefix to reconstruct derived accumulator state.
@@ -12170,34 +12414,58 @@ impl Engine {
                 // Historical legacy-planner fixtures predate explicit rail surfaces.
                 // Current master-plan worlds must always carry them; obsolete master plans
                 // are rejected by the layout-version digest before this validation.
-                if self.state.masterplan.is_some() && path_requires_rail_surface && path.surface_y.len() != path.points.len() {
+                if self.state.masterplan.is_some()
+                    && path_requires_rail_surface
+                    && path.surface_y.len() != path.points.len()
+                {
                     return Err(format!(
                         "traveler {} has a rail access path without surface elevations",
                         traveler.id
                     ));
                 }
                 if path_requires_rail_surface && !path.surface_y.is_empty() {
-                    let matches = path.points.first().zip(path.points.last()).is_some_and(|(&from, &to)| {
-                        [true, false].into_iter().any(|at_station| {
-                            let expected = if traveler.activity == "walking_to_station" {
-                                self.platform_entry_path_from_position(from, to, at_station, traveler.id)
-                            } else {
-                                self.platform_exit_path_from_position(from, to, at_station)
-                            };
-                            expected.is_some_and(|expected| expected.surface_y == path.surface_y
-                                && expected.points.len() == path.points.len()
-                                && expected.points.iter().zip(&path.points)
-                                    .all(|(a,b)| a.x == b.x && a.z == b.z))
-                        })
-                    });
+                    let matches =
+                        path.points
+                            .first()
+                            .zip(path.points.last())
+                            .is_some_and(|(&from, &to)| {
+                                [true, false].into_iter().any(|at_station| {
+                                    let expected = if traveler.activity == "walking_to_station" {
+                                        self.platform_entry_path_from_position(
+                                            from,
+                                            to,
+                                            at_station,
+                                            traveler.id,
+                                        )
+                                    } else {
+                                        self.platform_exit_path_from_position(from, to, at_station)
+                                    };
+                                    expected.is_some_and(|expected| {
+                                        expected.surface_y == path.surface_y
+                                            && expected.points.len() == path.points.len()
+                                            && expected
+                                                .points
+                                                .iter()
+                                                .zip(&path.points)
+                                                .all(|(a, b)| a.x == b.x && a.z == b.z)
+                                    })
+                                })
+                            });
                     if !matches {
                         return Err(format!("traveler {} has obsolete or invalid rail access geometry; start a fresh world", traveler.id));
                     }
                 }
                 // Door + three reserved passage points + curb + street-end +
                 // route-end. Keep a finite bound for the candidate save format.
-                let max_access_points = if path_requires_rail_surface { 8 }
-                    else if cfg!(feature="flag-passage-candidate") || cfg!(feature="parent-passage-candidate") { 7 } else { 5 };
+                let max_access_points = if path_requires_rail_surface {
+                    8
+                } else if cfg!(feature = "flag-passage-candidate")
+                    || cfg!(feature = "parent-passage-candidate")
+                {
+                    7
+                } else {
+                    5
+                };
                 if !(2..=max_access_points).contains(&path.points.len())
                     || (!path.surface_y.is_empty()
                         && (path.surface_y.len() != path.points.len()
@@ -12423,15 +12691,20 @@ impl Engine {
                                 && project.id == plan.project_id
                                 && project.progress < 1.0
                         })
-                }) && !self.state.height_redevelopment.as_ref().is_some_and(|plan| {
-                    plan.building_id == building_id
-                        && plan.parcel_id == p.id
-                        && self.state.projects.iter().any(|project| {
-                            project.id == plan.project_id
-                                && project.kind == "redevelopment"
-                                && project.progress < 1.0
-                        })
-                }) {
+                }) && !self
+                    .state
+                    .height_redevelopment
+                    .as_ref()
+                    .is_some_and(|plan| {
+                        plan.building_id == building_id
+                            && plan.parcel_id == p.id
+                            && self.state.projects.iter().any(|project| {
+                                project.id == plan.project_id
+                                    && project.kind == "redevelopment"
+                                    && project.progress < 1.0
+                            })
+                    })
+                {
                     return Err(format!(
                         "parcel {} has no active construction project",
                         p.id
@@ -14355,7 +14628,10 @@ mod tests {
         let mut probe = Engine::restore_json(&engine.save_json()).expect("copy restores");
         let before = parks(&probe);
         probe.dedicate_pocket_park();
-        let expected: Vec<u32> = parks(&probe).into_iter().filter(|id| !before.contains(id)).collect();
+        let expected: Vec<u32> = parks(&probe)
+            .into_iter()
+            .filter(|id| !before.contains(id))
+            .collect();
         assert_eq!(expected.len(), 1, "fixture should have a park candidate");
 
         // Enough shrine and plaza lots to exhaust the quota if they counted as
@@ -14366,17 +14642,39 @@ mod tests {
             .iter()
             .filter(|b| is_housing(b) && site_active(b))
             .count();
-        let site = engine.state.parcels.iter().find(|p| p.id == expected[0]).cloned().unwrap();
+        let site = engine
+            .state
+            .parcels
+            .iter()
+            .find(|p| p.id == expected[0])
+            .cloned()
+            .unwrap();
         let node = site.access_node;
         for i in 0..(homes / HOMES_PER_POCKET_PARK + 2) {
-            let id = engine.add_parcel(site.x + 0.5 + i as f32 * 0.01, site.z, 6.0, 6.0, node, 0.5, true);
+            let id = engine.add_parcel(
+                site.x + 0.5 + i as f32 * 0.01,
+                site.z,
+                6.0,
+                6.0,
+                node,
+                0.5,
+                true,
+            );
             assert_ne!(id, 0);
-            let parcel = engine.state.parcels.iter_mut().find(|p| p.id == id).unwrap();
+            let parcel = engine
+                .state
+                .parcels
+                .iter_mut()
+                .find(|p| p.id == id)
+                .unwrap();
             parcel.open_space = Some(if i == 0 { "plaza" } else { "shrine" }.into());
         }
         engine.dedicate_pocket_park();
         let after = parks(&engine);
-        assert!(after.contains(&expected[0]), "shrines and plazas blocked a pocket park");
+        assert!(
+            after.contains(&expected[0]),
+            "shrines and plazas blocked a pocket park"
+        );
         assert_eq!(after.len(), before.len() + 1);
     }
 
@@ -14398,13 +14696,27 @@ mod tests {
                 .collect()
         };
         let (plazas, shrines, parks) = (kind("plaza"), kind("shrine"), kind("park"));
-        assert!(!plazas.is_empty() && plazas.len() <= 2, "plaza lots: {}", plazas.len());
-        assert!(!shrines.is_empty() && shrines.len() <= 6, "shrine lots: {}", shrines.len());
+        assert!(
+            !plazas.is_empty() && plazas.len() <= 2,
+            "plaza lots: {}",
+            plazas.len()
+        );
+        assert!(
+            !shrines.is_empty() && shrines.len() <= 6,
+            "shrine lots: {}",
+            shrines.len()
+        );
         assert!(!parks.is_empty());
         let station = engine
             .plan
             .as_ref()
-            .and_then(|runtime| runtime.plan.nodes.iter().find(|n| n.kind == masterplan::NodeKind::Station))
+            .and_then(|runtime| {
+                runtime
+                    .plan
+                    .nodes
+                    .iter()
+                    .find(|n| n.kind == masterplan::NodeKind::Station)
+            })
             .map(|n| n.p)
             .expect("master plan has a station");
         for plaza in &plazas {
@@ -14420,12 +14732,20 @@ mod tests {
             assert!(space.protected && !built.contains(&space.id));
         }
         for event in ["PlazaReserved", "ShrineReserved"] {
-            assert!(engine.state.events.iter().any(|e| e.kind == event), "{event}");
+            assert!(
+                engine.state.events.iter().any(|e| e.kind == event),
+                "{event}"
+            );
         }
         engine.validate().expect("open space keeps the city valid");
         let restored = Engine::restore_json(&engine.save_json()).expect("save restores");
         let open_spaces = |engine: &Engine| -> Vec<(u32, Option<String>)> {
-            engine.state.parcels.iter().map(|p| (p.id, p.open_space.clone())).collect()
+            engine
+                .state
+                .parcels
+                .iter()
+                .map(|p| (p.id, p.open_space.clone()))
+                .collect()
         };
         assert_eq!(open_spaces(&restored), open_spaces(&engine));
     }
@@ -14445,7 +14765,10 @@ mod tests {
             .filter(|p| p.protected && !built.contains(&p.id))
             .filter(|p| p.open_space.as_deref() == Some("park"))
             .collect();
-        assert!(parks.len() >= 2, "growing neighborhoods dedicate pocket parks");
+        assert!(
+            parks.len() >= 2,
+            "growing neighborhoods dedicate pocket parks"
+        );
         let homes = engine
             .state
             .buildings
@@ -14474,7 +14797,13 @@ mod tests {
             replay.step(2_000);
         }
         let protected = |engine: &Engine| -> Vec<u32> {
-            engine.state.parcels.iter().filter(|p| p.protected).map(|p| p.id).collect()
+            engine
+                .state
+                .parcels
+                .iter()
+                .filter(|p| p.protected)
+                .map(|p| p.id)
+                .collect()
         };
         assert_eq!(protected(&engine), protected(&replay));
     }
@@ -15649,25 +15978,38 @@ mod tests {
         assert!(tower_only.node_connected(access_node));
         tower_only.evaluate_growth();
         assert_eq!(tower_only.state.road_infill_due, 0);
-        let road_target = tower_only.state.projects.iter()
+        let road_target = tower_only
+            .state
+            .projects
+            .iter()
             .find(|project| project.kind == "road" && project.progress < 1.0)
             .expect("exhausted infill must yield to the reserved neighborhood road")
-            .to.unwrap();
+            .to
+            .unwrap();
         // Coordinated plans construct their road before releasing its frontage.
         // Exercise completion through the production scheduler, not another
         // immediate evaluate_growth call on the same tick.
         tower_only.step(800);
-        assert!(tower_only.state.roads.iter().any(|road| {
-            road.to == road_target && road.stage == "open" && road.connected
-        }), "the admitted neighborhood road must complete and connect");
+        assert!(
+            tower_only
+                .state
+                .roads
+                .iter()
+                .any(|road| { road.to == road_target && road.stage == "open" && road.connected }),
+            "the admitted neighborhood road must complete and connect"
+        );
         assert!(tower_only.state.parcels.len() > initial_parcel_count);
-        assert!(tower_only.state.buildings.iter().any(|building| {
-            tower_only.state.parcels.iter().any(|parcel| {
-                parcel.id == building.parcel_id && parcel.id != tower_parcel
-                    && !tower_only.is_station_tower_lot(parcel)
-                    && tower_only.node_connected(parcel.access_node)
-            })
-        }), "ordinary frontage must enter construction after the road opens");
+        assert!(
+            tower_only.state.buildings.iter().any(|building| {
+                tower_only.state.parcels.iter().any(|parcel| {
+                    parcel.id == building.parcel_id
+                        && parcel.id != tower_parcel
+                        && !tower_only.is_station_tower_lot(parcel)
+                        && tower_only.node_connected(parcel.access_node)
+                })
+            }),
+            "ordinary frontage must enter construction after the road opens"
+        );
 
         // If an ordinary usable lot exists alongside an ineligible tower lot,
         // the scheduler should spend the quota on that lot before road growth.
@@ -15675,18 +16017,39 @@ mod tests {
         mixed.state.station_online = false;
         // Reuse an actual developed lot with a resolved access segment rather
         // than inventing a disconnected lot far from its declared access node.
-        let usable_building = mixed.state.buildings.iter().find(|building| {
-            mixed.state.parcels.iter().any(|parcel| {
-                parcel.id == building.parcel_id && !parcel.protected
-                    && parcel.reservation.is_none()
-                    && !mixed.is_station_tower_lot(parcel)
-                    && mixed.node_connected(parcel.access_node)
-                    && mixed.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
-            }) && mixed.building_access_segment(building.id).is_some()
-        }).expect("developed fixture must contain an accessible ordinary lot").clone();
+        let usable_building = mixed
+            .state
+            .buildings
+            .iter()
+            .find(|building| {
+                mixed.state.parcels.iter().any(|parcel| {
+                    parcel.id == building.parcel_id
+                        && !parcel.protected
+                        && parcel.reservation.is_none()
+                        && !mixed.is_station_tower_lot(parcel)
+                        && mixed.node_connected(parcel.access_node)
+                        && mixed.parcel_clear_of_river(
+                            parcel.x,
+                            parcel.z,
+                            parcel.width,
+                            parcel.depth,
+                        )
+                }) && mixed.building_access_segment(building.id).is_some()
+            })
+            .expect("developed fixture must contain an accessible ordinary lot")
+            .clone();
         let usable = usable_building.parcel_id;
-        let connected = mixed.state.parcels.iter().find(|p| p.id == usable).unwrap().access_node;
-        mixed.state.buildings.retain(|building| building.id != usable_building.id);
+        let connected = mixed
+            .state
+            .parcels
+            .iter()
+            .find(|p| p.id == usable)
+            .unwrap()
+            .access_node;
+        mixed
+            .state
+            .buildings
+            .retain(|building| building.id != usable_building.id);
         let ineligible = mixed.add_parcel(
             station.x,
             station.z + 30.0,
@@ -15708,11 +16071,11 @@ mod tests {
         }));
         mixed.evaluate_growth();
         assert!(
-            mixed
-                .state
-                .projects
-                .iter()
-                .any(|project| { project.kind == "building" && project.parcel_id == Some(usable) && project.progress < 1.0 }),
+            mixed.state.projects.iter().any(|project| {
+                project.kind == "building"
+                    && project.parcel_id == Some(usable)
+                    && project.progress < 1.0
+            }),
             "usable ordinary frontage was bypassed"
         );
         assert_eq!(mixed.state.road_infill_due, 0);
@@ -15853,8 +16216,12 @@ mod tests {
             let east = engine.add_node(-18.0, 42.0, "junction");
             // Follow the current seeded river's perpendicular bank offset.
             // The old fixed -184m endpoint lies inside its bank buffer.
-            let bank = river_course::bank_alignment(&river_course::sampled(engine.state.seed), -47.0);
-            let edge = bank.windows(2).find(|pair| pair[0].z <= 42.0 && pair[1].z >= 42.0).unwrap();
+            let bank =
+                river_course::bank_alignment(&river_course::sampled(engine.state.seed), -47.0);
+            let edge = bank
+                .windows(2)
+                .find(|pair| pair[0].z <= 42.0 && pair[1].z >= 42.0)
+                .unwrap();
             let t = (42.0 - edge[0].z) / (edge[1].z - edge[0].z);
             let west_x = edge[0].x + (edge[1].x - edge[0].x) * t;
             let west = engine.add_node(west_x, 42.0, "junction");
@@ -15932,12 +16299,23 @@ mod tests {
             .any(|project| { project.kind == "road" && project.from == Some(quiet_west) }));
 
         let (mut blocked, blocked_west) = bridge_world("open", true);
-        blocked.state.nodes.iter_mut().find(|node| node.id == blocked_west).unwrap().x = -184.0;
+        blocked
+            .state
+            .nodes
+            .iter_mut()
+            .find(|node| node.id == blocked_west)
+            .unwrap()
+            .x = -184.0;
         assert!(!blocked.ordinary_road_clear_of_river(-184.0, 42.0, -254.0, 42.0, 4.5));
         blocked.plan_road();
-        assert!(!blocked.state.projects.iter().any(|project| {
-            project.kind == "road" && project.from == Some(blocked_west)
-        }), "eligible bridgeheads must not bypass river clearance");
+        assert!(
+            !blocked
+                .state
+                .projects
+                .iter()
+                .any(|project| { project.kind == "road" && project.from == Some(blocked_west) }),
+            "eligible bridgeheads must not bypass river clearance"
+        );
 
         let (mut active, active_west) = bridge_world("open", true);
         active.plan_road();
@@ -16013,48 +16391,82 @@ mod tests {
             for _ in 0..3_200 {
                 engine.step(20);
                 if bridge_id.is_none() {
-                    bridge_id = engine.state.roads.iter().find(|r| r.kind == "bridge").map(|r| r.id);
+                    bridge_id = engine
+                        .state
+                        .roads
+                        .iter()
+                        .find(|r| r.kind == "bridge")
+                        .map(|r| r.id);
                 }
-                let Some(bridge) = engine.state.roads.iter().find(|r| Some(r.id) == bridge_id) else { continue; };
+                let Some(bridge) = engine.state.roads.iter().find(|r| Some(r.id) == bridge_id)
+                else {
+                    continue;
+                };
                 saw_bridge_construction |= bridge.stage != "open";
                 let a = engine.node(bridge.from).unwrap();
                 let b = engine.node(bridge.to).unwrap();
                 let west = if a.x < b.x { a.id } else { b.id };
                 let west_side = |x: f32, z: f32| x < engine.river_center_x_at(z) - RIVER_HALF_WIDTH;
                 saw_bank_road_construction |= engine.state.projects.iter().any(|p| {
-                    p.kind == "road" && p.progress < 1.0 && p.from.zip(p.to).is_some_and(|(a,b)| {
-                        engine.node(a).is_some_and(|n| west_side(n.x,n.z))
-                            && engine.node(b).is_some_and(|n| west_side(n.x,n.z))
-                    })
+                    p.kind == "road"
+                        && p.progress < 1.0
+                        && p.from.zip(p.to).is_some_and(|(a, b)| {
+                            engine.node(a).is_some_and(|n| west_side(n.x, n.z))
+                                && engine.node(b).is_some_and(|n| west_side(n.x, n.z))
+                        })
                 });
-                saw_bank_building_construction |= engine.state.buildings.iter().any(|b| {
-                    west_side(b.x,b.z) && b.stage != "open"
-                });
+                saw_bank_building_construction |= engine
+                    .state
+                    .buildings
+                    .iter()
+                    .any(|b| west_side(b.x, b.z) && b.stage != "open");
                 let bank_connected = engine.state.roads.iter().any(|r| {
-                    r.stage == "open" && r.connected && !matches!(r.kind.as_str(), "rail" | "bridge")
+                    r.stage == "open"
+                        && r.connected
+                        && !matches!(r.kind.as_str(), "rail" | "bridge")
                         && (r.from == west || r.to == west)
                 });
                 let housing = engine.state.buildings.iter().find(|b| {
-                    west_side(b.x,b.z) && b.stage == "open" && is_housing(b) && b.occupancy > 0
+                    west_side(b.x, b.z) && b.stage == "open" && is_housing(b) && b.occupancy > 0
                 });
                 if bridge.stage == "open" && bridge.connected && bank_connected {
                     if let Some(house) = housing {
-                        assert!(engine.building_access_segment(house.id).is_some(), "seed {seed}: missing house access");
-                        let parcel = engine.state.parcels.iter().find(|p| p.id == house.parcel_id).unwrap();
+                        assert!(
+                            engine.building_access_segment(house.id).is_some(),
+                            "seed {seed}: missing house access"
+                        );
+                        let parcel = engine
+                            .state
+                            .parcels
+                            .iter()
+                            .find(|p| p.id == house.parcel_id)
+                            .unwrap();
                         assert!(engine.node_connected(parcel.access_node));
                         settled = true;
                         break;
                     }
                 }
             }
-            assert!(saw_bridge_construction && saw_bank_road_construction && saw_bank_building_construction,
-                "seed {seed}: missing construction lifecycle");
-            assert!(settled, "seed {seed}: no occupied connected far-bank neighborhood by tick {}", engine.state.tick);
+            assert!(
+                saw_bridge_construction
+                    && saw_bank_road_construction
+                    && saw_bank_building_construction,
+                "seed {seed}: missing construction lifecycle"
+            );
+            assert!(
+                settled,
+                "seed {seed}: no occupied connected far-bank neighborhood by tick {}",
+                engine.state.tick
+            );
             engine.validate().unwrap();
             let mut resumed = Engine::restore_json(&engine.save_json()).unwrap();
             engine.step(2_000);
             resumed.step(2_000);
-            assert_eq!(engine.save_json(), resumed.save_json(), "seed {seed}: replay diverged");
+            assert_eq!(
+                engine.save_json(),
+                resumed.save_json(),
+                "seed {seed}: replay diverged"
+            );
         }
     }
     #[test]
@@ -16230,10 +16642,21 @@ mod tests {
         let assert_matches_snapshot = |engine: &Engine| {
             let doors = engine.train_doors();
             let snapshot = engine.snapshot();
-            assert_eq!(doors.len(), snapshot.trains.len().min(MAX_PRESENTED_TRAINS) * 3);
-            for (index, train) in snapshot.trains.iter().take(MAX_PRESENTED_TRAINS).enumerate() {
+            assert_eq!(
+                doors.len(),
+                snapshot.trains.len().min(MAX_PRESENTED_TRAINS) * 3
+            );
+            for (index, train) in snapshot
+                .trains
+                .iter()
+                .take(MAX_PRESENTED_TRAINS)
+                .enumerate()
+            {
                 assert_eq!(doors[index * 3], train.id as f32);
-                assert_eq!(doors[index * 3 + 1], train.door_terminal.map(|id| id as f32).unwrap_or(-1.0));
+                assert_eq!(
+                    doors[index * 3 + 1],
+                    train.door_terminal.map(|id| id as f32).unwrap_or(-1.0)
+                );
                 assert_eq!(doors[index * 3 + 2], train.door_open_fraction);
             }
         };
@@ -16640,17 +17063,32 @@ mod tests {
             .destination_access
             .clone()
             .expect("station trip needs a platform entry connector");
-        assert_eq!(entry.surface_y, vec![-1.0, 0.27, 0.27, 0.27, 0.27, 8.0, 8.0, 8.0]);
+        assert_eq!(
+            entry.surface_y,
+            vec![-1.0, 0.27, 0.27, 0.27, 0.27, 8.0, 8.0, 8.0]
+        );
         let mut corrupt: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
-        let actor = corrupt["travelers"].as_array_mut().unwrap().iter_mut()
-            .find(|t| t["id"].as_u64() == Some(first_id as u64)).unwrap();
-        let x = actor["destination_access"]["points"][1]["x"].as_f64().unwrap();
+        let actor = corrupt["travelers"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|t| t["id"].as_u64() == Some(first_id as u64))
+            .unwrap();
+        let x = actor["destination_access"]["points"][1]["x"]
+            .as_f64()
+            .unwrap();
         actor["destination_access"]["points"][1]["x"] = serde_json::json!(x + 0.25);
-        assert!(Engine::restore_json(&corrupt.to_string()).err().unwrap().contains("rail access geometry"));
+        assert!(Engine::restore_json(&corrupt.to_string())
+            .err()
+            .unwrap()
+            .contains("rail access geometry"));
         let mut mid_access = Engine::restore_json(&engine.save_json()).unwrap();
-        let stair_progress = entry.points[..5].windows(2)
-            .map(|p| (p[1].x-p[0].x).hypot(p[1].z-p[0].z)).sum::<f32>()
-            + (entry.points[5].x-entry.points[4].x).hypot(entry.points[5].z-entry.points[4].z)*0.5;
+        let stair_progress = entry.points[..5]
+            .windows(2)
+            .map(|p| (p[1].x - p[0].x).hypot(p[1].z - p[0].z))
+            .sum::<f32>()
+            + (entry.points[5].x - entry.points[4].x).hypot(entry.points[5].z - entry.points[4].z)
+                * 0.5;
         let traveler = mid_access
             .state
             .travelers
@@ -16723,7 +17161,10 @@ mod tests {
                 let local_x = (p.x - node.x) * nx + (p.z - node.z) * nz;
                 let local_z = (p.x - node.x) * dx + (p.z - node.z) * dz;
                 assert!((2.6..=7.8).contains(&local_x), "slot {slot} x={local_x}");
-                assert!((-1.0..=RAIL_PLATFORM_END).contains(&local_z), "slot {slot} z={local_z}");
+                assert!(
+                    (-1.0..=RAIL_PLATFORM_END).contains(&local_z),
+                    "slot {slot} z={local_z}"
+                );
                 assert!(
                     local_x + 0.45 <= 5.125,
                     "slot {slot} intersects bench clearance"
@@ -16832,7 +17273,12 @@ mod tests {
                     let lx = (p.x - terminal_point.x) * nx + (p.z - terminal_point.z) * nz;
                     let lz = (p.x - terminal_point.x) * ux + (p.z - terminal_point.z) * uz;
                     assert!(
-                        (if at_station { -21.51..=RAIL_PLATFORM_END+0.01 } else { -1.51..=RAIL_GATEWAY_STAIR_BOTTOM+1.51 }).contains(&lz),
+                        (if at_station {
+                            -21.51..=RAIL_PLATFORM_END + 0.01
+                        } else {
+                            -1.51..=RAIL_GATEWAY_STAIR_BOTTOM + 1.51
+                        })
+                        .contains(&lz),
                         "rotated connector point local z={lz}"
                     );
                     assert!(
@@ -19686,7 +20132,10 @@ mod tests {
         let (from, to) = (road.from, road.to);
         let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
         let driveway = AccessPath {
-            points: vec![WorldPoint { x: 250.0, z: 80.0 }, WorldPoint { x: 250.0, z: 50.0 }],
+            points: vec![
+                WorldPoint { x: 250.0, z: 80.0 },
+                WorldPoint { x: 250.0, z: 50.0 },
+            ],
             surface_y: Vec::new(),
         };
         // Two residents of one building leave by car on the same tick.
@@ -19720,11 +20169,19 @@ mod tests {
             engine.advance_travelers();
             let (lead, follow) = (progress(&engine, 900_001), progress(&engine, 900_002));
             if lead.0 == 0 && follow.0 == 0 && follow.1 > 0.0 {
-                assert!(lead.1 - follow.1 >= VEHICLE_MIN_GAP - 1e-3, "{lead:?} {follow:?}");
+                assert!(
+                    lead.1 - follow.1 >= VEHICLE_MIN_GAP - 1e-3,
+                    "{lead:?} {follow:?}"
+                );
             }
             // Whatever is drawn never overlaps: the waiting car is not emitted.
             let movement = engine.movement_buffer();
-            let at = |id: u32| movement.chunks(6).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]));
+            let at = |id: u32| {
+                movement
+                    .chunks(6)
+                    .find(|c| c[0] as u32 == id)
+                    .map(|c| (c[1], c[2]))
+            };
             if let (Some(a), Some(b)) = (at(900_001), at(900_002)) {
                 assert!((a.0 - b.0).hypot(a.1 - b.1) >= VEHICLE_MIN_GAP - 1e-3);
             }
@@ -19744,11 +20201,18 @@ mod tests {
             .find(|road| road.kind != "rail" && road.stage == "open")
             .expect("founding road is open");
         let (from, to) = (road.from, road.to);
-        let end = engine.route_endpoint_position(&[from, to], false, 910_001, 1)
+        let end = engine
+            .route_endpoint_position(&[from, to], false, 910_001, 1)
             .expect("arrival route endpoint");
         let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
         let driveway = AccessPath {
-            points: vec![end, WorldPoint { x: end.x + 30.0, z: end.z }],
+            points: vec![
+                end,
+                WorldPoint {
+                    x: end.x + 30.0,
+                    z: end.z,
+                },
+            ],
             surface_y: Vec::new(),
         };
         let car = |id, access_phase, edge_progress: f32| Traveler {
@@ -19780,17 +20244,34 @@ mod tests {
     }
 
     fn movement_of(engine: &Engine, id: u32) -> Option<(f32, f32)> {
-        engine.movement_buffer().chunks(6).find(|c| c[0] as u32 == id).map(|c| (c[1], c[2]))
+        engine
+            .movement_buffer()
+            .chunks(6)
+            .find(|c| c[0] as u32 == id)
+            .map(|c| (c[1], c[2]))
     }
 
     #[test]
     fn cars_held_at_a_busy_driveway_stay_on_the_road_and_queue() {
         let (mut engine, len, ids) = arrival_contention_engine();
         engine.advance_travelers();
-        let held = engine.state.travelers.iter().find(|t| t.id == ids[1]).unwrap().clone();
-        assert_eq!((held.access_phase, held.edge_index), (1, 0), "held at the kerb on its final lane");
+        let held = engine
+            .state
+            .travelers
+            .iter()
+            .find(|t| t.id == ids[1])
+            .unwrap()
+            .clone();
+        assert_eq!(
+            (held.access_phase, held.edge_index),
+            (1, 0),
+            "held at the kerb on its final lane"
+        );
         assert!((held.edge_progress - len.max(1.0)).abs() < 1e-4);
-        assert!(movement_of(&engine, ids[1]).is_some(), "a held car is still drawn");
+        assert!(
+            movement_of(&engine, ids[1]).is_some(),
+            "a held car is still drawn"
+        );
 
         let mut admitted = Vec::new();
         for tick in 0..600 {
@@ -19803,13 +20284,28 @@ mod tests {
                 .filter(|t| ids.contains(&t.id) && t.access_phase == 1)
                 .collect();
             for t in &road {
-                assert!(t.edge_index < t.route_lengths.len(), "tick {tick}: {} left its route", t.id);
-                assert!(movement_of(&engine, t.id).is_some(), "tick {tick}: {} is not drawn", t.id);
+                assert!(
+                    t.edge_index < t.route_lengths.len(),
+                    "tick {tick}: {} left its route",
+                    t.id
+                );
+                assert!(
+                    movement_of(&engine, t.id).is_some(),
+                    "tick {tick}: {} is not drawn",
+                    t.id
+                );
             }
             for a in &road {
                 for b in &road {
                     if a.id < b.id {
-                        assert!((a.edge_progress - b.edge_progress).abs() >= gap, "tick {tick}: {} and {} overlap: {:?} {:?}", a.id, b.id, (a.edge_index, a.edge_progress, a.wait_ticks), (b.edge_index, b.edge_progress));
+                        assert!(
+                            (a.edge_progress - b.edge_progress).abs() >= gap,
+                            "tick {tick}: {} and {} overlap: {:?} {:?}",
+                            a.id,
+                            b.id,
+                            (a.edge_index, a.edge_progress, a.wait_ticks),
+                            (b.edge_index, b.edge_progress)
+                        );
                     }
                 }
             }
@@ -19820,7 +20316,10 @@ mod tests {
                 .iter()
                 .filter(|t| ids.contains(&t.id) && t.access_phase == 2 && t.access_progress < 4.5)
                 .count();
-            assert!(in_mouth <= 1, "tick {tick}: {in_mouth} cars share the driveway mouth");
+            assert!(
+                in_mouth <= 1,
+                "tick {tick}: {in_mouth} cars share the driveway mouth"
+            );
             for t in &engine.state.travelers {
                 if ids.contains(&t.id) && t.access_phase == 2 && !admitted.contains(&t.id) {
                     admitted.push(t.id);
@@ -19833,14 +20332,26 @@ mod tests {
         }
         // Admitted in road order, and every car arrives.
         assert_eq!(admitted, ids);
-        assert!(!engine.state.travelers.iter().any(|t| ids.contains(&t.id)), "all arrivals complete");
+        assert!(
+            !engine.state.travelers.iter().any(|t| ids.contains(&t.id)),
+            "all arrivals complete"
+        );
     }
 
     #[test]
     fn a_car_held_at_a_driveway_survives_save_and_restore() {
         let (mut engine, _len, ids) = arrival_contention_engine();
         engine.advance_travelers();
-        assert_eq!(engine.state.travelers.iter().find(|t| t.id == ids[1]).unwrap().access_phase, 1);
+        assert_eq!(
+            engine
+                .state
+                .travelers
+                .iter()
+                .find(|t| t.id == ids[1])
+                .unwrap()
+                .access_phase,
+            1
+        );
         let mut restored = Engine::restore_json(&engine.save_json()).expect("held city restores");
         for _ in 0..200 {
             engine.advance_travelers();
@@ -19850,12 +20361,23 @@ mod tests {
 
         // Saves from before kerb holding kept a held car past the end of its route.
         let (mut legacy, len, ids) = arrival_contention_engine();
-        let old = legacy.state.travelers.iter_mut().find(|t| t.id == ids[1]).unwrap();
+        let old = legacy
+            .state
+            .travelers
+            .iter_mut()
+            .find(|t| t.id == ids[1])
+            .unwrap();
         old.edge_index = 1;
         old.edge_progress = 0.0;
-        let mut legacy = Engine::restore_json(&legacy.save_json()).expect("legacy held car restores");
+        let mut legacy =
+            Engine::restore_json(&legacy.save_json()).expect("legacy held car restores");
         legacy.advance_travelers();
-        let held = legacy.state.travelers.iter().find(|t| t.id == ids[1]).unwrap();
+        let held = legacy
+            .state
+            .travelers
+            .iter()
+            .find(|t| t.id == ids[1])
+            .unwrap();
         assert_eq!((held.access_phase, held.edge_index), (1, 0));
         assert!((held.edge_progress - len.max(1.0)).abs() < 1e-4);
         assert!(movement_of(&legacy, ids[1]).is_some());
@@ -19864,7 +20386,10 @@ mod tests {
     #[test]
     fn road_trips_choose_bodies_and_queue_by_length() {
         // Short bodies keep the historical spacing; long ones need more room.
-        assert_eq!(vehicle_gap(VEHICLE_COMPACT, VEHICLE_COMPACT), VEHICLE_MIN_GAP);
+        assert_eq!(
+            vehicle_gap(VEHICLE_COMPACT, VEHICLE_COMPACT),
+            VEHICLE_MIN_GAP
+        );
         assert_eq!(vehicle_gap(VEHICLE_KEI, VEHICLE_KEI), VEHICLE_MIN_GAP);
         assert!((vehicle_gap(VEHICLE_VAN, VEHICLE_TRUCK) - 5.2).abs() < 1e-5);
         assert!(vehicle_gap(VEHICLE_TAXI, VEHICLE_COMPACT) > VEHICLE_MIN_GAP);
@@ -19889,7 +20414,11 @@ mod tests {
                 edge_progress: len * 0.5,
                 speed: 1.0,
                 destination: to,
-                activity: if id % 2 == 0 { "delivery".into() } else { "commute".into() },
+                activity: if id % 2 == 0 {
+                    "delivery".into()
+                } else {
+                    "commute".into()
+                },
                 resident: 0,
                 name: "Test vehicle".into(),
                 origin_building: None,
@@ -19938,7 +20467,11 @@ mod tests {
                     .find(|road| road.kind != "rail" && road.stage == "open")
                     .expect("founding road is open");
                 road.kind = road_kind.into();
-                let (from, to) = if reverse { (road.to, road.from) } else { (road.from, road.to) };
+                let (from, to) = if reverse {
+                    (road.to, road.from)
+                } else {
+                    (road.from, road.to)
+                };
                 let a = engine.node(from).unwrap().clone();
                 let b = engine.node(to).unwrap().clone();
                 let len = distance(&a, &b);
@@ -19977,9 +20510,14 @@ mod tests {
                     let pedestrian = &movement[index..index + 5];
                     assert!((pedestrian[0] - center_x - nx * expected_offset * sign).abs() < 0.001);
                     assert!((pedestrian[1] - center_z - nz * expected_offset * sign).abs() < 0.001);
-                    assert!(expected_offset + 0.33 < surface_edge, "whole pedestrian fits surface");
+                    assert!(
+                        expected_offset + 0.33 < surface_edge,
+                        "whole pedestrian fits surface"
+                    );
                     for (at_start, node) in [(true, &a), (false, &b)] {
-                        let endpoint = engine.route_endpoint_position(&route, at_start, id, 0).unwrap();
+                        let endpoint = engine
+                            .route_endpoint_position(&route, at_start, id, 0)
+                            .unwrap();
                         assert!((endpoint.x - node.x - nx * expected_offset * sign).abs() < 0.001);
                         assert!((endpoint.z - node.z - nz * expected_offset * sign).abs() < 0.001);
                     }
@@ -20342,7 +20880,10 @@ mod tests {
             assert!(Engine::restore_json(&save.to_string()).is_err());
         }
         let mut missing: serde_json::Value = serde_json::from_str(&current).unwrap();
-        missing.as_object_mut().unwrap().remove("neighborhood_errands");
+        missing
+            .as_object_mut()
+            .unwrap()
+            .remove("neighborhood_errands");
         assert!(Engine::restore_json(&missing.to_string()).is_err());
     }
 
@@ -21462,10 +22003,15 @@ mod tests {
                 access_progress: if access_phase == 0 { 2.75 } else { 0.0 },
             };
             if access_phase == 0 {
-                let join = engine.route_endpoint_position(&traveler.route, true, traveler.id, traveler.kind).unwrap();
+                let join = engine
+                    .route_endpoint_position(&traveler.route, true, traveler.id, traveler.kind)
+                    .unwrap();
                 traveler.origin_access = Some(AccessPath {
                     points: vec![
-                        WorldPoint { x: join.x, z: join.z + 16.0 },
+                        WorldPoint {
+                            x: join.x,
+                            z: join.z + 16.0,
+                        },
                         join,
                     ],
                     surface_y: Vec::new(),
@@ -22359,10 +22905,14 @@ mod tests {
         let project_ids_before: BTreeSet<_> = left.state.projects.iter().map(|p| p.id).collect();
         left.plan_road();
         right.plan_road();
-        assert!(left.state.projects.iter().any(|p| {
-            !project_ids_before.contains(&p.id) && p.kind == "road"
-                && p.from == Some(proposal.start_id)
-        }), "replay must admit the enumerated frontier, not be a no-op");
+        assert!(
+            left.state.projects.iter().any(|p| {
+                !project_ids_before.contains(&p.id)
+                    && p.kind == "road"
+                    && p.from == Some(proposal.start_id)
+            }),
+            "replay must admit the enumerated frontier, not be a no-op"
+        );
         assert_eq!(
             left.save_json(),
             right.save_json(),
@@ -22372,7 +22922,11 @@ mod tests {
         right = Engine::restore_json(&admitted).expect("admitted frontier restores");
         left.step(800);
         right.step(800);
-        assert_eq!(left.save_json(), right.save_json(), "frontier construction replay diverged");
+        assert_eq!(
+            left.save_json(),
+            right.save_json(),
+            "frontier construction replay diverged"
+        );
     }
 
     fn synthetic_district_checkpoint(
@@ -22920,25 +23474,45 @@ mod tests {
             engine.add_road(c, a, "local", "open", 1.0);
             engine.add_road(a, b, "local", "open", 1.0);
             for connected in [false, true] {
-                if connected { engine.add_road(gateway, a, "local", "open", 1.0); }
+                if connected {
+                    engine.add_road(gateway, a, "local", "open", 1.0);
+                }
                 let mut seen = BTreeSet::from([gateway]);
                 let mut queue = VecDeque::from([gateway]);
                 while let Some(node) = queue.pop_front() {
                     for road in &engine.state.roads {
                         if road.stage == "open" && (road.from == node || road.to == node) {
-                            let next = if road.from == node { road.to } else { road.from };
-                            if seen.insert(next) { queue.push_back(next); }
+                            let next = if road.from == node {
+                                road.to
+                            } else {
+                                road.from
+                            };
+                            if seen.insert(next) {
+                                queue.push_back(next);
+                            }
                         }
                     }
                 }
-                let expected = engine.state.roads.iter().map(|r| r.stage == "open" && seen.contains(&r.from) && seen.contains(&r.to)).collect::<Vec<_>>();
+                let expected = engine
+                    .state
+                    .roads
+                    .iter()
+                    .map(|r| r.stage == "open" && seen.contains(&r.from) && seen.contains(&r.to))
+                    .collect::<Vec<_>>();
                 engine.recompute_connectivity();
-                assert_eq!(engine.state.roads.iter().map(|r|r.connected).collect::<Vec<_>>(),expected);
+                assert_eq!(
+                    engine
+                        .state
+                        .roads
+                        .iter()
+                        .map(|r| r.connected)
+                        .collect::<Vec<_>>(),
+                    expected
+                );
                 let revision = engine.access_geometry_revision_token();
                 engine.recompute_connectivity();
-                assert_eq!(engine.access_geometry_revision_token(),revision);
+                assert_eq!(engine.access_geometry_revision_token(), revision);
             }
         }
     }
-
 }

@@ -101,9 +101,9 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                     if let Some(key) = signature(plan) {
                         selected_spines.insert(key);
                         let spine_road_id = match plan.spine.as_ref().unwrap().stage {
-                            spine_plan::SpineStage::UnderConstruction {
-                                spine_road_id, ..
-                            } => Some(spine_road_id),
+                            spine_plan::SpineStage::UnderConstruction { spine_road_id, .. } => {
+                                Some(spine_road_id)
+                            }
                             _ => None,
                         };
                         seen_spines.entry(key).or_insert(spine_road_id);
@@ -127,10 +127,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .collect();
             let housing: Vec<_> = open.iter().copied().filter(|b| is_housing(b)).collect();
             let commerce: Vec<_> = open.iter().copied().filter(|b| is_commercial(b)).collect();
-            let envelope_area_m2: f64 = open
-                .iter()
-                .map(|b| (b.width * b.depth) as f64)
-                .sum();
+            let envelope_area_m2: f64 = open.iter().map(|b| (b.width * b.depth) as f64).sum();
             let floor_area_m2: f64 = open
                 .iter()
                 .map(|b| (b.width * b.depth * b.floors as f32) as f64)
@@ -186,9 +183,11 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
             let completed_spine_road_ids: BTreeSet<u32> = spine_road_ids
                 .into_iter()
                 .filter(|id| {
-                    engine.state.roads.iter().any(|road| {
-                        road.id == *id && road.stage == "open" && road.connected
-                    })
+                    engine
+                        .state
+                        .roads
+                        .iter()
+                        .any(|road| road.id == *id && road.stage == "open" && road.connected)
                 })
                 .collect();
             let completed_spine_count = completed_spine_road_ids.len();

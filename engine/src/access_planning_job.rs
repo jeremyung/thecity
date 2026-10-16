@@ -87,7 +87,12 @@ impl AccessPlanningJob {
         proposal_input: ProposalValidationInput,
         geometry_revision: u64,
     ) -> Result<Self, PlanningError> {
-        Self::new_excluding(discovery_input, proposal_input, geometry_revision, Vec::new())
+        Self::new_excluding(
+            discovery_input,
+            proposal_input,
+            geometry_revision,
+            Vec::new(),
+        )
     }
 
     pub(crate) fn new_excluding(
@@ -99,7 +104,8 @@ impl AccessPlanningJob {
         if discovery_input.viability != proposal_input.viability {
             return Err(PlanningError::SnapshotMismatch);
         }
-        let discovery = DiscoveryJob::new_excluding(discovery_input, excluded_faces).map_err(PlanningError::Discovery)?;
+        let discovery = DiscoveryJob::new_excluding(discovery_input, excluded_faces)
+            .map_err(PlanningError::Discovery)?;
         let proposal_input =
             ProposalValidationContext::new(proposal_input).map_err(PlanningError::ProposalInput)?;
         Ok(Self {

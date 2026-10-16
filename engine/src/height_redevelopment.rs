@@ -525,12 +525,15 @@ impl Engine {
         if !valid {
             return Err("height-redevelopment plan, host, parcel, and project disagree".into());
         }
-        if self.errand_references_building(building.id) || self.state.residents.iter().any(|resident| {
-            resident.home_building == building.id || resident.work_building == Some(building.id)
-        }) || self.state.travelers.iter().any(|traveler| {
-            traveler.origin_building == Some(building.id)
-                || traveler.destination_building == Some(building.id)
-        }) {
+        if self.errand_references_building(building.id)
+            || self.state.residents.iter().any(|resident| {
+                resident.home_building == building.id || resident.work_building == Some(building.id)
+            })
+            || self.state.travelers.iter().any(|traveler| {
+                traveler.origin_building == Some(building.id)
+                    || traveler.destination_building == Some(building.id)
+            })
+        {
             return Err("height-redevelopment host still has actor references".into());
         }
         if self.state.projects.iter().any(|other| {

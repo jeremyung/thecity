@@ -7,7 +7,8 @@ use crate::*;
 fn audit_largest_face_direct_access_candidate() {
     use serde_json::json;
 
-    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    const SAVE: &str =
+        include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let source = Engine::restore_json(SAVE).expect("matching mature checkpoint restores");
     assert_eq!(source.state.tick, 242_000);
     assert_eq!(source.state.seed, 87_231);
@@ -249,7 +250,8 @@ fn end_node_id_for_test() -> u32 {
 }
 
 fn generalized_access_candidate_engine() -> (Engine, usize) {
-    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    const SAVE: &str =
+        include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let mut engine = Engine::restore_json(SAVE).expect("mature checkpoint restores");
     let host_t = 0.72;
     let end = WorldPoint { x: 181.0, z: 15.0 };
@@ -344,7 +346,8 @@ fn generalized_access_candidate_engine() -> (Engine, usize) {
 
 #[test]
 fn explicit_angled_access_candidate_uses_branch_frontage_and_restores() {
-    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    const SAVE: &str =
+        include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let source = Engine::restore_json(SAVE).expect("mature checkpoint restores");
     let before = source.save_json();
     let candidate = interior_access::AccessGeometryCandidate {
@@ -423,7 +426,8 @@ fn explicit_angled_access_candidate_uses_branch_frontage_and_restores() {
 fn map_known_branch_local_sensitivity() {
     use serde_json::json;
 
-    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    const SAVE: &str =
+        include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     const HOST_ID: u32 = 3317;
     const BASE_T: f32 = 0.72;
     const BASE_END_X: f32 = 181.0;
@@ -694,7 +698,8 @@ fn diagnostic_rect_inside_face(rect: &geometry::OrientedRect, polygon: &[(f32, f
 #[ignore = "offline exhaustive prepared-page diagnostic on a mature face"]
 fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     let diagnostic_started = std::time::Instant::now();
-    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    const SAVE: &str =
+        include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let source = Engine::restore_json(SAVE).expect("current mature checkpoint restores");
     let source_before = source.save_json();
     let ordinary = source
@@ -890,7 +895,8 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
                 (
                     host.road_id,
                     along.to_bits(),
-                    (along / crate::access_math::length(host.bx - host.ax, host.bz - host.az)).to_bits(),
+                    (along / crate::access_math::length(host.bx - host.ax, host.bz - host.az))
+                        .to_bits(),
                 )
             })
         })
@@ -1146,7 +1152,10 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../validation/face-access-paged-search.json");
         std::fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
-        assert_eq!(proposal_count, 0, "expected no accepted proposal under restored split policy");
+        assert_eq!(
+            proposal_count, 0,
+            "expected no accepted proposal under restored split policy"
+        );
         return;
     };
 
@@ -1351,7 +1360,8 @@ fn scan_exact_planner_for_access_into_largest_face() {
     use serde_json::json;
     use std::collections::BTreeSet;
 
-    const SAVE: &str = include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    const SAVE: &str =
+        include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
     let engine = Engine::restore_json(SAVE).expect("matching checkpoint restores");
     let before = engine.save_json();
     let ordinary: Vec<_> = engine
@@ -3218,7 +3228,10 @@ fn mature_discovery_job_matches_reference() {
         viability: frozen_target_viability_input(&source),
     };
     let captured = crate::access_capture::capture(&source).unwrap();
-    assert_eq!(serde_json::to_value(&captured).unwrap(), serde_json::to_value(&input).unwrap());
+    assert_eq!(
+        serde_json::to_value(&captured).unwrap(),
+        serde_json::to_value(&input).unwrap()
+    );
     let input = captured;
     let reference = access_reference::load();
     let mut prior_work = None;
@@ -3284,39 +3297,122 @@ fn mature_discovery_job_matches_reference() {
 fn mature_incremental_proposal_validation_matches_live_oracle() {
     use crate::access_proposal_validation::*;
     use crate::face_target_viability::Segment;
-    let source = Engine::restore_json(include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json")).unwrap();
-    let segment = |from, to| source.node(from).zip(source.node(to)).map(|(a,b)| Segment { ax:a.x,az:a.z,bx:b.x,bz:b.z });
-    let mut hosts = source.state.roads.iter().filter(|r| r.stage == "open" && r.connected && matches!(r.kind.as_str(), "local" | "arterial"))
-        .filter_map(|r| segment(r.from,r.to).map(|segment| ProposalHost { id:r.id,from:r.from,to:r.to,segment })).collect::<Vec<_>>();
+    let source = Engine::restore_json(include_str!(
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+    ))
+    .unwrap();
+    let segment = |from, to| {
+        source
+            .node(from)
+            .zip(source.node(to))
+            .map(|(a, b)| Segment {
+                ax: a.x,
+                az: a.z,
+                bx: b.x,
+                bz: b.z,
+            })
+    };
+    let mut hosts = source
+        .state
+        .roads
+        .iter()
+        .filter(|r| {
+            r.stage == "open" && r.connected && matches!(r.kind.as_str(), "local" | "arterial")
+        })
+        .filter_map(|r| {
+            segment(r.from, r.to).map(|segment| ProposalHost {
+                id: r.id,
+                from: r.from,
+                to: r.to,
+                segment,
+            })
+        })
+        .collect::<Vec<_>>();
     hosts.sort_by_key(|h| h.id);
     let input = ProposalValidationInput {
         hosts,
-        nodes: source.state.nodes.iter().map(|n| ProposalNode {id:n.id,x:n.x,z:n.z}).collect(),
-        roads: source.state.roads.iter().map(|r| ProposalRoad {id:r.id,is_open:r.stage == "open",segment:segment(r.from,r.to)}).collect(),
-        projects: source.state.projects.iter().map(|p| ProposalProject { active_road:p.kind == "road" && p.progress < 1.0,
-            endpoints: match p.from.zip(p.to) { None => ProjectEndpoints::NoIds, Some((a,b)) => segment(a,b).map(ProjectEndpoints::Segment).unwrap_or(ProjectEndpoints::MissingNode) } }).collect(),
+        nodes: source
+            .state
+            .nodes
+            .iter()
+            .map(|n| ProposalNode {
+                id: n.id,
+                x: n.x,
+                z: n.z,
+            })
+            .collect(),
+        roads: source
+            .state
+            .roads
+            .iter()
+            .map(|r| ProposalRoad {
+                id: r.id,
+                is_open: r.stage == "open",
+                segment: segment(r.from, r.to),
+            })
+            .collect(),
+        projects: source
+            .state
+            .projects
+            .iter()
+            .map(|p| ProposalProject {
+                active_road: p.kind == "road" && p.progress < 1.0,
+                endpoints: match p.from.zip(p.to) {
+                    None => ProjectEndpoints::NoIds,
+                    Some((a, b)) => segment(a, b)
+                        .map(ProjectEndpoints::Segment)
+                        .unwrap_or(ProjectEndpoints::MissingNode),
+                },
+            })
+            .collect(),
         viability: crate::access_capture::capture(&source).unwrap().viability,
-        gates: AdmissionGates { demand:source.state.demand,has_pending_interior_plan:source.state.pending_interior_access.is_some(),has_neighborhood_plan:source.state.neighborhood_plan.is_some(),road_count:source.state.roads.len(),project_count:source.state.projects.len(),parcel_count:source.state.parcels.len(),frontage_count:source.state.parcel_frontages.len(),next_id:source.state.next_id,project_admission_available:source.project_admission_available(),pending_access_branch:None },
+        gates: AdmissionGates {
+            demand: source.state.demand,
+            has_pending_interior_plan: source.state.pending_interior_access.is_some(),
+            has_neighborhood_plan: source.state.neighborhood_plan.is_some(),
+            road_count: source.state.roads.len(),
+            project_count: source.state.projects.len(),
+            parcel_count: source.state.parcels.len(),
+            frontage_count: source.state.parcel_frontages.len(),
+            next_id: source.state.next_id,
+            project_admission_available: source.project_admission_available(),
+            pending_access_branch: None,
+        },
     };
     assert!(source.state.pending_interior_access.is_none());
     let captured = crate::access_proposal_capture::capture(&source).unwrap();
-    assert_eq!(serde_json::to_value(&captured).unwrap(), serde_json::to_value(&input).unwrap());
+    assert_eq!(
+        serde_json::to_value(&captured).unwrap(),
+        serde_json::to_value(&input).unwrap()
+    );
     let context = ProposalValidationContext::new(captured).unwrap();
     let reference = crate::access_reference::load();
-    let accepted_fixture: serde_json::Value = serde_json::from_str(include_str!("../../validation/accepted-access-candidate.json")).unwrap();
-    let regression_bits: [u32; 4] = serde_json::from_value(accepted_fixture["bits"].clone()).unwrap();
+    let accepted_fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../validation/accepted-access-candidate.json"
+    ))
+    .unwrap();
+    let regression_bits: [u32; 4] =
+        serde_json::from_value(accepted_fixture["bits"].clone()).unwrap();
     let mut validation_bits = reference.ordered_bits.clone();
     validation_bits.push(regression_bits);
     let mut totals = Vec::new();
-    for quota in [1usize,7,48] {
+    for quota in [1usize, 7, 48] {
         let mut accepted = Vec::new();
         let mut work = 0usize;
         let mut restores = 0usize;
-        for (i,bits) in validation_bits.iter().enumerate() {
-            let candidate = interior_access::AccessGeometryCandidate {host_id:bits[0],host_t:f32::from_bits(bits[1]),end_x:f32::from_bits(bits[2]),end_z:f32::from_bits(bits[3]),tie_index:(i%48) as u8};
-            let expected = source.propose_interior_access_from_geometry_candidates(0,&[candidate]).proposals;
-            let mut query = ProposalValidator::new(context.clone(),candidate);
-            assert_eq!(query.advance(0).work_used,0);
+        for (i, bits) in validation_bits.iter().enumerate() {
+            let candidate = interior_access::AccessGeometryCandidate {
+                host_id: bits[0],
+                host_t: f32::from_bits(bits[1]),
+                end_x: f32::from_bits(bits[2]),
+                end_z: f32::from_bits(bits[3]),
+                tie_index: (i % 48) as u8,
+            };
+            let expected = source
+                .propose_interior_access_from_geometry_candidates(0, &[candidate])
+                .proposals;
+            let mut query = ProposalValidator::new(context.clone(), candidate);
+            assert_eq!(query.advance(0).work_used, 0);
             let mut since_save = 0;
             loop {
                 let step = query.advance(quota);
@@ -3325,71 +3421,148 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
                 since_save += step.work_used;
                 if step.done || since_save >= 4093 {
                     let cp = serde_json::to_string(&query.checkpoint()).unwrap();
-                    query = ProposalValidator::restore(serde_json::from_str(&cp).unwrap(),context.clone()).unwrap_or_else(|e| panic!("candidate {i}, quota {quota}, restore {e:?}: {cp}"));
-                    restores += 1; since_save=0;
+                    query = ProposalValidator::restore(
+                        serde_json::from_str(&cp).unwrap(),
+                        context.clone(),
+                    )
+                    .unwrap_or_else(|e| {
+                        panic!("candidate {i}, quota {quota}, restore {e:?}: {cp}")
+                    });
+                    restores += 1;
+                    since_save = 0;
                 }
-                if step.done {break;}
+                if step.done {
+                    break;
+                }
                 assert!(step.work_used > 0);
             }
-            let actual = query.outcome().unwrap().ok().into_iter().collect::<Vec<_>>();
-            assert_eq!(actual,expected,"candidate {i}, quota {quota}");
+            let actual = query
+                .outcome()
+                .unwrap()
+                .ok()
+                .into_iter()
+                .collect::<Vec<_>>();
+            assert_eq!(actual, expected, "candidate {i}, quota {quota}");
             if i < reference.ordered_bits.len() {
                 // Only the edge-sample descriptor matching the frozen legal
                 // candidate is accepted on this fixture.
-                assert_eq!(actual.len(), usize::from(*bits == regression_bits), "candidate {i}");
+                assert_eq!(
+                    actual.len(),
+                    usize::from(*bits == regression_bits),
+                    "candidate {i}"
+                );
             } else {
-                assert_eq!(actual.len(), 1, "independent legal candidate must still be accepted");
+                assert_eq!(
+                    actual.len(),
+                    1,
+                    "independent legal candidate must still be accepted"
+                );
             }
             accepted.extend(actual);
         }
-        assert_eq!(accepted.len(),2);
-        assert!(accepted.iter().all(|p| p.host_id == 3317 && p.selected_lots.len() == 2));
-        assert_eq!((accepted[0].host_t, accepted[0].end_x, accepted[0].end_z, &accepted[0].selected_lots),
-            (accepted[1].host_t, accepted[1].end_x, accepted[1].end_z, &accepted[1].selected_lots));
+        assert_eq!(accepted.len(), 2);
+        assert!(accepted
+            .iter()
+            .all(|p| p.host_id == 3317 && p.selected_lots.len() == 2));
+        assert_eq!(
+            (
+                accepted[0].host_t,
+                accepted[0].end_x,
+                accepted[0].end_z,
+                &accepted[0].selected_lots
+            ),
+            (
+                accepted[1].host_t,
+                accepted[1].end_x,
+                accepted[1].end_z,
+                &accepted[1].selected_lots
+            )
+        );
         totals.push(serde_json::json!({"quota":quota,"work":work,"restores":restores,"accepted":accepted.len(),"descriptor_accepted":1,"independent_regression_accepted":1,"proposals":accepted}));
     }
     assert!(totals.windows(2).all(|w| w[0]["work"] == w[1]["work"]));
-    std::fs::write(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation/incremental-proposal-validation.json"),serde_json::to_vec_pretty(&totals).unwrap()).unwrap();
+    std::fs::write(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../validation/incremental-proposal-validation.json"),
+        serde_json::to_vec_pretty(&totals).unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
 #[ignore = "composed discovery to ranked proposal pages on mature city"]
 fn mature_access_planning_job_matches_ranked_pages() {
     use crate::access_planning_job::AccessPlanningJob;
-    let source = Engine::restore_json(include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json")).unwrap();
+    let source = Engine::restore_json(include_str!(
+        "../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
+    ))
+    .unwrap();
     let reference = crate::access_reference::load();
     let mut expected = Vec::new();
     for rows in reference.ordered_bits.chunks(48) {
-        let descriptors = rows.iter().enumerate().map(|(i,b)| interior_access::AccessGeometryCandidate { host_id:b[0],host_t:f32::from_bits(b[1]),end_x:f32::from_bits(b[2]),end_z:f32::from_bits(b[3]),tie_index:i as u8 }).collect::<Vec<_>>();
-        let mut proposals = source.propose_interior_access_from_geometry_candidates(0,&descriptors).proposals;
-        proposals.sort_by(|a,b| b.score.compare(a.score));
+        let descriptors = rows
+            .iter()
+            .enumerate()
+            .map(|(i, b)| interior_access::AccessGeometryCandidate {
+                host_id: b[0],
+                host_t: f32::from_bits(b[1]),
+                end_x: f32::from_bits(b[2]),
+                end_z: f32::from_bits(b[3]),
+                tie_index: i as u8,
+            })
+            .collect::<Vec<_>>();
+        let mut proposals = source
+            .propose_interior_access_from_geometry_candidates(0, &descriptors)
+            .proposals;
+        proposals.sort_by(|a, b| b.score.compare(a.score));
         expected.push(proposals);
     }
     let mut reports = Vec::new();
-    for quota in [48,4096] {
-        let mut job = AccessPlanningJob::new(crate::access_capture::capture(&source).unwrap(),crate::access_proposal_capture::capture(&source).unwrap(),source.access_geometry_revision_token().unwrap()).unwrap();
-        let mut work=0usize; let mut since_save=0; let mut restores=0; let mut pages=Vec::new();
-        assert_eq!(job.advance(0).work_used,0);
+    for quota in [48, 4096] {
+        let mut job = AccessPlanningJob::new(
+            crate::access_capture::capture(&source).unwrap(),
+            crate::access_proposal_capture::capture(&source).unwrap(),
+            source.access_geometry_revision_token().unwrap(),
+        )
+        .unwrap();
+        let mut work = 0usize;
+        let mut since_save = 0;
+        let mut restores = 0;
+        let mut pages = Vec::new();
+        assert_eq!(job.advance(0).work_used, 0);
         loop {
-            let step=job.advance(quota);
-            assert!(step.work_used<=quota);
-            work+=step.work_used; since_save+=step.work_used;
-            if since_save>=100_003 || step.page_ready || step.exhausted {
-                let checkpoint=serde_json::to_string(&job.checkpoint()).unwrap();
-                job=AccessPlanningJob::restore(serde_json::from_str(&checkpoint).unwrap()).unwrap();
-                restores+=1; since_save=0;
+            let step = job.advance(quota);
+            assert!(step.work_used <= quota);
+            work += step.work_used;
+            since_save += step.work_used;
+            if since_save >= 100_003 || step.page_ready || step.exhausted {
+                let checkpoint = serde_json::to_string(&job.checkpoint()).unwrap();
+                job =
+                    AccessPlanningJob::restore(serde_json::from_str(&checkpoint).unwrap()).unwrap();
+                restores += 1;
+                since_save = 0;
             }
             if step.page_ready {
                 pages.push(job.ready_page().unwrap().to_vec());
-                if !job.continue_next_page().unwrap() {break;}
-            } else if step.exhausted {break;}
-            else {assert!(step.work_used>0);}
-            assert!(work<20_000_000);
+                if !job.continue_next_page().unwrap() {
+                    break;
+                }
+            } else if step.exhausted {
+                break;
+            } else {
+                assert!(step.work_used > 0);
+            }
+            assert!(work < 20_000_000);
         }
-        assert_eq!(pages,expected,"quota {quota}");
+        assert_eq!(pages, expected, "quota {quota}");
         assert!(job.is_exhausted());
         reports.push(serde_json::json!({"quota":quota,"work":work,"restores":restores,"pages":pages.len(),"accepted":pages.iter().map(Vec::len).sum::<usize>()}));
     }
-    assert_eq!(reports[0]["work"],reports[1]["work"]);
-    std::fs::write(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../validation/access-planning-mature.json"),serde_json::to_vec_pretty(&reports).unwrap()).unwrap();
+    assert_eq!(reports[0]["work"], reports[1]["work"]);
+    std::fs::write(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../validation/access-planning-mature.json"),
+        serde_json::to_vec_pretty(&reports).unwrap(),
+    )
+    .unwrap();
 }

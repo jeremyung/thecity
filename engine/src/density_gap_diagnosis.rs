@@ -40,9 +40,7 @@ fn distance_to_polygon_boundary(point: (f32, f32), polygon: &[(f32, f32)]) -> f3
     for index in 0..polygon.len() {
         let a = polygon[index];
         let b = polygon[(index + 1) % polygon.len()];
-        distance = distance.min(point_segment_distance(
-            point.0, point.1, a.0, a.1, b.0, b.1,
-        ));
+        distance = distance.min(point_segment_distance(point.0, point.1, a.0, a.1, b.0, b.1));
     }
     distance
 }
@@ -85,25 +83,29 @@ fn classify_candidate(
     if !engine.interior_plan_allows_parcel(rect, false) {
         return "interior_access_reservation";
     }
-    if !engine.neighborhood_corridor_clear_for_parcel(
-        rect.x,
-        rect.z,
-        max_x - min_x,
-        max_z - min_z,
-    ) {
+    if !engine.neighborhood_corridor_clear_for_parcel(rect.x, rect.z, max_x - min_x, max_z - min_z)
+    {
         return "coordinated_block_reservation";
     }
-    if context.parcel_footprints.iter().any(|old| geometry::rects_overlap(rect, old, 2.0)) {
+    if context
+        .parcel_footprints
+        .iter()
+        .any(|old| geometry::rects_overlap(rect, old, 2.0))
+    {
         return "existing_parcel_envelope";
     }
-    if context.open_roads.iter().any(|road| {
-        geometry::rect_segment_distance(rect, road.ax, road.az, road.bx, road.bz) < 5.0
-    }) {
+    if context
+        .open_roads
+        .iter()
+        .any(|road| geometry::rect_segment_distance(rect, road.ax, road.az, road.bx, road.bz) < 5.0)
+    {
         return "open_road_footprint_clearance";
     }
-    if context.pending_roads.iter().any(|road| {
-        geometry::rect_segment_distance(rect, road.ax, road.az, road.bx, road.bz) < 7.0
-    }) {
+    if context
+        .pending_roads
+        .iter()
+        .any(|road| geometry::rect_segment_distance(rect, road.ax, road.az, road.bx, road.bz) < 7.0)
+    {
         return "pending_road_footprint_clearance";
     }
     if !engine.oriented_parcel_geometry_clear_with_context(rect, context) {
@@ -157,10 +159,9 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         &std::fs::read_to_string(&save_path).expect("read reviewed public-WASM checkpoint"),
     )
     .expect("parse public checkpoint");
-    let engine = Engine::restore_json(
-        &std::fs::read_to_string(&save_path).expect("read public save"),
-    )
-    .expect("public save canonically restores");
+    let engine =
+        Engine::restore_json(&std::fs::read_to_string(&save_path).expect("read public save"))
+            .expect("public save canonically restores");
     let void_audit: Value = serde_json::from_str(
         &std::fs::read_to_string(validation.join("density-void-audit.json"))
             .expect("read UI void geometry audit"),
@@ -169,11 +170,16 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
     let context = engine.collision_context();
     let towers = engine.available_station_tower_envelopes();
     let access_scan = engine.propose_interior_access();
-    let access_host_count = engine.state.roads.iter().filter(|road| {
-        road.stage == "open"
-            && road.connected
-            && matches!(road.kind.as_str(), "local" | "arterial")
-    }).count();
+    let access_host_count = engine
+        .state
+        .roads
+        .iter()
+        .filter(|road| {
+            road.stage == "open"
+                && road.connected
+                && matches!(road.kind.as_str(), "local" | "arterial")
+        })
+        .count();
     let access_candidate_count = access_host_count * interior_access::PROPOSALS_PER_HOST;
     let mut access_cycle_cursor = engine.state.interior_access_cursor;
     let mut access_cycle_examined = 0usize;
@@ -188,7 +194,10 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
     }
     let mut region_reports = Vec::new();
 
-    for region in void_audit["top3VoidComponents"].as_array().expect("3 audited gaps") {
+    for region in void_audit["top3VoidComponents"]
+        .as_array()
+        .expect("3 audited gaps")
+    {
         let polygon = region["road_face_polygon_xz"]
             .as_array()
             .expect("face polygon")
@@ -200,8 +209,12 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
                 )
             })
             .collect::<Vec<_>>();
-        let bounds = region["bbox"].as_array().unwrap().iter()
-            .map(|value| value.as_f64().unwrap() as f32).collect::<Vec<_>>();
+        let bounds = region["bbox"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_f64().unwrap() as f32)
+            .collect::<Vec<_>>();
         let mut counts = BTreeMap::<String, usize>::new();
         let mut site_keys = BTreeSet::new();
         let mut examples = Vec::new();
@@ -224,19 +237,16 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
                 continue;
             };
             let (grid_width, grid_depth, spacing) = if engine.is_neighborhood_plan_road(road.id) {
-                (NEIGHBORHOOD_PARCEL_SIZE, NEIGHBORHOOD_PARCEL_SIZE, NEIGHBORHOOD_FRONTAGE_SPACING)
+                (
+                    NEIGHBORHOOD_PARCEL_SIZE,
+                    NEIGHBORHOOD_PARCEL_SIZE,
+                    NEIGHBORHOOD_FRONTAGE_SPACING,
+                )
             } else {
                 (14.0, 12.0, FRONTAGE_SLOT_SPACING)
             };
             let (sites, dimensions, has_tower) = engine.frontage_candidates_with_shallow_fallback(
-                road.id,
-                a,
-                b,
-                &context,
-                &towers,
-                grid_width,
-                grid_depth,
-                spacing,
+                road.id, a, b, &context, &towers, grid_width, grid_depth, spacing,
             );
             for (slot, ((x, z, access_node, _along, side), (width, depth))) in
                 sites.into_iter().zip(dimensions).enumerate()
@@ -270,7 +280,9 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
                     (depth * 10_000.0).round() as i64,
                 );
                 if !site_keys.insert(key) {
-                    *counts.entry("duplicate_candidate_center".into()).or_default() += 1;
+                    *counts
+                        .entry("duplicate_candidate_center".into())
+                        .or_default() += 1;
                     continue;
                 }
                 candidate_count += 1;
@@ -288,7 +300,11 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
                         .then(|| overlapping_existing_parcel(&engine, &rect))
                         .flatten();
                     let blocker_building = blocker.and_then(|parcel_id| {
-                        engine.state.buildings.iter().find(|building| building.parcel_id == parcel_id)
+                        engine
+                            .state
+                            .buildings
+                            .iter()
+                            .find(|building| building.parcel_id == parcel_id)
                     });
                     examples.push(json!({
                         "road_id": road.id,
@@ -307,10 +323,16 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         }
         let mut access_cycle_options = Vec::new();
         for proposal in &access_cycle_proposals {
-            let Some(host) = engine.state.roads.iter().find(|road| road.id == proposal.host_id) else {
+            let Some(host) = engine
+                .state
+                .roads
+                .iter()
+                .find(|road| road.id == proposal.host_id)
+            else {
                 continue;
             };
-            let (Some(host_a), Some(host_b)) = (engine.node(host.from), engine.node(host.to)) else {
+            let (Some(host_a), Some(host_b)) = (engine.node(host.from), engine.node(host.to))
+            else {
                 continue;
             };
             let split = (
@@ -372,15 +394,28 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         }));
     }
 
-    let active_housing = engine.state.buildings.iter().filter(|building| {
-        building.stage == "open" && is_housing(building)
-    }).collect::<Vec<_>>();
-    let active_commerce = engine.state.buildings.iter().filter(|building| {
-        building.stage == "open" && is_commercial(building)
-    }).collect::<Vec<_>>();
-    let ordinary_open = engine.state.roads.iter().filter(|road| {
-        road.stage == "open" && road.connected && matches!(road.kind.as_str(), "local" | "arterial")
-    }).collect::<Vec<_>>();
+    let active_housing = engine
+        .state
+        .buildings
+        .iter()
+        .filter(|building| building.stage == "open" && is_housing(building))
+        .collect::<Vec<_>>();
+    let active_commerce = engine
+        .state
+        .buildings
+        .iter()
+        .filter(|building| building.stage == "open" && is_commercial(building))
+        .collect::<Vec<_>>();
+    let ordinary_open = engine
+        .state
+        .roads
+        .iter()
+        .filter(|road| {
+            road.stage == "open"
+                && road.connected
+                && matches!(road.kind.as_str(), "local" | "arterial")
+        })
+        .collect::<Vec<_>>();
     let report = json!({
         "checkpoint": "validation/early-reservation-wasm-87231-save.json",
         "checkpoint_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",

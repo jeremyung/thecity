@@ -70,11 +70,7 @@ mod tests {
 
     #[test]
     fn explicit_length_and_tangent_vectors_stay_finite_for_oblique_inputs() {
-        for (dx, dz, clearance) in [
-            (3.0, 4.0, 1.0),
-            (-7.25, 2.5, 3.0),
-            (0.03125, -0.0625, 0.01),
-        ] {
+        for (dx, dz, clearance) in [(3.0, 4.0, 1.0), (-7.25, 2.5, 3.0), (0.03125, -0.0625, 0.01)] {
             let distance = length(dx, dz);
             assert!(distance.is_finite() && distance > clearance);
             for direction in rotate_clearance_sides(dx, dz, distance, clearance) {
