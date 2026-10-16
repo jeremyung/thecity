@@ -15,8 +15,8 @@ pub struct Building {
     pub width: f32,
     pub depth: f32,
     pub floors: u8,
-    pub kind: String,
-    pub stage: String,
+    pub kind: BuildingKind,
+    pub stage: Stage,
     pub progress: f32,
     pub capacity: u16,
     pub occupancy: u16,
@@ -33,11 +33,11 @@ pub struct Building {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Project {
     pub id: u32,
-    pub kind: String,
+    pub kind: ProjectKind,
     pub from: Option<u32>,
     pub to: Option<u32>,
     pub parcel_id: Option<u32>,
-    pub stage: String,
+    pub stage: Stage,
     pub progress: f32,
     pub reason: String,
     pub duration: f32,
@@ -69,19 +69,22 @@ pub(crate) fn is_pocket_park(parcel: &Parcel) -> bool {
 }
 
 pub(crate) fn is_housing(building: &Building) -> bool {
-    matches!(building.kind.as_str(), "home" | "apartment")
+    matches!(building.kind, BuildingKind::Home | BuildingKind::Apartment)
 }
 
-pub(crate) fn is_commercial_kind(kind: &str) -> bool {
-    matches!(kind, "shop" | "cafe" | "office")
+pub(crate) fn is_commercial_kind(kind: BuildingKind) -> bool {
+    matches!(
+        kind,
+        BuildingKind::Shop | BuildingKind::Cafe | BuildingKind::Office
+    )
 }
 
 pub(crate) fn is_commercial(building: &Building) -> bool {
-    is_commercial_kind(&building.kind)
+    is_commercial_kind(building.kind)
 }
 
 pub(crate) fn site_active(building: &Building) -> bool {
-    if building.stage != "open" {
+    if building.stage != Stage::Open {
         return false;
     }
     if is_housing(building) {
@@ -94,7 +97,7 @@ pub(crate) fn site_active(building: &Building) -> bool {
 }
 
 pub(crate) fn site_vacant(building: &Building) -> bool {
-    if building.stage != "open" {
+    if building.stage != Stage::Open {
         return false;
     }
     if is_housing(building) {
@@ -110,9 +113,9 @@ impl Engine {
     pub(crate) fn add_building(
         &mut self,
         parcel: u32,
-        kind: &str,
+        kind: BuildingKind,
         floors: u8,
-        stage: &str,
+        stage: Stage,
         progress: f32,
         capacity: u16,
         name: &str,
@@ -138,8 +141,8 @@ impl Engine {
             width: p.width,
             depth: p.depth,
             floors,
-            kind: kind.into(),
-            stage: stage.into(),
+            kind,
+            stage,
             progress,
             capacity,
             occupancy: 0,
@@ -149,7 +152,7 @@ impl Engine {
             history,
             anchor,
             vacant_days: 0,
-            business_active: is_commercial_kind(kind) && stage == "open",
+            business_active: is_commercial_kind(kind) && stage == Stage::Open,
         });
         id
     }
@@ -164,31 +167,30 @@ impl Engine {
             let work = 1.0 / p.duration.max(1.0);
             p.progress = (p.progress + work).min(1.0);
             p.stage = if p.progress < 0.22 {
-                "survey"
+                Stage::Survey
             } else if p.progress < 0.48 {
-                "clearing"
+                Stage::Clearing
             } else if p.progress < 0.73 {
-                "structure"
+                Stage::Structure
             } else if p.progress < 0.92 {
-                "surface"
+                Stage::Surface
             } else {
-                "finishing"
-            }
-            .into();
-            if p.kind == "building" {
+                Stage::Finishing
+            };
+            if p.kind == ProjectKind::Building {
                 if let Some(parcel_id) = p.parcel_id {
                     if let Some(building) = self
                         .state
                         .buildings
                         .iter_mut()
-                        .find(|b| b.parcel_id == parcel_id && b.stage != "open")
+                        .find(|b| b.parcel_id == parcel_id && b.stage != Stage::Open)
                     {
                         building.stage = p.stage.clone();
                         building.progress = p.progress;
                     }
                 }
             }
-            if p.kind == "road"
+            if p.kind == ProjectKind::Road
                 && self
                     .state
                     .pending_interior_access
@@ -207,7 +209,7 @@ impl Engine {
                     }
                 }
             }
-            if p.kind == "road" {
+            if p.kind == ProjectKind::Road {
                 spine_road_progress.push((p.id, p.stage.clone(), p.progress));
             }
             if p.progress >= 1.0 {
@@ -215,7 +217,7 @@ impl Engine {
             }
         }
         for (project_id, stage, progress) in spine_road_progress {
-            self.sync_neighborhood_spine_project(project_id, &stage, progress);
+            self.sync_neighborhood_spine_project(project_id, stage, progress);
         }
         self.advance_height_redevelopment();
         self.sync_masterplan_road_projects();
@@ -240,7 +242,7 @@ impl Engine {
         if self.complete_height_redevelopment(id) {
             return;
         }
-        if p.kind == "extension" {
+        if p.kind == ProjectKind::Extension {
             self.complete_rear_extension_project(id);
             return;
         }
@@ -257,34 +259,34 @@ impl Engine {
             self.trim_completed_projects();
             return;
         }
-        match p.kind.as_str() {
-            "road" => {
+        match p.kind {
+            ProjectKind::Road => {
                 if let (Some(a), Some(b)) = (p.from, p.to) {
                     let kind = if let (Some(na), Some(nb)) = (self.node(a), self.node(b)) {
                         if (na.x - nb.x).abs() > 100.0 && (na.x < -100.0) != (nb.x < -100.0) {
-                            "bridge"
+                            RoadKind::Bridge
                         } else {
-                            "local"
+                            RoadKind::Local
                         }
                     } else {
-                        "local"
+                        RoadKind::Local
                     };
                     let rid = if let Some(road) = self.state.roads.iter_mut().find(|r| {
                         ((r.from == a && r.to == b) || (r.from == b && r.to == a))
-                            && r.stage != "open"
+                            && r.stage != Stage::Open
                     }) {
-                        road.stage = "open".into();
+                        road.stage = Stage::Open;
                         road.progress = 1.0;
                         road.id
                     } else {
-                        self.add_road(a, b, kind, "open", 1.0)
+                        self.add_road(a, b, kind, Stage::Open, 1.0)
                     };
                     self.recompute_connectivity();
                     self.remember_neighborhood_plan_road(rid, a, b);
                     if let Some(r) = self.state.roads.iter_mut().find(|r| r.id == rid) {
                         if r.connected {
                             self.record(
-                                "RoadOpened",
+                                EventKind::RoadOpened,
                                 rid,
                                 format!(
                                     "A {} opens and extends the connected street network",
@@ -317,7 +319,7 @@ impl Engine {
                     }
                 }
             }
-            "building" => {
+            ProjectKind::Building => {
                 if let Some(pid) = p.parcel_id {
                     let mut released_parcel_reservation = false;
                     if let Some(parcel) = self.state.parcels.iter_mut().find(|x| x.id == pid) {
@@ -330,9 +332,9 @@ impl Engine {
                         .state
                         .buildings
                         .iter_mut()
-                        .find(|b| b.parcel_id == pid && b.stage != "open")
+                        .find(|b| b.parcel_id == pid && b.stage != Stage::Open)
                     {
-                        b.stage = "open".into();
+                        b.stage = Stage::Open;
                         b.progress = 1.0;
                         b.built_day = (self.state.tick / TICKS_PER_DAY) as u32;
                         b.vacant_days = 0;
@@ -353,13 +355,13 @@ impl Engine {
                         };
                         if reopening {
                             self.record(
-                                "BusinessReopened",
+                                EventKind::BusinessReopened,
                                 id,
                                 format!("{} reopens as a {} after tenant renewal", name, kind),
                             );
                         } else {
                             self.record(
-                                "BuildingOpened",
+                                EventKind::BuildingOpened,
                                 id,
                                 format!("{} opens as a {}", name, kind),
                             );
@@ -369,16 +371,13 @@ impl Engine {
                     }
                 }
             }
-            "rail" => {
+            ProjectKind::Rail => {
                 let mut opened_rail = false;
-                if let Some(road) = self
-                    .state
-                    .roads
-                    .iter_mut()
-                    .find(|r| r.kind == "rail" && Some(r.from) == p.from && Some(r.to) == p.to)
-                {
-                    opened_rail = road.stage != "open";
-                    road.stage = "open".into();
+                if let Some(road) = self.state.roads.iter_mut().find(|r| {
+                    r.kind == RoadKind::Rail && Some(r.from) == p.from && Some(r.to) == p.to
+                }) {
+                    opened_rail = road.stage != Stage::Open;
+                    road.stage = Stage::Open;
                     road.progress = 1.0;
                 }
                 if opened_rail {
@@ -386,34 +385,33 @@ impl Engine {
                 }
                 self.recompute_connectivity();
                 self.record(
-                    "RailOpened",
+                    EventKind::RailOpened,
                     id,
                     "The completed rail link joins the connected transport network".into(),
                 );
-                self.state.station_online = self.state.station_ready
-                    && self
-                        .state
-                        .roads
-                        .iter()
-                        .any(|r| r.kind == "rail" && r.stage == "open" && r.connected);
+                self.state.station_online =
+                    self.state.station_ready
+                        && self.state.roads.iter().any(|r| {
+                            r.kind == RoadKind::Rail && r.stage == Stage::Open && r.connected
+                        });
                 if self.state.station_online {
                     self.record(
-                        "StationServiceStarted",
+                        EventKind::StationServiceStarted,
                         id,
                         "The completed platform and rail link begin service".into(),
                     );
                 }
             }
-            "station" => {
+            ProjectKind::Station => {
                 self.state.station_ready = true;
                 self.state.station_online = self
                     .state
                     .roads
                     .iter()
-                    .any(|r| r.kind == "rail" && r.stage == "open" && r.connected);
+                    .any(|r| r.kind == RoadKind::Rail && r.stage == Stage::Open && r.connected);
                 if self.state.station_online {
                     self.record(
-                        "StationServiceStarted",
+                        EventKind::StationServiceStarted,
                         id,
                         "The station begins service after its line and platform are ready".into(),
                     );
@@ -422,7 +420,7 @@ impl Engine {
             _ => {}
         }
         self.retire_completed_neighborhood_plan();
-        if p.kind == "road" {
+        if p.kind == ProjectKind::Road {
             // The active-road-project corridor is removed at completion even
             // when malformed/legacy project references meant no road opened.
             self.mark_access_geometry_changed();
@@ -457,7 +455,7 @@ impl Engine {
     }
 
     pub(crate) fn record_project(&mut self, project: Project) {
-        let adds_pending_road = project.kind == "road" && project.progress < 1.0;
+        let adds_pending_road = project.kind == ProjectKind::Road && project.progress < 1.0;
         while self.state.projects.len() >= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
             let Some(index) = self
                 .state
@@ -480,7 +478,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .filter(|node| node.kind == "station")
+            .filter(|node| node.kind == NodeKind::Station)
             .map(|node| (node.x - x).hypot(node.z - z))
             .min_by(f32::total_cmp)
             .unwrap_or(f32::INFINITY);
@@ -491,7 +489,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .filter(|node| node.kind == "market")
+            .filter(|node| node.kind == NodeKind::Market)
             .map(|node| (node.x - x).hypot(node.z - z))
             .min_by(f32::total_cmp)
             .unwrap_or(f32::INFINITY);
@@ -509,7 +507,7 @@ impl Engine {
         parcel: &Parcel,
         homes: usize,
         shops: usize,
-    ) -> (&'static str, u16, u8, &'static str) {
+    ) -> (BuildingKind, u16, u8, &'static str) {
         let profile = self.neighborhood_profile(parcel.x, parcel.z);
         let station_tower = self.is_station_tower_parcel(parcel);
         let mut weights = match profile {
@@ -533,15 +531,15 @@ impl Engine {
         let mut local_use_counts = [0usize; 5];
         let mut local_floor_counts = [0usize; 46];
         for building in self.state.buildings.iter().filter(|building| {
-            building.stage == "open" && (building.x - parcel.x).hypot(building.z - parcel.z) <= 58.0
+            building.stage == Stage::Open
+                && (building.x - parcel.x).hypot(building.z - parcel.z) <= 58.0
         }) {
-            let index = match building.kind.as_str() {
-                "home" => Some(0),
-                "shop" => Some(1),
-                "cafe" => Some(2),
-                "office" => Some(3),
-                "apartment" => Some(4),
-                _ => None,
+            let index = match building.kind {
+                BuildingKind::Home => Some(0),
+                BuildingKind::Shop => Some(1),
+                BuildingKind::Cafe => Some(2),
+                BuildingKind::Office => Some(3),
+                BuildingKind::Apartment => Some(4),
             };
             if let Some(index) = index {
                 local_use_counts[index] += 1;
@@ -568,13 +566,25 @@ impl Engine {
             }
             choice -= *weight;
         }
-        let kind = ["home", "shop", "cafe", "office", "apartment"][selected];
+        let kind = [
+            BuildingKind::Home,
+            BuildingKind::Shop,
+            BuildingKind::Cafe,
+            BuildingKind::Office,
+            BuildingKind::Apartment,
+        ][selected];
         let floor_options: &[(u8, f32)] = match (profile, kind) {
-            (NeighborhoodProfile::HistoricCore, "home") => &[(1, 18.0), (2, 58.0), (3, 24.0)],
-            (NeighborhoodProfile::HistoricCore, "shop" | "cafe") => &[(1, 68.0), (2, 32.0)],
-            (NeighborhoodProfile::HistoricCore, "office") => &[(2, 55.0), (3, 45.0)],
-            (NeighborhoodProfile::HistoricCore, "apartment") => &[(2, 38.0), (3, 47.0), (4, 15.0)],
-            (_, "office") if station_tower => &[
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Home) => {
+                &[(1, 18.0), (2, 58.0), (3, 24.0)]
+            }
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Shop | BuildingKind::Cafe) => {
+                &[(1, 68.0), (2, 32.0)]
+            }
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Office) => &[(2, 55.0), (3, 45.0)],
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Apartment) => {
+                &[(2, 38.0), (3, 47.0), (4, 15.0)]
+            }
+            (_, BuildingKind::Office) if station_tower => &[
                 (20, 12.0),
                 (24, 16.0),
                 (28, 18.0),
@@ -583,7 +593,7 @@ impl Engine {
                 (40, 12.0),
                 (45, 8.0),
             ],
-            (_, "apartment") if station_tower => &[
+            (_, BuildingKind::Apartment) if station_tower => &[
                 (20, 14.0),
                 (24, 17.0),
                 (28, 19.0),
@@ -592,7 +602,7 @@ impl Engine {
                 (40, 11.0),
                 (45, 7.0),
             ],
-            (NeighborhoodProfile::StationCore, "home") => &[
+            (NeighborhoodProfile::StationCore, BuildingKind::Home) => &[
                 (3, 8.0),
                 (4, 20.0),
                 (5, 28.0),
@@ -600,10 +610,10 @@ impl Engine {
                 (7, 14.0),
                 (8, 8.0),
             ],
-            (NeighborhoodProfile::StationCore, "shop" | "cafe") => {
+            (NeighborhoodProfile::StationCore, BuildingKind::Shop | BuildingKind::Cafe) => {
                 &[(2, 48.0), (3, 38.0), (4, 14.0)]
             }
-            (NeighborhoodProfile::StationCore, "office") => &[
+            (NeighborhoodProfile::StationCore, BuildingKind::Office) => &[
                 (5, 12.0),
                 (6, 18.0),
                 (7, 18.0),
@@ -612,7 +622,7 @@ impl Engine {
                 (10, 10.0),
                 (12, 10.0),
             ],
-            (NeighborhoodProfile::StationCore, "apartment") => &[
+            (NeighborhoodProfile::StationCore, BuildingKind::Apartment) => &[
                 (6, 12.0),
                 (7, 17.0),
                 (8, 18.0),
@@ -620,7 +630,7 @@ impl Engine {
                 (10, 16.0),
                 (12, 19.0),
             ],
-            (NeighborhoodProfile::StationFringe, "home") => &[
+            (NeighborhoodProfile::StationFringe, BuildingKind::Home) => &[
                 (2, 8.0),
                 (3, 24.0),
                 (4, 30.0),
@@ -628,10 +638,10 @@ impl Engine {
                 (6, 12.0),
                 (8, 4.0),
             ],
-            (NeighborhoodProfile::StationFringe, "shop" | "cafe") => {
+            (NeighborhoodProfile::StationFringe, BuildingKind::Shop | BuildingKind::Cafe) => {
                 &[(1, 35.0), (2, 52.0), (3, 13.0)]
             }
-            (NeighborhoodProfile::StationFringe, "office") => &[
+            (NeighborhoodProfile::StationFringe, BuildingKind::Office) => &[
                 (4, 10.0),
                 (5, 18.0),
                 (6, 20.0),
@@ -640,7 +650,7 @@ impl Engine {
                 (10, 12.0),
                 (12, 8.0),
             ],
-            (NeighborhoodProfile::StationFringe, "apartment") => &[
+            (NeighborhoodProfile::StationFringe, BuildingKind::Apartment) => &[
                 (4, 7.0),
                 (5, 14.0),
                 (6, 18.0),
@@ -649,10 +659,16 @@ impl Engine {
                 (10, 15.0),
                 (12, 12.0),
             ],
-            (NeighborhoodProfile::OuterNeighborhood, "home") => &[(1, 22.0), (2, 55.0), (3, 23.0)],
-            (NeighborhoodProfile::OuterNeighborhood, "shop" | "cafe") => &[(1, 72.0), (2, 28.0)],
-            (NeighborhoodProfile::OuterNeighborhood, "office") => &[(2, 32.0), (3, 68.0)],
-            (NeighborhoodProfile::OuterNeighborhood, "apartment") => {
+            (NeighborhoodProfile::OuterNeighborhood, BuildingKind::Home) => {
+                &[(1, 22.0), (2, 55.0), (3, 23.0)]
+            }
+            (NeighborhoodProfile::OuterNeighborhood, BuildingKind::Shop | BuildingKind::Cafe) => {
+                &[(1, 72.0), (2, 28.0)]
+            }
+            (NeighborhoodProfile::OuterNeighborhood, BuildingKind::Office) => {
+                &[(2, 32.0), (3, 68.0)]
+            }
+            (NeighborhoodProfile::OuterNeighborhood, BuildingKind::Apartment) => {
                 &[(3, 44.0), (4, 46.0), (5, 10.0)]
             }
             _ => &[(2, 30.0), (3, 52.0), (4, 18.0)],
@@ -678,28 +694,34 @@ impl Engine {
             floor_roll -= weight;
         }
         let capacity = match kind {
-            "home" => 6 + floors as u16 * 2,
-            "apartment" => floors as u16 * 5,
-            "office" => floors as u16 * 5,
+            BuildingKind::Home => 6 + floors as u16 * 2,
+            BuildingKind::Apartment => floors as u16 * 5,
+            BuildingKind::Office => floors as u16 * 5,
             _ => 6 + floors as u16 * 2,
         };
         let name = match (profile, kind, station_tower) {
-            (_, "office", true) => "Station Tower Offices",
-            (_, "apartment", true) => "Station Tower Residences",
-            (NeighborhoodProfile::HistoricCore, "home", false) => "Machiya House",
-            (NeighborhoodProfile::HistoricCore, "shop", false) => "Market Shop",
-            (NeighborhoodProfile::HistoricCore, "cafe", false) => "Kissa Komorebi",
-            (NeighborhoodProfile::StationCore, "office", false) => "Station Office",
-            (NeighborhoodProfile::StationCore, "apartment", false) => "Station Apartments",
-            (NeighborhoodProfile::StationCore, "shop", false) => "Station Kiosk",
-            (NeighborhoodProfile::StationCore, "cafe", false) => "Platform Cafe",
-            (NeighborhoodProfile::StationFringe, "apartment", false) => "Railway Apartments",
-            (NeighborhoodProfile::StationFringe, "office", false) => "Neighborhood Office",
-            (NeighborhoodProfile::OuterNeighborhood, "home", false) => "Lane House",
-            (_, "apartment", false) => "Walk-up Apartments",
-            (_, "office", false) => "Small Office",
-            (_, "shop", false) => "Corner Store",
-            (_, "cafe", false) => "Kissa Aoba",
+            (_, BuildingKind::Office, true) => "Station Tower Offices",
+            (_, BuildingKind::Apartment, true) => "Station Tower Residences",
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Home, false) => "Machiya House",
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Shop, false) => "Market Shop",
+            (NeighborhoodProfile::HistoricCore, BuildingKind::Cafe, false) => "Kissa Komorebi",
+            (NeighborhoodProfile::StationCore, BuildingKind::Office, false) => "Station Office",
+            (NeighborhoodProfile::StationCore, BuildingKind::Apartment, false) => {
+                "Station Apartments"
+            }
+            (NeighborhoodProfile::StationCore, BuildingKind::Shop, false) => "Station Kiosk",
+            (NeighborhoodProfile::StationCore, BuildingKind::Cafe, false) => "Platform Cafe",
+            (NeighborhoodProfile::StationFringe, BuildingKind::Apartment, false) => {
+                "Railway Apartments"
+            }
+            (NeighborhoodProfile::StationFringe, BuildingKind::Office, false) => {
+                "Neighborhood Office"
+            }
+            (NeighborhoodProfile::OuterNeighborhood, BuildingKind::Home, false) => "Lane House",
+            (_, BuildingKind::Apartment, false) => "Walk-up Apartments",
+            (_, BuildingKind::Office, false) => "Small Office",
+            (_, BuildingKind::Shop, false) => "Corner Store",
+            (_, BuildingKind::Cafe, false) => "Kissa Aoba",
             _ => "Riverside House",
         };
         (kind, capacity, floors, name)
@@ -764,7 +786,7 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .map(|building| infrastructure::development::OpenBuildingPoint {
                 x: building.x,
                 z: building.z,
@@ -784,13 +806,13 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|b| matches!(b.kind.as_str(), "home" | "apartment"))
+            .filter(|b| matches!(b.kind, BuildingKind::Home | BuildingKind::Apartment))
             .count();
         let shops = self
             .state
             .buildings
             .iter()
-            .filter(|b| b.kind == "shop" || b.kind == "cafe")
+            .filter(|b| b.kind == BuildingKind::Shop || b.kind == BuildingKind::Cafe)
             .count();
         let (kind, capacity, floors, name) = self.choose_building_profile(&parcel, homes, shops);
         let (kind, capacity, floors) =
@@ -809,7 +831,7 @@ impl Engine {
             parcel.id,
             kind,
             floors,
-            "foundation",
+            Stage::Foundation,
             0.0,
             capacity,
             name,
@@ -824,11 +846,11 @@ impl Engine {
         let duration = 2.0 + random_unit(&mut self.state.rng_growth) * 4.0;
         self.record_project(Project {
             id: project_id,
-            kind: "building".into(),
+            kind: ProjectKind::Building,
             from: None,
             to: None,
             parcel_id: Some(parcel.id),
-            stage: "foundation".into(),
+            stage: Stage::Foundation,
             progress: 0.0,
             reason: format!("{} is built to meet nearby demand", name),
             duration,

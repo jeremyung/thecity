@@ -7,6 +7,7 @@
 //! gates, and is added to a private collision context before later candidates.
 
 use crate::{geometry, site_active, Engine, Road};
+use crate::{ProjectKind, Stage};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -118,7 +119,9 @@ struct Candidate {
 }
 
 fn ordinary_connected(road: &Road) -> bool {
-    road.stage == "open" && road.connected && !matches!(road.kind.as_str(), "rail" | "bridge")
+    road.stage == Stage::Open
+        && road.connected
+        && !matches!(road.kind, crate::RoadKind::Rail | crate::RoadKind::Bridge)
 }
 
 fn road_intersects_expanded_crop(engine: &Engine, road: &Road) -> bool {
@@ -182,7 +185,7 @@ fn nearby_building_counts(engine: &Engine, x: f32, z: f32) -> (usize, usize) {
         .buildings
         .iter()
         .filter(|building| {
-            building.stage == "open" && (building.x - x).hypot(building.z - z) <= 78.0
+            building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
         })
         .fold((0, 0), |(open, active), building| {
             (open + 1, active + usize::from(site_active(building)))
@@ -672,7 +675,7 @@ fn compact_frontage_width_comparison_at_crop_host() {
     resumed.step(80);
     assert_eq!(admission.save_json(), resumed.save_json());
     let construction_started = admission.state.projects.iter().any(|project| {
-        project.kind == "building"
+        project.kind == ProjectKind::Building
             && project.progress < 1.0
             && project.parcel_id == Some(admitted.id)
     });

@@ -1,4 +1,6 @@
 //! Persisted lifecycle for bounded household errands to nearby active shops and cafes.
+use crate::BuildingKind;
+use crate::{ProjectKind, RoadKind, Stage};
 use serde::{Deserialize, Serialize};
 
 const MAX_ACTIVE: usize = 128;
@@ -62,11 +64,9 @@ impl crate::Engine {
             .pending_rear_extensions
             .iter()
             .any(|plan| plan.building_id == building_id)
-            || self
-                .state
-                .projects
-                .iter()
-                .any(|project| project.kind == "extension" && project.parcel_id == parcel_id)
+            || self.state.projects.iter().any(|project| {
+                project.kind == ProjectKind::Extension && project.parcel_id == parcel_id
+            })
     }
 
     pub(crate) fn schedule_neighborhood_errands(&mut self) {
@@ -575,8 +575,8 @@ impl crate::Engine {
         route.windows(2).zip(lengths).all(|(edge, length)| {
             self.state.roads.iter().any(|road| {
                 road.connected
-                    && road.stage == "open"
-                    && road.kind != "rail"
+                    && road.stage == Stage::Open
+                    && road.kind != RoadKind::Rail
                     && ((road.from == edge[0] && road.to == edge[1])
                         || (road.from == edge[1] && road.to == edge[0]))
             }) && self
@@ -645,10 +645,14 @@ fn make_traveler(
 }
 
 fn is_active_home(b: &crate::Building) -> bool {
-    b.stage == "open" && matches!(b.kind.as_str(), "home" | "apartment") && b.occupancy > 0
+    b.stage == Stage::Open
+        && matches!(b.kind, BuildingKind::Home | BuildingKind::Apartment)
+        && b.occupancy > 0
 }
 fn is_active_business(b: &crate::Building) -> bool {
-    b.stage == "open" && matches!(b.kind.as_str(), "shop" | "cafe") && b.business_active
+    b.stage == Stage::Open
+        && matches!(b.kind, BuildingKind::Shop | BuildingKind::Cafe)
+        && b.business_active
 }
 fn mix(mut x: u64) -> u64 {
     x ^= x >> 30;
@@ -674,7 +678,7 @@ mod tests {
             .state
             .roads
             .iter()
-            .filter(|r| r.connected && r.stage == "open" && r.kind != "rail")
+            .filter(|r| r.connected && r.stage == Stage::Open && r.kind != RoadKind::Rail)
             .min_by(|a, b| a.length.total_cmp(&b.length))
             .cloned()
             .expect("founding road");
@@ -697,9 +701,9 @@ mod tests {
         engine.remember_nearest_frontage(home_parcel, road.from);
         let home = engine.add_building(
             home_parcel,
-            "home",
+            BuildingKind::Home,
             2,
-            "open",
+            Stage::Open,
             1.0,
             8,
             "Home",
@@ -725,9 +729,9 @@ mod tests {
         engine.remember_nearest_frontage(shop_parcel, road.to);
         engine.add_building(
             shop_parcel,
-            "shop",
+            BuildingKind::Shop,
             1,
-            "open",
+            Stage::Open,
             1.0,
             8,
             "Shop",

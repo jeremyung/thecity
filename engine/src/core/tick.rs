@@ -16,14 +16,14 @@ impl Engine {
             self.state.weather_day = day;
             let roll = random_unit(&mut self.state.rng_weather);
             if roll < 0.56 {
-                self.state.weather_kind = "clear".into();
+                self.state.weather_kind = WeatherKind::Clear;
                 self.state.weather_intensity = 0.0;
             } else if roll < 0.84 {
-                self.state.weather_kind = "overcast".into();
+                self.state.weather_kind = WeatherKind::Overcast;
                 self.state.weather_intensity =
                     0.2 + random_unit(&mut self.state.rng_weather) * 0.25;
             } else {
-                self.state.weather_kind = "rain".into();
+                self.state.weather_kind = WeatherKind::Rain;
                 self.state.weather_intensity =
                     0.35 + random_unit(&mut self.state.rng_weather) * 0.65;
             }

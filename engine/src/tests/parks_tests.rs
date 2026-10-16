@@ -107,7 +107,7 @@ fn mature_neighborhoods_keep_spaced_pocket_parks_on_vacant_lots() {
         .state
         .events
         .iter()
-        .any(|event| event.kind == "ParkDedicated"));
+        .any(|event| event.kind == EventKind::ParkDedicated));
     engine.validate().expect("parks keep the city valid");
 
     // Dedication is part of the deterministic simulation.

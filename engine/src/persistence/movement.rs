@@ -94,9 +94,9 @@ impl Engine {
                     .roads
                     .iter()
                     .find(|r| {
-                        r.stage == "open"
+                        r.stage == Stage::Open
                             && r.connected
-                            && r.kind != "rail"
+                            && r.kind != RoadKind::Rail
                             && ((r.from == a.id && r.to == b.id)
                                 || (r.from == b.id && r.to == a.id))
                     })
@@ -187,9 +187,9 @@ impl Engine {
                     .roads
                     .iter()
                     .find(|r| {
-                        r.stage == "open"
+                        r.stage == Stage::Open
                             && r.connected
-                            && r.kind != "rail"
+                            && r.kind != RoadKind::Rail
                             && ((r.from == edge[0] && r.to == edge[1])
                                 || (r.from == edge[1] && r.to == edge[0]))
                     })
@@ -277,8 +277,8 @@ impl Engine {
                             .roads
                             .iter()
                             .find(|r| {
-                                r.kind == "rail"
-                                    && r.stage == "open"
+                                r.kind == RoadKind::Rail
+                                    && r.stage == Stage::Open
                                     && r.connected
                                     && ((r.from == edge[0] && r.to == edge[1])
                                         || (r.from == edge[1] && r.to == edge[0]))
@@ -311,9 +311,9 @@ impl Engine {
                         .roads
                         .iter()
                         .find(|r| {
-                            r.stage == "open"
+                            r.stage == Stage::Open
                                 && r.connected
-                                && r.kind != "rail"
+                                && r.kind != RoadKind::Rail
                                 && ((r.from == edge[0] && r.to == edge[1])
                                     || (r.from == edge[1] && r.to == edge[0]))
                         })

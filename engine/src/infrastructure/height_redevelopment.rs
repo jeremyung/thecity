@@ -116,8 +116,8 @@ impl Engine {
         lot_index: usize,
         day: u32,
     ) -> bool {
-        if building.kind != "office"
-            || building.stage != "open"
+        if building.kind != BuildingKind::Office
+            || building.stage != Stage::Open
             || building.anchor
             || building.floors == 0
             || building.floors >= MIN_OFFICE_FLOORS
@@ -186,7 +186,9 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|other| other.id != building.id && other.kind == "office" && site_active(other))
+            .filter(|other| {
+                other.id != building.id && other.kind == BuildingKind::Office && site_active(other)
+            })
             .any(|other| {
                 let assigned = self
                     .state
@@ -205,7 +207,7 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|other| other.floors >= MIN_OFFICE_FLOORS && other.stage != "demolished")
+            .filter(|other| other.floors >= MIN_OFFICE_FLOORS && other.stage != Stage::Demolished)
             .count()
             + self
                 .state
@@ -251,7 +253,7 @@ impl Engine {
         );
         push_history(&mut self.state.buildings[index].history, reason.clone());
         self.state.buildings[index].business_active = false;
-        self.state.buildings[index].stage = "demolition".into();
+        self.state.buildings[index].stage = Stage::Demolition;
         self.state.buildings[index].progress = 0.0;
         parcel.reservation = Some(building.id);
         let project_id = self.id();
@@ -266,17 +268,17 @@ impl Engine {
         });
         self.record_project(Project {
             id: project_id,
-            kind: "redevelopment".into(),
+            kind: ProjectKind::Redevelopment,
             from: None,
             to: None,
             parcel_id: Some(building.parcel_id),
-            stage: "demolition".into(),
+            stage: Stage::Demolition,
             progress: 0.0,
             reason: reason.clone(),
             duration: 24.0 + 2.0 * target_floors as f32,
             started_tick: self.state.tick,
         });
-        self.record("BusinessClosed", building_id, reason);
+        self.record(EventKind::BusinessClosed, building_id, reason);
         self.state.revision = self.state.revision.saturating_add(1);
         true
     }
@@ -304,29 +306,29 @@ impl Engine {
         };
         if progress < DEMOLITION_FRACTION {
             let phase = (progress / DEMOLITION_FRACTION).clamp(0.0, 1.0);
-            self.state.buildings[building_index].stage = "demolition".into();
+            self.state.buildings[building_index].stage = Stage::Demolition;
             self.state.buildings[building_index].progress = phase;
-            self.state.projects[project_index].stage = "demolition".into();
+            self.state.projects[project_index].stage = Stage::Demolition;
         } else {
             let phase =
                 ((progress - DEMOLITION_FRACTION) / (1.0 - DEMOLITION_FRACTION)).clamp(0.0, 1.0);
             let stage = if phase < 0.22 {
-                "survey"
+                Stage::Survey
             } else if phase < 0.48 {
-                "clearing"
+                Stage::Clearing
             } else if phase < 0.73 {
-                "structure"
+                Stage::Structure
             } else if phase < 0.92 {
-                "surface"
+                Stage::Surface
             } else {
-                "finishing"
+                Stage::Finishing
             };
             let building = &mut self.state.buildings[building_index];
             building.floors = plan.target_floors;
             building.capacity = plan.target_capacity;
-            building.stage = stage.into();
+            building.stage = stage;
             building.progress = phase;
-            self.state.projects[project_index].stage = stage.into();
+            self.state.projects[project_index].stage = stage;
         }
     }
 
@@ -357,7 +359,7 @@ impl Engine {
             building.capacity = plan.target_capacity;
             building.occupancy = 0;
             building.business_active = true;
-            building.stage = "open".into();
+            building.stage = Stage::Open;
             building.progress = 1.0;
             building.built_day = (self.state.tick / TICKS_PER_DAY) as u32;
             building.vacant_days = 0;
@@ -376,7 +378,7 @@ impl Engine {
         }
         self.state.height_redevelopment = None;
         self.record(
-            "BuildingRedeveloped",
+            EventKind::BuildingRedeveloped,
             plan.building_id,
             format!(
                 "A station-core office reopens at {} floors",
@@ -411,7 +413,7 @@ impl Engine {
                 .state
                 .projects
                 .iter()
-                .any(|project| project.kind == "redevelopment" && project.progress < 1.0)
+                .any(|project| project.kind == ProjectKind::Redevelopment && project.progress < 1.0)
             {
                 return Err("active redevelopment project has no plan".into());
             }
@@ -459,23 +461,23 @@ impl Engine {
             (project.progress - DEMOLITION_FRACTION) / (1.0 - DEMOLITION_FRACTION)
         };
         let expected_stage = if demolition {
-            "demolition"
+            Stage::Demolition
         } else if expected_building_progress < 0.22 {
-            "survey"
+            Stage::Survey
         } else if expected_building_progress < 0.48 {
-            "clearing"
+            Stage::Clearing
         } else if expected_building_progress < 0.73 {
-            "structure"
+            Stage::Structure
         } else if expected_building_progress < 0.92 {
-            "surface"
+            Stage::Surface
         } else {
-            "finishing"
+            Stage::Finishing
         };
         let expected_target_floors = plan
             .original_floors
             .saturating_add(TARGET_FLOOR_INCREMENT)
             .min(MAX_REDEVELOPMENT_FLOORS);
-        let valid = project.kind == "redevelopment"
+        let valid = project.kind == ProjectKind::Redevelopment
             && project.progress.is_finite()
             && (0.0..1.0).contains(&project.progress)
             && project.duration.is_finite()
@@ -491,7 +493,7 @@ impl Engine {
             && building.id == plan.building_id
             && building.parcel_id == plan.parcel_id
             && !building.anchor
-            && building.kind == "office"
+            && building.kind == BuildingKind::Office
             && !building.business_active
             && building.occupancy == 0
             && parcel.reservation == Some(building.id)
@@ -537,7 +539,9 @@ impl Engine {
             return Err("height-redevelopment host still has actor references".into());
         }
         if self.state.projects.iter().any(|other| {
-            other.id != plan.project_id && other.kind == "redevelopment" && other.progress < 1.0
+            other.id != plan.project_id
+                && other.kind == ProjectKind::Redevelopment
+                && other.progress < 1.0
         }) {
             return Err("multiple active height-redevelopment projects".into());
         }

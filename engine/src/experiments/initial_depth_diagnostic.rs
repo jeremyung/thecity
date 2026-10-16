@@ -6,6 +6,7 @@
 //! production demand, access, reservation, construction, and capacity rules.
 
 use crate::{geometry, CollisionContext, Engine, NeighborhoodProfile, Parcel};
+use crate::{NodeKind, Stage};
 use serde::Serialize;
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
@@ -102,9 +103,9 @@ fn ordinary_connected_road_count(engine: &Engine) -> usize {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && !matches!(road.kind, crate::RoadKind::Rail | crate::RoadKind::Bridge)
         })
         .count()
 }
@@ -114,7 +115,9 @@ fn routable_station_for(engine: &Engine, access_node: u32) -> Option<u32> {
         .state
         .nodes
         .iter()
-        .filter(|station| station.kind == "station" && engine.node_has_open_road(station.id))
+        .filter(|station| {
+            station.kind == NodeKind::Station && engine.node_has_open_road(station.id)
+        })
         .find(|station| {
             station.id == access_node || engine.route(station.id, access_node, false).len() >= 2
         })
@@ -178,9 +181,9 @@ pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parc
         return parcel;
     };
     let frontage_road_id = road.id;
-    if road.stage != "open"
+    if road.stage != Stage::Open
         || !road.connected
-        || matches!(road.kind.as_str(), "rail" | "bridge")
+        || matches!(road.kind, crate::RoadKind::Rail | crate::RoadKind::Bridge)
         || engine.is_neighborhood_plan_road(frontage_road_id)
     {
         reject("not_open_ordinary_frontage");
@@ -386,7 +389,7 @@ fn metrics(engine: &Engine) -> (f64, f64, u64, BTreeMap<String, u64>) {
         footprint += area;
         floor_area += area * f64::from(building.floors);
         capacity += u64::from(building.capacity);
-        *by_kind.entry(building.kind.clone()).or_default() += u64::from(building.capacity);
+        *by_kind.entry(building.kind.to_string()).or_default() += u64::from(building.capacity);
     }
     (footprint, floor_area, capacity, by_kind)
 }

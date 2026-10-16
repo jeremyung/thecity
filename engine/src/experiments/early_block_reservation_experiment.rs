@@ -22,13 +22,13 @@ fn developed_site_with_one_open_lot() -> Engine {
     engine.state.neighborhood_plan = None;
     engine.state.neighborhood_anchor_cursor = 0;
 
-    let gateway = engine.add_node(365.0, 360.0, "gateway");
-    let feeder = engine.add_node(320.0, 320.0, "junction");
-    let anchor = engine.add_node(250.0, 250.0, "junction");
-    let branch = engine.add_node(390.0, 350.0, "junction");
-    engine.add_road(gateway, feeder, "local", "open", 1.0);
-    engine.add_road(feeder, anchor, "local", "open", 1.0);
-    engine.add_road(gateway, branch, "local", "open", 1.0);
+    let gateway = engine.add_node(365.0, 360.0, NodeKind::Gateway);
+    let feeder = engine.add_node(320.0, 320.0, NodeKind::Junction);
+    let anchor = engine.add_node(250.0, 250.0, NodeKind::Junction);
+    let branch = engine.add_node(390.0, 350.0, NodeKind::Junction);
+    engine.add_road(gateway, feeder, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(feeder, anchor, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(gateway, branch, RoadKind::Local, Stage::Open, 1.0);
     engine.recompute_connectivity();
 
     for row in 0..3 {
@@ -38,9 +38,9 @@ fn developed_site_with_one_open_lot() -> Engine {
             let parcel = engine.add_parcel(x, z, 7.0, 7.0, anchor, 0.8, false);
             let building = engine.add_building(
                 parcel,
-                "home",
+                BuildingKind::Home,
                 2,
-                "open",
+                Stage::Open,
                 1.0,
                 8,
                 "Occupied machiya",
@@ -83,12 +83,12 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
         .state
         .projects
         .iter()
-        .any(|project| project.kind == "building"));
+        .any(|project| project.kind == ProjectKind::Building));
     assert!(!engine
         .state
         .projects
         .iter()
-        .any(|project| project.kind == "road"));
+        .any(|project| project.kind == ProjectKind::Road));
     engine.validate().unwrap();
 
     // Save at the actual reservation tick. Restoration keeps the pending
@@ -103,7 +103,7 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
     assert!(engine.state.neighborhood_plan.is_some());
     assert!(
         engine.state.buildings.iter().any(|building| {
-            building.parcel_id == existing_building_parcel && building.stage == "open"
+            building.parcel_id == existing_building_parcel && building.stage == Stage::Open
         }),
         "the pre-existing building project should finish during reservation"
     );
@@ -127,7 +127,7 @@ fn early_reservation_records_noop_when_existing_plan_guards_reject_candidate() {
             .state
             .projects
             .iter()
-            .filter(|project| project.kind == "road")
+            .filter(|project| project.kind == ProjectKind::Road)
             .count(),
         0
     );
@@ -194,7 +194,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                 .state
                 .buildings
                 .iter()
-                .filter(|building| building.stage == "open")
+                .filter(|building| building.stage == Stage::Open)
                 .collect();
             let housing: Vec<_> = open.iter().copied().filter(|b| is_housing(b)).collect();
             let commerce: Vec<_> = open.iter().copied().filter(|b| is_commercial(b)).collect();
@@ -203,9 +203,9 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                 .roads
                 .iter()
                 .filter(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && road.connected
-                        && !matches!(road.kind.as_str(), "rail" | "bridge")
+                        && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 })
                 .collect();
             let summary = json!({

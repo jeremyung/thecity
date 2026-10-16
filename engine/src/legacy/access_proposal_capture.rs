@@ -11,6 +11,7 @@ use crate::legacy::access_proposal_validation::{
 };
 use crate::legacy::face_target_viability::{FrozenViabilityInput, Segment};
 use crate::{Engine, MAX_PARCELS, MAX_PROJECTS, MAX_SEGMENTS};
+use crate::{NodeKind, ProjectKind, RoadKind, Stage};
 use std::collections::BTreeMap;
 
 #[cfg(feature = "legacy")]
@@ -92,7 +93,7 @@ fn capture_inner(
     if state
         .projects
         .iter()
-        .filter(|project| project.kind == "road" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .count()
         > MAX_PROJECTS
     {
@@ -111,9 +112,9 @@ fn capture_inner(
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .filter_map(|road| {
             let (ax, az) = *node_positions.get(&road.from)?;
@@ -143,7 +144,7 @@ fn capture_inner(
         .iter()
         .map(|road| ProposalRoad {
             id: road.id,
-            is_open: road.stage == "open",
+            is_open: road.stage == Stage::Open,
             segment: node_positions
                 .get(&road.from)
                 .zip(node_positions.get(&road.to))
@@ -166,7 +167,7 @@ fn capture_inner(
                     .unwrap_or(ProjectEndpoints::MissingNode),
             };
             ProposalProject {
-                active_road: project.kind == "road" && project.progress < 1.0,
+                active_road: project.kind == ProjectKind::Road && project.progress < 1.0,
                 endpoints,
             }
         })
@@ -234,9 +235,9 @@ mod tests {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
             })
             .filter_map(|road| {
                 segment(road.from, road.to).map(|segment| ProposalHost {
@@ -266,7 +267,7 @@ mod tests {
                 .iter()
                 .map(|road| ProposalRoad {
                     id: road.id,
-                    is_open: road.stage == "open",
+                    is_open: road.stage == Stage::Open,
                     segment: segment(road.from, road.to),
                 })
                 .collect(),
@@ -275,7 +276,7 @@ mod tests {
                 .projects
                 .iter()
                 .map(|project| ProposalProject {
-                    active_road: project.kind == "road" && project.progress < 1.0,
+                    active_road: project.kind == ProjectKind::Road && project.progress < 1.0,
                     endpoints: match project.from.zip(project.to) {
                         None => ProjectEndpoints::NoIds,
                         Some((from, to)) => segment(from, to)
@@ -356,20 +357,20 @@ mod tests {
                 id: from,
                 x: -300.0 + (index % 25) as f32 * 10.0,
                 z: -300.0 + (index / 25) as f32 * 10.0,
-                kind: "junction".into(),
+                kind: NodeKind::Junction,
             });
             engine.state.nodes.push(crate::Node {
                 id: to,
                 x: -299.0 + (index % 25) as f32 * 10.0,
                 z: -300.0 + (index / 25) as f32 * 10.0,
-                kind: "junction".into(),
+                kind: NodeKind::Junction,
             });
             engine.state.roads.push(crate::Road {
                 id: next_id,
                 from,
                 to,
-                kind: "local".into(),
-                stage: "open".into(),
+                kind: RoadKind::Local,
+                stage: Stage::Open,
                 progress: 1.0,
                 connected: true,
                 length: 1.0,
@@ -395,7 +396,7 @@ mod tests {
                 id: 100_000 + index as u32,
                 x: index as f32,
                 z: 0.0,
-                kind: "junction".into(),
+                kind: NodeKind::Junction,
             });
         }
         let before = engine.save_json();

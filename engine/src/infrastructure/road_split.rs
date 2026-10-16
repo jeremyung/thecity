@@ -3,6 +3,7 @@ use crate::{
     point_segment_distance, Engine, Node, Road, RoadSplitError, RoadSplitOutcome, MAX,
     MAX_BUS_ROUTE_NODES, MAX_ROUTE_NODES, MAX_SEGMENTS, MIN,
 };
+use crate::{NodeKind, ProjectKind, RoadKind, Stage};
 
 struct PreparedRoadSplit {
     expected_next_id: u32,
@@ -10,8 +11,8 @@ struct PreparedRoadSplit {
     host_road_id: u32,
     a_id: u32,
     b_id: u32,
-    kind: String,
-    stage: String,
+    kind: RoadKind,
+    stage: Stage,
     progress: f32,
     connected: bool,
     lanes: u8,
@@ -51,9 +52,9 @@ impl Engine {
             .position(|road| road.id == host_road_id)
             .ok_or(RoadSplitError::MissingRoad)?;
         let host = &self.state.roads[host_index];
-        if host.stage != "open"
+        if host.stage != Stage::Open
             || !host.connected
-            || !matches!(host.kind.as_str(), "local" | "arterial")
+            || !matches!(host.kind, RoadKind::Local | RoadKind::Arterial)
             || host.from == host.to
         {
             return Err(RoadSplitError::IneligibleRoad);
@@ -81,7 +82,7 @@ impl Engine {
             host.lanes,
         );
         if self.state.projects.iter().any(|project| {
-            project.kind == "road"
+            project.kind == ProjectKind::Road
                 && project.progress < 1.0
                 && matches!((project.from, project.to), (Some(from), Some(to))
                     if (from == a_id && to == b_id) || (from == b_id && to == a_id))
@@ -345,7 +346,7 @@ impl Engine {
             id: split_node_id,
             x: prepared.split_x,
             z: prepared.split_z,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         });
         {
             let retained = &mut self.state.roads[prepared.host_index];
@@ -405,7 +406,9 @@ impl Engine {
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open" && road.connected && road.kind != "rail")
+                .filter(|road| {
+                    road.stage == Stage::Open && road.connected && road.kind != RoadKind::Rail
+                })
                 .count() as u64;
         }
         self.mark_access_geometry_changed();
@@ -495,9 +498,9 @@ mod tests {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                     && road.length >= 20.0
             })
             .cloned()

@@ -117,13 +117,13 @@ impl Engine {
             .roads
             .iter()
             .find(|road| {
-                road.stage == "open"
-                    && road.kind != "rail"
+                road.stage == Stage::Open
+                    && road.kind != RoadKind::Rail
                     && ((road.from == edge.0 && road.to == edge.1)
                         || (road.from == edge.1 && road.to == edge.0))
             })
-            .map(|road| pedestrian_road_offset(&road.kind))
-            .unwrap_or_else(|| pedestrian_road_offset("unknown"));
+            .map(|road| pedestrian_road_offset(Some(road.kind)))
+            .unwrap_or_else(|| pedestrian_road_offset(None));
         let lateral = if kind == 1 {
             KERB_LANE
         } else if traveler_id % 2 == 0 {
@@ -178,7 +178,7 @@ impl Engine {
             x: a.x + dx * along,
             z: a.z + dz * along,
         };
-        let sidewalk = pedestrian_road_offset(&road.kind);
+        let sidewalk = pedestrian_road_offset(Some(road.kind));
         let frontage_side = frontage.side as f32;
         let frontage_walk = *segment.last()?;
         let access_node = if from_building {
@@ -258,7 +258,7 @@ impl Engine {
             x: a.x + dx * along,
             z: a.z + dz * along,
         };
-        let sidewalk = pedestrian_road_offset(&road.kind);
+        let sidewalk = pedestrian_road_offset(Some(road.kind));
         let side = frontage.side as f32;
         let frontage_walk = WorldPoint {
             x: center.x + nx * side * sidewalk,

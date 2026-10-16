@@ -241,7 +241,7 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
                 .state
                 .projects
                 .iter()
-                .filter(|project| project.kind == "road" && project.progress < 1.0)
+                .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .count();
             (Some(matches), road_projects)
         } else {

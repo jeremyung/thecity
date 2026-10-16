@@ -53,7 +53,7 @@ impl Engine {
             return false;
         }
         let clearance = (w.max(d) * 0.5 + 4.0).max(9.0);
-        for road in self.state.roads.iter().filter(|r| r.stage == "open") {
+        for road in self.state.roads.iter().filter(|r| r.stage == Stage::Open) {
             let (Some(a), Some(b)) = (self.node(road.from).cloned(), self.node(road.to).cloned())
             else {
                 continue;
@@ -66,7 +66,7 @@ impl Engine {
             .state
             .projects
             .iter()
-            .filter(|p| p.kind == "road" && p.progress < 1.0)
+            .filter(|p| p.kind == ProjectKind::Road && p.progress < 1.0)
         {
             let (Some(from), Some(to)) = (project.from, project.to) else {
                 continue;
@@ -140,7 +140,12 @@ impl Engine {
                 return false;
             }
         }
-        for road in self.state.roads.iter().filter(|road| road.stage == "open") {
+        for road in self
+            .state
+            .roads
+            .iter()
+            .filter(|road| road.stage == Stage::Open)
+        {
             let (Some(a), Some(b)) = (self.node(road.from), self.node(road.to)) else {
                 continue;
             };
@@ -152,7 +157,7 @@ impl Engine {
             .state
             .projects
             .iter()
-            .filter(|p| p.kind == "road" && p.progress < 1.0)
+            .filter(|p| p.kind == ProjectKind::Road && p.progress < 1.0)
         {
             let Some((from, to)) = project.from.zip(project.to) else {
                 continue;
@@ -213,7 +218,12 @@ impl Engine {
         }
 
         let mut open_roads = Vec::new();
-        for road in self.state.roads.iter().filter(|road| road.stage == "open") {
+        for road in self
+            .state
+            .roads
+            .iter()
+            .filter(|road| road.stage == Stage::Open)
+        {
             let (Some((ax, az)), Some((bx, bz))) =
                 (node_positions.get(&road.from), node_positions.get(&road.to))
             else {
@@ -231,7 +241,7 @@ impl Engine {
             .state
             .projects
             .iter()
-            .filter(|project| project.kind == "road" && project.progress < 1.0)
+            .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         {
             let Some((from, to)) = project.from.zip(project.to) else {
                 continue;

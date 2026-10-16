@@ -7,7 +7,7 @@ fn cars_sharing_a_driveway_queue_instead_of_overlapping() {
         .state
         .roads
         .iter()
-        .find(|road| road.kind != "rail" && road.stage == "open")
+        .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
         .expect("founding road is open");
     let (from, to) = (road.from, road.to);
     let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
@@ -130,7 +130,7 @@ fn road_trips_choose_bodies_and_queue_by_length() {
         .state
         .roads
         .iter()
-        .find(|road| road.kind != "rail" && road.stage == "open")
+        .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
         .expect("founding road is open");
     let (from, to) = (road.from, road.to);
     let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
@@ -185,9 +185,9 @@ fn road_trips_choose_bodies_and_queue_by_length() {
 #[test]
 fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
     for (road_kind, expected_offset, surface_edge) in [
-        ("local", 2.53, 3.25),
-        ("lane", 1.28, 2.0),
-        ("arterial", 8.72, 10.5),
+        (RoadKind::Local, 2.53, 3.25),
+        (RoadKind::Lane, 1.28, 2.0),
+        (RoadKind::Arterial, 8.72, 10.5),
     ] {
         for reverse in [false, true] {
             let mut engine = Engine::new_legacy(81);
@@ -195,9 +195,9 @@ fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
                 .state
                 .roads
                 .iter_mut()
-                .find(|road| road.kind != "rail" && road.stage == "open")
+                .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
                 .expect("founding road is open");
-            road.kind = road_kind.into();
+            road.kind = road_kind;
             let (from, to) = if reverse {
                 (road.to, road.from)
             } else {

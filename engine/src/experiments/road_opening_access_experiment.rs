@@ -8,8 +8,8 @@ fn face_filter_accepts_inside_plan_and_rejects_external_branch_or_lot() {
         id: 1,
         from: 10,
         to: 11,
-        kind: "local".into(),
-        stage: "open".into(),
+        kind: RoadKind::Local,
+        stage: Stage::Open,
         progress: 1.0,
         connected: true,
         length: 100.0,
@@ -19,13 +19,13 @@ fn face_filter_accepts_inside_plan_and_rejects_external_branch_or_lot() {
         id: 10,
         x: 0.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let to = Node {
         id: 11,
         x: 100.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let proposal = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
@@ -91,8 +91,8 @@ fn face_filter_keeps_only_contained_lots_and_requires_two_sites() {
         id: 1,
         from: 10,
         to: 11,
-        kind: "local".into(),
-        stage: "open".into(),
+        kind: RoadKind::Local,
+        stage: Stage::Open,
         progress: 1.0,
         connected: true,
         length: 100.0,
@@ -102,13 +102,13 @@ fn face_filter_keeps_only_contained_lots_and_requires_two_sites() {
         id: 10,
         x: 0.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let to = Node {
         id: 11,
         x: 100.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let lot = |x, z| interior_access::InteriorAccessLot {
         x,
@@ -185,8 +185,8 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
         id: 1,
         from: 10,
         to: 20,
-        kind: "local".into(),
-        stage: "open".into(),
+        kind: RoadKind::Local,
+        stage: Stage::Open,
         progress: 1.0,
         connected: true,
         length: 100.0,
@@ -196,13 +196,13 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
         id: 10,
         x: 0.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let bottom_b = Node {
         id: 20,
         x: 100.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let blocked = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
@@ -246,8 +246,8 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
         id: 2,
         from: 20,
         to: 30,
-        kind: "local".into(),
-        stage: "open".into(),
+        kind: RoadKind::Local,
+        stage: Stage::Open,
         progress: 1.0,
         connected: true,
         length: 100.0,
@@ -257,13 +257,13 @@ fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
         id: 20,
         x: 100.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let right_b = Node {
         id: 30,
         x: 100.0,
         z: 100.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let usable = interior_access::AccessProposal {
         score: interior_access::CandidateScore {
@@ -351,9 +351,9 @@ fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .map(|road| road.id)
         .find(|host_id| {
@@ -416,32 +416,32 @@ fn shallow_or_fully_served_faces_do_not_qualify_for_access() {
         id: 1,
         x: 0.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let bottom_b = Node {
         id: 2,
         x: 100.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let top_a = Node {
         id: 3,
         x: 0.0,
         z: 20.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let top_b = Node {
         id: 4,
         x: 100.0,
         z: 20.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let bottom = Road {
         id: 1,
         from: 1,
         to: 2,
-        kind: "local".into(),
-        stage: "open".into(),
+        kind: RoadKind::Local,
+        stage: Stage::Open,
         progress: 1.0,
         connected: true,
         length: 100.0,
@@ -461,25 +461,25 @@ fn shallow_or_fully_served_faces_do_not_qualify_for_access() {
         id: 5,
         x: 0.0,
         z: 100.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let left_b = Node {
         id: 6,
         x: 0.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let right_a = Node {
         id: 7,
         x: 100.0,
         z: 0.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let right_b = Node {
         id: 8,
         x: 100.0,
         z: 100.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let left = Road {
         id: 3,
@@ -914,7 +914,11 @@ fn face_has_unserved_interior(
                 continue;
             }
             let away_from_roads = roads.iter().all(|(road, start, end)| {
-                let half_width = if road.kind == "arterial" { 7.0 } else { 4.5 };
+                let half_width = if road.kind == RoadKind::Arterial {
+                    7.0
+                } else {
+                    4.5
+                };
                 geometry::point_segment_distance(point.x, point.z, start.x, start.z, end.x, end.z)
                     - half_width
                     >= FACE_MIN_ROAD_EDGE_CLEARANCE
@@ -946,9 +950,9 @@ impl Engine {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
             })
             .collect::<Vec<_>>();
         let participating = eligible_roads
@@ -1129,9 +1133,9 @@ fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                 && !engine.state.neighborhood_road_ids.contains(&road.id)
         })
         .map(|road| road.id)
@@ -1181,13 +1185,13 @@ fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
             id: 7,
             x: 0.0,
             z: 0.0,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         },
         Node {
             id: 8,
             x: 0.0,
             z: -100.0,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         },
     );
     let x = -342.42465;
@@ -1248,7 +1252,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         .iter()
         .find(|road| road.id == plan.branch_road_id)
         .unwrap();
-    assert_eq!(branch.stage, "survey");
+    assert_eq!(branch.stage, Stage::Survey);
     assert!(!branch.connected);
     let project = engine
         .state
@@ -1256,7 +1260,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         .iter()
         .find(|project| project.id == plan.project_id)
         .unwrap();
-    assert_eq!(project.kind, "road");
+    assert_eq!(project.kind, ProjectKind::Road);
     assert!(project.progress < 1.0);
 
     // Frontage admission runs after the split while this pending project is
@@ -1343,7 +1347,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
             .state
             .roads
             .iter()
-            .any(|road| road.id == plan.branch_road_id && road.stage == "open");
+            .any(|road| road.id == plan.branch_road_id && road.stage == Stage::Open);
         if opened {
             break;
         }
@@ -1354,7 +1358,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
             .state
             .roads
             .iter()
-            .any(|road| road.id == plan.branch_road_id && road.stage == "open")
+            .any(|road| road.id == plan.branch_road_id && road.stage == Stage::Open)
         {
             // Keep this lifecycle assertion scoped to the admitted child. A
             // later, unrelated road opening belongs in the matched run.
@@ -1367,7 +1371,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         .state
         .roads
         .iter()
-        .any(|road| road.id == plan.branch_road_id && road.stage == "open"));
+        .any(|road| road.id == plan.branch_road_id && road.stage == Stage::Open));
     assert_eq!(engine.save_json(), resumed.save_json());
     engine
         .validate()
@@ -1382,7 +1386,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         .iter()
         .find(|road| road.id == plan.branch_road_id)
         .unwrap();
-    assert_eq!(opened_branch.stage, "open");
+    assert_eq!(opened_branch.stage, Stage::Open);
     assert!(opened_branch.connected);
     assert_eq!(
         engine
@@ -1527,7 +1531,7 @@ fn road_opening_access_matched_seeds() {
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .collect();
         let housing: Vec<_> = open_buildings
             .iter()
@@ -1543,11 +1547,11 @@ fn road_opening_access_matched_seeds() {
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open" && road.connected)
+            .filter(|road| road.stage == Stage::Open && road.connected)
             .collect();
         let ordinary_roads: Vec<_> = connected_roads
             .iter()
-            .filter(|road| !matches!(road.kind.as_str(), "rail" | "bridge"))
+            .filter(|road| !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge))
             .collect();
         let summary = json!({
             "seed": seed,
@@ -1661,7 +1665,7 @@ fn face_conditioned_road_opening_access_matched_seeds() {
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .collect::<Vec<_>>();
         let housing = open_buildings
             .iter()
@@ -1675,11 +1679,11 @@ fn face_conditioned_road_opening_access_matched_seeds() {
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open" && road.connected)
+            .filter(|road| road.stage == Stage::Open && road.connected)
             .collect::<Vec<_>>();
         let ordinary_roads = connected_roads
             .iter()
-            .filter(|road| matches!(road.kind.as_str(), "local" | "arterial"))
+            .filter(|road| matches!(road.kind, RoadKind::Local | RoadKind::Arterial))
             .collect::<Vec<_>>();
         let summary = json!({
             "seed": seed,

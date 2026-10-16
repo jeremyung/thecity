@@ -117,7 +117,7 @@ fn classify_candidate(
     let mut local_open = 0;
     let mut local_active = 0;
     for building in engine.state.buildings.iter().filter(|building| {
-        building.stage == "open" && (building.x - rect.x).hypot(building.z - rect.z) <= 78.0
+        building.stage == Stage::Open && (building.x - rect.x).hypot(building.z - rect.z) <= 78.0
     }) {
         local_open += 1;
         local_active += usize::from(site_active(building));
@@ -175,9 +175,9 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .count();
     let access_candidate_count = access_host_count * interior_access::PROPOSALS_PER_HOST;
@@ -227,9 +227,9 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         let mut boundary_distances = Vec::new();
 
         for road in &engine.state.roads {
-            if road.stage != "open"
+            if road.stage != Stage::Open
                 || !road.connected
-                || !matches!(road.kind.as_str(), "local" | "arterial")
+                || !matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
             {
                 continue;
             }
@@ -398,22 +398,22 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         .state
         .buildings
         .iter()
-        .filter(|building| building.stage == "open" && is_housing(building))
+        .filter(|building| building.stage == Stage::Open && is_housing(building))
         .collect::<Vec<_>>();
     let active_commerce = engine
         .state
         .buildings
         .iter()
-        .filter(|building| building.stage == "open" && is_commercial(building))
+        .filter(|building| building.stage == Stage::Open && is_commercial(building))
         .collect::<Vec<_>>();
     let ordinary_open = engine
         .state
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect::<Vec<_>>();
     let report = json!({

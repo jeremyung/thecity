@@ -8,6 +8,7 @@ use crate::population::district_density::{
     validate_checkpoint, BuildingSample, BuildingUse, DistrictMetrics, FrontageSample, GridSpec,
     MeasureError, MeasurementAccumulator, MeasurementCheckpoint,
 };
+use crate::Stage;
 use crate::{geometry, Building, ParcelFrontage};
 use serde::{Deserialize, Serialize};
 
@@ -144,9 +145,15 @@ pub(crate) fn make_samples(
     let buildings = buildings
         .iter()
         .map(|building| {
-            let use_class = if matches!(building.kind.as_str(), "home" | "apartment") {
+            let use_class = if matches!(
+                building.kind,
+                crate::BuildingKind::Home | crate::BuildingKind::Apartment
+            ) {
                 BuildingUse::Housing
-            } else if matches!(building.kind.as_str(), "shop" | "cafe" | "office") {
+            } else if matches!(
+                building.kind,
+                crate::BuildingKind::Shop | crate::BuildingKind::Cafe | crate::BuildingKind::Office
+            ) {
                 BuildingUse::Commercial
             } else {
                 BuildingUse::Other
@@ -162,7 +169,7 @@ pub(crate) fn make_samples(
                 },
                 floors: building.floors,
                 use_class,
-                open: building.stage == "open",
+                open: building.stage == Stage::Open,
                 resident_occupancy: if use_class == BuildingUse::Housing {
                     building.occupancy
                 } else {

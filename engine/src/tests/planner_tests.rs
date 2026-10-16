@@ -28,17 +28,17 @@ fn early_growth_fills_connected_blocks_before_expanding_the_map() {
         let open_roads = snapshot
             .roads
             .iter()
-            .filter(|road| road.stage == "open")
+            .filter(|road| road.stage == Stage::Open)
             .count();
         let open_buildings = snapshot
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .count();
         let building_projects = snapshot
             .projects
             .iter()
-            .filter(|project| project.kind == "building" && project.progress < 1.0)
+            .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
             .count();
         assert!(
             open_buildings + building_projects >= minimum_buildings,
@@ -68,13 +68,13 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         .state
         .projects
         .iter()
-        .filter(|project| project.kind == "road" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .count();
     let admitted: Vec<_> = engine
         .state
         .projects
         .iter()
-        .filter(|project| project.kind == "road" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .collect();
     for project in &admitted {
         let endpoints = project
@@ -122,7 +122,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage != "demolished")
+            .filter(|building| building.stage != Stage::Demolished)
             .map(|building| building.width * building.depth)
             .sum();
         let open_ordinary: Vec<_> = engine
@@ -130,9 +130,9 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && !matches!(road.kind.as_str(), "rail" | "bridge")
+                    && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
             })
             .collect();
         let ordinary_length: f32 = open_ordinary.iter().map(|road| road.length).sum();
@@ -180,13 +180,13 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
                 .state
                 .projects
                 .iter()
-                .filter(|project| project.kind == "road" && project.progress < 1.0)
+                .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .count(),
             engine
                 .state
                 .projects
                 .iter()
-                .filter(|project| project.kind == "building" && project.progress < 1.0)
+                .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
                 .count(),
         )
     };
@@ -207,8 +207,8 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         .iter()
         .filter(|road| {
             road.connected
-                && road.stage == "open"
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && road.stage == Stage::Open
+                && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
         })
         .map(|road| road.id)
         .collect();
@@ -227,8 +227,8 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         .state
         .roads
         .iter()
-        .filter(|road| road.stage == "open")
-        .all(|road| { road.connected || road.kind == "bridge" }));
+        .filter(|road| road.stage == Stage::Open)
+        .all(|road| { road.connected || road.kind == RoadKind::Bridge }));
     engine.validate().unwrap();
     for _ in 0..85 {
         engine.step(2_000);
@@ -243,7 +243,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
             .state
             .projects
             .iter()
-            .any(|project| project.kind == "road" && project.progress < 1.0)
+            .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         {
             probe_project = true;
             break;
@@ -350,7 +350,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open")
+            .filter(|road| road.stage == Stage::Open)
             .count()
             < 40
     );
@@ -358,7 +358,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         .state
         .buildings
         .iter()
-        .filter(|building| building.stage == "open")
+        .filter(|building| building.stage == Stage::Open)
         .collect();
     let center = open_buildings.iter().fold((0.0, 0.0), |(x, z), building| {
         (
@@ -370,7 +370,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         .state
         .roads
         .iter()
-        .filter(|road| road.connected && road.stage == "open")
+        .filter(|road| road.connected && road.stage == Stage::Open)
         .flat_map(|road| [road.from, road.to])
         .collect();
     let mut origins: Vec<&Node> = engine
@@ -408,11 +408,11 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
     let blocker_id = engine.id();
     engine.state.projects.push(Project {
         id: blocker_id,
-        kind: "road".into(),
+        kind: ProjectKind::Road,
         from: Some(blocked_origin),
         to: Some(neighbor),
         parcel_id: None,
-        stage: "survey".into(),
+        stage: Stage::Survey,
         progress: 0.2,
         reason: "test blocker for one frontier origin".into(),
         duration: 2.0,
@@ -425,7 +425,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         .projects
         .iter()
         .find(|project| {
-            project.kind == "road" && project.id != blocker_id && project.progress < 1.0
+            project.kind == ProjectKind::Road && project.id != blocker_id && project.progress < 1.0
         })
         .expect("bounded origin search should advance past the blocked origin");
     assert_ne!(later_project.from, Some(blocked_origin));
@@ -437,7 +437,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "road" && project.progress < 1.0)
+        .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .cloned()
         .unwrap();
     let from = project.from.and_then(|id| engine.node(id)).unwrap();
@@ -667,13 +667,15 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "road" && project.progress < 1.0)
+        .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .cloned()
         .expect("first plan edge is ordinary road construction");
     assert_eq!(pending.from, Some(plan.segments[0].0));
     assert_eq!(pending.to, Some(plan.segments[0].1));
     assert!(!engine.state.roads.iter().any(|road| {
-        road.from == plan.segments[0].0 && road.to == plan.segments[0].1 && road.stage == "open"
+        road.from == plan.segments[0].0
+            && road.to == plan.segments[0].1
+            && road.stage == Stage::Open
     }));
     let (reserved_from, reserved_to) = plan.segments[2];
     let blocked_a = engine.node(reserved_from).unwrap();
@@ -682,13 +684,13 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         id: u32::MAX - 20,
         x: (blocked_a.x + blocked_b.x) * 0.5,
         z: (blocked_a.z + blocked_b.z) * 0.5 - 30.0,
-        kind: "candidate".into(),
+        kind: NodeKind::Candidate,
     };
     let crossing_end = Node {
         id: u32::MAX - 21,
         x: crossing.x,
         z: crossing.z + 60.0,
-        kind: "candidate".into(),
+        kind: NodeKind::Candidate,
     };
     assert!(!engine.neighborhood_corridor_clear_for_road(&crossing, &crossing_end, crossing.id));
     let (active_from, active_to) = plan.segments[0];
@@ -735,7 +737,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         .iter()
         .find(|road| road.from == plan.segments[0].0 && road.to == plan.segments[0].1)
         .unwrap();
-    assert_eq!(opened.stage, "open");
+    assert_eq!(opened.stage, Stage::Open);
     assert!(opened.connected);
     assert!(engine.state.parcels.iter().any(|parcel| {
         engine
@@ -751,7 +753,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "road" && project.progress < 1.0)
+        .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .cloned()
         .unwrap();
     assert_eq!(second.from, Some(plan.segments[1].0));
@@ -768,7 +770,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
                 .projects
                 .iter()
                 .find(|project| {
-                    project.kind == "road"
+                    project.kind == ProjectKind::Road
                         && project.progress < 1.0
                         && project.from == Some(from)
                         && project.to == Some(to)
@@ -792,7 +794,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
             .iter()
             .find(|road| road.from == from && road.to == to)
             .unwrap();
-        assert_eq!(road.stage, "open");
+        assert_eq!(road.stage, Stage::Open);
         assert!(road.connected);
     }
     assert!(engine.state.neighborhood_plan.is_none());
@@ -921,9 +923,9 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
     let developed = accessible_lots[0];
     let building_id = engine.add_building(
         developed.id,
-        "home",
+        BuildingKind::Home,
         3,
-        "open",
+        Stage::Open,
         1.0,
         12,
         "New block machiya",
@@ -940,11 +942,11 @@ fn neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence() {
         .state
         .nodes
         .iter()
-        .find(|node| node.kind == "gateway")
+        .find(|node| node.kind == NodeKind::Gateway)
         .unwrap()
         .id;
-    let outer = engine.add_node(390.0, 370.0, "junction");
-    engine.add_road(gateway, outer, "local", "open", 1.0);
+    let outer = engine.add_node(390.0, 370.0, NodeKind::Junction);
+    engine.add_road(gateway, outer, RoadKind::Local, Stage::Open, 1.0);
     engine.recompute_connectivity();
     engine.state.tick = 80;
 
@@ -969,7 +971,7 @@ fn neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence() {
         .state
         .projects
         .iter()
-        .any(|project| project.kind == "road" && project.progress < 1.0));
+        .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0));
 
     engine.state.tick = 160;
     engine.evaluate_growth();
@@ -979,7 +981,7 @@ fn neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence() {
         .state
         .projects
         .iter()
-        .any(|project| { project.kind == "road" && project.progress < 1.0 }));
+        .any(|project| { project.kind == ProjectKind::Road && project.progress < 1.0 }));
     engine.validate().unwrap();
 }
 
@@ -997,7 +999,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
         .roads
         .iter()
         .find(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && ((road.from == reuse_from && road.to == reuse_to)
                     || (road.from == reuse_to && road.to == reuse_from))
         })
@@ -1076,8 +1078,8 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
     ));
     let original_parcel_count = base.state.parcels.len();
     let original_frontages = base.state.parcel_frontages.clone();
-    let new_corner_c = base.add_node(corners[2].x, corners[2].z, "junction");
-    let new_corner_d = base.add_node(corners[3].x, corners[3].z, "junction");
+    let new_corner_c = base.add_node(corners[2].x, corners[2].z, NodeKind::Junction);
+    let new_corner_d = base.add_node(corners[3].x, corners[3].z, NodeKind::Junction);
     let selected_plan = NeighborhoodPlan {
         anchor_node: plan.anchor_node,
         segments: vec![
@@ -1144,7 +1146,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
                 .projects
                 .iter_mut()
                 .find(|project| {
-                    project.kind == "road"
+                    project.kind == ProjectKind::Road
                         && project.progress < 1.0
                         && project.from == Some(from)
                         && project.to == Some(to)
@@ -1263,7 +1265,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
                 .projects
                 .iter_mut()
                 .find(|project| {
-                    project.kind == "road"
+                    project.kind == ProjectKind::Road
                         && project.progress < 1.0
                         && project.from == Some(from)
                         && project.to == Some(to)
@@ -1337,22 +1339,28 @@ fn neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers(
         let endpoint = engine.add_node(
             first_point.x + angle.cos() * 75.0,
             first_point.z + angle.sin() * 75.0,
-            "junction",
+            NodeKind::Junction,
         );
-        engine.add_road(first_anchor, endpoint, "local", "open", 1.0);
+        engine.add_road(first_anchor, endpoint, RoadKind::Local, Stage::Open, 1.0);
     }
 
     // Add a separate later catchment in the same connected road system.
     // Its degree and parcels admit an ordinary full-block candidate.
-    let later_anchor = engine.add_node(-250.0, -250.0, "junction");
-    let far_south = engine.add_node(360.0, -350.0, "junction");
-    let west_south = engine.add_node(-160.0, -350.0, "junction");
-    let later_feeder = engine.add_node(-190.0, -310.0, "junction");
+    let later_anchor = engine.add_node(-250.0, -250.0, NodeKind::Junction);
+    let far_south = engine.add_node(360.0, -350.0, NodeKind::Junction);
+    let west_south = engine.add_node(-160.0, -350.0, NodeKind::Junction);
+    let later_feeder = engine.add_node(-190.0, -310.0, NodeKind::Junction);
     let gateway = engine.state.nodes[0].id;
-    engine.add_road(gateway, far_south, "local", "open", 1.0);
-    engine.add_road(far_south, west_south, "local", "open", 1.0);
-    engine.add_road(west_south, later_feeder, "local", "open", 1.0);
-    engine.add_road(later_feeder, later_anchor, "local", "open", 1.0);
+    engine.add_road(gateway, far_south, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(far_south, west_south, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(west_south, later_feeder, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(
+        later_feeder,
+        later_anchor,
+        RoadKind::Local,
+        Stage::Open,
+        1.0,
+    );
     engine.recompute_connectivity();
     for row in 0..3 {
         for column in 0..4 {
@@ -1367,9 +1375,9 @@ fn neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers(
             );
             let building = engine.add_building(
                 parcel,
-                "home",
+                BuildingKind::Home,
                 2,
-                "open",
+                Stage::Open,
                 1.0,
                 8,
                 "Later occupied machiya",
@@ -1475,7 +1483,7 @@ fn coordinated_block_road_clearance_protects_interior_and_allows_perimeter() {
         id: u32::MAX,
         x: interior.x,
         z: interior.z,
-        kind: "candidate".into(),
+        kind: NodeKind::Candidate,
     };
     assert!(!engine.neighborhood_corridor_clear_for_road(&anchor, &spur, anchor.id));
 
@@ -1611,7 +1619,7 @@ fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
     assert!(
         left.state.projects.iter().any(|p| {
             !project_ids_before.contains(&p.id)
-                && p.kind == "road"
+                && p.kind == ProjectKind::Road
                 && p.from == Some(proposal.start_id)
         }),
         "replay must admit the enumerated frontier, not be a no-op"

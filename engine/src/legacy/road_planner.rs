@@ -35,7 +35,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open")
+            .filter(|road| road.stage == Stage::Open)
             .count();
         let homes = self
             .state
@@ -82,13 +82,13 @@ impl Engine {
             .state
             .projects
             .iter()
-            .filter(|project| project.kind == "building" && project.progress < 1.0)
+            .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
             .count();
         let active_road_projects = self
             .state
             .projects
             .iter()
-            .filter(|project| project.kind == "road" && project.progress < 1.0)
+            .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
             .count();
         // Reserve a coordinated block before ordinary infill and building
         // project gates can spend its interior frontage. Reservation only
@@ -117,9 +117,9 @@ impl Engine {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && !matches!(road.kind.as_str(), "rail" | "bridge")
+                    && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
             })
             .count();
         #[cfg(test)]
@@ -210,14 +210,14 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|r| r.connected && r.stage == "open")
+            .filter(|r| r.connected && r.stage == Stage::Open)
             .flat_map(|r| [r.from, r.to])
             .collect();
         let isolated = self
             .state
             .roads
             .iter()
-            .filter(|r| r.kind == "bridge" && r.stage != "open")
+            .filter(|r| r.kind == RoadKind::Bridge && r.stage != Stage::Open)
             .count()
             > 0;
         // This is the production demand boundary for every road planner,
@@ -240,8 +240,8 @@ impl Engine {
         let mut bearings = Vec::new();
         for road in self.state.roads.iter().filter(|road| {
             road.connected
-                && road.stage == "open"
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && road.stage == Stage::Open
+                && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 && (road.from == node_id || road.to == node_id)
         }) {
             let neighbor_id = if road.from == node_id {
@@ -256,7 +256,7 @@ impl Engine {
             }
         }
         for project in self.state.projects.iter().filter(|project| {
-            project.kind == "road"
+            project.kind == ProjectKind::Road
                 && project.progress < 1.0
                 && (project.from == Some(node_id) || project.to == Some(node_id))
         }) {
@@ -282,8 +282,8 @@ impl Engine {
             .iter()
             .filter(|road| {
                 road.connected
-                    && road.stage == "open"
-                    && !matches!(road.kind.as_str(), "rail" | "bridge")
+                    && road.stage == Stage::Open
+                    && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                     && (road.from == node_id || road.to == node_id)
             })
             .count();
@@ -292,7 +292,7 @@ impl Engine {
             .projects
             .iter()
             .filter(|project| {
-                project.kind == "road"
+                project.kind == ProjectKind::Road
                     && project.progress < 1.0
                     && (project.from == Some(node_id) || project.to == Some(node_id))
             })
@@ -338,12 +338,9 @@ impl Engine {
         open_buildings: &[Building],
     ) -> BTreeMap<u32, f32> {
         let mut headings = BTreeMap::new();
-        for bridge in self
-            .state
-            .roads
-            .iter()
-            .filter(|road| road.kind == "bridge" && road.stage == "open" && road.connected)
-        {
+        for bridge in self.state.roads.iter().filter(|road| {
+            road.kind == RoadKind::Bridge && road.stage == Stage::Open && road.connected
+        }) {
             for (head_id, opposite_id) in [(bridge.from, bridge.to), (bridge.to, bridge.from)] {
                 let Some(head) = self.node(head_id) else {
                     continue;
@@ -353,21 +350,21 @@ impl Engine {
                 };
                 let ordinary_open_or_planned = self.state.roads.iter().any(|road| {
                     (road.from == head_id || road.to == head_id)
-                        && road.stage == "open"
+                        && road.stage == Stage::Open
                         && road.connected
-                        && !matches!(road.kind.as_str(), "rail" | "bridge")
+                        && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 }) || self.state.projects.iter().any(|project| {
                     let (Some(from), Some(to)) = (project.from, project.to) else {
                         return false;
                     };
-                    if project.kind != "road"
+                    if project.kind != ProjectKind::Road
                         || project.progress >= 1.0
                         || (from != head_id && to != head_id)
                     {
                         return false;
                     }
                     let matches_nonordinary_road = self.state.roads.iter().any(|road| {
-                        matches!(road.kind.as_str(), "rail" | "bridge")
+                        matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                             && ((road.from == from && road.to == to)
                                 || (road.to == from && road.from == to))
                     });
@@ -410,7 +407,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|road| road.connected && road.stage == "open")
+            .filter(|road| road.connected && road.stage == Stage::Open)
             .flat_map(|road| [road.from, road.to])
             .collect();
         // An open bridge can leave its far endpoint connected but outside the
@@ -471,12 +468,9 @@ impl Engine {
             next_cursor = (idx + 1) % choice_count;
             let start = candidates[idx].0.clone();
             let bridgehead_heading = candidates[idx].2;
-            if self
-                .state
-                .projects
-                .iter()
-                .any(|p| p.kind == "road" && p.from == Some(start.id) && p.progress < 1.0)
-            {
+            if self.state.projects.iter().any(|p| {
+                p.kind == ProjectKind::Road && p.from == Some(start.id) && p.progress < 1.0
+            }) {
                 continue;
             }
             let generated_junction = start.id >= 7;
@@ -506,7 +500,7 @@ impl Engine {
                                 || (road.to == start.id && road.from == node.id)
                         })
                         && !self.state.projects.iter().any(|project| {
-                            project.kind == "road"
+                            project.kind == ProjectKind::Road
                                 && project.progress < 1.0
                                 && ((project.from == Some(start.id) && project.to == Some(node.id))
                                     || (project.from == Some(node.id)
@@ -535,7 +529,7 @@ impl Engine {
                     id: u32::MAX,
                     x,
                     z,
-                    kind: "candidate".into(),
+                    kind: NodeKind::Candidate,
                 };
                 let try_loop = !loop_targets.is_empty() && random_unit(&mut rng) < 0.28;
                 let mut loop_target = None;
@@ -581,7 +575,7 @@ impl Engine {
                     .state
                     .roads
                     .iter()
-                    .filter(|road| road.stage == "open")
+                    .filter(|road| road.stage == Stage::Open)
                     .all(|road| {
                         if road.from == start.id
                             || road.to == start.id
@@ -599,7 +593,7 @@ impl Engine {
                     .state
                     .projects
                     .iter()
-                    .filter(|project| project.kind == "road" && project.progress < 1.0)
+                    .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                     .all(|project| {
                         let (Some(from), Some(to)) = (project.from, project.to) else {
                             return true;
@@ -756,17 +750,17 @@ impl Engine {
         }
         let to = proposal
             .target_id
-            .unwrap_or_else(|| self.add_node(proposal.end_x, proposal.end_z, "junction"));
+            .unwrap_or_else(|| self.add_node(proposal.end_x, proposal.end_z, NodeKind::Junction));
         let id = self.id();
         let reason = "A connected street extension serves demand from nearby homes and businesses";
         let duration = 3.0 + random_unit(&mut self.state.rng_growth) * 4.0;
         self.record_project(Project {
             id,
-            kind: "road".into(),
+            kind: ProjectKind::Road,
             from: Some(proposal.start_id),
             to: Some(to),
             parcel_id: None,
-            stage: "survey".into(),
+            stage: Stage::Survey,
             progress: 0.0,
             reason: reason.into(),
             duration,
@@ -835,7 +829,7 @@ impl Engine {
                     id: u32::MAX,
                     x: proposal.end_x,
                     z: proposal.end_z,
-                    kind: "candidate".into(),
+                    kind: NodeKind::Candidate,
                 }
             };
             let rects = self.viable_frontage_benefit_sites(
@@ -1124,7 +1118,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|road| road.connected && road.stage == "open")
+            .filter(|road| road.connected && road.stage == Stage::Open)
             .flat_map(|road| [road.from, road.to])
             .collect();
         let access_nodes: BTreeMap<u32, u32> = self
@@ -1136,7 +1130,7 @@ impl Engine {
         self.state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .filter(|building| {
                 access_nodes
                     .get(&building.parcel_id)

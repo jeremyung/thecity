@@ -7,7 +7,7 @@ pub struct Node {
     pub id: u32,
     pub x: f32,
     pub z: f32,
-    pub kind: String,
+    pub kind: NodeKind,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -15,8 +15,8 @@ pub struct Road {
     pub id: u32,
     pub from: u32,
     pub to: u32,
-    pub kind: String,
-    pub stage: String,
+    pub kind: RoadKind,
+    pub stage: Stage,
     pub progress: f32,
     pub connected: bool,
     pub length: f32,
@@ -54,22 +54,22 @@ pub(crate) fn lane_key(traveler: &Traveler, from: u32, to: u32) -> (u32, u32, u8
 
 /// Rendered carriageway width. Tokyo local streets are narrow shared surfaces;
 /// only arterials carry raised sidewalks.
-pub(crate) fn road_width(kind: &str) -> f32 {
+/// Carriageway width; `None` is an unresolved road.
+pub(crate) fn road_width(kind: Option<RoadKind>) -> f32 {
     match kind {
-        "arterial" => 16.0,
-        "bridge" => 16.0,
-        "local" => 6.5,
-        "lane" => 4.0,
-        _ => 9.0,
+        Some(RoadKind::Arterial | RoadKind::Bridge) => 16.0,
+        Some(RoadKind::Local) => 6.5,
+        Some(RoadKind::Lane) => 4.0,
+        Some(RoadKind::Expressway | RoadKind::Rail) | None => 9.0,
     }
 }
 
 /// Shared streets carry walkers inside the painted edge; arterials use the
 /// raised sidewalk outside the carriageway. All access and movement consumers
 /// must use this same offset so their route endpoints meet.
-pub(crate) fn pedestrian_road_offset(kind: &str) -> f32 {
+pub(crate) fn pedestrian_road_offset(kind: Option<RoadKind>) -> f32 {
     let half_width = road_width(kind) * 0.5;
-    if matches!(kind, "local" | "lane") {
+    if matches!(kind, Some(RoadKind::Local | RoadKind::Lane)) {
         half_width - 0.72
     } else {
         half_width + 0.72
@@ -81,7 +81,7 @@ impl Engine {
         self.state
             .nodes
             .iter()
-            .find(|n| n.kind == "station")
+            .find(|n| n.kind == NodeKind::Station)
             .map(|n| n.id)
     }
 
@@ -89,13 +89,13 @@ impl Engine {
         self.state.nodes.iter().find(|n| n.id == id)
     }
 
-    pub(crate) fn add_node(&mut self, x: f32, z: f32, kind: &str) -> u32 {
+    pub(crate) fn add_node(&mut self, x: f32, z: f32, kind: NodeKind) -> u32 {
         let id = self.id();
         self.state.nodes.push(Node {
             id,
             x: x.clamp(MIN, MAX),
             z: z.clamp(MIN, MAX),
-            kind: kind.into(),
+            kind,
         });
         self.mark_access_geometry_changed();
         id
@@ -105,8 +105,8 @@ impl Engine {
         &mut self,
         from: u32,
         to: u32,
-        kind: &str,
-        stage: &str,
+        kind: RoadKind,
+        stage: Stage,
         progress: f32,
     ) -> u32 {
         let id = self.id();
@@ -118,12 +118,12 @@ impl Engine {
             id,
             from,
             to,
-            kind: kind.into(),
-            stage: stage.into(),
+            kind,
+            stage,
             progress,
             connected: false,
             length: len.max(1.0),
-            lanes: if kind == "arterial" { 2 } else { 1 },
+            lanes: if kind == RoadKind::Arterial { 2 } else { 1 },
         });
         self.mark_access_geometry_changed();
         id
@@ -133,7 +133,7 @@ impl Engine {
         self.state
             .roads
             .iter()
-            .any(|r| r.stage == "open" && r.connected && (r.from == id || r.to == id))
+            .any(|r| r.stage == Stage::Open && r.connected && (r.from == id || r.to == id))
     }
 
     pub(crate) fn recompute_connectivity(&mut self) {
@@ -141,7 +141,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .find(|n| n.kind == "gateway")
+            .find(|n| n.kind == NodeKind::Gateway)
             .map(|n| n.id);
         let Some(start) = gateway else { return };
         let mut seen = BTreeSet::new();
@@ -150,7 +150,12 @@ impl Engine {
         // Preserve source-road neighbor order while avoiding a full road
         // scan for every visited node in a large connected district.
         let mut adjacency: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
-        for road in self.state.roads.iter().filter(|road| road.stage == "open") {
+        for road in self
+            .state
+            .roads
+            .iter()
+            .filter(|road| road.stage == Stage::Open)
+        {
             adjacency.entry(road.from).or_default().push(road.to);
             if road.from != road.to {
                 adjacency.entry(road.to).or_default().push(road.from);
@@ -168,7 +173,7 @@ impl Engine {
         let mut connectivity_changed = false;
         for road in &mut self.state.roads {
             let connected =
-                road.stage == "open" && seen.contains(&road.from) && seen.contains(&road.to);
+                road.stage == Stage::Open && seen.contains(&road.from) && seen.contains(&road.to);
             connectivity_changed |= road.connected != connected;
             road.connected = connected;
         }
@@ -180,8 +185,8 @@ impl Engine {
     pub(crate) fn node_has_open_road(&self, node_id: u32) -> bool {
         self.state.roads.iter().any(|road| {
             road.connected
-                && road.stage == "open"
-                && road.kind != "rail"
+                && road.stage == Stage::Open
+                && road.kind != RoadKind::Rail
                 && (road.from == node_id || road.to == node_id)
         })
     }
@@ -208,7 +213,7 @@ impl Engine {
         blocked: &BTreeSet<u32>,
     ) -> Vec<u32> {
         self.route_where(start, goal, blocked, |road| {
-            (rail && road.kind == "rail") || (!rail && road.kind != "rail")
+            (rail && road.kind == RoadKind::Rail) || (!rail && road.kind != RoadKind::Rail)
         })
     }
 
@@ -231,7 +236,7 @@ impl Engine {
             .roads
             .iter()
             .enumerate()
-            .filter(|(_, road)| road.connected && road.stage == "open" && eligible(road))
+            .filter(|(_, road)| road.connected && road.stage == Stage::Open && eligible(road))
         {
             adjacency.push((road.from, index));
             if road.to != road.from {

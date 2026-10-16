@@ -35,7 +35,7 @@ impl Engine {
         let Some(road) = self.state.roads.iter().find(|r| r.id == road_id).cloned() else {
             return;
         };
-        if road.kind == "rail" || road.kind == "bridge" {
+        if road.kind == RoadKind::Rail || road.kind == RoadKind::Bridge {
             return;
         }
         let (Some(a), Some(b)) = (self.node(road.from).cloned(), self.node(road.to).cloned())
@@ -538,7 +538,7 @@ impl Engine {
             }
             let road = &self.state.roads[road_index];
             let road_id = road.id;
-            if matches!(road.kind.as_str(), "rail" | "bridge") {
+            if matches!(road.kind, RoadKind::Rail | RoadKind::Bridge) {
                 road_index += 1;
                 slot_index = 0;
                 roads_visited += 1;
@@ -547,7 +547,7 @@ impl Engine {
             // This scan is bounded and persistent. Skip temporarily unusable
             // roads so they do not starve later streets; cursor wrap revisits
             // them after they open or reconnect.
-            if road.stage != "open" || !road.connected {
+            if road.stage != Stage::Open || !road.connected {
                 road_index += 1;
                 slot_index = 0;
                 roads_visited += 1;
@@ -661,7 +661,7 @@ impl Engine {
                 continue;
             }
             let nearby = self.state.buildings.iter().filter(|building| {
-                building.stage == "open"
+                building.stage == Stage::Open
                     && (building.x - parcel_x).hypot(building.z - parcel_z) <= 78.0
             });
             let mut local_open = 0usize;

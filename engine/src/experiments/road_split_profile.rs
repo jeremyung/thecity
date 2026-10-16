@@ -6,6 +6,7 @@ use crate::{
     point_segment_distance, Engine, Node, Road, RoadSplitError, Traveler, MAX_ROUTE_NODES,
     MAX_SEGMENTS, MAX_TRAVELERS,
 };
+use crate::{NodeKind, RoadKind, Stage};
 use std::time::{Duration, Instant};
 
 const SEED: u32 = 87_231;
@@ -16,9 +17,9 @@ fn split_host(engine: &Engine) -> Road {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                 && road.length >= 20.0
         })
         .max_by(|a, b| a.length.total_cmp(&b.length))
@@ -34,7 +35,7 @@ fn route_away_from_split(engine: &Engine, host: &Road) -> Road {
         .state
         .roads
         .iter()
-        .filter(|road| road.id != host.id && road.stage == "open" && road.length > 0.0)
+        .filter(|road| road.id != host.id && road.stage == Stage::Open && road.length > 0.0)
         .find(|road| {
             let (Some(from), Some(to)) = (engine.node(road.from), engine.node(road.to)) else {
                 return false;
@@ -57,7 +58,7 @@ fn route_after_host_split(
         .state
         .roads
         .iter()
-        .filter(|road| road.id != host.id && road.stage == "open")
+        .filter(|road| road.id != host.id && road.stage == Stage::Open)
         .find_map(|road| {
             let other = if road.from == host.to {
                 road.to
@@ -176,21 +177,21 @@ fn add_disjoint_road_geometry(engine: &mut Engine, host: &Road, target_roads: us
             id: from,
             x,
             z,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         });
         engine.state.nodes.push(Node {
             id: to,
             x: x + 1.0,
             z,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         });
         let road_id = engine.id();
         engine.state.roads.push(Road {
             id: road_id,
             from,
             to,
-            kind: "local".into(),
-            stage: "survey".into(),
+            kind: RoadKind::Local,
+            stage: Stage::Survey,
             progress: 0.0,
             connected: false,
             length: 1.0,
@@ -236,7 +237,7 @@ fn add_connected_road_geometry(engine: &mut Engine, host: &Road, target_roads: u
         .state
         .nodes
         .iter()
-        .find(|node| node.kind == "gateway")
+        .find(|node| node.kind == NodeKind::Gateway)
         .expect("fresh world has a gateway")
         .clone();
     let mut previous = gateway.id;
@@ -250,15 +251,15 @@ fn add_connected_road_geometry(engine: &mut Engine, host: &Road, target_roads: u
             id: node_id,
             x: point.0,
             z: point.1,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         });
         let road_id = engine.id();
         engine.state.roads.push(Road {
             id: road_id,
             from: previous,
             to: node_id,
-            kind: "local".into(),
-            stage: "open".into(),
+            kind: RoadKind::Local,
+            stage: Stage::Open,
             progress: 1.0,
             connected: true,
             length: (point.0 - previous_point.0).hypot(point.1 - previous_point.1),

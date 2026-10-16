@@ -68,9 +68,9 @@ fn passage_facing_survives_release_building_and_access() {
         .any(|b| b.parcel_id == parcel_id));
     let building_id = engine.add_building(
         parcel_id,
-        "home",
+        BuildingKind::Home,
         2,
-        "open",
+        Stage::Open,
         1.0,
         8,
         "Passage test",
@@ -164,7 +164,7 @@ fn generated_parent_sites_build_with_clear_access_and_replay() {
                 .state
                 .roads
                 .iter()
-                .any(|r| r.id == road && r.stage == "open"));
+                .any(|r| r.id == road && r.stage == crate::Stage::Open));
             for other in &engine.state.parcels {
                 if other.id == parcel_id {
                     continue;

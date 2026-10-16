@@ -111,7 +111,12 @@ impl Engine {
             .nodes
             .iter()
             .find(|n| n.id == node_id)
-            .is_some_and(|n| matches!(n.kind.as_str(), "junction" | "market" | "station"))
+            .is_some_and(|n| {
+                matches!(
+                    n.kind,
+                    NodeKind::Junction | NodeKind::Market | NodeKind::Station
+                )
+            })
     }
 
     pub(crate) fn junction_red_state(
@@ -166,13 +171,13 @@ impl Engine {
         len: f32,
     ) -> (f32, f32) {
         let road = self.state.roads.iter().find(|r| {
-            r.stage == "open"
-                && r.kind != "rail"
+            r.stage == Stage::Open
+                && r.kind != RoadKind::Rail
                 && ((r.from == from && r.to == to) || (r.from == to && r.to == from))
         });
         let walking_offset = road
-            .map(|r| pedestrian_road_offset(&r.kind))
-            .unwrap_or_else(|| pedestrian_road_offset("unknown"));
+            .map(|r| pedestrian_road_offset(Some(r.kind)))
+            .unwrap_or_else(|| pedestrian_road_offset(None));
         let lateral = if traveler.kind == 1 {
             KERB_LANE
         } else if traveler.id % 2 == 0 {

@@ -25,11 +25,11 @@ impl Engine {
             self.keep_interior_project_retryable(project_id);
             return;
         };
-        if project.kind != "road"
+        if project.kind != ProjectKind::Road
             || project.from != Some(branch.from)
             || project.to != Some(branch.to)
-            || branch.stage == "open"
-            || branch.kind == "rail"
+            || branch.stage == Stage::Open
+            || branch.kind == RoadKind::Rail
             || self
                 .state
                 .parcels
@@ -90,7 +90,7 @@ impl Engine {
             .iter_mut()
             .find(|road| road.id == plan.branch_road_id)
         {
-            road.stage = "open".into();
+            road.stage = Stage::Open;
             road.progress = 1.0;
         }
         self.recompute_connectivity();
@@ -106,7 +106,7 @@ impl Engine {
                 .iter_mut()
                 .find(|road| road.id == plan.branch_road_id)
             {
-                road.stage = "survey".into();
+                road.stage = Stage::Survey;
                 road.progress = 0.999;
             }
             self.recompute_connectivity();
@@ -147,7 +147,7 @@ impl Engine {
             .find(|project| project.id == project_id)
         {
             project.progress = 1.0;
-            project.stage = "finishing".into();
+            project.stage = Stage::Finishing;
         }
         self.state.road_infill_due = self
             .state
@@ -155,7 +155,7 @@ impl Engine {
             .saturating_add(plan.selected_lots.len() as u8)
             .min(9);
         self.record(
-            "RoadOpened",
+            EventKind::RoadOpened,
             plan.branch_road_id,
             "A new access street opens with reserved, connected neighborhood frontage".into(),
         );
@@ -180,7 +180,7 @@ impl Engine {
         {
             restored_pending_road = project.progress >= 1.0;
             project.progress = 0.999;
-            project.stage = "finishing".into();
+            project.stage = Stage::Finishing;
         }
         if restored_pending_road {
             self.mark_access_geometry_changed();
@@ -192,9 +192,9 @@ impl Engine {
                 .iter_mut()
                 .find(|road| road.id == plan.branch_road_id)
             {
-                if road.stage != "open" {
+                if road.stage != Stage::Open {
                     road.progress = 0.999;
-                    road.stage = "finishing".into();
+                    road.stage = Stage::Finishing;
                 }
             }
         }
@@ -234,9 +234,9 @@ impl Engine {
         let Some(host) = self.state.roads.iter().find(|road| road.id == road_id) else {
             return false;
         };
-        if host.stage != "open"
+        if host.stage != Stage::Open
             || !host.connected
-            || !matches!(host.kind.as_str(), "local" | "arterial")
+            || !matches!(host.kind, RoadKind::Local | RoadKind::Arterial)
         {
             return false;
         }
@@ -245,16 +245,16 @@ impl Engine {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
             })
             .count();
         let active_buildings = self
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .count();
         if established_roads < 40 || active_buildings < 8 {
             return false;
@@ -263,7 +263,7 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .cloned()
             .collect();
         if !self
@@ -402,7 +402,7 @@ impl Engine {
             .state
             .projects
             .iter()
-            .any(|project| project.kind == "road" && project.progress < 1.0)
+            .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         {
             return unchanged();
         }
@@ -424,9 +424,9 @@ impl Engine {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                     && only_host.is_none_or(|host_id| road.id == host_id)
                     && explicit_host_ids
                         .as_ref()
@@ -636,7 +636,7 @@ impl Engine {
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open")
+                .filter(|road| road.stage == Stage::Open)
                 .all(|road| {
                     if road.id == host.id {
                         return true;
@@ -652,7 +652,7 @@ impl Engine {
                 .state
                 .projects
                 .iter()
-                .filter(|project| project.kind == "road" && project.progress < 1.0)
+                .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .all(|project| {
                     let Some((from, to)) = project.from.zip(project.to) else {
                         return true;
@@ -809,17 +809,22 @@ impl Engine {
             Err(_) => return false,
         };
         self.recompute_connectivity();
-        let endpoint_id = self.add_node(end.x, end.z, "junction");
-        let branch_road_id =
-            self.add_road(split.split_node_id, endpoint_id, "local", "survey", 0.0);
+        let endpoint_id = self.add_node(end.x, end.z, NodeKind::Junction);
+        let branch_road_id = self.add_road(
+            split.split_node_id,
+            endpoint_id,
+            RoadKind::Local,
+            Stage::Survey,
+            0.0,
+        );
         let project_id = self.id();
         let project = Project {
             id: project_id,
-            kind: "road".into(),
+            kind: ProjectKind::Road,
             from: Some(split.split_node_id),
             to: Some(endpoint_id),
             parcel_id: None,
-            stage: "survey".into(),
+            stage: Stage::Survey,
             progress: 0.0,
             reason: "A neighborhood access street is being built from an established corridor"
                 .into(),

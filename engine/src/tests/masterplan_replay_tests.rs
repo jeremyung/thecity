@@ -9,16 +9,22 @@ fn live_masterplan_construction_matches_restored_continuation() {
         engine.set_development_rate(16);
         let mut covered = BTreeSet::new();
         while engine.state.tick < 160_000 && covered.len() < 4 {
-            let active: BTreeSet<String> = engine
+            let active: BTreeSet<ProjectKind> = engine
                 .state
                 .projects
                 .iter()
                 .filter(|p| {
                     p.progress > 0.0
                         && p.progress < 1.0
-                        && ["building", "road", "rail", "expressway"].contains(&p.kind.as_str())
+                        && matches!(
+                            p.kind,
+                            ProjectKind::Building
+                                | ProjectKind::Road
+                                | ProjectKind::Rail
+                                | ProjectKind::Expressway
+                        )
                 })
-                .map(|p| p.kind.clone())
+                .map(|p| p.kind)
                 .filter(|kind| !covered.contains(kind))
                 .collect();
             if active.is_empty() {
@@ -63,10 +69,10 @@ fn live_masterplan_construction_matches_restored_continuation() {
         assert_eq!(
             covered,
             BTreeSet::from([
-                "building".to_owned(),
-                "road".to_owned(),
-                "rail".to_owned(),
-                "expressway".to_owned()
+                ProjectKind::Building,
+                ProjectKind::Road,
+                ProjectKind::Rail,
+                ProjectKind::Expressway
             ]),
             "seed {seed} never exercised every construction kind"
         );

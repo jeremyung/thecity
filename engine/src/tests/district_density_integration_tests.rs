@@ -36,7 +36,7 @@ fn mature_district_measurements_conserve_capacity_without_mutating_worlds() {
                     BuildingUse::Other
                 },
                 // Empty open buildings must remain in the vacancy denominator.
-                open: building.stage == "open",
+                open: building.stage == Stage::Open,
                 resident_occupancy: building.occupancy,
                 capacity: building.capacity,
                 business_active: building.business_active,
@@ -69,7 +69,7 @@ fn mature_district_measurements_conserve_capacity_without_mutating_worlds() {
             .state
             .buildings
             .iter()
-            .filter(|b| b.stage == "open")
+            .filter(|b| b.stage == Stage::Open)
             .collect();
         let housing_capacity: f64 = open
             .iter()

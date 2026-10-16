@@ -29,7 +29,7 @@ fn early_access_scheduling_matched_seeds() {
                 .state
                 .buildings
                 .iter()
-                .filter(|building| building.stage == "open")
+                .filter(|building| building.stage == Stage::Open)
                 .collect();
             let housing: Vec<_> = open_buildings
                 .iter()
@@ -45,11 +45,11 @@ fn early_access_scheduling_matched_seeds() {
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open" && road.connected)
+                .filter(|road| road.stage == Stage::Open && road.connected)
                 .collect();
             let ordinary_roads: Vec<_> = connected_roads
                 .iter()
-                .filter(|road| !matches!(road.kind.as_str(), "rail" | "bridge"))
+                .filter(|road| !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge))
                 .collect();
             let envelope_proxy_m2: f64 = open_buildings
                 .iter()

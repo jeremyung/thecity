@@ -128,8 +128,8 @@ impl Engine {
         };
         let mut best: Option<(u32, f32, i8, f32)> = None;
         for road in self.state.roads.iter().filter(|road| {
-            road.stage == "open"
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+            road.stage == Stage::Open
+                && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 && (road.from == access_node || road.to == access_node)
         }) {
             let (Some(a), Some(b)) = (self.node(road.from).cloned(), self.node(road.to).cloned())

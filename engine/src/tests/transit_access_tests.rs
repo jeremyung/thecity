@@ -1,3 +1,4 @@
+use crate::{BuildingKind, NodeKind, RoadKind, Stage};
 use crate::{Bus, BusLine, Engine, Node, Resident, Road};
 
 #[test]
@@ -9,7 +10,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
             id,
             x,
             z,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         };
         engine.state.nodes.push(node);
         id
@@ -33,8 +34,8 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
             id,
             from,
             to,
-            kind: "local".into(),
-            stage: "open".into(),
+            kind: RoadKind::Local,
+            stage: Stage::Open,
             progress: 1.0,
             connected: true,
             length,
@@ -160,16 +161,20 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
             .state
             .roads
             .iter_mut()
-            .find(|road| road.kind == "rail")
+            .find(|road| road.kind == RoadKind::Rail)
             .unwrap();
-        rail.stage = "open".into();
+        rail.stage = Stage::Open;
         rail.progress = 1.0;
         rail.connected = true;
         (rail.from, rail.to)
     };
     let station = [from, to]
         .into_iter()
-        .find(|id| engine.node(*id).is_some_and(|node| node.kind == "station"))
+        .find(|id| {
+            engine
+                .node(*id)
+                .is_some_and(|node| node.kind == NodeKind::Station)
+        })
         .unwrap();
     let destination = {
         let node = engine.node(station).unwrap().clone();
@@ -178,13 +183,13 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
             id,
             x: node.x + 24.0,
             z: node.z - 18.0,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         });
         id
     };
     let building = engine.state.buildings[0].id;
-    engine.state.buildings[0].kind = "home".into();
-    engine.state.buildings[0].stage = "open".into();
+    engine.state.buildings[0].kind = BuildingKind::Home;
+    engine.state.buildings[0].stage = Stage::Open;
     let resident_id = engine.id();
     engine.state.residents.push(Resident {
         id: resident_id,
@@ -223,7 +228,7 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         wait_position,
         false,
     ));
-    let road_id = engine.add_road(station, destination, "local", "open", 1.0);
+    let road_id = engine.add_road(station, destination, RoadKind::Local, Stage::Open, 1.0);
     engine
         .state
         .roads

@@ -1,5 +1,6 @@
 //! Consistency checks for the persisted realization of a regenerated plan.
 
+use crate::NodeKind;
 use std::collections::BTreeSet;
 
 use crate::{frontage_access_node, Engine};
@@ -63,8 +64,8 @@ impl Engine {
                 ));
             };
             let expected = plan.nodes[i];
-            let kind_ok = node.kind == expected.kind.as_str()
-                || (i == plan.founding_market && node.kind == "market");
+            let kind_ok = node.kind == expected.kind.world()
+                || (i == plan.founding_market && node.kind == NodeKind::Market);
             if !near(node.x, expected.p.x, 1.0e-3)
                 || !near(node.z, expected.p.z, 1.0e-3)
                 || !kind_ok
@@ -109,7 +110,7 @@ impl Engine {
             };
             if *a == 0
                 || *b == 0
-                || road.kind != expected.kind.as_str()
+                || road.kind != expected.kind.world()
                 || !((road.from == *a && road.to == *b) || (road.from == *b && road.to == *a))
             {
                 return Err(format!(

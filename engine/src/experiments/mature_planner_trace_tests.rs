@@ -5,6 +5,7 @@
 //! restored clone through ordinary simulation ticks.
 
 use crate::{site_active, Engine, NeighborhoodPlan, Road};
+use crate::{ProjectKind, Stage};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -146,9 +147,9 @@ fn ordinary_connected_roads(engine: &Engine) -> Vec<Road> {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && !matches!(road.kind, crate::RoadKind::Rail | crate::RoadKind::Bridge)
         })
         .cloned()
         .collect()
@@ -167,13 +168,13 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
         .state
         .projects
         .iter()
-        .filter(|project| project.kind == "road" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .count();
     let active_building_projects = engine
         .state
         .projects
         .iter()
-        .filter(|project| project.kind == "building" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
         .count();
     let ordinary_roads = ordinary_connected_roads(engine);
     let connected_nodes: BTreeSet<u32> = ordinary_roads
@@ -288,7 +289,7 @@ fn planner_frontdoor_blockers(engine: &Engine) -> Vec<&'static str> {
         .state
         .projects
         .iter()
-        .any(|project| project.kind == "road" && project.progress < 1.0)
+        .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
     {
         blockers.push("active_road_project_exists");
     }
@@ -296,7 +297,7 @@ fn planner_frontdoor_blockers(engine: &Engine) -> Vec<&'static str> {
         .state
         .projects
         .iter()
-        .any(|project| project.kind == "building" && project.progress < 1.0)
+        .any(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
     {
         blockers.push("active_building_project_exists");
     }
@@ -343,13 +344,13 @@ fn normal_trace(source: &Engine) -> NormalTickTrace {
                 .state
                 .projects
                 .iter()
-                .filter(|project| project.kind == "road" && project.progress < 1.0)
+                .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .count(),
             active_building_projects: engine
                 .state
                 .projects
                 .iter()
-                .filter(|project| project.kind == "building" && project.progress < 1.0)
+                .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
                 .count(),
             planner_frontdoor_eligible: sample_blockers.is_empty(),
             planner_frontdoor_blockers: sample_blockers,

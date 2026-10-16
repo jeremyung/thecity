@@ -4,6 +4,7 @@
 //! the exact parcel geometry gates would allow additional rear lot depth while
 //! retaining each existing road-facing edge.
 
+use crate::Stage;
 use crate::{geometry, Building, CollisionContext, Engine, Parcel, ParcelFrontage};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -127,9 +128,9 @@ fn build_candidates(engine: &Engine) -> Vec<Candidate> {
     }
     let mut road_positions = BTreeMap::new();
     for road in &engine.state.roads {
-        if road.stage != "open"
+        if road.stage != Stage::Open
             || !road.connected
-            || matches!(road.kind.as_str(), "rail" | "bridge")
+            || matches!(road.kind, crate::RoadKind::Rail | crate::RoadKind::Bridge)
         {
             continue;
         }
@@ -148,7 +149,7 @@ fn build_candidates(engine: &Engine) -> Vec<Candidate> {
         ) else {
             continue;
         };
-        if building.stage != "open"
+        if building.stage != Stage::Open
             || building.anchor
             || !(1..=8).contains(&building.floors)
             || parcel.protected

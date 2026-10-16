@@ -59,7 +59,7 @@ fn parent_passage_runtime_admission_probe() {
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open")
+            .filter(|road| road.stage == crate::Stage::Open)
             .filter_map(|road| {
                 let a = engine.node(road.from)?;
                 let b = engine.node(road.to)?;

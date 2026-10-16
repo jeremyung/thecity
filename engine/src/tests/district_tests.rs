@@ -254,30 +254,30 @@ fn district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero() {
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open" && road.connected)
+                .filter(|road| road.stage == Stage::Open && road.connected)
                 .collect();
             let envelope_area: f64 = engine
                 .state
                 .buildings
                 .iter()
-                .filter(|building| building.stage == "open")
+                .filter(|building| building.stage == Stage::Open)
                 .map(|building| (building.width * building.depth) as f64)
                 .sum();
             let floor_area: f64 = engine
                 .state
                 .buildings
                 .iter()
-                .filter(|building| building.stage == "open")
+                .filter(|building| building.stage == Stage::Open)
                 .map(|building| (building.width * building.depth * building.floors as f32) as f64)
                 .sum();
             let road_length: f64 = open_roads
                 .iter()
-                .filter(|road| !matches!(road.kind.as_str(), "rail" | "bridge"))
+                .filter(|road| !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge))
                 .map(|road| road.length as f64)
                 .sum();
             eprintln!(
                 "district-policy seed={seed} enabled={enabled} buildings={} connected_open_roads={} road_length={road_length:.1}m envelope_proxy={envelope_area:.1} floor_proxy={floor_area:.1} comparisons={} access_wins={} frontier_wins={} elapsed={:.2}s",
-                engine.state.buildings.iter().filter(|b| b.stage == "open").count(),
+                engine.state.buildings.iter().filter(|b| b.stage == Stage::Open).count(),
                 open_roads.len(),
                 engine.experiments.district_policy_comparisons,
                 engine.experiments.district_policy_access_wins,

@@ -17,7 +17,7 @@ fn building_picker_bounds_window_wraps_cursor_and_replays() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "building")
+        .find(|project| project.kind == ProjectKind::Building)
         .and_then(|project| project.parcel_id)
         .expect("one building project should be planned");
     let selected_index = candidate_ids.iter().position(|id| *id == selected).unwrap();
@@ -101,7 +101,7 @@ fn admitted_interior_branch_with_exact_clearance_restores_without_radial_rejecti
             .roads
             .iter()
             .find(|road| road.id == branch_id)
-            .is_some_and(|road| road.stage == "open" && road.connected)
+            .is_some_and(|road| road.stage == Stage::Open && road.connected)
         {
             break;
         }
@@ -113,7 +113,7 @@ fn admitted_interior_branch_with_exact_clearance_restores_without_radial_rejecti
         .iter()
         .find(|road| road.id == branch_id)
         .expect("completed branch keeps its road identity");
-    assert_eq!(branch.stage, "open");
+    assert_eq!(branch.stage, Stage::Open);
     assert!(branch.connected);
     let (a, b) = (
         completed.node(branch.from).unwrap(),
@@ -151,7 +151,7 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
         .state
         .nodes
         .iter()
-        .find(|node| node.kind == "station")
+        .find(|node| node.kind == NodeKind::Station)
         .unwrap()
         .id;
     let route = engine.route(parcel.access_node, station, false);

@@ -7,6 +7,7 @@
 //! exhausted work limits fail closed rather than returning partial faces.
 
 use crate::world::geometry::segments_distance_coords;
+use crate::{NodeKind, RoadKind, Stage};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -774,9 +775,9 @@ mod tests {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
             })
             .map(|road| RoadFaceEdge {
                 id: road.id,
@@ -883,25 +884,25 @@ mod tests {
                 .state
                 .nodes
                 .iter()
-                .find(|node| node.kind == "market")
+                .find(|node| node.kind == NodeKind::Market)
                 .unwrap();
             let station = engine
                 .state
                 .nodes
                 .iter()
-                .find(|node| node.kind == "station")
+                .find(|node| node.kind == NodeKind::Station)
                 .unwrap();
             let gateway = engine
                 .state
                 .nodes
                 .iter()
-                .find(|node| node.kind == "gateway")
+                .find(|node| node.kind == NodeKind::Gateway)
                 .unwrap();
             let center = engine
                 .state
                 .nodes
                 .iter()
-                .filter(|node| node.kind == "junction")
+                .filter(|node| node.kind == NodeKind::Junction)
                 .min_by(|a, b| {
                     (a.x - 72.0)
                         .hypot(a.z - 42.0)
@@ -914,7 +915,8 @@ mod tests {
                 .roads
                 .iter()
                 .filter(|road| {
-                    road.stage == "open" && matches!(road.kind.as_str(), "local" | "arterial")
+                    road.stage == Stage::Open
+                        && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                 })
                 .collect::<Vec<_>>();
             let participating_ids = ordinary
@@ -1045,9 +1047,9 @@ mod tests {
                 .roads
                 .iter()
                 .filter(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && road.connected
-                        && matches!(road.kind.as_str(), "local" | "arterial")
+                        && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                 })
                 .map(|road| RoadFaceEdge {
                     id: road.id,
@@ -1185,15 +1187,15 @@ mod tests {
         let mut excluded = BTreeMap::<String, usize>::new();
         let mut selected = Vec::new();
         for road in &engine.state.roads {
-            let reason = if road.stage != "open" {
+            let reason = if road.stage != Stage::Open {
                 Some("not_open")
             } else if !road.connected {
                 Some("disconnected")
-            } else if road.kind == "rail" {
+            } else if road.kind == RoadKind::Rail {
                 Some("rail")
-            } else if road.kind == "bridge" {
+            } else if road.kind == RoadKind::Bridge {
                 Some("bridge")
-            } else if !matches!(road.kind.as_str(), "local" | "arterial") {
+            } else if !matches!(road.kind, RoadKind::Local | RoadKind::Arterial) {
                 Some("other_kind")
             } else {
                 None

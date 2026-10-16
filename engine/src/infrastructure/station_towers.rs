@@ -42,7 +42,7 @@ impl Engine {
         self.state
             .nodes
             .iter()
-            .filter(|node| node.kind == "station")
+            .filter(|node| node.kind == NodeKind::Station)
             .any(|station| (station.x - parcel.x).hypot(station.z - parcel.z) <= 105.0)
     }
 
@@ -77,9 +77,9 @@ impl Engine {
 
         let mut candidates: Vec<(f32, u64, f32, f32)> = Vec::new();
         for road in self.state.roads.iter().filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
         }) {
             let (Some(a), Some(b)) = (self.node(road.from), self.node(road.to)) else {
                 continue;
@@ -92,7 +92,7 @@ impl Engine {
             .state
             .projects
             .iter()
-            .filter(|project| project.kind == "road" && project.progress < 1.0)
+            .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         {
             let (Some(from), Some(to)) = (project.from, project.to) else {
                 continue;
@@ -155,7 +155,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .filter(|node| node.kind == "station")
+            .filter(|node| node.kind == NodeKind::Station)
             .map(|station| (station.x - x).hypot(station.z - z))
             .min_by(f32::total_cmp)
             .unwrap_or(f32::INFINITY);
@@ -190,7 +190,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .find(|node| node.kind == "station")?;
+            .find(|node| node.kind == NodeKind::Station)?;
         let dx = b.x - a.x;
         let dz = b.z - a.z;
         let length = dx.hypot(dz);

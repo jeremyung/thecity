@@ -6,7 +6,7 @@ use std::collections::{BTreeSet, VecDeque};
 pub struct Event {
     pub id: u32,
     pub tick: u64,
-    pub kind: String,
+    pub kind: EventKind,
     pub entity_id: u32,
     pub reason: String,
 }
@@ -21,7 +21,7 @@ pub struct Stats {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Weather {
-    pub kind: String,
+    pub kind: WeatherKind,
     pub intensity: f32,
 }
 
@@ -119,7 +119,7 @@ pub(crate) struct WorldState {
     #[serde(default)]
     pub(crate) station_ready: bool,
     pub(crate) weather_day: u32,
-    pub(crate) weather_kind: String,
+    pub(crate) weather_kind: WeatherKind,
     pub(crate) weather_intensity: f32,
     pub(crate) last_departure_day: u32,
     pub(crate) last_renewal_day: u32,

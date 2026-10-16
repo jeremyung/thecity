@@ -143,8 +143,8 @@ impl Engine {
                 .iter()
                 .find(|building| building.id == pending.destination_building)
                 .is_some_and(|building| {
-                    building.stage == "open"
-                        && (!is_commercial_kind(&building.kind) || building.business_active)
+                    building.stage == Stage::Open
+                        && (!is_commercial_kind(building.kind) || building.business_active)
                 });
             if !destination_open
                 || !self
@@ -270,7 +270,7 @@ impl Engine {
             self.state.travelers.push(traveler);
             self.remove_pending_alight(resident_id);
             self.record(
-                "TransitAlightRouteResumed",
+                EventKind::TransitAlightRouteResumed,
                 resident_id,
                 format!(
                     "{name} resumes the intended walk from stop {}",

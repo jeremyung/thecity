@@ -3,6 +3,7 @@ use crate::{
     access_capture, access_live::LiveAccess, access_planning_job::AccessPlanningJob,
     access_proposal_capture, Engine, WorldPoint, MAX_PARCELS, MAX_SEGMENTS,
 };
+use crate::{ProjectKind, Stage};
 
 #[cfg(feature = "legacy")]
 const WORK_PER_TICK: usize = 4096;
@@ -54,7 +55,7 @@ impl Engine {
                 .state
                 .projects
                 .iter()
-                .any(|p| p.kind == "road" && p.progress < 1.0)
+                .any(|p| p.kind == ProjectKind::Road && p.progress < 1.0)
     }
 
     /// Atomic input capture is outside the incremental work counter. Discovery
@@ -102,9 +103,9 @@ impl Engine {
                 .roads
                 .iter()
                 .filter(|r| {
-                    r.stage == "open"
+                    r.stage == Stage::Open
                         && r.connected
-                        && matches!(r.kind.as_str(), "local" | "arterial")
+                        && matches!(r.kind, crate::RoadKind::Local | crate::RoadKind::Arterial)
                 })
                 .count();
             if roads < 40 || !self.start_face_access() {
@@ -395,7 +396,7 @@ mod tests {
                 .iter()
                 .filter(|f| f.road_id == branch_id)
                 .count();
-            if branch.stage != "open" {
+            if branch.stage != Stage::Open {
                 assert_eq!(frontages, 0, "dependent lots must wait for road opening");
             } else {
                 assert!(branch.connected);
@@ -433,8 +434,8 @@ mod tests {
             // depending on a proposal remaining admissible after the change.
             if steps == 5 || steps == 13 {
                 let offset = steps as f32;
-                uninterrupted.add_node(490.0 - offset, -490.0 + offset, "test");
-                resumed.add_node(490.0 - offset, -490.0 + offset, "test");
+                uninterrupted.add_node(490.0 - offset, -490.0 + offset, crate::NodeKind::Junction);
+                resumed.add_node(490.0 - offset, -490.0 + offset, crate::NodeKind::Junction);
                 assert!(uninterrupted.live_access.is_some());
                 assert_eq!(
                     uninterrupted.access_geometry_revision_token(),

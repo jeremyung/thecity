@@ -6,12 +6,12 @@ fn bus_uses_collectors_while_walkers_keep_the_lane_shortcut() {
     let mut engine = engine_with_graph(
         5,
         vec![
-            road(0, 0, 1, "lane", "open", true, 1.0),
-            road(1, 1, 4, "lane", "open", true, 1.0),
-            road(2, 0, 2, "local", "open", true, 3.0),
-            road(3, 2, 3, "arterial", "open", true, 3.0),
-            road(4, 3, 4, "bridge", "open", true, 3.0),
-            road(5, 0, 4, "expressway", "open", true, 4.0),
+            road(0, 0, 1, RoadKind::Lane, Stage::Open, true, 1.0),
+            road(1, 1, 4, RoadKind::Lane, Stage::Open, true, 1.0),
+            road(2, 0, 2, RoadKind::Local, Stage::Open, true, 3.0),
+            road(3, 2, 3, RoadKind::Arterial, Stage::Open, true, 3.0),
+            road(4, 3, 4, RoadKind::Bridge, Stage::Open, true, 3.0),
+            road(5, 0, 4, RoadKind::Expressway, Stage::Open, true, 4.0),
         ],
     );
     assert_eq!(engine.route(0, 4, false), vec![0, 1, 4]);
@@ -26,7 +26,7 @@ fn bus_uses_collectors_while_walkers_keep_the_lane_shortcut() {
     assert!(engine
         .bus_route_avoiding(0, 4, &BTreeSet::from([2]))
         .is_empty());
-    engine.state.roads[3].stage = "construction".into();
+    engine.state.roads[3].stage = Stage::Survey;
     assert!(engine.bus_route_avoiding(0, 4, &BTreeSet::new()).is_empty());
     assert_eq!(engine.route(0, 4, false), vec![0, 1, 4]);
 }
@@ -35,7 +35,7 @@ fn bus_uses_collectors_while_walkers_keep_the_lane_shortcut() {
 fn route_limit_accepts_complete_boundary_and_rejects_suffix() {
     let count = MAX_ROUTE_NODES as u32 + 1;
     let roads = (0..count - 1)
-        .map(|id| road(id, id, id + 1, "local", "open", true, 1.0))
+        .map(|id| road(id, id, id + 1, RoadKind::Local, Stage::Open, true, 1.0))
         .collect();
     let engine = engine_with_graph(count, roads);
     let valid = engine.route(0, count - 2, false);
@@ -51,14 +51,14 @@ fn route_limit_accepts_complete_boundary_and_rejects_suffix() {
 fn delivery_does_not_spawn_midway_along_an_oversized_route() {
     let count = MAX_ROUTE_NODES as u32 + 1;
     let roads = (0..count - 1)
-        .map(|id| road(id, id, id + 1, "local", "open", true, 1.0))
+        .map(|id| road(id, id, id + 1, RoadKind::Local, Stage::Open, true, 1.0))
         .collect();
     let mut engine = engine_with_graph(count, roads);
-    engine.state.nodes[0].kind = "gateway".into();
+    engine.state.nodes[0].kind = NodeKind::Gateway;
     engine.state.buildings.truncate(1);
     let business = &mut engine.state.buildings[0];
-    business.kind = "shop".into();
-    business.stage = "open".into();
+    business.kind = BuildingKind::Shop;
+    business.stage = Stage::Open;
     business.business_active = true;
     let parcel_id = business.parcel_id;
     engine
@@ -115,8 +115,8 @@ fn route_avoiding_scan(
         let base = *dist.get(&current).unwrap_or(&f32::INFINITY);
         for r in engine.state.roads.iter().filter(|r| {
             r.connected
-                && r.stage == "open"
-                && ((rail && r.kind == "rail") || (!rail && r.kind != "rail"))
+                && r.stage == Stage::Open
+                && ((rail && r.kind == RoadKind::Rail) || (!rail && r.kind != RoadKind::Rail))
                 && (r.from == current || r.to == current)
         }) {
             let next = if r.from == current { r.to } else { r.from };
@@ -154,7 +154,7 @@ fn engine_with_graph(node_count: u32, roads: Vec<Road>) -> Engine {
             id,
             x: id as f32 * 10.0,
             z: 0.0,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         })
         .collect();
     engine.state.roads = roads;
@@ -165,8 +165,8 @@ fn road(
     id: u32,
     from: u32,
     to: u32,
-    kind: &str,
-    stage: &str,
+    kind: RoadKind,
+    stage: Stage,
     connected: bool,
     length: f32,
 ) -> Road {
@@ -174,9 +174,9 @@ fn road(
         id,
         from,
         to,
-        kind: kind.into(),
-        stage: stage.into(),
-        progress: if stage == "open" { 1.0 } else { 0.0 },
+        kind,
+        stage,
+        progress: if stage == Stage::Open { 1.0 } else { 0.0 },
         connected,
         length,
         lanes: 1,
@@ -201,10 +201,10 @@ fn assert_matches_oracle(engine: &Engine, start: u32, goal: u32, rail: bool, blo
 #[test]
 fn exact_routes_match_scan_for_equal_cost_diamonds_and_source_order() {
     let diamond = vec![
-        road(10, 0, 1, "local", "open", true, 1.0),
-        road(11, 1, 3, "local", "open", true, 1.0),
-        road(12, 0, 2, "local", "open", true, 1.0),
-        road(13, 2, 3, "local", "open", true, 1.0),
+        road(10, 0, 1, RoadKind::Local, Stage::Open, true, 1.0),
+        road(11, 1, 3, RoadKind::Local, Stage::Open, true, 1.0),
+        road(12, 0, 2, RoadKind::Local, Stage::Open, true, 1.0),
+        road(13, 2, 3, RoadKind::Local, Stage::Open, true, 1.0),
     ];
     for roads in [diamond.clone(), diamond.into_iter().rev().collect()] {
         let engine = engine_with_graph(4, roads);
@@ -217,15 +217,15 @@ fn exact_routes_match_scan_for_equal_cost_diamonds_and_source_order() {
 #[test]
 fn exact_routes_match_scan_for_filters_parallel_edges_and_blocked_nodes() {
     let roads = vec![
-        road(0, 0, 1, "local", "open", true, 2.0),
-        road(1, 1, 2, "rail", "open", true, 2.0),
-        road(2, 0, 2, "arterial", "open", true, 9.0),
-        road(3, 0, 2, "local", "open", true, 9.0), // parallel edge
-        road(4, 2, 3, "local", "survey", true, 1.0),
-        road(5, 2, 3, "local", "open", false, 1.0),
-        road(6, 2, 4, "local", "open", true, 1.0),
-        road(7, 4, 4, "local", "open", true, 0.0), // self loop
-        road(8, 4, 5, "local", "open", true, 1.0),
+        road(0, 0, 1, RoadKind::Local, Stage::Open, true, 2.0),
+        road(1, 1, 2, RoadKind::Rail, Stage::Open, true, 2.0),
+        road(2, 0, 2, RoadKind::Arterial, Stage::Open, true, 9.0),
+        road(3, 0, 2, RoadKind::Local, Stage::Open, true, 9.0), // parallel edge
+        road(4, 2, 3, RoadKind::Local, Stage::Survey, true, 1.0),
+        road(5, 2, 3, RoadKind::Local, Stage::Open, false, 1.0),
+        road(6, 2, 4, RoadKind::Local, Stage::Open, true, 1.0),
+        road(7, 4, 4, RoadKind::Local, Stage::Open, true, 0.0), // self loop
+        road(8, 4, 5, RoadKind::Local, Stage::Open, true, 1.0),
     ];
     let engine = engine_with_graph(7, roads);
     for (rail, start, goal, blocked) in [
@@ -255,14 +255,14 @@ fn exact_routes_match_scan_for_deterministic_generated_graphs() {
             let to = state % node_count;
             state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
             let kind = match state % 4 {
-                0 => "rail",
-                1 => "arterial",
-                _ => "local",
+                0 => RoadKind::Rail,
+                1 => RoadKind::Arterial,
+                _ => RoadKind::Local,
             };
             let (stage, connected) = match (state >> 4) % 5 {
-                0 => ("survey", true),
-                1 => ("open", false),
-                _ => ("open", true),
+                0 => (Stage::Survey, true),
+                1 => (Stage::Open, false),
+                _ => (Stage::Open, true),
             };
             let length = match (state >> 8) % 5 {
                 0 => 1.0,
@@ -301,7 +301,7 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
             id: node_id(index),
             x: index as f32,
             z: 0.0,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         })
         .collect();
 
@@ -312,8 +312,8 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
             50_000 + index * 23,
             node_id(index),
             node_id(index + 1),
-            "local",
-            "open",
+            RoadKind::Local,
+            Stage::Open,
             true,
             0.35 + (index % 4) as f32 * 0.025,
         ));
@@ -325,8 +325,8 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
             90_001 + index * 31,
             node_id(index),
             node_id(index + 2),
-            "local",
-            "open",
+            RoadKind::Local,
+            Stage::Open,
             true,
             1.125,
         ));
@@ -335,8 +335,8 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
         120_007,
         node_id(0),
         node_id(1),
-        "rail",
-        "open",
+        RoadKind::Rail,
+        Stage::Open,
         true,
         0.75,
     ));
@@ -344,8 +344,8 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
         120_113,
         node_id(1),
         node_id(2),
-        "rail",
-        "open",
+        RoadKind::Rail,
+        Stage::Open,
         true,
         0.625,
     ));
@@ -363,9 +363,9 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
     // Exercise each adjacency input across repeated calls. A per-call index
     // must immediately reflect mutations to status, connectivity, endpoints,
     // cost, and source ordering.
-    engine.state.roads[0].stage = "survey".into();
+    engine.state.roads[0].stage = Stage::Survey;
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
-    engine.state.roads[0].stage = "open".into();
+    engine.state.roads[0].stage = Stage::Open;
     engine.state.roads[0].connected = false;
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
     engine.state.roads[0].connected = true;

@@ -2,6 +2,7 @@
 //! corridors. Geometry is cached from the immutable plan; realization remains
 //! an engine-state decision.
 
+use crate::{RoadKind, Stage};
 use serde::{Deserialize, Serialize};
 
 use crate::infrastructure::masterplan::{MasterPlan, P};
@@ -571,8 +572,8 @@ fn route_is_open(engine: &Engine, route: &Route) -> bool {
         endpoints_match
             && engine.state.roads.iter().any(|road| {
                 road.id == road_id
-                    && road.kind == "expressway"
-                    && road.stage == "open"
+                    && road.kind == RoadKind::Expressway
+                    && road.stage == Stage::Open
                     && ((road.from == from_id && road.to == to_id)
                         || (road.from == to_id && road.to == from_id))
             })
@@ -591,7 +592,7 @@ mod tests {
                 let mapped = engine.state.masterplan.as_ref().unwrap().node_ids[node_index];
                 if mapped == 0 {
                     let node_plan = plan.nodes[node_index];
-                    let id = engine.add_node(node_plan.p.x, node_plan.p.z, node_plan.kind.as_str());
+                    let id = engine.add_node(node_plan.p.x, node_plan.p.z, node_plan.kind.world());
                     engine.state.masterplan.as_mut().unwrap().node_ids[node_index] = id;
                 }
             }
@@ -603,8 +604,8 @@ mod tests {
                 let id = engine.add_road(
                     from,
                     to,
-                    "expressway",
-                    if open { "open" } else { "construction" },
+                    RoadKind::Expressway,
+                    if open { Stage::Open } else { Stage::Survey },
                     if open { 1.0 } else { 0.2 },
                 );
                 engine.state.masterplan.as_mut().unwrap().road_ids[segment.road_index] = id;
@@ -614,7 +615,7 @@ mod tests {
                 .iter_mut()
                 .find(|road| road.id == road_id)
             {
-                road.stage = if open { "open" } else { "construction" }.into();
+                road.stage = if open { Stage::Open } else { Stage::Survey };
                 road.progress = if open { 1.0 } else { 0.2 };
             }
             let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
@@ -725,7 +726,7 @@ mod tests {
             .iter_mut()
             .find(|r| r.id == road_id)
             .unwrap()
-            .stage = "open".into();
+            .stage = Stage::Open;
         engine
             .state
             .roads
@@ -845,7 +846,7 @@ mod tests {
             .iter_mut()
             .find(|road| road.id == road_id)
             .unwrap()
-            .stage = "construction".into();
+            .stage = Stage::Survey;
         missing_middle.state.tick = missing_middle.state.expressway_traffic.next_departure_tick;
         missing_middle.advance_expressway_traffic();
         assert!(missing_middle.state.expressway_traffic.trips.is_empty());

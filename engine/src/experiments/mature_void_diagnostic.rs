@@ -161,7 +161,7 @@ fn evaluate_exact_candidate(
         .state
         .roads
         .iter()
-        .filter(|road| road.stage == "open")
+        .filter(|road| road.stage == Stage::Open)
         .all(|road| {
             if road.id == host.id {
                 return true;
@@ -176,7 +176,7 @@ fn evaluate_exact_candidate(
         .state
         .projects
         .iter()
-        .filter(|project| project.kind == "road" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .all(|project| {
             let Some((from, to)) = project.from.zip(project.to) else {
                 return true;
@@ -303,9 +303,9 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .filter_map(|road| {
             let (a, b) = (engine.node(road.from)?, engine.node(road.to)?);
@@ -337,7 +337,9 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     let mut fixed_rejections = BTreeMap::<String, usize>::new();
     let mut fixed_accepted = Vec::new();
     for host in engine.state.roads.iter().filter(|road| {
-        road.stage == "open" && road.connected && matches!(road.kind.as_str(), "local" | "arterial")
+        road.stage == Stage::Open
+            && road.connected
+            && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
     }) {
         for fraction in interior_access::FRACTIONS {
             for side in interior_access::SIDES {
@@ -368,9 +370,9 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
         let mut rejected_examples = Vec::new();
         let mut targeted = 0usize;
         for host in engine.state.roads.iter().filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         }) {
             let (Some(a), Some(b)) = (engine.node(host.from), engine.node(host.to)) else {
                 continue;

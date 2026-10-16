@@ -110,7 +110,7 @@ fn probe_mid_edge_access(
         .state
         .roads
         .iter()
-        .filter(|road| road.stage == "open")
+        .filter(|road| road.stage == Stage::Open)
     {
         if road.id == host_road.id {
             continue;
@@ -189,7 +189,9 @@ fn audit_mid_edge_access_candidates(engine: &Engine) -> MidEdgeProbeAudit {
     let context = engine.collision_context();
     let mut audit = MidEdgeProbeAudit::default();
     for host in engine.state.roads.iter().filter(|road| {
-        road.stage == "open" && road.connected && !matches!(road.kind.as_str(), "bridge" | "rail")
+        road.stage == Stage::Open
+            && road.connected
+            && !matches!(road.kind, RoadKind::Bridge | RoadKind::Rail)
     }) {
         let (Some(a), Some(b)) = (engine.node(host.from), engine.node(host.to)) else {
             continue;
@@ -371,13 +373,13 @@ fn audit_neighborhood_candidate(
                         id: 0,
                         x: corners[edge].x,
                         z: corners[edge].z,
-                        kind: String::new(),
+                        kind: NodeKind::Junction,
                     },
                     &Node {
                         id: 0,
                         x: corners[(edge + 1) % 4].x,
                         z: corners[(edge + 1) % 4].z,
-                        kind: String::new(),
+                        kind: NodeKind::Junction,
                     },
                 ) >= 70.0
                     && lots.iter().filter(|lot| lot.frontage_edge == edge).count() < 2)
@@ -393,7 +395,7 @@ fn audit_neighborhood_candidate(
                 id: u32::MAX - index as u32,
                 x: corners[index].x,
                 z: corners[index].z,
-                kind: "candidate".into(),
+                kind: NodeKind::Candidate,
             })
     });
     for edge in 0..4 {
@@ -403,9 +405,9 @@ fn audit_neighborhood_candidate(
             reused == edge
                 && engine.state.roads.iter().any(|road| {
                     road.id == road_id
-                        && road.stage == "open"
+                        && road.stage == Stage::Open
                         && road.connected
-                        && !matches!(road.kind.as_str(), "rail" | "bridge")
+                        && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                         && ((road.from == a.id && road.to == b.id)
                             || (road.from == b.id && road.to == a.id))
                 })
@@ -451,7 +453,7 @@ fn audit_neighborhood_candidate(
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open")
+            .filter(|road| road.stage == Stage::Open)
         {
             let (Some(old_a), Some(old_b)) = (engine.node(road.from), engine.node(road.to)) else {
                 continue;
@@ -468,7 +470,7 @@ fn audit_neighborhood_candidate(
             }
         }
         if engine.state.projects.iter().any(|project| {
-            if project.kind != "road" || project.progress >= 1.0 {
+            if project.kind != ProjectKind::Road || project.progress >= 1.0 {
                 return false;
             }
             let Some((from, to)) = project.from.zip(project.to) else {
@@ -516,7 +518,7 @@ fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
         .state
         .roads
         .iter()
-        .filter(|road| road.connected && road.stage == "open")
+        .filter(|road| road.connected && road.stage == Stage::Open)
         .flat_map(|road| [road.from, road.to])
         .collect();
     let mut reusable: BTreeMap<u32, Vec<Road>> = BTreeMap::new();
@@ -524,9 +526,9 @@ fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
         .state
         .roads
         .iter()
-        .filter(|road| road.connected && road.stage == "open")
+        .filter(|road| road.connected && road.stage == Stage::Open)
     {
-        if !matches!(road.kind.as_str(), "rail" | "bridge") {
+        if !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge) {
             reusable.entry(road.from).or_default().push(road.clone());
             reusable.entry(road.to).or_default().push(road.clone());
         }
@@ -731,16 +733,16 @@ fn building_picker_engine() -> (Engine, u32) {
         .state
         .roads
         .iter()
-        .find(|road| road.stage == "open" && road.connected && road.kind != "rail")
+        .find(|road| road.stage == Stage::Open && road.connected && road.kind != RoadKind::Rail)
         .map(|road| road.from)
         .expect("founding street is open and connected");
     for (x, z) in [(210.0, 200.0), (222.0, 200.0), (216.0, 212.0)] {
         let parcel = engine.add_parcel(x, z, 8.0, 8.0, access_node, 1.0, false);
         let building = engine.add_building(
             parcel,
-            "home",
+            BuildingKind::Home,
             2,
-            "open",
+            Stage::Open,
             1.0,
             4,
             "Test home",
@@ -762,8 +764,8 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
     let mut engine = Engine::new_legacy(217);
     let founder = engine.state.buildings.first().unwrap().id;
     let parcel_id = engine.state.buildings.first().unwrap().parcel_id;
-    engine.state.buildings[0].kind = "home".into();
-    engine.state.buildings[0].stage = "open".into();
+    engine.state.buildings[0].kind = BuildingKind::Home;
+    engine.state.buildings[0].stage = Stage::Open;
     engine.state.buildings[0].occupancy = 1;
     let start = engine
         .state
@@ -787,7 +789,7 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
             id,
             x: start_node.x + x_offset,
             z: start_node.z + 7.0,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         });
         let from = engine.node(previous).unwrap().clone();
         let to = engine.node(id).unwrap().clone();
@@ -796,8 +798,8 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
             id: road_id,
             from: previous,
             to: id,
-            kind: "local".into(),
-            stage: "open".into(),
+            kind: RoadKind::Local,
+            stage: Stage::Open,
             progress: 1.0,
             connected: true,
             length: distance(&from, &to),
@@ -866,15 +868,19 @@ fn rail_test_engine(seed: u32) -> (Engine, u32, u32) {
             .state
             .roads
             .iter_mut()
-            .find(|road| road.kind == "rail")
+            .find(|road| road.kind == RoadKind::Rail)
             .unwrap();
-        rail.stage = "open".into();
+        rail.stage = Stage::Open;
         rail.progress = 1.0;
         (rail.from, rail.to)
     };
     let station = [from, to]
         .into_iter()
-        .find(|id| engine.node(*id).is_some_and(|node| node.kind == "station"))
+        .find(|id| {
+            engine
+                .node(*id)
+                .is_some_and(|node| node.kind == NodeKind::Station)
+        })
         .unwrap();
     let gateway = if from == station { to } else { from };
     engine.state.station_ready = true;
@@ -922,9 +928,9 @@ fn add_rail_test_resident(engine: &mut Engine, gateway: u32) -> u32 {
             .clone();
         let home_id = engine.add_building(
             parcel.id,
-            "home",
+            BuildingKind::Home,
             2,
-            "open",
+            Stage::Open,
             1.0,
             100,
             "Test Rail Home",
@@ -983,13 +989,13 @@ fn engine_with_clear_local_chord() -> (Engine, u32, u32) {
     engine.state.station_ready = false;
     engine.state.road_origin_cursor = 0;
 
-    let gateway = engine.add_node(365.0, 360.0, "gateway");
-    let hub = engine.add_node(30.0, 400.0, "junction");
-    let start = engine.add_node(0.0, 300.0, "junction");
-    let target = engine.add_node(60.0, 300.0, "junction");
-    engine.add_road(gateway, hub, "local", "open", 1.0);
-    engine.add_road(hub, start, "local", "open", 1.0);
-    engine.add_road(hub, target, "local", "open", 1.0);
+    let gateway = engine.add_node(365.0, 360.0, NodeKind::Gateway);
+    let hub = engine.add_node(30.0, 400.0, NodeKind::Junction);
+    let start = engine.add_node(0.0, 300.0, NodeKind::Junction);
+    let target = engine.add_node(60.0, 300.0, NodeKind::Junction);
+    engine.add_road(gateway, hub, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(hub, start, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(hub, target, RoadKind::Local, Stage::Open, 1.0);
     engine.recompute_connectivity();
 
     // A compact, occupied block sits south of the clear 60 m chord. These
@@ -1001,9 +1007,9 @@ fn engine_with_clear_local_chord() -> (Engine, u32, u32) {
             let parcel_id = engine.add_parcel(x, z, 8.0, 8.0, hub, 0.85, false);
             let building_id = engine.add_building(
                 parcel_id,
-                "home",
+                BuildingKind::Home,
                 2,
-                "open",
+                Stage::Open,
                 1.0,
                 10,
                 "Test Machiya",
@@ -1042,11 +1048,11 @@ fn engine_with_developed_plan_site() -> Engine {
     engine.state.neighborhood_plan = None;
     engine.state.neighborhood_anchor_cursor = 0;
 
-    let gateway = engine.add_node(365.0, 360.0, "gateway");
-    let feeder = engine.add_node(310.0, 315.0, "junction");
-    let anchor = engine.add_node(250.0, 250.0, "junction");
-    engine.add_road(gateway, feeder, "local", "open", 1.0);
-    engine.add_road(feeder, anchor, "local", "open", 1.0);
+    let gateway = engine.add_node(365.0, 360.0, NodeKind::Gateway);
+    let feeder = engine.add_node(310.0, 315.0, NodeKind::Junction);
+    let anchor = engine.add_node(250.0, 250.0, NodeKind::Junction);
+    engine.add_road(gateway, feeder, RoadKind::Local, Stage::Open, 1.0);
+    engine.add_road(feeder, anchor, RoadKind::Local, Stage::Open, 1.0);
     engine.recompute_connectivity();
 
     // Real occupied frontage creates local demand west of the prospective
@@ -1058,9 +1064,9 @@ fn engine_with_developed_plan_site() -> Engine {
             let parcel = engine.add_parcel(x, z, 7.0, 7.0, anchor, 0.8, false);
             let building = engine.add_building(
                 parcel,
-                "home",
+                BuildingKind::Home,
                 2,
-                "open",
+                Stage::Open,
                 1.0,
                 8,
                 "Occupied machiya",
@@ -1102,7 +1108,7 @@ fn arrival_contention_engine() -> (Engine, f32, Vec<u32>) {
         .state
         .roads
         .iter()
-        .find(|road| road.kind != "rail" && road.stage == "open")
+        .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
         .expect("founding road is open");
     let (from, to) = (road.from, road.to);
     let end = engine

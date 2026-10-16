@@ -1,4 +1,5 @@
 //! Authoritative per-road rail samples shared by motion and presentation.
+use crate::Stage;
 use crate::{
     masterplan::{MasterPlan, RoadKind, P},
     rail_alignment::Alignment,
@@ -245,9 +246,9 @@ mod tests {
             .state
             .roads
             .iter_mut()
-            .find(|r| r.kind == "rail")
+            .find(|r| r.kind == crate::RoadKind::Rail)
             .unwrap();
-        rail.stage = "open".into();
+        rail.stage = Stage::Open;
         rail.progress = 1.0;
         rail.connected = true;
         let (from, to, length) = (rail.from, rail.to, rail.length);
@@ -319,7 +320,7 @@ mod tests {
             .state
             .roads
             .iter_mut()
-            .find(|r| r.kind == "rail")
+            .find(|r| r.kind == crate::RoadKind::Rail)
             .unwrap()
             .length += 1.0;
         assert!(engine

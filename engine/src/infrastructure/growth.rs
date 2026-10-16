@@ -42,7 +42,8 @@ impl Engine {
             if site_vacant(b) {
                 b.vacant_days = b.vacant_days.saturating_add(1);
             }
-            if b.stage == "open" && is_housing(b) && b.occupancy < b.capacity && b.capacity > 0 {
+            if b.stage == Stage::Open && is_housing(b) && b.occupancy < b.capacity && b.capacity > 0
+            {
                 let arrivals = ((population as f32 / 100.0).ceil() as u16).max(1);
                 let previous = b.occupancy;
                 b.occupancy = (b.occupancy + arrivals).min(b.capacity);
@@ -122,7 +123,7 @@ impl Engine {
             parcel.open_space = Some("park".into());
         }
         self.record(
-            "ParkDedicated",
+            EventKind::ParkDedicated,
             parcel_id,
             format!("A vacant lot becomes a pocket park for {nearby} nearby homes"),
         );
@@ -189,7 +190,7 @@ impl Engine {
             if b.history.len() > 10 {
                 b.history.remove(0);
             }
-            b.stage = "renovation".into();
+            b.stage = Stage::Renovation;
             b.progress = 0.0;
             b.vacant_days = 0;
             b.business_active = false;
@@ -204,18 +205,18 @@ impl Engine {
         let pid = self.id();
         self.record_project(Project {
             id: pid,
-            kind: "building".into(),
+            kind: ProjectKind::Building,
             from: None,
             to: None,
             parcel_id: Some(parcel_id),
-            stage: "structure".into(),
+            stage: Stage::Structure,
             progress: 0.0,
             reason: msg,
             duration: 2.0,
             started_tick: self.state.tick,
         });
         self.record(
-            "RenovationStarted",
+            EventKind::RenovationStarted,
             id,
             "A vacant property is renewed for a new neighborhood use".into(),
         );
@@ -241,10 +242,10 @@ impl Engine {
                 referenced.insert(building_id);
             }
         }
-        let mut active_by_kind = BTreeMap::<String, usize>::new();
+        let mut active_by_kind = BTreeMap::<BuildingKind, usize>::new();
         for building in &self.state.buildings {
             if is_commercial(building) && site_active(building) {
-                *active_by_kind.entry(building.kind.clone()).or_default() += 1;
+                *active_by_kind.entry(building.kind).or_default() += 1;
             }
         }
         let eligible: Vec<u32> = self
@@ -254,7 +255,7 @@ impl Engine {
             .filter(|building| {
                 is_commercial(building)
                     && building.business_active
-                    && building.stage == "open"
+                    && building.stage == Stage::Open
                     && !building.anchor
                     && !self
                         .state
@@ -288,7 +289,7 @@ impl Engine {
         building.business_active = false;
         building.occupancy = 0;
         building.vacant_days = 0;
-        self.record("BusinessClosed", chosen, reason);
+        self.record(EventKind::BusinessClosed, chosen, reason);
         self.state.revision = self.state.revision.saturating_add(1);
         true
     }

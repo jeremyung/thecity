@@ -14,6 +14,7 @@ use crate::legacy::access_discovery_job::DiscoveryInput;
 use crate::legacy::face_target_viability::{FrozenViabilityInput, Segment};
 use crate::legacy::road_faces::{RoadFaceEdge, RoadFaceNode};
 use crate::{Engine, MAX_PROJECTS, MAX_SEGMENTS};
+use crate::{ProjectKind, Stage};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[cfg(feature = "legacy")]
@@ -181,9 +182,12 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(
+                    road.kind,
+                    crate::RoadKind::Local | crate::RoadKind::Arterial
+                )
         })
         .count();
     if ordinary_road_count > MAX_FACE_GRAPH_EDGES {
@@ -203,7 +207,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
         .state
         .roads
         .iter()
-        .filter(|road| road.stage == "open")
+        .filter(|road| road.stage == Stage::Open)
         .count();
     if open_road_count > MAX_SEGMENTS {
         return Err(CaptureError::TooManyOpenRoads);
@@ -212,7 +216,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
         .state
         .projects
         .iter()
-        .filter(|project| project.kind == "road" && project.progress < 1.0)
+        .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .count();
     if pending_road_count > MAX_PROJECTS {
         return Err(CaptureError::TooManyPendingRoads);
@@ -223,9 +227,12 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(
+                    road.kind,
+                    crate::RoadKind::Local | crate::RoadKind::Arterial
+                )
         })
         .collect::<Vec<_>>();
 
@@ -320,9 +327,12 @@ mod tests {
             .roads
             .iter()
             .find(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(
+                        road.kind,
+                        crate::RoadKind::Local | crate::RoadKind::Arterial
+                    )
             })
             .unwrap()
             .clone();
@@ -341,11 +351,11 @@ mod tests {
             MAX_PROJECTS + crate::COMPLETED_PROJECT_HISTORY + 1,
             || crate::Project {
                 id: 0,
-                kind: "completed".into(),
+                kind: ProjectKind::Completed,
                 from: None,
                 to: None,
                 parcel_id: None,
-                stage: "done".into(),
+                stage: Stage::Done,
                 progress: 1.0,
                 reason: String::new(),
                 duration: 0.0,
@@ -371,7 +381,7 @@ mod tests {
             id: first.id,
             x: first.x + 123.0,
             z: first.z - 321.0,
-            kind: "duplicate".into(),
+            kind: crate::NodeKind::Junction,
         });
         let missing = u32::MAX;
         engine.state.neighborhood_plan = Some(crate::NeighborhoodPlan {
@@ -407,9 +417,12 @@ mod tests {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(
+                        road.kind,
+                        crate::RoadKind::Local | crate::RoadKind::Arterial
+                    )
             })
             .collect::<Vec<_>>();
         let used = ordinary
@@ -477,9 +490,12 @@ mod tests {
             .roads
             .iter()
             .find(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(
+                        road.kind,
+                        crate::RoadKind::Local | crate::RoadKind::Arterial
+                    )
             })
             .expect("founding city has an ordinary open road")
             .clone();

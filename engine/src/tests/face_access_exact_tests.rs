@@ -39,7 +39,7 @@ fn audit_largest_face_direct_access_candidate() {
             id: u32::MAX,
             x: end.x,
             z: end.z,
-            kind: "junction".into(),
+            kind: NodeKind::Junction,
         },
     );
     let endpoint_spacing = split_probe
@@ -197,7 +197,7 @@ fn audit_largest_face_direct_access_candidate() {
                 "frontage_along": along / branch_length,
                 "frontage_access_node": frontage_access_node(
                     &split_probe.node(split.split_node_id).unwrap().clone(),
-                    &Node { id: end_node_id_for_test(), x: end.x, z: end.z, kind: "junction".into() },
+                    &Node { id: end_node_id_for_test(), x: end.x, z: end.z, kind: NodeKind::Junction },
                     along / branch_length,
                 ),
             }));
@@ -660,7 +660,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
         .state
         .roads
         .iter()
-        .any(|r| r.id == branch_id && r.stage == "open" && r.connected));
+        .any(|r| r.id == branch_id && r.stage == Stage::Open && r.connected));
     assert_eq!(engine.state.parcels.len(), parcels_before + lot_count);
 }
 
@@ -707,9 +707,9 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect::<Vec<_>>();
     let used_nodes = ordinary
@@ -1217,7 +1217,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
             .iter()
             .filter(|frontage| frontage.road_id == branch_id)
             .count();
-        if branch.stage == "open" {
+        if branch.stage == Stage::Open {
             assert!(branch.connected);
             assert_eq!(frontage_count, proposal.selected_lots.len());
             assert!(admitted
@@ -1370,7 +1370,9 @@ fn scan_exact_planner_for_access_into_largest_face() {
         .roads
         .iter()
         .filter(|r| {
-            r.stage == "open" && r.connected && matches!(r.kind.as_str(), "local" | "arterial")
+            r.stage == Stage::Open
+                && r.connected
+                && matches!(r.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect();
     let used_nodes: BTreeSet<u32> = ordinary.iter().flat_map(|r| [r.from, r.to]).collect();
@@ -1795,8 +1797,8 @@ fn scan_exact_planner_for_access_into_largest_face() {
         let Some(host) = engine.state.roads.iter().find(|r| r.id == host_id) else {
             continue;
         };
-        if !matches!(host.kind.as_str(), "local" | "arterial")
-            || host.stage != "open"
+        if !matches!(host.kind, RoadKind::Local | RoadKind::Arterial)
+            || host.stage != Stage::Open
             || !host.connected
         {
             continue;
@@ -1986,9 +1988,9 @@ fn mature_graph_preflight_preserves_indexed_edges() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect::<Vec<_>>();
     let used = roads
@@ -2383,9 +2385,9 @@ fn mature_composed_face_trace_matches_reference() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect::<Vec<_>>();
     let used = roads
@@ -2920,9 +2922,9 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect::<Vec<_>>();
     let used = ordinary
@@ -3127,9 +3129,9 @@ fn mature_access_capture_cost() {
             .roads
             .iter()
             .filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
             })
             .collect::<Vec<_>>();
         let used = ordinary
@@ -3202,7 +3204,9 @@ fn mature_discovery_job_matches_reference() {
         .roads
         .iter()
         .filter(|r| {
-            r.stage == "open" && r.connected && matches!(r.kind.as_str(), "local" | "arterial")
+            r.stage == Stage::Open
+                && r.connected
+                && matches!(r.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .collect::<Vec<_>>();
     let used = ordinary
@@ -3331,7 +3335,9 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
         .roads
         .iter()
         .filter(|r| {
-            r.stage == "open" && r.connected && matches!(r.kind.as_str(), "local" | "arterial")
+            r.stage == Stage::Open
+                && r.connected
+                && matches!(r.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .filter_map(|r| {
             segment(r.from, r.to).map(|segment| ProposalHost {
@@ -3361,7 +3367,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
             .iter()
             .map(|r| ProposalRoad {
                 id: r.id,
-                is_open: r.stage == "open",
+                is_open: r.stage == Stage::Open,
                 segment: segment(r.from, r.to),
             })
             .collect(),
@@ -3370,7 +3376,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
             .projects
             .iter()
             .map(|p| ProposalProject {
-                active_road: p.kind == "road" && p.progress < 1.0,
+                active_road: p.kind == ProjectKind::Road && p.progress < 1.0,
                 endpoints: match p.from.zip(p.to) {
                     None => ProjectEndpoints::NoIds,
                     Some((a, b)) => segment(a, b)

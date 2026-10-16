@@ -19,7 +19,7 @@ pub struct RearExtensionView {
     pub depth: f32,
     pub rotation: f32,
     pub floors: u8,
-    pub stage: String,
+    pub stage: Stage,
     pub progress: f32,
 }
 
@@ -223,11 +223,11 @@ impl Engine {
         self.state
             .buildings
             .iter()
-            .filter(|building| building.stage != "demolished")
+            .filter(|building| building.stage != Stage::Demolished)
             .filter_map(|building| {
                 let (road_id, access) = self.building_access_segment(building.id)?;
                 let road = self.state.roads.iter().find(|road| road.id == road_id)?;
-                if road.stage != "open" || !road.connected || road.kind == "rail" {
+                if road.stage != Stage::Open || !road.connected || road.kind == RoadKind::Rail {
                     return None;
                 }
                 Some(BuildingAccessView {
@@ -245,7 +245,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|r| r.stage == "open")
+            .filter(|r| r.stage == Stage::Open)
             .count();
         let active_sites = self
             .state
@@ -331,7 +331,7 @@ impl Engine {
                     .state
                     .nodes
                     .iter()
-                    .filter(|n| n.kind == "gateway")
+                    .filter(|n| n.kind == NodeKind::Gateway)
                     .map(|n| n.id)
                     .collect(),
             },

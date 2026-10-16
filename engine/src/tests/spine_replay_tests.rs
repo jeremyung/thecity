@@ -8,7 +8,7 @@ fn reserved_rectangle(depth: f32) -> (Engine, [u32; 2]) {
         .state
         .nodes
         .iter()
-        .find(|n| n.kind == "gateway")
+        .find(|n| n.kind == NodeKind::Gateway)
         .unwrap()
         .id;
     let points = [
@@ -17,10 +17,18 @@ fn reserved_rectangle(depth: f32) -> (Engine, [u32; 2]) {
         (352.0, 200.0 + depth),
         (270.0, 200.0 + depth),
     ];
-    let nodes = points.map(|(x, z)| engine.add_node(x, z, "junction"));
-    engine.add_road(gateway, nodes[0], "local", "open", 1.0);
+    let nodes = points.map(|(x, z)| engine.add_node(x, z, NodeKind::Junction));
+    engine.add_road(gateway, nodes[0], RoadKind::Local, Stage::Open, 1.0);
     let roads: Vec<u32> = (0..4)
-        .map(|i| engine.add_road(nodes[i], nodes[(i + 1) % 4], "local", "open", 1.0))
+        .map(|i| {
+            engine.add_road(
+                nodes[i],
+                nodes[(i + 1) % 4],
+                RoadKind::Local,
+                Stage::Open,
+                1.0,
+            )
+        })
         .collect();
     engine.recompute_connectivity();
     engine
@@ -77,11 +85,11 @@ fn spine_normal_ticks_match_uninterrupted_from_every_saved_stage() {
                 let id = uninterrupted.id();
                 uninterrupted.record_project(Project {
                     id,
-                    kind: "road".into(),
+                    kind: ProjectKind::Road,
                     from: Some(road.from),
                     to: Some(road.to),
                     parcel_id: None,
-                    stage: "survey".into(),
+                    stage: Stage::Survey,
                     progress: 0.0,
                     reason: "Final reserved perimeter street".into(),
                     duration: 3.0,

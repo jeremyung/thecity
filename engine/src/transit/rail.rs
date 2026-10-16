@@ -99,14 +99,13 @@ impl Engine {
         if !self.state.station_online {
             return None;
         }
-        let rail = self
-            .state
-            .roads
-            .iter()
-            .find(|road| road.kind == "rail" && road.stage == "open" && road.connected)?;
-        let station = [rail.from, rail.to]
-            .into_iter()
-            .find(|id| self.node(*id).is_some_and(|node| node.kind == "station"))?;
+        let rail = self.state.roads.iter().find(|road| {
+            road.kind == RoadKind::Rail && road.stage == Stage::Open && road.connected
+        })?;
+        let station = [rail.from, rail.to].into_iter().find(|id| {
+            self.node(*id)
+                .is_some_and(|node| node.kind == NodeKind::Station)
+        })?;
         let gateway = if station == rail.from {
             rail.to
         } else {
@@ -225,7 +224,7 @@ impl Engine {
                     );
                 }
                 self.record(
-                    "RailTripStarted",
+                    EventKind::RailTripStarted,
                     resident.id,
                     format!(
                         "{} begins a rail commute toward the regional gateway",
@@ -254,7 +253,7 @@ impl Engine {
                     );
                 }
                 self.record(
-                    "RailReturnQueued",
+                    EventKind::RailReturnQueued,
                     resident.id,
                     format!(
                         "{} waits at the regional gateway for the return shuttle",
@@ -271,7 +270,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .find(|r| r.kind == "rail" && r.stage == "open" && r.connected)
+            .find(|r| r.kind == RoadKind::Rail && r.stage == Stage::Open && r.connected)
             .cloned();
         let Some(rail) = usable_rail
             .filter(|r| self.state.station_online && r.length >= TRAIN_HALF_LENGTH * 2.0)
@@ -283,7 +282,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .find(|n| n.kind == "station" && (n.id == rail.from || n.id == rail.to))
+            .find(|n| n.kind == NodeKind::Station && (n.id == rail.from || n.id == rail.to))
             .map(|n| n.id);
         let Some(station) = station else {
             self.state.trains.clear();
@@ -347,7 +346,7 @@ impl Engine {
                     train.dwell_ticks = TRAIN_GATEWAY_DWELL_TICKS;
                     stops.push((
                         train.id,
-                        "TrainGatewayStop",
+                        EventKind::TrainGatewayStop,
                         "The regional shuttle pauses at its outer terminus",
                     ));
                 }
@@ -359,7 +358,7 @@ impl Engine {
                     train.dwell_ticks = TRAIN_STATION_DWELL_TICKS;
                     stops.push((
                         train.id,
-                        "TrainStationStop",
+                        EventKind::TrainStationStop,
                         "The shuttle pauses at the neighborhood platform",
                     ));
                 }
@@ -447,7 +446,7 @@ impl Engine {
                         ),
                     );
                     self.record(
-                        "TrainPassengerWaitingForRoute",
+                        EventKind::TrainPassengerWaitingForRoute,
                         resident_id,
                         format!("A resident alights from train {train_id} into the bounded route queue at station {station}"),
                     );
@@ -466,7 +465,7 @@ impl Engine {
                         format!("Returned home from the gateway at tick {}", self.state.tick),
                     );
                     self.record(
-                        "TrainPassengerAlighted",
+                        EventKind::TrainPassengerAlighted,
                         train_id,
                         format!(
                             "{} completes the inbound trip at the station",
@@ -521,7 +520,7 @@ impl Engine {
                         ),
                     );
                     self.record(
-                        "TrainPassengerAlighted",
+                        EventKind::TrainPassengerAlighted,
                         train_id,
                         format!(
                             "{} alights at the station and continues on foot",
@@ -545,12 +544,12 @@ impl Engine {
                     ),
                 );
                 self.record(
-                    "RailWorkStarted",
+                    EventKind::RailWorkStarted,
                     resident_id,
                     format!("{} arrives at an external workplace by rail", resident.name),
                 );
                 self.record(
-                    "TrainPassengerAlighted",
+                    EventKind::TrainPassengerAlighted,
                     train_id,
                     format!("{} alights at the regional gateway", resident.name),
                 );
@@ -592,7 +591,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .find(|road| road.kind == "rail" && road.stage == "open" && road.connected)
+            .find(|road| road.kind == RoadKind::Rail && road.stage == Stage::Open && road.connected)
             .map(|road| road.length)
             .unwrap_or(0.0);
         let at_gateway = direction < 0 && distance >= rail_length - TRAIN_HALF_LENGTH - 0.01;
@@ -660,7 +659,7 @@ impl Engine {
         }
         let board_station = queue_state == "waiting_station";
         self.record(
-            "TrainPassengerBoarded",
+            EventKind::TrainPassengerBoarded,
             train_id,
             format!(
                 "{resident_name} boards the shuttle at node {}",
@@ -689,7 +688,7 @@ impl Engine {
         self.state
             .roads
             .iter()
-            .find(|road| road.kind == "rail" && road.stage == "open" && road.connected)
+            .find(|road| road.kind == RoadKind::Rail && road.stage == Stage::Open && road.connected)
             .map(|road| road.length)
             .unwrap_or(0.0)
     }

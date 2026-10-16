@@ -129,7 +129,7 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|b| is_housing(b) && b.stage == "open" && b.occupancy > 0)
+            .filter(|b| is_housing(b) && b.stage == Stage::Open && b.occupancy > 0)
             .filter_map(|b| {
                 self.state
                     .parcels
@@ -138,7 +138,7 @@ impl Engine {
                     .map(|p| (b.id, b.occupancy, p.access_node))
             })
             .collect();
-        let destinations: Vec<(u32, u32, String, u16)> = self
+        let destinations: Vec<(u32, u32, BuildingKind, u16)> = self
             .state
             .buildings
             .iter()
@@ -148,7 +148,7 @@ impl Engine {
                     .parcels
                     .iter()
                     .find(|p| p.id == b.parcel_id)
-                    .map(|p| (b.id, p.access_node, b.kind.clone(), b.capacity))
+                    .map(|p| (b.id, p.access_node, b.kind, b.capacity))
             })
             .collect();
         if destinations.is_empty() {
@@ -176,7 +176,7 @@ impl Engine {
         let max_jobs: usize = destinations
             .iter()
             .map(|(_, _, kind, capacity)| {
-                if kind == "office" {
+                if *kind == BuildingKind::Office {
                     *capacity as usize
                 } else {
                     (*capacity as usize / 2).max(1)
@@ -191,7 +191,7 @@ impl Engine {
                 if self.state.residents.len() >= MAX_RESIDENTS {
                     return;
                 }
-                let mut choices: Vec<(u32, u32, String, u16)> = destinations.clone();
+                let mut choices: Vec<(u32, u32, BuildingKind, u16)> = destinations.clone();
                 choices.sort_by_key(|(id, _, _, _)| {
                     (assigned_by_work.get(id).copied().unwrap_or(0), *id)
                 });
@@ -200,7 +200,7 @@ impl Engine {
                     choices
                         .iter()
                         .find(|(id, _, kind, capacity)| {
-                            let jobs = if kind == "office" {
+                            let jobs = if *kind == BuildingKind::Office {
                                 *capacity
                             } else {
                                 (*capacity / 2).max(1)
@@ -212,7 +212,9 @@ impl Engine {
                 } else {
                     choices
                         .iter()
-                        .find(|(_, _, kind, _)| kind == "shop" || kind == "cafe")
+                        .find(|(_, _, kind, _)| {
+                            *kind == BuildingKind::Shop || *kind == BuildingKind::Cafe
+                        })
                         .cloned()
                         .or_else(|| choices.first().cloned())
                 };
@@ -473,7 +475,7 @@ impl Engine {
                 );
             }
             self.record(
-                "ResidentTripStarted",
+                EventKind::ResidentTripStarted,
                 resident.id,
                 format!("{} begins a purposeful {activity} trip", resident.name),
             );
@@ -502,7 +504,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .find(|n| n.kind == "gateway")
+            .find(|n| n.kind == NodeKind::Gateway)
             .map(|n| n.id)
         else {
             return;
@@ -511,7 +513,7 @@ impl Engine {
             .state
             .buildings
             .iter()
-            .filter(|b| matches!(b.kind.as_str(), "shop" | "cafe") && site_active(b))
+            .filter(|b| matches!(b.kind, BuildingKind::Shop | BuildingKind::Cafe) && site_active(b))
             .filter_map(|b| {
                 self.state
                     .parcels
@@ -561,7 +563,7 @@ impl Engine {
         );
         self.state.travelers.push(traveler);
         self.record(
-            "DeliveryDispatched",
+            EventKind::DeliveryDispatched,
             id,
             format!("A delivery van leaves the gateway for {shop_name}"),
         );

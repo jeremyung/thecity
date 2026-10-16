@@ -80,7 +80,7 @@ impl Engine {
                                 last_stop: Some(terminal),
                             });
                             self.record(
-                                "BusServiceExpanded",
+                                EventKind::BusServiceExpanded,
                                 bus_id,
                                 "A second neighborhood bus joins the line after demand grows"
                                     .into(),
@@ -95,7 +95,9 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|road| road.kind != "rail" && road.stage == "open" && road.connected)
+            .filter(|road| {
+                road.kind != RoadKind::Rail && road.stage == Stage::Open && road.connected
+            })
             .count();
         let developed: Vec<u32> = self
             .state
@@ -128,7 +130,7 @@ impl Engine {
             .state
             .nodes
             .iter()
-            .find(|node| node.kind == "station" && self.node_has_open_road(node.id))
+            .find(|node| node.kind == NodeKind::Station && self.node_has_open_road(node.id))
             .map(|node| node.id)
         else {
             return;
@@ -303,7 +305,7 @@ impl Engine {
             last_stop: stops.first().copied(),
         });
         self.record(
-            "BusServiceStarted",
+            EventKind::BusServiceStarted,
             bus_id,
             format!(
                 "Neighborhood bus service opens with {} connected stops",
@@ -558,7 +560,7 @@ impl Engine {
             );
         }
         self.record(
-            "BusTripStarted",
+            EventKind::BusTripStarted,
             id,
             format!(
                 "A resident walks from building {origin_building} toward bus stop {origin_stop}"
@@ -577,7 +579,10 @@ impl Engine {
         // Full-size neighborhood buses stay on collectors and wider ground
         // streets. Residents can still walk through lanes to reach these stops.
         self.route_where(start, goal, blocked, |road| {
-            matches!(road.kind.as_str(), "local" | "arterial" | "bridge")
+            matches!(
+                road.kind,
+                RoadKind::Local | RoadKind::Arterial | RoadKind::Bridge
+            )
         })
     }
 
@@ -742,7 +747,7 @@ impl Engine {
                     bus.next_departure_tick = self.state.tick.saturating_add(BUS_HEADWAY_TICKS);
                 }
                 self.record(
-                    "BusStop",
+                    EventKind::BusStop,
                     self.state.buses[bus_index].id,
                     format!(
                         "Bus {} arrives at stop {}",
@@ -907,7 +912,7 @@ impl Engine {
                 );
             }
             self.record(
-                "BusPassengerBoarded",
+                EventKind::BusPassengerBoarded,
                 resident_id,
                 format!("A resident boards bus {bus_id} at stop {stop}"),
             );
@@ -992,7 +997,7 @@ impl Engine {
                 ),
             );
             self.record(
-                "BusPassengerWaitingForRoute",
+                EventKind::BusPassengerWaitingForRoute,
                 resident_id,
                 format!("A resident alights from bus {bus_id} into the bounded route queue at stop {stop}"),
             );
@@ -1062,7 +1067,7 @@ impl Engine {
         }
         self.state.travelers.push(traveler);
         self.record(
-            "BusPassengerAlighted",
+            EventKind::BusPassengerAlighted,
             resident_id,
             format!("A resident leaves bus {bus_id} at stop {stop}"),
         );

@@ -14,6 +14,7 @@ mod world;
 // Transitional root re-exports of relocated modules.
 pub(crate) use core::clock::*;
 pub use core::engine::*;
+pub use core::kinds::*;
 pub(crate) use core::limits::*;
 pub use core::state::*;
 pub(crate) use infrastructure::blocks;

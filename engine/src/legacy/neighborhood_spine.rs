@@ -121,17 +121,17 @@ impl Engine {
             return false;
         };
         let [start, end] = [splits[0].split_node_id, splits[1].split_node_id];
-        let road_id = self.add_road(start, end, "local", "survey", 0.0);
+        let road_id = self.add_road(start, end, RoadKind::Local, Stage::Survey, 0.0);
         self.state.neighborhood_road_ids.insert(road_id);
         let project_id = self.id();
         let duration = 3.0 + random_unit(&mut self.state.rng_growth) * 4.0;
         self.record_project(Project {
             id: project_id,
-            kind: "road".into(),
+            kind: ProjectKind::Road,
             from: Some(start),
             to: Some(end),
             parcel_id: None,
-            stage: "survey".into(),
+            stage: Stage::Survey,
             progress: 0.0,
             reason: "A reserved neighborhood spine connects the block’s new side streets".into(),
             duration,
@@ -157,7 +157,7 @@ impl Engine {
     pub(crate) fn sync_neighborhood_spine_project(
         &mut self,
         project_id: u32,
-        stage: &str,
+        stage: Stage,
         progress: f32,
     ) {
         let road_id = self
@@ -175,7 +175,7 @@ impl Engine {
             });
         if let Some(road_id) = road_id {
             if let Some(road) = self.state.roads.iter_mut().find(|road| road.id == road_id) {
-                road.stage = stage.to_owned();
+                road.stage = stage;
                 road.progress = progress;
             }
         }
@@ -223,14 +223,14 @@ impl Engine {
             self.keep_spine_project_retryable(project_id, spine_road_id);
             return true;
         };
-        if project.kind != "road"
+        if project.kind != ProjectKind::Road
             || project.progress < 1.0
             || project.from != Some(split_node_ids[0])
             || project.to != Some(split_node_ids[1])
             || branch.from != split_node_ids[0]
             || branch.to != split_node_ids[1]
-            || branch.stage == "open"
-            || branch.kind != "local"
+            || branch.stage == Stage::Open
+            || branch.kind != RoadKind::Local
             || layout.lots.len() < crate::legacy::spine_plan::MIN_SPINE_LOTS
             || self.state.parcels.len().saturating_add(layout.lots.len()) > MAX_PARCELS
             || self
@@ -311,9 +311,9 @@ impl Engine {
             let Some(road) = self.state.roads.iter().find(|road| {
                 road.id == road_id
                     && if road_id == spine_road_id {
-                        road.stage != "open"
+                        road.stage != Stage::Open
                     } else {
-                        road.stage == "open" && road.connected
+                        road.stage == Stage::Open && road.connected
                     }
             }) else {
                 self.keep_spine_project_retryable(project_id, spine_road_id);
@@ -347,7 +347,7 @@ impl Engine {
         // The split endpoints are already connected through their perimeter
         // hosts. Opening the spine therefore cannot create disconnected travel.
         if let Some(road) = self.state.roads.iter_mut().find(|r| r.id == spine_road_id) {
-            road.stage = "open".into();
+            road.stage = Stage::Open;
             road.progress = 1.0;
         }
         self.recompute_connectivity();
@@ -358,7 +358,7 @@ impl Engine {
             .any(|r| r.id == spine_road_id && r.connected)
         {
             if let Some(road) = self.state.roads.iter_mut().find(|r| r.id == spine_road_id) {
-                road.stage = "finishing".into();
+                road.stage = Stage::Finishing;
                 road.progress = 0.999;
             }
             self.recompute_connectivity();
@@ -396,7 +396,7 @@ impl Engine {
         }
         self.state.revision = self.state.revision.saturating_add(1);
         self.record(
-            "NeighborhoodSpineOpened",
+            EventKind::NeighborhoodSpineOpened,
             spine_road_id,
             format!(
                 "A shared neighborhood spine opens with {} connected frontage sites",
@@ -409,12 +409,12 @@ impl Engine {
     fn keep_spine_project_retryable(&mut self, project_id: u32, spine_road_id: u32) {
         if let Some(project) = self.state.projects.iter_mut().find(|p| p.id == project_id) {
             project.progress = 0.999;
-            project.stage = "finishing".into();
+            project.stage = Stage::Finishing;
         }
         if let Some(road) = self.state.roads.iter_mut().find(|r| r.id == spine_road_id) {
-            if road.stage != "open" {
+            if road.stage != Stage::Open {
                 road.progress = 0.999;
-                road.stage = "finishing".into();
+                road.stage = Stage::Finishing;
             }
         }
     }
@@ -459,7 +459,7 @@ impl Engine {
                 if !has_road {
                     future_perimeter_roads += 1;
                     let has_project = self.state.projects.iter().any(|project| {
-                        project.kind == "road"
+                        project.kind == ProjectKind::Road
                             && project.progress < 1.0
                             && ((project.from == Some(*from) && project.to == Some(*to))
                                 || (project.from == Some(*to) && project.to == Some(*from)))
@@ -511,7 +511,7 @@ impl Engine {
                 for edge in [0_usize, 2] {
                     let (from, to) = plan.segments[edge];
                     if !self.state.roads.iter().any(|road| {
-                        road.stage == "open"
+                        road.stage == Stage::Open
                             && road.connected
                             && ((road.from == from && road.to == to)
                                 || (road.from == to && road.to == from))
@@ -543,12 +543,12 @@ impl Engine {
                     .ok_or_else(|| "neighborhood spine project is missing".to_string())?;
                 if branch.from != split_node_ids[0]
                     || branch.to != split_node_ids[1]
-                    || branch.kind != "local"
-                    || branch.stage == "open"
+                    || branch.kind != RoadKind::Local
+                    || branch.stage == Stage::Open
                     || branch.connected
                     || branch.stage != project.stage
                     || (branch.progress - project.progress).abs() > 1.0e-6
-                    || project.kind != "road"
+                    || project.kind != ProjectKind::Road
                     || project.from != Some(split_node_ids[0])
                     || project.to != Some(split_node_ids[1])
                     || project.progress < 0.0
@@ -612,9 +612,9 @@ impl Engine {
         for (slot, edge) in [3_usize, 1].into_iter().enumerate() {
             let (from, to) = segments[edge];
             let road = self.state.roads.iter().find(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && road.kind != "rail"
+                    && road.kind != RoadKind::Rail
                     && ((road.from == from && road.to == to)
                         || (road.from == to && road.to == from))
             })?;
@@ -633,9 +633,9 @@ impl Engine {
             };
             self.state.roads.iter().any(|road| {
                 road.id == ids[slot]
-                    && road.stage == "open"
+                    && road.stage == Stage::Open
                     && road.connected
-                    && matches!(road.kind.as_str(), "local" | "arterial")
+                    && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
                     && ((road.from == *from && road.to == *to)
                         || (road.from == *to && road.to == *from))
             })
@@ -648,9 +648,9 @@ impl Engine {
         };
         plan.segments.iter().all(|(from, to)| {
             self.state.roads.iter().any(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && road.kind != "rail"
+                    && road.kind != RoadKind::Rail
                     && ((road.from == *from && road.to == *to)
                         || (road.from == *to && road.to == *from))
             })
@@ -678,9 +678,9 @@ impl Engine {
                 .roads
                 .iter()
                 .filter(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && road.connected
-                        && road.kind != "rail"
+                        && road.kind != RoadKind::Rail
                         && ((road.from == from && road.to == split_nodes[slot])
                             || (road.to == from && road.from == split_nodes[slot])
                             || (road.from == split_nodes[slot] && road.to == to)
@@ -813,7 +813,7 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|road| road.stage == "open" && road.kind != "rail")
+            .filter(|road| road.stage == Stage::Open && road.kind != RoadKind::Rail)
         {
             if is_perimeter_or_spine_road(road) {
                 continue;
@@ -863,7 +863,7 @@ fn perimeter_road_ids(roads: &[Road], segments: &[(u32, u32)]) -> [u32; 4] {
     let mut ids = [0; 4];
     for (index, (from, to)) in segments.iter().enumerate().take(4) {
         if let Some(road) = roads.iter().find(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
                 && ((road.from == *from && road.to == *to)
                     || (road.from == *to && road.to == *from))
@@ -884,7 +884,7 @@ mod tests {
             .state
             .nodes
             .iter()
-            .find(|node| node.kind == "gateway")
+            .find(|node| node.kind == NodeKind::Gateway)
             .unwrap()
             .id;
         let points = [
@@ -893,15 +893,15 @@ mod tests {
             (352.0, 282.0),
             (270.0, 282.0),
         ];
-        let corners = points.map(|(x, z)| engine.add_node(x, z, "junction"));
-        let connector = engine.add_road(gateway, corners[0], "local", "open", 1.0);
+        let corners = points.map(|(x, z)| engine.add_node(x, z, NodeKind::Junction));
+        let connector = engine.add_road(gateway, corners[0], RoadKind::Local, Stage::Open, 1.0);
         let perimeter = (0..4)
             .map(|index| {
                 engine.add_road(
                     corners[index],
                     corners[(index + 1) % 4],
-                    "local",
-                    "open",
+                    RoadKind::Local,
+                    Stage::Open,
                     1.0,
                 )
             })
@@ -1017,7 +1017,7 @@ mod tests {
             .iter()
             .find(|project| project.id == project_id)
             .unwrap();
-        assert_ne!(road.stage, "open");
+        assert_ne!(road.stage, Stage::Open);
         assert!(!road.connected);
         assert_eq!(road.stage, project.stage);
         assert_eq!(road.progress, project.progress);
@@ -1056,7 +1056,7 @@ mod tests {
             .iter()
             .find(|road| road.id == spine_road_id)
             .unwrap();
-        assert_eq!(opened.stage, "open");
+        assert_eq!(opened.stage, Stage::Open);
         assert!(opened.connected);
         assert_eq!(resumed.state.parcels.len() - parcels_before, 20);
         assert_eq!(resumed.state.parcel_frontages.len() - frontages_before, 20);
@@ -1157,16 +1157,16 @@ mod tests {
             .iter_mut()
             .find(|road| road.id == road_id)
             .unwrap();
-        road.stage = "survey".into();
+        road.stage = Stage::Survey;
         road.progress = 0.2;
         road.connected = false;
         engine.record_project(Project {
             id: project_id,
-            kind: "road".into(),
+            kind: ProjectKind::Road,
             from: Some(corners[3]),
             to: Some(corners[0]),
             parcel_id: None,
-            stage: "survey".into(),
+            stage: Stage::Survey,
             progress: 0.2,
             reason: "pending final perimeter edge".into(),
             duration: 5.0,

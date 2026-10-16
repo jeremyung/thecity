@@ -334,7 +334,7 @@ impl Engine {
                     id: u32::MAX - index as u32,
                     x: corners[index].x,
                     z: corners[index].z,
-                    kind: "candidate".into(),
+                    kind: NodeKind::Candidate,
                 });
             }
         }
@@ -529,9 +529,9 @@ impl Engine {
                 edge_index == index
                     && self.state.roads.iter().any(|road| {
                         road.id == road_id
-                            && road.stage == "open"
+                            && road.stage == Stage::Open
                             && road.connected
-                            && !matches!(road.kind.as_str(), "rail" | "bridge")
+                            && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                             && ((road.from == a.id && road.to == b.id)
                                 || (road.from == b.id && road.to == a.id))
                     })
@@ -576,7 +576,12 @@ impl Engine {
             {
                 return Err(NeighborhoodRejection::RoadCorridorParcelConflict);
             }
-            for road in self.state.roads.iter().filter(|road| road.stage == "open") {
+            for road in self
+                .state
+                .roads
+                .iter()
+                .filter(|road| road.stage == Stage::Open)
+            {
                 let (Some(old_a), Some(old_b)) = (self.node(road.from), self.node(road.to)) else {
                     continue;
                 };
@@ -592,7 +597,7 @@ impl Engine {
                 }
             }
             if self.state.projects.iter().any(|project| {
-                if project.kind != "road" || project.progress >= 1.0 {
+                if project.kind != ProjectKind::Road || project.progress >= 1.0 {
                     return false;
                 }
                 let (Some(from), Some(to)) = (project.from, project.to) else {

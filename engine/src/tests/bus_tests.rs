@@ -10,7 +10,7 @@ fn bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save() {
         let stop_position = engine.node(stop).unwrap();
         (stop_position.x, stop_position.z)
     };
-    let target = engine.add_node(stop_x + 18.0, stop_z - 18.0, "junction");
+    let target = engine.add_node(stop_x + 18.0, stop_z - 18.0, NodeKind::Junction);
     let bus_id = engine.state.buses[0].id;
     let resident = engine
         .state
@@ -88,7 +88,7 @@ fn bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save() {
     assert!(pending.retry_after_tick > restored.state.tick);
     assert!(restored.route(stop, target, false).is_empty());
 
-    restored.add_road(stop, target, "local", "open", 1.0);
+    restored.add_road(stop, target, RoadKind::Local, Stage::Open, 1.0);
     restored.recompute_connectivity();
     assert!(!restored.route(stop, target, false).is_empty());
     restored.step(1);
@@ -116,7 +116,11 @@ fn pending_alight_scheduler_checks_at_most_eight_waiters_per_tick() {
     let line = engine.state.bus_line.as_ref().unwrap().clone();
     let stop = line.stops[0];
     let stop_position = engine.node(stop).unwrap();
-    let target = engine.add_node(stop_position.x + 18.0, stop_position.z - 18.0, "junction");
+    let target = engine.add_node(
+        stop_position.x + 18.0,
+        stop_position.z - 18.0,
+        NodeKind::Junction,
+    );
     let building = engine.state.residents[0].home_building;
     for id in ids {
         let resident = engine
@@ -178,9 +182,9 @@ fn pending_alight_retries_when_destination_opens_without_geometry_change() {
         let stop_position = engine.node(stop).unwrap();
         (stop_position.x, stop_position.z)
     };
-    let target = engine.add_node(stop_x + 18.0, stop_z - 18.0, "junction");
+    let target = engine.add_node(stop_x + 18.0, stop_z - 18.0, NodeKind::Junction);
     let building_id = engine.state.residents[0].home_building;
-    engine.add_road(stop, target, "local", "open", 1.0);
+    engine.add_road(stop, target, RoadKind::Local, Stage::Open, 1.0);
     engine.recompute_connectivity();
     let position = WorldPoint {
         x: stop_x,
@@ -221,7 +225,7 @@ fn pending_alight_retries_when_destination_opens_without_geometry_change() {
         .iter_mut()
         .find(|building| building.id == building_id)
         .unwrap();
-    building.stage = "structure".into();
+    building.stage = Stage::Structure;
     let revision = engine.state.access_geometry_revision;
     engine.advance_pending_alights();
     let pending = engine.state.residents[0].pending_alight.as_ref().unwrap();
@@ -239,7 +243,7 @@ fn pending_alight_retries_when_destination_opens_without_geometry_change() {
         .iter_mut()
         .find(|building| building.id == building_id)
         .unwrap()
-        .stage = "open".into();
+        .stage = Stage::Open;
     engine.advance_pending_alights();
     assert!(engine.state.residents[0].pending_alight.is_none());
     assert!(engine
@@ -256,7 +260,7 @@ fn full_pending_alight_queue_keeps_bus_passenger_seated() {
     let resident_id = ids[0];
     let line = engine.state.bus_line.as_ref().unwrap().clone();
     let stop = *line.stops.last().unwrap();
-    let target = engine.add_node(340.0, -340.0, "junction");
+    let target = engine.add_node(340.0, -340.0, NodeKind::Junction);
     let bus_id = engine.state.buses[0].id;
     let resident = &mut engine.state.residents[0];
     resident.at_work = false;
@@ -416,7 +420,7 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
             .bus_line
             .as_ref()
             .map(|line| (&line.route, &line.stops)),
-        engine.state.events.iter().filter(|event| event.kind == "BusStop").map(|event| (event.tick, event.reason.clone())).collect::<Vec<_>>(),
+        engine.state.events.iter().filter(|event| event.kind == EventKind::BusStop).map(|event| (event.tick, event.reason.clone())).collect::<Vec<_>>(),
         engine.state.travelers.iter().map(|traveler| (traveler.kind, &traveler.route, traveler.edge_index, traveler.edge_progress, &traveler.activity, traveler.wait_ticks)).collect::<Vec<_>>()
     );
     let return_save = engine.save_json();
@@ -817,9 +821,9 @@ fn seeded_neighborhood_bus_carries_residents_on_connected_roads() {
         .route
         .windows(2)
         .all(|edge| engine.state.roads.iter().any(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && road.kind != "rail"
+                && road.kind != RoadKind::Rail
                 && ((road.from == edge[0] && road.to == edge[1])
                     || (road.from == edge[1] && road.to == edge[0]))
         })));
@@ -827,7 +831,7 @@ fn seeded_neighborhood_bus_carries_residents_on_connected_roads() {
         .state
         .events
         .iter()
-        .filter(|event| event.kind == "BusPassengerBoarded")
+        .filter(|event| event.kind == EventKind::BusPassengerBoarded)
         .count();
     assert!(boardings > 0, "bus line never carried a resident");
     assert!(engine
@@ -945,7 +949,7 @@ fn generated_seed_five_bus_shuttle_runs_both_directions_after_bridge_growth() {
         .route
         .windows(2)
         .all(|edge| engine.state.roads.iter().any(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
                 && ((road.from == edge[0] && road.to == edge[1])
                     || (road.from == edge[1] && road.to == edge[0]))
@@ -1154,9 +1158,9 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
     let other_cafe_parcel = engine.state.parcels[3].id;
     let home_id = engine.add_building(
         home_parcel,
-        "home",
+        BuildingKind::Home,
         2,
-        "open",
+        Stage::Open,
         1.0,
         6,
         "Turnover Home",
@@ -1165,9 +1169,9 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
     );
     let cafe_id = engine.add_building(
         cafe_parcel,
-        "cafe",
+        BuildingKind::Cafe,
         2,
-        "open",
+        Stage::Open,
         1.0,
         12,
         "Cafe A",
@@ -1176,9 +1180,9 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
     );
     let other_cafe_id = engine.add_building(
         other_cafe_parcel,
-        "cafe",
+        BuildingKind::Cafe,
         2,
-        "open",
+        Stage::Open,
         1.0,
         12,
         "Cafe B",
@@ -1296,7 +1300,7 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
         .state
         .events
         .iter()
-        .any(|event| { event.kind == "BusinessClosed" && event.entity_id == closed_id }));
+        .any(|event| { event.kind == EventKind::BusinessClosed && event.entity_id == closed_id }));
     engine.sync_residents();
     assert!(engine
         .state
@@ -1316,7 +1320,7 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
         .buildings
         .iter()
         .find(|building| {
-            building.id != closed_id && building.kind == "cafe" && site_active(building)
+            building.id != closed_id && building.kind == BuildingKind::Cafe && site_active(building)
         })
         .unwrap()
         .id;
@@ -1337,7 +1341,7 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
             .find(|b| b.id == closed_id)
             .unwrap()
             .stage,
-        "renovation"
+        Stage::Renovation
     );
     for _ in 0..2 {
         engine.advance_projects();
@@ -1348,14 +1352,12 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
         .iter()
         .find(|building| building.id == closed_id)
         .unwrap();
-    assert_eq!(reopened.stage, "open");
+    assert_eq!(reopened.stage, Stage::Open);
     assert!(reopened.business_active);
     assert_eq!(reopened.vacant_days, 0);
-    assert!(engine
-        .state
-        .events
-        .iter()
-        .any(|event| { event.kind == "BusinessReopened" && event.entity_id == closed_id }));
+    assert!(engine.state.events.iter().any(|event| {
+        event.kind == EventKind::BusinessReopened && event.entity_id == closed_id
+    }));
     assert!(site_active(
         engine
             .state
@@ -1379,7 +1381,7 @@ fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
         .state
         .roads
         .iter()
-        .find(|road| road.kind == "arterial" && road.stage == "open")
+        .find(|road| road.kind == RoadKind::Arterial && road.stage == Stage::Open)
         .unwrap()
         .clone();
     engine.state.neighborhood_road_ids.insert(host.id);
@@ -1412,9 +1414,9 @@ fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
     });
     let building_id = engine.add_building(
         parcel_id,
-        "home",
+        BuildingKind::Home,
         2,
-        "open",
+        Stage::Open,
         1.0,
         8,
         "Split Test Home",
@@ -1432,9 +1434,9 @@ fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
     });
     let second_building_id = engine.add_building(
         second_parcel,
-        "home",
+        BuildingKind::Home,
         2,
-        "open",
+        Stage::Open,
         1.0,
         8,
         "Second Split Test Home",

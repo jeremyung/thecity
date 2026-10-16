@@ -27,7 +27,7 @@ impl Engine {
             .state
             .projects
             .iter()
-            .find(|p| p.kind == "station")
+            .find(|p| p.kind == ProjectKind::Station)
             .map_or(1.0, |p| p.progress);
         // The eight-work-step station reaches .75 and .875 before completion;
         // late surfacing must expose the canopy before service starts.
@@ -45,13 +45,18 @@ impl Engine {
     }
 
     pub(crate) fn rail_platform_views(&self) -> Vec<RailPlatformView> {
-        let Some(rail) = self.state.roads.iter().find(|road| road.kind == "rail") else {
+        let Some(rail) = self
+            .state
+            .roads
+            .iter()
+            .find(|road| road.kind == RoadKind::Rail)
+        else {
             return Vec::new();
         };
-        let Some(station) = [rail.from, rail.to]
-            .into_iter()
-            .find(|id| self.node(*id).is_some_and(|node| node.kind == "station"))
-        else {
+        let Some(station) = [rail.from, rail.to].into_iter().find(|id| {
+            self.node(*id)
+                .is_some_and(|node| node.kind == NodeKind::Station)
+        }) else {
             return Vec::new();
         };
         let gateway = if station == rail.from {
@@ -277,9 +282,9 @@ mod tests {
                 .state
                 .roads
                 .iter_mut()
-                .find(|r| r.kind == "rail")
+                .find(|r| r.kind == RoadKind::Rail)
                 .unwrap();
-            rail.stage = "open".into();
+            rail.stage = Stage::Open;
             rail.progress = 1.0;
             engine.state.station_ready = true;
             engine.state.station_online = true;

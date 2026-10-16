@@ -1,4 +1,5 @@
 //! Versioned integer sidecar for movement poses and infrastructure provenance.
+use crate::{NodeKind, RoadKind, Stage};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Row {
@@ -47,8 +48,8 @@ impl crate::Engine {
             .roads
             .iter()
             .find(|road| {
-                road.kind == "rail"
-                    && road.stage == "open"
+                road.kind == RoadKind::Rail
+                    && road.stage == Stage::Open
                     && road.connected
                     && ((road.from == station && road.to == gateway)
                         || (road.from == gateway && road.to == station))
@@ -73,9 +74,9 @@ impl crate::Engine {
                 .roads
                 .iter()
                 .find(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && road.connected
-                        && road.kind != "rail"
+                        && road.kind != RoadKind::Rail
                         && ((road.from == edge[0] && road.to == edge[1])
                             || (road.from == edge[1] && road.to == edge[0]))
                 })
@@ -92,7 +93,7 @@ impl crate::Engine {
             self.state
                 .roads
                 .iter()
-                .find(|road| road.id == id && road.stage == "open" && road.connected)?;
+                .find(|road| road.id == id && road.stage == Stage::Open && road.connected)?;
             if !roads.contains(&id) {
                 roads.push(id);
             }
@@ -233,8 +234,8 @@ mod tests {
                         .iter()
                         .find(|road| road.id == *id)
                         .expect("resolved support references a road");
-                    assert_eq!(road.stage, "open");
-                    if road.kind == "expressway" {
+                    assert_eq!(road.stage, crate::Stage::Open);
+                    if road.kind == crate::RoadKind::Expressway {
                         assert_eq!(row[4], 1);
                         assert!(engine.state.nodes.iter().any(|node| node.id == road.from));
                         assert!(engine.state.nodes.iter().any(|node| node.id == road.to));
@@ -257,7 +258,11 @@ mod tests {
             .state
             .roads
             .iter()
-            .find(|road| road.kind != "rail" && road.stage == "open" && road.connected)
+            .find(|road| {
+                road.kind != crate::RoadKind::Rail
+                    && road.stage == crate::Stage::Open
+                    && road.connected
+            })
             .expect("fixture has a connected open road")
             .clone();
         let a = engine.node(road.from).unwrap().clone();
@@ -312,7 +317,7 @@ mod tests {
                 id,
                 x,
                 z,
-                kind: "junction".into(),
+                kind: crate::NodeKind::Junction,
             });
             node_ids.push(id);
         }
@@ -323,8 +328,8 @@ mod tests {
                 id,
                 from: edge[0],
                 to: edge[1],
-                kind: "local".into(),
-                stage: "open".into(),
+                kind: crate::RoadKind::Local,
+                stage: crate::Stage::Open,
                 progress: 1.0,
                 connected: true,
                 length: 40.0,
@@ -405,7 +410,7 @@ mod tests {
                 id,
                 x,
                 z,
-                kind: "junction".into(),
+                kind: crate::NodeKind::Junction,
             });
             node_ids.push(id);
         }
@@ -424,8 +429,8 @@ mod tests {
                 id,
                 from,
                 to,
-                kind: "local".into(),
-                stage: "open".into(),
+                kind: crate::RoadKind::Local,
+                stage: crate::Stage::Open,
                 progress: 1.0,
                 connected: true,
                 length: (b.x - a.x).hypot(b.z - a.z),
@@ -544,15 +549,19 @@ mod tests {
                 .state
                 .roads
                 .iter_mut()
-                .find(|road| road.kind == "rail")
+                .find(|road| road.kind == crate::RoadKind::Rail)
                 .expect("legacy fixture has a rail road");
-            rail.stage = "open".into();
+            rail.stage = crate::Stage::Open;
             rail.progress = 1.0;
             (rail.from, rail.to, rail.id)
         };
         let station = [from, to]
             .into_iter()
-            .find(|id| engine.node(*id).is_some_and(|node| node.kind == "station"))
+            .find(|id| {
+                engine
+                    .node(*id)
+                    .is_some_and(|node| node.kind == crate::NodeKind::Station)
+            })
             .expect("rail fixture has a station terminal");
         let gateway = if station == from { to } else { from };
         engine.state.station_online = true;
@@ -564,7 +573,7 @@ mod tests {
                 id: ground,
                 x: terminal_node.x + 35.0,
                 z: terminal_node.z + 20.0,
-                kind: "junction".into(),
+                kind: crate::NodeKind::Junction,
             });
             let ground_node = engine.node(ground).unwrap().clone();
             let local_road = engine.id();
@@ -572,8 +581,8 @@ mod tests {
                 id: local_road,
                 from: terminal,
                 to: ground,
-                kind: "local".into(),
-                stage: "open".into(),
+                kind: crate::RoadKind::Local,
+                stage: crate::Stage::Open,
                 progress: 1.0,
                 connected: true,
                 length: (ground_node.x - terminal_node.x).hypot(ground_node.z - terminal_node.z),
@@ -661,16 +670,20 @@ mod tests {
                 .state
                 .roads
                 .iter_mut()
-                .find(|road| road.kind == "rail")
+                .find(|road| road.kind == crate::RoadKind::Rail)
                 .expect("legacy fixture has rail service");
-            rail.stage = "open".into();
+            rail.stage = crate::Stage::Open;
             rail.progress = 1.0;
             rail.connected = true;
             (rail.from, rail.to, rail.id)
         };
         let station = [from, to]
             .into_iter()
-            .find(|id| engine.node(*id).is_some_and(|node| node.kind == "station"))
+            .find(|id| {
+                engine
+                    .node(*id)
+                    .is_some_and(|node| node.kind == crate::NodeKind::Station)
+            })
             .expect("service has station terminal");
         let gateway = if station == from { to } else { from };
         let terminal = engine.node(station).unwrap().clone();
@@ -679,15 +692,15 @@ mod tests {
             id: branch_node,
             x: terminal.x + 30.0,
             z: terminal.z + 30.0,
-            kind: "junction".into(),
+            kind: crate::NodeKind::Junction,
         });
         let branch_road_id = engine.id();
         engine.state.roads.push(crate::Road {
             id: branch_road_id,
             from: station,
             to: branch_node,
-            kind: "rail".into(),
-            stage: "open".into(),
+            kind: crate::RoadKind::Rail,
+            stage: crate::Stage::Open,
             progress: 1.0,
             connected: true,
             length: 42.0,

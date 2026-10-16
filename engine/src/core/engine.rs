@@ -130,7 +130,7 @@ impl Engine {
                 station_online: false,
                 station_ready: false,
                 weather_day: 0,
-                weather_kind: "clear".into(),
+                weather_kind: WeatherKind::Clear,
                 weather_intensity: 0.0,
                 last_departure_day: u32::MAX,
                 last_renewal_day: u32::MAX,
@@ -166,31 +166,31 @@ impl Engine {
 
     pub(crate) fn initialize_world(&mut self) {
         // Every seed shares the river crossing and founding conditions, while its basin bends and parcel fabric vary.
-        let gateway = self.add_node(365.0, 42.0, "gateway");
-        let east = self.add_node(-18.0, 42.0, "junction");
-        let west = self.add_node(-184.0, 42.0, "junction");
-        let center = self.add_node(72.0, 42.0, "junction");
+        let gateway = self.add_node(365.0, 42.0, NodeKind::Gateway);
+        let east = self.add_node(-18.0, 42.0, NodeKind::Junction);
+        let west = self.add_node(-184.0, 42.0, NodeKind::Junction);
+        let center = self.add_node(72.0, 42.0, NodeKind::Junction);
         let founder_z = 6.0;
         let founder_x = self.river_center_x_at(founder_z) + 55.0;
-        let market = self.add_node(founder_x, 28.0, "market");
-        let station = self.add_node(153.0, 58.0, "station");
+        let market = self.add_node(founder_x, 28.0, NodeKind::Market);
+        let station = self.add_node(153.0, 58.0, NodeKind::Station);
         let (a, b) = (gateway, center);
-        self.add_road(a, b, "arterial", "open", 1.0);
-        self.add_road(center, east, "local", "open", 1.0);
-        self.add_road(center, market, "local", "open", 1.0);
+        self.add_road(a, b, RoadKind::Arterial, Stage::Open, 1.0);
+        self.add_road(center, east, RoadKind::Local, Stage::Open, 1.0);
+        self.add_road(center, market, RoadKind::Local, Stage::Open, 1.0);
         // Keep the founding street graph planar: the market already connects
         // to center, so a direct market-to-station chord would cross the
         // center-to-east lane. The station instead joins at center.
-        self.add_road(center, station, "local", "open", 1.0);
-        self.add_road(east, west, "bridge", "survey", 0.0);
+        self.add_road(center, station, RoadKind::Local, Stage::Open, 1.0);
+        self.add_road(east, west, RoadKind::Bridge, Stage::Survey, 0.0);
         let bridge_id = self.state.roads.last().unwrap().id;
         let parcel_id = self.add_parcel(founder_x, founder_z, 24.0, 18.0, market, 0.93, false);
         self.remember_nearest_frontage(parcel_id, market);
         let founder = self.add_building(
             parcel_id,
-            "shop",
+            BuildingKind::Shop,
             2,
-            "open",
+            Stage::Open,
             1.0,
             12,
             "Kissa Aoba",
@@ -205,16 +205,16 @@ impl Engine {
         self.remember_nearest_frontage(parcel, market);
         let parcel = self.add_parcel(180.0, 94.0, 25.0, 20.0, station, 0.86, false);
         self.remember_nearest_frontage(parcel, station);
-        let rail_b = self.add_node(300.0, 115.0, "rail_gateway");
-        let rail_id = self.add_road(station, rail_b, "rail", "foundation", 0.0);
+        let rail_b = self.add_node(300.0, 115.0, NodeKind::RailGateway);
+        let rail_id = self.add_road(station, rail_b, RoadKind::Rail, Stage::Foundation, 0.0);
         let rail_project_id = self.id();
         self.state.projects.push(Project {
             id: rail_project_id,
-            kind: "rail".into(),
+            kind: ProjectKind::Rail,
             from: Some(station),
             to: Some(rail_b),
             parcel_id: None,
-            stage: "survey".into(),
+            stage: Stage::Survey,
             progress: 0.0,
             reason: "A short rail link is built from the station toward the regional gateway"
                 .into(),
@@ -224,11 +224,11 @@ impl Engine {
         let station_id = self.id();
         self.state.projects.push(Project {
             id: station_id,
-            kind: "station".into(),
+            kind: ProjectKind::Station,
             from: Some(station),
             to: Some(rail_b),
             parcel_id: None,
-            stage: "platform".into(),
+            stage: Stage::Platform,
             progress: 0.0,
             reason: "A rail stop is planned where the growing neighborhood meets the river route"
                 .into(),
@@ -238,11 +238,11 @@ impl Engine {
         let bridge_project_id = self.id();
         self.state.projects.push(Project {
             id: bridge_project_id,
-            kind: "road".into(),
+            kind: ProjectKind::Road,
             from: Some(east),
             to: Some(west),
             parcel_id: None,
-            stage: "survey".into(),
+            stage: Stage::Survey,
             progress: 0.0,
             reason: "The first cross-river bridge connects the founding lane to the western bank"
                 .into(),
@@ -251,7 +251,7 @@ impl Engine {
         });
         let _ = (bridge_id, rail_id, founder);
         self.record(
-            "FoundingShopOpened",
+            EventKind::FoundingShopOpened,
             founder,
             "A small kissa opens beside the first lane".into(),
         );
@@ -259,13 +259,13 @@ impl Engine {
         self.state.revision += 1;
     }
 
-    pub(crate) fn record(&mut self, kind: &str, entity_id: u32, reason: String) {
+    pub(crate) fn record(&mut self, kind: EventKind, entity_id: u32, reason: String) {
         let id = self.state.next_event_id;
         self.state.next_event_id = self.state.next_event_id.saturating_add(1);
         self.state.events.push_back(Event {
             id,
             tick: self.state.tick,
-            kind: kind.into(),
+            kind,
             entity_id,
             reason,
         });

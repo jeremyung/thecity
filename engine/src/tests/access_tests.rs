@@ -28,9 +28,9 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
         .expect("founding parcels should carry road frontage metadata");
     let home_id = engine.add_building(
         home_parcel.id,
-        "home",
+        BuildingKind::Home,
         2,
-        "open",
+        Stage::Open,
         1.0,
         80,
         "Connector Test Home",
@@ -142,7 +142,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
         .find(|road| road.id == frontage_road)
         .unwrap();
     road.connected = true;
-    road.stage = "structure".into();
+    road.stage = Stage::Structure;
     assert!(!engine
         .snapshot()
         .building_access
@@ -228,9 +228,9 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
     let mut target = None;
 
     'roads: for (road_index, road) in engine.state.roads.iter().enumerate() {
-        if road.stage != "open"
+        if road.stage != Stage::Open
             || !road.connected
-            || matches!(road.kind.as_str(), "rail" | "bridge")
+            || matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
         {
             continue;
         }
@@ -261,7 +261,7 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
             }
             let (mut local_open, mut local_active) = (0usize, 0usize);
             for building in engine.state.buildings.iter().filter(|building| {
-                building.stage == "open" && (building.x - x).hypot(building.z - z) <= 78.0
+                building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
             }) {
                 local_open += 1;
                 local_active += usize::from(site_active(building));
@@ -336,9 +336,9 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
 
     let building = engine.add_building(
         parcel.id,
-        "home",
+        BuildingKind::Home,
         2,
-        "open",
+        Stage::Open,
         1.0,
         8,
         "Gap frontage home",
@@ -366,13 +366,13 @@ fn frontage_access_selection_is_projection_based_and_orientation_stable() {
         id: 274,
         x: 56.069_992,
         z: 164.448_24,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let b = Node {
         id: 753,
         x: 117.672_96,
         z: 219.651_73,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     assert_eq!(frontage_access_node(&a, &b, 0.25), a.id);
     assert_eq!(frontage_access_node(&a, &b, 0.75), b.id);
@@ -416,7 +416,7 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
                 .state
                 .projects
                 .iter_mut()
-                .find(|project| project.kind == "road" && project.progress < 1.0)
+                .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .unwrap();
             let id = project.id;
             project.progress = 1.0;
@@ -459,7 +459,7 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
             .iter()
             .find(|road| road.id == frontage.road_id)
             .unwrap();
-        assert!(road.stage == "open" && road.connected);
+        assert!(road.stage == Stage::Open && road.connected);
         assert!(engine.node_connected(parcel.access_node));
         let theta = parcel.rotation.unwrap();
         let expected = engine.frontage_rotation(parcel.id);
@@ -492,13 +492,13 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "road" && project.progress < 1.0)
+        .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .cloned()
         .expect("a clear occupied neighborhood should reserve a local chord");
     assert_eq!(project.from, Some(start));
     assert_eq!(project.to, Some(target));
     assert!(!first.state.roads.iter().any(|road| {
-        road.stage == "open"
+        road.stage == Stage::Open
             && ((road.from == start && road.to == target)
                 || (road.from == target && road.to == start))
     }));
@@ -510,7 +510,12 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     for footprint in &corridor_context.parcel_footprints {
         assert!(geometry::rect_segment_distance(footprint, a.x, a.z, b.x, b.z) >= 5.0);
     }
-    for road in first.state.roads.iter().filter(|road| road.stage == "open") {
+    for road in first
+        .state
+        .roads
+        .iter()
+        .filter(|road| road.stage == Stage::Open)
+    {
         if road.from == start || road.to == start || road.from == target || road.to == target {
             continue;
         }
@@ -541,13 +546,13 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
             .duration = 2.0;
         engine.advance_projects();
         assert!(!engine.state.roads.iter().any(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && ((road.from == start && road.to == target)
                     || (road.from == target && road.to == start))
         }));
         engine.advance_projects();
         assert!(engine.state.roads.iter().any(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
                 && ((road.from == start && road.to == target)
                     || (road.from == target && road.to == start))
@@ -577,7 +582,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
         .projects
         .iter()
         .find(|candidate| {
-            candidate.kind == "building"
+            candidate.kind == ProjectKind::Building
                 && candidate.progress < 1.0
                 && candidate
                     .parcel_id
@@ -587,7 +592,8 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
         .expect("the completed chord should provide a buildable, connected lot");
     for _ in 0..=6 {
         if first.state.buildings.iter().any(|building| {
-            building.parcel_id == building_project.parcel_id.unwrap() && building.stage == "open"
+            building.parcel_id == building_project.parcel_id.unwrap()
+                && building.stage == Stage::Open
         }) {
             break;
         }
@@ -599,7 +605,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
         .iter()
         .find(|building| building.parcel_id == building_project.parcel_id.unwrap())
         .expect("the frontage building opens after construction");
-    assert_eq!(new_building.stage, "open");
+    assert_eq!(new_building.stage, Stage::Open);
     let (access_road, points) = first
         .building_access_segment(new_building.id)
         .expect("the new building has a real frontage access segment");
@@ -683,7 +689,7 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
             .unwrap_or_else(|| panic!("{name}: host road is missing"))
             .clone();
         assert!(
-            host.stage == "open" && host.connected,
+            host.stage == Stage::Open && host.connected,
             "{name}: host is not open"
         );
         let before_positions: Vec<_> = engine
@@ -810,9 +816,9 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .count()
         .saturating_mul(interior_access::PROPOSALS_PER_HOST);
@@ -835,7 +841,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         .iter()
         .find(|road| road.id == plan.branch_road_id)
         .unwrap();
-    assert_eq!(branch.stage, "survey");
+    assert_eq!(branch.stage, Stage::Survey);
     assert!(!branch.connected);
     let project = engine
         .state
@@ -843,14 +849,14 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         .iter()
         .find(|project| project.id == plan.project_id)
         .unwrap();
-    assert_eq!(project.kind, "road");
+    assert_eq!(project.kind, ProjectKind::Road);
     assert!(project.progress < 1.0);
     assert_eq!(branch.progress, project.progress);
     let visible = engine.snapshot();
     assert!(visible
         .roads
         .iter()
-        .any(|road| road.id == plan.branch_road_id && road.stage != "open"));
+        .any(|road| road.id == plan.branch_road_id && road.stage != Stage::Open));
     let parcels_before = engine.state.parcels.len();
     for lot in &plan.selected_lots {
         let rect = geometry::OrientedRect {
@@ -978,7 +984,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
             .find(|road| road.id == plan.branch_road_id)
             .unwrap()
             .stage,
-        "open"
+        Stage::Open
     );
     assert!(
         blocked
@@ -1015,7 +1021,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         .iter()
         .find(|road| road.id == plan.branch_road_id)
         .unwrap();
-    assert_eq!(branch.stage, "open");
+    assert_eq!(branch.stage, Stage::Open);
     assert!(branch.connected);
     assert_eq!(
         engine.state.parcels.len(),
@@ -1065,9 +1071,9 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         .roads
         .iter()
         .filter(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && matches!(road.kind.as_str(), "local" | "arterial")
+                && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
         })
         .count()
         .saturating_mul(interior_access::PROPOSALS_PER_HOST);
@@ -1141,10 +1147,10 @@ fn access_geometry_revision_tracks_effective_writers_and_ignores_ticks() {
     engine.recompute_connectivity();
     assert_eq!(engine.state.access_geometry_revision, initial);
 
-    let node = engine.add_node(260.0, 260.0, "junction");
+    let node = engine.add_node(260.0, 260.0, NodeKind::Junction);
     let after_node = engine.state.access_geometry_revision;
     assert!(after_node > initial);
-    let road = engine.add_road(1, node, "local", "open", 1.0);
+    let road = engine.add_road(1, node, RoadKind::Local, Stage::Open, 1.0);
     let after_road = engine.state.access_geometry_revision;
     assert!(after_road > after_node);
     engine.recompute_connectivity();
@@ -1173,7 +1179,7 @@ fn access_geometry_revision_tracks_effective_writers_and_ignores_ticks() {
         .projects
         .iter()
         .rev()
-        .find(|project| project.kind == "building" && project.progress < 1.0)
+        .find(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
         .unwrap()
         .clone();
     let before_reservation_release = engine.state.access_geometry_revision;
@@ -1188,7 +1194,7 @@ fn access_geometry_revision_tracks_road_opening_and_plan_reservations() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "road")
+        .find(|project| project.kind == ProjectKind::Road)
         .unwrap()
         .id;
     let before_open = engine.state.access_geometry_revision;
@@ -1217,11 +1223,11 @@ fn access_geometry_revision_is_backward_compatible_and_fails_closed_at_overflow(
     let mut exhausted = restored;
     exhausted.state.access_geometry_revision = u64::MAX;
     assert_eq!(exhausted.access_geometry_revision_token(), Some(u64::MAX));
-    exhausted.add_node(0.0, 0.0, "junction");
+    exhausted.add_node(0.0, 0.0, NodeKind::Junction);
     assert!(exhausted.state.access_geometry_revision_exhausted);
     assert_eq!(exhausted.state.access_geometry_revision, u64::MAX);
     assert_eq!(exhausted.access_geometry_revision_token(), None);
-    exhausted.add_node(1.0, 1.0, "junction");
+    exhausted.add_node(1.0, 1.0, NodeKind::Junction);
     assert_eq!(exhausted.access_geometry_revision_token(), None);
     assert!(exhausted.validate().is_ok());
 }

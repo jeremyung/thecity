@@ -226,12 +226,12 @@ impl Engine {
         let selected_lots = plan.selected_lots.clone();
         let ready = segments.iter().all(|(from, to)| {
             self.state.roads.iter().any(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
                     && ((road.from == *from && road.to == *to)
                         || (road.from == *to && road.to == *from))
             }) && !self.state.projects.iter().any(|project| {
-                project.kind == "road"
+                project.kind == ProjectKind::Road
                     && project.progress < 1.0
                     && project
                         .from
@@ -288,7 +288,7 @@ impl Engine {
                 z: node.z,
             };
             let Some(road) = self.state.roads.iter().find(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
                     && ((road.from == *from && road.to == *to)
                         || (road.from == *to && road.to == *from))
@@ -433,7 +433,7 @@ impl Engine {
         }
         segments.iter().all(|(from, to)| {
             self.state.roads.iter().any(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
                     && ((road.from == *from && road.to == *to)
                         || (road.from == *to && road.to == *from))
@@ -456,9 +456,9 @@ impl Engine {
             return false;
         };
         if !self.state.roads.iter().any(|road| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 && ((road.from == *reuse_from && road.to == *reuse_to)
                     || (road.from == *reuse_to && road.to == *reuse_from))
         }) {
@@ -812,11 +812,11 @@ impl Engine {
             .state
             .roads
             .iter()
-            .filter(|road| road.connected && road.stage == "open")
+            .filter(|road| road.connected && road.stage == Stage::Open)
         {
             connected.insert(road.from);
             connected.insert(road.to);
-            if !matches!(road.kind.as_str(), "rail" | "bridge") {
+            if !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge) {
                 reusable_edges_by_node
                     .entry(road.from)
                     .or_default()
@@ -1266,7 +1266,7 @@ impl Engine {
                 ids[index] = Some(self.add_node(
                     candidate.corners[index].x,
                     candidate.corners[index].z,
-                    "junction",
+                    NodeKind::Junction,
                 ));
             }
         }
@@ -1309,7 +1309,7 @@ impl Engine {
                 .roads
                 .iter()
                 .find(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && ((road.from == from && road.to == to)
                             || (road.from == to && road.to == from))
                 })
@@ -1331,11 +1331,11 @@ impl Engine {
             let started_tick = self.state.tick;
             self.record_project(Project {
                 id,
-                kind: "road".into(),
+                kind: ProjectKind::Road,
                 from: Some(from),
                 to: Some(to),
                 parcel_id: None,
-                stage: "survey".into(),
+                stage: Stage::Survey,
                 progress: 0.0,
                 reason: "A reserved local street opens a compact neighborhood block".into(),
                 duration,
@@ -1364,7 +1364,7 @@ impl Engine {
                 .state
                 .projects
                 .iter()
-                .any(|project| project.kind == "road" && project.progress < 1.0)
+                .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         {
             return false;
         }
@@ -1375,8 +1375,8 @@ impl Engine {
             .iter()
             .filter(|road| {
                 road.connected
-                    && road.stage == "open"
-                    && !matches!(road.kind.as_str(), "rail" | "bridge")
+                    && road.stage == Stage::Open
+                    && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
             })
             .flat_map(|road| [road.from, road.to])
             .collect();
@@ -1440,7 +1440,7 @@ impl Engine {
                     (road.from == start.id && road.to == target.id)
                         || (road.from == target.id && road.to == start.id)
                 }) || self.state.projects.iter().any(|project| {
-                    project.kind == "road"
+                    project.kind == ProjectKind::Road
                         && project.progress < 1.0
                         && ((project.from == Some(start.id) && project.to == Some(target.id))
                             || (project.from == Some(target.id) && project.to == Some(start.id)))
@@ -1490,7 +1490,7 @@ impl Engine {
                     .state
                     .roads
                     .iter()
-                    .filter(|road| road.stage == "open")
+                    .filter(|road| road.stage == Stage::Open)
                     .all(|road| {
                         if road.from == start.id
                             || road.to == start.id
@@ -1508,7 +1508,7 @@ impl Engine {
                     .state
                     .projects
                     .iter()
-                    .filter(|project| project.kind == "road" && project.progress < 1.0)
+                    .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                     .all(|project| {
                         let (Some(from), Some(to)) = (project.from, project.to) else {
                             return true;
@@ -1544,11 +1544,11 @@ impl Engine {
                 let duration = 3.0 + random_unit(&mut self.state.rng_growth) * 4.0;
                 self.record_project(Project {
                     id,
-                    kind: "road".into(),
+                    kind: ProjectKind::Road,
                     from: Some(start.id),
                     to: Some(target.id),
                     parcel_id: None,
-                    stage: "survey".into(),
+                    stage: Stage::Survey,
                     progress: 0.0,
                     reason:
                         "A local connector closes a developed block and opens new street frontage"

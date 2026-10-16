@@ -66,6 +66,18 @@ pub(crate) enum NodeKind {
 }
 
 impl NodeKind {
+    /// The world node kind this plan node becomes when realized.
+    pub(crate) fn world(self) -> crate::NodeKind {
+        match self {
+            NodeKind::Junction => crate::NodeKind::Junction,
+            NodeKind::Gateway => crate::NodeKind::Gateway,
+            NodeKind::Station => crate::NodeKind::Station,
+            NodeKind::RailGateway => crate::NodeKind::RailGateway,
+            NodeKind::RailTerminus => crate::NodeKind::RailTerminus,
+            NodeKind::Elevated => crate::NodeKind::Elevated,
+        }
+    }
+
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             NodeKind::Junction => "junction",
@@ -89,6 +101,18 @@ pub(crate) enum RoadKind {
 }
 
 impl RoadKind {
+    /// The world road kind this plan road becomes when realized.
+    pub(crate) fn world(self) -> crate::RoadKind {
+        match self {
+            RoadKind::Arterial => crate::RoadKind::Arterial,
+            RoadKind::Local => crate::RoadKind::Local,
+            RoadKind::Lane => crate::RoadKind::Lane,
+            RoadKind::Bridge => crate::RoadKind::Bridge,
+            RoadKind::Rail => crate::RoadKind::Rail,
+            RoadKind::Expressway => crate::RoadKind::Expressway,
+        }
+    }
+
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             RoadKind::Arterial => "arterial",

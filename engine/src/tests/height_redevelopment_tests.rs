@@ -34,9 +34,9 @@ fn reusable_office_engine() -> (Engine, u32) {
         .unwrap_or_else(|| {
             engine.add_building(
                 parcel_id,
-                "office",
+                BuildingKind::Office,
                 3,
-                "open",
+                Stage::Open,
                 1.0,
                 15,
                 "Test Office",
@@ -50,11 +50,11 @@ fn reusable_office_engine() -> (Engine, u32) {
         .iter_mut()
         .find(|building| building.id == building_id)
         .unwrap();
-    building.kind = "office".into();
+    building.kind = BuildingKind::Office;
     building.floors = 3;
     building.capacity = 15;
     building.occupancy = 0;
-    building.stage = "open".into();
+    building.stage = Stage::Open;
     building.business_active = true;
     building.built_day = 0;
     building.anchor = false;
@@ -96,7 +96,7 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
             .find(|building| building.id == building_id)
             .unwrap()
             .stage,
-        "demolition"
+        Stage::Demolition
     );
     engine.validate_height_redevelopment().unwrap();
 
@@ -134,8 +134,8 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
         .find(|building| building.id == building_id)
         .unwrap();
     assert!(matches!(
-        reconstruction.stage.as_str(),
-        "survey" | "clearing" | "structure" | "surface" | "finishing"
+        reconstruction.stage,
+        Stage::Survey | Stage::Clearing | Stage::Structure | Stage::Surface | Stage::Finishing
     ));
     let reconstruction_save = engine.save_json();
     let mut restored_reconstruction = Engine::restore_json(&reconstruction_save)
@@ -160,7 +160,7 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
             .find(|building| building.id == building_id)
             .unwrap()
             .stage,
-        "open"
+        Stage::Open
     );
 }
 
@@ -194,7 +194,7 @@ fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
         .iter()
         .find(|building| building.id == building_id)
         .unwrap();
-    assert_eq!(building.stage, "open");
+    assert_eq!(building.stage, Stage::Open);
     assert_eq!(building.floors, plan.target_floors);
     assert!(building.business_active);
     assert_eq!(
@@ -230,8 +230,8 @@ fn actor_references_and_character_fraction_disqualify_office_candidate() {
         .iter_mut()
         .find(|building| building.id != building_id)
         .unwrap();
-    other_office.kind = "office".into();
-    other_office.stage = "open".into();
+    other_office.kind = BuildingKind::Office;
+    other_office.stage = Stage::Open;
     other_office.business_active = true;
     other_office.capacity = 20;
     building.appearance_seed = 4;
@@ -281,8 +281,8 @@ fn station_core_lot_class_and_eight_tower_cap_gate_candidates() {
         .iter_mut()
         .find(|building| building.id != building_id)
         .unwrap();
-    other_office.kind = "office".into();
-    other_office.stage = "open".into();
+    other_office.kind = BuildingKind::Office;
+    other_office.stage = Stage::Open;
     other_office.business_active = true;
     other_office.capacity = 20;
     assert!(engine.height_redevelopment_candidate(
@@ -346,7 +346,7 @@ fn redevelopment_waits_for_eighty_five_percent_lot_realization() {
     for index in 0..300 {
         let mut active = template.clone();
         active.id = 910_000 + index;
-        active.stage = "open".into();
+        active.stage = Stage::Open;
         active.business_active = true;
         engine.state.buildings.push(active);
     }
@@ -362,7 +362,7 @@ fn redevelopment_waits_for_eighty_five_percent_lot_realization() {
         .state
         .projects
         .iter()
-        .all(|project| project.kind != "redevelopment"));
+        .all(|project| project.kind != ProjectKind::Redevelopment));
 }
 
 #[test]

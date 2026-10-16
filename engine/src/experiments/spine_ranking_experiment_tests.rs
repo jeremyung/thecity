@@ -123,7 +123,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .state
                 .buildings
                 .iter()
-                .filter(|building| building.stage == "open")
+                .filter(|building| building.stage == Stage::Open)
                 .collect();
             let housing: Vec<_> = open.iter().copied().filter(|b| is_housing(b)).collect();
             let commerce: Vec<_> = open.iter().copied().filter(|b| is_commercial(b)).collect();
@@ -136,7 +136,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open" && road.connected)
+                .filter(|road| road.stage == Stage::Open && road.connected)
                 .map(|road| road.length as f64)
                 .sum();
             let ordinary_road_length_m: f64 = engine
@@ -144,9 +144,9 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .roads
                 .iter()
                 .filter(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && road.connected
-                        && !matches!(road.kind.as_str(), "rail" | "bridge")
+                        && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 })
                 .map(|road| road.length as f64)
                 .sum();
@@ -154,14 +154,18 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open" && road.connected && road.kind == "rail")
+                .filter(|road| {
+                    road.stage == Stage::Open && road.connected && road.kind == RoadKind::Rail
+                })
                 .map(|road| road.length as f64)
                 .sum();
             let bridge_length_m: f64 = engine
                 .state
                 .roads
                 .iter()
-                .filter(|road| road.stage == "open" && road.connected && road.kind == "bridge")
+                .filter(|road| {
+                    road.stage == Stage::Open && road.connected && road.kind == RoadKind::Bridge
+                })
                 .map(|road| road.length as f64)
                 .sum();
             let housing_capacity: u64 = housing.iter().map(|b| b.capacity as u64).sum();
@@ -180,16 +184,15 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .as_ref()
                 .is_some_and(|p| p.spine.is_some());
             let spine_road_ids: BTreeSet<u32> = seen_spines.values().flatten().copied().collect();
-            let completed_spine_road_ids: BTreeSet<u32> = spine_road_ids
-                .into_iter()
-                .filter(|id| {
-                    engine
-                        .state
-                        .roads
-                        .iter()
-                        .any(|road| road.id == *id && road.stage == "open" && road.connected)
-                })
-                .collect();
+            let completed_spine_road_ids: BTreeSet<u32> =
+                spine_road_ids
+                    .into_iter()
+                    .filter(|id| {
+                        engine.state.roads.iter().any(|road| {
+                            road.id == *id && road.stage == Stage::Open && road.connected
+                        })
+                    })
+                    .collect();
             let completed_spine_count = completed_spine_road_ids.len();
             assert!(completed_spine_count <= selected_spines.len());
             let open_building_count = open.len();

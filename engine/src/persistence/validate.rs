@@ -101,8 +101,8 @@ impl Engine {
                 .iter()
                 .find(|road| road.id == plan.branch_road_id)
                 .ok_or_else(|| "interior access plan references a missing branch".to_string())?;
-            if retained.stage != "open"
-                || second.stage != "open"
+            if retained.stage != Stage::Open
+                || second.stage != Stage::Open
                 || !retained.connected
                 || !second.connected
                 || retained.id == second.id
@@ -111,14 +111,18 @@ impl Engine {
                 || retained.to != plan.split_node_id
                 || second.from != plan.split_node_id
                 || retained.kind != second.kind
-                || !matches!(retained.kind.as_str(), "local" | "arterial")
+                || !matches!(retained.kind, RoadKind::Local | RoadKind::Arterial)
                 || branch.from != plan.split_node_id
                 || branch.to != plan.branch_endpoint_id
-                || branch.kind != "local"
-                || branch.stage == "open"
+                || branch.kind != RoadKind::Local
+                || branch.stage == Stage::Open
                 || !matches!(
-                    branch.stage.as_str(),
-                    "survey" | "clearing" | "structure" | "surface" | "finishing"
+                    branch.stage,
+                    Stage::Survey
+                        | Stage::Clearing
+                        | Stage::Structure
+                        | Stage::Surface
+                        | Stage::Finishing
                 )
             {
                 return Err("interior access plan road references are inconsistent".into());
@@ -129,7 +133,7 @@ impl Engine {
                 .iter()
                 .find(|project| project.id == plan.project_id)
                 .ok_or_else(|| "interior access plan references a missing project".to_string())?;
-            if project.kind != "road"
+            if project.kind != ProjectKind::Road
                 || project.progress >= 1.0
                 || project.from != Some(branch.from)
                 || project.to != Some(branch.to)
@@ -203,9 +207,9 @@ impl Engine {
                 difference.min(std::f32::consts::TAU - difference) >= std::f32::consts::PI / 6.0
             };
             for road in self.state.roads.iter().filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.connected
-                    && !matches!(road.kind.as_str(), "rail" | "bridge")
+                    && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                     && (road.from == plan.split_node_id || road.to == plan.split_node_id)
             }) {
                 let neighbor_id = if road.from == plan.split_node_id {
@@ -223,7 +227,7 @@ impl Engine {
             }
             for other in self.state.projects.iter().filter(|other| {
                 other.id != plan.project_id
-                    && other.kind == "road"
+                    && other.kind == ProjectKind::Road
                     && other.progress < 1.0
                     && (other.from == Some(plan.split_node_id)
                         || other.to == Some(plan.split_node_id))
@@ -248,7 +252,7 @@ impl Engine {
                 return Err("interior access endpoint violates junction spacing".into());
             }
             for road in self.state.roads.iter().filter(|road| {
-                road.stage == "open"
+                road.stage == Stage::Open
                     && road.id != retained.id
                     && road.id != second.id
                     && road.id != branch.id
@@ -277,7 +281,9 @@ impl Engine {
                 .projects
                 .iter()
                 .filter(|other| {
-                    other.id != plan.project_id && other.kind == "road" && other.progress < 1.0
+                    other.id != plan.project_id
+                        && other.kind == ProjectKind::Road
+                        && other.progress < 1.0
                 })
                 .any(|other| {
                     let Some((from, to)) = other.from.zip(other.to) else {
@@ -488,7 +494,7 @@ impl Engine {
                 .iter()
                 .find(|b| b.id == resident.home_building)
                 .ok_or_else(|| format!("resident {} references a missing home", resident.id))?;
-            if !matches!(home.kind.as_str(), "home" | "apartment") {
+            if !matches!(home.kind, BuildingKind::Home | BuildingKind::Apartment) {
                 return Err(format!(
                     "resident {} is assigned to a non-residential building",
                     resident.id
@@ -623,9 +629,9 @@ impl Engine {
             }
             for edge in line.route.windows(2) {
                 if !self.state.roads.iter().any(|road| {
-                    road.stage == "open"
+                    road.stage == Stage::Open
                         && road.connected
-                        && road.kind != "rail"
+                        && road.kind != RoadKind::Rail
                         && ((road.from == edge[0] && road.to == edge[1])
                             || (road.from == edge[1] && road.to == edge[0]))
                 }) {
@@ -919,7 +925,7 @@ impl Engine {
                 .iter()
                 .find(|p| p.id == b.parcel_id)
                 .ok_or_else(|| format!("building {} references missing parcel", b.id))?;
-            if b.stage == "open" && !self.node_connected(p.access_node) {
+            if b.stage == Stage::Open && !self.node_connected(p.access_node) {
                 return Err(format!(
                     "open building {} lacks connected road access",
                     b.id
@@ -1010,7 +1016,7 @@ impl Engine {
                 .state
                 .roads
                 .iter()
-                .filter(|r| r.stage == "open" && r.kind != "expressway")
+                .filter(|r| r.stage == Stage::Open && r.kind != RoadKind::Expressway)
             {
                 let (Some(a), Some(b)) = (self.node(road.from), self.node(road.to)) else {
                     continue;
@@ -1023,9 +1029,9 @@ impl Engine {
                     .fold(f32::INFINITY, f32::min);
                 // Lanes are 4 m shared surfaces; master-plan lots start at
                 // 2.3 m, retaining a small margin over this runtime envelope.
-                let road_clearance = match road.kind.as_str() {
-                    "lane" => 2.2,
-                    "local" => f32::min(road_clearance, 3.4),
+                let road_clearance = match road.kind {
+                    RoadKind::Lane => 2.2,
+                    RoadKind::Local => f32::min(road_clearance, 3.4),
                     _ => road_clearance,
                 };
                 let exact_clearance_ok = nearest_envelope_distance >= road_clearance;
@@ -1060,18 +1066,18 @@ impl Engine {
                     .pending_rear_extensions
                     .iter()
                     .any(|plan| plan.building_id == building_id && plan.parcel_id == p.id);
-                if building.stage == "open" && !rear_extension_reserved {
+                if building.stage == Stage::Open && !rear_extension_reserved {
                     return Err(format!("parcel {} reserves an open building", p.id));
                 }
                 if !self.state.projects.iter().any(|project| {
-                    project.kind == "building"
+                    project.kind == ProjectKind::Building
                         && project.parcel_id == Some(p.id)
                         && project.progress < 1.0
                 }) && !self.state.pending_rear_extensions.iter().any(|plan| {
                     plan.building_id == building_id
                         && plan.parcel_id == p.id
                         && self.state.projects.iter().any(|project| {
-                            project.kind == "extension"
+                            project.kind == ProjectKind::Extension
                                 && project.id == plan.project_id
                                 && project.progress < 1.0
                         })
@@ -1084,7 +1090,7 @@ impl Engine {
                             && plan.parcel_id == p.id
                             && self.state.projects.iter().any(|project| {
                                 project.id == plan.project_id
-                                    && project.kind == "redevelopment"
+                                    && project.kind == ProjectKind::Redevelopment
                                     && project.progress < 1.0
                             })
                     })

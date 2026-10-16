@@ -6,7 +6,7 @@ fn presentation_geometry_signature(engine: &Engine) -> String {
     let open_roads: Vec<_> = snapshot
         .roads
         .iter()
-        .filter(|road| road.stage == "open")
+        .filter(|road| road.stage == Stage::Open)
         .map(|road| {
             (
                 road.id,
@@ -56,7 +56,7 @@ fn tick_and_weather_alone_do_not_change_presentation_revision() {
     let mut engine = Engine::new(87231);
     engine.set_development_rate(0);
     let before = engine.presentation_revision();
-    engine.state.weather_kind = "rain".into();
+    engine.state.weather_kind = WeatherKind::Rain;
     engine.state.weather_intensity = 0.8;
     // step() can change reservations even with development paused. Isolate
     // clock/weather writes here; the growth test below covers real stepping.
@@ -80,7 +80,7 @@ fn presentation_revision_tracks_station_visual_threshold_and_service_state() {
             .state
             .projects
             .iter_mut()
-            .find(|p| p.kind == "station")
+            .find(|p| p.kind == ProjectKind::Station)
             .unwrap()
             .progress = low;
         let revision = engine.presentation_revision();
@@ -94,7 +94,7 @@ fn presentation_revision_tracks_station_visual_threshold_and_service_state() {
             .state
             .projects
             .iter_mut()
-            .find(|p| p.kind == "station")
+            .find(|p| p.kind == ProjectKind::Station)
             .unwrap()
             .progress = high;
         assert_eq!(engine.presentation_revision(), revision);
@@ -153,7 +153,7 @@ fn expressway_completion_through_complete_project_changes_presentation_revision(
                 .state
                 .projects
                 .iter()
-                .find(|project| project.kind == "expressway" && project.progress < 1.0)
+                .find(|project| project.kind == ProjectKind::Expressway && project.progress < 1.0)
                 .cloned()
         })
         .expect("seeded growth should start an expressway project");
@@ -164,8 +164,8 @@ fn expressway_completion_through_complete_project_changes_presentation_revision(
         .state
         .roads
         .iter()
-        .any(|road| road.kind == "expressway"
-            && road.stage == "open"
+        .any(|road| road.kind == RoadKind::Expressway
+            && road.stage == Stage::Open
             && (road.from == expressway.from.unwrap())
             && (road.to == expressway.to.unwrap())));
 }

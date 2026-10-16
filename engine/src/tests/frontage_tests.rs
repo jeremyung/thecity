@@ -6,7 +6,7 @@ fn building_picker_prefers_connected_infill_and_excludes_invalid_sites() {
     let isolated = engine.add_parcel(350.0, 350.0, 10.0, 10.0, access_node, 0.8, false);
     let infill = engine.add_parcel(216.0, 232.0, 10.0, 10.0, access_node, 0.8, false);
     let protected = engine.add_parcel(240.0, 240.0, 10.0, 10.0, access_node, 0.8, true);
-    let disconnected_node = engine.add_node(390.0, 390.0, "junction");
+    let disconnected_node = engine.add_node(390.0, 390.0, NodeKind::Junction);
     let disconnected = engine.add_parcel(380.0, 380.0, 10.0, 10.0, disconnected_node, 0.8, false);
 
     // The former sort-then-cycle picker selected the isolated site at
@@ -17,7 +17,7 @@ fn building_picker_prefers_connected_infill_and_excludes_invalid_sites() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "building")
+        .find(|project| project.kind == ProjectKind::Building)
         .expect("one building project should be planned");
     assert_eq!(project.parcel_id, Some(infill));
     assert_ne!(project.parcel_id, Some(isolated));
@@ -42,13 +42,13 @@ fn road_frontage_benefit_accepts_two_sites_on_one_side() {
         id: u32::MAX - 1,
         x: 280.0,
         z: 300.0,
-        kind: "candidate".into(),
+        kind: NodeKind::Candidate,
     };
     let b = Node {
         id: u32::MAX,
         x: 350.0,
         z: 300.0,
-        kind: "candidate".into(),
+        kind: NodeKind::Candidate,
     };
 
     assert_eq!(engine.viable_frontage_benefit_count(&a, &b, 2), 2);
@@ -101,14 +101,14 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
         .state
         .nodes
         .iter()
-        .find(|node| node.kind == "station")
+        .find(|node| node.kind == NodeKind::Station)
         .unwrap()
         .clone();
     let access_node = tower_only
         .state
         .roads
         .iter()
-        .find(|road| road.stage == "open" && road.connected && road.kind != "rail")
+        .find(|road| road.stage == Stage::Open && road.connected && road.kind != RoadKind::Rail)
         .unwrap()
         .from;
     let tower_parcel = tower_only.add_parcel(
@@ -134,7 +134,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
         .state
         .projects
         .iter()
-        .find(|project| project.kind == "road" && project.progress < 1.0)
+        .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .expect("exhausted infill must yield to the reserved neighborhood road")
         .to
         .unwrap();
@@ -147,7 +147,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
             .state
             .roads
             .iter()
-            .any(|road| { road.to == road_target && road.stage == "open" && road.connected }),
+            .any(|road| { road.to == road_target && road.stage == Stage::Open && road.connected }),
         "the admitted neighborhood road must complete and connect"
     );
     assert!(tower_only.state.parcels.len() > initial_parcel_count);
@@ -219,7 +219,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
     mixed.evaluate_growth();
     assert!(
         mixed.state.projects.iter().any(|project| {
-            project.kind == "building"
+            project.kind == ProjectKind::Building
                 && project.parcel_id == Some(usable)
                 && project.progress < 1.0
         }),
@@ -231,7 +231,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
             .state
             .projects
             .iter()
-            .any(|project| { project.kind == "road" && project.progress < 1.0 }),
+            .any(|project| { project.kind == ProjectKind::Road && project.progress < 1.0 }),
         "road growth bypassed an ordinary lot while infill was due"
     );
 }
@@ -253,13 +253,13 @@ fn frontage_cursor_accepts_exact_candidate_cap_and_rejects_overflow() {
         id: 10_001,
         x: 200.0,
         z: -160.0,
-        kind: "local".into(),
+        kind: NodeKind::Junction,
     };
     let b = Node {
         id: 10_002,
         x: 200.0,
         z: 160.0,
-        kind: "local".into(),
+        kind: NodeKind::Junction,
     };
     let sites = at_cap.frontage_candidate_sites_with_layout(&a, &b, 14.0, 12.0, 18.0);
     // This helper returns only fixed-grid sites. Compact gap candidates
@@ -274,13 +274,13 @@ fn frontage_gap_default_layout_is_exactly_the_legacy_candidate_sequence() {
         id: 10,
         x: 0.0,
         z: 0.0,
-        kind: "local".into(),
+        kind: NodeKind::Junction,
     };
     let b = Node {
         id: 20,
         x: 0.0,
         z: 100.0,
-        kind: "local".into(),
+        kind: NodeKind::Junction,
     };
     let context = CollisionContext {
         parcel_footprints: Vec::new(),
@@ -342,7 +342,7 @@ fn shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes() {
         .state
         .roads
         .iter()
-        .find(|road| road.stage == "open" && road.connected && road.kind == "local")
+        .find(|road| road.stage == Stage::Open && road.connected && road.kind == RoadKind::Local)
         .unwrap();
     let (a, b) = (
         engine.node(road.from).unwrap(),
@@ -470,7 +470,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
                 .collect();
             if !pending_replay_checked
                 && engine.state.projects.iter().any(|project| {
-                    project.kind == "building"
+                    project.kind == ProjectKind::Building
                         && project.progress < 1.0
                         && project
                             .parcel_id
@@ -508,7 +508,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
             .collect();
         let open_shallow = shallow_buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .count();
         assert!(
             !shallow_parcels.is_empty(),
@@ -544,7 +544,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
             "shallow_nominal_envelope_area_m2": shallow_parcels.iter().map(|parcel| (parcel.width * parcel.depth) as f64).sum::<f64>(),
             "shallow_buildings": shallow_buildings.len(),
             "shallow_open_buildings": open_shallow,
-            "shallow_construction_projects_pending": engine.state.projects.iter().filter(|project| project.kind == "building" && project.progress < 1.0 && project.parcel_id.is_some_and(|id| shallow_ids.contains(&id))).count(),
+            "shallow_construction_projects_pending": engine.state.projects.iter().filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0 && project.parcel_id.is_some_and(|id| shallow_ids.contains(&id))).count(),
             "canonical_pending_project_replay_checked": pending_replay_checked,
             "validation_passed": true,
         });
@@ -606,9 +606,9 @@ fn shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds() {
             let mut roads_with_sites = BTreeSet::new();
 
             for road in &engine.state.roads {
-                if road.stage != "open"
+                if road.stage != Stage::Open
                     || !road.connected
-                    || matches!(road.kind.as_str(), "rail" | "bridge")
+                    || matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 {
                     continue;
                 }
@@ -707,7 +707,8 @@ fn shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds() {
                     }
                     let (mut local_open, mut local_active) = (0usize, 0usize);
                     for building in engine.state.buildings.iter().filter(|building| {
-                        building.stage == "open" && (building.x - x).hypot(building.z - z) <= 78.0
+                        building.stage == Stage::Open
+                            && (building.x - x).hypot(building.z - z) <= 78.0
                     }) {
                         local_open += 1;
                         local_active += usize::from(site_active(building));
@@ -783,9 +784,9 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
     let mut target = None;
 
     for road in &engine.state.roads {
-        if road.stage != "open"
+        if road.stage != Stage::Open
             || !road.connected
-            || matches!(road.kind.as_str(), "rail" | "bridge")
+            || matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
         {
             continue;
         }
@@ -848,7 +849,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
             .buildings
             .iter()
             .filter(|building| {
-                building.stage == "open"
+                building.stage == Stage::Open
                     && (building.x - parcel_x).hypot(building.z - parcel_z) <= 78.0
             })
             .collect();
@@ -861,9 +862,15 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
     let (target_road_id, _, _, _, _, _) =
         target.expect("mature city has an eligible later frontage position");
 
-    let blocked_from = engine.add_node(350.0, 350.0, "junction");
-    let blocked_to = engine.add_node(370.0, 350.0, "junction");
-    let blocked_road_id = engine.add_road(blocked_from, blocked_to, "local", "survey", 0.5);
+    let blocked_from = engine.add_node(350.0, 350.0, NodeKind::Junction);
+    let blocked_to = engine.add_node(370.0, 350.0, NodeKind::Junction);
+    let blocked_road_id = engine.add_road(
+        blocked_from,
+        blocked_to,
+        RoadKind::Local,
+        Stage::Survey,
+        0.5,
+    );
     assert_eq!(engine.state.roads.last().unwrap().id, blocked_road_id);
     assert!(!engine.state.roads.last().unwrap().connected);
     let blocked_road = engine.state.roads.pop().unwrap();
@@ -900,7 +907,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
         .iter()
         .find(|road| road.id == blocked_road_id)
         .unwrap();
-    assert_eq!(blocked.stage, "survey");
+    assert_eq!(blocked.stage, Stage::Survey);
     assert!(!blocked.connected);
     assert!(!engine.node_connected(blocked_from));
     assert!(!engine.node_connected(blocked_to));
@@ -921,7 +928,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
             .find(|road| road.id == blocked_road_id)
             .unwrap()
             .stage,
-        "survey"
+        Stage::Survey
     );
     assert!(!resumed.node_connected(blocked_from));
 }
@@ -936,9 +943,9 @@ fn legacy_city_save_can_unlock_progressive_frontage() {
         .iter()
         .enumerate()
         .filter(|(_, road)| {
-            road.stage == "open"
+            road.stage == Stage::Open
                 && road.connected
-                && !matches!(road.kind.as_str(), "rail" | "bridge")
+                && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
         })
         .find_map(|(road_index, road)| {
             let a = engine.node(road.from)?;
@@ -1020,9 +1027,9 @@ fn legacy_city_save_can_unlock_progressive_frontage() {
 #[test]
 fn rotated_progressive_frontage_uses_road_facing_footprint() {
     let mut engine = Engine::new_legacy(904);
-    let a_id = engine.add_node(200.0, 200.0, "junction");
-    let b_id = engine.add_node(280.0, 280.0, "junction");
-    let road_id = engine.add_road(a_id, b_id, "local", "open", 1.0);
+    let a_id = engine.add_node(200.0, 200.0, NodeKind::Junction);
+    let b_id = engine.add_node(280.0, 280.0, NodeKind::Junction);
+    let road_id = engine.add_road(a_id, b_id, RoadKind::Local, Stage::Open, 1.0);
     engine.state.roads.last_mut().unwrap().connected = true;
     let (a, b) = (
         engine.node(a_id).unwrap().clone(),
@@ -1090,13 +1097,13 @@ fn frontage_grid_keeps_midpoint_spacing_clear_and_endpoint_bounded() {
         id: 90_001,
         x: 10.0,
         z: 300.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let b = Node {
         id: 90_002,
         x: 90.0,
         z: 300.0,
-        kind: "junction".into(),
+        kind: NodeKind::Junction,
     };
     let candidates = engine.frontage_candidate_sites(&a, &b);
     let mut along: Vec<f32> = candidates
@@ -1122,11 +1129,11 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
         .state
         .nodes
         .iter()
-        .find(|node| node.kind == "gateway")
+        .find(|node| node.kind == NodeKind::Gateway)
         .unwrap()
         .id;
-    let outer = engine.add_node(390.0, 370.0, "junction");
-    engine.add_road(gateway, outer, "local", "open", 1.0);
+    let outer = engine.add_node(390.0, 370.0, NodeKind::Junction);
+    engine.add_road(gateway, outer, RoadKind::Local, Stage::Open, 1.0);
     engine.recompute_connectivity();
     let access_node = engine
         .state
@@ -1155,7 +1162,9 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
         "existing infill keeps priority over road work"
     );
     assert!(engine.state.projects.iter().any(|project| {
-        project.kind == "building" && project.progress < 1.0 && project.parcel_id == Some(parcel_id)
+        project.kind == ProjectKind::Building
+            && project.progress < 1.0
+            && project.parcel_id == Some(parcel_id)
     }));
     assert!(engine
         .state
@@ -1169,7 +1178,7 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
         .state
         .projects
         .iter()
-        .any(|project| project.kind == "road" && project.progress < 1.0));
+        .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0));
 }
 
 #[test]
@@ -1198,7 +1207,7 @@ fn coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed()
             assert!(world.plan_next_neighborhood_segment());
             let segment = plan.segments[edge];
             let pending = world.state.projects.iter_mut().find(|project| {
-                project.kind == "road"
+                project.kind == ProjectKind::Road
                     && project.progress < 1.0
                     && project.from == Some(segment.0)
                     && project.to == Some(segment.1)

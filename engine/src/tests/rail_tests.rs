@@ -8,7 +8,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     let home_node = engine.add_node(
         station_position.x + 18.0,
         station_position.z - 18.0,
-        "junction",
+        NodeKind::Junction,
     );
     let train_id = engine.id();
     let resident = engine
@@ -50,7 +50,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     let save = engine.save_json();
     let mut restored = Engine::restore_json(&save).unwrap();
     assert_eq!(restored.save_json(), save);
-    restored.add_road(station, home_node, "local", "open", 1.0);
+    restored.add_road(station, home_node, RoadKind::Local, Stage::Open, 1.0);
     restored.recompute_connectivity();
     restored.step(1);
     let traveler = restored
@@ -122,7 +122,7 @@ fn master_plan_keeps_a_station_plaza_and_spaced_neighborhood_shrines() {
     for space in plazas.iter().chain(&shrines).chain(&parks) {
         assert!(space.protected && !built.contains(&space.id));
     }
-    for event in ["PlazaReserved", "ShrineReserved"] {
+    for event in [EventKind::PlazaReserved, EventKind::ShrineReserved] {
         assert!(
             engine.state.events.iter().any(|e| e.kind == event),
             "{event}"
@@ -148,9 +148,9 @@ fn train_shuttle_dwells_and_reverses_inside_rail_end_clearances() {
         .state
         .roads
         .iter_mut()
-        .find(|road| road.kind == "rail")
+        .find(|road| road.kind == RoadKind::Rail)
         .expect("founding plan includes a rail corridor");
-    rail.stage = "open".into();
+    rail.stage = Stage::Open;
     rail.connected = true;
     let rail_length = rail.length;
     engine.state.station_ready = true;
@@ -187,12 +187,12 @@ fn train_shuttle_dwells_and_reverses_inside_rail_end_clearances() {
         .state
         .events
         .iter()
-        .any(|event| event.kind == "TrainGatewayStop"));
+        .any(|event| event.kind == EventKind::TrainGatewayStop));
     assert!(engine
         .state
         .events
         .iter()
-        .any(|event| event.kind == "TrainStationStop"));
+        .any(|event| event.kind == EventKind::TrainStationStop));
 }
 
 #[test]
@@ -248,13 +248,13 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
     assert_eq!(engine.state.trains[0].passengers, vec![resident_id]);
     assert_eq!(engine.snapshot().trains[0].door_open_fraction, 0.95);
     assert!(!engine.state.events.iter().any(|event| {
-        event.kind == "TrainPassengerAlighted" && event.tick == engine.state.tick
+        event.kind == EventKind::TrainPassengerAlighted && event.tick == engine.state.tick
     }));
     engine.advance_trains();
     assert_eq!(engine.state.trains[0].dwell_ticks, 200);
     assert!(engine.state.trains[0].passengers.is_empty());
     assert!(engine.state.events.iter().any(|event| {
-        event.kind == "TrainPassengerAlighted" && event.tick == engine.state.tick
+        event.kind == EventKind::TrainPassengerAlighted && event.tick == engine.state.tick
     }));
 
     engine.state.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
@@ -476,12 +476,12 @@ fn named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save() {
         .state
         .events
         .iter()
-        .any(|event| event.kind == "RailWorkStarted"));
+        .any(|event| event.kind == EventKind::RailWorkStarted));
     assert!(engine
         .state
         .events
         .iter()
-        .any(|event| event.kind == "TrainPassengerAlighted"));
+        .any(|event| event.kind == EventKind::TrainPassengerAlighted));
     let inspected: serde_json::Value =
         serde_json::from_str(&engine.inspect_json(resident_id)).unwrap();
     assert_eq!(inspected["entityType"], "resident");
@@ -722,19 +722,19 @@ fn mature_neighborhoods_keep_low_rise_core_and_tall_station_cluster() {
             .state
             .nodes
             .iter()
-            .find(|node| node.kind == "station")
+            .find(|node| node.kind == NodeKind::Station)
             .unwrap();
         let market = engine
             .state
             .nodes
             .iter()
-            .find(|node| node.kind == "market")
+            .find(|node| node.kind == NodeKind::Market)
             .unwrap();
         let open: Vec<&Building> = engine
             .state
             .buildings
             .iter()
-            .filter(|building| building.stage == "open")
+            .filter(|building| building.stage == Stage::Open)
             .collect();
         let station_core: Vec<_> = open
             .iter()
@@ -799,7 +799,8 @@ fn mature_neighborhoods_keep_low_rise_core_and_tall_station_cluster() {
         assert!(
             historic_core
                 .iter()
-                .any(|building| building.kind == "shop" || building.kind == "cafe"),
+                .any(|building| building.kind == BuildingKind::Shop
+                    || building.kind == BuildingKind::Cafe),
             "seed {seed} lost everyday commerce from its founding core"
         );
         assert!(
@@ -848,14 +849,14 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .state
         .nodes
         .iter()
-        .find(|node| node.kind == "station")
+        .find(|node| node.kind == NodeKind::Station)
         .unwrap();
     let towers: Vec<_> = engine
         .state
         .buildings
         .iter()
         .filter(|building| {
-            building.stage == "open"
+            building.stage == Stage::Open
                 && building.floors >= 20
                 && (building.x - station.x).hypot(building.z - station.z) <= 112.0
         })
@@ -875,7 +876,10 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
             .building_access
             .iter()
             .any(|access| access.building_id == tower.id));
-        assert!(matches!(tower.kind.as_str(), "office" | "apartment"));
+        assert!(matches!(
+            tower.kind,
+            BuildingKind::Office | BuildingKind::Apartment
+        ));
         assert_eq!(tower.width, parcel.width);
         assert_eq!(tower.depth, parcel.depth);
     }
@@ -892,7 +896,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .iter()
         .filter(|building| {
             let distance = (building.x - station.x).hypot(building.z - station.z);
-            building.stage == "open" && (82.0..205.0).contains(&distance)
+            building.stage == Stage::Open && (82.0..205.0).contains(&distance)
         })
         .filter(|building| (5..=12).contains(&building.floors))
         .count();
@@ -900,7 +904,9 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     let mut geometry_valid_sites = 0usize;
     let mut demand_ready_sites = 0usize;
     for road in engine.state.roads.iter().filter(|road| {
-        road.stage == "open" && road.connected && !matches!(road.kind.as_str(), "rail" | "bridge")
+        road.stage == Stage::Open
+            && road.connected
+            && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
     }) {
         let (Some(a), Some(b)) = (engine.node(road.from), engine.node(road.to)) else {
             continue;
@@ -914,7 +920,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
             let mut local_open = 0usize;
             let mut local_occupied = 0usize;
             for building in engine.state.buildings.iter().filter(|building| {
-                building.stage == "open" && (building.x - x).hypot(building.z - z) <= 78.0
+                building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
             }) {
                 local_open += 1;
                 local_occupied += usize::from(site_active(building));
@@ -928,7 +934,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .state
         .buildings
         .iter()
-        .filter(|building| building.stage != "demolished")
+        .filter(|building| building.stage != Stage::Demolished)
         .map(|building| building.width * building.depth)
         .sum();
     let planned_segment_count = engine
@@ -940,7 +946,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
                 .iter()
                 .filter(|(from, to)| {
                     engine.state.roads.iter().any(|road| {
-                        road.stage == "open"
+                        road.stage == Stage::Open
                             && ((road.from == *from && road.to == *to)
                                 || (road.from == *to && road.to == *from))
                     })
@@ -1005,19 +1011,19 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .collect();
     let planned_residential = planned_buildings
         .iter()
-        .filter(|building| matches!(building.kind.as_str(), "home" | "apartment"))
+        .filter(|building| matches!(building.kind, BuildingKind::Home | BuildingKind::Apartment))
         .count();
     let planned_residential_occupied: Vec<_> = planned_buildings
         .iter()
         .filter(|building| {
-            matches!(building.kind.as_str(), "home" | "apartment")
-                && building.stage == "open"
+            matches!(building.kind, BuildingKind::Home | BuildingKind::Apartment)
+                && building.stage == Stage::Open
                 && building.occupancy > 0
         })
         .collect();
     let planned_commercial = planned_buildings
         .iter()
-        .filter(|building| !matches!(building.kind.as_str(), "home" | "apartment"))
+        .filter(|building| !matches!(building.kind, BuildingKind::Home | BuildingKind::Apartment))
         .count();
     let planned_parcel_area: f32 = engine
         .state
@@ -1071,7 +1077,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
             .state
             .roads
             .iter()
-            .any(|road| road.id == *id && road.stage == "open" && road.connected)
+            .any(|road| road.id == *id && road.stage == Stage::Open && road.connected)
     }));
     assert!(
         midrise >= 8,
@@ -1094,13 +1100,13 @@ fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
     engine.state.parcel_frontages.clear();
     engine.state.buildings.clear();
     engine.state.station_online = false;
-    let station = engine.add_node(0.0, 200.0, "station");
-    let left_a = engine.add_node(-40.0, 150.0, "junction");
-    let left_b = engine.add_node(40.0, 150.0, "junction");
-    let right_a = engine.add_node(-40.0, 250.0, "junction");
-    let right_b = engine.add_node(40.0, 250.0, "junction");
-    let lower = engine.add_road(left_a, left_b, "local", "open", 1.0);
-    let upper = engine.add_road(right_a, right_b, "local", "open", 1.0);
+    let station = engine.add_node(0.0, 200.0, NodeKind::Station);
+    let left_a = engine.add_node(-40.0, 150.0, NodeKind::Junction);
+    let left_b = engine.add_node(40.0, 150.0, NodeKind::Junction);
+    let right_a = engine.add_node(-40.0, 250.0, NodeKind::Junction);
+    let right_b = engine.add_node(40.0, 250.0, NodeKind::Junction);
+    let lower = engine.add_road(left_a, left_b, RoadKind::Local, Stage::Open, 1.0);
+    let upper = engine.add_road(right_a, right_b, RoadKind::Local, Stage::Open, 1.0);
     let growth_rng = engine.state.rng_growth;
 
     engine.add_frontage_parcels(lower);

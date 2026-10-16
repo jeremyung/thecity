@@ -525,7 +525,7 @@ impl Engine {
                     );
                 }
                 self.record(
-                    "ResidentTripArrived",
+                    EventKind::ResidentTripArrived,
                     arrived.id,
                     format!("{} arrives after {}", arrived.name, arrived.activity),
                 );
@@ -558,7 +558,7 @@ impl Engine {
                 returning.access_progress = 0.0;
                 return_vehicles.push(returning);
                 self.record(
-                    "DeliveryArrived",
+                    EventKind::DeliveryArrived,
                     arrived.id,
                     format!(
                         "A supply van reaches {}",
@@ -567,7 +567,7 @@ impl Engine {
                 );
             } else if arrived.activity == "delivery_return" {
                 self.record(
-                    "DeliveryReturned",
+                    EventKind::DeliveryReturned,
                     arrived.id,
                     "A supply van returns to the regional gateway".into(),
                 );

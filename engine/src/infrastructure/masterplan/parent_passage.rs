@@ -166,7 +166,7 @@ pub(super) fn append(
                     let a = nodes[r.a].p;
                     let d = nodes[r.b].p.sub(a);
                     let projection = a.add(d.scale(boundary.sub(a).dot(d) / d.dot(d)));
-                    let offset = crate::pedestrian_road_offset(r.kind.as_str());
+                    let offset = crate::pedestrian_road_offset(Some(r.kind.world()));
                     let walk = projection.add(boundary.sub(projection).unit().scale(offset));
                     // Include the curb/setback connection in collision checks.
                     let connector = corridor(entry, walk);
