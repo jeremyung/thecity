@@ -1,4 +1,4 @@
-use crate::geometry::{distance_coords, point_segment_distance, OrientedRect};
+use crate::world::geometry::{distance_coords, point_segment_distance, OrientedRect};
 use crate::*;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};

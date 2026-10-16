@@ -69,7 +69,7 @@ pub(crate) fn load() -> DescriptorReference {
 #[test]
 fn offline_search_matches_frozen_mature_descriptor_sequence() {
     let reference = load();
-    let search = crate::access_candidates::PreparedAccessSearch::prepare(
+    let search = crate::legacy::access_candidates::PreparedAccessSearch::prepare(
         &reference.face,
         &reference.hosts,
         &reference.nodes,
@@ -103,7 +103,7 @@ fn offline_search_matches_frozen_mature_descriptor_sequence() {
 #[ignore]
 fn export_candidate_descriptor_sequence_for_cross_target_review() {
     let reference = load();
-    let search = crate::access_candidates::PreparedAccessSearch::prepare(
+    let search = crate::legacy::access_candidates::PreparedAccessSearch::prepare(
         &reference.face,
         &reference.hosts,
         &reference.nodes,

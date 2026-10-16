@@ -3,14 +3,14 @@
 //! This is a geometric diagnostic only. It does not construct a runtime access
 //! proposal and must not be used as an admission predicate.
 
-use crate::access_discovery_job::DiscoveryJob;
-use crate::access_proposal_validation::{
+use crate::legacy::access_discovery_job::DiscoveryJob;
+use crate::legacy::access_proposal_validation::{
     AdmissionGates, ProposalHost, ProposalRoad, ProposalValidationInput,
 };
-use crate::face_target_viability::{FrozenViabilityContext, Segment, ViabilityQuery};
-use crate::geometry::{self, OrientedRect};
-use crate::road_face_trace::RoadFaceTrace;
-use crate::road_faces::RoadFace;
+use crate::legacy::face_target_viability::{FrozenViabilityContext, Segment, ViabilityQuery};
+use crate::legacy::road_face_trace::RoadFaceTrace;
+use crate::legacy::road_faces::RoadFace;
+use crate::world::geometry::{self, OrientedRect};
 use crate::*;
 use serde_json::json;
 use std::sync::Arc;
@@ -862,7 +862,7 @@ fn final_segment_lots(segment: Segment, offset: f32, compact: bool) -> Vec<Orien
         return Vec::new();
     }
     let tangent = (dx / length, dz / length);
-    let intervals = crate::frontage::subdivide_frontage(
+    let intervals = crate::infrastructure::frontage::subdivide_frontage(
         length,
         &[],
         crate::FRONTAGE_ENDPOINT_CLEARANCE,
@@ -1016,7 +1016,7 @@ fn point_in_polygon(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::face_target_viability::FrozenViabilityInput;
+    use crate::legacy::face_target_viability::FrozenViabilityInput;
 
     fn square() -> RoadFace {
         RoadFace {
@@ -1266,7 +1266,7 @@ mod tests {
         assert!(valid_split_and_end(path, host, &input));
         input
             .nodes
-            .push(crate::access_proposal_validation::ProposalNode {
+            .push(crate::legacy::access_proposal_validation::ProposalNode {
                 id: 3,
                 x: 20.0,
                 z: 70.0,
@@ -1278,12 +1278,12 @@ mod tests {
         ProposalValidationInput {
             hosts: vec![host],
             nodes: vec![
-                crate::access_proposal_validation::ProposalNode {
+                crate::legacy::access_proposal_validation::ProposalNode {
                     id: 1,
                     x: 0.0,
                     z: 0.0,
                 },
-                crate::access_proposal_validation::ProposalNode {
+                crate::legacy::access_proposal_validation::ProposalNode {
                     id: 2,
                     x: 0.0,
                     z: 100.0,

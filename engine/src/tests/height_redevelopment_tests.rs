@@ -1,5 +1,5 @@
-use crate::height_redevelopment::MIN_BUILDING_AGE_DAYS;
-use crate::height_redevelopment::{
+use crate::infrastructure::height_redevelopment::MIN_BUILDING_AGE_DAYS;
+use crate::infrastructure::height_redevelopment::{
     MAX_REDEVELOPED_TOWERS, MIN_DEVELOPMENT_DEMAND, MIN_OFFICE_FLOORS,
 };
 use crate::*;

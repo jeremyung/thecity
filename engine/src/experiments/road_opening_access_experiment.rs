@@ -160,7 +160,7 @@ fn face_filter_keeps_only_contained_lots_and_requires_two_sites() {
 #[test]
 fn blocked_closing_edge_yields_to_bounded_alternate_face_boundary_host() {
     let polygon = vec![(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)];
-    let face = crate::road_faces::RoadFace {
+    let face = crate::legacy::road_faces::RoadFace {
         identity: vec![10, 20, 30, 40],
         vertex_ids: vec![10, 20, 30, 40],
         polygon: polygon.clone(),
@@ -697,7 +697,7 @@ fn retain_face_lots(
 
 fn ordered_face_boundary_hosts(
     trigger_id: u32,
-    faces: &[crate::road_faces::RoadFace],
+    faces: &[crate::legacy::road_faces::RoadFace],
     eligible_ids: &std::collections::BTreeSet<u32>,
 ) -> Vec<u32> {
     let mut ordered = Vec::new();
@@ -960,7 +960,7 @@ impl Engine {
             .nodes
             .iter()
             .filter(|node| participating.contains(&node.id))
-            .map(|node| crate::road_faces::RoadFaceNode {
+            .map(|node| crate::legacy::road_faces::RoadFaceNode {
                 id: node.id,
                 x: node.x,
                 z: node.z,
@@ -968,13 +968,13 @@ impl Engine {
             .collect::<Vec<_>>();
         let edges = eligible_roads
             .iter()
-            .map(|road| crate::road_faces::RoadFaceEdge {
+            .map(|road| crate::legacy::road_faces::RoadFaceEdge {
                 id: road.id,
                 from: road.from,
                 to: road.to,
             })
             .collect::<Vec<_>>();
-        let faces = crate::road_faces::trace_faces(&nodes, &edges, None).ok()?;
+        let faces = crate::legacy::road_faces::trace_faces(&nodes, &edges, None).ok()?;
         let bounded_count = faces.len();
         eligible_roads.iter().find(|road| road.id == road_id)?;
         let face_roads = eligible_roads

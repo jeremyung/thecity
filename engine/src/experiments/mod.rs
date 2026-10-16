@@ -8,7 +8,7 @@ pub(crate) struct ExperimentState {
     pub(crate) district_policy_comparisons: u32,
     pub(crate) district_policy_access_wins: u32,
     pub(crate) district_policy_frontier_wins: u32,
-    pub(crate) district_policy_diagnostics: crate::district_policy::ExperimentDiagnostics,
+    pub(crate) district_policy_diagnostics: crate::legacy::district_policy::ExperimentDiagnostics,
     /// Test-only scheduler experiment: offer a real interior-access project
     /// before progressive frontage release, after ordinary usable infill.
     pub(crate) early_access_experiment: bool,

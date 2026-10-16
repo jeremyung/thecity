@@ -1,6 +1,6 @@
 //! Plan-only audit of large station-core lot availability and realized towers.
 
-use crate::masterplan::{self, District};
+use crate::infrastructure::masterplan::{self, District};
 use crate::Engine;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;

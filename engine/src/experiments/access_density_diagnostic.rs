@@ -1,7 +1,7 @@
 //! One-face rejection audit for the mature fragmented-access save.
 
-use crate::access_discovery_job::DiscoveryJob;
-use crate::access_proposal_validation::{
+use crate::legacy::access_discovery_job::DiscoveryJob;
+use crate::legacy::access_proposal_validation::{
     ProposalValidationContext, ProposalValidator, RejectReason,
 };
 use crate::*;

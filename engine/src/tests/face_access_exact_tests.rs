@@ -895,8 +895,9 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
                 (
                     host.road_id,
                     along.to_bits(),
-                    (along / crate::access_math::length(host.bx - host.ax, host.bz - host.az))
-                        .to_bits(),
+                    (along
+                        / crate::legacy::access_math::length(host.bx - host.ax, host.bz - host.az))
+                    .to_bits(),
                 )
             })
         })
@@ -2031,11 +2032,14 @@ fn mature_graph_preflight_preserves_indexed_edges() {
     let mut expected_topology_work = None;
     let mut expected_walk_work = None;
     for quota in [1, 7, 48] {
-        let mut job =
-            crate::road_face_preflight::GraphPreflight::new(nodes.clone(), edges.clone(), None)
-                .unwrap();
+        let mut job = crate::legacy::road_face_preflight::GraphPreflight::new(
+            nodes.clone(),
+            edges.clone(),
+            None,
+        )
+        .unwrap();
         let initial = serde_json::to_vec(&job.checkpoint()).unwrap();
-        job = crate::road_face_preflight::GraphPreflight::restore(
+        job = crate::legacy::road_face_preflight::GraphPreflight::restore(
             serde_json::from_slice(&initial).unwrap(),
         )
         .unwrap();
@@ -2056,7 +2060,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
             assert!(result.work_used > 0);
             if work - last_save_work >= 8_191 {
                 let bytes = serde_json::to_vec(&job.checkpoint()).unwrap();
-                job = crate::road_face_preflight::GraphPreflight::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
+                job = crate::legacy::road_face_preflight::GraphPreflight::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
                     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
                     panic!("preflight restore {error:?}: quota={quota} work={work} stage={} edge={} edge_stage={} lookup={} unique={} from={} to={}", value["stage"], value["edge_cursor"], value["edge_stage"], value["lookup_cursor"], value["unique_cursor"], value["from_index"], value["to_index"]);
                 });
@@ -2065,7 +2069,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
             }
         }
         let bytes = serde_json::to_vec(&job.checkpoint()).unwrap();
-        job = crate::road_face_preflight::GraphPreflight::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
+        job = crate::legacy::road_face_preflight::GraphPreflight::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
                     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
                     panic!("preflight restore {error:?}: quota={quota} work={work} stage={} edge={} edge_stage={} lookup={} unique={} from={} to={}", value["stage"], value["edge_cursor"], value["edge_stage"], value["lookup_cursor"], value["unique_cursor"], value["from_index"], value["to_index"]);
                 });
@@ -2076,7 +2080,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
         }
         expected_work = Some(work);
         let reference_bridges = road_faces::graph_bridge_edges(nodes.len(), &expected);
-        let mut bridge_job = crate::road_face_bridges::BridgeSearch::new(
+        let mut bridge_job = crate::legacy::road_face_bridges::BridgeSearch::new(
             nodes.len(),
             job.result().unwrap().unwrap().to_vec(),
         )
@@ -2091,7 +2095,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
             assert!(bridge_work < 2_000_000);
             // This graph is small enough to test every returned bridge-search boundary.
             let bytes = serde_json::to_vec(&bridge_job.checkpoint()).unwrap();
-            bridge_job = crate::road_face_bridges::BridgeSearch::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
+            bridge_job = crate::legacy::road_face_bridges::BridgeSearch::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
                 let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
                 panic!("bridge restore {error:?}: quota={quota} work={bridge_work} phase={} node={} index={} compare={} key={} shifts={}", value["phase"], value["sort_node"], value["sort_index"], value["sort_compare"], value["sort_key"], value["sort_shifts"]);
             });
@@ -2112,7 +2116,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
         }
         let bridge_flags = actual_bridges.to_vec();
         assert_eq!(bridge_job.advance(quota).work_used, 0);
-        let mut topology_job = crate::road_face_topology::TopologySearch::new(
+        let mut topology_job = crate::legacy::road_face_topology::TopologySearch::new(
             nodes.clone(),
             edges.clone(),
             expected.clone(),
@@ -2127,7 +2131,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
             topology_work += result.work_used;
             assert!(topology_work < 2_000_000);
             let bytes = serde_json::to_vec(&topology_job.checkpoint()).unwrap();
-            topology_job = crate::road_face_topology::TopologySearch::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
+            topology_job = crate::legacy::road_face_topology::TopologySearch::restore(serde_json::from_slice(&bytes).unwrap()).unwrap_or_else(|error| {
                 let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
                 panic!("topology restore {error:?}: quota={quota} work={topology_work} phase={} node={} index={} compare={} step={}", value["phase"], value["sort_node"], value["sort_index"], value["sort_compare"], value["build_step"]);
             });
@@ -2205,7 +2209,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
             actual_faces, reference_faces,
             "mature block geometry from topology successors"
         );
-        let mut walk_job = crate::road_face_walk::FaceWalkSearch::new(
+        let mut walk_job = crate::legacy::road_face_walk::FaceWalkSearch::new(
             nodes.clone(),
             edges.clone(),
             topology.half_edges.to_vec(),
@@ -2214,7 +2218,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
         )
         .unwrap();
         let initial = serde_json::to_vec(&walk_job.checkpoint()).unwrap();
-        walk_job = crate::road_face_walk::FaceWalkSearch::restore(
+        walk_job = crate::legacy::road_face_walk::FaceWalkSearch::restore(
             serde_json::from_slice(&initial).unwrap(),
         )
         .unwrap();
@@ -2228,7 +2232,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
             assert!(walk_work < 5_000_000, "mature face walk terminates");
             if result.done || walk_work - last_walk_save >= 4_093 {
                 let bytes = serde_json::to_vec(&walk_job.checkpoint()).unwrap();
-                walk_job = crate::road_face_walk::FaceWalkSearch::restore(
+                walk_job = crate::legacy::road_face_walk::FaceWalkSearch::restore(
                     serde_json::from_slice(&bytes).unwrap(),
                 )
                 .unwrap_or_else(|error| {
@@ -2267,7 +2271,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
 #[test]
 #[ignore = "mature target-grid containment parity against the frozen face fixture"]
 fn mature_target_containment_matches_reference() {
-    use crate::face_target_containment::{PointContainment, ValidatedPolygon};
+    use crate::legacy::face_target_containment::{PointContainment, ValidatedPolygon};
     let reference: serde_json::Value = serde_json::from_str(include_str!(
         "../../../tests/fixtures/validation/face-target-reference.json"
     ))
@@ -2369,7 +2373,7 @@ fn mature_target_containment_matches_reference() {
 #[test]
 #[ignore = "composed road-face tracing on the frozen mature connected graph"]
 fn mature_composed_face_trace_matches_reference() {
-    use crate::road_face_trace::RoadFaceTrace;
+    use crate::legacy::road_face_trace::RoadFaceTrace;
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -2455,8 +2459,8 @@ fn mature_composed_face_trace_matches_reference() {
 
 pub(crate) fn frozen_target_viability_input(
     source: &Engine,
-) -> crate::face_target_viability::FrozenViabilityInput {
-    use crate::face_target_viability::{FrozenViabilityInput, Segment};
+) -> crate::legacy::face_target_viability::FrozenViabilityInput {
+    use crate::legacy::face_target_viability::{FrozenViabilityInput, Segment};
     let context = source.collision_context();
     let river = source.river_control_points();
     let reserved_lots = source
@@ -2543,7 +2547,7 @@ pub(crate) fn frozen_target_viability_input(
 #[test]
 #[ignore = "frozen target viability parity against the mature engine predicates"]
 fn mature_target_viability_matches_engine() {
-    use crate::face_target_viability::{FrozenViabilityContext, ViabilityQuery};
+    use crate::legacy::face_target_viability::{FrozenViabilityContext, ViabilityQuery};
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -2652,8 +2656,8 @@ fn mature_target_viability_matches_engine() {
 #[test]
 #[ignore = "complete face sampler parity against all mature frozen face centers"]
 fn mature_face_sampling_matches_reference() {
-    use crate::face_target_sampling::FaceSampler;
-    use crate::face_target_viability::FrozenViabilityContext;
+    use crate::legacy::face_target_sampling::FaceSampler;
+    use crate::legacy::face_target_viability::FrozenViabilityContext;
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -2735,8 +2739,8 @@ fn mature_face_sampling_matches_reference() {
 #[test]
 #[ignore = "mature winning-face clearance and target spacing parity"]
 fn mature_target_ranking_matches_reference() {
-    use crate::face_target_ranking::TargetRanking;
-    use crate::face_target_viability::Segment;
+    use crate::legacy::face_target_ranking::TargetRanking;
+    use crate::legacy::face_target_viability::Segment;
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -2827,8 +2831,8 @@ fn mature_target_ranking_matches_reference() {
 #[test]
 #[ignore = "streaming mature face selection matches frozen viable-face ranking"]
 fn mature_face_selection_matches_reference() {
-    use crate::face_target_selection::FaceSelection;
-    use crate::face_target_viability::FrozenViabilityContext;
+    use crate::legacy::face_target_selection::FaceSelection;
+    use crate::legacy::face_target_viability::FrozenViabilityContext;
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -3188,7 +3192,7 @@ fn mature_access_capture_cost() {
 #[test]
 #[ignore = "single persisted discovery job reproduces mature ordered descriptors"]
 fn mature_discovery_job_matches_reference() {
-    use crate::access_discovery_job::{DiscoveryInput, DiscoveryJob};
+    use crate::legacy::access_discovery_job::{DiscoveryInput, DiscoveryJob};
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -3237,7 +3241,7 @@ fn mature_discovery_job_matches_reference() {
             .collect(),
         viability: frozen_target_viability_input(&source),
     };
-    let captured = crate::access_capture::capture(&source).unwrap();
+    let captured = crate::legacy::access_capture::capture(&source).unwrap();
     assert_eq!(
         serde_json::to_value(&captured).unwrap(),
         serde_json::to_value(&input).unwrap()
@@ -3305,8 +3309,8 @@ fn mature_discovery_job_matches_reference() {
 #[test]
 #[ignore = "mature candidate validation parity across all discovered descriptors"]
 fn mature_incremental_proposal_validation_matches_live_oracle() {
-    use crate::access_proposal_validation::*;
-    use crate::face_target_viability::Segment;
+    use crate::legacy::access_proposal_validation::*;
+    use crate::legacy::face_target_viability::Segment;
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -3375,7 +3379,9 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
                 },
             })
             .collect(),
-        viability: crate::access_capture::capture(&source).unwrap().viability,
+        viability: crate::legacy::access_capture::capture(&source)
+            .unwrap()
+            .viability,
         gates: AdmissionGates {
             demand: source.state.demand,
             has_pending_interior_plan: source.state.pending_interior_access.is_some(),
@@ -3390,7 +3396,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
         },
     };
     assert!(source.state.pending_interior_access.is_none());
-    let captured = crate::access_proposal_capture::capture(&source).unwrap();
+    let captured = crate::legacy::access_proposal_capture::capture(&source).unwrap();
     assert_eq!(
         serde_json::to_value(&captured).unwrap(),
         serde_json::to_value(&input).unwrap()
@@ -3502,7 +3508,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
 #[test]
 #[ignore = "composed discovery to ranked proposal pages on mature city"]
 fn mature_access_planning_job_matches_ranked_pages() {
-    use crate::access_planning_job::AccessPlanningJob;
+    use crate::legacy::access_planning_job::AccessPlanningJob;
     let source = Engine::restore_json(include_str!(
         "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
     ))
@@ -3530,8 +3536,8 @@ fn mature_access_planning_job_matches_ranked_pages() {
     let mut reports = Vec::new();
     for quota in [48, 4096] {
         let mut job = AccessPlanningJob::new(
-            crate::access_capture::capture(&source).unwrap(),
-            crate::access_proposal_capture::capture(&source).unwrap(),
+            crate::legacy::access_capture::capture(&source).unwrap(),
+            crate::legacy::access_proposal_capture::capture(&source).unwrap(),
             source.access_geometry_revision_token().unwrap(),
         )
         .unwrap();

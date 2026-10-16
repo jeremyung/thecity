@@ -1,5 +1,5 @@
 //! Tests against real restored worlds; this adapter is not a runtime controller.
-use crate::district_density::{measure, BuildingSample, BuildingUse, GridSpec};
+use crate::population::district_density::{measure, BuildingSample, BuildingUse, GridSpec};
 use crate::*;
 
 #[test]

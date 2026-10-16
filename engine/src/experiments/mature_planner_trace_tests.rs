@@ -39,7 +39,7 @@ struct PlannerCall {
     cursor_anchors_examined: usize,
     production_method_accepted: bool,
     accepted_plan: Option<PlanSummary>,
-    geometry_rejection_capture: crate::neighborhood_admission::RejectionCapture,
+    geometry_rejection_capture: crate::legacy::neighborhood_admission::RejectionCapture,
 }
 
 #[derive(Serialize)]
@@ -110,7 +110,7 @@ struct Report {
     reuse_edge_cap: usize,
     planner_calls: Vec<PlannerCall>,
     rejection_histogram: BTreeMap<&'static str, usize>,
-    rejection_witnesses: Vec<crate::neighborhood_admission::RejectionWitness>,
+    rejection_witnesses: Vec<crate::legacy::neighborhood_admission::RejectionWitness>,
     scanned_anchor_count: usize,
     full_anchor_cursor_coverage: bool,
     production_plan_found: bool,
@@ -412,7 +412,7 @@ fn build_report() -> Report {
         for call_index in 0..max_calls {
             let cursor_start = engine.state.neighborhood_anchor_cursor % node_count;
             let (accepted_this_call, mut geometry_rejection_capture) =
-                crate::neighborhood_admission::capture_rejections(|| {
+                crate::legacy::neighborhood_admission::capture_rejections(|| {
                     engine.try_create_neighborhood_plan()
                 });
             for (reason, count) in &geometry_rejection_capture.reason_counts {
@@ -498,9 +498,9 @@ fn build_report() -> Report {
         source_save_unchanged,
         gate_inputs: gates,
         anchor_attempt_cap: crate::MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION,
-        shared_candidate_cap: crate::development::MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION,
-        full_candidate_cap: crate::development::MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION,
-        spine_candidate_cap: crate::development::MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION,
+        shared_candidate_cap: crate::infrastructure::development::MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION,
+        full_candidate_cap: crate::infrastructure::development::MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION,
+        spine_candidate_cap: crate::infrastructure::development::MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION,
         reuse_edge_cap: crate::MAX_NEIGHBORHOOD_REUSE_EDGES_PER_EVALUATION,
         planner_calls: calls,
         rejection_histogram,

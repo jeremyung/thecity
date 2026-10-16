@@ -1,5 +1,5 @@
 //! Integration regressions owned by the primary review, using normal engine ticks.
-use crate::spine_plan::{SpinePlan, SpineStage, RECIPE_VERSION};
+use crate::legacy::spine_plan::{SpinePlan, SpineStage, RECIPE_VERSION};
 use crate::*;
 
 fn reserved_rectangle(depth: f32) -> (Engine, [u32; 2]) {
