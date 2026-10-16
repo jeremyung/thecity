@@ -40,7 +40,7 @@ Measured from PLATEAU road surfaces and OpenStreetMap centerlines for 1 km meshe
 
 ### Fabric targets
 
-Measure over 250 m crops using the rendered footprint union, as in `scripts/audit-rendered-coverage.mjs`. Report gross and net-of-road coverage separately.
+Measure over 250 m crops using the rendered footprint union, as in `scripts/audit/audit-rendered-coverage.mjs`. Report gross and net-of-road coverage separately.
 
 | Metric | Compact district | Station district | Waterfront | Source |
 | --- | --- | --- | --- | --- |

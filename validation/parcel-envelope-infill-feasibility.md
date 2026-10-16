@@ -10,7 +10,7 @@ This is a legal-envelope issue as well as a visual one. Current development admi
 
 ## Evidence
 
-The analysis uses the public-WASM checkpoint `validation/early-reservation-wasm-87231-save.json` (seed 87231, tick 242,000; SHA-256 `f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e`) and its matching authoritative snapshot. It measures the production `buildingKit` meshes from `web/src/render/kit.ts`, projects triangles above 1 m onto XZ, and rasterizes them at 0.25 m. The script and machine-readable results are `scripts/diagnose-parcel-envelope-infill.mjs` and `validation/parcel-envelope-infill-feasibility.json`.
+The analysis uses the public-WASM checkpoint `validation/early-reservation-wasm-87231-save.json` (seed 87231, tick 242,000; SHA-256 `f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e`) and its matching authoritative snapshot. It measures the production `buildingKit` meshes from `web/src/render/kit.ts`, projects triangles above 1 m onto XZ, and rasterizes them at 0.25 m. The script and machine-readable results are `scripts/diagnose/diagnose-parcel-envelope-infill.mjs` and `validation/parcel-envelope-infill-feasibility.json`.
 
 | Parcel | Building | Reserved envelope | Kit-covered area inside envelope | Uncovered raster area | Access |
 |---|---|---:|---:|---:|---|

@@ -3712,7 +3712,7 @@ mod export {
     use super::*;
 
     /// `PLAN_JSON=/path PLAN_SEED=87231 cargo test --release masterplan::export -- --ignored`
-    /// Exports the plan for scripts/plateau-street-reference.py.
+    /// Exports the plan for scripts/assets/plateau-street-reference.py.
     #[test]
     #[ignore]
     fn export_plan_json() {

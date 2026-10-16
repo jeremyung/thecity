@@ -25,7 +25,7 @@ Responds to the 2026-10-16 architecture review. Baseline: `origin/main` @ `23621
 
 - **One concern per PR**: refactor, behavior change, or visual change.
 - **A refactor PR must pass these unchanged**: `npm run test:engine -- --release`,
-  the master-plan replay (`scripts/verify-masterplan-replay.mjs`), the save
+  the master-plan replay (`scripts/audit/verify-masterplan-replay.mjs`), the save
   round-trip, `npm test` and `npm run build`. A failure means the refactor
   changed behavior.
 - **Save format**: old saves may break (saves are not yet a compatibility

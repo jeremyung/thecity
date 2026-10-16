@@ -1,6 +1,6 @@
 {
   "id": "train-mask",
-  "source": "Derived from the train atlas sources by scripts/build-train-kits.py",
+  "source": "Derived from the train atlas sources by scripts/assets/build-train-kits.py",
   "provenance": "art-workshop/train-kit.json",
   "status": "runtime: commuter train consist",
   "role": "atlas",

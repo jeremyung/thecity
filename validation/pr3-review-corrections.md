@@ -38,7 +38,7 @@ blanket test deletion. The goal remains paused for review.
 node scripts/test-engine.mjs --release
 MASTERPLAN_REPLAY_FIXTURE_DIR="$PWD/.tools/masterplan-review-fixes" node scripts/test-engine.mjs --release masterplan_replay_tests
 npm run wasm
-node scripts/verify-masterplan-replay.mjs .tools/masterplan-review-fixes
+node scripts/audit/verify-masterplan-replay.mjs .tools/masterplan-review-fixes
 npm test
 npm run build
 ```

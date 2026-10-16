@@ -1,7 +1,7 @@
 {
   "date": "2026-10-14",
-  "save": "seed 87231, tick 242000, development rate 16 (scripts/generate-review-city.mjs)",
-  "command": "node scripts/benchmark-building-surfaces.mjs <save.json> <port> <label>",
+  "save": "seed 87231, tick 242000, development rate 16 (scripts/capture/generate-review-city.mjs)",
+  "command": "node scripts/benchmark/benchmark-building-surfaces.mjs <save.json> <port> <label>",
   "note": "Scene pass with shadows, gl.finish per frame, 1600x900, balanced quality; post pipeline excluded. main served from origin/main, branch from render/building-surfaces.",
   "renderer": "ANGLE (NVIDIA Corporation, NVIDIA RTX PRO 6000 Blackwell Workstation Edition/PCIe/SSE2, OpenGL ES 3.2)",
   "main": [

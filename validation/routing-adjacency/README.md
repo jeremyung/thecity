@@ -31,7 +31,7 @@ All three final saves hash to
 The production candidate hash is in `compact-index.json`. Both candidate runs
 pass resource caps, active-traveler accounting, and exact save restoration.
 Reproduce with `npm run wasm` followed by
-`node scripts/profile-endurance-wasm.mjs /tmp/routing.json`.
+`node scripts/benchmark/profile-endurance-wasm.mjs /tmp/routing.json`.
 
 ## Equivalence coverage
 

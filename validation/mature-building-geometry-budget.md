@@ -1,6 +1,6 @@
 # Mature building geometry budget
 
-Measured the 850-building city at seed 87231, tick 242000. Input and transitive source hashes are recorded in `mature-building-geometry-budget.json`. Reproduce with `node scripts/audit-mature-building-geometry.mjs`.
+Measured the 850-building city at seed 87231, tick 242000. Input and transitive source hashes are recorded in `mature-building-geometry-budget.json`. Reproduce with `node scripts/audit/audit-mature-building-geometry.mjs`.
 
 The production kits author **2,135,638 triangles** across **14,422 meshes**. The production descriptor-based chunk path preserves every triangle in **417 batch meshes and 16 contour objects**, across 16 chunks. The staged drain takes 1290 update calls; this count is not a frame-time measurement.
 

@@ -1,6 +1,6 @@
 # Overhead lines benchmark (2026-10-15)
 
-`node scripts/benchmark-overhead-lines.mjs <save.json>` on the seed 87231 review city (tick 242000, development rate 16) generated and served from `codex/city-runtime-review` with this branch on top. Hardware WebGL through ANGLE/OpenGL ES on an NVIDIA RTX PRO 6000 Blackwell, 1600×900, balanced quality. Each row renders the scene pass with shadows and calls `gl.finish`, 120 samples after 30 warm-up frames. The post pipeline is left out because its `render()` returns without drawing in headless Chromium. Use the differences between rows, not the absolute times. The script prints the raw numbers as JSON on its last line.
+`node scripts/benchmark/benchmark-overhead-lines.mjs <save.json>` on the seed 87231 review city (tick 242000, development rate 16) generated and served from `codex/city-runtime-review` with this branch on top. Hardware WebGL through ANGLE/OpenGL ES on an NVIDIA RTX PRO 6000 Blackwell, 1600×900, balanced quality. Each row renders the scene pass with shadows and calls `gl.finish`, 120 samples after 30 warm-up frames. The post pipeline is left out because its `render()` returns without drawing in headless Chromium. Use the differences between rows, not the absolute times. The script prints the raw numbers as JSON on its last line.
 
 ## Layer
 

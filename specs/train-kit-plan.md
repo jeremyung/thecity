@@ -8,20 +8,20 @@ Related: [rendering spec](05-rendering.md), [world growth — rail and transit](
 ## Outcome (2026-10-13)
 
 - Phase 1–2: local HunyuanImage-2.1 elevations; generated a clean trailer and a
-  front seed sweep; `scripts/build-train-kits.py` (shared ops extracted into
-  `scripts/kit_image_ops.py`, car outputs proven byte-identical) writes
+  front seed sweep; `scripts/assets/build-train-kits.py` (shared ops extracted into
+  `scripts/assets/kit_image_ops.py`, car outputs proven byte-identical) writes
   `public/art/trains` and `web/src/render/train-manifest.json`.
 - Phase 3–4: `train-kit.ts`, `train-materials.ts` and `trains.ts`; `city.ts`
   uses `TrainFleet`; the engine's `TRAIN_HALF_LENGTH` is 40.9 m and the station
   platform follows it. 4-car consist, baked livery, four wheels per car,
   pantograph, night lamps and glass.
 - Phase 5–6: `tests/train-kit.test.ts`, `tests/trains.test.ts`,
-  `scripts/capture-train-review.mjs`; captures under
+  `scripts/capture/capture-train-review.mjs`; captures under
   `validation/captures/train-kit/`; rendering spec, asset manifest and texture
   audit updated. `npm test` 330 passing; the one failing engine test
   (`frontier_proposal_scan_is_read_only_and_plan_road_replays`) also fails on
   the unmodified engine, so it is pre-existing.
-- Phase 5 benchmark: `scripts/benchmark-trains.mjs`; eight consists add four
+- Phase 5 benchmark: `scripts/benchmark/benchmark-trains.mjs`; eight consists add four
   draw calls and ~17,800 triangles. Open: art acceptance against the concept
   boards. The generator sweep is in
   [art-workshop/train-variants/REVIEW.md](../art-workshop/train-variants/REVIEW.md).
@@ -134,8 +134,8 @@ split (2–3 offline, 4–6 runtime) if review prefers.
 ### Phase 1 — Generation pilot (done)
 
 - [x] `art-workshop/train-pilot.json` (views, dimensions, suffixes, criteria).
-- [x] `scripts/generate-train-pilot-local.py` (per-view sizes, local ledger).
-- [x] `scripts/review-train-pilot.py` (separable matting, metrics, contact
+- [x] `scripts/assets/generate-train-pilot-local.py` (per-view sizes, local ledger).
+- [x] `scripts/assets/review-train-pilot.py` (separable matting, metrics, contact
       sheet, at-scale sheet).
 - [x] Four views generated locally at $0; body proportion error −0.8% to −8.9%
       on sides, −1.6% on the front; livery/window bands consistent.
@@ -150,11 +150,11 @@ Offline; no runtime change.
 - [ ] **Extract shared image ops.** Move `foreground`, `flood`, `dilate`,
       `erode`, `shift`, `wheels`, `refine_wheel`, `column_outline`, `simplify`,
       `masks`, `box_blur`, `masked_blur`, `bleed` from
-      `scripts/build-vehicle-kits.py` into e.g.
+      `scripts/assets/build-vehicle-kits.py` into e.g.
       `scripts/vehicle_kit_image.py`, imported by the vehicle builder. Re-run
       the car build and confirm byte-identical outputs before proceeding.
 - [ ] **Add the separable background model** to that module (`background_model`
-      as prototyped in `scripts/review-train-pilot.py`), and switch the vehicle
+      as prototyped in `scripts/assets/review-train-pilot.py`), and switch the vehicle
       builder to it only if the car outputs remain identical; otherwise expose
       it as an option.
 - [ ] `art-workshop/train-kit.json` input, **keyed by class** so later classes
@@ -169,7 +169,7 @@ Offline; no runtime change.
       and mirror symmetry above ~0.75. The sweep showed raked noses come back as
       three-quarter views, so generate several seeds per front or escalate to an
       edit/control model; never accept one front image blindly.
-- [ ] `scripts/build-train-kits.py`:
+- [ ] `scripts/assets/build-train-kits.py`:
       - matte each view with the separable model;
       - trace the side outline (reuse `column_outline` + `simplify`);
       - detect **bogies** (two axles per end) rather than two single wheels;
@@ -247,10 +247,10 @@ are visually and behaviourally unchanged.
 
 ### Phase 5 — Review scene, captures, benchmark
 
-- [ ] `scripts/capture-train-review.mjs` (lineup on the review station, both
+- [ ] `scripts/capture/capture-train-review.mjs` (lineup on the review station, both
       styles, day/night) and `scripts/capture-train-city.mjs` (train in the
       living city, following it).
-- [ ] `scripts/benchmark-trains.mjs`: 0/1/3 consists, median/p95, draw calls and
+- [ ] `scripts/benchmark/benchmark-trains.mjs`: 0/1/3 consists, median/p95, draw calls and
       triangles, hardware WebGL (ANGLE/OpenGL ES, as `benchmark-vehicles.mjs`).
       State that headless Chromium exposes no WebGPU adapter here.
 - [ ] Capture the train at 128/64 px for typology and inspect AA, night
@@ -285,18 +285,18 @@ checkpoint.
 New:
 
 - `art-workshop/train-kit.json`
-- `scripts/build-train-kits.py`, shared image-ops module
+- `scripts/assets/build-train-kits.py`, shared image-ops module
 - `public/art/trains/train-atlas.png`, `train-mask.png`
 - `web/src/render/train-manifest.json`
 - `web/src/render/train-kit.ts`, `train-materials.ts` (or generalized material)
 - `web/src/render/trains.ts`
 - `tests/train-kit.test.ts`, `tests/trains.test.ts`
-- `scripts/benchmark-trains.mjs`, `capture-train-review.mjs`,
+- `scripts/benchmark/benchmark-trains.mjs`, `capture-train-review.mjs`,
   `capture-train-city.mjs`
 
 Modified:
 
-- `scripts/build-vehicle-kits.py` (imports the extracted ops; outputs unchanged)
+- `scripts/assets/build-vehicle-kits.py` (imports the extracted ops; outputs unchanged)
 - `web/src/render/vehicle-materials.ts` (generalized) and/or `vehicles.ts`
 - `web/src/render/city.ts`, `web/src/render/asset-review.ts`
 - `web/src/render/types.ts` if `World.trains` typing changes
@@ -313,8 +313,8 @@ npm run build
 npm run audit:textures
 git diff --check
 # offline kit rebuild
-python3 scripts/build-train-kits.py
-python3 scripts/review-train-pilot.py
+python3 scripts/assets/build-train-kits.py
+python3 scripts/assets/review-train-pilot.py
 ```
 
 ## 7. Risks and mitigations

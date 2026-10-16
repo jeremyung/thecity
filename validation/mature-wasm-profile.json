@@ -1,7 +1,7 @@
 {
   "profile": "mature-wasm-collection-caps",
   "context": {
-    "command": "node scripts/profile-mature-wasm.mjs",
+    "command": "node scripts/benchmark/profile-mature-wasm.mjs",
     "testEquivalentWorkload": "seed 1204, development rate 60, 150 batches × 2000 synchronous ticks",
     "concurrentFullTestRun": false,
     "runtime": {
@@ -1453,10 +1453,10 @@
       },
       {
         "function": "(anonymous)",
-        "url": "file:///Users/jung/Development/thecity/scripts/profile-mature-wasm.mjs",
+        "url": "file:///Users/jung/Development/thecity/scripts/benchmark/profile-mature-wasm.mjs",
         "line": 0,
         "column": 0,
-        "source": "file:///Users/jung/Development/thecity/scripts/profile-mature-wasm.mjs",
+        "source": "file:///Users/jung/Development/thecity/scripts/benchmark/profile-mature-wasm.mjs",
         "samples": 3236,
         "timeMs": 44828.083,
         "shareOfProfilePercent": 92.29959501949607,

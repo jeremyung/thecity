@@ -5,7 +5,7 @@ import { Builder } from './vehicle-kit';
 import { RAIL_CENTER_OFFSET, PANTOGRAPH_CONTACT_HEIGHT } from './rail-profile';
 
 /**
- * Train cars extruded from the traced side elevation (scripts/build-train-kits.py),
+ * Train cars extruded from the traced side elevation (scripts/assets/build-train-kits.py),
  * with a flat front cap traced from the generated head-on view. Same local frame
  * and attribute contract as the road vehicles: +z forward, +y up, ground at
  * y=0, kerb side +x. Livery is baked into the atlas, so `tinted` is 0 and the

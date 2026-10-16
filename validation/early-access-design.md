@@ -136,7 +136,7 @@ The width/area arithmetic uses rectangular nominal parcel envelopes and the curr
 The native experiment exports both authoritative saves and render snapshots. To measure the exact current building kit without restoring through an older public WASM, run:
 
 ```sh
-node scripts/audit-rendered-coverage.mjs --snapshot validation/spine-ranking-seed-0-by-sites-true-snapshot.json --output validation/spine-ranking-seed-0-by-sites-true-coverage.json
+node scripts/audit/audit-rendered-coverage.mjs --snapshot validation/spine-ranking-seed-0-by-sites-true-snapshot.json --output validation/spine-ranking-seed-0-by-sites-true-coverage.json
 ```
 
 `--input` continues to mean a save restored through public WASM; `--snapshot` consumes a render snapshot directly. Reports identify the input kind and its SHA-256. Root verified identical coverage, cells, methodology, and counts for a founder world supplied through either route (`coverage-snapshot-input-check.json`). This is a CLI equivalence check, not an experiment result. Projected geometry includes kit surfaces above one metre, uses a 0.5 m cell-center raster, and divides by gross world area; it does not measure net developable land or establish visual acceptance.

@@ -27,7 +27,7 @@ This review replaces the incremental frontier/infill planner with the seeded mas
 
 ## Measured fabric
 
-`node scripts/audit-masterplan-fabric.mjs` on three seeds at tick 160,000 (development rate 16). Rendered coverage is the production-kit plan-view union, the same method used for the [PLATEAU comparison](../synthetic-morphology/README.md). The compact crop is the densest 250 m window on a 25 m lattice; the station crop is centered on the station.
+`node scripts/audit/audit-masterplan-fabric.mjs` on three seeds at tick 160,000 (development rate 16). Rendered coverage is the production-kit plan-view union, the same method used for the [PLATEAU comparison](../synthetic-morphology/README.md). The compact crop is the densest 250 m window on a 25 m lattice; the station crop is centered on the station.
 
 | Crop | Legacy (seed 87231) | Master plan (seeds 87231 / 0 / 7) | Target | Tokyo reference |
 | --- | --- | --- | --- | --- |
@@ -59,7 +59,7 @@ Outside the targets:
 
 ## Captures
 
-[Overview](captures/overview.png), [neighborhood](captures/neighborhood.png), [station](captures/station.png) and [street](captures/street.png) views of seed 87231 at tick 160,000, made with `scripts/capture-masterplan-city.mjs`. They use software WebGL with the post pipeline detached while geometry queues drain, preview hour 15, Anime style, and depth of field off. They are visual evidence only, not performance evidence. The [plan diagram](plan-87231.svg) shows lots by district, the elevated layers and the station. For comparison, the earlier mature legacy city is [mature-871-software-webgl.png](../screenshots/narrow-infill/mature-871-software-webgl.png).
+[Overview](captures/overview.png), [neighborhood](captures/neighborhood.png), [station](captures/station.png) and [street](captures/street.png) views of seed 87231 at tick 160,000, made with `scripts/capture/capture-masterplan-city.mjs`. They use software WebGL with the post pipeline detached while geometry queues drain, preview hour 15, Anime style, and depth of field off. They are visual evidence only, not performance evidence. The [plan diagram](plan-87231.svg) shows lots by district, the elevated layers and the station. For comparison, the earlier mature legacy city is [mature-871-software-webgl.png](../screenshots/narrow-infill/mature-871-software-webgl.png).
 
 ## Validation
 
@@ -93,7 +93,7 @@ MASTERPLAN_SEED=87231 MASTERPLAN_TICKS=160000 MASTERPLAN_SNAPSHOT=$PWD/../.tools
   cargo test --release masterplan_growth::tests::long_run -- --ignored --nocapture
 PLAN_SVG=$PWD/../validation/masterplan-review/plan-87231.svg cargo test --release masterplan::svg -- --ignored
 cd .. && npm run wasm
-node scripts/audit-masterplan-fabric.mjs --output validation/masterplan-review/fabric-audit.json .tools/masterplan-review/mp-*.json
+node scripts/audit/audit-masterplan-fabric.mjs --output validation/masterplan-review/fabric-audit.json .tools/masterplan-review/mp-*.json
 npx vite --host 127.0.0.1 --port 5173 &   # then:
-node scripts/capture-masterplan-city.mjs .tools/masterplan-review/mp-87231.json.save.json validation/masterplan-review/captures 87231
+node scripts/capture/capture-masterplan-city.mjs .tools/masterplan-review/mp-87231.json.save.json validation/masterplan-review/captures 87231
 ```

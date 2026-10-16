@@ -1,6 +1,6 @@
 # Live planner worker verification — 2026-10-10
 
-The primary independently ran `node scripts/profile-live-worker.mjs` against the actual Vite-served simulation module worker and production WASM in headless Chromium. The source fixture is seed 87231 at tick 242000. Exact browser version, WASM hash and samples are in [the report](live-worker-profile.json).
+The primary independently ran `node scripts/benchmark/profile-live-worker.mjs` against the actual Vite-served simulation module worker and production WASM in headless Chromium. The source fixture is seed 87231 at tick 242000. Exact browser version, WASM hash and samples are in [the report](live-worker-profile.json).
 
 - At requested speed 8, the worker advanced 2,766 ticks in 20.003 seconds (about 6.91× effective speed). Buildings increased from 850 to 852.
 - The unpaused mid-run save at tick 242686 contained an active live-planning checkpoint: 275,165 bytes within a 3,239,238-byte city save. Restoring it paused in epoch 3 and saving again produced identical bytes.

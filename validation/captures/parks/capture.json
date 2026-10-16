@@ -1,5 +1,5 @@
 {
-  "source": "validation/captures/parks (seed 87231, tick 242000, development rate 16; generated with scripts/generate-review-city.mjs)",
+  "source": "validation/captures/parks (seed 87231, tick 242000, development rate 16; generated with scripts/capture/generate-review-city.mjs)",
   "backend": "software WebGL (swiftshader)",
   "performanceEvidence": false,
   "previewHour": 15,

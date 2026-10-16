@@ -4,7 +4,7 @@ import {
   auditRenderedCoverage,
   createCoverageGrid,
   markLocalTriangle,
-} from '../scripts/audit-rendered-coverage.mjs';
+} from '../scripts/audit/audit-rendered-coverage.mjs';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildingKit, disposeGroup } from '../web/src/render/kit';
 import { buildExtendedBuilding } from '../web/src/render/extended-building';

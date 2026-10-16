@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error This executable .mjs utility intentionally has no TS build dependency.
-import { summarizeDensity } from '../scripts/audit-density.mjs';
+import { summarizeDensity } from '../scripts/audit/audit-density.mjs';
 // @ts-expect-error This executable .mjs utility intentionally has no TS build dependency.
-import { renderDensityMap } from '../scripts/render-density-map.mjs';
+import { renderDensityMap } from '../scripts/capture/render-density-map.mjs';
 
 interface Measure {
   count: number;

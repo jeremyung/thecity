@@ -3,7 +3,7 @@ import manifest from './vehicle-manifest.json';
 
 /**
  * Vehicle bodies extruded from traced side elevations
- * (scripts/build-vehicle-kits.py). Local frame: +z forward, +y up, ground at
+ * (scripts/assets/build-vehicle-kits.py). Local frame: +z forward, +y up, ground at
  * y=0, kerb side at +x: the driver's left in this right-handed, y-up frame
  * (engine KERB_LANE; see buses.test). The manifest's `left` elevation is the
  * kerb side, so it reads unmirrored there.

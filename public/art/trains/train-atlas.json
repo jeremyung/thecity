@@ -1,6 +1,6 @@
 {
   "id": "train-atlas",
-  "source": "Side and front elevations generated with HunyuanImage-2.1 (train pilot and final trailer/front sweep), traced and packed by scripts/build-train-kits.py",
+  "source": "Side and front elevations generated with HunyuanImage-2.1 (train pilot and final trailer/front sweep), traced and packed by scripts/assets/build-train-kits.py",
   "provenance": "art-workshop/train-pilot/ledger.json, art-workshop/train-final/local-ledger.json",
   "status": "runtime: commuter train consist",
   "role": "atlas",

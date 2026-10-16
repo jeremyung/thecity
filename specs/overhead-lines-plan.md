@@ -15,7 +15,7 @@ The first version targeted `main` and drew its own straight-segment rail catenar
 - **Stations.** Every engine platform uses the foliage clearance (`overlapsStation`).
 - **Entry paths.** Clearances cover every leg of an entry path, not just the door-to-curb pair.
 - **Rebuilds.** The layer rebuilds with the park layer, whose key already covers decks, platforms and alignments.
-- **Evidence.** Captures stay local to match the branch's no-binary-evidence rule; `scripts/capture-overhead-lines.mjs` reproduces them.
+- **Evidence.** Captures stay local to match the branch's no-binary-evidence rule; `scripts/capture/capture-overhead-lines.mjs` reproduces them.
 - **Benchmark.** 758 poles, +9–13 draws, 0–0.2 ms per frame and a 23 ms rebuild ([report](../validation/overhead-lines-benchmark.md)).
 
 The original plan follows for reference. Its rail sections (Phase 0's train heights and Phase 3) describe the superseded straight-segment work.
@@ -77,8 +77,8 @@ Done means:
 
 - Capture seed 87231 at tick 242000 in Anime and Miniature, with depth of
   field off. Take a local street, a lane, an arterial, the station approach
-  and the overview. Extend `scripts/capture-parks.mjs` or add
-  `scripts/capture-overhead-lines.mjs` with the same camera list, so the
+  and the overview. Extend `scripts/capture/capture-parks.mjs` or add
+  `scripts/capture/capture-overhead-lines.mjs` with the same camera list, so the
   before and after views match.
 - Measure in world space where the pantograph head sits.
   - `TrainFleet.add` is called with lift `RAIL_DECK` (6 m, `city.ts:658`).
@@ -187,8 +187,8 @@ Tests (`tests/overhead-lines.test.ts`):
 
 - Remove the anchor-lot poles in `kit.ts:1391–1408` and update any kit test
   that counts their parts.
-- Add `scripts/benchmark-overhead-lines.mjs`, modelled on
-  `scripts/benchmark-trains.mjs`, to measure draw calls, triangles and frame
+- Add `scripts/benchmark/benchmark-overhead-lines.mjs`, modelled on
+  `scripts/benchmark/benchmark-trains.mjs`, to measure draw calls, triangles and frame
   time against the Phase 0 baseline in hardware WebGL.
 - Add a dated checkpoint in `specs/05-rendering.md`, an entry in
   `assets-manifest.json`, and a line in the README's current scope.
@@ -205,7 +205,7 @@ Tests (`tests/overhead-lines.test.ts`):
 | `web/src/render/train-kit.ts` | pantograph height |
 | `web/src/render/parks.ts` | none expected: `streetTreePlacements()` is already exported, so pass its result from `rebuildParks()` |
 | `tests/overhead-lines.test.ts` | new |
-| `scripts/capture-overhead-lines.mjs`, `scripts/benchmark-overhead-lines.mjs` | new |
+| `scripts/capture/capture-overhead-lines.mjs`, `scripts/benchmark/benchmark-overhead-lines.mjs` | new |
 | `specs/05-rendering.md`, `assets-manifest.json`, `README.md` | docs |
 
 ## 6. Verification commands
@@ -214,8 +214,8 @@ Tests (`tests/overhead-lines.test.ts`):
 npm test tests/overhead-lines.test.ts tests/parks.test.ts tests/street-lighting.test.ts tests/train-kit.test.ts
 npm test
 npm run build
-node scripts/capture-overhead-lines.mjs anime && node scripts/capture-overhead-lines.mjs miniature
-node scripts/benchmark-overhead-lines.mjs
+node scripts/capture/capture-overhead-lines.mjs anime && node scripts/capture/capture-overhead-lines.mjs miniature
+node scripts/benchmark/benchmark-overhead-lines.mjs
 git diff --check
 ```
 

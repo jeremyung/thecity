@@ -1,5 +1,5 @@
 {
-  "source": "seed 87231, tick 242000 (day 10, summer), development rate 16; scripts/generate-review-city.mjs then scripts/capture-parks.mjs",
+  "source": "seed 87231, tick 242000 (day 10, summer), development rate 16; scripts/capture/generate-review-city.mjs then scripts/capture/capture-parks.mjs",
   "backend": "software WebGL (swiftshader)",
   "performanceEvidence": false,
   "depthOfField": false,

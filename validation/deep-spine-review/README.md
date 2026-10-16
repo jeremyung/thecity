@@ -71,7 +71,7 @@ do not validate the rejected candidate as a production policy.
 on the same 800 m domain. It is a map, not a rendered screenshot. Reproduce with:
 
 ```
-python3 scripts/compare-growth-layouts.py --baseline .tools/deep-spine-review/baseline-87231-snapshot.json --candidate .tools/deep-spine-review/candidate-87231-snapshot.json --output validation/deep-spine-review/layout-87231.svg
+python3 scripts/audit/compare-growth-layouts.py --baseline .tools/deep-spine-review/baseline-87231-snapshot.json --candidate .tools/deep-spine-review/candidate-87231-snapshot.json --output validation/deep-spine-review/layout-87231.svg
 ```
 
 Seed87231 loses 9,722 m² across 31 fixed 100 m cells and gains 5,363.5 m² across

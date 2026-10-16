@@ -55,7 +55,7 @@ Reproduce with:
 CARGO_HOME="$PWD/.tools/cargo" RUSTUP_HOME="$PWD/.tools/rustup" \
   .tools/cargo/bin/cargo run --manifest-path engine/Cargo.toml --release \
   --example shallow_trace > validation/shallow-native-trace.jsonl
-node scripts/diagnose-shallow-parity.mjs
+node scripts/diagnose/diagnose-shallow-parity.mjs
 ```
 
 The per-checkpoint traces are `validation/shallow-native-trace.jsonl` and

@@ -75,4 +75,4 @@ neighborhood evidence. See the [consolidated learnings](../validation/archive/20
 Specimen A/B, lighting previews, sampled motion and focused tests do not establish
 the complete release gates below.
 
-Fabric acceptance (2026-10-11): at maturity, rendered-footprint crops of compact and station districts meet the [fabric targets](02-world-growth.md#fabric-targets) for at least three seeds, with no overlapping lots, no inaccessible occupied building, and connected junctions. Run `node scripts/audit-masterplan-fabric.mjs` on a mature snapshot to report gross coverage, footprint median/p90, floor median and road share per crop.
+Fabric acceptance (2026-10-11): at maturity, rendered-footprint crops of compact and station districts meet the [fabric targets](02-world-growth.md#fabric-targets) for at least three seeds, with no overlapping lots, no inaccessible occupied building, and connected junctions. Run `node scripts/audit/audit-masterplan-fabric.mjs` on a mature snapshot to report gross coverage, footprint median/p90, floor median and road share per crop.

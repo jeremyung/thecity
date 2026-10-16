@@ -67,7 +67,7 @@ git apply validation/shallow-block-experiment/experiment.patch
 node scripts/test-engine.mjs --release shallow_shared_edge_geometry_and_saved_lifecycle_support_42m_blocks
 SHALLOW_BLOCK_EXPERIMENT_DIR=/tmp/thecity-shallow-block \
 node scripts/test-engine.mjs --release compare_shallow_shared_edge_fallback_at_mature_seeds -- --ignored
-node scripts/audit-rendered-coverage.mjs \
+node scripts/audit/audit-rendered-coverage.mjs \
   --snapshot /tmp/thecity-shallow-block/seed-0-baseline-snapshot.json \
   --output /tmp/thecity-shallow-block/seed-0-baseline-coverage.json
 ```

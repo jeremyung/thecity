@@ -60,7 +60,7 @@ Reproduce:
 node scripts/test-engine.mjs --release compact_frontage_width_comparison_at_crop_host -- --nocapture
 COMPACT_FRONTAGE_REPORT=/tmp/frontage.json node scripts/test-engine.mjs --release compact_frontage_existing_road -- --ignored
 npm run wasm
-node scripts/verify-narrow-frontage-wasm.mjs
+node scripts/audit/verify-narrow-frontage-wasm.mjs
 ```
 
 ## Render review follow-up — 2026-10-11
@@ -69,8 +69,8 @@ The optional output-directory argument to `verify-narrow-frontage-wasm.mjs`
 exports the final save and snapshot for browser review:
 
 ```
-node scripts/verify-narrow-frontage-wasm.mjs .tools/narrow-frontage-review
-node scripts/audit-rendered-coverage.mjs --snapshot .tools/narrow-frontage-review/final-snapshot.json --output validation/synthetic-morphology/narrow-final-coverage.json
+node scripts/audit/verify-narrow-frontage-wasm.mjs .tools/narrow-frontage-review
+node scripts/audit/audit-rendered-coverage.mjs --snapshot .tools/narrow-frontage-review/final-snapshot.json --output validation/synthetic-morphology/narrow-final-coverage.json
 ```
 
 The recorded report measures the kit **before the entrance correction below**.
