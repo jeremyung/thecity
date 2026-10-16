@@ -59,6 +59,34 @@ describe('midrise family geometry integration',()=>{
     } finally {art.dispose();}
   });
 
+  it('keeps compact apartment entries clear and balcony floors supported through the lifecycle',()=>{
+    const art=new ArtMaterials();
+    try {
+      for(const style of ['anime','miniature'] as const){
+        art.setStyle(style);
+        for(const seed of [0,1])for(const floors of [4,6]){
+          for(const [stage,progress] of [['open',1],['construction',.3],['construction',.8],['construction',1],['renovation',.5]] as const){
+            const b=midrise('apartment',stage,progress,floors,12,14,seed);
+            const group=buildingKit(b,art);group.updateMatrixWorld(true);
+            expectParcelContained(group,b);
+            if(stage==='open'){
+              const door=new THREE.Raycaster(new THREE.Vector3(0,1.5,12),new THREE.Vector3(0,0,-1)).intersectObject(group,true)[0];
+              expect(door).toBeDefined();
+              expect((door.object as THREE.Mesh).material).toBe(art.get('#55757a',.25));
+              for(let floor=1;floor<floors;floor++){
+                const y=.58+floor*3.25;
+                const slab=new THREE.Raycaster(new THREE.Vector3(0,y+.5,b.depth*.84/2+.35),new THREE.Vector3(0,-1,0)).intersectObject(group,true)[0];
+                expect(slab).toBeDefined();
+                expect(slab.point.y).toBeCloseTo(y+.145,5);
+              }
+            }
+            disposeGroup(group);
+          }
+        }
+      }
+    }finally{art.dispose();}
+  });
+
   it('gives tall homes a centered ground door instead of an uninterrupted window facade',()=>{
     const art=new ArtMaterials();
     try {

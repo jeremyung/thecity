@@ -1,3 +1,4 @@
+import { DEFAULT_TILT_SHIFT, normalizeTiltShift, type TiltShiftSettings } from './camera/tilt-shift';
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import Controls, { busLineLabel } from './ui/Controls';
@@ -117,6 +118,7 @@ function CityExperience(){
   const [paused,setPaused]=useState(false),[speed,setSpeed]=useState(1),[style,setStyle]=useState<Style>(preferences.style),[mode,setMode]=useState<'watch'|'explore'|'overview'>('watch');
   const [preparingStyle,setPreparingStyle]=useState<Style|null>(null);
   const [fixedReviewQuality,setFixedReviewQuality]=useState(false);
+  const [tiltShift,setTiltShift]=useState<TiltShiftSettings>({...DEFAULT_TILT_SHIFT});
   const [preview,setPreview]=useState<number|null>(null),[sound,setSound]=useState(false),[musicLevel,setMusicLevel]=useState(preferences.musicLevel),[cityLevel,setCityLevel]=useState(preferences.cityLevel),[focus,setFocus]=useState(preferences.focus),[development,setDevelopment]=useState(1),[quality,setQuality]=useState(preferences.quality),[contrast,setContrast]=useState(preferences.contrast),[lens,setLens]=useState<LensPresetId>(preferences.lens);
   const [subject,setSubject]=useState<Subject|null>(null);
   const [selectedId,setSelectedId]=useState<number|null>(null),[metrics,setMetrics]=useState<RenderMetrics|null>(null),[sceneLabel,setSceneLabel]=useState('Along the river');
@@ -135,7 +137,7 @@ function CityExperience(){
     const client=new SimulationClient(),audio=new AudioDirector();runtime.current={renderer,client,audio};
     const recoveryRequested=new URLSearchParams(location.search).get('recover')==='1';
     renderer.setLens(lens,false);
-    renderer.setFocus(focus);renderer.setQuality(recoveryRequested?'balanced':quality);audio.setLevels(musicLevel,cityLevel);
+    renderer.setTiltShift(tiltShift);renderer.setFocus(focus);renderer.setQuality(recoveryRequested?'balanced':quality);audio.setLevels(musicLevel,cityLevel);
     if(recoveryRequested)setQuality('balanced');
     let disposed=false,graphicsReady=false,simReady=false,latestMetrics:Metrics|null=null,audioEpoch=0,recoveryInitPending=false;
     const graphicsStartup=createGraphicsStartupWatchdog(setError);
@@ -198,7 +200,7 @@ function CityExperience(){
   async function newWorld(seed:number){try{if(currentWorld.current&&!(await save()))return;const r=runtime.current;if(!r)throw new Error('The graphics renderer is not available yet. Try the graphics recovery option.');startupOverridden.current=true;const url=new URL(window.location.href);url.searchParams.delete('recover');window.history.replaceState(null,'',`${url.pathname}${url.search}${url.hash}`);resetWorldSelection(r);setError(null);r.client.init(seed);notice('A new beginning, beside a different river.');}catch(e){setError(String(e));}}
   return <main className="city-app">
     <div className="city-canvas" ref={mount} aria-label="Living three-dimensional Tokyo city. Drag to explore; use arrow keys to pan and plus or minus to zoom." />
-    <Controls achievableSpeed={simulationMetrics?.achievableSpeed} world={world} ready={ready} error={error} message={message} paused={paused} speed={speed} style={style} preparingStyle={preparingStyle} mode={mode} sceneLabel={sceneLabel} preview={preview} sound={sound} musicLevel={musicLevel} cityLevel={cityLevel} focus={focus} contrast={contrast} lens={lens} selected={world?.buildings.find(b=>b.id===selectedId)??null} metrics={metrics} subject={subject} development={development} quality={quality} onDismissError={()=>setError(null)}
+    <Controls achievableSpeed={simulationMetrics?.achievableSpeed} world={world} ready={ready} error={error} message={message} paused={paused} speed={speed} style={style} preparingStyle={preparingStyle} mode={mode} sceneLabel={sceneLabel} preview={preview} sound={sound} musicLevel={musicLevel} cityLevel={cityLevel} focus={focus} tiltShift={tiltShift} onTiltShift={patch=>{const value=normalizeTiltShift({...tiltShift,...patch});setTiltShift(value);runtime.current?.renderer.setTiltShift(value);if(patch.enabled===true&&!focus){setFocus(true);storePreferences({focus:true});runtime.current?.renderer.setFocus(true);}}} contrast={contrast} lens={lens} selected={world?.buildings.find(b=>b.id===selectedId)??null} metrics={metrics} subject={subject} development={development} quality={quality} onDismissError={()=>setError(null)}
       onDevelopment={value=>{setDevelopment(value);runtime.current?.client.controls({development:value});}}
       onQuality={value=>{setQuality(value);storePreferences({quality:value});runtime.current?.renderer.setQuality(value);}}
       fixedReviewQuality={fixedReviewQuality}

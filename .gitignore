@@ -1,5 +1,5 @@
 # Dependencies, compiler outputs, and local toolchains
-node_modules/
+node_modules
 dist/
 .tools/
 engine/target/

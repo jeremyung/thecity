@@ -265,3 +265,28 @@ describe('overhead line layer',()=>{
     disposeGroup(group);art.dispose();
   });
 });
+
+it('retains pole buffers while producing exactly the fresh placement after a street moves',()=>{
+  const {points,segments}=splitStreet();const art=new ArtMaterials();
+  const before=buildOverheadLines(world(segments,points),art);
+  const shafts=before.getObjectByName('utility-pole-shafts') as THREE.InstancedMesh;
+  const buffer=shafts.instanceMatrix;
+  const moved=world(segments,points.map(p=>({...p,z:p.z+5})));
+  const expected=buildOverheadLines(moved,art);
+  const actual=buildOverheadLines(moved,art,[],before);
+  expect(actual.getObjectByName(shafts.name)).toBe(shafts);
+  expect(shafts.instanceMatrix).toBe(buffer);
+  for(const wanted of expected.children){
+    const got=actual.getObjectByName(wanted.name) as THREE.Mesh;
+    expect(got).toBeDefined();
+    if(wanted instanceof THREE.InstancedMesh){
+      const mesh=got as THREE.InstancedMesh;expect(mesh.count).toBe(wanted.count);
+      expect(Array.from(mesh.instanceMatrix.array.slice(0,mesh.count*16))).toEqual(Array.from(wanted.instanceMatrix.array.slice(0,wanted.count*16)));
+    }
+    expect(Array.from(got.geometry.getAttribute('position').array)).toEqual(Array.from((wanted as THREE.Mesh).geometry.getAttribute('position').array));
+  }
+  // Retiring the old group must not dispose adopted instances/geometry.
+  let disposed=false;shafts.geometry.addEventListener('dispose',()=>{disposed=true;});
+  disposeGroup(before);expect(disposed).toBe(false);
+  disposeGroup(actual);disposeGroup(expected);art.dispose();
+});

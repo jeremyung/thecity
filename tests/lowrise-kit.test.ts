@@ -75,6 +75,23 @@ function materialGeometrySignature(root:THREE.Object3D,material:THREE.Material){
 }
 
 describe('integrated low-rise families',()=>{
+  it('closes both fallback gable ends above the occupied wall',()=>{
+    const art=new ArtMaterials();
+    const b=building('home','open',{anchor:true,x:0,z:0,rotation:0,width:10,depth:12,floors:2});
+    const root=buildingKit(b,art);root.updateMatrixWorld(true);
+    try{
+      const top=.58+2*3.25;
+      for(const side of [-1,1]){
+        const ray=new THREE.Raycaster(new THREE.Vector3(side*12,top+.6,0),new THREE.Vector3(-side,0,0));
+        const hits=ray.intersectObject(root,true);
+        const wall=hits.find(hit=>hit.face&&Math.abs(hit.face.normal.x)>.99&&Math.abs(hit.point.y-(top+.6))<.001);
+        expect(wall,`outward-facing gable on side ${side}`).toBeDefined();
+        expect(Math.abs(wall!.point.x)).toBeLessThan(b.width/2);
+        expect(Math.abs(wall!.point.x)).toBeGreaterThan(3);
+      }
+    }finally{disposeGroup(root);art.dispose();}
+  });
+
   it('exposes shop canopies beyond the wall while staying inside the parcel',()=>{
     const art=new ArtMaterials();
     try{for(const style of ['anime','miniature'] as const){
@@ -404,7 +421,7 @@ describe('integrated low-rise families',()=>{
       const rearPanes=localGeometryPoints(open,lightGlass).filter(point=>point.y>upperY-.7&&point.y<upperY+.7&&point.z<rear-.05);
       const plainRearPanes=localGeometryPoints(plain,lightGlass).filter(point=>point.y>upperY-.7&&point.y<upperY+.7&&point.z<rear-.05);
       expect(rearPanes.length,`${style} compact rear utility windows`).toBeGreaterThan(0);
-      expect(plainRearPanes,`${style} unselected home has no modern rear windows`).toHaveLength(0);
+      expect(plainRearPanes.length,`${style} both home variants have occupied rear rooms`).toBeGreaterThan(0);
 
       const side=layout.quietSides[0],acX=service.x+side*(service.width/2+.36),acY=base+1.3,acZ=service.z+service.depth*.16;
       const unitVertex=new THREE.Vector3(acX+side*.36,acY+.28,acZ+.24);
@@ -433,6 +450,26 @@ describe('integrated low-rise families',()=>{
     art.dispose();
   });
 
+  it('keeps rear residential rooms above the attached service roof for homes and shop-houses',()=>{
+    const art=new ArtMaterials();
+    try{for(const kind of ['home','shop','cafe'] as const)for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      const b=building(kind,'open',{floors:3,width:8,depth:12});
+      const d=b.depth*.84,w=lowriseBuildingWidth(b,b.width-.9,d),layout=lowriseMassing(b,w,d)!;
+      const main=layout.masses.find(x=>x.role==='frontage')!,service=layout.masses.find(x=>x.role==='service')!;
+      const group=buildingKit(b,art);group.updateMatrixWorld(true);
+      const rear=main.z-main.depth/2;
+      const panes=localGeometryPoints(group,art.window('home')).filter(p=>p.z<rear-.05&&p.z>rear-.15);
+      expect(panes.length).toBeGreaterThan(0);
+      expect(Math.min(...panes.map(p=>p.y))).toBeGreaterThan(.58+service.floors*3.25+.4);
+      const ray=new THREE.Raycaster(new THREE.Vector3(panes[0].x,.58+3.25+1.65,rear-1),new THREE.Vector3(0,0,1));
+      const hits=ray.intersectObject(group,true);
+      expect(hits.length).toBeGreaterThan(0);
+      expect(hits[0].point.z).toBeLessThan(rear);
+      disposeGroup(group);
+    }}finally{art.dispose();}
+  });
+
   it('keeps gable-edge trim attached to the roof eaves instead of parcel-clearance coordinates',()=>{
     const art=new ArtMaterials();
     const b=building('home','open',{width:14,depth:14,floors:2,appearance_seed:1});
@@ -458,5 +495,61 @@ describe('integrated low-rise families',()=>{
     const anchorGroup=buildingKit(anchor,art);
     expect(new THREE.Box3().setFromObject(anchorGroup).max.y).toBeGreaterThan(.58+anchor.floors*3.25);
     [...groups,anchorGroup].forEach(disposeGroup);art.dispose();
+  });
+});
+
+
+describe('broad home staged family',()=>{
+  it('keeps actual witness geometry within rotated parcels throughout construction and renovation',()=>{
+    const art=new ArtMaterials();
+    try { for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      for(const [width,depth] of [[14.746641,24.086472],[10.633784,24.086466]]){
+        const b=building('home','open',{width,depth,floors:3,appearance_seed:1018519500,rotation:1.8066885});
+        for(const stage of ['open','construction','renovation'] as const)for(const progress of stage==='construction'?[.3,.7,.99]:[1]){
+          const group=buildingKit({...b,stage,progress},art);
+          group.position.set(b.x,0,b.z);group.rotation.y=b.rotation;
+          const points=parcelLocalPoints(group);expectFinite(points);
+          const maxX=Math.max(...points.map(p=>Math.abs(p.x)));
+          const maxZ=Math.max(...points.map(p=>Math.abs(p.z)));
+          expect(maxX,`${width} ${style} ${stage}/${progress} X`).toBeLessThanOrEqual(width/2+1e-5);
+          expect(maxZ,`${width} ${style} ${stage}/${progress} Z`).toBeLessThanOrEqual(depth/2+1e-5);
+          disposeGroup(group);
+        }
+        const open=buildingKit(b,art),late=buildingKit({...b,stage:'construction',progress:.99},art);
+        open.updateMatrixWorld(true);
+        const upperFront=Math.max(6,depth*.84)/2-2.4;
+        const doorHit=new THREE.Raycaster(new THREE.Vector3(0,.58+6.5+1.13,upperFront+1),new THREE.Vector3(0,0,-1)).intersectObject(open,true)[0];
+        expect(doorHit,'upper terrace has a visible door rather than an overlapping window').toBeDefined();
+        expect((doorHit.object as THREE.Mesh).material).toBe(art.get('#55757a',.25));
+        const wall=art.get(buildingPalette(b,art.palette).wall);
+        expect(materialGeometrySignature(late,wall)).toEqual(materialGeometrySignature(open,wall));
+        disposeGroup(open);disposeGroup(late);
+      }
+    }}finally{art.dispose();}
+  });
+});
+
+describe('closed domestic gables',()=>{
+  it('closes both roof ends with outward-facing wall geometry through late construction and renovation',()=>{
+    const art=new ArtMaterials();
+    try{for(const style of ['anime','miniature'] as const){
+      art.setStyle(style);
+      const b=building('home','open',{width:8,depth:14,floors:2,appearance_seed:451});
+      const d=b.depth*.84,w=lowriseBuildingWidth(b,7.1,d);
+      const mass=lowriseMassing(b,w,d)!.masses[0];
+      expect(mass.roof).toBe('gable');
+      for(const stage of ['open','construction','renovation'] as const){
+        const group=buildingKit({...b,stage,progress:stage==='construction'?.99:1},art);
+        group.updateMatrixWorld(true);
+        for(const side of [-1,1]){
+          const hit=new THREE.Raycaster(new THREE.Vector3(side*(b.width/2+1),.58+b.floors*3.25+.6,mass.z),new THREE.Vector3(-side,0,0)).intersectObject(group,true)[0];
+          expect(hit,`${style} ${stage} gable ${side}`).toBeDefined();
+          expect(hit.point.x).toBeCloseTo(side*mass.width/2,4);
+          expect(hit.face!.normal.x).toBe(side);
+        }
+        disposeGroup(group);
+      }
+    }}finally{art.dispose();}
   });
 });

@@ -31,6 +31,32 @@ function meshes(root: THREE.Object3D): THREE.Mesh[] {
 }
 
 describe('BuildingAccessPaths', () => {
+  it('joins shared streets at carriageway height and rebuilds when the road becomes arterial', () => {
+    const art = new ArtMaterials();
+    const paths = new BuildingAccessPaths(art, release => release());
+    const state = world([building(1)], [{ building_id: 1, road_id: 9,
+      points: [{ x: 0, z: 0 }, { x: 0, z: 10 }] }]);
+    state.roads = [{ id: 9, from: 1, to: 2, kind: 'local', stage: 'open',
+      progress: 1, connected: true, length: 20, lanes: 1 }];
+    const landingTop = () => {
+      const p = meshes(paths.root)[0].geometry.getAttribute('position');
+      let top = -Infinity;
+      for (let i = 0; i < p.count; i++) if (p.getZ(i) > 10.5) top = Math.max(top, p.getY(i));
+      return top;
+    };
+    for (const kind of ['local', 'lane']) {
+      state.roads[0].kind = kind;
+      paths.setWorld(state);
+      expect(landingTop()).toBeCloseTo(.305, 5);
+    }
+    const shared = paths.root.children[0];
+    state.roads[0].kind = 'arterial';
+    paths.setWorld(state);
+    expect(paths.root.children[0]).not.toBe(shared);
+    expect(landingTop()).toBeCloseTo(.475, 5);
+    paths.reset(); art.dispose();
+  });
+
   it('follows a bent passage without paving a diagonal through the front lot', () => {
     const art = new ArtMaterials();
     const paths = new BuildingAccessPaths(art, release => release());

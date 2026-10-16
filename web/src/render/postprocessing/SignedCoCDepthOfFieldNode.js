@@ -1,9 +1,9 @@
 // Derived from Three.js 0.183.2 DepthOfFieldNode.js (MIT).
 // Upstream SHA256: e031582eda45a5bda6b564e841f29472acf06f924dd55efcd0d98d29922b1f32
-// Changes: signed normalized CoC input; upstream gather retained; composite
+// Changes: signed normalized CoC input; normalized second gather; composite
 // coverage uses output-pixel radius independently of the gather cap.
 import { TempNode, NodeMaterial, NodeUpdateType, RenderTarget, Vector2, HalfFloatType, RedFormat, QuadMesh, RendererUtils } from 'three/webgpu';
-import { convertToTexture, nodeObject, Fn, uniform, step, texture, max, uniformArray, outputStruct, property, vec4, vec3, uv, Loop, min, mix } from 'three/tsl';
+import { convertToTexture, nodeObject, Fn, uniform, step, texture, uniformArray, outputStruct, property, vec4, vec3, uv, Loop, min, mix } from 'three/tsl';
 import { gaussianBlur } from 'three/addons/tsl/display/GaussianBlurNode.js';
 
 const _quadMesh = /*@__PURE__*/ new QuadMesh();
@@ -205,6 +205,9 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 		 * @type {string}
 		 * @default 'frame'
 		 */
+		this._ownedInputTexture = null;
+		this._nearBlur = null;
+		this._disposed = false;
 		this.updateBeforeType = NodeUpdateType.FRAME;
 
 	}
@@ -362,7 +365,8 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 
 		// blurred CoC for near field
 
-		this._CoCBlurredMaterial.colorNode = gaussianBlur( this._CoCTextureNode, 1, 2 );
+		this._nearBlur ??= gaussianBlur( this._CoCTextureNode, 1, 2 );
+		this._CoCBlurredMaterial.colorNode = this._nearBlur;
 		this._CoCBlurredMaterial.needsUpdate = true;
 
 		// bokeh 64 blur pass
@@ -404,7 +408,9 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 			const uvNode = uv();
 
 			const col = this._blur64TextureNode.sample( uvNode ).toVar();
-			const maxVal = col.rgb;
+			// Average instead of maximum dilation to avoid expanding bright roof
+			// edges and water glints. Keep the signed near/far coverage unchanged.
+			const accumulated = col.rgb.toVar();
 			const CoC = col.a;
 			const sampleStep = this._invSize.mul( this.bokehScaleNode ).mul( CoC );
 
@@ -413,11 +419,11 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 				const sUV = uvNode.add( sampleStep.mul( bokeh16.element( i ) ) );
 				const tap = this._blur64TextureNode.sample( sUV );
 
-				maxVal.assign( max( tap.rgb, maxVal ) );
+				accumulated.addAssign( tap.rgb );
 
 			} );
 
-			return vec4( maxVal, CoC );
+			return vec4( accumulated.div( 17 ), CoC );
 
 		} );
 
@@ -503,6 +509,19 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 	 */
 	dispose() {
 
+		if ( this._disposed ) return;
+		this._disposed = true;
+		// Three r183 nested effects do not recursively release their inputs.
+		// Only the RTT created by our factory belongs to this effect; scene
+		// pass textures and caller-owned texture nodes remain borrowed.
+		if ( this._ownedInputTexture ) {
+			this._ownedInputTexture.renderTarget.dispose();
+			this._ownedInputTexture._quadMesh.material.dispose();
+		}
+		if ( this._nearBlur ) {
+			this._nearBlur.dispose();
+			this._nearBlur._material?.dispose();
+		}
 		this._CoCRT.dispose();
 		this._CoCBlurredRT.dispose();
 		this._blur64RT.dispose();
@@ -523,4 +542,9 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 export default SignedCoCDepthOfFieldNode;
 
 /** Bounded upstream gather with an explicit signed normalized CoC input. */
-export const signedCoCDof = ( node, signedCoC, maxGatherRadiusPx = 1 ) => new SignedCoCDepthOfFieldNode( convertToTexture( node ), nodeObject( signedCoC ), nodeObject( maxGatherRadiusPx ) );
+export const signedCoCDof = ( node, signedCoC, maxGatherRadiusPx = 1 ) => {
+	const input = convertToTexture( node );
+	const effect = new SignedCoCDepthOfFieldNode( input, nodeObject( signedCoC ), nodeObject( maxGatherRadiusPx ) );
+	if ( ! node.isSampleNode && ! node.isTextureNode && ! node.isPassNode ) effect._ownedInputTexture = input;
+	return effect;
+};

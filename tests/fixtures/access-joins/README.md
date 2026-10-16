@@ -4,10 +4,12 @@ These static test inputs derive from the historical captures named in
 [manifest.json](manifest.json). The historical `validation/` files remain
 byte-identical to their committed originals; they still document the old runs.
 
-Regenerate with `python3 scripts/refresh-access-join-fixtures.py` from the repo
-root. This is an offline test-data tool, not an application save migration.
-Its endpoint calculation follows `Engine::route_endpoint_position`; native
-restore validation checks the resulting inputs independently.
+Hydrate the pinned current-format fixtures with `npm run setup:fixtures` from the
+repo root (or `python3 scripts/setup-test-fixtures.py --archive <bundle>` offline).
+The committed `scripts/test-fixtures-manifest.json` verifies every file hash.
+The historical refresh script is not shipped in this checkpoint; the generation
+notes below describe bundle provenance, not a runnable regeneration command.
+Native and WASM restore validation independently check route joins.
 
 Across 18 fixtures (including the sibling bus-queue fixture), 7,505 connector joins are updated to meet the current route
 endpoint and street-width policy. In five active paths across the fixture corpus, the corrected path is shorter

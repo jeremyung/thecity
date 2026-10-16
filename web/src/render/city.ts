@@ -1,3 +1,6 @@
+import { miniatureOpticalScale } from '../camera/miniature-scale';
+import { DEFAULT_TILT_SHIFT, normalizeTiltShift, writeTiltedFocusPlane, type TiltShiftSettings } from '../camera/tilt-shift';
+import { instanceCapacity, reuseInstances } from './reuse-instances';
 import { riverbankTreePoints } from './riverbank-planting';
 import { groundRoadFootprint, groundRoadSurfaceGeometry } from './ground-road-footprint';
 import { RoadSurfacePartition } from './road-surface-partition';
@@ -15,9 +18,10 @@ import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '.
 import { snapShadowAnchor } from './shadow-anchor';
 import { styleWarmup, compileStyleSamples, compileForScenePass } from './style-warmup';
 import * as THREE from 'three/webgpu';
+import { submitSceneAndEffects } from './scene-submission';
 import { color, uniform, mix, positionLocal, smoothstep, mx_noise_float, pass, add, vec3, attribute, positionView, float, floor, fract, step, vec2, vec4, mrt, output, normalView, directionToColor, colorToDirection, sample, getViewPosition, uv, fog, rangeFogFactor, positionWorld } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
-import { ao } from 'three/addons/tsl/display/GTAONode.js';
+import { ownedAO as ao } from './postprocessing/owned-ao';
 import { ssr } from 'three/addons/tsl/display/SSRNode.js';
 import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
 import { SkyEnvironment } from './sky-environment';
@@ -112,8 +116,10 @@ export class CityRenderer {
   private styleSwitchMetrics:StyleSwitchMetrics|undefined;
   private retiredResources:Array<()=>void>=[];
   private pipeline:THREE.RenderPipeline|null=null;
+  private focusedPipeline:THREE.RenderPipeline|null=null;
+  private unblurredPipeline:THREE.RenderPipeline|null=null;
   private occlusion:ReturnType<typeof ao>|null=null;
-  private occlusionStrength=uniform(.65);
+  private occlusionStrength=uniform(.22);
   private hazeColor=uniform(new THREE.Color('#d2d6cc'));
   private hazeNear=uniform(HAZE_NEAR.anime);
   private hazeFar=uniform(HAZE_FAR.anime);
@@ -136,6 +142,11 @@ export class CityRenderer {
   private outputHeight=uniform(1);
   private dofEnabled=uniform(1);
   private bokeh=uniform(4);
+  private tiltShift: TiltShiftSettings={...DEFAULT_TILT_SHIFT};
+  private tiltEnabled=uniform(0);
+  private tiltWidth=uniform(.5);
+  private tiltOpticalScale=uniform(.01);
+  private tiltPlane=uniform(new THREE.Vector4(0,0,1,300));
   private shine: ReturnType<typeof bloom> | null = null;
   private depthOfField:ReturnType<typeof signedCoCDof>|null=null;
   private skyHigh=uniform(new THREE.Color('#9bbac8'));
@@ -324,9 +335,11 @@ export class CityRenderer {
     this.renderer.domElement.dataset.graphicsPhase='loop-started';
     await startup.promise;
   }
+  private readonly sceneFrame=new THREE.NodeFrame();
   private buildPipeline(){
     this.disposePipeline();
     this.scenePass=pass(this.scene,this.camera,{samples:4});
+    this.scenePass.updateBeforeType=THREE.NodeUpdateType.NONE;
     // Explicit resolved normals avoid Three's depth-normal reconstruction path,
     // which emits an invalid textureDimensions mip argument for MSAA WebGPU depth.
     // Keep four-sample scene AA; AO and wet-weather SSR share the normal target.
@@ -367,23 +380,36 @@ export class CityRenderer {
       sceneColor=sceneColor.add(vec4(shafts.getTextureNode().rgb.mul(this.shaftColor),0));
     }
     const depth=this.scenePass.getViewZNode();
-    const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:this.focus,
-      focalLengthM:this.lensFocalM,fNumber:this.lensFNumber,opticalScale:this.opticalScale,
+    // Intersect each visible camera ray with the tilted plane. Unlike a
+    // screen-space stripe, roof height and scene depth affect the focus.
+    const focusView=getViewPosition(uv(),depthTexture.r,uniform(this.camera.projectionMatrixInverse));
+    const focusRay=vec3(focusView.xy.div(depth.negate().max(.0001)),1);
+    const planeDenominator=focusRay.dot(this.tiltPlane.xyz);
+    const planeValid=planeDenominator.abs().greaterThan(.00001);
+    const planeDepth=this.tiltPlane.w.div(planeValid.select(planeDenominator,float(1)));
+    const tiltedDepth=planeValid.and(planeDepth.greaterThan(.1))
+      .select(planeDepth,float(1000000));
+    const signedCoC=physicalCoCNode({viewZ:depth,focusDistanceM:mix(this.focus,tiltedDepth,this.tiltEnabled),
+      focalLengthM:this.lensFocalM,fNumber:this.lensFNumber.mul(mix(float(1),this.tiltWidth,this.tiltEnabled)),opticalScale:mix(this.opticalScale,this.tiltOpticalScale,this.tiltEnabled),
       outputHeightPx:this.outputHeight,maxGatherRadiusPx:this.bokeh,enabled:this.dofEnabled});
-    // A zero CoC still runs seven full-screen passes. Omit the DOF node
-    // entirely when disabled, preserving the unblurred scene and bloom.
-    const focus=this.focusEnabled
-      ?(this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh))
-      :sceneColor;
+    // Keep two output graphs sharing the scene/AO/bloom resources. Switching
+    // focus must not rebuild the scene pass and invalidate its compiled work.
+    // The unblurred graph omits DOF entirely, so its seven passes do not run.
+    const focus=this.depthOfField=signedCoCDof(sceneColor,signedCoC,this.bokeh);
     const shine=bloom(sceneColor,.1,.5,.9);this.shine=shine;
-    this.pipeline=new THREE.RenderPipeline(this.renderer);
-    this.pipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>, shine as unknown as THREE.Node<'vec4'>);
+    this.focusedPipeline=new THREE.RenderPipeline(this.renderer);
+    this.focusedPipeline.outputNode=add(focus as unknown as THREE.Node<'vec4'>,shine as unknown as THREE.Node<'vec4'>);
+    this.unblurredPipeline=new THREE.RenderPipeline(this.renderer);
+    this.unblurredPipeline.outputNode=add(sceneColor,shine as unknown as THREE.Node<'vec4'>);
+    this.pipeline=this.focusEnabled?this.focusedPipeline:this.unblurredPipeline;
   }
+
   private disposePipeline(){
     // Warmup borrows scene attachments. Detach immediately, but keep the old
     // resources alive until pending compiler work releases its references.
-    const resources=[this.occlusion,this.reflections,this.shafts,this.pipeline,this.depthOfField,this.shine,this.scenePass];
+    const resources=new Set([this.occlusion,this.reflections,this.shafts,this.pipeline,this.focusedPipeline,this.unblurredPipeline,this.depthOfField,this.shine,this.scenePass]);
     this.occlusion=null;this.reflections=null;this.shafts=null;this.pipeline=null;
+    this.focusedPipeline=null;this.unblurredPipeline=null;
     this.depthOfField=null;this.shine=null;this.scenePass=null;
     this.retire(()=>{for(const resource of resources)resource?.dispose();});
   }
@@ -419,7 +445,7 @@ export class CityRenderer {
   }
   private applyStyle(style:Style){
     this.style=style;this.art.setStyle(style);this.chunks.setContoursVisible(style==='anime');this.scene.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(m=>this.art.variant(m)):this.art.variant(o.material);});
-    this.opticalScale.value=style==='miniature'?.01:.04;this.bokeh.value=style==='miniature'?16:4;
+    this.opticalScale.value=style==='miniature'?.01:.04;this.bokeh.value=this.tiltShift.enabled?this.tiltShift.blur:(style==='miniature'?16:4);
   }
   private retire(dispose:()=>void){if(this.pendingCompiles)this.retiredResources.push(dispose);else dispose();}
   private retireGroup(group:THREE.Group){group.removeFromParent();this.retire(()=>disposeGroup(group));}
@@ -427,10 +453,16 @@ export class CityRenderer {
   toggleWaterReflectionForReview(){return this.water?.toggleReflectionForReview()??false;}
   toggleStreetLightsForReview(){return this.nearbyStreetLights.enabled=!this.nearbyStreetLights.enabled;}
   setLens(id:LensPresetId,takeManualControl=true){this.director.setLens(id,takeManualControl);const lens=LENS_PRESETS[id];this.lensFocalM.value=lens.focalLengthMm/1000;this.lensFNumber.value=lens.fNumber;}
+  setTiltShift(settings:Partial<TiltShiftSettings>){
+    this.tiltShift=normalizeTiltShift({...this.tiltShift,...settings});
+    this.tiltEnabled.value=this.tiltShift.enabled?1:0;
+    this.tiltWidth.value=this.tiltShift.width;
+    this.bokeh.value=this.tiltShift.enabled?this.tiltShift.blur:(this.style==='miniature'?16:4);
+  }
   setFocus(value:boolean){
     if(this.focusEnabled===value)return;
     this.focusEnabled=value;this.dofEnabled.value=value?1:0;
-    if(this.pipeline)this.buildPipeline();
+    if(this.pipeline)this.pipeline=value?this.focusedPipeline:this.unblurredPipeline;
   }
   setQuality(quality:'high'|'balanced'){this.quality=quality;this.qualityController.setProfile(quality);this.applyQuality();}
   setFixedReviewQuality(enabled:boolean){
@@ -607,7 +639,7 @@ export class CityRenderer {
    * suburban roofscape continues the city past its edge, farmland fills the
    * valley floor and forest climbs the hills. All of it sits behind range haze. */
   private outerLandscapeColor(){
-    const p=positionLocal,edge=p.x.abs().max(p.z.abs());
+    const p=positionLocal;
     // Field parcels on a slightly rotated grid, each with its own crop tone.
     const u=p.x.mul(.92).add(p.z.mul(.39)).div(74),v=p.z.mul(.92).sub(p.x.mul(.39)).div(46);
     const parcel=mx_noise_float(vec3(floor(u),floor(v),3.1).mul(.61)).mul(.5).add(.5);
@@ -623,18 +655,10 @@ export class CityRenderer {
     const forestMask=smoothstep(26,58,p.y).max(smoothstep(.58,.7,woods));
     const crowns=mx_noise_float(p.mul(.21)).mul(.5).add(.5);
     const canopy=mix(color('#4a6248'),color('#6c8053'),crowns.mul(crowns));
-    // Low dense roofs just outside the basin, thinning with distance: a block
-    // grid of individually toned roofs split by darker streets.
-    const town=smoothstep(1050,560,edge).mul(smoothstep(22,8,p.y)).mul(smoothstep(.4,.52,mx_noise_float(wp.mul(.004)).mul(.5).add(.5)));
-    const townP=vec2(p.x,p.z).add(warp.mul(.12));
-    const lot=townP.div(vec2(11,8)),lotCell=floor(lot),lotUv=fract(lot);
-    const tone=mx_noise_float(vec3(lotCell,1.7).mul(.83)).mul(.5).add(.5);
-    const roofPalette=mix(mix(color('#7d8288'),color('#a59d8c'),smoothstep(.25,.55,tone)),color('#8a5f4f'),smoothstep(.78,.9,tone));
-    const lotGap=smoothstep(.02,.12,lotUv.x.min(lotUv.x.oneMinus())).mul(smoothstep(.03,.15,lotUv.y.min(lotUv.y.oneMinus())));
-    const blocks=townP.div(vec2(66,48)),blockUv=fract(blocks);
-    const street=smoothstep(.0,.04,blockUv.x.min(blockUv.x.oneMinus())).mul(smoothstep(.0,.05,blockUv.y.min(blockUv.y.oneMinus())));
-    const roofs=mix(color('#62655f'),roofPalette,lotGap.mul(.25).add(.75).mul(street.mul(.6).add(.4)));
-    return mix(mix(fields,canopy,forestMask),roofs,town.mul(forestMask.oneMinus()));
+    // Distant buildings are silhouettes/geometry, not a translucent roof grid
+    // painted over fields. That grid produced ghost rectangles and moire at
+    // grazing angles, even with shadows and AO disabled.
+    return mix(fields,canopy,forestMask);
   }
   private buildSkyline(seed:number,river:Point[]){
     const material=new THREE.MeshBasicNodeMaterial({side:THREE.DoubleSide});
@@ -650,8 +674,9 @@ export class CityRenderer {
     if(!this.treeNearGeometry||!this.treeTrunkGeometry)return [];
     const cells=new Map<string,number[]>();for(let i=0;i<points.length;i++){const p=points[i],key=`${Math.floor((p.x+400)/200)}:${Math.floor((p.z+400)/200)}`;const list=cells.get(key)??[];list.push(i);cells.set(key,list);}
     const batches:TreeBatch[]=[];
-    for(const indices of cells.values()){
-      const trunks=new THREE.InstancedMesh(this.treeTrunkGeometry,this.art.get('#746b5c'),indices.length),trees=new THREE.InstancedMesh(this.treeNearGeometry,this.art.get('#fffffe',.96),indices.length),center=new THREE.Vector3();
+    for(const [key,indices] of cells){
+      const trunks=new THREE.InstancedMesh(this.treeTrunkGeometry,this.art.get('#746b5c'),instanceCapacity(indices.length)),trees=new THREE.InstancedMesh(this.treeNearGeometry,this.art.get('#fffffe',.96),instanceCapacity(indices.length)),center=new THREE.Vector3();
+      trunks.name=`tree-trunks-${key}`;trees.name=`tree-crowns-${key}`;trunks.count=trees.count=indices.length;
       trunks.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.instanceMatrix.setUsage(THREE.DynamicDrawUsage);trees.castShadow=true;trunks.castShadow=true;
       for(let local=0;local<indices.length;local++){const p=points[indices[local]];center.x+=p.x;center.z+=p.z;trees.setColorAt(local,colorOf(p,local,indices[local]));}
       center.divideScalar(indices.length);batches.push({indices,trees,trunks,center,far:false});
@@ -665,6 +690,14 @@ export class CityRenderer {
     this.parkBatches=[];this.retireGroup(this.parks);this.parks=new THREE.Group();this.parks.name='parks';this.scene.add(this.parks);
   }
   private rebuildParks(world:World){
+    // Retain instance identity across nearby development; fresh InstancedMesh
+    // objects otherwise rebuild hundreds of node programs on a world update.
+    const previousBatches=this.parkBatches;
+    const previousTrees=new Map(previousBatches.map(b=>[b.trees.name,b]));
+    for(const batch of previousBatches){batch.trees.removeFromParent();batch.trunks.removeFromParent();}
+    const previousWires=this.parks.getObjectByName('overhead-lines') as THREE.Group|undefined;
+    previousWires?.removeFromParent();
+    this.parkBatches=[];
     this.clearParks();
     const streetTrees=streetTreePlacements(world),kit=new Kit(),planted:PlantedTree[]=[...streetTrees];
     for(const parcel of openSpaces(world)){
@@ -673,14 +706,23 @@ export class CityRenderer {
     }
     addScrambleCrossing(kit,world,this.art);
     for(const polygon of world.terrain.protected)planted.push(...addShrineGrove(kit,polygon,this.art));
-    this.parks.add(kit.finish(),buildOverheadLines(world,this.art,streetTrees));
+    this.parks.add(kit.finish(),buildOverheadLines(world,this.art,streetTrees,previousWires));
     this.parkLook=planted;
     this.parkBatches=this.createTreeBatches(planted,p=>treeColor(p.species,p.color,this.season,p.variation));
     for(const batch of this.parkBatches){
       for(let local=0;local<batch.indices.length;local++){const i=batch.indices[local],p=planted[i];dummy.position.set(p.x,0,p.z);dummy.rotation.set(0,i*2.39996,0);dummy.scale.setScalar(p.s/1.8);dummy.updateMatrix();batch.trees.setMatrixAt(local,dummy.matrix);batch.trunks.setMatrixAt(local,dummy.matrix);}
+      const previous=previousTrees.get(batch.trees.name);
+      const nearGeometry=batch.trees.geometry;
+      batch.trees=reuseInstances(previous?.trees,batch.trees);
+      batch.trunks=reuseInstances(previous?.trunks,batch.trunks);
+      batch.trees.geometry=nearGeometry;
+      batch.trees.instanceMatrix.needsUpdate=true;batch.trunks.instanceMatrix.needsUpdate=true;
       batch.trees.computeBoundingSphere();batch.trunks.computeBoundingSphere();
       this.parks.add(batch.trees,batch.trunks);
     }
+    const retained=new Set(this.parkBatches.flatMap(b=>[b.trees,b.trunks]));
+    for(const batch of previousBatches)for(const mesh of [batch.trees,batch.trunks])if(!retained.has(mesh))this.retire(()=>mesh.dispose());
+    if(previousWires)this.retireGroup(previousWires);
   }
   /** Repaint every crown for the current season; called only when its quantized key changes. */
   private paintSeason(){
@@ -1040,8 +1082,12 @@ export class CityRenderer {
     const focusTarget=focusDepthFromViewZ(this.focusTargetView.z,this.camera.near,this.camera.far);
     if(this.focusResetPending){this.focus.value=focusTarget;this.focusResetPending=false;}
     else this.focus.value=dampFocusDepth(this.focus.value,focusTarget,dt);
+    if(this.tiltShift.enabled){
+      writeTiltedFocusPlane(this.tiltPlane.value,this.focus.value,this.camera.fov,this.tiltShift);
+      this.tiltOpticalScale.value=miniatureOpticalScale(this.focus.value);
+    }
     if(this.selected!==null){const b=this.worldState?.buildings.find(b=>b.id===this.selected);this.highlight.visible=!!b;if(b)this.highlight.position.set(b.x,.22,b.z);}else this.highlight.visible=false;
-    this.pipeline?.render();
+    if(this.scenePass&&this.pipeline)submitSceneAndEffects(this.renderer,this.scenePass,this.pipeline,this.sceneFrame);
     const cost=performance.now()-begin;
     if(!this.fixedReviewQuality&&this.qualityController.record(frameInterval,now,!document.hidden&&this.objectQueue.size===0&&this.chunks.pendingCount===0&&this.sidewalks.pendingCount===0&&this.pendingRoads===0&&this.pendingCompiles===0)!==null)this.applyQuality();
     this.frame++;
@@ -1111,9 +1157,14 @@ export class CityRenderer {
       shadowCamera.right-shadowCamera.left,shadowCamera.top-shadowCamera.bottom,
       this.sun.shadow.mapSize.x,this.sun.shadow.mapSize.y,this.sun.target.position);
     this.sun.position.add(this.sun.target.position);
-    this.sun.intensity=.16+this.daylight*2.05;
+    // Clear daytime key separates sunlit neutral facades from cool sky fill.
+    // Fade the extra energy out with dusk so the established night/golden-hour
+    // treatment stays intact; ambient and exposure are deliberately unchanged.
+    const clearDayKey=this.daylight*(1-dusk)*(1-THREE.MathUtils.clamp(this.rain,0,1));
+    this.sun.intensity=.16+this.daylight*2.05+clearDayKey*1.19;
     this.shaftStrength=dusk*THREE.MathUtils.smoothstep(this.daylight,.15,.6)*(1-this.rain);
     this.shaftColor.value.set(dusk>.4?'#ffc58a':'#ffe2b4').multiplyScalar(this.shaftStrength*.45);this.sun.color.set('#aac8e3').lerp(new THREE.Color(dusk>.4?'#ffcc9a':'#ffe6c2'),this.daylight);
+    this.sun.color.lerp(new THREE.Color('#fff1db'),clearDayKey);
     this.water?.setSun(v.copy(this.sun.position).sub(this.sun.target.position),new THREE.Color().copy(this.sun.color).multiplyScalar(this.sun.intensity*.5));
     // Soft urban bounce keeps opaque facades and lanes readable between local
     // emitters. The visible sky is not an environment light: retain enough

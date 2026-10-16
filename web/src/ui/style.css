@@ -477,3 +477,10 @@
 @media (prefers-reduced-motion: reduce) {
   .city-ui *, .city-ui *::before, .city-ui *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+.tilt-shift-controls { margin: 14px 0; padding: 12px; border: 1px solid currentColor; border-radius: 8px; }
+.tilt-shift-controls legend { padding: 0 5px; font-size: 12px; }
+.tilt-shift-controls label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 9px 0; font-size: 12px; }
+.tilt-shift-controls input[type="range"] { width: 55%; min-width: 0; }
+
+.camera-blur-note { font-size: 12px; line-height: 1.5; opacity: .75; }

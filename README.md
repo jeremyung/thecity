@@ -33,18 +33,13 @@ The next milestone is the existing 800 m city: visual fidelity, normal loading a
 
 The [updated living-city goal](validation/living-city-goal.md) incorporates the
 [multidimensional fidelity assessment](validation/fidelity-review-current.md#multidimensional-gap-assessment--2026-10-12).
-The bounded station-to-street correction is retained on three-seed support audits
-and sampled passenger traversal in both styles. Further station detailing stops.
-The bounded bank planting correction is also retained. The next primary decision
-is city-wide urban fabric: reduce excessive openness, street regularity and
-transport dominance, then evaluate neighborhood-scale improvements in matched
-ordinary views. Existing compact-crop coverage does not establish city-wide
-visual success. Preserve the bounded apartment, entrance, canopy and glazing
-changes with their validation limits.
-See the [latest learning record and priorities](validation/fidelity-review-current.md#consolidated-learning-record-and-priorities--2026-10-13)
-for the evidence, remaining gaps and stop conditions.
-Full lot counts, more travelers, extra textures or stronger blur alone do not
-establish fidelity.
+The primary workstream is camera, shaders, rendering and texture quality against the locked concepts. The immediate camera target is an optional, depth-aware tilt-shift miniature effect. Architecture, urban fabric, activity and the full living-city scope remain required; this presentation pass is not deferred behind more parcel or building-kit variants. See the [current milestones](specs/08-delivery.md#current-acceptance-milestones--2026-10-15) and [handoff](validation/HANDOFF.md) for implemented, tested and visually accepted status.
+
+### Try tilt-shift
+
+Open **City details** on desktop or **Visual settings** on mobile, then enable **Tilted focus plane** under **Camera effects**. For a clear miniature study, use an elevated neighborhood view and the 50mm lens. Move **Focus position**, rotate **Band angle**, and reduce **Band width** for a narrower sharp region. **Plane tilt** changes how focus depth varies across the scene; **Blur limit** caps the radius rather than increasing blur everywhere. Turn off the tilted plane to return to ordinary depth of field, or uncheck **Camera blur** to inspect sharp geometry. Switching Camera blur back on restores the selected effect and its settings. Adjusting the sliders while blur is off keeps the view unblurred. These candidate settings currently last only for the session.
+
+Both-style static screens and bounded weather-motion diagnostics support the controls locally. Broad scene coverage, temporal artifact review and live-production performance acceptance remain open. Stronger blur alone does not establish scene fidelity.
 
 Open arterial sidewalks now rebuild incrementally and join around junctions. Frequent growth updates coalesce behind the active build to avoid repeated cancellation, with a short presentation delay. Developing-city checks cover both styles; continuous growth, fallback rendering and remaining road-surface seams are still under review. See [sidewalk validation](validation/sidewalk-junctions.md#live-staged-integration--2026-10-12). Ground junction heights and open-local markings are corrected; width-aware rounded junction footprints and connected arterial sidewalk corners are implemented, and intersection paint now clears adjoining carriageways. Full-city motion is still under review. See [surface checks](validation/ground-surface-artifacts.md#ground-junction-datum-and-open-local-streets--2026-10-12).
 
