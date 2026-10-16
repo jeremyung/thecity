@@ -776,15 +776,13 @@ const result = {
     face_vertex_ids: face.identity,
     traced_face_count: tracedFaces.length,
     aggregate_free_area_all_traced_faces_m2: voidComponents.reduce((sum, c) => sum + c.area_m2, 0),
-    largest_free_components: voidComponents
-      .slice(0, 12)
-      .map((c) => ({
-        area_m2: c.area_m2,
-        centroid_xz: c.centroid,
-        bbox_xz: c.bbox,
-        face_area_m2: c.face.area,
-        face_vertex_ids: c.face.identity,
-      })),
+    largest_free_components: voidComponents.slice(0, 12).map((c) => ({
+      area_m2: c.area_m2,
+      centroid_xz: c.centroid,
+      bbox_xz: c.bbox,
+      face_area_m2: c.face.area,
+      face_vertex_ids: c.face.identity,
+    })),
   },
   geometry_assumptions: {
     grid_step_m: STEP,
@@ -805,14 +803,12 @@ const result = {
     raw_portal_candidates: sourceCandidates.length,
     distinct_portals: portals.length,
     portal_rejections: portalRejected,
-    portal_examples: portals
-      .slice(0, 12)
-      .map((p) => ({
-        road_id: p.host.id,
-        attachment: p.attach,
-        first_cell: [p.cell.x, p.cell.z],
-        connector_length_m: p.distance,
-      })),
+    portal_examples: portals.slice(0, 12).map((p) => ({
+      road_id: p.host.id,
+      attachment: p.attach,
+      first_cell: [p.cell.x, p.cell.z],
+      connector_length_m: p.distance,
+    })),
     stats: bfsStats,
     approximate_safe_cell_count: [...clearCellMemo.values()].filter(Boolean).length,
   },

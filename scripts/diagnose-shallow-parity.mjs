@@ -20,17 +20,15 @@ const summarize = () => {
   const raw = engine.save();
   const save = JSON.parse(raw);
   const newShallow = save.parcels.filter((p) => !initialIds.has(p.id) && p.depth === 8);
-  const latest = newShallow
-    .slice(-3)
-    .map(({ id, x, z, width, depth, road_id, access_node }) => ({
-      id,
-      x,
-      z,
-      width,
-      depth,
-      road_id,
-      access_node,
-    }));
+  const latest = newShallow.slice(-3).map(({ id, x, z, width, depth, road_id, access_node }) => ({
+    id,
+    x,
+    z,
+    width,
+    depth,
+    road_id,
+    access_node,
+  }));
   return {
     tick: save.tick,
     parcel_count: save.parcels.length,

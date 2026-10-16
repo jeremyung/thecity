@@ -1809,14 +1809,12 @@ export class CityRenderer {
       const crossings: CrossingDeck[] = world.roads.flatMap((road) => {
         const alignment = railAlignments.get(road.id);
         if (alignment)
-          return alignment.samples
-            .slice(1)
-            .map((s, i) => ({
-              a: { x: alignment.samples[i][1], z: alignment.samples[i][2] },
-              b: { x: s[1], z: s[2] },
-              width: roadWidth(road.kind),
-              height: 1 + RAIL_DECK,
-            }));
+          return alignment.samples.slice(1).map((s, i) => ({
+            a: { x: alignment.samples[i][1], z: alignment.samples[i][2] },
+            b: { x: s[1], z: s[2] },
+            width: roadWidth(road.kind),
+            height: 1 + RAIL_DECK,
+          }));
         const a = nodes.get(road.from),
           b = nodes.get(road.to);
         return a && b
