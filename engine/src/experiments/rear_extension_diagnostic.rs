@@ -4,7 +4,7 @@
 //! the exact parcel geometry gates would allow additional rear lot depth while
 //! retaining each existing road-facing edge.
 
-use super::{geometry, Building, CollisionContext, Engine, Parcel, ParcelFrontage};
+use crate::{geometry, Building, CollisionContext, Engine, Parcel, ParcelFrontage};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs;

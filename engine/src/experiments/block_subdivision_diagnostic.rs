@@ -7,7 +7,7 @@
 //! protected land, bounds, and other reservations. It is an opportunity
 //! measurement, not a legal retrofit or a demand/construction forecast.
 
-use super::{blocks, geometry, CollisionSegment, Engine, NeighborhoodPlan};
+use crate::{blocks, geometry, CollisionSegment, Engine, NeighborhoodPlan};
 use serde::Serialize;
 use std::collections::BTreeSet;
 

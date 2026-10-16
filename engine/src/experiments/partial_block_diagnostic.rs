@@ -4,7 +4,7 @@
 //! only permits explicitly selected, individually clear canonical lots when a
 //! legacy all-canonical-lots check would reject a full block.
 
-use super::*;
+use crate::*;
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -20,7 +20,7 @@ struct PartialFullBlockWitness {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
-pub(super) struct PartialFullBlockCapture {
+pub(crate) struct PartialFullBlockCapture {
     candidates: usize,
     selected_lot_counts: BTreeMap<usize, usize>,
     rejection_counts: BTreeMap<&'static str, usize>,
@@ -36,7 +36,7 @@ std::thread_local! {
     static PARTIAL_CAPTURE: std::cell::RefCell<Option<PartialCaptureState>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn capture_partial_candidates<R>(f: impl FnOnce() -> R) -> (R, PartialFullBlockCapture) {
+pub(crate) fn capture_partial_candidates<R>(f: impl FnOnce() -> R) -> (R, PartialFullBlockCapture) {
     PARTIAL_CAPTURE.with(|capture| {
         assert!(
             capture.borrow().is_none(),
@@ -66,7 +66,7 @@ impl Drop for PartialCaptureGuard {
     }
 }
 
-pub(super) fn record_partial_candidate(
+pub(crate) fn record_partial_candidate(
     anchor: u32,
     corners: &[WorldPoint; 4],
     canonical_count: usize,
@@ -183,7 +183,7 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
         clone_started_from_source,
         "each treatment starts from exact source save"
     );
-    engine.partial_full_block_experiment = partial_enabled;
+    engine.experiments.partial_full_block_experiment = partial_enabled;
     let (((planner_calls, anchors_visited), capture), partial_full_block) =
         capture_partial_candidates(|| {
             neighborhood_admission::capture_rejections(|| {
@@ -233,7 +233,7 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
     {
         let mut resumed = Engine::restore_json(&canonical_save).ok();
         if let Some(resumed) = resumed.as_mut() {
-            resumed.partial_full_block_experiment = partial_enabled;
+            resumed.experiments.partial_full_block_experiment = partial_enabled;
             engine.step(2_000);
             resumed.step(2_000);
             let matches = engine.save_json() == resumed.save_json();
@@ -276,7 +276,7 @@ impl Engine {
     /// frontage edge; this is a diagnostic usefulness threshold, not a claimed
     /// production rule. Road and exact lot-clearance checks remain unchanged.
     #[cfg(test)]
-    pub(super) fn partial_full_block_lots_useful(
+    pub(crate) fn partial_full_block_lots_useful(
         corners: &[WorldPoint; 4],
         lots: &[blocks::BlockLot],
     ) -> bool {
@@ -359,10 +359,10 @@ fn partial_full_block_usefulness_requires_four_lots_and_both_long_edges() {
 #[test]
 fn partial_full_block_experiment_hook_defaults_off_and_is_not_persisted() {
     let engine = Engine::new_legacy(87231);
-    assert!(!engine.partial_full_block_experiment);
+    assert!(!engine.experiments.partial_full_block_experiment);
     let save = engine.save_json();
     let restored = Engine::restore_json(&save).expect("restore default engine");
-    assert!(!restored.partial_full_block_experiment);
+    assert!(!restored.experiments.partial_full_block_experiment);
     assert_eq!(restored.save_json(), save);
 }
 

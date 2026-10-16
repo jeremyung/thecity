@@ -2292,7 +2292,7 @@ mod tests {
     #[test]
     #[ignore = "mature golden parity through the owned incremental initializer"]
     fn owned_initialization_matches_frozen_mature_descriptors() {
-        let reference = crate::access_reference::load();
+        let reference = crate::tests::access_reference::load();
         let mut search = DescriptorSearch::from_owned(
             reference.face.clone(),
             reference.hosts.clone(),

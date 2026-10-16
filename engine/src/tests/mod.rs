@@ -1,15 +1,28 @@
 use super::*;
 
+mod access_descriptor_integration_tests;
+mod access_path_validation_tests;
+pub(crate) mod access_reference;
 mod access_tests;
 mod bus_tests;
 mod core_tests;
+mod district_density_integration_tests;
 mod district_tests;
+pub(crate) mod face_access_exact_tests;
 mod frontage_tests;
+mod height_redevelopment_tests;
+mod masterplan_replay_tests;
+#[cfg(feature = "parent-passage-candidate")]
+mod parent_passage_tests;
 mod parks_tests;
 mod persistence_tests;
 mod planner_tests;
+mod presentation_revision_tests;
 mod rail_tests;
+mod route_equivalence_tests;
+mod spine_replay_tests;
 mod traffic_tests;
+mod transit_access_tests;
 
 #[derive(Default, Debug)]
 struct MatureProposalAudit {

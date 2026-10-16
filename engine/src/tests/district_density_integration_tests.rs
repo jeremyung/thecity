@@ -1,15 +1,15 @@
 //! Tests against real restored worlds; this adapter is not a runtime controller.
-use super::*;
 use crate::district_density::{measure, BuildingSample, BuildingUse, GridSpec};
+use crate::*;
 
 #[test]
 fn mature_district_measurements_conserve_capacity_without_mutating_worlds() {
     for fixture in [
         include_str!(
-            "../../tests/fixtures/access-joins/interior-access-verified-87231.json.final.json"
+            "../../../tests/fixtures/access-joins/interior-access-verified-87231.json.final.json"
         ),
         include_str!(
-            "../../tests/fixtures/access-joins/interior-access-verified-seed0.json.final.json"
+            "../../../tests/fixtures/access-joins/interior-access-verified-seed0.json.final.json"
         ),
     ] {
         let engine = Engine::restore_json(fixture).expect("mature fixture restores");

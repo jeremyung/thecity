@@ -71,9 +71,9 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
 
     engine.step(1);
     assert_eq!(engine.state.tick, 80);
-    assert_eq!(engine.early_block_reservation_attempts, 1);
-    assert_eq!(engine.early_block_reservation_admissions, 1);
-    assert_eq!(engine.early_block_reservation_noops, 0);
+    assert_eq!(engine.experiments.early_block_reservation_attempts, 1);
+    assert_eq!(engine.experiments.early_block_reservation_admissions, 1);
+    assert_eq!(engine.experiments.early_block_reservation_noops, 0);
     let plan = engine.state.neighborhood_plan.as_ref().unwrap();
     assert_eq!(
         plan.next_segment, 0,
@@ -99,7 +99,7 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
     engine.step(2_000);
     resumed.step(2_000);
     assert_eq!(engine.save_json(), resumed.save_json());
-    assert!(engine.early_block_reservation_duration_ticks > 0);
+    assert!(engine.experiments.early_block_reservation_duration_ticks > 0);
     assert!(engine.state.neighborhood_plan.is_some());
     assert!(
         engine.state.buildings.iter().any(|building| {
@@ -118,9 +118,9 @@ fn early_reservation_records_noop_when_existing_plan_guards_reject_candidate() {
     engine.step(1);
 
     assert_eq!(engine.state.tick, 80);
-    assert_eq!(engine.early_block_reservation_attempts, 1);
-    assert_eq!(engine.early_block_reservation_admissions, 0);
-    assert_eq!(engine.early_block_reservation_noops, 1);
+    assert_eq!(engine.experiments.early_block_reservation_attempts, 1);
+    assert_eq!(engine.experiments.early_block_reservation_admissions, 0);
+    assert_eq!(engine.experiments.early_block_reservation_noops, 1);
     assert!(engine.state.neighborhood_plan.is_none());
     assert_eq!(
         engine
@@ -146,7 +146,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
             let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             engine.district_policy_experiment = false;
-            engine.early_block_reservation_disable_override = !enabled;
+            engine.experiments.early_block_reservation_disable_override = !enabled;
             for _ in 0..121 {
                 engine.step(2_000);
             }
@@ -225,10 +225,10 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                 "ordinary_road_records": ordinary_roads.len(),
                 "ordinary_road_length_m": ordinary_roads.iter().map(|r| r.length as f64).sum::<f64>(),
                 "parcels": engine.state.parcels.len(),
-                "reservation_attempts": engine.early_block_reservation_attempts,
-                "reservation_admissions": engine.early_block_reservation_admissions,
-                "reservation_noops": engine.early_block_reservation_noops,
-                "reservation_duration_ticks": engine.early_block_reservation_duration_ticks,
+                "reservation_attempts": engine.experiments.early_block_reservation_attempts,
+                "reservation_admissions": engine.experiments.early_block_reservation_admissions,
+                "reservation_noops": engine.experiments.early_block_reservation_noops,
+                "reservation_duration_ticks": engine.experiments.early_block_reservation_duration_ticks,
                 "planner_work_cap": {
                     "evaluation_cadence_ticks": 80,
                     "anchors": MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION,
@@ -257,7 +257,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
             .expect("write native snapshot");
 
             let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
-            resumed.early_block_reservation_disable_override = !enabled;
+            resumed.experiments.early_block_reservation_disable_override = !enabled;
             resumed.district_policy_experiment = false;
             assert_eq!(resumed.save_json(), save);
             engine.step(2_000);

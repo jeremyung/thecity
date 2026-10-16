@@ -16,7 +16,7 @@ fn early_access_scheduling_matched_seeds() {
             let mut engine = Engine::new_legacy(seed);
             engine.set_development_rate(16);
             engine.district_policy_experiment = false;
-            engine.early_access_experiment = enabled;
+            engine.experiments.early_access_experiment = enabled;
             for _ in 0..121 {
                 engine.step(2_000);
             }
@@ -81,9 +81,9 @@ fn early_access_scheduling_matched_seeds() {
                 "ordinary_road_length_m": road_length_m,
                 "ordinary_road_records": ordinary_roads.len(),
                 "total_road_records": engine.state.roads.len(),
-                "early_access_attempts": engine.early_access_attempts,
-                "early_access_admissions": engine.early_access_admissions,
-                "interior_access_completions": engine.interior_access_completions,
+                "early_access_attempts": engine.experiments.early_access_attempts,
+                "early_access_admissions": engine.experiments.early_access_admissions,
+                "interior_access_completions": engine.experiments.interior_access_completions,
                 "pending_access_lots": engine.state.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
                 "pending_access_project": engine.state.pending_interior_access.as_ref().map(|plan| plan.project_id),
                 "unbuilt_parcels": engine.state.parcels.iter().filter(|parcel| !engine.state.buildings.iter().any(|building| building.parcel_id == parcel.id)).count(),
@@ -109,7 +109,7 @@ fn early_access_scheduling_matched_seeds() {
             // The policy is intentionally non-persisted, so restore and replay
             // both continuations with the same explicit experiment setting.
             let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
-            resumed.early_access_experiment = enabled;
+            resumed.experiments.early_access_experiment = enabled;
             resumed.district_policy_experiment = false;
             assert_eq!(resumed.save_json(), save);
             engine.step(2_000);

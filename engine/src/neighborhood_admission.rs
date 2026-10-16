@@ -433,7 +433,7 @@ impl Engine {
             return Err(NeighborhoodRejection::ProposedLotGeometry);
         }
         #[cfg(test)]
-        if self.partial_full_block_experiment
+        if self.experiments.partial_full_block_experiment
             && reused_edge.is_none()
             && spine_plan.is_none()
             && selected_lots.is_some()
@@ -442,7 +442,7 @@ impl Engine {
             return Err(NeighborhoodRejection::InsufficientInteriorFrontage);
         }
         #[cfg(test)]
-        let partial_full_block_is_explicit = self.partial_full_block_experiment
+        let partial_full_block_is_explicit = self.experiments.partial_full_block_experiment
             && selected_lots.is_some_and(|selected| {
                 selected.len() < canonical_lots.len()
                     && selected.iter().enumerate().all(|(index, lot)| {

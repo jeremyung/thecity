@@ -1,60 +1,34 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+#[cfg(test)]
+mod experiments;
 mod neighborhood_demand;
 mod neighborhood_errands;
 
-#[cfg(all(test, feature = "parent-passage-candidate"))]
-mod parent_passage_tests;
-
-#[cfg(test)]
-mod presentation_revision_tests;
-
-#[cfg(test)]
-mod access_bend_diagnostic;
 mod access_candidates;
 mod access_capture;
 mod access_connector;
-#[cfg(test)]
-mod access_density_diagnostic;
-#[cfg(test)]
-mod access_descriptor_integration_tests;
 mod access_descriptor_search;
 mod access_discovery_job;
 #[cfg(target_arch = "wasm32")]
 mod access_discovery_wasm;
-#[cfg(test)]
-mod access_discovery_work_diagnostic;
 mod access_live;
 mod access_live_engine;
 mod access_math;
 mod access_path_validation;
-#[cfg(test)]
-mod access_path_validation_tests;
 mod access_planning_job;
 mod access_proposal_capture;
 mod access_proposal_validation;
 mod access_rays;
-#[cfg(test)]
-mod access_reference;
 mod access_search;
-#[cfg(test)]
-mod block_subdivision_diagnostic;
 mod blocks;
-#[cfg(test)]
-mod compact_frontage_diagnostic;
-#[cfg(test)]
-mod density_gap_diagnosis;
 mod development;
 mod district_controller;
 mod district_density;
-#[cfg(test)]
-mod district_density_integration_tests;
 mod district_policy;
 mod expressway_profile;
 mod expressway_traffic;
-#[cfg(test)]
-mod face_access_exact_tests;
 mod face_target_containment;
 mod face_target_ranking;
 mod face_target_sampling;
@@ -64,31 +38,19 @@ mod frontage;
 mod frontier;
 mod geometry;
 mod height_redevelopment;
-#[cfg(test)]
-mod height_redevelopment_tests;
-#[cfg(test)]
-mod initial_depth_diagnostic;
 mod interior_access;
 mod masterplan;
 mod masterplan_growth;
-#[cfg(test)]
-mod masterplan_replay_tests;
 mod masterplan_validation;
-#[cfg(test)]
-mod mature_planner_trace_tests;
 mod movement_support;
 mod neighborhood_admission;
 mod neighborhood_spine;
 mod network_split;
 mod node_coincidence_index;
-#[cfg(test)]
-mod partial_block_diagnostic;
 mod project_scoring;
 mod rail_alignment;
 mod rail_platform;
 mod rail_runtime;
-#[cfg(test)]
-mod rear_extension_diagnostic;
 mod rear_extensions;
 mod river_course;
 mod road_curve;
@@ -100,20 +62,8 @@ mod road_face_walk;
 mod road_faces;
 mod road_pair_broadphase;
 mod road_split;
-#[cfg(test)]
-mod road_split_profile;
-#[cfg(test)]
-mod route_equivalence_tests;
-#[cfg(test)]
-mod skyline_allocation_diagnostic;
 mod spine_blocks;
 mod spine_plan;
-#[cfg(test)]
-mod spine_ranking_experiment_tests;
-#[cfg(test)]
-mod spine_replay_tests;
-#[cfg(test)]
-mod transit_access_tests;
 mod transit_recovery;
 
 const SCHEMA_VERSION: u32 = 1;
@@ -1035,58 +985,7 @@ pub struct Engine {
     /// experiment against legacy scheduling. Production defaults to false.
     district_policy_experiment: bool,
     #[cfg(test)]
-    district_policy_comparisons: u32,
-    #[cfg(test)]
-    district_policy_access_wins: u32,
-    #[cfg(test)]
-    district_policy_frontier_wins: u32,
-    #[cfg(test)]
-    district_policy_diagnostics: district_policy::ExperimentDiagnostics,
-    /// Test-only scheduler experiment: offer a real interior-access project
-    /// before progressive frontage release, after ordinary usable infill.
-    #[cfg(test)]
-    early_access_experiment: bool,
-    #[cfg(test)]
-    early_access_attempted_tick: Option<u64>,
-    #[cfg(test)]
-    early_access_admissions: u32,
-    #[cfg(test)]
-    early_access_attempts: u32,
-    /// Test-only control for paired comparisons after early block reservation
-    /// became the production scheduling behavior.
-    #[cfg(test)]
-    early_block_reservation_disable_override: bool,
-    #[cfg(test)]
-    early_block_reservation_attempts: u32,
-    #[cfg(test)]
-    early_block_reservation_admissions: u32,
-    #[cfg(test)]
-    early_block_reservation_noops: u32,
-    #[cfg(test)]
-    early_block_reservation_started_tick: Option<u64>,
-    #[cfg(test)]
-    early_block_reservation_duration_ticks: u64,
-    #[cfg(test)]
-    interior_access_completions: u32,
-    /// Test-only opening-time access experiment. Production remains unchanged.
-    #[cfg(test)]
-    road_opening_access_experiment: bool,
-    /// Narrow follow-up experiment: permit opening-time access only when the
-    /// newly formed face contains sampled unserved interior and a wholly
-    /// contained access proposal. The legacy opening experiment remains a
-    /// separate control for matched comparisons.
-    #[cfg(test)]
-    face_conditioned_access_experiment: bool,
-    /// Test-only admission treatment allowing a canonical clear-lot subset on
-    /// otherwise ordinary full-block candidates.
-    #[cfg(test)]
-    partial_full_block_experiment: bool,
-    #[cfg(test)]
-    road_opening_access_attempts: u32,
-    #[cfg(test)]
-    road_opening_access_admissions: u32,
-    #[cfg(test)]
-    road_opening_access_branch: Option<u32>,
+    experiments: experiments::ExperimentState,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -1427,47 +1326,7 @@ impl Engine {
             live_access: None,
             district_policy_experiment: false,
             #[cfg(test)]
-            district_policy_comparisons: 0,
-            #[cfg(test)]
-            district_policy_access_wins: 0,
-            #[cfg(test)]
-            district_policy_frontier_wins: 0,
-            #[cfg(test)]
-            district_policy_diagnostics: district_policy::ExperimentDiagnostics::default(),
-            #[cfg(test)]
-            early_access_experiment: false,
-            #[cfg(test)]
-            early_access_attempted_tick: None,
-            #[cfg(test)]
-            early_access_admissions: 0,
-            #[cfg(test)]
-            early_access_attempts: 0,
-            #[cfg(test)]
-            early_block_reservation_disable_override: false,
-            #[cfg(test)]
-            early_block_reservation_attempts: 0,
-            #[cfg(test)]
-            early_block_reservation_admissions: 0,
-            #[cfg(test)]
-            early_block_reservation_noops: 0,
-            #[cfg(test)]
-            early_block_reservation_started_tick: None,
-            #[cfg(test)]
-            early_block_reservation_duration_ticks: 0,
-            #[cfg(test)]
-            interior_access_completions: 0,
-            #[cfg(test)]
-            road_opening_access_experiment: false,
-            #[cfg(test)]
-            face_conditioned_access_experiment: false,
-            #[cfg(test)]
-            partial_full_block_experiment: false,
-            #[cfg(test)]
-            road_opening_access_attempts: 0,
-            #[cfg(test)]
-            road_opening_access_admissions: 0,
-            #[cfg(test)]
-            road_opening_access_branch: None,
+            experiments: Default::default(),
         };
         if masterplan {
             engine.initialize_masterplan_world(initial_plan);
@@ -2596,13 +2455,18 @@ impl Engine {
         }
         self.advance_district_measurement();
         #[cfg(test)]
-        if self.early_block_reservation_started_tick.is_some() {
+        if self
+            .experiments
+            .early_block_reservation_started_tick
+            .is_some()
+        {
             if self.state.neighborhood_plan.is_some() {
-                self.early_block_reservation_duration_ticks = self
+                self.experiments.early_block_reservation_duration_ticks = self
+                    .experiments
                     .early_block_reservation_duration_ticks
                     .saturating_add(1);
             } else {
-                self.early_block_reservation_started_tick = None;
+                self.experiments.early_block_reservation_started_tick = None;
             }
         }
     }
@@ -3227,7 +3091,10 @@ impl Engine {
         );
         #[cfg(test)]
         {
-            self.interior_access_completions = self.interior_access_completions.saturating_add(1);
+            self.experiments.interior_access_completions = self
+                .experiments
+                .interior_access_completions
+                .saturating_add(1);
         }
         self.state.revision = self.state.revision.saturating_add(1);
         self.trim_completed_projects();
@@ -3407,7 +3274,7 @@ impl Engine {
             })
             .count();
         #[cfg(test)]
-        if self.early_access_experiment
+        if self.experiments.early_access_experiment
             && connected_ordinary_roads >= 40
             && self.state.tick % 160 == 0
             && active_road_projects == 0
@@ -3434,10 +3301,12 @@ impl Engine {
                 .eligible_bridgehead_headings(&active_buildings)
                 .is_empty();
             if !bridgehead_due {
-                self.early_access_attempted_tick = Some(self.state.tick);
-                self.early_access_attempts = self.early_access_attempts.saturating_add(1);
+                self.experiments.early_access_attempted_tick = Some(self.state.tick);
+                self.experiments.early_access_attempts =
+                    self.experiments.early_access_attempts.saturating_add(1);
                 if self.try_plan_interior_access() {
-                    self.early_access_admissions = self.early_access_admissions.saturating_add(1);
+                    self.experiments.early_access_admissions =
+                        self.experiments.early_access_admissions.saturating_add(1);
                     return;
                 }
             }
@@ -3519,7 +3388,7 @@ impl Engine {
 
     fn try_reserve_early_coordinated_block(&mut self, active_road_projects: usize) -> bool {
         #[cfg(test)]
-        if self.early_block_reservation_disable_override {
+        if self.experiments.early_block_reservation_disable_override {
             return false;
         }
         if self.state.tick % 80 != 0
@@ -3541,8 +3410,10 @@ impl Engine {
 
     #[cfg(test)]
     fn record_early_block_attempt(&mut self) {
-        self.early_block_reservation_attempts =
-            self.early_block_reservation_attempts.saturating_add(1);
+        self.experiments.early_block_reservation_attempts = self
+            .experiments
+            .early_block_reservation_attempts
+            .saturating_add(1);
     }
 
     #[cfg(not(test))]
@@ -3550,9 +3421,11 @@ impl Engine {
 
     #[cfg(test)]
     fn record_early_block_admission(&mut self) {
-        self.early_block_reservation_admissions =
-            self.early_block_reservation_admissions.saturating_add(1);
-        self.early_block_reservation_started_tick = Some(self.state.tick);
+        self.experiments.early_block_reservation_admissions = self
+            .experiments
+            .early_block_reservation_admissions
+            .saturating_add(1);
+        self.experiments.early_block_reservation_started_tick = Some(self.state.tick);
     }
 
     #[cfg(not(test))]
@@ -3560,7 +3433,10 @@ impl Engine {
 
     #[cfg(test)]
     fn record_early_block_noop(&mut self) {
-        self.early_block_reservation_noops = self.early_block_reservation_noops.saturating_add(1);
+        self.experiments.early_block_reservation_noops = self
+            .experiments
+            .early_block_reservation_noops
+            .saturating_add(1);
     }
 
     #[cfg(not(test))]
@@ -5672,7 +5548,7 @@ impl Engine {
                     },
                 ];
                 #[cfg(test)]
-                let partial_lots = if self.partial_full_block_experiment {
+                let partial_lots = if self.experiments.partial_full_block_experiment {
                     let lots = self.available_coordinated_block_lots(&corners, &collision_context);
                     let canonical_count = blocks::subdivide_rectangular_block(
                         corners.map(|point| blocks::BlockPoint {
@@ -5712,7 +5588,7 @@ impl Engine {
                             2.2,
                         )
                         .len();
-                        partial_block_diagnostic::record_partial_candidate(
+                        experiments::partial_block_diagnostic::record_partial_candidate(
                             anchor.id,
                             &corners,
                             canonical_count,
@@ -6178,7 +6054,7 @@ impl Engine {
 
     #[cfg(test)]
     fn try_plan_access_at_road_opening(&mut self, road_id: u32) -> bool {
-        if !self.road_opening_access_experiment
+        if !self.experiments.road_opening_access_experiment
             || self.state.neighborhood_plan.is_some()
             || self.state.pending_interior_access.is_some()
             || self.state.neighborhood_road_ids.contains(&road_id)
@@ -6227,8 +6103,11 @@ impl Engine {
             return false;
         }
 
-        self.road_opening_access_attempts = self.road_opening_access_attempts.saturating_add(1);
-        let mut proposals = if self.face_conditioned_access_experiment {
+        self.experiments.road_opening_access_attempts = self
+            .experiments
+            .road_opening_access_attempts
+            .saturating_add(1);
+        let mut proposals = if self.experiments.face_conditioned_access_experiment {
             let Some(proposals) = self.face_conditioned_access_proposals(road_id) else {
                 return false;
             };
@@ -6249,16 +6128,18 @@ impl Engine {
                 },
                 proposal.selected_lots,
             ) {
-                if self.face_conditioned_access_experiment
+                if self.experiments.face_conditioned_access_experiment
                     && std::env::var_os("FACE_ACCESS_DEBUG").is_some()
                 {
                     eprintln!(
                         "face access admitted trigger={road_id} host={proposed_host_id} lots={proposed_lot_count}"
                     );
                 }
-                self.road_opening_access_admissions =
-                    self.road_opening_access_admissions.saturating_add(1);
-                self.road_opening_access_branch = self
+                self.experiments.road_opening_access_admissions = self
+                    .experiments
+                    .road_opening_access_admissions
+                    .saturating_add(1);
+                self.experiments.road_opening_access_branch = self
                     .state
                     .pending_interior_access
                     .as_ref()
@@ -7140,8 +7021,10 @@ impl Engine {
         if can_compare {
             #[cfg(test)]
             {
-                self.district_policy_comparisons =
-                    self.district_policy_comparisons.saturating_add(1);
+                self.experiments.district_policy_comparisons = self
+                    .experiments
+                    .district_policy_comparisons
+                    .saturating_add(1);
             }
             let access_scan = self.propose_interior_access();
             // Both read-only scans advance their deterministic cursors once,
@@ -7171,7 +7054,7 @@ impl Engine {
 
     #[cfg(test)]
     fn access_fallback_not_attempted_this_tick(&self) -> bool {
-        self.early_access_attempted_tick != Some(self.state.tick)
+        self.experiments.early_access_attempted_tick != Some(self.state.tick)
     }
 
     #[cfg(not(test))]
@@ -7227,7 +7110,9 @@ impl Engine {
             #[cfg(test)]
             {
                 diagnostic.no_admission_reason = Some("no_metrics");
-                self.district_policy_diagnostics.observe(diagnostic);
+                self.experiments
+                    .district_policy_diagnostics
+                    .observe(diagnostic);
             }
             return false;
         };
@@ -7243,7 +7128,9 @@ impl Engine {
                 #[cfg(test)]
                 {
                     diagnostic.no_admission_reason = Some("no_geometry");
-                    self.district_policy_diagnostics.observe(diagnostic);
+                    self.experiments
+                        .district_policy_diagnostics
+                        .observe(diagnostic);
                 }
                 return false;
             };
@@ -7252,7 +7139,9 @@ impl Engine {
                     #[cfg(test)]
                     {
                         diagnostic.no_admission_reason = Some("no_geometry");
-                        self.district_policy_diagnostics.observe(diagnostic);
+                        self.experiments
+                            .district_policy_diagnostics
+                            .observe(diagnostic);
                     }
                     return false;
                 };
@@ -7386,7 +7275,9 @@ impl Engine {
                         "no_cell_forecast"
                     },
                 );
-                self.district_policy_diagnostics.observe(diagnostic);
+                self.experiments
+                    .district_policy_diagnostics
+                    .observe(diagnostic);
             }
             return false;
         }
@@ -7410,7 +7301,9 @@ impl Engine {
                 #[cfg(test)]
                 {
                     diagnostic.no_admission_reason = Some("score_error");
-                    self.district_policy_diagnostics.observe(diagnostic);
+                    self.experiments
+                        .district_policy_diagnostics
+                        .observe(diagnostic);
                 }
                 return false;
             }
@@ -7427,7 +7320,9 @@ impl Engine {
                         "no_cell_forecast"
                     },
                 );
-                self.district_policy_diagnostics.observe(diagnostic);
+                self.experiments
+                    .district_policy_diagnostics
+                    .observe(diagnostic);
             }
             return false;
         }
@@ -7467,10 +7362,14 @@ impl Engine {
                 ) {
                     #[cfg(test)]
                     {
-                        self.district_policy_access_wins =
-                            self.district_policy_access_wins.saturating_add(1);
+                        self.experiments.district_policy_access_wins = self
+                            .experiments
+                            .district_policy_access_wins
+                            .saturating_add(1);
                         diagnostic.winner = Some("access");
-                        self.district_policy_diagnostics.observe(diagnostic);
+                        self.experiments
+                            .district_policy_diagnostics
+                            .observe(diagnostic);
                     }
                     return true;
                 }
@@ -7485,10 +7384,14 @@ impl Engine {
                     self.commit_frontier_road(scan, proposal);
                     #[cfg(test)]
                     {
-                        self.district_policy_frontier_wins =
-                            self.district_policy_frontier_wins.saturating_add(1);
+                        self.experiments.district_policy_frontier_wins = self
+                            .experiments
+                            .district_policy_frontier_wins
+                            .saturating_add(1);
                         diagnostic.winner = Some("frontier");
-                        self.district_policy_diagnostics.observe(diagnostic);
+                        self.experiments
+                            .district_policy_diagnostics
+                            .observe(diagnostic);
                     }
                     return true;
                 }
@@ -7498,7 +7401,9 @@ impl Engine {
         #[cfg(test)]
         {
             diagnostic.no_admission_reason = Some("ranked_admission_rejected");
-            self.district_policy_diagnostics.observe(diagnostic);
+            self.experiments
+                .district_policy_diagnostics
+                .observe(diagnostic);
         }
         false
     }
@@ -7714,7 +7619,8 @@ impl Engine {
         // project, try a deeper initial parcel while retaining the original
         // parcel for use/floor selection and every production admission gate.
         #[cfg(test)]
-        let parcel = initial_depth_diagnostic::maybe_expand_selected_parcel(self, parcel);
+        let parcel =
+            experiments::initial_depth_diagnostic::maybe_expand_selected_parcel(self, parcel);
         let history = vec![format!(
             "Reserved after sustained neighborhood demand on day {}",
             day
@@ -11570,47 +11476,7 @@ impl Engine {
             district_runtime,
             district_policy_experiment: false,
             #[cfg(test)]
-            district_policy_comparisons: 0,
-            #[cfg(test)]
-            district_policy_access_wins: 0,
-            #[cfg(test)]
-            district_policy_frontier_wins: 0,
-            #[cfg(test)]
-            district_policy_diagnostics: district_policy::ExperimentDiagnostics::default(),
-            #[cfg(test)]
-            early_access_experiment: false,
-            #[cfg(test)]
-            early_access_attempted_tick: None,
-            #[cfg(test)]
-            early_access_admissions: 0,
-            #[cfg(test)]
-            early_access_attempts: 0,
-            #[cfg(test)]
-            early_block_reservation_disable_override: false,
-            #[cfg(test)]
-            early_block_reservation_attempts: 0,
-            #[cfg(test)]
-            early_block_reservation_admissions: 0,
-            #[cfg(test)]
-            early_block_reservation_noops: 0,
-            #[cfg(test)]
-            early_block_reservation_started_tick: None,
-            #[cfg(test)]
-            early_block_reservation_duration_ticks: 0,
-            #[cfg(test)]
-            interior_access_completions: 0,
-            #[cfg(test)]
-            road_opening_access_experiment: false,
-            #[cfg(test)]
-            face_conditioned_access_experiment: false,
-            #[cfg(test)]
-            partial_full_block_experiment: false,
-            #[cfg(test)]
-            road_opening_access_attempts: 0,
-            #[cfg(test)]
-            road_opening_access_admissions: 0,
-            #[cfg(test)]
-            road_opening_access_branch: None,
+            experiments: Default::default(),
         };
         engine.load_masterplan()?;
         engine.refresh_height_redevelopment_lots();
@@ -12797,19 +12663,6 @@ mod wasm {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "early_access_experiment.rs"]
-mod early_access_experiment;
-#[cfg(test)]
-#[path = "early_block_reservation_experiment.rs"]
-mod early_block_reservation_experiment;
-#[cfg(test)]
-#[path = "mature_void_diagnostic.rs"]
-mod mature_void_diagnostic;
-#[cfg(test)]
-#[path = "road_opening_access_experiment.rs"]
-mod road_opening_access_experiment;
 
 #[cfg(test)]
 mod tests;

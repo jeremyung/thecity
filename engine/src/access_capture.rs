@@ -273,7 +273,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::face_access_exact_tests::frozen_target_viability_input;
+    use crate::tests::face_access_exact_tests::frozen_target_viability_input;
 
     #[test]
     fn pair_matches_standalone_captures_for_initial_mature_and_legacy_rotation() {

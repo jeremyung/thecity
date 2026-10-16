@@ -279,21 +279,23 @@ fn district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero() {
                 "district-policy seed={seed} enabled={enabled} buildings={} connected_open_roads={} road_length={road_length:.1}m envelope_proxy={envelope_area:.1} floor_proxy={floor_area:.1} comparisons={} access_wins={} frontier_wins={} elapsed={:.2}s",
                 engine.state.buildings.iter().filter(|b| b.stage == "open").count(),
                 open_roads.len(),
-                engine.district_policy_comparisons,
-                engine.district_policy_access_wins,
-                engine.district_policy_frontier_wins,
+                engine.experiments.district_policy_comparisons,
+                engine.experiments.district_policy_access_wins,
+                engine.experiments.district_policy_frontier_wins,
                 started.elapsed().as_secs_f64(),
             );
             if enabled {
-                assert!(engine.district_policy_comparisons > 0);
+                assert!(engine.experiments.district_policy_comparisons > 0);
                 assert!(
-                    engine.district_policy_access_wins + engine.district_policy_frontier_wins > 0
+                    engine.experiments.district_policy_access_wins
+                        + engine.experiments.district_policy_frontier_wins
+                        > 0
                 );
                 assert_eq!(
-                    engine.district_policy_diagnostics.comparisons,
-                    engine.district_policy_comparisons
+                    engine.experiments.district_policy_diagnostics.comparisons,
+                    engine.experiments.district_policy_comparisons
                 );
-                let diag = &engine.district_policy_diagnostics;
+                let diag = &engine.experiments.district_policy_diagnostics;
                 eprintln!(
                     "district-policy diagnostics seed={seed} comparisons={} frontier(proposals={},geometry={},source_ok={},source_reject={},sites={},area_m2={:.1},ranked={},top_mean={:.4},top_max={:.4},wins={}) access(proposals={},geometry={},source_ok={},source_reject={},sites={},area_m2={:.1},ranked={},top_mean={:.4},top_max={:.4},wins={}) paired(ranked={},frontier_score_wins={},access_score_wins={},ties={},mean_frontier_minus_access={:.5},frontier_admissions={},access_admissions={}) no_admission(no_geometry={},no_source_feasible={},no_cell_forecast={},no_metrics={},score_errors={},ranked_rejected={}) representative_comparisons={} samples={}",
                     diag.comparisons,
@@ -354,7 +356,7 @@ fn district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero() {
                     );
                 }
             } else {
-                assert_eq!(engine.district_policy_comparisons, 0);
+                assert_eq!(engine.experiments.district_policy_comparisons, 0);
             }
 
             let saved = engine.save_json();

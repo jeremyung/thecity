@@ -1,5 +1,5 @@
 //! Integration gate against immutable mature search inputs and Float32 outputs.
-use crate::{access_descriptor_search::DescriptorSearch, access_reference};
+use crate::{access_descriptor_search::DescriptorSearch, tests::access_reference};
 
 #[test]
 #[ignore = "mature descriptor parity across work quotas and serialized resumes"]

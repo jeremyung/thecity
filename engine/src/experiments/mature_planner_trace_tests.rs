@@ -4,7 +4,7 @@
 //! restored planner clone through the production anchor scan and a second
 //! restored clone through ordinary simulation ticks.
 
-use super::{site_active, Engine, NeighborhoodPlan, Road};
+use crate::{site_active, Engine, NeighborhoodPlan, Road};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -39,7 +39,7 @@ struct PlannerCall {
     cursor_anchors_examined: usize,
     production_method_accepted: bool,
     accepted_plan: Option<PlanSummary>,
-    geometry_rejection_capture: super::neighborhood_admission::RejectionCapture,
+    geometry_rejection_capture: crate::neighborhood_admission::RejectionCapture,
 }
 
 #[derive(Serialize)]
@@ -110,7 +110,7 @@ struct Report {
     reuse_edge_cap: usize,
     planner_calls: Vec<PlannerCall>,
     rejection_histogram: BTreeMap<&'static str, usize>,
-    rejection_witnesses: Vec<super::neighborhood_admission::RejectionWitness>,
+    rejection_witnesses: Vec<crate::neighborhood_admission::RejectionWitness>,
     scanned_anchor_count: usize,
     full_anchor_cursor_coverage: bool,
     production_plan_found: bool,
@@ -220,7 +220,7 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
         population: engine.state.population,
         population_pass: engine.state.population >= 24,
         roads_plus_projects,
-        segment_capacity_pass: roads_plus_projects <= super::MAX_SEGMENTS,
+        segment_capacity_pass: roads_plus_projects <= crate::MAX_SEGMENTS,
         active_projects,
         active_road_projects,
         active_building_projects,
@@ -278,7 +278,7 @@ fn planner_frontdoor_blockers(engine: &Engine) -> Vec<&'static str> {
     if engine.state.population < 24 {
         blockers.push("population_below_neighborhood_threshold");
     }
-    if engine.state.roads.len() + engine.state.projects.len() + 3 > super::MAX_SEGMENTS {
+    if engine.state.roads.len() + engine.state.projects.len() + 3 > crate::MAX_SEGMENTS {
         blockers.push("road_and_project_capacity_exhausted");
     }
     if engine.state.road_infill_due != 0 {
@@ -321,8 +321,8 @@ fn normal_trace(source: &Engine) -> NormalTickTrace {
     let start_roads = engine.state.roads.len();
     let start_projects = engine.state.projects.len();
     let start_anchor_cursor = engine.state.neighborhood_anchor_cursor;
-    let start_early_access_attempts = engine.early_access_attempts;
-    let start_early_block_attempts = engine.early_block_reservation_attempts;
+    let start_early_access_attempts = engine.experiments.early_access_attempts;
+    let start_early_block_attempts = engine.experiments.early_block_reservation_attempts;
     let mut samples = Vec::new();
     for _ in 0..(TRACE_TICKS / 80) {
         let cursor_before = engine.state.neighborhood_anchor_cursor;
@@ -332,8 +332,8 @@ fn normal_trace(source: &Engine) -> NormalTickTrace {
             tick: engine.state.tick,
             anchor_cursor: engine.state.neighborhood_anchor_cursor,
             anchor_cursor_changed: cursor_before != engine.state.neighborhood_anchor_cursor,
-            early_access_attempts: engine.early_access_attempts,
-            early_block_reservation_attempts: engine.early_block_reservation_attempts,
+            early_access_attempts: engine.experiments.early_access_attempts,
+            early_block_reservation_attempts: engine.experiments.early_block_reservation_attempts,
             plan: plan_summary(engine.state.neighborhood_plan.as_ref()),
             buildings: engine.state.buildings.len(),
             parcels: engine.state.parcels.len(),
@@ -371,9 +371,9 @@ fn normal_trace(source: &Engine) -> NormalTickTrace {
         start_anchor_cursor,
         end_anchor_cursor: engine.state.neighborhood_anchor_cursor,
         start_early_access_attempts,
-        end_early_access_attempts: engine.early_access_attempts,
+        end_early_access_attempts: engine.experiments.early_access_attempts,
         start_early_block_reservation_attempts: start_early_block_attempts,
-        end_early_block_reservation_attempts: engine.early_block_reservation_attempts,
+        end_early_block_reservation_attempts: engine.experiments.early_block_reservation_attempts,
         samples_at_80_tick_boundaries: samples,
         final_plan: plan_summary(engine.state.neighborhood_plan.as_ref()),
         planner_frontdoor_eligible_at_end: blockers.is_empty(),
@@ -412,7 +412,7 @@ fn build_report() -> Report {
         for call_index in 0..max_calls {
             let cursor_start = engine.state.neighborhood_anchor_cursor % node_count;
             let (accepted_this_call, mut geometry_rejection_capture) =
-                super::neighborhood_admission::capture_rejections(|| {
+                crate::neighborhood_admission::capture_rejections(|| {
                     engine.try_create_neighborhood_plan()
                 });
             for (reason, count) in &geometry_rejection_capture.reason_counts {
@@ -497,11 +497,11 @@ fn build_report() -> Report {
         source_demand,
         source_save_unchanged,
         gate_inputs: gates,
-        anchor_attempt_cap: super::MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION,
-        shared_candidate_cap: super::development::MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION,
-        full_candidate_cap: super::development::MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION,
-        spine_candidate_cap: super::development::MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION,
-        reuse_edge_cap: super::MAX_NEIGHBORHOOD_REUSE_EDGES_PER_EVALUATION,
+        anchor_attempt_cap: crate::MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION,
+        shared_candidate_cap: crate::development::MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION,
+        full_candidate_cap: crate::development::MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION,
+        spine_candidate_cap: crate::development::MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION,
+        reuse_edge_cap: crate::MAX_NEIGHBORHOOD_REUSE_EDGES_PER_EVALUATION,
         planner_calls: calls,
         rejection_histogram,
         rejection_witnesses,

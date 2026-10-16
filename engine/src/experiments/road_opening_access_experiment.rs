@@ -338,7 +338,7 @@ fn face_candidate_window_round_robins_over_boundary_with_global_budget() {
 #[test]
 fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
     let mut engine = Engine::restore_json(include_str!(
-        "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
+        "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;
@@ -937,7 +937,7 @@ fn face_has_unserved_interior(
 }
 
 impl Engine {
-    pub(super) fn face_conditioned_access_proposals(
+    pub(crate) fn face_conditioned_access_proposals(
         &self,
         road_id: u32,
     ) -> Option<Vec<interior_access::AccessProposal>> {
@@ -1119,11 +1119,11 @@ impl Engine {
 #[test]
 fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
     let mut engine = Engine::restore_json(include_str!(
-        "../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
+        "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
     engine.state.demand = 4.0;
-    engine.road_opening_access_experiment = true;
+    engine.experiments.road_opening_access_experiment = true;
     let host_ids = engine
         .state
         .roads
@@ -1150,8 +1150,8 @@ fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
     assert!(!engine.try_plan_access_at_road_opening(host));
     assert_eq!(engine.state.interior_access_cursor, cursor);
     assert_eq!(engine.save_json(), before);
-    assert_eq!(engine.road_opening_access_attempts, 1);
-    assert_eq!(engine.road_opening_access_admissions, 0);
+    assert_eq!(engine.experiments.road_opening_access_attempts, 1);
+    assert_eq!(engine.experiments.road_opening_access_admissions, 0);
 }
 
 #[test]
@@ -1216,25 +1216,28 @@ fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
 fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     let mut engine = Engine::new_legacy(87_231);
     engine.set_development_rate(16);
-    engine.road_opening_access_experiment = true;
-    engine.early_access_experiment = false;
+    engine.experiments.road_opening_access_experiment = true;
+    engine.experiments.early_access_experiment = false;
     engine.district_policy_experiment = false;
 
     for _ in 0..242_000 {
         engine.step(1);
-        if engine.road_opening_access_admissions > 0 {
+        if engine.experiments.road_opening_access_admissions > 0 {
             break;
         }
     }
     assert!(
-        engine.road_opening_access_admissions > 0,
+        engine.experiments.road_opening_access_admissions > 0,
         "seed 87231 did not produce a valid access proposal while a new road opened (attempts={})",
-        engine.road_opening_access_attempts
+        engine.experiments.road_opening_access_attempts
     );
 
     let plan = engine.state.pending_interior_access.clone().unwrap();
-    assert_eq!(engine.road_opening_access_branch, Some(plan.branch_road_id));
-    let completions_before = engine.interior_access_completions;
+    assert_eq!(
+        engine.experiments.road_opening_access_branch,
+        Some(plan.branch_road_id)
+    );
+    let completions_before = engine.experiments.interior_access_completions;
     assert!(!engine
         .state
         .neighborhood_road_ids
@@ -1331,8 +1334,8 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         .expect("pending opening-time plan is valid");
     let save = engine.save_json();
     let mut resumed = Engine::restore_json(&save).expect("pending opening-time plan restores");
-    resumed.road_opening_access_experiment = true;
-    resumed.early_access_experiment = false;
+    resumed.experiments.road_opening_access_experiment = true;
+    resumed.experiments.early_access_experiment = false;
     resumed.district_policy_experiment = false;
     assert_eq!(resumed.save_json(), save);
     for _ in 0..24_000 {
@@ -1355,8 +1358,8 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         {
             // Keep this lifecycle assertion scoped to the admitted child. A
             // later, unrelated road opening belongs in the matched run.
-            engine.road_opening_access_experiment = false;
-            resumed.road_opening_access_experiment = false;
+            engine.experiments.road_opening_access_experiment = false;
+            resumed.experiments.road_opening_access_experiment = false;
             break;
         }
     }
@@ -1369,7 +1372,10 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     engine
         .validate()
         .expect("completed child road and lots preserve invariants");
-    assert_eq!(engine.interior_access_completions, completions_before + 1);
+    assert_eq!(
+        engine.experiments.interior_access_completions,
+        completions_before + 1
+    );
     let opened_branch = engine
         .state
         .roads
@@ -1413,8 +1419,8 @@ fn road_opening_access_matched_seeds() {
         let mut engine = Engine::new_legacy(seed);
         engine.set_development_rate(16);
         engine.district_policy_experiment = false;
-        engine.early_access_experiment = false;
-        engine.road_opening_access_experiment = enabled;
+        engine.experiments.early_access_experiment = false;
+        engine.experiments.road_opening_access_experiment = enabled;
         for _ in 0..121 {
             engine.step(2_000);
         }
@@ -1563,9 +1569,9 @@ fn road_opening_access_matched_seeds() {
             "connected_open_roads": connected_roads.len(),
             "ordinary_road_records": ordinary_roads.len(),
             "ordinary_road_length_m": ordinary_roads.iter().map(|r| r.length as f64).sum::<f64>(),
-            "access_attempts": engine.road_opening_access_attempts,
-            "access_admissions": engine.road_opening_access_admissions,
-            "access_completions": engine.interior_access_completions,
+            "access_attempts": engine.experiments.road_opening_access_attempts,
+            "access_admissions": engine.experiments.road_opening_access_admissions,
+            "access_completions": engine.experiments.interior_access_completions,
             "pending_access_lots": engine.state.pending_interior_access.as_ref().map_or(0, |p| p.selected_lots.len()),
             "demand": engine.state.demand,
             "population": engine.state.population,
@@ -1585,8 +1591,8 @@ fn road_opening_access_matched_seeds() {
         )
         .expect("write native snapshot");
         let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
-        resumed.road_opening_access_experiment = enabled;
-        resumed.early_access_experiment = false;
+        resumed.experiments.road_opening_access_experiment = enabled;
+        resumed.experiments.early_access_experiment = false;
         resumed.district_policy_experiment = false;
         assert_eq!(resumed.save_json(), save);
         engine.step(2_000);
@@ -1640,9 +1646,9 @@ fn face_conditioned_road_opening_access_matched_seeds() {
         let mut engine = Engine::new_legacy(seed);
         engine.set_development_rate(16);
         engine.district_policy_experiment = false;
-        engine.early_access_experiment = false;
-        engine.road_opening_access_experiment = enabled;
-        engine.face_conditioned_access_experiment = enabled;
+        engine.experiments.early_access_experiment = false;
+        engine.experiments.road_opening_access_experiment = enabled;
+        engine.experiments.face_conditioned_access_experiment = enabled;
         for _ in 0..121 {
             engine.step(2_000);
         }
@@ -1695,9 +1701,9 @@ fn face_conditioned_road_opening_access_matched_seeds() {
             "connected_open_roads": connected_roads.len(),
             "ordinary_open_roads": ordinary_roads.len(),
             "ordinary_road_length_m": ordinary_roads.iter().map(|road| road.length as f64).sum::<f64>(),
-            "attempts": engine.road_opening_access_attempts,
-            "admissions": engine.road_opening_access_admissions,
-            "completions": engine.interior_access_completions,
+            "attempts": engine.experiments.road_opening_access_attempts,
+            "admissions": engine.experiments.road_opening_access_admissions,
+            "completions": engine.experiments.interior_access_completions,
             "pending_selected_lots": engine.state.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
             "pending_branch_id": engine.state.pending_interior_access.as_ref().map(|plan| plan.branch_road_id),
             "demand": engine.state.demand,
@@ -1718,9 +1724,9 @@ fn face_conditioned_road_opening_access_matched_seeds() {
         )
         .expect("write native snapshot");
         let mut resumed = Engine::restore_json(&save).expect("canonical save restores");
-        resumed.road_opening_access_experiment = enabled;
-        resumed.face_conditioned_access_experiment = enabled;
-        resumed.early_access_experiment = false;
+        resumed.experiments.road_opening_access_experiment = enabled;
+        resumed.experiments.face_conditioned_access_experiment = enabled;
+        resumed.experiments.early_access_experiment = false;
         resumed.district_policy_experiment = false;
         assert_eq!(resumed.save_json(), save);
         engine.step(2_000);

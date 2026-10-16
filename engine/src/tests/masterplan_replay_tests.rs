@@ -1,6 +1,6 @@
 //! Continue the live engine, rather than a second restored copy, across saves
 //! taken during each new-world construction lifecycle.
-use super::*;
+use crate::*;
 
 #[test]
 fn live_masterplan_construction_matches_restored_continuation() {

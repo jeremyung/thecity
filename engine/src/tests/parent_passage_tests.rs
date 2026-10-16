@@ -1,5 +1,5 @@
 //! Contract checks for passage-facing parcels; not generator/visual acceptance.
-use super::*;
+use crate::*;
 
 fn passage_world() -> (Engine, usize, masterplan::PlanLot) {
     let source = Engine::new(0);

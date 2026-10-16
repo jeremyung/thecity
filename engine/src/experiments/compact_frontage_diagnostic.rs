@@ -6,12 +6,12 @@
 //! frontage geometry, tower-reservation, local-occupancy, and connected-access
 //! gates, and is added to a private collision context before later candidates.
 
-use super::{geometry, site_active, Engine, Road};
+use crate::{geometry, site_active, Engine, Road};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
 const MATURE_SAVE: &str =
-    include_str!("../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
+    include_str!("../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json");
 const CROP: [f32; 4] = [50.0, 300.0, -350.0, -100.0];
 const ENDPOINT_CLEARANCE: f32 = 9.0;
 const MAX_STEPS: usize = 8;
@@ -162,7 +162,7 @@ fn candidates_for_road(engine: &Engine, road: &Road, recipe: Recipe) -> Vec<Cand
                 z: a.z + dz * along + nz * side as f32 * recipe.offset,
                 along,
                 side,
-                access_node: super::frontage_access_node(a, b, along),
+                access_node: crate::frontage_access_node(a, b, along),
             });
         }
     }
@@ -190,8 +190,8 @@ fn nearby_building_counts(engine: &Engine, x: f32, z: f32) -> (usize, usize) {
 }
 
 fn global_frontage_gate(engine: &Engine) -> bool {
-    engine.state.parcels.len() < super::MAX_PARCELS
-        && engine.state.buildings.len() < super::MAX_BUILDINGS
+    engine.state.parcels.len() < crate::MAX_PARCELS
+        && engine.state.buildings.len() < crate::MAX_BUILDINGS
         && engine.state.demand >= 1.2
         && engine
             .state
@@ -426,7 +426,7 @@ fn compact_frontage_width_comparison_at_crop_host() {
         a.x + dx * along + nx * side as f32 * 15.0,
         a.z + dz * along + nz * side as f32 * 15.0,
     );
-    let access_node = super::frontage_access_node(a, b, along);
+    let access_node = crate::frontage_access_node(a, b, along);
     let rotation = (side as f32 * (b.z - a.z)).atan2(-side as f32 * (b.x - a.x));
     let global_gates_pass = global_frontage_gate(&engine);
     let (nearby_open, nearby_active) = nearby_building_counts(&engine, center.0, center.1);
@@ -477,12 +477,12 @@ fn compact_frontage_width_comparison_at_crop_host() {
 
     let (grid_width, grid_depth, spacing) = if engine.is_neighborhood_plan_road(road.id) {
         (
-            super::NEIGHBORHOOD_PARCEL_SIZE,
-            super::NEIGHBORHOOD_PARCEL_SIZE,
-            super::NEIGHBORHOOD_FRONTAGE_SPACING,
+            crate::NEIGHBORHOOD_PARCEL_SIZE,
+            crate::NEIGHBORHOOD_PARCEL_SIZE,
+            crate::NEIGHBORHOOD_FRONTAGE_SPACING,
         )
     } else {
-        (14.0, 12.0, super::FRONTAGE_SLOT_SPACING)
+        (14.0, 12.0, crate::FRONTAGE_SLOT_SPACING)
     };
     let context = engine.collision_context();
     let towers = engine.available_station_tower_envelopes();
@@ -585,7 +585,7 @@ fn compact_frontage_width_comparison_at_crop_host() {
                 >= 5.0
         });
         let open_road_center_clear = context.open_roads.iter().all(|segment| {
-            super::point_segment_distance(
+            crate::point_segment_distance(
                 rect.x, rect.z, segment.ax, segment.az, segment.bx, segment.bz,
             ) >= (rect.width.max(rect.depth) * 0.5 + 4.0).max(9.0)
         });

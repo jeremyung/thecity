@@ -5,7 +5,7 @@
 //! vacant ordinary frontage parcel's rear edge outward, but it retains the
 //! production demand, access, reservation, construction, and capacity rules.
 
-use super::{geometry, CollisionContext, Engine, NeighborhoodProfile, Parcel};
+use crate::{geometry, CollisionContext, Engine, NeighborhoodProfile, Parcel};
 use serde::Serialize;
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
@@ -129,7 +129,7 @@ fn record_selected() {
 
 /// Called from the ordinary building reservation path after profile selection.
 /// Returns the original parcel on any failed gate; it never consumes RNG.
-pub(super) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parcel) -> Parcel {
+pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parcel) -> Parcel {
     if !ENABLED.with(Cell::get) {
         return parcel;
     }
