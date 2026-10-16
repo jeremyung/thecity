@@ -1575,12 +1575,12 @@ The 20-second recording and twelve decoded samples show the passenger sequence
 from stair landing, around the foot, along the paved approach and onto the street.
 No visible disconnect appears in those samples. Evidence:
 
-- [Anime recording](recordings/station-road-landing-anime.webm) and
-  [sampled frames](screenshots/station-fabric/road-landing-anime-motion-samples.jpg).
-- [Miniature recording](recordings/station-road-landing-miniature.webm) and
-  [sampled frames](screenshots/station-fabric/road-landing-miniature-motion-samples.jpg).
-- [Three-seed mesh support](station-road-landing-height.json),
-  [added-area clearance](station-road-landing-clearance.json) and the three
+- [Anime recording](../../recordings/station-road-landing-anime.webm) and
+  [sampled frames](../../screenshots/station-fabric/road-landing-anime-motion-samples.jpg).
+- [Miniature recording](../../recordings/station-road-landing-miniature.webm) and
+  [sampled frames](../../screenshots/station-fabric/road-landing-miniature-motion-samples.jpg).
+- [Three-seed mesh support](../../station-road-landing-height.json),
+  [added-area clearance](../../station-road-landing-clearance.json) and the three
   `station-road-landing-*-probe.json` reports.
 
 Retain the correction and stop station embellishment. These sampled observations
@@ -1621,7 +1621,7 @@ behind a demonstrated need. The overall objective remains the complete living ci
 ### Riverbank planting diagnosis — 2026-10-13
 
 Added `scripts/audit-riverbank-planting.mjs` and its
-[three-seed baseline](riverbank-planting-baseline.json). The audit extracts current
+[three-seed baseline](../../riverbank-planting-baseline.json). The audit extracts current
 renderer placement and exact visibility predicates and bundles their production
 helpers; it records source/input hashes. It does not alter the renderer or worlds.
 
@@ -1646,9 +1646,9 @@ inside the current 11.5 m road clearance. The renderer's nominal unpaved strip i
 not automatically suitable for this tree line. No candidate was added to runtime;
 do not override clearance to make the experiment visible.
 
-Saved matched [Anime](screenshots/riverbank-planting/baseline-anime.jpg) and
-[Miniature](screenshots/riverbank-planting/baseline-miniature.jpg) waterfront baseline
-views and [metadata](screenshots/riverbank-planting/baseline.json). The browser was
+Saved matched [Anime](../../screenshots/riverbank-planting/baseline-anime.jpg) and
+[Miniature](../../screenshots/riverbank-planting/baseline-miniature.jpg) waterfront baseline
+views and [metadata](../../screenshots/riverbank-planting/baseline.json). The browser was
 paused at seed87231/tick85169, 50 mm, 1280×720, High WebGPU, DOF off, noon lighting
 preview; the same held camera was preserved between styles. Miniature switch
 completed with all queues zero. Export `.tools/riverbank-review-save.json` preserves
@@ -1671,7 +1671,7 @@ sloping banks, world bounds and trunk/branch clearance from coping.
 
 Ordinary import reached zero queues. Both-style candidate captures at the held
 waterfront/noon preview show a modest, visible bank rhythm; see
-[full evidence](riverbank-planting.md). This is candidate retention for further
+[full evidence](../../riverbank-planting.md). This is candidate retention for further
 review, not artistic acceptance. Motion, developing/construction states, all
 crossing conflicts and controlled cost comparisons remain open. Do not add another
 planting variant before checking this one. Source reload briefly showed slow
@@ -1685,7 +1685,7 @@ scaled2.38m crown radius, with matching broad-phase reach. Saved the failing aud
 Corrected retention is74new trees per mature seed; outer/inland counts unchanged.
 All41ordinary checkpoint cases, including observed bridge construction stages,
 pass checked bridge/rail envelope clearance. Eight focused tests and TypeScript
-pass. See [planting evidence](riverbank-planting.md).
+pass. See [planting evidence](../../riverbank-planting.md).
 
 An ordinary20sAnime orbit/hold recording and six decoded frames show the corrected
 bank rhythm and readable bridge openings. Sampled frames do not establish every
@@ -1698,12 +1698,12 @@ then stop this bounded planting work and return to the ranked neighborhood gaps.
 Corrected Miniature orbit/hold completed after ordinary import and zero queues,
 from the same85169review save and settings as Anime. Six decoded frames show
 coherent bank planting and bridge openings. Retain this bounded correction and
-stop more planting variants. See [evidence and limits](riverbank-planting.md).
+stop more planting variants. See [evidence and limits](../../riverbank-planting.md).
 
 A normal Watch view selected after the review shows much denser local fabric than
 the wide waterfront view. Held that pose in Explore and captured DOF off/on:
-[without blur](screenshots/riverbank-planting/watch-neighborhood-dof-off.jpg),
-[with blur](screenshots/riverbank-planting/watch-neighborhood-dof-on.jpg).
+[without blur](../../screenshots/riverbank-planting/watch-neighborhood-dof-off.jpg),
+[with blur](../../screenshots/riverbank-planting/watch-neighborhood-dof-on.jpg).
 Miniature,50mm,High,1280×720,noon preview,paused after normal recording; this is not
 the original85169actor frame or a measured camera pose. The paired captures show
 visible near/far depth separation with a sharper middle band. Thus absent DOF is
@@ -1725,7 +1725,7 @@ specific material bug or acceptance of the Watch director.
 regularity, weak Japanese identity/vegetation, flat atmosphere and visible world
 edges as leading failures. The current workstream is city-wide spatial composition
 and environmental depth, not further office/facade detail or actor counts. See
-[user review and revised decision](user-visual-review-2026-10-13.md). Existing
+[user review and revised decision](../../user-visual-review-2026-10-13.md). Existing
 coverage statistics and feature code do not rebut the perceived failure. The
 historical table below retains checkpoint evidence, not the current ranking.
 
@@ -1733,7 +1733,7 @@ historical table below retains checkpoint evidence, not the current ranking.
 all123recorded parcel overhangs across557offices.99are on parcels narrower than
 the minimum body plus foundation; the remaining24are rear AC assemblies exceeding
 shallow setbacks. This is measured geometry, not a density or style judgment.
-See [diagnosis and bounded acceptance](office-parcel-fitting.md). Correct fitting
+See [diagnosis and bounded acceptance](../../office-parcel-fitting.md). Correct fitting
 before further visual embellishment, preserving authoritative parcels and access;
 no production correction or broader acceptance is established by this audit.
 
@@ -1753,7 +1753,7 @@ no new browser observations or test results.
 | Browser delivery | Ordinary scheduling and sampled recordings provide bounded evidence. Rolling frame observations do not isolate causes or establish hardware acceptance. | Measure startup/import, growth, motion, memory and stalls on named hardware/browser; retain the full spec08 matrix, including narrow views and actual day cycles. |
 
 Proceed with one architectural/material diagnosis and one bounded intervention,
-using the [updated goal](living-city-goal.md). Hold seed, tick, pose/lens, lighting,
+using the [updated goal](../../living-city-goal.md). Hold seed, tick, pose/lens, lighting,
 weather, quality and resolution fixed; include ordinary neighborhood and wider
 context views. Verify framing/lighting alone cannot explain the claimed benefit.
 Preserve deterministic current saves and legal access; obsolete-save compatibility
@@ -1764,7 +1764,7 @@ alone without its bounded acceptance criterion.
 ### Production neighborhood family audit — 2026-10-13
 
 Added `scripts/audit-neighborhood-architecture.mjs` and
-[the three-seed report](neighborhood-architecture-current.json). The audit imports
+[the three-seed report](../../neighborhood-architecture-current.json). The audit imports
 production envelope, massing and palette helpers, hashes its bundled runtime and
 input saves, and records every occupied 160 m tile rather than selecting a favorable
 crop. Open buildings only, at ordinary ticks 83229 / 83255 / 82901.
@@ -1801,7 +1801,7 @@ rendering change, new visual acceptance or performance claim in this audit.
 Captured the ordinary neighborhood at noon and 16:00 lighting preview in both
 styles, with simulation paused and the same held Explore camera, 50 mm, High
 WebGPU, 1280×720, DOF off. Normal geometry queues were zero before capture.
-[Metadata and limitations](screenshots/neighborhood-materials/metadata.json).
+[Metadata and limitations](../../screenshots/neighborhood-materials/metadata.json).
 
 The pair visibly distinguishes the styles: Anime has brighter, spatially varied
 painted walls; Miniature is darker and smoother. Afternoon shadow direction changes
@@ -1828,7 +1828,7 @@ Completed one bounded material-response trial at deterministic station framing,
 saved seed87231/tick86278, both styles, noon preview and DOF off. Wall/roof0.68,
 concrete0.96 and pale-concrete0.8 roughness did not produce useful scene-scale
 benefit. Reverted exactly to pre-trial kit source; existing dirty work preserved.
-All15focusedtests pass after restore. See [trial evidence](neighborhood-material-response.md)
+All15focusedtests pass after restore. See [trial evidence](../../neighborhood-material-response.md)
 for paired screenshots, source patch, computed pose and actor-frame limitations.
 Stop scalar roughness tuning. Reassess facade/roof composition against the concepts
 before selecting a different visible mechanism; do not stack another material tweak.
@@ -1844,7 +1844,7 @@ lighting, authoritative-state or extra material-family changes. TypeScript and
 15focusedtests pass. Actual open-office meshes across three seeds add roughly
 39k–47k triangles, with no new/worsened checked parcel overhangs. The same audit
 finds30/29/64existing office parcel-box violations, recorded by ID and bounds.
-Do not claim full clearance. See [candidate evidence](office-side-facades.md).
+Do not claim full clearance. See [candidate evidence](../../office-side-facades.md).
 
 ## Current decision record — learning reconciliation, 2026-10-13
 
@@ -1861,7 +1861,7 @@ it adds no new runtime, test, capture or acceptance claim.
   benefit. Preserve that negative result and stop scalar roughness/fill tuning.
 - **Candidate:** guarded office ribbon sides have final stills in both styles and
   bounded test/mesh evidence. Finish motion and developing-state checks, then make
-  a retention decision without adding variants. See [office evidence](office-side-facades.md).
+  a retention decision without adding variants. See [office evidence](../../office-side-facades.md).
 - **Correctness follow-up:** the mesh audit found 30/29/64 existing parcel-box
   violations across three seeds, with none new or worsened by this candidate.
   Narrow-lot fitting is a hypothesis requiring diagnosis, not a full explanation.
@@ -1869,7 +1869,7 @@ it adds no new runtime, test, capture or acceptance claim.
   defects, compare the ordinary neighborhood and wider context against all eight
   dimensions in the consolidated table. Choose the largest remaining evidenced gap.
 
-The [updated goal](living-city-goal.md) preserves the complete living-city objective,
+The [updated goal](../../living-city-goal.md) preserves the complete living-city objective,
 README/specification references and architectural baseline. It requires one bounded
 workstream, matched evidence, a stop condition and reassessment after two failed
 attempts. Full behavior, audio, camera motion, day cycle, hardware performance and
@@ -1906,7 +1906,7 @@ facade variants or production edits were made during this comparison. See
 
 ## User review supersedes next-work ranking — 2026-10-13
 
-See [the seven-dimensional review, source reconciliation and acceptance plan](user-visual-review-2026-10-13.md). City-wide composition and depth now lead. No new rendering result or acceptance is claimed.
+See [the seven-dimensional review, source reconciliation and acceptance plan](../../user-visual-review-2026-10-13.md). City-wide composition and depth now lead. No new rendering result or acceptance is claimed.
 
 
 ## City-wide horizon diagnosis — 2026-10-13
@@ -1917,10 +1917,10 @@ vertices. These are geometric probes, not visibility/coverage measurements.
 Observed: seed0/tick58300 ordinary overview and lower skyline show hills but an
 abrupt developed-city transition to empty terrain, plus dominant straight elevated
 decks. A missing-mountains diagnosis is insufficient. No production edit yet.
-See [evidence and next decision](horizon-framing-diagnosis.md). Continue corridor,
+See [evidence and next decision](../../horizon-framing-diagnosis.md). Continue corridor,
 frontage and urban-edge diagnosis; do not substitute background ornament for it.
 
 
 ## Whole-city road hierarchy — 2026-10-13
 
-Measured whole-city three-seed audit finds2.85–3.65%lane share of mature ground-street chord length and about1.57km of20m elevated expressway per seed. Source assigns Compact subdivision cuts to Local; only selected Strips cuts become lanes. This supports testing district-aware secondary-lane generation, with collectors and route semantics preserved. It is not a projected-area or frontage measurement. See [diagnosis and bounded next candidate](city-corridor-hierarchy.md). The newly user-edited concise goal is mirrored unchanged in `living-city-goal.md`; retain experimental evidence here.
+Measured whole-city three-seed audit finds2.85–3.65%lane share of mature ground-street chord length and about1.57km of20m elevated expressway per seed. Source assigns Compact subdivision cuts to Local; only selected Strips cuts become lanes. This supports testing district-aware secondary-lane generation, with collectors and route semantics preserved. It is not a projected-area or frontage measurement. See [diagnosis and bounded next candidate](../../city-corridor-hierarchy.md). The newly user-edited concise goal is mirrored unchanged in `living-city-goal.md`; retain experimental evidence here.

@@ -1,14 +1,14 @@
 # Current checkpoint — 2026-10-16
 
-PR19 is merged. Current work is on `codex/camera-rendering-checkpoint`, based on main `56f5486`. This checkpoint is prepared for review against main; its PR carries the publication and CI status. See [camera-rendering-checkpoint.md](camera-rendering-checkpoint.md) for scope, review order, validation and remaining acceptance gates.
+PR19 is merged. Current work is on `codex/camera-rendering-checkpoint`, based on main `56f5486`. This checkpoint is prepared for review against main; its PR carries the publication and CI status. See [camera-rendering-checkpoint.md](../../camera-rendering-checkpoint.md) for scope, review order, validation and remaining acceptance gates.
 
-All local experiments have finished. The latest concrete-grain, direct-cloud-lighting and bank-planting candidates were rejected and removed. Do not resume old capture handles or promote those archived candidates. [The material study](street-building-material-study.md) records the useful conclusions.
+All local experiments have finished. The latest concrete-grain, direct-cloud-lighting and bank-planting candidates were rejected and removed. Do not resume old capture handles or promote those archived candidates. [The material study](../../street-building-material-study.md) records the useful conclusions.
 
 The retained work includes optional depth-aware tilt-shift, stable scene submission and effect ownership, Watch selection/framing, daylight/ambient and distant-ground corrections, plus bounded building/entrance fixes. These are technical and local visual improvements; complete neighborhood reference fidelity and the living-city goal remain unaccepted. Camera controls retain an unblurred inspection mode.
 
 Validation at this checkpoint: production build and TypeScript pass; 133 web test files, 728 tests pass. Rust/WASM source is unchanged and was not rebuilt. Recordings, bulk screenshots, generated reports, local tools and dependency symlinks are excluded. Existing reference images remain intact.
 
-Next work should address coherent street/building/landscape composition at ordinary viewing scale. Stop isolated grain, roughness, window-count or planting-height tweaks without a new visible cause. Preserve access correctness and test both styles with effects off before judging lens treatments. Full acceptance requirements remain in [the living-city goal](living-city-goal.md) and specifications.
+Next work should address coherent street/building/landscape composition at ordinary viewing scale. Stop isolated grain, roughness, window-count or planting-height tweaks without a new visible cause. Preserve access correctness and test both styles with effects off before judging lens treatments. Full acceptance requirements remain in [the living-city goal](../../living-city-goal.md) and specifications.
 
 ---
 
@@ -23,12 +23,12 @@ The following notes predate this checkpoint and do not describe current jobs, br
 
 PR #3 now validates saved master-plan entity mappings and tests continuation of
 the original live engine against a restored copy during construction. See
-[review corrections and validation](pr3-review-corrections.md).
+[review corrections and validation](../../pr3-review-corrections.md).
 
 The immediate milestone is the existing 800 m city: visual quality in both
 styles, normal startup/growth/loading, and browser measurements on named hardware.
 Larger maps and imports remain subsequent work. See the updated
-[delivery priorities](../specs/08-delivery.md#immediate-milestone-after-the-master-plan-review-2026-10-11).
+[delivery priorities](../../../specs/08-delivery.md#immediate-milestone-after-the-master-plan-review-2026-10-11).
 Backward save compatibility and migrations are not required; current-format
 validation and replay remain required. Older migration notes below are historical.
 The external goal objective has been updated and the goal remains paused for review.
@@ -53,7 +53,7 @@ reaches two structure-stage extensions at tick 275520. Root then restored that
 fixture in the rebuilt WASM engine and verified exact same-target replay every
 20 ticks through both completions at tick 276200: capacities 35→70 and 8→14,
 depths 12→24 m and 12→20 m. Pending capacity stays unchanged and nominal front
-edges stay fixed. See [the machine-readable check](rear-extension-lifecycle.json)
+edges stay fixed. See [the machine-readable check](../../rear-extension-lifecycle.json)
 and `scripts/verify-rear-extension.mjs`. This cross-target fixture test does not
 claim native and WASM growth histories are identical.
 
@@ -72,10 +72,10 @@ ground. Construction uses the same final envelope and joins a previous annex
 when a building extends again. Apartment annex glazing now invalidates on
 empty/occupied transitions. Ordinary buildings keep their existing render path.
 
-Both-style asset inspections are in [apartment/anime](screenshots/rear-extension/1343-anime.png),
-[apartment/miniature](screenshots/rear-extension/1343-miniature.png),
-[shop/anime](screenshots/rear-extension/1369-anime.png), and
-[shop/miniature](screenshots/rear-extension/1369-miniature.png).
+Both-style asset inspections are in [apartment/anime](../../screenshots/rear-extension/1343-anime.png),
+[apartment/miniature](../../screenshots/rear-extension/1343-miniature.png),
+[shop/anime](../../screenshots/rear-extension/1369-anime.png), and
+[shop/miniature](../../screenshots/rear-extension/1369-miniature.png).
 They use real pending/completed snapshots and production kits, isolated studio
 lighting, the same camera, and software WebGL. They show original/construction/
 completed forms; they do not exercise the full city pipeline, water, DOF or
@@ -93,8 +93,8 @@ site waits for an older handoff to free a slot. Chunk replacement, cross-chunk
 moves, clear/reset and delayed handoff tests pass. Four focused render suites
 pass 31/31, and the production build passes.
 
-Full-scene anime captures now show [construction](screenshots/rear-extension/city-construction-anime.png)
-and the [completed addition](screenshots/rear-extension/city-completed-anime.png)
+Full-scene anime captures now show [construction](../../screenshots/rear-extension/city-construction-anime.png)
+and the [completed addition](../../screenshots/rear-extension/city-completed-anime.png)
 at the same camera. Software WebGL, noon preview, DOF disabled, balanced quality;
 the UI clock still displays simulation time rather than the forced preview hour.
 The renderer pipeline was detached while manually draining bounded geometry
@@ -104,7 +104,7 @@ plain. The full-city miniature attempt returned from the style-switch await but
 timed out after 30 seconds during screenshot readback. Asset-level miniature
 checks remain available; full-city miniature acceptance is unproven. Use
 `scripts/capture-rear-extension-city.mjs` for the anime capture and handoff report.
-The [successful handoff report](rear-extension-render-handoff.json) records
+The [successful handoff report](../../rear-extension-render-handoff.json) records
 1,832 initial geometry updates to drain the mature scene. The completion update
 keeps both old construction groups until update 139, when their replacement
 batch commits; the temporary group count then becomes one, matching the new
@@ -112,7 +112,7 @@ survey-stage project (4076) already present in the completed snapshot. Both
 building and chunk queues finish empty. These are manual update counts, not
 elapsed frame-time measurements.
 
-[A 32,000-tick normal WASM continuation](rear-extension-growth.json) from the
+[A 32,000-tick normal WASM continuation](../../rear-extension-growth.json) from the
 mature checkpoint reaches tick 304000 with the same 871 buildings and 210 roads,
 40 durable original-footprint records, and two pending extensions. Nominal
 building area increases from 162,545.24 to 166,441.37 m² (+2.397%) and total
@@ -126,8 +126,8 @@ The coverage audit now uses the production `buildExtendedBuilding` adapter and
 persisted original footprints, rather than stretching the original kit over the
 expanded parcel. Five focused raster tests pass, including identical legacy
 coverage without history and a retained-form case that differs from a stretched
-kit. The matched [before](rear-extension-rendered-before.json) and
-[after](rear-extension-rendered-after.json) reports use the same compiled kit
+kit. The matched [before](../../rear-extension-rendered-before.json) and
+[after](../../rear-extension-rendered-after.json) reports use the same compiled kit
 hash and 0.5 m cell-center raster. Over the above continuation, projected kit
 surface union above 1 m rises from 124,413.25 to 127,631.50 m² (+3,218.25 m²,
 about 2.59%). Full-domain coverage rises from 19.440% to 19.942%, a gain of
@@ -155,7 +155,7 @@ node scripts/capture-rear-extension-study.mjs
 
 ## Residual block diagnosis — 2026-10-11
 
-The [saved-frontage census](mature-frontage-allocation.json), reproduced with
+The [saved-frontage census](../../mature-frontage-allocation.json), reproduced with
 `scripts/audit-frontage-allocation.mjs`, follows explicit parcel frontage road
 IDs rather than proximity. At seed 87231/tick 304000, 560 of 871 buildings front
 neighborhood-tagged roads (116,709.93 m² of 166,441.37 m² nominal envelopes),
@@ -183,7 +183,7 @@ four lots; none passes all remaining checks. This rejects the tested partial
 other seeds or all residual land development. No fresh-seed growth trial is
 justified by these results. The source state is unchanged, both post-scan states
 validate and restore canonically; construction replay is correctly untested
-because no plan was admitted. See [the diagnostic](partial-block-diagnostic.json).
+because no plan was admitted. See [the diagnostic](../../partial-block-diagnostic.json).
 The unchanged baseline reproduces all six rejection counts from the prior mature
 trace exactly. Root verified the source/save hashes, reviewed the bounded
 witnesses, and ran the native release suite: 384 passed, zero failed, 50 ignored.
@@ -225,7 +225,7 @@ production retained-form kit bundle and 0.5 m raster:
 | 87231 | 128,443.00 m² | 127,524.25 m² | −918.75 m² (−0.715%) |
 
 See `initial-depth-seed-{0,87231}-{baseline,depth18}-coverage.json` and
-[the experiment report](initial-depth-experiment.json). The intervention
+[the experiment report](../../initial-depth-experiment.json). The intervention
 accepts 20 and 21 deeper parcels respectively, but changes subsequent growth
 and does not reliably increase total coverage. Keep it experimental. This is
 evidence against promoting this particular local rule, not against deeper
@@ -253,7 +253,7 @@ node scripts/audit-rendered-coverage.mjs --input .tools/initial-depth-review/see
 
 ## Mixed-row subdivision follow-up — 2026-10-11
 
-[One narrow row plus one wider row](block-subdivision-study/mixed-rows.md)
+[One narrow row plus one wider row](../../block-subdivision-study/mixed-rows.md)
 preserves narrow-side lot positions and gains area in all 73 sampled blocks.
 The 11/14 option adds 2.5–2.9% nominal area with about 10% fewer lots; 11/18 adds
 4.2–4.3% with about 20% fewer lots. All previous baseline observations/variants
@@ -263,7 +263,7 @@ assignment, footprint-aware capacity, lifecycle or visual acceptance is claimed.
 
 ## Within-block subdivision study — 2026-10-11
 
-[Test-only comparison over 73 live block footprints](block-subdivision-study/README.md)
+[Test-only comparison over 73 live block footprints](../../block-subdivision-study/README.md)
 holds roads, inset/gaps, outside parcels and exact clearance checks fixed.
 Target frontage 14 m adds 4.80–5.49% feasible nominal area but loses about 19%
 of individual lots; 18 m adds 8.13–8.67% area but loses about 40% of lots.
@@ -276,7 +276,7 @@ not final city density or visual acceptance.
 
 ## Oversized-route safety — 2026-10-11
 
-[Route reconstruction now rejects a capped suffix missing its origin](route-cap-safety.md).
+[Route reconstruction now rejects a capped suffix missing its origin](../../route-cap-safety.md).
 Previously consumers could accept it and spawn an actor midway through a trip.
 Exactly 128 nodes remain accepted; longer reconstructed paths return no route.
 Six routing tests and the native release suite pass (361 passed, 43 ignored).
@@ -287,7 +287,7 @@ study was promoted.
 
 ## Compact routing adjacency — 2026-10-11
 
-[Routing now builds a source-ordered adjacency vector per query](routing-adjacency/README.md),
+[Routing now builds a source-ordered adjacency vector per query](../../routing-adjacency/README.md),
 avoiding the previous full-road scan at every visited node. The 300,000-tick
 standalone WASM run takes 54.24 s versus the prior 56.05 s measurement, with an
 identical final-save hash and cap/restore checks passing. This single comparison
@@ -299,7 +299,7 @@ The production WASM rebuild and all five tests in `tests/wasm.test.ts` also pass
 
 ## Endurance timing baseline — 2026-10-11
 
-[Current production WASM measurements](endurance-profile/README.md) reproduce
+[Current production WASM measurements](../../endurance-profile/README.md) reproduce
 the 300,000-tick endurance workload in 56.05 s unprofiled / 56.61 s sampled,
 with identical final-save hashes, collection caps and exact restore passing.
 This is close to the 60 s test limit; previous Vitest timeouts remain unresolved.
@@ -309,7 +309,7 @@ source-order routing semantics. No runtime optimization or timeout change yet.
 
 ## Fair-budget control — 2026-10-11
 
-The [independent-budget follow-up](shallow-block-experiment/fair-budget/README.md)
+The [independent-budget follow-up](../../shallow-block-experiment/fair-budget/README.md)
 confirms that preserving baseline scan slots avoids the prior regression:
 both treatment saves and snapshots exactly equal their controls. At most eight
 extra candidates per evaluation produced zero feasible 42 m alternatives in
@@ -324,13 +324,13 @@ admissions in two matched seeds, despite 19,330/22,689 attempts. Charging those
 attempts to the existing candidate budget changed baseline selection and reduced
 rendered coverage by 1.55%/3.06%. Root reproduced all four saves and snapshots
 byte-for-byte and independently audited kit coverage. The experiment is removed
-from engine source; its [patch and evidence](shallow-block-experiment/README.md)
+from engine source; its [patch and evidence](../../shallow-block-experiment/README.md)
 remain reproducible. Future adaptive block search must account for candidate
 budget displacement rather than treating extra shapes as free improvements.
 
 ## Destination-first follow-up — 2026-10-11
 
-The [destination-first diagnostic](destination-first-access.md) tests lanes and
+The [destination-first diagnostic](../../destination-first-access.md) tests lanes and
 standard lots before connecting them to a host street. On the same exhausted
 face, all 8,976 layouts were scanned without truncation: 74 clear lanes remained,
 34 with zero viable lots and 40 with one. None supported two, so no connection
@@ -355,7 +355,7 @@ and verifies that the next search selects a different face without changing
 roads or allocating IDs. Selector tests exercise quota-1/7 checkpoint replay;
 discovery tests reject malformed identity prefixes and ownership. Production
 WASM and the web build pass. Full native release suite: 316 passed, 39 ignored.
-The [30,000-tick browser continuation](face-sweep-browser-profile.md) observes
+The [30,000-tick browser continuation](../../face-sweep-browser-profile.md) observes
 11 selected faces, one connected road opening and both dependent frontages;
 buildings increase only 850 → 853. General visual density improvement is not yet
 demonstrated: the reviewed mature scene still has large undeveloped interiors.
@@ -372,14 +372,14 @@ samples for fragmented free spans, within the existing six-sample cap. Full
 native suite: 321 passed, 39 ignored; mature golden descriptors and WASM build
 pass. The matched 30,000-tick browser continuation is byte-identical to the
 previous run: this fixes a candidate-coverage blind spot but provides **no density
-gain on the mature fixture**. See [comparison](fragmented-frontage-browser-profile.md).
+gain on the mature fixture**. See [comparison](../../fragmented-frontage-browser-profile.md).
 Host-preparation checkpoint schema is now 4. Stop speculative sample expansion;
 investigate rejected geometry/upstream block layout and the documented render
 quality gaps. Runtime screenshots are in screenshots/latest/.
 
 ## Exhausted-face geometry diagnosis
 
-The new [rejection audit](exhausted-face-rejections.md) evaluates all 2,440
+The new [rejection audit](../../exhausted-face-rejections.md) evaluates all 2,440
 candidates for one exhausted face against fresh captured geometry. It rejects
 2,401 on existing parcel footprints, 22 on roads, 10 on endpoints and 7 on lot
 viability. All start points clear parcels; 1,597 conflict within 5 m and 2,329
@@ -394,7 +394,7 @@ to establish an improvement; screenshots/water-review records the rejected trial
 
 ## Bounded bent-connector search — 2026-10-11
 
-[Offline geometry search](bent-access-witness.md) checks 29,280 two-segment
+[Offline geometry search](../../bent-access-witness.md) checks 29,280 two-segment
 routes on the exhausted face. No route qualifies with standard frontage,
 closer frontage, or small 8 m-deep lots. Twelve routes pass the earlier geometry
 stages; eight then fail node/split clearance and four fail lot viability.
@@ -451,7 +451,7 @@ Specifications under `specs/` remain the product source of truth. `validation/sp
 
 ## Road-pair spatial filter checkpoint
 
-An isolated 5,000-segment quota-stepped AABB pair iterator is implemented and independently checked, with checkpoint validation hardened by the primary agent. See [road-pair-broadphase.md](road-pair-broadphase.md). It is not connected to production preflight yet; the live 512-node/edge cap remains. Next: exact narrow-phase parity and coordinated graph-stage integration, including job versions and worker profiling.
+An isolated 5,000-segment quota-stepped AABB pair iterator is implemented and independently checked, with checkpoint validation hardened by the primary agent. See [road-pair-broadphase.md](../../road-pair-broadphase.md). It is not connected to production preflight yet; the live 512-node/edge cap remains. Next: exact narrow-phase parity and coordinated graph-stage integration, including job versions and worker profiling.
 
 The next compatibility gate is now covered natively: a concrete f32 endpoint-cancellation witness proves raw AABBs can omit an existing rejection. A projection-aware `Bounds::from_segment_f32` adapter and actual-predicate parity tests address this before integration; eight preflight tests pass. Details in `road-pair-broadphase.md`. Production preflight still uses all pairs.
 
@@ -473,21 +473,21 @@ Two 6,000-tick Chromium worker runs do not show a clear overall timing gain (p95
 
 ## Node coincidence spatial indexing — 2026-10-11
 
-A transient nine-cell index replaces preflight's full node-pair scan for supported coordinates, retaining the exact f32 predicate, source-order failures and schema3 cursor meaning. Mature preflight falls18,095→5,692 units with unchanged49faces; full native351pass/42ignored and rebuilt WASM3180descriptor parity pass. Total discovery decreases only0.17%; no browser timing or density gain is claimed. See [node-coincidence-index.md](node-coincidence-index.md). Coupled512limits remain; continue graph-stage scaling and visual/density work.
+A transient nine-cell index replaces preflight's full node-pair scan for supported coordinates, retaining the exact f32 predicate, source-order failures and schema3 cursor meaning. Mature preflight falls18,095→5,692 units with unchanged49faces; full native351pass/42ignored and rebuilt WASM3180descriptor parity pass. Total discovery decreases only0.17%; no browser timing or density gain is claimed. See [node-coincidence-index.md](../../node-coincidence-index.md). Coupled512limits remain; continue graph-stage scaling and visual/density work.
 
 ## Shared live capture — 2026-10-11
 
-Live search startup now computes the shared viability/collision snapshot once, retaining independent adapter limits and source order. Native355pass/43ignored; paired-vs-independent startup and200tick saves match; rebuilt WASM live200tick save/resume passes, as does3180descriptor parity. Native capture medians improve by roughly0.1ms on the mature fixture, not enough to explain prior worker spikes. Capture remains synchronous;512limits and visual acceptance are unchanged. See [shared-live-capture.md](shared-live-capture.md) for measured scope and the remaining consistency requirements.
+Live search startup now computes the shared viability/collision snapshot once, retaining independent adapter limits and source order. Native355pass/43ignored; paired-vs-independent startup and200tick saves match; rebuilt WASM live200tick save/resume passes, as does3180descriptor parity. Native capture medians improve by roughly0.1ms on the mature fixture, not enough to explain prior worker spikes. Capture remains synchronous;512limits and visual acceptance are unchanged. See [shared-live-capture.md](../../shared-live-capture.md) for measured scope and the remaining consistency requirements.
 
 ## Compact midrise development study — 2026-10-11
 
-Development-only `?midrise=compact` tests wider 4–11-floor apartment/office bodies inside existing parcels; production ignores the flag. The 850-building fixture gains only 1,341 m² projected kit coverage (+1.09%), with +0.81% triangles and +1.93 MB counted CPU geometry arrays. This cannot solve the citywide empty interiors. Containment, entry and cross-style vertex checks pass; runtime visual approval is pending because both screenshot APIs failed while the Mac was locked. Default appearance remains selected. See [study and reproduction](compact-midrise-review/README.md); do not promote without matched style/time views and browser measurements.
+Development-only `?midrise=compact` tests wider 4–11-floor apartment/office bodies inside existing parcels; production ignores the flag. The 850-building fixture gains only 1,341 m² projected kit coverage (+1.09%), with +0.81% triangles and +1.93 MB counted CPU geometry arrays. This cannot solve the citywide empty interiors. Containment, entry and cross-style vertex checks pass; runtime visual approval is pending because both screenshot APIs failed while the Mac was locked. Default appearance remains selected. See [study and reproduction](../../compact-midrise-review/README.md); do not promote without matched style/time views and browser measurements.
 
 The focused render suite passes 34 tests and the production build passes. Full web testing is not green: unrestricted run264pass/2timeouts; two-worker run265pass/1timeout; isolated300,000-tick WASM endurance also exceeded60seconds (62.15seconds). Timeout limits were not relaxed. See the study report for scope; do not present this checkpoint as full validation or visual acceptance.
 
 ## Bounded PLATEAU source pilot — 2026-10-11
 
-[Source pilot](plateau-pilot/README.md) now contains three individually retrieved
+[Source pilot](../../plateau-pilot/README.md) now contains three individually retrieved
 Tokyo meshes, exact provenance/hashes/resource license statements, and provisional
 250 m crop geometry/metrics. Sources plus metadata total 26,254,659 compressed
 bytes; no browser dependency is added. Six extractor tests and three source runs
@@ -498,7 +498,7 @@ district/context review and synthetic visual/performance comparisons remain.
 
 ## PLATEAU source reconciliation and diagrams — 2026-10-11
 
-[The pilot](plateau-pilot/README.md) now reconciles all three catalog feature
+[The pilot](../../plateau-pilot/README.md) now reconciles all three catalog feature
 counts: Taito's extra item is a geometry-free CityObjectGroup, not a missing
 building. Explicit raw/status fields exclude 9999 unknown markers from floor
 statistics. Twelve focused tests pass; root reran all sources and reproduced
@@ -511,7 +511,7 @@ frontage and roof-shape calibration before a multi-seed growth/render trial.
 
 ## Matched-size synthetic morphology — 2026-10-11
 
-[Three250m synthetic crops](synthetic-morphology/README.md) separate exact nominal
+[Three250m synthetic crops](../../synthetic-morphology/README.md) separate exact nominal
 envelopes and actual production-kit raster coverage. The most envelope-covered
 inland crop among60 tested windows yields37.75% nominal versus28.87% rendered;
 compact PLATEAU roof-edge coverage is48.47%. Methods/selection differ and are
@@ -524,7 +524,7 @@ and actual rendered views; do not turn the sample directly into a citywide targe
 
 ## Compact varied frontage prototype — 2026-10-11
 
-[Test-only compact rows](block-subdivision-study/compact-rows.md) add20–21% feasible
+[Test-only compact rows](../../block-subdivision-study/compact-rows.md) add20–21% feasible
 lots across the same73 blocks, but reduce nominal area3–4%. They preserve required
 clearances and retain occasional larger merged sites. All16 block/spine tests and
 the long diagnostic pass; the prior five variants remain exact. Not promoted as
@@ -536,7 +536,7 @@ multi-seed construction/render validation. Production appearance remains unchang
 
 ## Production narrow midpoint infill — 2026-10-11
 
-[Concrete enumeration fix](synthetic-morphology/narrow-midpoint-infill.md): append
+[Concrete enumeration fix](../../synthetic-morphology/narrow-midpoint-infill.md): append
 existing-minimum8×12m shapes at grid positions after old candidates. Road2985
 provides a regression where wider/shifted production candidates fail but this
 shape passes exact geometry/access. Normal admission, construction and save/resume
@@ -553,7 +553,7 @@ new low apartment/office instances with no visible generic-facade entrance. The
 shared kit now supplies a centered door and clear window opening, constrains
 balconies with parcel bounds, and bounds narrow gable trim. Root verifies 19
 focused geometry tests and production build/typecheck; style geometry matches.
-[Coverage and reproduction](synthetic-morphology/narrow-midpoint-infill.md#render-review-follow-up--2026-10-11)
+[Coverage and reproduction](../../synthetic-morphology/narrow-midpoint-infill.md#render-review-follow-up--2026-10-11)
 record a modest gain, not density acceptance. Headless WebGPU loaded 871 buildings
 but screenshot capture timed out without frame metrics. Usable captures remain
 the 850-building views; live visual and browser-performance review are still open.
@@ -567,11 +567,11 @@ runtime recovery feedback; disposal safely settles pending startup. Root passes
 browser fault-injection check with saving still available. A software WebGL
 founder capture succeeds, but the mature WebGPU capture remains unresolved; no
 GPU presentation/performance or artistic acceptance follows from this fix.
-[Evidence and limitations](screenshots/render-startup/README.md).
+[Evidence and limitations](../../screenshots/render-startup/README.md).
 
 ## 871-building static visual review — 2026-10-11
 
-[Latest capture](screenshots/narrow-infill/README.md) now renders the complete
+[Latest capture](../../screenshots/narrow-infill/README.md) now renders the complete
 871-building continuation on software WebGL, with building/chunk queues empty.
 Intermediate GPU draws were skipped during preparation; this is not normal
 loading, hardware WebGPU or performance evidence. Root rejects overall art
@@ -607,7 +607,7 @@ art, hardware WebGPU, or browser performance acceptance follows from this change
 
 ## Deeper center-street trial rejected — 2026-10-11
 
-[Matched WASM evidence](deep-spine-review/README.md) tests adding an 82×110 m
+[Matched WASM evidence](../../deep-spine-review/README.md) tests adding an 82×110 m
 center-street candidate before the existing square, retaining the fixed scan
 budget and all clearances. Pure layouts and 10,000-tick candidate save/resume
 pass, but actual projected coverage changes +2.46% in seed0 and −3.37% in seed87231
@@ -619,7 +619,7 @@ promoting another local ranking or size preference; no art acceptance claimed.
 
 ## Spatial trial follow-up — 2026-10-11
 
-[Matched layout map](deep-spine-review/layout-87231.png) locates the rejected
+[Matched layout map](../../deep-spine-review/layout-87231.png) locates the rejected
 deep-spine trial's gains and losses. Seed87231 has fewer ordinary road metres
 and stops new-building completions earlier, but final saves cannot prove which
 reservation displaced an alternative project. Corrected the earlier scan-budget
@@ -631,7 +631,7 @@ coverage; root rendered and inspected the final PNG.
 ## Mature planner scheduling ruled out — 2026-10-11
 
 The test-only `mature_planner_trace_tests` module restores the current 871-building
-WASM save natively without modifying it. [Trace](mature-planner-trace.json): all
+WASM save natively without modifying it. [Trace](../../mature-planner-trace.json): all
 top-level neighborhood gates pass (demand 4, no active projects, no reserved plan,
 160 locally qualified anchors). Twenty-five bounded calls cover all 162 anchor
 indices; none accepts a neighborhood layout. A separate 2,000-tick normal
@@ -681,7 +681,7 @@ or visual improvement is claimed by this behavior-preserving refactor.
 
 ## Rear extension opportunity — 2026-10-11
 
-[Geometry experiment and map](rear-extension-diagnostic/README.md) finds 145
+[Geometry experiment and map](../../rear-extension-diagnostic/README.md) finds 145
 compatible rear parcel extensions in the mature871 checkpoint, adding 13,422.74
 m² of nominal envelopes while preserving frontage and existing clearances. All
 562 eligible unchanged footprints pass the baseline control; two focused tests
@@ -693,4 +693,4 @@ candidate for testing, not acceptance of city density or the art target.
 
 ## Master-plan generator (2026-10-11)
 
-The incremental frontier/infill planner is replaced for new worlds by a seeded master plan and its demand-driven realization; see [the master-plan review](masterplan-review/README.md) and [world growth](../specs/02-world-growth.md#master-plan). Three mature seeds measure 49.6–51.6% compact and 39.9–42.2% station rendered coverage, against 28.9% and 20.1% for the legacy planner. Native suite: 392 passed, 1 pre-existing failure, 52 ignored. Web suite: 290 of 290. Open items are listed in the review.
+The incremental frontier/infill planner is replaced for new worlds by a seeded master plan and its demand-driven realization; see [the master-plan review](../../masterplan-review/README.md) and [world growth](../../../specs/02-world-growth.md#master-plan). Three mature seeds measure 49.6–51.6% compact and 39.9–42.2% station rendered coverage, against 28.9% and 20.1% for the legacy planner. Native suite: 392 passed, 1 pre-existing failure, 52 ignored. Web suite: 290 of 290. Open items are listed in the review.

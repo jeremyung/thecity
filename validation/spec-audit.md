@@ -1428,7 +1428,7 @@ excluding them before target sampling on subsequent searches. This allows a
 runner-up block to be considered after the selected block yields no admission.
 History clears when a completed search finds no remaining viable face; failed
 jobs do not advance that history. Admission, connectivity and construction gates
-are unchanged. See HANDOFF.md for limits and nested checkpoint compatibility.
+are unchanged. See archive/2026-10/HANDOFF.md for limits and nested checkpoint compatibility.
 
 Primary verification: selector 7/7, discovery 12/12, live integration 9/9.
 Full native release run: 315 passed, one failed, 39 ignored. The failure was the

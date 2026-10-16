@@ -1,6 +1,6 @@
 # Browser Architecture
 
-### Movement support presentation (2026-10-12)
+### Movement support presentation
 
 An integer packet associates each pose with its supporting road and
 platform identities. Worker protocol v5 transfers it with the presentation token.
@@ -56,24 +56,11 @@ The layout above is the target decomposition. As of 2026-10-09, browser subsyste
 
 `engine/src/road_split.rs` owns the engine's open-road split operation, including precomputed frontage and traveler/bus/train route remaps followed by mutation. It remains an `impl Engine` module with access to authoritative state; this extraction is an ownership boundary, not a state-independent service. `network_split.rs` retains the pure route transformation helpers. Paired splitting now preflights both hosts together, with cumulative actor remaps and combined ID/segment/route caps, before committing either. It preserves the active-plan guard, with an exception only for the validated owning spine plan and its canonical pair of host midpoints. `neighborhood_spine.rs` owns that staged construction lifecycle; `spine_plan.rs` derives the versioned geometry and reservation contract. Bounded deep candidate enumeration is integrated in public WASM. Production keeps the existing nominal-area ranking; a separate test-only site-count comparison has mixed density results and is not promoted. Calling the single-road operation twice remains non-atomic.
 
-Master-plan checkpoint (2026-10-11): `engine/src/masterplan.rs` is a pure, state-free generator. It produces the transport skeleton, perturbed arterial lattice, recursively split local streets, polygonal blocks and gap-free lots (including flag lots) from the seed and river geometry. Its decisions use only IEEE-exact arithmetic, so native and WASM regenerate identical plans; saves carry a plan digest that restore verifies. It owns no RNG stream shared with the simulation: it uses its own hash of the seed. The engine maps plan nodes to world nodes lazily as roads are realized. The legacy frontier, infill, access-discovery, spine and coordinated-block planners stay compiled only for the legacy test fixtures (`Engine::new_legacy`); new worlds never run them. Delete them once the master-plan path passes acceptance.
-
 ## WASM interface
 
 Expose coarse operations: initialize definitions and seed; enqueue command batch; step a tick batch; extract compact changes; query inspector data; serialize; restore. Use wasm-bindgen for the interface and explicit binary layouts for hot data.
 
 Batch boundary crossings. Never invoke WASM once per agent from the renderer. Avoid rebuilding a JavaScript object tree of the entire city each frame.
-
-Rear-extension checkpoint (2026-10-11): `engine/src/rear_extensions.rs` owns
-bounded admission, parcel reservation, pending construction, completion and
-validation. Save activity schema 4 carries both pending plans and the earliest
-original footprint for each extended building. Structural snapshots expose
-`rear_extensions` and `building_original_footprints`; the renderer preserves the
-original kit and adds the rear volume independently of style. Geometry and
-capacity remain authoritative engine fields. Incremental neighborhood batches
-report exact descriptor visibility only after their atomic scene commit, allowing
-temporary construction geometry to remain until its replacement is visible.
-See [the checkpoint and verification limits](../validation/HANDOFF.md#inhabited-rear-extensions--implementation-in-progress-2026-10-11).
 
 The structural snapshot includes `road_decks` entries (`road_id`, `deck_height`)
 for realized master-plan expressways. They are derived from the regenerated plan
@@ -100,7 +87,7 @@ Every message carries protocol version and world epoch. Epoch changes on load or
 
 Publish movement at 10–20 Hz initially. Interpolate between two snapshots with a short presentation delay; avoid extrapolating through intersections. Structural changes are applied in revision order. Reliable deltas are never dropped; request a full resync if a gap is detected.
 
-Elevated movement contract (2026-10-11): worker protocol 3 uses
+Elevated movement contract: worker protocol 3 uses
 six Float32 values per actor: `[id, x, z, heading, kind, surfaceY]`. Actor kind
 continues to identify person/car/train/bus (0/1/2/3). A nonnegative `surfaceY`
 is an authoritative absolute pedestrian or vehicle surface height; -1 delegates
@@ -150,8 +137,7 @@ Hidden tabs pause simulation and suspend or fade sound. Resume restores continui
 
 Pin tested dependency versions at implementation time.
 
-
-Expressway geometry contract (2026-10-11): each `road_decks` entry includes
+Expressway geometry contract: each `road_decks` entry includes
 `controls: [[x,z],[x,z]]` in world metres, oriented from the realized road's
 `from` node to its `to` node. These cubic controls and deck height derive from
 the complete regenerated plan and participate in its digest. Renderers consume
@@ -164,19 +150,4 @@ Only complete open boundary-to-boundary chains admit traffic; their regional
 connection is independent of ground-road gateway connectivity. Ramps, lane
 changes, merges and ramp grades remain future work.
 
-## Train door state checkpoint — 2026-10-11
-
-`TrainView.door_open_fraction` and `door_terminal` are derived from existing
-terminal position and dwell countdown, rather than a second persisted clock.
-Station/gateway dwell lasts 220/180 ticks, with 20-tick opening and closing phases
-at 20 Hz. Boarding and alighting require the fully open interval. Boarding cadence
-is three ticks to retain the existing 48-passenger capacity within that interval.
-Quiet-hour station holds keep doors closed. Worker protocol v4 includes a compact
-`trainDoors` Float32Array alongside each movement message: `[id, terminal, fraction]`
-with terminal -1 away from a stop. At most eight trainsets use 96 bytes. The WASM
-export shares the snapshot phase calculation without constructing a full world.
-Doors and positions use the same pair of updates and interpolation fraction;
-coarse world snapshots cannot rewind animated door state. The first movement
-sample displays the restored phase immediately. A platform-position guard keeps
-fast-forward skips from displaying open doors while moving. Full passenger
-approach choreography and visual motion acceptance remain outstanding.
+Dated implementation notes for this spec: [validation/spec-notes/04-architecture.md](../validation/spec-notes/04-architecture.md).

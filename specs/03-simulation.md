@@ -20,17 +20,6 @@ Core components:
 
 The represented population exceeds individual agents. Aggregate households and jobs generate bounded trip demand. Persistent residents contribute their trips once, without double-counting them in aggregate cohorts.
 
-Implementation candidate (2026-10-12): residual households now dispatch bounded
-local walking errands with saved outbound, dwelling and returning phases. Each
-outing represents one person; the home participant remains reserved until arrival
-home. Shop/cafe reservations and actual entrance routes precede admission. Current
-parameters cap128 outings and180m per outbound walking leg, with09:00–21:00
-admissions. These are calibration candidates, not acceptance targets. Broader
-job-derived demand, universal visitor accounting, fixed route-expansion budgets
-and multi-seed/browser acceptance remain outstanding. See the
-[daily activity review](../validation/fidelity-review-current.md).
-
-
 ### Housing occupancy and commercial activity
 
 Residential occupancy counts people housed in homes and apartments. It is not a universal measure of whether a building is in use: an operating shop, cafe, or office can have zero residential occupants. Commercial premises need explicit tenant/activity state. Construction stage, tenant activity, household occupancy, and transient visitors are distinct facts.
@@ -76,31 +65,17 @@ Evaluate a fixed number of candidate parcels and route search expansions per tic
 
 Research follow-through (2026-10-09), not an implementation claim: apply the priority-queue structure described by [tmwhere](https://www.tmwhere.com/city_generation.html) to road proposals. Order candidates by simulation due tick and stable proposal ID; process a bounded number per tick. Separate growth goals from local geometry and access validation. Proposal acceptance reserves capacity for construction; only an opening event changes traversable connectivity. Revalidate stale proposals against graph revisions and current land reservations. Bound queue size, deduplicate proposals, persist pending work, and use deterministic retry/defer rules. Seeded suitability is an input alongside actual accessibility and sustained demand, not a substitute for them. Preserve independent movement and development clocks.
 
-Implementation checkpoint (2026-10-10): the diagnostic geometry-derived access search now discovers an admissible two-lot branch in the mature seed87231 fixture without hand-picked route coordinates. It enumerates2,069 descriptors in44 pages of at most48 and passes shared admission, validation, and canonical restore. The discovered road also completes through normal engine ticks (observed open and connected at242400), with dependent lots withheld until opening and save-identical mid-construction replay. This remains test-only. The first resumable stage now reproduces44 mature-face host split samples bit-for-bit at quotas1,7,and48 with JSON resume checks; A separately tested ray/segment primitive now budgets individual polygon-edge checks and preserves JSON resume; the composed heading/endpoint preparer now matches all2,069 frozen mature descriptors at quotas1,7,48,and irregular partitions, including149 JSON restores per run. All runs charge2,422,472 work units; the largest observed checkpoint is451,864 JSON bytes. This proves native sequence/resume parity on this fixture, not full runtime acceptance. Ray initialization now shares a polygon validated once per job; host lookup uses canonical binary search. Every-step small-fixture restore validation and the remaining setup/evaluator budget review are still required before promotion. A pure graph pipeline now reproduces all49 mature reference faces through budgeted preflight, bridge detection, topology and complete face walking at quotas1,7,48 with JSON resumes. Its stage work counts are119,232 /2,022 /2,427 /19,630 respectively; this is native frozen-input evidence. Live graph capture, target sampling and pipeline scheduling remain outstanding. Before runtime promotion, incrementally budget live face/target discovery and exact evaluation; persist deterministic cursors and frozen inputs, validate restored bounds, and recheck current geometry at admission. Latest integration evidence: the persisted frozen discovery wrapper now runs through a separate WASM diagnostic boundary, with native and WASM producing the same2,069 ordered descriptor bits after shared algebraic heading construction. Checkpointed and uninterrupted WASM results agree. Native and WASM logical work counts still differ, so cross-target scheduling equivalence is not established. A frozen quota-stepped proposal validator now independently matches the existing evaluator on all2,069 descriptors with JSON resume; production capture, stale-geometry checks, split preflight and live scheduling are still pending. See `validation/spec-audit.md` and `validation/incremental-access-admission-plan.md`. A single successful face is not evidence of general density improvement. See `validation/face-access-paged-search.json` and `validation/face-access-paged-root-test.txt`.
-
 Use walking, driving, and rail graphs with explicit transfers. Initial routing can use A* with cached origin-destination corridors and local refinement. Share routes where appropriate. A graph revision invalidates only impacted routes when practical.
 
 Vehicles use left-hand lanes, speed limits, following distance, and intersection reservations or signals. Pedestrians wait at controlled crossings. Initially use kinematic movement rather than a general rigid-body engine. Detect blocked routes, safely replan, and record cancellations when no valid route exists. Never let unreachable travelers accumulate forever.
 
 Arrival changes an agent's activity and occupancy records at a tick boundary. At an external gateway, entering and leaving represent the region beyond the simulated domain.
 
-Implementation checkpoint (2026-10-11): bus and inbound train passengers can
-alight into a persisted, visible waiting-at-stop state when the final walking
-route is unavailable. Recovery caps are 256 waiting residents and eight examined
-entries/route queries per tick; unchanged failed-route geometry suppresses repeat
-searches. Reconnection preserves the physical waiting position and original trip
-intent. Native and WASM replay evidence is recorded in
-[the handoff](../validation/HANDOFF.md). A permanently unavailable route still
-needs an explicit cancellation/replanning policy; this checkpoint does not close
-the complete travel requirement.
-
 ## Determinism
 
 Use separate seeded streams for geography, growth, schedules, weather, and cosmetic definitions. Rendering randomness has no access to simulation streams. Stable iteration order and deterministic event ordering are required. Avoid dependence on hash-map iteration, wall time, or asynchronous job completion order.
 
 Reproducibility is guaranteed for an explicitly versioned engine and tested execution targets. If cross-platform identical hashes are required, use integer or fixed-point authoritative decisions and prohibit platform-sensitive floating-point decisions. Appearance and render interpolation may use floats freely.
-
-Implementation evidence (2026-10-10): shallow-frontage continuation is repeatable within the tested WASM binary, but native and WASM are not evolution-identical. Matched 200-tick checkpoints first differ in frontage geometry at tick 243200 and choose different candidates by tick 251600. Do not use native continuation counts as exact browser predictions. See `validation/shallow-native-wasm-diagnostic.md`; the new `tests/shallow-infill-wasm.test.ts` covers real construction, connected access, and same-target replay in the browser engine.
 
 ## History and persistence
 
@@ -112,8 +87,7 @@ A complete save includes state arrays, identifiers, pending projects, graph revi
 
 Use occupancy feedback, bounded external migration, project cooldowns, and moving-average demand. Require sustained pressure before approval and a lower threshold for cancellation to avoid oscillation. Construction capacity is finite. At saturation, population stabilizes while activities and limited renewal continue.
 
-
-### Walking surface contract — 2026-10-13
+### Walking surface contract
 
 Local streets and lanes are shared surfaces: pedestrian centers run0.72m inside
 the carriageway edge. Arterial walking centers use the raised sidewalk0.72m beyond
@@ -122,3 +96,5 @@ this offset calculation. A supported endpoint alone does not establish support
 through every junction or station approach; verify complete connectors against
 rendered surfaces. Current-format replay remains required; obsolete access paths
 may be rejected without migration.
+
+Dated implementation notes for this spec: [validation/spec-notes/03-simulation.md](../validation/spec-notes/03-simulation.md).
