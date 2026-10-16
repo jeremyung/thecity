@@ -14,3 +14,12 @@ it('releases private AO noise and targets once while preserving borrowed attachm
   for(const spy of [noise,target,material])expect(spy).toHaveBeenCalledTimes(1);
   for(const spy of borrowed)expect(spy).not.toHaveBeenCalled();
 });
+
+it('tolerates an absent private noise field while still releasing AO targets',()=>{
+  const effect=ownedAO(texture(new Texture()),texture(new Texture()),new PerspectiveCamera()) as any;
+  effect._noiseNode.value.dispose();
+  delete effect._noiseNode;
+  const target=vi.spyOn(effect._aoRenderTarget,'dispose');
+  expect(()=>{effect.dispose();effect.dispose();}).not.toThrow();
+  expect(target).toHaveBeenCalledTimes(1);
+});

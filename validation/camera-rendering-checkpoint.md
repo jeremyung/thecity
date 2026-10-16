@@ -16,6 +16,22 @@ The city needs controllable miniature photography while retaining clear inspecti
 4. Building massing/kit/access changes: bounded terrace homes, facade/roof construction and shared-street landing levels. These do not alter simulation land use or density.
 5. README/specification priorities and the material-study decision summary. Rejected experiments are excluded, not pending implementation.
 
+## Reproduce from a clean checkout
+
+Install the pinned Rust/WASM toolchain described in README, then run:
+
+```sh
+npm ci
+npm run wasm
+npm run setup:fixtures
+npm test -- --maxWorkers=2
+npm run build
+```
+
+`public/wasm` is gitignored: rebuild it from this checkout before testing, even if an older binary is present. Fixture setup downloads the pinned release archive (bounded to 8 MiB) and verifies its contents against the committed manifest; an offline archive can be supplied with `python3 scripts/setup-test-fixtures.py --archive <bundle>`.
+
+The reported 728-test run used populated current-format fixtures and generated WASM. It is not reproducible with stale WASM: errors about schema 5 or missing `expressway_traffic` can indicate an older binary, not a source regression. “No fresh native rebuild” refers to the separate native Rust test run; it does not remove the WASM build prerequisite. This review-hardening update adds two ownership tests beyond that earlier count.
+
 ## Validation
 
 - `npm run build`: passes TypeScript and production build. Existing Vite warning remains: main JS chunk about 1.52 MB / 456 kB gzip.
@@ -45,3 +61,11 @@ The supplied review examined `codex/living-city-fidelity` at `fb039797`, not thi
 5. **Follow ternary:** the premise is incorrect: `updateFollow` calls `setMode("watch")` after the missing-subject grace period, clearing `followId`. Named the post-update condition and documented it; retained the correct transition easing. The existing disappearing-subject regression exercises this path.
 
 Fresh targeted validation: camera and business-activity WASM suites pass, 57 tests in two files. Full web suite previously passed 728 tests; the new change preserves behavior and only clarifies the branch condition. Native source change is a comment only; no fresh native rebuild claimed. No review comment was posted externally.
+
+## PR20 follow-up review
+
+Added guarded access to optional Three r183 disposal internals and missing-field regression checks, while retaining exactly-once disposal tests. Removed only guards already dominated by `rebuildCompleted`; construction-path yield guards remain necessary.
+
+The shallow-office external-unit behavior is unchanged: no minimum depth is forced through the parcel boundary. The sampled/presented actor separation is deferred: `current` also drives follow visibility and spatial audio, so removing its cap filtering alone would expose invisible actors to those systems. A future separation must preserve that presentation contract and explicitly test cap exit/re-entry interpolation; this checkpoint does not claim that refactor.
+
+Follow-up validation: all eight targeted ownership/retirement tests pass; TypeScript and production build pass. The existing bundle-size warning remains. No new full-suite or native test run is claimed for this small hardening update.

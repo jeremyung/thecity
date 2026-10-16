@@ -882,8 +882,8 @@ export class CityRenderer {
     if(rebuildCompleted)for(const road of orderedRoads){
       if(road.stage!=='open')continue;
       const a=nodes.get(road.from),b=nodes.get(road.to);if(!a||!b)continue;
-      if(rebuildCompleted)this.roadKit(kit,a,b,road,deckHeights.get(road.id),crossings,curves.get(road.id),world.rail_platforms,markingTrims.get(road.id),surfaces,world.expressway_profile);
-      if(rebuildCompleted)yield;
+      this.roadKit(kit,a,b,road,deckHeights.get(road.id),crossings,curves.get(road.id),world.rail_platforms,markingTrims.get(road.id),surfaces,world.expressway_profile);
+      yield;
     }
     if(rebuildCompleted){
       const junctions=new Map<number,JunctionArm[]>();
@@ -895,8 +895,8 @@ export class CityRenderer {
       for(const [id,arms] of junctions){
         const node=nodes.get(id)!;const points=junctionFootprint(node,arms);
         const pieces=surfaces.claim(points);
-        if(rebuildCompleted)this.addGroundRoadSurface(kit,pieces,this.art.asphalt());
-        if(rebuildCompleted)yield;
+        this.addGroundRoadSurface(kit,pieces,this.art.asphalt());
+        yield;
       }
     }
     const constructionSurfaces=surfaces.fork();
@@ -916,7 +916,7 @@ export class CityRenderer {
     if(rebuildCompleted){
       for(const node of world.nodes.filter(n=>n.kind==='market'||n.kind==='station')){for(let stripe=-3;stripe<=3;stripe++)kit.box(node.x+stripe*1.1,.37,node.z, .65,.025,6,this.art.get('#dedaca'));}
       lighting.data=prepareStreetLighting(world);
-      if(rebuildCompleted)yield;
+      yield;
       for(const layout of world.rail_platforms??[]){
         const platform=buildStationPlatform(layout,this.art);
         if(layout.construction_phase===4){

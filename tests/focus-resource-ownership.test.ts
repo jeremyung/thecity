@@ -29,3 +29,17 @@ it('does not release a borrowed texture or caller-owned RTT',()=>{
   borrowed.dispose();expect(target).not.toHaveBeenCalled();
   owner.dispose();expect(target).toHaveBeenCalledTimes(1);
 });
+
+it('tolerates missing private input and blur materials without skipping owned targets',()=>{
+  const effect=signedCoCDof(vec4(1),0) as any;
+  const input=effect._ownedInputTexture;
+  input._quadMesh.material.dispose();delete input._quadMesh;
+  effect.setup({getSharedContext:()=>({})});
+  const blur=effect._nearBlur;
+  blur._material?.dispose();delete blur._material;
+  const target=vi.spyOn(input.renderTarget,'dispose');
+  const horizontal=vi.spyOn(blur._horizontalRT,'dispose');
+  expect(()=>{effect.dispose();effect.dispose();}).not.toThrow();
+  expect(target).toHaveBeenCalledTimes(1);
+  expect(horizontal).toHaveBeenCalledTimes(1);
+});

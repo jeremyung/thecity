@@ -11,7 +11,7 @@ class OwnedGTAONode extends GTAONode {
     if(this.released)return;
     this.released=true;
     super.dispose();
-    this._noiseNode.value.dispose();
+    this._noiseNode?.value?.dispose?.();
   }
 }
 

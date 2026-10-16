@@ -515,12 +515,12 @@ class SignedCoCDepthOfFieldNode extends TempNode {
 		// Only the RTT created by our factory belongs to this effect; scene
 		// pass textures and caller-owned texture nodes remain borrowed.
 		if ( this._ownedInputTexture ) {
-			this._ownedInputTexture.renderTarget.dispose();
-			this._ownedInputTexture._quadMesh.material.dispose();
+			this._ownedInputTexture.renderTarget?.dispose?.();
+			this._ownedInputTexture._quadMesh?.material?.dispose?.();
 		}
 		if ( this._nearBlur ) {
 			this._nearBlur.dispose();
-			this._nearBlur._material?.dispose();
+			this._nearBlur._material?.dispose?.();
 		}
 		this._CoCRT.dispose();
 		this._CoCBlurredRT.dispose();
