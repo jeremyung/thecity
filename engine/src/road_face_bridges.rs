@@ -20,6 +20,7 @@ pub(crate) enum BridgeError {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -73,6 +74,7 @@ pub(crate) struct BridgeSearch {
 }
 
 impl BridgeSearch {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(node_count: usize, edges: Vec<(usize, usize)>) -> Result<Self, BridgeError> {
         if node_count > MAX_NODES {
             return Err(BridgeError::TooManyNodes);
@@ -93,6 +95,7 @@ impl BridgeSearch {
     /// Construct from endpoint indices already validated by graph preflight.
     /// All node/edge-sized initialization is performed incrementally by
     /// `advance`, so this handoff itself is constant-work.
+    #[cfg(feature = "legacy")]
     pub(crate) fn new_trusted(node_count: usize, edges: Vec<(usize, usize)>) -> Self {
         let edge_count = edges.len();
         Self {
@@ -130,6 +133,7 @@ impl BridgeSearch {
         Ok(Self { state: checkpoint })
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.state.phase == Phase::Done {
             return AdvanceResult {
@@ -154,11 +158,13 @@ impl BridgeSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn bridges(&self) -> Option<&[bool]> {
         (self.state.phase == Phase::Done).then_some(self.state.bridges.as_slice())
     }
 
     /// Move the completed indexed graph and bridge flags into topology setup.
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_result(self) -> Result<(Vec<(usize, usize)>, Vec<bool>), BridgeError> {
         if self.state.phase != Phase::Done {
             return Err(BridgeError::InvalidCheckpoint);
@@ -186,6 +192,7 @@ impl BridgeSearch {
                 })
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_initialize(&mut self) {
         let cp = &mut self.state;
         let total = cp.node_count.max(cp.edges.len());
@@ -205,6 +212,7 @@ impl BridgeSearch {
         cp.initialize_cursor += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_adjacency(&mut self) {
         let cp = &mut self.state;
         if cp.build_edge >= cp.edges.len() {
@@ -227,6 +235,7 @@ impl BridgeSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_sort(&mut self) {
         let cp = &mut self.state;
         if cp.sort_node >= cp.node_count {
@@ -263,6 +272,7 @@ impl BridgeSearch {
         cp.sort_shifts = 0;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_dfs(&mut self) {
         let cp = &mut self.state;
         if let Some((node, parent_edge)) = cp.pending_enter.take() {

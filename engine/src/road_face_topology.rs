@@ -22,6 +22,7 @@ pub(crate) enum TopologyError {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -39,6 +40,7 @@ type NodeRecord = RoadFaceNode;
 type EdgeRecord = RoadFaceEdge;
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct Topology {
     pub half_edges: Vec<HalfEdgeRecord>,
     /// For every directed half-edge, the next clockwise predecessor of its
@@ -47,6 +49,7 @@ pub(crate) struct Topology {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct TopologyView<'a> {
     pub half_edges: &'a [HalfEdgeRecord],
     pub next: &'a [usize],
@@ -94,6 +97,7 @@ pub(crate) struct TopologySearch {
 }
 
 impl TopologySearch {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(
         nodes: Vec<RoadFaceNode>,
         edges: Vec<RoadFaceEdge>,
@@ -134,6 +138,7 @@ impl TopologySearch {
 
     /// Construct from the preflight/bridge pipeline. Node-sized output buffers
     /// are initialized one node per `advance` work unit.
+    #[cfg(feature = "legacy")]
     pub(crate) fn new_trusted(
         nodes: Vec<RoadFaceNode>,
         edges: Vec<RoadFaceEdge>,
@@ -176,6 +181,7 @@ impl TopologySearch {
         Ok(Self { state: checkpoint })
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.state.phase == Phase::Done {
             return AdvanceResult {
@@ -200,6 +206,7 @@ impl TopologySearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_initialize(&mut self) {
         let cp = &mut self.state;
         if cp.initialize_cursor >= cp.nodes.len() {
@@ -210,6 +217,7 @@ impl TopologySearch {
         cp.initialize_cursor += 1;
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn topology(&self) -> Option<TopologyView<'_>> {
         if self.state.phase != Phase::Done {
             return None;
@@ -226,6 +234,7 @@ impl TopologySearch {
 
     /// Consume a completed topology stage and move all graph buffers into the
     /// face walker without cloning the half-edge arrays.
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_result(self) -> Option<(Vec<RoadFaceNode>, Vec<RoadFaceEdge>, Topology)> {
         if self.state.phase != Phase::Done {
             return None;
@@ -240,6 +249,7 @@ impl TopologySearch {
         ))
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_build(&mut self) {
         let cp = &mut self.state;
         if cp.build_edge >= cp.edges.len() {
@@ -291,6 +301,7 @@ impl TopologySearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_sort(&mut self) {
         let cp = &mut self.state;
         if cp.sort_node >= cp.nodes.len() {
@@ -328,6 +339,7 @@ impl TopologySearch {
         cp.sort_shifts = 0;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_link(&mut self) {
         let cp = &mut self.state;
         if cp.link_edge >= cp.half_edges.len() {

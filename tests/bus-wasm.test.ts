@@ -2,6 +2,11 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
+// Legacy-planner world: needs `npm run wasm:legacy`. Remove with the legacy feature.
+import {
+  CityEngine as LegacyCityEngine,
+  initSync as initLegacySync,
+} from '../.tools/wasm-legacy/city_engine.js';
 import type { World } from '../web/src/types';
 
 it('publishes connected bus service, real riders and replayable movement through WASM', () => {
@@ -68,13 +73,13 @@ it('publishes connected bus service, real riders and replayable movement through
 }, 20000);
 
 it('serves the historical reverse-stop queue rather than driving past its passengers', () => {
-  initSync({
-    module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)),
+  initLegacySync({
+    module: readFileSync(new URL('../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
   });
-  const engine = CityEngine.restore(
+  const engine = LegacyCityEngine.restore(
     readFileSync(new URL('./fixtures/bus-seed5-legacy-queue.json', import.meta.url), 'utf8'),
   );
-  let replay: CityEngine | undefined;
+  let replay: LegacyCityEngine | undefined;
   const resident = () =>
     JSON.parse(engine.inspect(46)) as {
       transfer: string;
@@ -95,7 +100,7 @@ it('serves the historical reverse-stop queue rather than driving past its passen
       }
     }
     expect(boarded, 'a reverse bus must stop at node 5 and board the waiting resident').toBe(true);
-    replay = CityEngine.restore(engine.save());
+    replay = LegacyCityEngine.restore(engine.save());
     let arrived = false;
     for (let elapsed = 0; elapsed < 8000; elapsed += 20) {
       engine.step(20);

@@ -9,16 +9,20 @@
 use crate::access_candidates::{
     CandidateNode, MAX_PREPARED_INPUT_NODES, MAX_PREPARED_INPUT_PARCELS,
 };
+#[cfg(feature = "legacy")]
 use crate::access_discovery_job::DiscoveryInput;
 use crate::face_target_viability::{FrozenViabilityInput, Segment};
 use crate::road_faces::{RoadFaceEdge, RoadFaceNode};
 use crate::{Engine, MAX_PROJECTS, MAX_SEGMENTS};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[cfg(feature = "legacy")]
 const MAX_FACE_GRAPH_NODES: usize = 512;
+#[cfg(feature = "legacy")]
 const MAX_FACE_GRAPH_EDGES: usize = 512;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) enum CaptureError {
     TooManyGraphNodes,
     TooManyGraphEdges,
@@ -29,18 +33,22 @@ pub(crate) enum CaptureError {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) enum PairCaptureError {
     Discovery(CaptureError),
     Proposal(crate::access_proposal_capture::CaptureError),
 }
 
 /// A projection tied to the immutable engine borrow that produced it.
+#[cfg(feature = "legacy")]
 pub(crate) struct CapturedViability<'a> {
     engine: &'a Engine,
     viability: FrozenViabilityInput,
 }
 
+#[cfg(any(test, feature = "legacy"))]
 impl<'a> CapturedViability<'a> {
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_parts(self) -> (&'a Engine, FrozenViabilityInput) {
         (self.engine, self.viability)
     }
@@ -49,6 +57,7 @@ impl<'a> CapturedViability<'a> {
 /// Capture both live inputs through one authoritative engine read boundary.
 /// Discovery limits are checked first, then the proposal adapter's complete
 /// independent limits are checked; their footprint ceilings intentionally differ.
+#[cfg(feature = "legacy")]
 pub(crate) fn capture_pair(
     engine: &Engine,
 ) -> Result<
@@ -68,6 +77,7 @@ pub(crate) fn capture_pair(
 }
 
 /// Shared geometry and collision projection for discovery and proposal validation.
+#[cfg(feature = "legacy")]
 pub(crate) fn capture_viability(engine: &Engine) -> FrozenViabilityInput {
     let collision = engine.collision_context();
     let reserved_lots = engine
@@ -159,6 +169,7 @@ pub(crate) fn capture_viability(engine: &Engine) -> FrozenViabilityInput {
 /// tracer's limits instead of truncating the city graph. The remaining
 /// candidate-node and collision arrays retain their engine source order to
 /// match the existing frozen diagnostic oracle.
+#[cfg(feature = "legacy")]
 pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
     if engine.state.nodes.len() > MAX_PREPARED_INPUT_NODES {
         return Err(CaptureError::TooManyCandidateNodes);

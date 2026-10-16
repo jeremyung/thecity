@@ -7,9 +7,18 @@ if (existsSync('.tools/cargo/bin')) {
   env.RUSTUP_HOME = resolve('.tools/rustup');
   env.PATH = `${resolve('.tools/cargo/bin')}:${env.PATH}`;
 }
+// Legacy-planner tests stay in the suite until master-plan acceptance passes.
 const result = spawnSync(
   'cargo',
-  ['test', '--manifest-path', 'engine/Cargo.toml', '--locked', ...process.argv.slice(2)],
+  [
+    'test',
+    '--manifest-path',
+    'engine/Cargo.toml',
+    '--locked',
+    '--features',
+    'legacy',
+    ...process.argv.slice(2),
+  ],
   { env, stdio: 'inherit' },
 );
 if (result.error) throw result.error;

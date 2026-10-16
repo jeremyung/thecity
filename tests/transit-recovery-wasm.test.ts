@@ -1,11 +1,12 @@
 // @ts-expect-error Node built-in types are not included in the application config.
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { CityEngine, initSync } from '../public/wasm/city_engine.js';
+// Legacy-planner world: needs `npm run wasm:legacy`. Remove with the legacy feature.
+import { CityEngine, initSync } from '../.tools/wasm-legacy/city_engine.js';
 
 it('alights a real bus rider at the curb, persists the wait, and resumes when connected', () => {
   initSync({
-    module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)),
+    module: readFileSync(new URL('../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
   });
   const state = JSON.parse(
     readFileSync(new URL('./fixtures/bus-seed5-legacy-queue.json', import.meta.url), 'utf8'),

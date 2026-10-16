@@ -10,6 +10,9 @@ crate-type = ["cdylib", "rlib"]
 [features]
 # Opt-in diagnostic mutation API; never enabled for application builds.
 profiling = []
+# Retired incremental planners (Engine::new_legacy). Tests only; delete once
+# master-plan acceptance passes.
+legacy = []
 # Isolated visual-review build; not enabled in the normal application.
 single-expressway-candidate = []
 compact-expressway-candidate = []

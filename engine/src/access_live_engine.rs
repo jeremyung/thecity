@@ -4,7 +4,9 @@ use crate::{
     access_proposal_capture, Engine, WorldPoint, MAX_PARCELS, MAX_SEGMENTS,
 };
 
+#[cfg(feature = "legacy")]
 const WORK_PER_TICK: usize = 4096;
+#[cfg(feature = "legacy")]
 const SEARCH_INTERVAL_TICKS: u64 = 1200;
 const MAX_HISTORY_FACES: usize = 512;
 const MAX_HISTORY_ITEMS: usize = 32_768;
@@ -19,6 +21,7 @@ pub(crate) fn validate_face_history(history: &[Vec<u32>]) -> Result<(), String> 
     Ok(())
 }
 
+#[cfg(feature = "legacy")]
 fn remember_exhausted_face(history: &mut Vec<Vec<u32>>, identity: &[u32]) {
     if history.iter().any(|previous| previous == identity) {
         return;
@@ -31,6 +34,7 @@ fn remember_exhausted_face(history: &mut Vec<Vec<u32>>, identity: &[u32]) {
 }
 
 impl Engine {
+    #[cfg(feature = "legacy")]
     fn face_access_admission_available(&self) -> bool {
         self.access_geometry_revision_token().is_some()
             && self.state.pending_interior_access.is_none()
@@ -56,6 +60,7 @@ impl Engine {
     /// Atomic input capture is outside the incremental work counter. Discovery
     /// never holds references into mutable engine storage and never restarts
     /// merely because the geometry revision changes during its search.
+    #[cfg(feature = "legacy")]
     fn start_face_access(&mut self) -> bool {
         if !self.face_access_admission_available() {
             return false;
@@ -81,6 +86,7 @@ impl Engine {
     /// One bounded planning slice and at most one atomic admission per tick.
     /// Runs before actor movement so split preflight/remapping uses the actors'
     /// current routes and positions, never a snapshot from an earlier tick.
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance_face_access(&mut self) {
         if self.masterplan_active() {
             return;

@@ -36,6 +36,7 @@ Open the local address printed by Vite. Run `npm run wasm` again after changing 
 npm run setup:fixtures   # once; downloads pinned regression saves (Python 3.9+)
 npm run test:engine -- --release
 npm run wasm
+npm run wasm:legacy     # retired-planner build used by a few WASM tests
 npm test
 npm run build
 ```

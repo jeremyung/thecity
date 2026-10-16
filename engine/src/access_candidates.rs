@@ -39,8 +39,11 @@ pub(crate) struct CandidateScan {
 
 const HOST_END_CLEARANCE_M: f32 = 10.0;
 const SPLIT_NODE_CLEARANCE_M: f32 = 1.0;
+#[cfg(feature = "legacy")]
 pub(crate) const MIN_BRANCH_M: f32 = 24.0;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_BRANCH_M: f32 = 60.0;
+#[cfg(feature = "legacy")]
 pub(crate) const FACE_EDGE_MARGIN_M: f32 = 2.0;
 pub(crate) const MAX_HOSTS_PER_FACE: usize = 24;
 /// Quartile/midpoint samples per host; edge samples are appended after them.
@@ -51,7 +54,9 @@ pub(crate) const MAX_HEADINGS_PER_SPLIT: usize = 4;
 pub(crate) const PARCEL_HOST_CLEARANCE_M: f32 = 5.0;
 pub(crate) const PARCEL_PROJECTION_MARGIN_M: f32 = 2.0;
 pub(crate) const RAY_SAMPLE_M: f32 = 1.0;
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) const MAX_RAY_LOOKAHEAD_M: f32 = MAX_BRANCH_M + FACE_EDGE_MARGIN_M;
+#[cfg(feature = "legacy")]
 pub(crate) const FRONTAGE_TARGET_MARGIN_M: f32 = 15.0;
 pub(crate) const MAX_TARGETS_PER_SPLIT: usize = 12;
 /// Offline prepared searches refuse more complex faces so the per-descriptor
@@ -90,6 +95,7 @@ impl PreparedAccessSearch {
     /// descriptors; the nested preparation loops also cap 12 targets, 4
     /// nearest blockers, 4,000 parcel envelopes, 5,000 nodes, and 64 face
     /// vertices. The resulting object can be paged without prefix rescans.
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn prepare(
         face: &RoadFace,
         hosts: &[BoundaryHost],
@@ -171,6 +177,7 @@ impl PreparedAccessSearch {
 /// and the face's sampled interior centroid; lengths are clipped to the face
 /// ray. Exact world, road, parcel, project, and capacity checks remain in the
 /// engine proposal evaluator.
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn candidates_for_face(
     face: &RoadFace,
     hosts: &[BoundaryHost],
@@ -182,6 +189,7 @@ pub(crate) fn candidates_for_face(
         .candidates
 }
 
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn candidates_for_face_with_work(
     face: &RoadFace,
     hosts: &[BoundaryHost],
@@ -199,6 +207,7 @@ pub(crate) fn candidates_for_face_with_work(
     )
 }
 
+#[cfg(any(test, feature = "legacy"))]
 fn candidates_for_face_mode(
     face: &RoadFace,
     hosts: &[BoundaryHost],
@@ -649,6 +658,7 @@ fn subtract_intervals(base: (f32, f32), exclusions: &[(f32, f32)]) -> Vec<(f32, 
 /// the resumable preparation stage. Keep arithmetic and ordering here stable:
 /// the access-search golden test compares its yielded split points against
 /// this function.
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn host_split_samples(
     host: BoundaryHost,
     nodes: &[CandidateNode],
@@ -773,12 +783,14 @@ pub(crate) fn edge_split_samples(start: f32, end: f32, host_len: f32) -> Vec<f32
 /// Whether a fragmented-span edge sample crowds an existing split point.
 /// Shared by the synchronous and resumable selectors to keep their decisions
 /// identical while the resumable caller charges each comparison separately.
+#[cfg(feature = "legacy")]
 pub(crate) fn edge_sample_is_duplicate(sample: f32, existing: f32) -> bool {
     (sample - existing).abs() < 1.0
 }
 
 /// Synchronous reference selection for the at-most-two fragmented edge
 /// samples. `samples` already contains the historical midpoint prefix.
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn append_fragmented_edge_samples(
     samples: &mut Vec<f32>,
     selected_spans: &[(f32, f32)],
@@ -802,10 +814,12 @@ pub(crate) fn append_fragmented_edge_samples(
     added
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) fn dot(a: (f32, f32), b: (f32, f32)) -> f32 {
     a.0 * b.0 + a.1 * b.1
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) fn junction_angle_ok(host: (f32, f32), branch: (f32, f32)) -> bool {
     let cross = (host.0 * branch.1 - host.1 * branch.0).abs();
     let cosine = dot(host, branch).abs();
@@ -854,6 +868,7 @@ fn segment_inside_polygon(start: (f32, f32), end: (f32, f32), polygon: &[(f32, f
     })
 }
 
+#[cfg(any(test, feature = "legacy"))]
 fn ray_exit_distance(start: (f32, f32), heading: (f32, f32), polygon: &[(f32, f32)]) -> f32 {
     let mut last_inside = 0.0;
     // Look one margin beyond the maximum allowed branch. If the face does not
@@ -878,6 +893,7 @@ fn ray_exit_distance(start: (f32, f32), heading: (f32, f32), polygon: &[(f32, f3
 /// the entire centerline at the required clearance from every parcel. Segment
 /// distance is monotone nonincreasing as a prefix grows, so binary search is
 /// safe even when the remaining ray eventually meets an obstacle.
+#[cfg(any(test, feature = "legacy"))]
 fn max_clear_prefix(
     start: (f32, f32),
     heading: (f32, f32),

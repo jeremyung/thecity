@@ -149,6 +149,7 @@ impl BroadPhase {
 
     /// Append one validated input before any scan work starts. This allows
     /// callers to charge incremental graph-to-bounds construction per record.
+    #[cfg(feature = "legacy")]
     pub(crate) fn push_bounds(&mut self, bounds: Bounds) -> Result<(), Error> {
         if self.phase != 0 || self.cursor != 0 {
             return Err(Error::InvalidCheckpoint);

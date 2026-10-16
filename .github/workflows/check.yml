@@ -28,6 +28,7 @@ jobs:
       - run: python3 scripts/test-review-evidence.py
       - run: npm run test:engine -- --release
       - run: npm run wasm
+      - run: npm run wasm:legacy
       - run: npm test
       - run: npm run build
       - run: git diff --exit-code

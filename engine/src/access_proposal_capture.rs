@@ -13,11 +13,15 @@ use crate::face_target_viability::{FrozenViabilityInput, Segment};
 use crate::{Engine, MAX_PARCELS, MAX_PROJECTS, MAX_SEGMENTS};
 use std::collections::BTreeMap;
 
+#[cfg(feature = "legacy")]
 const MAX_NODES: usize = crate::access_candidates::MAX_PREPARED_INPUT_NODES;
+#[cfg(feature = "legacy")]
 const MAX_PROJECT_RECORDS: usize = MAX_PROJECTS + crate::COMPLETED_PROJECT_HISTORY;
+#[cfg(feature = "legacy")]
 const MAX_NEIGHBORHOOD_SEGMENTS: usize = 1_024;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) enum CaptureError {
     TooManyNodes,
     TooManyRoads,
@@ -33,10 +37,12 @@ pub(crate) enum CaptureError {
 /// Capture every road/node/project and the complete collision projection in
 /// source order. Eligible hosts alone are sorted by road id, matching the
 /// live proposal evaluator. The engine remains unchanged on success or error.
+#[cfg(feature = "legacy")]
 pub(crate) fn capture(engine: &Engine) -> Result<ProposalValidationInput, CaptureError> {
     capture_inner(engine, None)
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) fn capture_with_viability(
     captured: crate::access_capture::CapturedViability<'_>,
 ) -> Result<ProposalValidationInput, CaptureError> {
@@ -44,6 +50,7 @@ pub(crate) fn capture_with_viability(
     capture_inner(engine, Some(viability))
 }
 
+#[cfg(feature = "legacy")]
 fn capture_inner(
     engine: &Engine,
     shared_viability: Option<FrozenViabilityInput>,

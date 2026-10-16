@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 pub(crate) const MAX_DISTRICT_CELLS: usize = 256;
 pub(crate) const MAX_DENSITY_BUILDINGS: usize = 2_000;
 pub(crate) const MAX_DENSITY_FRONTAGES: usize = 5_000;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_PROJECT_CANDIDATES: usize = 128;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -514,6 +515,7 @@ pub(crate) fn measure(
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg(feature = "legacy")]
 pub(crate) enum CandidateKind {
     Infill,
     InteriorAccess,
@@ -521,6 +523,7 @@ pub(crate) enum CandidateKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) struct ProjectCandidate {
     pub stable_id: u64,
     pub kind: CandidateKind,
@@ -537,12 +540,14 @@ pub(crate) struct ProjectCandidate {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct TargetRange {
     pub min: f64,
     pub max: f64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct DistrictTargets {
     /// Explicit deficit thresholds as fractions of gross cell area. Scoring
     /// rewards progress only toward each range's `min`; `max` is validated
@@ -557,6 +562,7 @@ pub(crate) struct DistrictTargets {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct ScoreWeights {
     pub coverage: f64,
     pub floor_area: f64,
@@ -567,6 +573,7 @@ pub(crate) struct ScoreWeights {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) struct RankedCandidate {
     pub stable_id: u64,
     pub kind: CandidateKind,
@@ -587,6 +594,7 @@ pub(crate) enum ScoreError {
 /// enforcement or hysteresis. Vacancy suppresses expansions only when the
 /// relevant use has positive vacant capacity. Geometry and delivery access
 /// remain authoritative upstream prerequisites.
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn rank_candidates(
     metrics: &DistrictMetrics,
     candidates: &[ProjectCandidate],
@@ -606,6 +614,7 @@ pub(crate) fn rank_candidates(
 /// permission to infer vacancy from a destination cell. Callers with projects
 /// spanning multiple cells must allocate gains consistently or aggregate them
 /// before ranking.
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn rank_candidates_by_district(
     metrics: &DistrictMetrics,
     candidates: &[ProjectCandidate],
@@ -621,12 +630,15 @@ pub(crate) fn rank_candidates_by_district(
 }
 
 #[derive(Clone, Copy)]
+#[cfg(any(test, feature = "legacy"))]
 enum CandidateTargets<'a> {
     Uniform(DistrictTargets),
     ByCell(&'a [DistrictTargets]),
 }
 
+#[cfg(any(test, feature = "legacy"))]
 impl<'a> CandidateTargets<'a> {
+    #[cfg(any(test, feature = "legacy"))]
     fn copy_for_cell(self, cell_id: usize) -> Option<DistrictTargets> {
         match self {
             Self::Uniform(targets) => Some(targets),
@@ -643,6 +655,7 @@ impl<'a> CandidateTargets<'a> {
         Ok(())
     }
 
+    #[cfg(any(test, feature = "legacy"))]
     fn all(self) -> impl Iterator<Item = DistrictTargets> + 'a {
         let (uniform, by_cell) = match self {
             Self::Uniform(target) => (Some(target), None),
@@ -656,6 +669,7 @@ impl<'a> CandidateTargets<'a> {
     }
 }
 
+#[cfg(any(test, feature = "legacy"))]
 fn rank_candidates_with_targets(
     metrics: &DistrictMetrics,
     candidates: &[ProjectCandidate],
@@ -757,6 +771,7 @@ fn rank_candidates_with_targets(
     Ok(ranked)
 }
 
+#[cfg(any(test, feature = "legacy"))]
 fn valid_targets(targets: DistrictTargets) -> bool {
     let ranges = [
         targets.built_envelope_coverage_proxy,
@@ -774,6 +789,7 @@ fn valid_targets(targets: DistrictTargets) -> bool {
         && targets.commercial_vacancy_expansion_limit.is_finite()
 }
 
+#[cfg(any(test, feature = "legacy"))]
 fn valid_weights(weights: ScoreWeights) -> bool {
     [
         weights.coverage,
@@ -880,6 +896,7 @@ fn accumulate_rect(
 /// Allocate one proposed envelope across existing district cells. This returns
 /// geometry only: callers must label any resulting benefit as a forecast and
 /// must not add it to measured built coverage before construction completes.
+#[cfg(feature = "legacy")]
 pub(crate) fn clipped_envelope_areas(
     metrics: &DistrictMetrics,
     rect: OrientedRect,

@@ -14,6 +14,7 @@ impl Engine {
     /// Count road records still promised by a preconstruction spine reservation.
     /// Count every perimeter segment without a road record, including one
     /// represented only by a pending project. Each will still consume a record.
+    #[cfg(feature = "legacy")]
     pub(super) fn spine_reserved_road_records(&self) -> usize {
         let Some(plan) = self.state.neighborhood_plan.as_ref() else {
             return 0;

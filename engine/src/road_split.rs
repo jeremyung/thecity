@@ -473,6 +473,7 @@ impl Engine {
     /// Split an already-open ordinary road without changing its geometry or
     /// introducing a shortcut between its old endpoints. Preparation is
     /// read-only; the commit runs only after every validation succeeds.
+    #[cfg(feature = "legacy")]
     pub(super) fn try_split_open_road(
         &mut self,
         host_road_id: u32,

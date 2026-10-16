@@ -52,6 +52,7 @@ pub(crate) struct LiveAccess {
 impl LiveAccess {
     /// Wrap a planning job whose discovery and proposal inputs share a frozen
     /// geometry revision. The wrapper never restarts that discovery.
+    #[cfg(feature = "legacy")]
     pub(crate) fn new(job: AccessPlanningJob) -> Self {
         Self {
             planning: job,
@@ -67,6 +68,7 @@ impl LiveAccess {
     /// Spend at most `budget` planning work units. Ready pages are consumed
     /// with one charged unit per page transition, including empty pages.
     /// Returns actual underlying work and bounded page-transition charges.
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> usize {
         let mut work = 0;
         while work < budget {
@@ -97,6 +99,7 @@ impl LiveAccess {
     /// Return the current frozen proposal as an exact live geometry candidate.
     /// A caller must capture fresh current context and call `begin_validation`
     /// before the proposal can be exposed by `ready_proposal`.
+    #[cfg(feature = "legacy")]
     pub(crate) fn needs_validation(&self) -> Option<AccessGeometryCandidate> {
         if self.validator.is_some() || self.approved.is_some() {
             return None;
@@ -113,6 +116,7 @@ impl LiveAccess {
 
     /// Start validating the current proposal against one fresh captured
     /// context and its live geometry revision.
+    #[cfg(feature = "legacy")]
     pub(crate) fn begin_validation(
         &mut self,
         input: ProposalValidationInput,
@@ -131,22 +135,26 @@ impl LiveAccess {
 
     /// Return the freshly validated proposal and the revision it was checked
     /// against. The caller still checks live scalar gates and performs commit.
+    #[cfg(feature = "legacy")]
     pub(crate) fn ready_proposal(&self) -> Option<(&AccessProposal, u64)> {
         Some((self.approved.as_ref()?, self.validation_revision?))
     }
 
     /// Revision associated with the current in-progress or completed live
     /// validation, so the caller can discard work as soon as it turns stale.
+    #[cfg(feature = "legacy")]
     pub(crate) fn validation_revision(&self) -> Option<u64> {
         self.validation_revision
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn selected_face_identity(&self) -> Option<&[u32]> {
         self.planning.selected_face_identity()
     }
 
     /// Advance live validation by a bounded quota. Rejected proposals are
     /// skipped automatically; accepted results wait for caller disposition.
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance_validation(&mut self, budget: usize) -> usize {
         let Some(validator) = self.validator.as_mut() else {
             return 0;
@@ -167,6 +175,7 @@ impl LiveAccess {
 
     /// Consume the current proposal after rejection or successful atomic
     /// commit. This is a constant-time cursor change.
+    #[cfg(feature = "legacy")]
     pub(crate) fn reject_or_consume(&mut self) {
         self.validator = None;
         self.approved = None;
@@ -179,6 +188,7 @@ impl LiveAccess {
     /// Discard a completed/in-progress validation after observing a stale
     /// world revision. Returns true when the same candidate remains eligible
     /// for a fresh capture; after two retries it skips the candidate.
+    #[cfg(feature = "legacy")]
     pub(crate) fn discard_stale_validation(&mut self) -> bool {
         if self.validator.is_none() && self.approved.is_none() {
             return false;
@@ -196,6 +206,7 @@ impl LiveAccess {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn is_exhausted(&self) -> bool {
         self.planning.is_exhausted()
             && self.planning.ready_page().is_none()
@@ -203,6 +214,7 @@ impl LiveAccess {
             && self.approved.is_none()
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn failed(&self) -> bool {
         self.planning.error().is_some()
     }

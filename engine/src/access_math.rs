@@ -16,6 +16,7 @@ pub(crate) fn length(x: f32, z: f32) -> f32 {
 /// This is the vector equivalent of rotating the normalized input by the two
 /// signed angles. Callers retain their existing distance and clearance gates.
 #[inline]
+#[cfg(feature = "legacy")]
 pub(crate) fn rotate_clearance_sides(
     dx: f32,
     dz: f32,

@@ -24,6 +24,8 @@ const modes = [
   ['flag-passage', 'flag-passage-candidate'],
   ['block-proportion', 'block-proportion-candidate'],
   ['parent-passage', 'parent-passage-candidate'],
+  // Retired planners for the legacy WASM tests; never the application build.
+  ['legacy', 'legacy'],
 ];
 const selected = modes.filter(([flag]) => process.argv.includes(`--${flag}`));
 if (selected.length > 1) throw new Error('Choose one isolated build mode.');

@@ -18,7 +18,9 @@ const MAX_EDGES: usize = 512;
 const MAX_HALF_EDGES: usize = 1024;
 const MAX_HALF_EDGE_STEPS: usize = 1024;
 const MAX_OUTPUT_FACES: usize = 512;
+#[cfg(feature = "legacy")]
 const COINCIDENT_EPSILON: f32 = 1.0e-5;
+#[cfg(feature = "legacy")]
 const MIN_FACE_AREA: f64 = 1.0e-3;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -124,6 +126,7 @@ pub(crate) struct Checkpoint {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -201,6 +204,7 @@ impl FaceWalkSearch {
     /// Construct from graph stages that have already validated every input.
     /// Per-node and per-half-edge marks are allocated incrementally by
     /// `advance` rather than initialized during a stage handoff.
+    #[cfg(feature = "legacy")]
     pub(crate) fn new_trusted(
         nodes: Vec<RoadFaceNode>,
         edges: Vec<RoadFaceEdge>,
@@ -279,6 +283,7 @@ impl FaceWalkSearch {
         Ok(Self { state: checkpoint })
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn faces(&self) -> Option<Result<&[RoadFace], RoadFaceError>> {
         match self.state.phase {
             Phase::Done => Some(Ok(&self.state.faces)),
@@ -291,6 +296,7 @@ impl FaceWalkSearch {
         self.state.proposed_edge_id
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_faces(self) -> Result<Vec<RoadFace>, RoadFaceError> {
         match self.state.phase {
             Phase::Done => Ok(self.state.faces),
@@ -299,6 +305,7 @@ impl FaceWalkSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || matches!(self.state.phase, Phase::Done | Phase::Failed(_)) {
             return AdvanceResult {
@@ -336,6 +343,7 @@ impl FaceWalkSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_initialize(&mut self) {
         let cp = &mut self.state;
         let total = cp.nodes.len().max(cp.half_edges.len());
@@ -353,6 +361,7 @@ impl FaceWalkSearch {
         cp.initialize_cursor += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_scan_start(&mut self) {
         if self.state.start_cursor >= self.state.half_edges.len() {
             self.state.phase = Phase::SortFaces;
@@ -371,6 +380,7 @@ impl FaceWalkSearch {
         self.state.phase = Phase::WalkVisit;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_walk_visit(&mut self) {
         let current = self.state.current;
         if self.state.visited[current] {
@@ -390,23 +400,27 @@ impl FaceWalkSearch {
         self.state.phase = Phase::AppendVertex;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_append_vertex(&mut self) {
         let half = &self.state.half_edges[self.state.current];
         self.state.walk_vertices.push(half.from);
         self.state.phase = Phase::AppendEdge;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_append_edge(&mut self) {
         let half = &self.state.half_edges[self.state.current];
         self.state.walk_edges.push(half.edge_index);
         self.state.phase = Phase::MoveNext;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_move_next(&mut self) {
         self.state.current = self.state.next[self.state.current];
         self.state.phase = Phase::WalkVisit;
     }
 
+    #[cfg(feature = "legacy")]
     fn finish_walk(&mut self) {
         let count = self.state.walk_vertices.len();
         if count < 3 {
@@ -423,6 +437,7 @@ impl FaceWalkSearch {
         self.state.phase = Phase::RepeatVertices;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_repeat(&mut self) {
         if self.state.repeat_index >= self.state.walk_vertices.len() {
             if self.state.repeated {
@@ -443,6 +458,7 @@ impl FaceWalkSearch {
         self.state.repeat_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_area(&mut self) {
         if self.state.area_index >= self.state.walk_vertices.len() {
             self.state.area = self.state.area_twice * 0.5;
@@ -466,6 +482,7 @@ impl FaceWalkSearch {
         self.state.area_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_minimum(&mut self) {
         if self.state.minimum_cursor >= self.state.walk_vertices.len() {
             self.state.output_vertex_ids.clear();
@@ -485,6 +502,7 @@ impl FaceWalkSearch {
         self.state.minimum_cursor += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_face_arrays(&mut self) {
         if self.state.output_cursor >= self.state.walk_vertices.len() {
             self.state.canonical_sequence = 0;
@@ -519,6 +537,7 @@ impl FaceWalkSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_canonical_build(&mut self) {
         let count = self.state.output_vertex_ids.len();
         if self.state.canonical_build_cursor >= count {
@@ -539,6 +558,7 @@ impl FaceWalkSearch {
         self.state.canonical_build_cursor += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_canonical_compare(&mut self) {
         if self.state.canonical_best.is_empty() {
             self.state.phase = Phase::CanonicalDecide;
@@ -570,6 +590,7 @@ impl FaceWalkSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_canonical_decide(&mut self) {
         if self.state.canonical_order == Some(SavedOrdering::Less) {
             self.state.canonical_best = std::mem::take(&mut self.state.canonical_candidate);
@@ -594,6 +615,7 @@ impl FaceWalkSearch {
         self.state.phase = Phase::CanonicalBuild;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_contains_proposed(&mut self) {
         let Some(proposed_id) = self.state.proposed_edge_id else {
             self.state.phase = Phase::EmitFace;
@@ -611,6 +633,7 @@ impl FaceWalkSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_emit_face(&mut self) {
         self.state.faces.push(RoadFace {
             identity: std::mem::take(&mut self.state.canonical_best),
@@ -623,6 +646,7 @@ impl FaceWalkSearch {
         self.next_walk();
     }
 
+    #[cfg(feature = "legacy")]
     fn next_walk(&mut self) {
         self.state.walk_vertices.clear();
         self.state.walk_edges.clear();
@@ -651,6 +675,7 @@ impl FaceWalkSearch {
         self.state.phase = Phase::ScanStart;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_sort_faces(&mut self) {
         if self.state.sort_key.is_none() {
             if self.state.sort_index >= self.state.faces.len() {
@@ -715,6 +740,7 @@ impl FaceWalkSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_nested(&mut self) {
         if self.state.faces.len() < 2 || self.state.nested_first >= self.state.faces.len() - 1 {
             self.state.phase = Phase::Done;
@@ -772,11 +798,13 @@ impl FaceWalkSearch {
         self.state.nested_edge += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn fail(&mut self, error: RoadFaceError) {
         self.state.phase = Phase::Failed(error);
     }
 }
 
+#[cfg(feature = "legacy")]
 fn empty_face() -> RoadFace {
     RoadFace {
         identity: Vec::new(),

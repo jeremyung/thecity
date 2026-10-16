@@ -7,6 +7,11 @@ import type { World } from '../web/src/types';
 // @ts-expect-error Node built-in types are not included in the app TypeScript config.
 import { readFileSync } from 'node:fs';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
+// Legacy-planner world: needs `npm run wasm:legacy`. Remove with the legacy feature.
+import {
+  CityEngine as LegacyCityEngine,
+  initSync as initLegacySync,
+} from '../.tools/wasm-legacy/city_engine.js';
 
 const orbitMocks = vi.hoisted(() => ({
   instances: [] as Array<{
@@ -1582,13 +1587,15 @@ describe('CameraDirector', () => {
   });
 
   it('fits the actual mature skyline roof and footprint corners across wide and narrow viewports', () => {
-    const wasm = readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url));
+    const wasm = readFileSync(
+      new URL('../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url),
+    );
     const save = readFileSync(
       new URL('./fixtures/access-joins/mature-world.json', import.meta.url),
       'utf8',
     );
-    initSync({ module: wasm });
-    const engine = CityEngine.restore(save);
+    initLegacySync({ module: wasm });
+    const engine = LegacyCityEngine.restore(save);
     try {
       const world = JSON.parse(engine.snapshot()) as World;
       const tallest = Math.max(

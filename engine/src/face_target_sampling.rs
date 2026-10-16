@@ -15,9 +15,12 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 const CHECKPOINT_SCHEMA: u8 = 1;
+#[cfg(feature = "legacy")]
 const MAX_FACE_VERTICES: usize = 1024;
+#[cfg(feature = "legacy")]
 const GRID_SPACING_M: f32 = 8.0;
 const GRID_MAX_SIDE: usize = 24;
+#[cfg(feature = "legacy")]
 const NOMINAL_SITE_SIZE_M: f32 = 8.0;
 const MAX_FACE_COORDINATE: f32 = 100_000.0;
 
@@ -88,6 +91,7 @@ pub(crate) struct FaceSamplerCheckpoint {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -101,6 +105,7 @@ pub(crate) struct FaceSampler {
 }
 
 impl FaceSampler {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(
         polygon: Vec<(f32, f32)>,
         context: Arc<FrozenViabilityContext>,
@@ -121,6 +126,7 @@ impl FaceSampler {
     /// Start sampling a polygon that was already validated while a bounded
     /// caller-owned preparation stage copied it. This avoids rescanning each
     /// face synchronously at the handoff boundary.
+    #[cfg(feature = "legacy")]
     pub(crate) fn with_polygon(
         polygon: ValidatedPolygon,
         context: Arc<FrozenViabilityContext>,
@@ -203,16 +209,19 @@ impl FaceSampler {
         (self.state.phase == Phase::Done && !self.state.failed).then_some(&self.state.centers)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_centers(self) -> Option<Vec<(f32, f32)>> {
         (self.state.phase == Phase::Done && !self.state.failed).then_some(self.state.centers)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn error(&self) -> Option<SamplingError> {
         self.state
             .failed
             .then_some(SamplingError::InvalidRuntimeState)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.state.phase == Phase::Done {
             return AdvanceResult {
@@ -350,6 +359,7 @@ impl FaceSampler {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn finish_bounds(&mut self) {
         let min_x = self.state.min_x.expect("nonempty polygon");
         let max_x = self.state.max_x.expect("nonempty polygon");
@@ -362,6 +372,7 @@ impl FaceSampler {
         self.state.phase = Phase::GridCell;
     }
 
+    #[cfg(feature = "legacy")]
     fn fail(&mut self) {
         self.state.phase = Phase::Done;
         self.state.failed = true;
@@ -372,6 +383,7 @@ impl FaceSampler {
 
     /// Complete only already-finished nested queries and bounded enum/cursor
     /// transitions; this never scans a polygon or context array.
+    #[cfg(feature = "legacy")]
     fn settle_completed_queries(&mut self) {
         loop {
             match self.state.phase {

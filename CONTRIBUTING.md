@@ -11,7 +11,7 @@ Run the smallest relevant check first, then the full set before pushing:
 cargo test --manifest-path engine/Cargo.toml <test_name>   # one engine test
 npx vitest run tests/<file>.test.ts                        # one web test file
 npm run test:engine -- --release                           # all engine tests
-npm run wasm && npm test                                   # web + WASM integration
+npm run wasm && npm run wasm:legacy && npm test             # web + WASM integration
 npm run build
 ```
 

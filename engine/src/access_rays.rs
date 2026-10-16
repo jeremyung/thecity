@@ -13,6 +13,7 @@ const MAX_POLYGON_VERTICES: usize = 64;
 const MAX_COORDINATE: f32 = 1_000_000.0;
 const RAY_LOOKAHEAD_M: f32 = 62.0;
 const SAMPLE_M: f32 = 1.0;
+#[cfg(feature = "legacy")]
 const SEGMENT_MAX_STEPS: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -84,6 +85,7 @@ pub(crate) struct RayCheckpoint {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct RayAdvance {
     pub work_used: usize,
     pub done: bool,
@@ -96,10 +98,12 @@ pub(crate) struct RayQuery {
 }
 
 impl RayQuery {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(polygon: Vec<(f32, f32)>, kind: RayQueryKind) -> Result<Self, RayError> {
         Self::with_polygon(ValidatedPolygon::new(polygon)?, kind)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn with_polygon(
         polygon: ValidatedPolygon,
         kind: RayQueryKind,
@@ -154,10 +158,12 @@ impl RayQuery {
         self.checkpoint.clone()
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn result(&self) -> Option<RayResult> {
         self.checkpoint.result
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> RayAdvance {
         if budget == 0 || self.checkpoint.phase == Phase::Done {
             return RayAdvance {
@@ -190,6 +196,7 @@ impl RayQuery {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn start_sample(&mut self) {
         let cp = &mut self.checkpoint;
         let (x, z) = sample_point(cp.kind, cp.sample_index);
@@ -201,6 +208,7 @@ impl RayQuery {
         cp.phase = Phase::ClassifyEdges;
     }
 
+    #[cfg(feature = "legacy")]
     fn classify_one_edge(&mut self) {
         let cp = &mut self.checkpoint;
         let current = cp.edge_index;
@@ -234,6 +242,7 @@ impl RayQuery {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn finish_sample(&mut self) {
         let cp = &mut self.checkpoint;
         let inside = cp.point_result.unwrap_or(false);
@@ -300,6 +309,7 @@ mod arc_slice_serde {
     }
 }
 
+#[cfg(feature = "legacy")]
 fn clear_point_state(cp: &mut RayCheckpoint) {
     cp.sample_x = 0.0;
     cp.sample_z = 0.0;

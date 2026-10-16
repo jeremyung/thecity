@@ -117,6 +117,7 @@ impl ViabilityCheckpoint {
         self.rect == rect && self.extra_road == extra_road
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn result(&self) -> Option<bool> {
         self.result
     }

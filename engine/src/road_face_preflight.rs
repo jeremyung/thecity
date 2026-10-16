@@ -20,6 +20,7 @@ const COINCIDENT_EPSILON: f32 = 1.0e-5;
 const MAX_PREFLIGHT_WORK: usize = 1_700_000;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct PreflightAdvance {
     pub work_used: usize,
     pub done: bool,
@@ -268,6 +269,7 @@ impl GraphPreflight {
         })
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn result(&self) -> Option<Result<&[(usize, usize)], RoadFaceError>> {
         match self.checkpoint.stage {
             Stage::Done => Some(Ok(&self.checkpoint.indexed_edges)),
@@ -282,6 +284,7 @@ impl GraphPreflight {
 
     /// Consume a completed preflight and move its frozen inputs into the next
     /// stage without cloning the graph or its indexed-edge output.
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_result(
         self,
     ) -> Result<(Vec<RoadFaceNode>, Vec<RoadFaceEdge>, Vec<(usize, usize)>), RoadFaceError> {
@@ -299,6 +302,7 @@ impl GraphPreflight {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> PreflightAdvance {
         if budget == 0 || matches!(self.checkpoint.stage, Stage::Done | Stage::Failed(_)) {
             return PreflightAdvance {
@@ -342,6 +346,7 @@ impl GraphPreflight {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_nodes(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         if cp.node_cursor == cp.nodes.len() {
@@ -376,6 +381,7 @@ impl GraphPreflight {
         false
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_coincident_nodes(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         if cp.coincident_left + 1 >= cp.nodes.len() {
@@ -411,6 +417,7 @@ impl GraphPreflight {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_edges(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         let edge_count = cp.edges.len() + usize::from(cp.proposed_edge.is_some());
@@ -505,6 +512,7 @@ impl GraphPreflight {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_filter_build(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         if cp.filter_fallback || self.filter.is_none() {
@@ -538,6 +546,7 @@ impl GraphPreflight {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_planarity(&mut self, budget: usize) -> usize {
         let cp = &mut self.checkpoint;
         if budget == 0 {
@@ -603,6 +612,7 @@ impl GraphPreflight {
         self.test_pending_pair()
     }
 
+    #[cfg(feature = "legacy")]
     fn test_pending_pair(&mut self) -> usize {
         let cp = &mut self.checkpoint;
         let (first, second) = cp.pending_pair.take().unwrap();
@@ -625,6 +635,7 @@ impl GraphPreflight {
 
 // Shared by the live validator and broad-phase parity tests so the oracle
 // includes the actual f32 arithmetic and shared-node collinearity rule.
+#[cfg(feature = "legacy")]
 fn pair_nonplanar(nodes: &[RoadFaceNode], a: usize, b: usize, c: usize, d: usize) -> bool {
     let shared = a == c || a == d || b == c || b == d;
     if shared {

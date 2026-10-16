@@ -5,9 +5,9 @@
 //! advance to the next one and must revalidate world and actor state before
 //! live admission.
 
-use crate::access_discovery_job::{
-    DiscoveryCheckpoint, DiscoveryError, DiscoveryInput, DiscoveryJob,
-};
+#[cfg(feature = "legacy")]
+use crate::access_discovery_job::DiscoveryInput;
+use crate::access_discovery_job::{DiscoveryCheckpoint, DiscoveryError, DiscoveryJob};
 use crate::access_proposal_validation::{
     InputError, ProposalValidationCheckpoint, ProposalValidationContext, ProposalValidationInput,
     ProposalValidator,
@@ -40,6 +40,7 @@ pub(crate) enum PlanningError {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct PlanningAdvance {
     pub work_used: usize,
     pub page_ready: bool,
@@ -82,6 +83,7 @@ pub(crate) struct AccessPlanningJob {
 impl AccessPlanningJob {
     /// Build a job from the two projections captured at the same simulation
     /// boundary. Their full viability arrays must agree before either is used.
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(
         discovery_input: DiscoveryInput,
         proposal_input: ProposalValidationInput,
@@ -95,6 +97,7 @@ impl AccessPlanningJob {
         )
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn new_excluding(
         discovery_input: DiscoveryInput,
         proposal_input: ProposalValidationInput,
@@ -128,6 +131,7 @@ impl AccessPlanningJob {
         self.geometry_revision
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn selected_face_identity(&self) -> Option<&[u32]> {
         self.discovery.selected_face_identity()
     }
@@ -136,10 +140,12 @@ impl AccessPlanningJob {
         (self.phase == Phase::Ready).then_some(self.proposals.as_slice())
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn is_exhausted(&self) -> bool {
         self.phase == Phase::Exhausted || self.phase == Phase::Failed
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn error(&self) -> Option<PlanningError> {
         self.failure.map(PlanningError::Discovery)
     }
@@ -147,6 +153,7 @@ impl AccessPlanningJob {
     /// Mark the ready page consumed/rejected. Empty ready pages are valid and
     /// must also be continued so an all-rejected descriptor page cannot stall.
     /// Returns true when another descriptor page remains.
+    #[cfg(feature = "legacy")]
     pub(crate) fn continue_next_page(&mut self) -> Result<bool, PlanningError> {
         if self.phase != Phase::Ready {
             return Err(PlanningError::InvalidCheckpoint);
@@ -350,6 +357,7 @@ impl AccessPlanningJob {
         })
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> PlanningAdvance {
         if budget == 0 || matches!(self.phase, Phase::Ready | Phase::Exhausted | Phase::Failed) {
             return self.advance_result(0);
@@ -456,6 +464,7 @@ impl AccessPlanningJob {
         self.advance_result(work)
     }
 
+    #[cfg(feature = "legacy")]
     fn descriptor_count(&self) -> Result<usize, PlanningError> {
         match self.discovery.descriptors() {
             Some(Ok(descriptors)) => Ok(descriptors.len()),
@@ -464,6 +473,7 @@ impl AccessPlanningJob {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_result(&self, work_used: usize) -> PlanningAdvance {
         PlanningAdvance {
             work_used,

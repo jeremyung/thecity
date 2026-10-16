@@ -90,7 +90,12 @@ impl Engine {
     pub(crate) fn load_masterplan(&mut self) -> Result<(), String> {
         let Some(progress) = self.state.masterplan.as_ref() else {
             self.plan = None;
-            return Ok(());
+            if cfg!(feature = "legacy") {
+                return Ok(());
+            }
+            return Err(
+                "this save has no master plan; legacy worlds are no longer supported".into(),
+            );
         };
         let plan = masterplan::generate(&self.masterplan_geography());
         if progress.node_ids.len() != plan.nodes.len()

@@ -1,7 +1,8 @@
 // @ts-expect-error Node built-in types are not included in the application config.
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { CityEngine, initSync } from '../public/wasm/city_engine.js';
+// Legacy-planner world: needs `npm run wasm:legacy`. Remove with the legacy feature.
+import { CityEngine, initSync } from '../.tools/wasm-legacy/city_engine.js';
 import type { World } from '../web/src/types';
 
 type Lot = {
@@ -38,7 +39,7 @@ it.each([
   'WASM resumes %s and releases lots only after construction',
   (_label, fixture) => {
     initSync({
-      module: readFileSync(new URL('../public/wasm/city_engine_bg.wasm', import.meta.url)),
+      module: readFileSync(new URL('../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
     });
     const engine = CityEngine.restore(
       readFileSync(new URL(`./fixtures/access-joins/${fixture}`, import.meta.url), 'utf8'),

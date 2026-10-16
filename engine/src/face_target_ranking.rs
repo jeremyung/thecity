@@ -23,6 +23,7 @@ const TARGET_LIMIT: usize = 12;
 // item. No advance call can exceed the caller's explicit quota.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -93,6 +94,7 @@ pub(crate) struct TargetRanking {
 }
 
 impl TargetRanking {
+    #[cfg(feature = "legacy")]
     pub(crate) fn new(
         centers: Vec<(f32, f32)>,
         parcels: Vec<OrientedRect>,
@@ -139,6 +141,7 @@ impl TargetRanking {
         (self.state.phase == Phase::Done).then_some(self.state.selected.as_slice())
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.state.phase == Phase::Done {
             return AdvanceResult {
@@ -157,6 +160,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_one(&mut self) {
         match self.state.phase {
             Phase::ScoreParcels => self.score_parcel(),
@@ -171,6 +175,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn score_parcel(&mut self) {
         let state = &mut self.state;
         if state.centers.is_empty() {
@@ -214,6 +219,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn score_road(&mut self) {
         let state = &mut self.state;
         if state.roads.is_empty() {
@@ -235,6 +241,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn record_score(&mut self) {
         let state = &mut self.state;
         let (x, z) = state.centers[state.center_index];
@@ -258,6 +265,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn start_sort(&mut self) {
         if self.state.sort_index >= self.state.scored.len() {
             self.state.phase = Phase::SelectStart;
@@ -269,6 +277,7 @@ impl TargetRanking {
         self.state.phase = Phase::SortCompare;
     }
 
+    #[cfg(feature = "legacy")]
     fn sort_compare(&mut self) {
         let key = self.state.sort_key.expect("sort key initialized");
         if self.state.sort_compare == 0 {
@@ -287,6 +296,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn finish_sort_item(&mut self) {
         self.state.sort_index += 1;
         self.state.sort_key = None;
@@ -298,6 +308,7 @@ impl TargetRanking {
         };
     }
 
+    #[cfg(feature = "legacy")]
     fn start_candidate(&mut self) {
         if self.state.candidate_index >= self.state.scored.len()
             || self.state.selected.len() == TARGET_LIMIT
@@ -316,6 +327,7 @@ impl TargetRanking {
         };
     }
 
+    #[cfg(feature = "legacy")]
     fn scan_node(&mut self) {
         let candidate = self.state.scored[self.state.candidate_index];
         if self.state.node_index >= self.state.nodes.len() {
@@ -334,6 +346,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn scan_target(&mut self) {
         let candidate = self.state.scored[self.state.candidate_index];
         if self.state.selected_index >= self.state.selected.len() {
@@ -351,6 +364,7 @@ impl TargetRanking {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn next_candidate_phase(&mut self) -> Phase {
         self.state.candidate_index += 1;
         self.state.node_index = 0;
@@ -367,6 +381,7 @@ impl TargetRanking {
     }
 }
 
+#[cfg(feature = "legacy")]
 fn rank_order(left: &RankedCenter, right: &RankedCenter) -> std::cmp::Ordering {
     let score_order = match (left.score, right.score) {
         (None, None) => std::cmp::Ordering::Equal,

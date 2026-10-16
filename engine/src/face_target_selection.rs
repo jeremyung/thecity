@@ -7,9 +7,9 @@
 use crate::face_target_containment::{
     polygon_fingerprint_add, polygon_fingerprint_start, ValidatedPolygon,
 };
-use crate::face_target_sampling::{
-    AdvanceResult, FaceSampler, FaceSamplerCheckpoint, SamplingError,
-};
+#[cfg(feature = "legacy")]
+use crate::face_target_sampling::AdvanceResult;
+use crate::face_target_sampling::{FaceSampler, FaceSamplerCheckpoint, SamplingError};
 use crate::face_target_viability::FrozenViabilityContext;
 use crate::road_faces::RoadFace;
 use serde::{Deserialize, Serialize};
@@ -83,6 +83,7 @@ pub(crate) struct FaceSelectionCheckpoint {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg(feature = "legacy")]
 pub(crate) struct SelectionView<'a> {
     pub face_index: usize,
     pub centers: &'a [(f32, f32)],
@@ -98,6 +99,7 @@ pub(crate) struct FaceSelection {
 }
 
 impl FaceSelection {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(
         faces: Vec<RoadFace>,
         context: Arc<FrozenViabilityContext>,
@@ -108,6 +110,7 @@ impl FaceSelection {
     /// Select the best viable face after excluding canonical identities.
     /// Exclusion comparisons are persisted and charged to `advance`, one
     /// identity item or page transition per work unit.
+    #[cfg(feature = "legacy")]
     pub(crate) fn new_excluding(
         faces: Vec<RoadFace>,
         context: Arc<FrozenViabilityContext>,
@@ -193,6 +196,7 @@ impl FaceSelection {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn selection(&self) -> Option<Option<SelectionView<'_>>> {
         if self.state.phase != Phase::Done || self.state.failed {
             return None;
@@ -205,6 +209,7 @@ impl FaceSelection {
 
     /// Move the winner and its centers; swap removal avoids shifting all faces.
     /// Dropping unselected storage remains allocator work outside logical quotas.
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_selected(
         mut self,
     ) -> Result<Option<(RoadFace, Vec<(f32, f32)>)>, SelectionError> {
@@ -221,12 +226,14 @@ impl FaceSelection {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn error(&self) -> Option<SelectionError> {
         self.state
             .failed
             .then_some(SelectionError::InvalidRuntimeState)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.state.phase == Phase::Done {
             return AdvanceResult {
@@ -420,12 +427,14 @@ impl FaceSelection {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn promote_candidate(&mut self) {
         self.state.best_index = Some(self.state.face_index);
         self.state.best_centers = std::mem::take(&mut self.state.candidate_centers);
         self.finish_face();
     }
 
+    #[cfg(feature = "legacy")]
     fn finish_face(&mut self) {
         self.state.candidate_centers.clear();
         self.active_sampler = None;
@@ -445,6 +454,7 @@ impl FaceSelection {
         };
     }
 
+    #[cfg(feature = "legacy")]
     fn fail(&mut self) {
         self.state.phase = Phase::Done;
         self.state.failed = true;

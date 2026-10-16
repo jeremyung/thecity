@@ -35,6 +35,7 @@ const MAX_DESCRIPTORS: usize = crate::access_candidates::MAX_HOSTS_PER_FACE
     * 4;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg(feature = "legacy")]
 pub(crate) struct DiscoveryInput {
     pub graph_nodes: Vec<RoadFaceNode>,
     pub graph_edges: Vec<RoadFaceEdge>,
@@ -65,6 +66,7 @@ impl From<ViabilityError> for DiscoveryError {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct DiscoveryAdvance {
     pub work_used: usize,
     pub done: bool,
@@ -221,10 +223,12 @@ pub(crate) struct DiscoveryJob {
 impl DiscoveryJob {
     /// Fixed-size/count validation is synchronous and bounded. The graph and
     /// candidate caps match the constituent trace/descriptor stages.
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(input: DiscoveryInput) -> Result<Self, DiscoveryError> {
         Self::new_excluding(input, Vec::new())
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn new_excluding(
         input: DiscoveryInput,
         excluded_faces: Vec<Vec<u32>>,
@@ -598,6 +602,7 @@ impl DiscoveryJob {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn selected_face_identity(&self) -> Option<&[u32]> {
         self.selected_face_identity.as_deref()
     }
@@ -611,6 +616,7 @@ impl DiscoveryJob {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> DiscoveryAdvance {
         if budget == 0 || self.descriptors().is_some() {
             return DiscoveryAdvance {

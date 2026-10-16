@@ -5,6 +5,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(super) enum NeighborhoodRejection {
     AnchorNotInCandidateCorners,
     RoadSegmentCapacity,
@@ -36,6 +37,7 @@ pub(super) enum NeighborhoodRejection {
     StationTowerRoadClearance,
 }
 
+#[cfg(any(test, feature = "legacy"))]
 impl NeighborhoodRejection {
     #[cfg(test)]
     pub(super) fn label(self) -> &'static str {
@@ -272,6 +274,7 @@ fn record_lot_geometry_failure(
 }
 
 impl Engine {
+    #[cfg(feature = "legacy")]
     pub(super) fn neighborhood_candidate_clear_with_layout_reason(
         &self,
         anchor: &Node,

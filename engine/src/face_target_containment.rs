@@ -41,6 +41,7 @@ impl ValidatedPolygon {
 
     /// Construct from a polygon whose exact contents were already verified
     /// while being copied in a quota-stepped preparation stage.
+    #[cfg(feature = "legacy")]
     pub(crate) fn from_validated(points: Vec<(f32, f32)>, fingerprint: u64) -> Self {
         Self {
             points: Arc::from(points),
@@ -90,6 +91,7 @@ impl PointContainmentState {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -102,6 +104,7 @@ pub(crate) struct PointContainment {
 }
 
 impl PointContainment {
+    #[cfg(feature = "legacy")]
     pub(crate) fn new(
         point: (f32, f32),
         polygon: ValidatedPolygon,
@@ -135,6 +138,7 @@ impl PointContainment {
         self.state.clone()
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn checkpoint_state(&self) -> PointContainmentState {
         PointContainmentState {
             schema: self.state.schema,
@@ -182,6 +186,7 @@ impl PointContainment {
         self.state.result
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.state.result.is_some() {
             return AdvanceResult {

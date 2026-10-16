@@ -68,6 +68,7 @@ struct CandidateRecord {
 }
 
 impl CandidateRecord {
+    #[cfg(feature = "legacy")]
     fn candidate(self, tie_index: usize) -> AccessGeometryCandidate {
         AccessGeometryCandidate {
             host_id: self.host_id,
@@ -243,6 +244,7 @@ pub(crate) struct DescriptorCheckpoint {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -260,6 +262,7 @@ pub(crate) struct DescriptorSearch {
 }
 
 impl DescriptorSearch {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(
         face: &RoadFace,
         hosts: &[BoundaryHost],
@@ -375,6 +378,7 @@ impl DescriptorSearch {
     /// (including its bounded face copy) remain synchronous; input-array
     /// ordering, deduplication, host projection, and prep-array copies are
     /// charged to the incremental work quota.
+    #[cfg(feature = "legacy")]
     pub(crate) fn from_owned(
         face: RoadFace,
         hosts: Vec<BoundaryHost>,
@@ -455,6 +459,7 @@ impl DescriptorSearch {
         (self.checkpoint.phase == Phase::Done).then_some(&self.checkpoint.descriptors)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.checkpoint.phase == Phase::Done {
             return AdvanceResult {
@@ -504,6 +509,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_one(&mut self) {
         match self.checkpoint.phase {
             Phase::InitSortHosts
@@ -543,6 +549,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_initialization(&mut self) {
         match self.checkpoint.phase {
             Phase::InitSortHosts => self.advance_insertion_sort_hosts(),
@@ -560,6 +567,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_insertion_sort_hosts(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_index >= cp.hosts.len() {
@@ -592,6 +600,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_insertion_sort_nodes(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_index >= cp.nodes.len() {
@@ -624,6 +633,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_insertion_sort_parcels(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_index >= cp.parcels.len() {
@@ -659,6 +669,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_deduplicate_parcels(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_dedup_index >= cp.parcels.len() {
@@ -679,6 +690,7 @@ impl DescriptorSearch {
         cp.init_dedup_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_insertion_sort_targets(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_index >= cp.targets.len() {
@@ -718,6 +730,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_deduplicate_targets(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_dedup_index >= cp.targets.len() {
@@ -737,6 +750,7 @@ impl DescriptorSearch {
         cp.init_dedup_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_build_edge_order(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.init_index >= cp.face.boundary_edge_ids.len() {
@@ -749,6 +763,7 @@ impl DescriptorSearch {
         cp.init_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_sort_edge_order(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.edge_order_index >= cp.edge_order.len() {
@@ -785,6 +800,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_project_hosts(&mut self) {
         let cp = &mut self.checkpoint;
         let limit = cp.edge_order.len().min(access_search::MAX_PREPARED_HOSTS);
@@ -836,6 +852,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_copy_host_nodes(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.host_prep_node_index < cp.nodes.len() {
@@ -847,6 +864,7 @@ impl DescriptorSearch {
         cp.host_prep_parcel_index = 0;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_copy_host_parcels(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.host_prep_parcel_index < cp.parcels.len() {
@@ -864,10 +882,12 @@ impl DescriptorSearch {
         cp.phase = Phase::HostIntervals;
     }
 
+    #[cfg(feature = "legacy")]
     fn current_sample(&self) -> HostSplitSample {
         self.checkpoint.split_samples[self.checkpoint.split_index]
     }
 
+    #[cfg(feature = "legacy")]
     fn current_host(&self) -> BoundaryHost {
         let id = self.current_sample().road_id;
         let hosts = &self.checkpoint.hosts;
@@ -877,6 +897,7 @@ impl DescriptorSearch {
         hosts[index]
     }
 
+    #[cfg(feature = "legacy")]
     fn split_start(&self) -> (f32, f32) {
         let host = self.current_host();
         let sample = self.current_sample();
@@ -886,12 +907,14 @@ impl DescriptorSearch {
         )
     }
 
+    #[cfg(feature = "legacy")]
     fn host_heading(&self) -> (f32, f32) {
         let host = self.current_host();
         let length = crate::access_math::length(host.bx - host.ax, host.bz - host.az);
         ((host.bx - host.ax) / length, (host.bz - host.az) / length)
     }
 
+    #[cfg(feature = "legacy")]
     fn start_split(&mut self) {
         if self.checkpoint.split_index >= self.checkpoint.split_samples.len() {
             self.checkpoint.phase = Phase::SortCandidates;
@@ -926,6 +949,7 @@ impl DescriptorSearch {
         cp.phase = Phase::InitialInwardRay;
     }
 
+    #[cfg(feature = "legacy")]
     fn collect_host_split(&mut self) {
         let Some(preparation) = self.host_preparation.as_ref() else {
             self.checkpoint.phase = Phase::Done;
@@ -948,6 +972,7 @@ impl DescriptorSearch {
         };
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_initial_ray(&mut self) {
         let start = self.split_start();
         let inward = self.current_sample();
@@ -960,6 +985,7 @@ impl DescriptorSearch {
         );
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_target(&mut self) {
         let host_direction = self.host_heading();
         let start = self.split_start();
@@ -1023,6 +1049,7 @@ impl DescriptorSearch {
         cp.phase = Phase::DuplicateCheck;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_duplicate_check(&mut self) {
         let cp = &mut self.checkpoint;
         let pending = cp.pending_heading.expect("duplicate check has candidate");
@@ -1046,6 +1073,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_target_heading_ray(&mut self) {
         let start = self.split_start();
         let heading = self.checkpoint.pending_heading.unwrap();
@@ -1060,6 +1088,7 @@ impl DescriptorSearch {
         );
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_blocker_scan(&mut self) {
         let start = self.split_start();
         let cp = &mut self.checkpoint;
@@ -1098,6 +1127,7 @@ impl DescriptorSearch {
         cp.blocker_target_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_blocker_insert(&mut self) {
         let cp = &mut self.checkpoint;
         let candidate = cp.pending_blocker.expect("pending blocker");
@@ -1125,6 +1155,7 @@ impl DescriptorSearch {
         cp.phase = Phase::BlockerScan;
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_tangent(&mut self) {
         let host_direction = self.host_heading();
         let start = self.split_start();
@@ -1191,6 +1222,7 @@ impl DescriptorSearch {
         cp.phase = Phase::DuplicateCheck;
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_tangent_ray(&mut self) {
         let start = self.split_start();
         let heading = self.checkpoint.pending_heading.unwrap();
@@ -1203,6 +1235,7 @@ impl DescriptorSearch {
         );
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_fallback_ray(&mut self) {
         let start = self.split_start();
         let heading = self.checkpoint.pending_heading.unwrap();
@@ -1215,6 +1248,7 @@ impl DescriptorSearch {
         );
     }
 
+    #[cfg(feature = "legacy")]
     fn start_heading(&mut self) {
         if self.checkpoint.heading_index >= self.checkpoint.headings.len() {
             self.checkpoint.split_index += 1;
@@ -1226,6 +1260,7 @@ impl DescriptorSearch {
         self.checkpoint.phase = Phase::HeadingRay;
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_heading_ray(&mut self) {
         let start = self.split_start();
         let heading = self.checkpoint.current_heading.unwrap();
@@ -1238,6 +1273,7 @@ impl DescriptorSearch {
         );
     }
 
+    #[cfg(feature = "legacy")]
     fn build_lengths(&mut self) {
         let cp = &mut self.checkpoint;
         let heading = cp.current_heading.unwrap();
@@ -1263,6 +1299,7 @@ impl DescriptorSearch {
         cp.phase = Phase::SortLengths;
     }
 
+    #[cfg(feature = "legacy")]
     fn sort_lengths(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.length_sort_index >= cp.lengths.len() {
@@ -1285,6 +1322,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn deduplicate_lengths(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.length_index >= cp.lengths.len() {
@@ -1303,6 +1341,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn start_endpoint(&mut self) {
         if self.checkpoint.length_index >= self.checkpoint.deduplicated_lengths.len() {
             self.checkpoint.heading_index += 1;
@@ -1313,6 +1352,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_endpoint_query(&mut self) {
         let start = self.split_start();
         let heading = self.checkpoint.current_heading.unwrap();
@@ -1332,6 +1372,7 @@ impl DescriptorSearch {
         );
     }
 
+    #[cfg(feature = "legacy")]
     fn initialize_candidate_sort(&mut self) {
         let cp = &mut self.checkpoint;
         cp.sort_width = 1;
@@ -1341,6 +1382,7 @@ impl DescriptorSearch {
         initialize_candidate_merge_run(cp);
     }
 
+    #[cfg(feature = "legacy")]
     fn sort_candidates(&mut self) {
         let cp = &mut self.checkpoint;
         let len = cp.candidates.len();
@@ -1392,6 +1434,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn deduplicate_candidates(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.candidate_index >= cp.candidates.len() {
@@ -1416,6 +1459,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn build_host_groups(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.group_scan_index >= cp.candidates.len() {
@@ -1443,6 +1487,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn round_robin(&mut self) {
         let cp = &mut self.checkpoint;
         if cp.round_group_index >= cp.host_groups.len() {
@@ -1467,6 +1512,7 @@ impl DescriptorSearch {
         cp.round_group_index += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn begin_ray(&mut self, kind: RayQueryKind, purpose: RayPurpose) {
         match RayQuery::with_polygon(self.polygon.clone(), kind) {
             Ok(query) => {
@@ -1483,6 +1529,7 @@ impl DescriptorSearch {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn endpoint_result(&mut self, inside: bool, length: f32, end_x: f32, end_z: f32) {
         if inside {
             let sample = self.current_sample();
@@ -1498,6 +1545,7 @@ impl DescriptorSearch {
         self.checkpoint.phase = Phase::StartEndpoint;
     }
 
+    #[cfg(feature = "legacy")]
     fn consume_ray_result(&mut self) {
         let result = self.ray_query.take().and_then(|query| query.result());
         self.checkpoint.ray = None;
@@ -1591,6 +1639,7 @@ impl DescriptorSearch {
     }
 }
 
+#[cfg(feature = "legacy")]
 fn empty_checkpoint(
     face: FrozenFace,
     hosts: Vec<BoundaryHost>,
@@ -1684,6 +1733,7 @@ fn reserve_initialization_storage(cp: &mut DescriptorCheckpoint) {
     cp.host_prep_parcels.reserve_exact(cp.parcels.len());
 }
 
+#[cfg(feature = "legacy")]
 fn initialize_candidate_merge_run(cp: &mut DescriptorCheckpoint) {
     let len = cp.candidates.len();
     cp.sort_left = cp.sort_run_start;
@@ -1695,6 +1745,7 @@ fn initialize_candidate_merge_run(cp: &mut DescriptorCheckpoint) {
         .min(len);
 }
 
+#[cfg(feature = "legacy")]
 fn reset_candidate_sort(cp: &mut DescriptorCheckpoint) {
     cp.sort_width = 1;
     cp.sort_run_start = 0;
@@ -1705,6 +1756,7 @@ fn reset_candidate_sort(cp: &mut DescriptorCheckpoint) {
     cp.sort_output.clear();
 }
 
+#[cfg(feature = "legacy")]
 fn validate_inputs(
     face: &RoadFace,
     hosts: &[BoundaryHost],
@@ -2129,6 +2181,7 @@ fn rect_order(a: &OrientedRect, b: &OrientedRect) -> Ordering {
         .then_with(|| a.rotation.total_cmp(&b.rotation))
 }
 
+#[cfg(feature = "legacy")]
 fn candidate_order(a: &CandidateRecord, b: &CandidateRecord) -> Ordering {
     a.host_id
         .cmp(&b.host_id)
@@ -2138,6 +2191,7 @@ fn candidate_order(a: &CandidateRecord, b: &CandidateRecord) -> Ordering {
         .then_with(|| a.end_z.total_cmp(&b.end_z))
 }
 
+#[cfg(feature = "legacy")]
 fn blocker_order(a: &Blocker, b: &Blocker) -> Ordering {
     a.nearest_distance
         .total_cmp(&b.nearest_distance)

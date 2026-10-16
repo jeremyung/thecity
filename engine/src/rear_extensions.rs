@@ -11,10 +11,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 pub(crate) const MAX_PENDING_REAR_EXTENSIONS: usize = 2;
+#[cfg(feature = "legacy")]
 const MAX_BUILDINGS_SCANNED_PER_PASS: usize = 8;
+#[cfg(feature = "legacy")]
 const SCAN_INTERVAL: u64 = 160;
 const MAX_DEPTH: f32 = 32.0;
 const CANDIDATE_DEPTH_INCREASES: [f32; 3] = [12.0, 8.0, 4.0];
+#[cfg(feature = "legacy")]
 const CONSTRUCTION_DURATION: f32 = 24.0;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -107,6 +110,7 @@ impl Engine {
             .collect()
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn try_start_rear_extension(&mut self) -> bool {
         if self.state.tick % SCAN_INTERVAL != 0
             || self.state.demand <= 1.1
@@ -261,6 +265,7 @@ impl Engine {
         false
     }
 
+    #[cfg(feature = "legacy")]
     fn rear_extension_building_eligible(&self, building: &super::Building) -> bool {
         if self.errand_references_building(building.id)
             || building.stage != "open"

@@ -12,6 +12,7 @@ mod access_connector;
 mod access_descriptor_search;
 mod access_discovery_job;
 #[cfg(target_arch = "wasm32")]
+#[cfg(feature = "legacy")]
 mod access_discovery_wasm;
 mod access_live;
 mod access_live_engine;
@@ -26,6 +27,7 @@ mod blocks;
 mod development;
 mod district_controller;
 mod district_density;
+#[cfg(feature = "legacy")]
 mod district_policy;
 mod expressway_profile;
 mod expressway_traffic;
@@ -35,6 +37,7 @@ mod face_target_sampling;
 mod face_target_selection;
 mod face_target_viability;
 mod frontage;
+#[cfg(feature = "legacy")]
 mod frontier;
 mod geometry;
 mod height_redevelopment;
@@ -43,10 +46,12 @@ mod masterplan;
 mod masterplan_growth;
 mod masterplan_validation;
 mod movement_support;
+#[cfg(feature = "legacy")]
 mod neighborhood_admission;
 mod neighborhood_spine;
 mod network_split;
 mod node_coincidence_index;
+#[cfg(feature = "legacy")]
 mod project_scoring;
 mod rail_alignment;
 mod rail_platform;
@@ -89,22 +94,33 @@ const POCKET_PARK_INTERVAL_TICKS: u64 = TICKS_PER_DAY / 4;
 const HOMES_PER_POCKET_PARK: usize = 30;
 /// Ordinary neighborhood lots only; station towers and tiny slivers are skipped.
 const POCKET_PARK_AREA: std::ops::RangeInclusive<f32> = 80.0..=520.0;
+#[cfg(feature = "legacy")]
 const MAX_FRONTAGE_ROADS_PER_EVALUATION: usize = 24;
+#[cfg(feature = "legacy")]
 const MAX_FRONTAGE_SITES_PER_EVALUATION: usize = 48;
 const MAX_FRONTAGE_GRID_SITES_PER_ROAD: usize = 34;
 const MAX_FRONTAGE_GAP_LOTS_PER_SIDE: usize = 8;
+#[cfg(feature = "legacy")]
 const FRONTAGE_GAP_DEPTH: f32 = 12.0;
+#[cfg(feature = "legacy")]
 const FRONTAGE_GAP_OFFSET: f32 = 15.0;
+#[cfg(feature = "legacy")]
 const FRONTAGE_SHALLOW_DEPTH: f32 = 8.0;
+#[cfg(feature = "legacy")]
 const FRONTAGE_SHALLOW_OFFSET: f32 = 12.0;
 const MAX_FRONTAGE_SITES_PER_ROAD: usize =
     2 * MAX_FRONTAGE_GRID_SITES_PER_ROAD + 4 * MAX_FRONTAGE_GAP_LOTS_PER_SIDE;
+#[cfg(feature = "legacy")]
 const MAX_ROAD_ORIGINS_PER_EVALUATION: usize = 6;
+#[cfg(feature = "legacy")]
 const MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION: usize = 24;
+#[cfg(feature = "legacy")]
 const MAX_NEIGHBORHOOD_REUSE_EDGES_PER_EVALUATION: usize = 24;
 const FRONTAGE_SLOT_SPACING: f32 = 16.0;
 const FRONTAGE_ENDPOINT_CLEARANCE: f32 = 9.0;
+#[cfg(feature = "legacy")]
 const NEIGHBORHOOD_BLOCK_LENGTH: f32 = 82.0;
+#[cfg(feature = "legacy")]
 const NEIGHBORHOOD_BLOCK_WIDTH: f32 = 50.0;
 const NEIGHBORHOOD_PARCEL_SIZE: f32 = 16.0;
 const NEIGHBORHOOD_FRONTAGE_SPACING: f32 = 18.0;
@@ -688,6 +704,7 @@ struct NeighborhoodPlan {
 
 /// A validated, ephemeral block option. Nodes are allocated only after the
 /// bounded candidate window has been ranked and this option wins.
+#[cfg(feature = "legacy")]
 struct NeighborhoodCandidate {
     anchor_node: u32,
     corners: [WorldPoint; 4],
@@ -721,6 +738,7 @@ impl Drop for SpineRankingExperimentGuard {
     }
 }
 
+#[cfg(feature = "legacy")]
 fn neighborhood_candidate_is_better(
     candidate: development::NeighborhoodBenefitScore,
     current: development::NeighborhoodBenefitScore,
@@ -1090,6 +1108,7 @@ fn frontage_access_node(a: &Node, b: &Node, along: f32) -> u32 {
 fn point_segment_distance(x: f32, z: f32, ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
     geometry::point_segment_distance(x, z, ax, az, bx, bz)
 }
+#[cfg(feature = "legacy")]
 fn segments_distance(a: &Node, b: &Node, c: &Node, d: &Node) -> f32 {
     geometry::segments_distance_coords(a.x, a.z, b.x, b.z, c.x, c.z, d.x, d.z)
 }
@@ -1163,10 +1182,12 @@ fn stateless_tower_site_hash(seed: u32, x: f32, z: f32) -> u64 {
     value = (value ^ (value >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
     value ^ (value >> 31)
 }
+#[cfg(feature = "legacy")]
 fn district_frontier_candidate_id(start_id: u32, target_id: Option<u32>) -> u64 {
     0x4000_0000_0000_0000 | ((start_id as u64) << 32) | target_id.unwrap_or(0) as u64
 }
 
+#[cfg(feature = "legacy")]
 fn district_access_candidate_id(proposal: &interior_access::AccessProposal) -> u64 {
     0x8000_0000_0000_0000
         | ((proposal.score.host_id as u64) << 16)
@@ -1175,6 +1196,7 @@ fn district_access_candidate_id(proposal: &interior_access::AccessProposal) -> u
         | proposal.score.length_index as u64
 }
 
+#[cfg(feature = "legacy")]
 fn road_demand_is_sufficient(demand: f32) -> bool {
     demand > 0.8
 }
@@ -1240,6 +1262,7 @@ impl Engine {
 
     /// New world using the retired incremental frontier/infill planner. Kept
     /// only for the legacy test fixtures until they are removed.
+    #[cfg(feature = "legacy")]
     pub fn new_legacy(seed: u32) -> Self {
         Self::construct(seed, false, None)
     }
@@ -2089,6 +2112,7 @@ impl Engine {
     /// Protect the legacy and rendered parcel envelopes by their exact
     /// centerline distance. `collision_context` retains both orientations for
     /// legacy parcels whose saved rotation is absent.
+    #[cfg(feature = "legacy")]
     fn road_corridor_clear_of_parcels_with_context(
         &self,
         ax: f32,
@@ -2169,6 +2193,7 @@ impl Engine {
     /// protected-land checks. The oriented helper's segment-distance checks
     /// add a footprint safety check; the centerline thresholds below preserve
     /// the ordinary infill spacing policy exactly.
+    #[cfg(feature = "legacy")]
     fn progressive_frontage_geometry_clear(
         &self,
         rect: &geometry::OrientedRect,
@@ -2254,6 +2279,7 @@ impl Engine {
         )
     }
 
+    #[cfg(feature = "legacy")]
     fn interior_plan_reserves_road(&self, ax: f32, az: f32, bx: f32, bz: f32) -> bool {
         let Some(plan) = &self.state.pending_interior_access else {
             return false;
@@ -2272,6 +2298,7 @@ impl Engine {
         geometry::segments_distance_coords(ax, az, bx, bz, a.x, a.z, b.x, b.z) < 8.0
     }
 
+    #[cfg(feature = "legacy")]
     fn interior_plan_lots_clear_of_road(&self, ax: f32, az: f32, bx: f32, bz: f32) -> bool {
         self.state
             .pending_interior_access
@@ -2436,6 +2463,7 @@ impl Engine {
             self.dedicate_pocket_park();
         }
         self.trim_completed_projects();
+        #[cfg(feature = "legacy")]
         self.advance_face_access();
         if self.state.tick % 200 == 0 {
             self.ensure_bus_service();
@@ -3180,6 +3208,13 @@ impl Engine {
             self.masterplan_growth();
             return;
         }
+        #[cfg(feature = "legacy")]
+        self.evaluate_legacy_growth();
+    }
+
+    /// Incremental frontier/infill growth for worlds without a master plan.
+    #[cfg(feature = "legacy")]
+    fn evaluate_legacy_growth(&mut self) {
         // Bridge opens before western growth can be considered.
         let day = (self.state.tick / TICKS_PER_DAY) as u32;
         let open_roads = self
@@ -3386,6 +3421,7 @@ impl Engine {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn try_reserve_early_coordinated_block(&mut self, active_road_projects: usize) -> bool {
         #[cfg(test)]
         if self.experiments.early_block_reservation_disable_override {
@@ -3417,6 +3453,7 @@ impl Engine {
     }
 
     #[cfg(not(test))]
+    #[cfg(feature = "legacy")]
     fn record_early_block_attempt(&mut self) {}
 
     #[cfg(test)]
@@ -3429,6 +3466,7 @@ impl Engine {
     }
 
     #[cfg(not(test))]
+    #[cfg(feature = "legacy")]
     fn record_early_block_admission(&mut self) {}
 
     #[cfg(test)]
@@ -3440,6 +3478,7 @@ impl Engine {
     }
 
     #[cfg(not(test))]
+    #[cfg(feature = "legacy")]
     fn record_early_block_noop(&mut self) {}
 
     fn neighborhood_profile(&self, x: f32, z: f32) -> NeighborhoodProfile {
@@ -4034,6 +4073,7 @@ impl Engine {
             })
     }
 
+    #[cfg(feature = "legacy")]
     fn neighborhood_block_has_unbuilt_frontage(&self) -> bool {
         let block_parcels: BTreeSet<u32> = self
             .state
@@ -4233,6 +4273,7 @@ impl Engine {
         Some(blocks::subdivide_rectangular_block(corners, 8.0, 11.0, 2.2))
     }
 
+    #[cfg(feature = "legacy")]
     fn available_coordinated_block_lots(
         &self,
         corners: &[WorldPoint; 4],
@@ -4505,12 +4546,14 @@ impl Engine {
     /// must be clear, so each counted site can survive ordinary parcel
     /// admission after construction. Adjacent sample positions have 16 m
     /// center spacing for 14 m frontage, leaving a 2 m gap.
+    #[cfg(feature = "legacy")]
     fn viable_frontage_benefit_count(&self, a: &Node, b: &Node, limit: usize) -> usize {
         self.viable_frontage_benefit_sites(a, b, limit).len()
     }
 
     /// Return the same mutually compatible opportunities used by road admission.
     /// These are potential lots, not reservations or promised occupied floor area.
+    #[cfg(feature = "legacy")]
     fn viable_frontage_benefit_sites(
         &self,
         a: &Node,
@@ -4571,6 +4614,7 @@ impl Engine {
 
     /// Project reserved footprints into each roadside strip. Subdivision only
     /// proposes sites; admission still checks their complete oriented geometry.
+    #[cfg(feature = "legacy")]
     fn frontage_gap_candidates(
         &self,
         a: &Node,
@@ -4588,6 +4632,7 @@ impl Engine {
         )
     }
 
+    #[cfg(feature = "legacy")]
     fn frontage_gap_candidates_with_layout(
         &self,
         a: &Node,
@@ -4671,6 +4716,7 @@ impl Engine {
         result
     }
 
+    #[cfg(feature = "legacy")]
     fn frontage_candidates_with_shallow_fallback(
         &self,
         road_id: u32,
@@ -4738,6 +4784,7 @@ impl Engine {
         (candidates, dimensions, tower_candidate.is_some())
     }
 
+    #[cfg(feature = "legacy")]
     fn try_progressive_frontage_infill(&mut self) -> bool {
         if self.state.parcels.len() >= MAX_PARCELS
             || self.state.buildings.len() >= MAX_BUILDINGS
@@ -4945,6 +4992,7 @@ impl Engine {
         self.state.frontage_slot_cursor = slot_index.min(u16::MAX as usize) as u16;
         false
     }
+    #[cfg(feature = "legacy")]
     fn ordinary_road_bearings(&self, node_id: u32) -> Vec<f32> {
         let mut bearings = Vec::new();
         for road in self.state.roads.iter().filter(|road| {
@@ -4983,6 +5031,7 @@ impl Engine {
         bearings
     }
 
+    #[cfg(feature = "legacy")]
     fn ordinary_road_degree(&self, node_id: u32) -> usize {
         let open = self
             .state
@@ -5008,6 +5057,7 @@ impl Engine {
         open + planned
     }
 
+    #[cfg(feature = "legacy")]
     fn ordinary_heading_clear(&self, node_id: u32, heading: f32) -> bool {
         const MIN_JUNCTION_ANGLE: f32 = std::f32::consts::PI / 6.0;
         self.ordinary_road_bearings(node_id).iter().all(|existing| {
@@ -5016,6 +5066,7 @@ impl Engine {
         })
     }
 
+    #[cfg(feature = "legacy")]
     fn road_extension_headings(&self, node_id: u32) -> Vec<f32> {
         let mut headings = Vec::new();
         for bearing in self.ordinary_road_bearings(node_id) {
@@ -5074,6 +5125,7 @@ impl Engine {
             })
     }
 
+    #[cfg(feature = "legacy")]
     fn neighborhood_corridor_clear_for_road(
         &self,
         start: &Node,
@@ -5117,6 +5169,7 @@ impl Engine {
             })
     }
 
+    #[cfg(feature = "legacy")]
     fn neighborhood_candidate_clear(
         &self,
         anchor: &Node,
@@ -5137,6 +5190,7 @@ impl Engine {
         )
     }
 
+    #[cfg(feature = "legacy")]
     fn neighborhood_candidate_clear_with_edge(
         &self,
         anchor: &Node,
@@ -5159,6 +5213,7 @@ impl Engine {
         )
     }
 
+    #[cfg(feature = "legacy")]
     fn neighborhood_candidate_clear_with_layout(
         &self,
         anchor: &Node,
@@ -5185,6 +5240,7 @@ impl Engine {
         result.is_ok()
     }
 
+    #[cfg(feature = "legacy")]
     fn ranked_neighborhood_candidate(
         anchor_node: u32,
         corners: [WorldPoint; 4],
@@ -5239,6 +5295,7 @@ impl Engine {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn spine_candidate_lots(plan: &spine_plan::SpinePlan) -> Option<Vec<blocks::BlockLot>> {
         let layout = plan.validate().ok()?;
         Some(
@@ -5260,6 +5317,7 @@ impl Engine {
         )
     }
 
+    #[cfg(feature = "legacy")]
     fn try_create_neighborhood_plan(&mut self) -> bool {
         if self.state.neighborhood_plan.is_some()
             || self.state.pending_interior_access.is_some()
@@ -5760,6 +5818,7 @@ impl Engine {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn plan_next_neighborhood_segment(&mut self) -> bool {
         loop {
             let Some(plan) = self.state.neighborhood_plan.as_ref() else {
@@ -5820,6 +5879,7 @@ impl Engine {
     /// before extending the outer edge. A chord joins two existing connected
     /// junctions, so its construction cannot introduce a disconnected segment
     /// or a speculative endpoint inside a future parcel.
+    #[cfg(feature = "legacy")]
     fn try_plan_local_chord(
         &mut self,
         open_buildings: &[Building],
@@ -6031,6 +6091,7 @@ impl Engine {
         false
     }
 
+    #[cfg(feature = "legacy")]
     fn try_plan_interior_access(&mut self) -> bool {
         let mut scan = self.propose_interior_access();
         self.state.interior_access_cursor = scan.next_cursor;
@@ -6152,14 +6213,17 @@ impl Engine {
 
     /// Enumerate bounded interior-access proposals without changing simulation
     /// state. The caller commits the returned cursor before attempting admission.
+    #[cfg(feature = "legacy")]
     fn propose_interior_access(&self) -> interior_access::AccessScan {
         self.propose_interior_access_from(None, self.state.interior_access_cursor)
     }
 
+    #[cfg(any(test, feature = "legacy"))]
     fn propose_interior_access_for_host(&self, host_id: u32) -> interior_access::AccessScan {
         self.propose_interior_access_from(Some(host_id), 0)
     }
 
+    #[cfg(feature = "legacy")]
     fn propose_interior_access_from(
         &self,
         only_host: Option<u32>,
@@ -6168,6 +6232,7 @@ impl Engine {
         self.propose_interior_access_from_candidates(only_host, cursor, None)
     }
 
+    #[cfg(feature = "legacy")]
     fn propose_interior_access_from_candidates(
         &self,
         only_host: Option<u32>,
@@ -6186,6 +6251,7 @@ impl Engine {
         self.propose_interior_access_scan(None, cursor, None, Some(explicit_candidates))
     }
 
+    #[cfg(feature = "legacy")]
     fn propose_interior_access_scan(
         &self,
         only_host: Option<u32>,
@@ -6588,6 +6654,7 @@ impl Engine {
     /// Commit one geometry-checked proposal through the existing atomic split
     /// preflight. Keeping admission separate lets planners compare proposals
     /// without allocating IDs or changing the network during scoring.
+    #[cfg(feature = "legacy")]
     fn admit_interior_access(
         &mut self,
         host_id: u32,
@@ -6659,6 +6726,7 @@ impl Engine {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn eligible_bridgehead_headings(&self, open_buildings: &[Building]) -> BTreeMap<u32, f32> {
         let mut headings = BTreeMap::new();
         for bridge in self
@@ -6716,6 +6784,7 @@ impl Engine {
     /// Enumerate the first viable frontier proposal without mutating the
     /// engine. The local RNG and cursor follow the legacy search order so the
     /// caller can commit precisely the state the mutating planner used.
+    #[cfg(feature = "legacy")]
     fn propose_frontier_road(
         &self,
         open_buildings: &[Building],
@@ -6968,10 +7037,12 @@ impl Engine {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn plan_road(&mut self) {
         self.plan_road_with_policy(self.district_policy_experiment);
     }
 
+    #[cfg(feature = "legacy")]
     fn plan_road_with_policy(&mut self, use_district_policy: bool) {
         if self.state.roads.len() + self.state.projects.len() + self.spine_reserved_road_records()
             >= MAX_SEGMENTS
@@ -7058,10 +7129,12 @@ impl Engine {
     }
 
     #[cfg(not(test))]
+    #[cfg(feature = "legacy")]
     fn access_fallback_not_attempted_this_tick(&self) -> bool {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn commit_frontier_road(
         &mut self,
         scan: frontier::FrontierScan,
@@ -7093,6 +7166,7 @@ impl Engine {
         self.state.revision += 1;
     }
 
+    #[cfg(feature = "legacy")]
     fn try_admit_ranked_district_road(
         &mut self,
         frontier_proposal: Option<frontier::FrontierProposal>,
@@ -7408,6 +7482,7 @@ impl Engine {
         false
     }
 
+    #[cfg(feature = "legacy")]
     fn district_targets(
         &self,
         metrics: &district_density::DistrictMetrics,
@@ -7429,6 +7504,7 @@ impl Engine {
         district_policy::targets(metrics, &minima)
     }
 
+    #[cfg(feature = "legacy")]
     fn live_catchment_buildings(&self) -> Vec<district_policy::ServedBuilding> {
         let connected_nodes: BTreeSet<u32> = self
             .state
@@ -7479,6 +7555,7 @@ impl Engine {
             .collect()
     }
 
+    #[cfg(feature = "legacy")]
     fn make_district_score_candidate(
         &self,
         stable_id: u64,
@@ -7547,6 +7624,7 @@ impl Engine {
             })
             .map(|(i, _)| i)
             .collect();
+        #[cfg(feature = "legacy")]
         if choices.is_empty() && !self.masterplan_active() {
             self.create_frontier_parcels();
             choices = self
@@ -7657,6 +7735,7 @@ impl Engine {
         self.state.road_infill_due = self.state.road_infill_due.saturating_sub(1);
         self.state.revision += 1;
     }
+    #[cfg(feature = "legacy")]
     fn create_frontier_parcels(&mut self) {
         if self.state.parcels.len() >= MAX_PARCELS {
             return;
@@ -12599,6 +12678,7 @@ mod wasm {
             }
         }
         /// Legacy incremental planner, kept for comparison fixtures only.
+        #[cfg(feature = "legacy")]
         #[wasm_bindgen(js_name=newLegacy)]
         pub fn new_legacy(seed: u32) -> CityEngine {
             CityEngine {

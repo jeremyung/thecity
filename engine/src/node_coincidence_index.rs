@@ -27,6 +27,7 @@ impl NodeCoincidenceIndex {
 
     /// Return the lowest source index at or after `min_index` that could be
     /// coincident with `(x, z)`. `Err(())` requests the legacy full scan.
+    #[cfg(feature = "legacy")]
     pub(crate) fn next_candidate(
         &self,
         x: f32,

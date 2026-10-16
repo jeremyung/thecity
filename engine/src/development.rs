@@ -5,8 +5,11 @@
 //! state.
 
 pub(crate) const MAX_BUILDING_CANDIDATES_PER_EVALUATION: usize = 32;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION: usize = 32;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION: usize = 32;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION: usize = 24;
 const LOCAL_NEIGHBORHOOD_RADIUS: f32 = 78.0;
 
@@ -14,6 +17,7 @@ const LOCAL_NEIGHBORHOOD_RADIUS: f32 = 78.0;
 /// neighborhood plan with the length of road that still needs construction.
 /// The area is a nominal site-capacity measure, not a floor-area estimate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct NeighborhoodBenefitScore {
     pub usable_sites: u16,
     pub nominal_area_cm2: u64,
@@ -25,13 +29,16 @@ pub(crate) struct NeighborhoodBenefitScore {
 /// Separate caps ensure each plan type gets a chance to compete even when one
 /// candidate class has many more geometrically plausible alternatives.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct NeighborhoodCandidateBudget {
     pub shared: usize,
     pub full: usize,
     pub spine: usize,
 }
 
+#[cfg(any(test, feature = "legacy"))]
 impl NeighborhoodCandidateBudget {
+    #[cfg(feature = "legacy")]
     pub fn claim_shared(&mut self) -> bool {
         if self.shared >= MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION {
             return false;
@@ -40,6 +47,7 @@ impl NeighborhoodCandidateBudget {
         true
     }
 
+    #[cfg(feature = "legacy")]
     pub fn claim_full(&mut self) -> bool {
         if self.full >= MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION {
             return false;
@@ -48,6 +56,7 @@ impl NeighborhoodCandidateBudget {
         true
     }
 
+    #[cfg(feature = "legacy")]
     pub fn claim_spine(&mut self) -> bool {
         if self.spine >= MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION {
             return false;
@@ -56,18 +65,22 @@ impl NeighborhoodCandidateBudget {
         true
     }
 
+    #[cfg(feature = "legacy")]
     pub fn shared_limit_reached(&self) -> bool {
         self.shared >= MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION
     }
 
+    #[cfg(feature = "legacy")]
     pub fn full_limit_reached(&self) -> bool {
         self.full >= MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION
     }
 
+    #[cfg(any(test, feature = "legacy"))]
     pub fn spine_limit_reached(&self) -> bool {
         self.spine >= MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION
     }
 
+    #[cfg(feature = "legacy")]
     pub fn any_limit_reached(&self) -> bool {
         // Spine is an additional candidate class. Exhausting its independent
         // allowance must not stop ordinary shared/full candidates from being
@@ -78,6 +91,7 @@ impl NeighborhoodCandidateBudget {
 
 /// Returns true when `candidate` provides more nominal parcel area per meter
 /// of new road. Stable tie-breaks keep equal-value plans deterministic.
+#[cfg(feature = "legacy")]
 pub(crate) fn neighborhood_score_is_better(
     candidate: NeighborhoodBenefitScore,
     current: NeighborhoodBenefitScore,
@@ -106,6 +120,7 @@ pub(crate) fn neighborhood_score_is_better(
 /// usable lots per new road metre, then nominal parcel envelope area per metre,
 /// and finally applies the existing deterministic tie breakers. This remains
 /// separate from the production comparator until realized outcomes are reviewed.
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) fn neighborhood_sites_per_road_is_better(
     candidate: NeighborhoodBenefitScore,
     current: NeighborhoodBenefitScore,

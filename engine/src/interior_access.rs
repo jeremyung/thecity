@@ -48,6 +48,7 @@ pub(crate) struct AccessProposal {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AccessScan {
     pub proposals: Vec<AccessProposal>,
     pub next_cursor: usize,
@@ -56,6 +57,7 @@ pub(crate) struct AccessScan {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AccessCandidate {
     pub host_id: u32,
     pub fraction_index: u8,
@@ -89,8 +91,11 @@ impl CandidateScore {
     }
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) const FRACTIONS: [f32; 3] = [0.25, 0.5, 0.75];
+#[cfg(feature = "legacy")]
 pub(crate) const SIDES: [i8; 2] = [-1, 1];
+#[cfg(feature = "legacy")]
 pub(crate) const LENGTHS: [f32; 4] = [24.0, 36.0, 48.0, 60.0];
 pub(crate) const PROPOSALS_PER_HOST: usize = 3 * 2 * 4;
 

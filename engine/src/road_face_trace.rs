@@ -23,6 +23,7 @@ const MAX_FACES: usize = 512;
 const MAX_HALF_EDGES: usize = 1024;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -72,6 +73,7 @@ pub(crate) struct RoadFaceTrace {
 }
 
 impl RoadFaceTrace {
+    #[cfg(feature = "legacy")]
     pub(crate) fn new(
         nodes: Vec<RoadFaceNode>,
         edges: Vec<RoadFaceEdge>,
@@ -175,6 +177,7 @@ impl RoadFaceTrace {
         })
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn faces(&self) -> Option<Result<&[RoadFace], RoadFaceError>> {
         match &self.stage {
             RuntimeStage::Done(faces) => Some(Ok(faces)),
@@ -184,6 +187,7 @@ impl RoadFaceTrace {
     }
 
     /// Move completed output into the next job without copying face buffers.
+    #[cfg(feature = "legacy")]
     pub(crate) fn into_faces(self) -> Option<Result<Vec<RoadFace>, RoadFaceError>> {
         match self.stage {
             RuntimeStage::Done(faces) => Some(Ok(faces)),
@@ -192,6 +196,7 @@ impl RoadFaceTrace {
         }
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || matches!(self.stage, RuntimeStage::Done(_) | RuntimeStage::Failed(_)) {
             return AdvanceResult {
@@ -247,6 +252,7 @@ impl RoadFaceTrace {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn handoff(&mut self) {
         let next = match std::mem::replace(
             &mut self.stage,

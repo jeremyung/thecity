@@ -6,14 +6,17 @@
 //! across cells; this module checks for duplicate cell entries but does not
 //! attempt to reconstruct or revalidate geometry conservation from summaries.
 
+#[cfg(feature = "legacy")]
 use crate::district_density::{
-    CandidateKind, DistrictMetrics, DistrictTargets, ScoreWeights, MAX_DISTRICT_CELLS,
-    MAX_PROJECT_CANDIDATES,
+    CandidateKind, DistrictTargets, ScoreWeights, MAX_PROJECT_CANDIDATES,
 };
+use crate::district_density::{DistrictMetrics, MAX_DISTRICT_CELLS};
 
+#[cfg(feature = "legacy")]
 const MAX_IMPACTS_PER_PROJECT: usize = MAX_DISTRICT_CELLS;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct ForecastCellImpact {
     pub cell_id: usize,
     /// Forecast increment to the nominal envelope-area proxy, in m².
@@ -29,6 +32,7 @@ pub(crate) struct ForecastCellImpact {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct LiveCatchment {
     /// Current served housing capacity, aggregated by the live caller.
     pub housing_capacity: f64,
@@ -41,6 +45,7 @@ pub(crate) struct LiveCatchment {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct VacancyPolicy {
     /// Expansion is suppressed at or above this served-catchment vacancy ratio.
     pub housing_limit: f64,
@@ -49,6 +54,7 @@ pub(crate) struct VacancyPolicy {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct ProjectScoreCandidate {
     pub stable_id: u64,
     pub kind: CandidateKind,
@@ -65,6 +71,7 @@ pub(crate) struct ProjectScoreCandidate {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct RankedProject {
     pub stable_id: u64,
     pub kind: CandidateKind,
@@ -72,6 +79,7 @@ pub(crate) struct RankedProject {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) enum ProjectScoreError {
     TooManyProjects,
     TooManyImpacts,
@@ -88,6 +96,7 @@ pub(crate) enum ProjectScoreError {
 /// applied once per project. Expansion gates use only `live_catchment`, never
 /// destination-cell vacancy. Frontage weighting can be set to zero until a
 /// reliable frontage measurement is available.
+#[cfg(feature = "legacy")]
 pub(crate) fn rank_projects(
     metrics: &DistrictMetrics,
     candidates: &[ProjectScoreCandidate],
@@ -209,6 +218,7 @@ pub(crate) fn rank_projects(
     Ok(ranked)
 }
 
+#[cfg(feature = "legacy")]
 fn expansion_blocked(candidate: &ProjectScoreCandidate, policy: VacancyPolicy) -> bool {
     let catchment = candidate.live_catchment;
     (candidate
@@ -226,6 +236,7 @@ fn expansion_blocked(candidate: &ProjectScoreCandidate, policy: VacancyPolicy) -
                 >= policy.commercial_limit)
 }
 
+#[cfg(feature = "legacy")]
 fn valid_catchment(catchment: LiveCatchment) -> bool {
     let fields = [
         catchment.housing_capacity,
@@ -238,6 +249,7 @@ fn valid_catchment(catchment: LiveCatchment) -> bool {
         && catchment.commercial_vacant_capacity <= catchment.commercial_capacity
 }
 
+#[cfg(feature = "legacy")]
 fn valid_targets(targets: DistrictTargets) -> bool {
     let ranges = [
         targets.built_envelope_coverage_proxy,
@@ -249,6 +261,7 @@ fn valid_targets(targets: DistrictTargets) -> bool {
     })
 }
 
+#[cfg(feature = "legacy")]
 fn valid_weights(weights: ScoreWeights) -> bool {
     [
         weights.coverage,
@@ -262,6 +275,7 @@ fn valid_weights(weights: ScoreWeights) -> bool {
         && weights.road_cost_scale_m > 0.0
 }
 
+#[cfg(feature = "legacy")]
 fn finite_nonnegative(value: f64) -> bool {
     value.is_finite() && value >= 0.0
 }

@@ -3,17 +3,29 @@
 //! All coverage targets are provisional calibration values for the experiment;
 //! they are not approved art targets or universal Tokyo density rules.
 
-use crate::district_density::{DistrictMetrics, DistrictTargets, TargetRange};
+use crate::district_density::DistrictMetrics;
+#[cfg(feature = "legacy")]
+use crate::district_density::{DistrictTargets, TargetRange};
+#[cfg(feature = "legacy")]
 use crate::project_scoring::{LiveCatchment, VacancyPolicy};
 
+#[cfg(feature = "legacy")]
 pub(crate) const METRICS_MAX_AGE_TICKS: u64 = 400;
+#[cfg(feature = "legacy")]
 pub(crate) const FORECAST_UTILIZATION: f64 = 0.5;
+#[cfg(feature = "legacy")]
 pub(crate) const HOUSING_VACANCY_LIMIT: f64 = 0.25;
+#[cfg(feature = "legacy")]
 pub(crate) const COMMERCIAL_VACANCY_LIMIT: f64 = 0.35;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_FRONTIER_SITES: usize = 50;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_ACCESS_PROPOSALS: usize = 48;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_ACCESS_LOTS_PER_PROPOSAL: usize = 16;
+#[cfg(feature = "legacy")]
 pub(crate) const MAX_COMPARED_PROJECTS: usize = 1 + MAX_ACCESS_PROPOSALS;
+#[cfg(any(test, feature = "legacy"))]
 pub(crate) const MAX_FORECAST_RECTS: usize =
     MAX_FRONTIER_SITES + MAX_ACCESS_PROPOSALS * MAX_ACCESS_LOTS_PER_PROPOSAL;
 
@@ -171,6 +183,7 @@ impl ExperimentDiagnostics {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg(feature = "legacy")]
 pub(crate) struct ServedBuilding {
     pub x: f32,
     pub z: f32,
@@ -180,6 +193,7 @@ pub(crate) struct ServedBuilding {
     pub commercial_vacant: f64,
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) fn catchment_at(buildings: &[ServedBuilding], x: f32, z: f32) -> LiveCatchment {
     let mut catchment = LiveCatchment::default();
     for building in buildings {
@@ -194,6 +208,7 @@ pub(crate) fn catchment_at(buildings: &[ServedBuilding], x: f32, z: f32) -> Live
     catchment
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) fn vacancy_policy() -> VacancyPolicy {
     VacancyPolicy {
         housing_limit: HOUSING_VACANCY_LIMIT,
@@ -203,6 +218,7 @@ pub(crate) fn vacancy_policy() -> VacancyPolicy {
 
 /// Create per-cell experimental targets. The max is validated metadata only;
 /// the scorer rewards progress toward the minimum and does not enforce a cap.
+#[cfg(feature = "legacy")]
 pub(crate) fn targets(
     metrics: &DistrictMetrics,
     provisional_minima: &[f64],
@@ -225,6 +241,7 @@ pub(crate) fn targets(
 
 /// Reject additional capacity when a served source market has substantial
 /// vacancy. A market with no current capacity is neutral during bootstrap.
+#[cfg(feature = "legacy")]
 pub(crate) fn source_market_accepts_capacity(catchment: LiveCatchment) -> bool {
     (catchment.housing_capacity <= 0.0
         || catchment.housing_vacant_capacity / catchment.housing_capacity < HOUSING_VACANCY_LIMIT)
@@ -233,6 +250,7 @@ pub(crate) fn source_market_accepts_capacity(catchment: LiveCatchment) -> bool {
                 < COMMERCIAL_VACANCY_LIMIT)
 }
 
+#[cfg(feature = "legacy")]
 pub(crate) fn demand_fit(demand: f32) -> f64 {
     ((demand - 0.8_f32) as f64 / 1.2).clamp(0.0, 1.0)
 }

@@ -14,9 +14,13 @@ const MAX_HOST_INPUTS: usize = 512;
 pub(crate) const MAX_PREPARED_HOSTS: usize = 24;
 const MAX_NODES: usize = access_candidates::MAX_PREPARED_INPUT_NODES;
 const MAX_PARCELS: usize = access_candidates::MAX_PREPARED_INPUT_PARCELS;
+#[cfg(feature = "legacy")]
 const NODE_CLEARANCE_M: f32 = 1.0;
+#[cfg(feature = "legacy")]
 const HOST_END_CLEARANCE_M: f32 = 10.0;
+#[cfg(feature = "legacy")]
 const PARCEL_HOST_CLEARANCE_M: f32 = 5.0;
+#[cfg(feature = "legacy")]
 const PARCEL_PROJECTION_MARGIN_M: f32 = 2.0;
 const MAX_SPLITS_PER_HOST: usize = access_candidates::MAX_SPLITS_PER_HOST;
 const MAX_INTERVAL_SPLITS: usize = access_candidates::MAX_INTERVAL_SPLITS;
@@ -105,6 +109,7 @@ pub(crate) struct Checkpoint {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(feature = "legacy")]
 pub(crate) struct AdvanceResult {
     pub work_used: usize,
     pub done: bool,
@@ -120,6 +125,7 @@ pub(crate) struct AccessHostPreparation {
 }
 
 impl AccessHostPreparation {
+    #[cfg(any(test, feature = "legacy"))]
     pub(crate) fn new(
         face: &RoadFace,
         hosts: &[BoundaryHost],
@@ -221,6 +227,7 @@ impl AccessHostPreparation {
     /// Construct from an already validated and projected host list. The
     /// descriptor pipeline uses this after budgeting edge ordering, host
     /// lookup, and copies of the frozen node/parcel inputs.
+    #[cfg(feature = "legacy")]
     pub(crate) fn from_projected_owned(
         hosts: Vec<ProjectionHost>,
         nodes: Vec<CandidateNode>,
@@ -281,6 +288,7 @@ impl AccessHostPreparation {
         (self.checkpoint.phase == Phase::Done).then_some(&self.checkpoint.samples)
     }
 
+    #[cfg(feature = "legacy")]
     pub(crate) fn advance(&mut self, budget: usize) -> AdvanceResult {
         if budget == 0 || self.checkpoint.phase == Phase::Done {
             return AdvanceResult {
@@ -314,6 +322,7 @@ impl AccessHostPreparation {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn transition_if_ready(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         match cp.phase {
@@ -381,6 +390,7 @@ impl AccessHostPreparation {
         }
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_node(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         let host = cp.hosts[cp.host_index].road;
@@ -404,6 +414,7 @@ impl AccessHostPreparation {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_parcel_corner(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         let host = cp.hosts[cp.host_index].road;
@@ -441,6 +452,7 @@ impl AccessHostPreparation {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_sort(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         let n = cp.forbidden.len();
@@ -490,6 +502,7 @@ impl AccessHostPreparation {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_subtract(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         if cp.span_index >= cp.free_spans.len() {
@@ -520,6 +533,7 @@ impl AccessHostPreparation {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_filter_spans(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         let span = cp.free_spans[cp.filter_index];
@@ -530,6 +544,7 @@ impl AccessHostPreparation {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn advance_select(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         let span = cp.free_spans[cp.select_index];
@@ -575,6 +590,7 @@ impl AccessHostPreparation {
     /// Examine at most two edge samples per selected span. Each generated
     /// sample comparison against a midpoint or prior accepted edge consumes
     /// one work unit; cursor transitions are charged by this phase as well.
+    #[cfg(feature = "legacy")]
     fn advance_edge_select(&mut self) -> bool {
         let cp = &mut self.checkpoint;
         if cp.edge_samples.len() >= MAX_EDGE_SPLITS {
@@ -613,6 +629,7 @@ impl AccessHostPreparation {
         true
     }
 
+    #[cfg(feature = "legacy")]
     fn finish_host(&mut self) {
         let cp = &mut self.checkpoint;
         let host = cp.hosts[cp.host_index].road;
@@ -690,18 +707,21 @@ fn rect_order(a: &OrientedRect, b: &OrientedRect) -> Ordering {
         .then_with(|| a.rotation.total_cmp(&b.rotation))
 }
 
+#[cfg(feature = "legacy")]
 fn interval_start_order(a: Interval, b: Interval) -> Ordering {
     a.start
         .total_cmp(&b.start)
         .then_with(|| a.end.total_cmp(&b.end))
 }
 
+#[cfg(feature = "legacy")]
 fn split_order(a: Interval, b: Interval) -> Ordering {
     (b.end - b.start)
         .total_cmp(&(a.end - a.start))
         .then_with(|| a.start.total_cmp(&b.start))
 }
 
+#[cfg(feature = "legacy")]
 fn initialize_merge_run(cp: &mut Checkpoint) {
     let n = cp.forbidden.len();
     cp.sort_left = cp.sort_run_start;
@@ -713,6 +733,7 @@ fn initialize_merge_run(cp: &mut Checkpoint) {
         .min(n);
 }
 
+#[cfg(feature = "legacy")]
 fn reset_sort_cursors(cp: &mut Checkpoint) {
     cp.sort_width = 1;
     cp.sort_run_start = 0;
