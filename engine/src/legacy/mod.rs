@@ -22,11 +22,14 @@ pub(crate) mod face_target_ranking;
 pub(crate) mod face_target_sampling;
 pub(crate) mod face_target_selection;
 pub(crate) mod face_target_viability;
+pub(crate) mod frontage_planner;
 #[cfg(feature = "legacy")]
 pub(crate) mod frontier;
 pub(crate) mod interior_access;
+pub(crate) mod interior_planner;
 #[cfg(feature = "legacy")]
 pub(crate) mod neighborhood_admission;
+pub(crate) mod neighborhood_planner;
 pub(crate) mod neighborhood_spine;
 #[cfg(feature = "legacy")]
 pub(crate) mod project_scoring;
@@ -36,5 +39,6 @@ pub(crate) mod road_face_topology;
 pub(crate) mod road_face_trace;
 pub(crate) mod road_face_walk;
 pub(crate) mod road_faces;
+pub(crate) mod road_planner;
 pub(crate) mod spine_blocks;
 pub(crate) mod spine_plan;
