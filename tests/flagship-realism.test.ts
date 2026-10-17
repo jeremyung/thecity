@@ -26,6 +26,7 @@ it('limits screen spill to a fixed pool and respects day, off, far, activity and
   expect(pool.lights).toHaveLength(MAX_MEDIA_SPILL_LIGHTS);expect(pool.root.children).toHaveLength(4);
   pool.setWorld({buildings},recipes,signage,'animated');pool.update(new THREE.Vector3(),3,1,'miniature',details,ready);
   expect(pool.lights.filter(l=>l.intensity>0)).toHaveLength(2);expect(pool.lights.every(l=>!l.castShadow)).toBe(true);
+  for(let i=0;i<2;i++){const b=buildings[i],l=pool.lights[i];const outward=(l.position.x-b.x)*Math.sin(b.rotation)+(l.position.z-b.z)*Math.cos(b.rotation);expect(outward).toBeGreaterThan(b.depth/2);}
   pool.update(new THREE.Vector3(),4,0,'miniature',details,ready);expect(pool.lights.every(l=>l.intensity===0)).toBe(true);
   for(const b of buildings)details.set(b.id,'far');pool.update(new THREE.Vector3(),4,1,'miniature',details,ready);expect(pool.lights.every(l=>l.intensity===0)).toBe(true);
   pool.setWorld({buildings},recipes,signage,'off');pool.update(new THREE.Vector3(),4,1,'miniature',new Map(),ready);expect(pool.lights.every(l=>l.intensity===0)).toBe(true);

@@ -120,7 +120,7 @@ export function videoScreenSurface(art: ArtMaterials, program=0) {
       :treatment===1?vec3(color(BILLBOARDS[variant].accent)).mul(sweep.add(.25))
       :treatment===2?field.mul(smoothstep(.2,.5,length(p.sub(centre))).oneMinus())
       :vec3(color(BILLBOARDS[variant].accent)).mul(sin(p.x.mul(18).sub(t.mul(4))).mul(.3).add(.5));
-    const picture=mix(poster.mul(beat),motion,treatment===1?.28:.18).mul(scan).mul(art.night.mul(.45).add(.8)).mul(art.litShop);
+    const picture=mix(poster.mul(beat),motion,treatment===1?.28:.18).mul(scan).mul(art.night.mul(1.3).add(1)).mul(art.litShop);
     // A black base keeps the screen independent of sun and shadow; the
     // picture is pure emission in both styles.
     const anime = new THREE.MeshToonNodeMaterial({ color: '#000000', gradientMap: art.toonRamp });
@@ -156,7 +156,7 @@ export function mediaArtworkSurface(art:ArtMaterials,program=0){
   const atlas=streetSignSurface(art).map!,cell=billboardCell(variant*3);
   const labelUV=vec2(p.x,p.y.div(.17).clamp(0,1));
   const label=texture(atlas,labelUV.mul(vec2(cell.u1-cell.u0,cell.v1-cell.v0)).add(vec2(cell.u0,cell.v0))).rgb;
-  const picture=mix(label,graphic,smoothstep(.16,.18,p.y)).mul(art.night.mul(.4).add(.85)).mul(art.litShop);
+  const picture=mix(label,graphic,smoothstep(.16,.18,p.y)).mul(art.night.mul(1.3).add(1.1)).mul(art.litShop);
   const anime=new THREE.MeshToonNodeMaterial({color:'#000000',gradientMap:art.toonRamp}),miniature=new THREE.MeshStandardNodeMaterial({color:'#000000',roughness:.4});
   for(const material of [anime,miniature]){(material as unknown as {emissiveNode:typeof picture}).emissiveNode=picture;material.userData.mediaArtwork=variant;}
   return {anime,miniature};
