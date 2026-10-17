@@ -62,13 +62,19 @@ export function flagshipCampaignSurface(art:ArtMaterials,program=0){const varian
  const calibration=mix(vec3(1),vec3(hash.mul(.07).add(.945),hash.mul(.06).add(.95),tint.mul(.065).add(.945)),cabinetVisibility);
  // Fine emitters resolve only in close views. Fade to their average before
  // minification; no scanline animation, random flicker or additional texture.
- const pixelUV=p.mul(vec2(768,384)),pixel=fract(pixelUV);
+ const pixelUV=p.mul(vec2(192,96)),pixel=fract(pixelUV);
  const pixelFootprint=fwidth(pixelUV).x.max(fwidth(pixelUV).y);
- const pixelVisibility=smoothstep(.3,.85,pixelFootprint).oneMinus();
+ const pixelVisibility=smoothstep(.65,1.4,pixelFootprint).oneMinus();
  const pixelEdge=pixel.x.min(pixel.y).min(pixel.x.oneMinus()).min(pixel.y.oneMinus());
- const emitter=smoothstep(.08,.2,pixelEdge);
- const emitters=mix(1,emitter.mul(.32).add(.76),pixelVisibility);
- const picture=poster.mul(joints).mul(calibration).mul(emitters).mul(art.night.mul(.18).add(.85)).mul(art.litShop);
+ const emitter=smoothstep(.10,.27,pixelEdge);
+ const emitters=mix(1,emitter.mul(.56).add(.57),pixelVisibility);
+ // A fixed ordered threshold belongs to the LED lattice, so the pattern
+ // follows the curved screen rather than crawling with the camera or time.
+ const address=floor(pixelUV),parity=fract(address.mul(.5)).mul(2);
+ const threshold=parity.x.mul(2).add(parity.y.mul(3)).mod(4).add(.5).div(4);
+ const quantized=floor(poster.mul(40).add(threshold)).div(40);
+ const dithered=mix(poster,quantized,pixelVisibility);
+ const picture=dithered.mul(joints).mul(calibration).mul(emitters).mul(art.night.mul(.18).add(.85)).mul(art.litShop);
  const anime=new THREE.MeshToonNodeMaterial({color:'#070b0d',gradientMap:art.toonRamp}),miniature=new THREE.MeshStandardNodeMaterial({color:'#070b0d',roughness:.64});
  for(const m of [anime,miniature]){(m as unknown as {emissiveNode:typeof picture}).emissiveNode=picture;m.userData.flagshipCampaign=variant;}
  return {anime,miniature};
