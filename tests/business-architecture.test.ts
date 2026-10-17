@@ -97,3 +97,22 @@ it('reserves city advertising slots for media and tenant facades instead of rest
  for(const recipe of BUSINESS_RECIPES.filter(r=>r.era==='contemporary'&&['screen','fins','curtain','stepped'].includes(r.form)))expect(businessCanHostAdvertising(recipe)).toBe(false);
  expect(businessCanHostAdvertising(BUSINESS_RECIPES.find(r=>r.id==='media-corner')!)).toBe(true);
 });
+it('selects five distinct corporate skyscrapers and preserves their geometry across lifecycle and LOD',async()=>{
+ const {CORPORATE_SKYSCRAPERS}=await import('../web/src/render/architecture/corporate-tower-recipes');
+ const world=businessCityStudy(32,'skyscrapers'),owner=new ApartmentResources(),errors=vi.spyOn(console,'error');
+ try{expect(world.buildings).toHaveLength(5);for(const b of world.buildings){const recipe=selectBusinessRecipe(b)!;expect(CORPORATE_SKYSCRAPERS).toContain(recipe);expect(businessCanHostAdvertising(recipe)).toBe(false);expect(selectBusinessRecipe(b,'older')?.towerForm).toBeUndefined();expect(selectBusinessRecipe(b,'legacy')).toBeUndefined();
+ let close=0,far=0;for(const detail of ['close','district','far'] as const)for(const stage of ['foundation','structure','surface','open','renovation','demolition']){
+ const g=buildBusinessBuilding({...b,stage,progress:.72},owner.art,{recipe,detail})!,bounds=new THREE.Box3().setFromObject(g);let vertices=0;
+ expect(bounds.min.x).toBeGreaterThanOrEqual(-b.width/2-.001);expect(bounds.max.x).toBeLessThanOrEqual(b.width/2+.001);expect(bounds.min.z).toBeGreaterThanOrEqual(-b.depth/2-.001);expect(bounds.max.z).toBeLessThanOrEqual(b.depth/2+.001);expect(bounds.max.y).toBeLessThanOrEqual(.58+b.floors*3.25+3.01);
+ g.traverse(o=>{if(o instanceof THREE.Mesh){vertices+=o.geometry.getAttribute('position').count;expect(Array.from(o.geometry.getAttribute('position').array).every(Number.isFinite)).toBe(true);expect(owner.owns(o.material as THREE.Material)).toBe(true);if((o.material as THREE.Material).userData.windowPane){expect(o.geometry.hasAttribute(WINDOW_ATTRIBUTE)).toBe(true);if((o.material as THREE.Material).userData.corporateGlass)expect(owner.batch(o.material as THREE.Material).material===o.material).toBe(true);}}});
+ if(stage==='open'){if(detail==='close')close=vertices;if(detail==='far')far=vertices;}expect(g.userData.businessArchitecture.roofInstalled).toBe(stage==='open'||stage==='renovation');disposeGroup(g);
+ }expect(far).toBeLessThan(close);}expect(errors).not.toHaveBeenCalled();
+ }finally{owner.dispose();}
+},30000);
+it('keeps corporate eligibility bounded and supports variable engine dimensions',async()=>{
+ const {CORPORATE_SKYSCRAPERS}=await import('../web/src/render/architecture/corporate-tower-recipes');const owner=new ApartmentResources(),base=businessCityStudy(32,'skyscrapers').buildings[0];
+ try{for(const dims of [{width:24,depth:20,floors:24},{width:90,depth:80,floors:60}])for(const recipe of CORPORATE_SKYSCRAPERS){const b={...base,...dims};expect(businessPool(b,'contemporary')).toContain(recipe);const g=buildBusinessBuilding(b,owner.art,{recipe,detail:'far'})!,bounds=new THREE.Box3().setFromObject(g);expect(bounds.max.x).toBeLessThanOrEqual(b.width/2);expect(bounds.max.z).toBeLessThanOrEqual(b.depth/2);expect(bounds.max.y).toBeLessThanOrEqual(.58+b.floors*3.25+3.01);disposeGroup(g);}
+ for(const b of [{...base,width:23},{...base,depth:19},{...base,floors:23},{...base,kind:'apartment'},{...base,anchor:true}])expect(businessPool(b,'contemporary').every(r=>!r.towerForm)).toBe(true);
+ expect(businessCityStudy(32,'skyscrapers','older').buildings).toHaveLength(5);
+ }finally{owner.dispose();}
+});

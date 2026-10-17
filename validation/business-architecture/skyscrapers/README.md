@@ -1,0 +1,11 @@
+# Corporate skyscraper validation
+
+Five extra grammars (35 total business designs) based on the supplied split, rounded and blue corporate tower references. Review at `/?review=architecture-city&family=skyscrapers`.
+
+- Full regression suite: 140 files / 779 tests passed; final focused suite after slab template reuse and dimension/era coverage: 22 passed. Production TypeScript/Vite build passed; existing bundle warning remains. Approved asset integrity: 8 components / 12 textures verified.
+- Sweep covers five tower forms, three LODs, six lifecycle stages, finite indexed geometry, material ownership, custom glass batching, parcel bounds and roof height. Extra geometry cases cover 24 × 20 m / 24 floors and 90 × 80 m / 60 floors. Smaller/shorter, residential, anchor and older/legacy cases do not select corporate towers.
+- WebGPU daytime and WebGL night/rain/anime inspected. WebGL console had no errors, with no pending buildings/chunks after warmup. Initial shader compilation can briefly stall controls. Screenshots are the real production renderer, without photographic compositing.
+- CPU benchmark includes four passes over each catalog/LOD, shared materials and per-tower slab templates. Corporate p50 close/district/far: 54.97 / 28.57 / 14.09 ms; p95: 179.58 / 95.55 / 23.27 ms. Max triangles: 132838 / 84782 / 43822. Measurements ran alongside regression/browser work and are not isolated or cross-device frame-rate claims. Template reuse reduced repeat triangulation; large builds still exceed one frame, so incremental source scheduling remains necessary. Further worker generation/caching is warranted before a dense district of close-range skyscrapers.
+- Pinned mature world remains 169 business selections among 449 buildings: none meet the new corporate eligibility threshold. Gallery specimens exercise production selection at larger dimensions; simulation growth/height rules are unchanged.
+
+Compared with references: broad curtain walls, distinct podiums, split volumes, rounded/chamfered silhouettes, mullions and crowns now exist procedurally. Reflections are an analytical sky, not captured surrounding buildings; roofs/podium landscapes and facade detailing remain simplified. This is stylized architecture, not photographic parity. No new image textures were generated; glass uses a shared shader specialization.

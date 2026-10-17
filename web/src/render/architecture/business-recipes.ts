@@ -1,3 +1,4 @@
+import {CORPORATE_SKYSCRAPERS} from './corporate-tower-recipes';
 import type {Building} from '../../types';
 import type {ApartmentEra} from './era-preference';
 import {architecturalChoice} from './variation';
@@ -5,6 +6,7 @@ export type BusinessFamily='office'|'commercial'|'mixed-use';
 export type DisplayMode='off'|'static'|'animated';
 export function parseDisplayMode(value:unknown):DisplayMode{return value==='off'||value==='static'?value:'animated';}
 export interface BusinessRecipe {
+ towerForm?:'split'|'rounded'|'chamfered'|'setback'|'crown';
  id:string;family:BusinessFamily;era:'older'|'contemporary';label:string;
  form:'punched'|'ribbon'|'frame'|'curtain'|'stepped'|'shop-house'|'tenant'|'corner'|'podium'|'arcade'|'fins'|'screen'|'media'|'department'|'slab'|'loft';
  wall:string;roughness:number;bay:number;upper:'office'|'home'|'shop';retailFloors:number;awning:boolean;
@@ -42,11 +44,12 @@ export const BUSINESS_RECIPES:readonly BusinessRecipe[]=[
  {id:'fin-worklive',family:'mixed-use',era:'contemporary',label:'Screened work/live building',form:'fins',wall:'#897c69',roughness:.55,bay:3,upper:'home',retailFloors:1,awning:false},
  {id:'terraced-workplace',family:'mixed-use',era:'contemporary',label:'Retail and terraced workplace',form:'stepped',wall:'#d8cfbb',roughness:.85,bay:3.6,upper:'office',retailFloors:2,awning:false},
 ];
-export const BUSINESS_RECIPE_VERSION=2;
+export const BUSINESS_RECIPE_VERSION=3;
 export function supportsBusiness(b:Building,retained=false){return !retained&&!b.anchor&&['office','shop','cafe','apartment'].includes(b.kind)&&Number.isFinite(b.width)&&b.width>=5&&b.width<=90&&Number.isFinite(b.depth)&&b.depth>=6&&b.depth<=80&&Number.isInteger(b.floors)&&b.floors>=1&&b.floors<=60&&Number.isFinite(b.progress)&&['foundation','structure','surface','finishing','open','renovation','demolition'].includes(b.stage);}
 export function businessPool(b:Building,mode:ApartmentEra='mixed'):readonly BusinessRecipe[]{
  if(mode==='legacy'||!supportsBusiness(b))return [];
  const seed=b.appearance_seed;
+ if(b.kind==='office'&&b.floors>=24&&b.width>=24&&b.depth>=20&&mode!=='older'&&(mode==='contemporary'||architecturalChoice(seed,386)%5!==0))return CORPORATE_SKYSCRAPERS;
  const family:BusinessFamily=b.kind==='apartment'?'mixed-use':b.kind==='office'?(b.floors>=3&&architecturalChoice(seed,301)%4===0?'mixed-use':'office'):b.floors>=3&&architecturalChoice(seed,302)%2===0?'mixed-use':'commercial';
  // Apartment ground-floor commerce is a deliberate minority; saves keep their existing capacity.
  if(b.kind==='apartment'&&(b.floors<4||architecturalChoice(seed,303)%5!==0))return [];
@@ -75,4 +78,4 @@ export function resolveBusinessRecipes(buildings:readonly Building[],mode:Apartm
 }
 
 /** Corporate/showroom facades keep restrained branding; media and tenant buildings host ads. */
-export function businessCanHostAdvertising(recipe:BusinessRecipe){return recipe.era==='older'||['media','tenant','podium','department'].includes(recipe.form);}
+export function businessCanHostAdvertising(recipe:BusinessRecipe){return !recipe.towerForm&&(recipe.era==='older'||['media','tenant','podium','department'].includes(recipe.form));}

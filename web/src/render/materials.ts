@@ -202,8 +202,8 @@ export class ArtMaterials {
   onDispose(release:()=>void){this.disposers.push(release);}
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
   buildingBatch(material:THREE.Material):BuildingBatchSurface{
-    // Panes read their schedule from vertex data, so all of them share one batch.
-    if(material.userData.windowPane)return{material:this.window('home')};
+    // Ordinary panes share a vertex-scheduled batch; corporate glass retains its solar-control variant.
+    if(material.userData.windowPane)return{material:material.userData.corporateGlass?this.variant(material):this.window('home')};
     const artClass=material.userData.artBuildingClass as BuildingArtClass|undefined;
     const baseColor=(material as THREE.Material&{color?:THREE.Color}).color;
     if(!artClass||!baseColor)return{material:this.variant(material)};
