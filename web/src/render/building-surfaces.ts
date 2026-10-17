@@ -247,7 +247,13 @@ export function windowRadiance(u: WindowUniforms): Vec3Node {
   const inFurniture = back.and(hx.greaterThan(furnitureX)).and(hx.lessThan(furnitureX.add(furnitureW))).and(hy.lessThan(yMin.add(mix(float(1.5), float(1.9), h(6)))));
   const inPartition = back.and(hy.lessThan(yMin.add(1.15)));
   let albedo = select(onFloor, floorAlbedo, select(onCeiling, ceiling, wall));
-  albedo = select(home, select(inFurniture, vec3(color('#5b4636')), albedo), select(inPartition, vec3(color('#8a9094')), albedo));
+  // Retail gets shallow stocked shelves rather than office partitions. Geometry
+  // behind an opaque interior-mapped pane would be invisible; keep it in the room shader.
+  const shelfHeight=hy.sub(yMin),shelf=back.and(shelfHeight.mod(.58).lessThan(.055)).and(shelfHeight.lessThan(2.1));
+  const goods=back.and(shelfHeight.mod(.58).greaterThan(.08)).and(shelfHeight.mod(.58).lessThan(.44)).and(shelfHeight.lessThan(2.1)).and(hx.mul(4).fract().lessThan(.78));
+  const goodsColor=choose3(fract(floor(hx.mul(4)).mul(.37).add(h(10))),vec3(color('#bd7956')),vec3(color('#8caa8d')),vec3(color('#d3bc79')));
+  const retailAlbedo=select(shelf,vec3(color('#5d5145')),select(goods,goodsColor,albedo));
+  albedo = select(home, select(inFurniture, vec3(color('#5b4636')), albedo), select(office,select(inPartition, vec3(color('#8a9094')), albedo),retailAlbedo));
   albedo = mix(vec3(color('#bdbcb6')).mul(select(onFloor, float(.62), float(1))), albedo, lived);
   const geometryShade = select(back, float(1), select(onFloor, float(.74), select(onCeiling, float(.92), float(.8))))
     .mul(mix(float(1), float(.62), hz.negate().div(depth)));

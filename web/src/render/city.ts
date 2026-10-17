@@ -1,3 +1,5 @@
+import {buildBusinessBuilding} from './architecture/business';
+import {resolveBusinessRecipes,BUSINESS_RECIPE_VERSION,parseDisplayMode,type BusinessRecipe,type DisplayMode} from './architecture/business-recipes';
 import {selectApartmentArchitecture,resolveApartmentArchitectures,type ApartmentArchitecture,apartmentArchitectureKey,buildSelectedApartment,parseApartmentEra,type ApartmentEra} from './architecture/era';
 import {apartmentPhase,APARTMENT_RECIPE_VERSION} from './architecture/recipes';
 import {ApartmentResources} from './architecture/resources';
@@ -111,6 +113,8 @@ export class CityRenderer {
   private apartmentDetails=new Map<number,ApartmentDetail>();
   private apartmentDetailAt=0;
   private apartmentEra:ApartmentEra='mixed';
+  private businessChoices=new Map<number,BusinessRecipe>();
+  private commercialDisplays:DisplayMode='animated';
   private apartmentChoices=new Map<number,ApartmentArchitecture>();
   private apartmentLayout='';
   readonly director:CameraDirector;
@@ -461,13 +465,16 @@ export class CityRenderer {
   private materialVariant(material:THREE.Material,style:Style=this.style){return this.apartmentResources.owns(material)?this.apartmentResources.variant(material,style):this.art.variant(material,style);}
   private apartmentSignature(b:Building,original?:BuildingOriginalFootprint){
     const choice=this.apartmentChoices.get(b.id)??selectApartmentArchitecture(b,this.apartmentEra,!!original);
-    return buildingRenderSignature(b,original,this.signage.get(b.id))+(choice.kind!=='legacy'?`:architecture-${APARTMENT_RECIPE_VERSION}:${apartmentArchitectureKey(choice)}:${this.apartmentDetails.get(b.id)??'district'}:${apartmentPhase(b)}`:'');
+    const business=this.businessChoices?.get(b.id);
+    if(business)return buildingRenderSignature(b,original,this.signage.get(b.id))+`:business-${BUSINESS_RECIPE_VERSION}:${business.id}:${this.commercialDisplays}:${this.apartmentDetails.get(b.id)??'district'}:${apartmentPhase(b)}`;
+    return buildingRenderSignature(b,original,this.signage.get(b.id))+`:displays-${this.commercialDisplays}`+(choice.kind!=='legacy'?`:architecture-${APARTMENT_RECIPE_VERSION}:${apartmentArchitectureKey(choice)}:${this.apartmentDetails.get(b.id)??'district'}:${apartmentPhase(b)}`:'');
   }
+  setCommercialDisplays(value:DisplayMode){const mode=parseDisplayMode(value);if(mode===this.commercialDisplays)return;this.commercialDisplays=mode;if(this.worldState)this.setWorld(this.worldState);}
   setApartmentEra(value:ApartmentEra){const mode=parseApartmentEra(value);if(mode===this.apartmentEra)return;this.apartmentEra=mode;this.apartmentLayout='';if(this.worldState)this.setWorld(this.worldState);}
   private updateApartmentDetail(now:number){
     if(!this.worldState||now-this.apartmentDetailAt<1000)return;this.apartmentDetailAt=now;
     const originals=new Set(this.worldState.building_original_footprints?.map(b=>b.building_id));let changed=false;
-    for(const b of this.worldState.buildings)if((this.apartmentChoices.get(b.id)??selectApartmentArchitecture(b,this.apartmentEra,originals.has(b.id))).kind!=='legacy'){
+    for(const b of this.worldState.buildings)if(this.businessChoices?.has(b.id)||(this.apartmentChoices.get(b.id)??selectApartmentArchitecture(b,this.apartmentEra,originals.has(b.id))).kind!=='legacy'){
       const previous=this.apartmentDetails.get(b.id),next=apartmentDetail(Math.hypot(b.x-this.camera.position.x,b.z-this.camera.position.z,b.floors*1.625-this.camera.position.y),previous);
       if(previous!==next){this.apartmentDetails.set(b.id,next);changed=true;}
     }
@@ -537,22 +544,23 @@ export class CityRenderer {
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
     const layout=world.buildings.map(b=>`${b.id}:${b.kind}:${b.anchor}:${b.appearance_seed}:${b.floors}:${b.width}:${b.depth}:${b.x}:${b.z}:${b.stage}:${originals.has(b.id)}`).join('|');
-    if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));}
+    if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));}
     const signage=this.signage=signageContexts(world);
     for(const b of world.buildings){
       const original=originals.get(b.id);
       const context=signage.get(b.id);
       const architecture=this.apartmentChoices.get(b.id)??selectApartmentArchitecture(b,this.apartmentEra,!!original);
-      if(architecture.kind!=='legacy'&&!this.apartmentDetails.has(b.id))this.apartmentDetails.set(b.id,apartmentDetail(Math.hypot(b.x-this.camera.position.x,b.z-this.camera.position.z,b.floors*1.625-this.camera.position.y)));
+      const business=this.businessChoices.get(b.id);
+      if((business||architecture.kind!=='legacy')&&!this.apartmentDetails.has(b.id))this.apartmentDetails.set(b.id,apartmentDetail(Math.hypot(b.x-this.camera.position.x,b.z-this.camera.position.z,b.floors*1.625-this.camera.position.y)));
       const signature=this.apartmentSignature(b,original);
       if(this.buildings.get(b.id)?.signature===signature){this.objectQueue.delete(b.id);continue;}
       // One pending update per authoritative building. Repeated snapshots replace
       // its data without appending duplicate closures or starving older parcels.
       const snapshot:Building={...b,history:[...b.history]};
       const originalSnapshot=original?{...original}:undefined;
-      const detail=this.apartmentDetails.get(b.id)??'district';
+      const detail=this.apartmentDetails.get(b.id)??'district',displays=this.commercialDisplays;
       const source:RebuildableBuildingSource={
-        createGroup:()=>{const group=buildSelectedApartment(snapshot,this.apartmentResources.art,architecture,detail)??buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview,signage:context});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
+        createGroup:()=>{const group=(business?buildBusinessBuilding(snapshot,this.apartmentResources.art,{recipe:business,detail,displays,signage:context}):null)??buildSelectedApartment(snapshot,this.apartmentResources.art,architecture,detail)??buildExtendedBuilding(snapshot,originalSnapshot,this.art,{compactMidrise:this.compactMidriseReview,signage:context,commercialDisplays:displays});group.position.set(snapshot.x,0,snapshot.z);group.rotation.y=snapshot.rotation;return group;},
         disposeGroup:group=>disposeGroup(group),
       };
       this.objectQueue.set(b.id,{building:snapshot,signature,source});
@@ -575,7 +583,7 @@ export class CityRenderer {
     this.cancelRoadBuild();
     this.infrastructure().reset();
     this.nearbyStreetLights?.reset();this.streetLighting?.reset();
-    this.buildings.clear();this.apartmentDetails.clear();this.apartmentChoices.clear();this.apartmentLayout='';
+    this.buildings.clear();this.apartmentDetails.clear();this.apartmentChoices.clear();this.businessChoices.clear();this.apartmentLayout='';
     this.clearParks();this.parkKey='';this.paintedSeason='';
     this.retireGroup(this.terrain);const near=this.treeNearGeometry,far=this.treeFarGeometry,trunk=this.treeTrunkGeometry;this.retire(()=>{near?.dispose();far?.dispose();trunk?.dispose();});this.treeNearGeometry=null;this.treeFarGeometry=null;this.treeTrunkGeometry=null;this.treeBatches=[];this.terrain=new THREE.Group();this.scene.add(this.terrain);
     this.retireGroup(this.roads);this.roads=new THREE.Group();this.scene.add(this.roads);

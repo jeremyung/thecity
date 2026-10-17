@@ -1,3 +1,4 @@
+import {parseDisplayMode,type DisplayMode} from '../render/architecture/business-recipes';
 import {parseApartmentEra,type ApartmentEra} from '../render/architecture/era-preference';
 import type { LensPresetId } from "../camera/lens";
 
@@ -11,6 +12,7 @@ type SaveRecord = {
 export type LoadedWorld = { data: string; seed: number; savedAt: number };
 export type ViewerPreferences = {
   apartmentEra: ApartmentEra;
+  commercialDisplays: DisplayMode;
   musicLevel: number;
   cityLevel: number;
   style: "anime" | "miniature";
@@ -27,6 +29,7 @@ const SAVE_SLOTS = 2;
 const PREFERENCES_KEY = "thecity-viewer-preferences";
 const DEFAULT_PREFERENCES: ViewerPreferences = {
   apartmentEra: "mixed",
+  commercialDisplays: "animated",
   musicLevel: 0.38,
   cityLevel: 0.55,
   style: "anime",
@@ -80,6 +83,7 @@ export function parseViewerPreferences(raw: string | null): ViewerPreferences {
       typeof entry === "number" && Number.isFinite(entry) ? Math.max(0, Math.min(1, entry)) : fallback;
     return {
       apartmentEra: parseApartmentEra(value.apartmentEra),
+      commercialDisplays: parseDisplayMode(value.commercialDisplays),
       musicLevel: level(value.musicLevel, DEFAULT_PREFERENCES.musicLevel),
       cityLevel: level(value.cityLevel, DEFAULT_PREFERENCES.cityLevel),
       style: value.style === "anime" || value.style === "miniature" ? value.style : DEFAULT_PREFERENCES.style,

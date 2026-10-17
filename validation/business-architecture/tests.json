@@ -1,0 +1,27 @@
+{
+  "business-full-tests": {
+    "passed": 774,
+    "failed": 0,
+    "total": 774
+  },
+  "business-final-focused": {
+    "passed": 73,
+    "failed": 0,
+    "total": 73
+  },
+  "business-last-tests": {
+    "passed": 42,
+    "failed": 0,
+    "total": 42
+  },
+  "business-envelope-tests": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8
+  },
+  "business-release-tests": {
+    "passed": 14,
+    "failed": 0,
+    "total": 14
+  }
+}

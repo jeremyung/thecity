@@ -15,7 +15,8 @@
     "setup:fixtures": "python3 scripts/setup-test-fixtures.py",
     "build:architecture": "node scripts/build-architecture-assets.mjs",
     "check:architecture": "node scripts/build-architecture-assets.mjs --check",
-    "benchmark:architecture": "node scripts/benchmark-apartment-production.mjs"
+    "benchmark:architecture": "node scripts/benchmark-apartment-production.mjs",
+    "benchmark:business": "node scripts/benchmark-business-architecture.mjs"
   },
   "dependencies": {
     "lucide-react": "0.577.0",

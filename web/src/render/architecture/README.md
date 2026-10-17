@@ -35,3 +35,5 @@ Development-only review URLs:
 - `/?review=architecture-city&family=towers` — actual renderer, five towers, day/dusk/night, rain, demolition, both styles.
 - `/?review=architecture-city&family=mature` — pinned real mature snapshot, after `npm run setup:fixtures` and `npm run wasm`.
 - Append `&webgl=1` for the WebGL backend.
+
+Office, commercial and mixed-use façade generation reuses this owner and pipeline. See [business architecture](BUSINESS.md) for its fifteen-recipe catalog, storefront atlas, billboard controls, integration and simulation boundary.

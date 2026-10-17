@@ -1,0 +1,107 @@
+{
+  "method": "Node CPU geometry only; four passes across five fixed varied-height specimens per family/LOD. Shared materials; not a GPU or cross-device benchmark.",
+  "report": [
+    {
+      "family": "office",
+      "detail": "close",
+      "samples": 20,
+      "p50BuildMs": 2.6699999999999875,
+      "p95BuildMs": 14.691416000000004,
+      "meanTriangles": 8767.2,
+      "maxTriangles": 24268
+    },
+    {
+      "family": "office",
+      "detail": "district",
+      "samples": 20,
+      "p50BuildMs": 1.8874159999999733,
+      "p95BuildMs": 9.260625000000005,
+      "meanTriangles": 7236,
+      "maxTriangles": 20044
+    },
+    {
+      "family": "office",
+      "detail": "far",
+      "samples": 20,
+      "p50BuildMs": 0.8246249999999691,
+      "p95BuildMs": 4.969415999999967,
+      "meanTriangles": 3482,
+      "maxTriangles": 9350
+    },
+    {
+      "family": "commercial",
+      "detail": "close",
+      "samples": 20,
+      "p50BuildMs": 0.9149170000000026,
+      "p95BuildMs": 3.387042000000008,
+      "meanTriangles": 2007.6,
+      "maxTriangles": 3362
+    },
+    {
+      "family": "commercial",
+      "detail": "district",
+      "samples": 20,
+      "p50BuildMs": 0.6556250000000432,
+      "p95BuildMs": 1.7328330000000278,
+      "meanTriangles": 1471.6,
+      "maxTriangles": 2546
+    },
+    {
+      "family": "commercial",
+      "detail": "far",
+      "samples": 20,
+      "p50BuildMs": 0.3528329999999755,
+      "p95BuildMs": 0.7892499999999814,
+      "meanTriangles": 911.6,
+      "maxTriangles": 1588
+    },
+    {
+      "family": "mixed-use",
+      "detail": "close",
+      "samples": 20,
+      "p50BuildMs": 2.8398750000000064,
+      "p95BuildMs": 7.243666999999959,
+      "meanTriangles": 8740,
+      "maxTriangles": 16870
+    },
+    {
+      "family": "mixed-use",
+      "detail": "district",
+      "samples": 20,
+      "p50BuildMs": 1.8623329999999783,
+      "p95BuildMs": 6.083833000000027,
+      "meanTriangles": 7218.4,
+      "maxTriangles": 14230
+    },
+    {
+      "family": "mixed-use",
+      "detail": "far",
+      "samples": 20,
+      "p50BuildMs": 0.9764170000000831,
+      "p95BuildMs": 3.63412500000004,
+      "meanTriangles": 3394.4,
+      "maxTriangles": 6152
+    }
+  ],
+  "census": {
+    "totalBuildings": 449,
+    "businessBuildings": 169,
+    "recipes": {
+      "vertical-retail": 22,
+      "market-arcade": 21,
+      "terrace-office": 6,
+      "alc-ribbon": 5,
+      "corner-worklive": 7,
+      "tiled-office": 9,
+      "vertical-tenants": 7,
+      "corner-cafe": 26,
+      "glass-showroom": 11,
+      "shop-residences": 8,
+      "neighborhood-shops": 25,
+      "deep-frame": 6,
+      "curtain-tower": 6,
+      "retail-office-podium": 8,
+      "retail-residential-tower": 2
+    }
+  }
+}

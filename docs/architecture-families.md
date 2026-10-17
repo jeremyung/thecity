@@ -1,5 +1,7 @@
 # Extending the procedural architecture pipeline
 
+Office, commercial and mixed-use façade families are now implemented as a follow-up to the apartment integration: five recipes each. See [business architecture contract](../web/src/render/architecture/BUSINESS.md) for the delivered catalog and simulation boundary. The family proposals below remain the design rationale; independent mixed-use simulation is still future engine work.
+
 The apartment release supplies a reusable offline asset pipeline, finite shared material palettes, Blender component attachment conventions, deterministic recipes, construction state, room data, distance detail and city batching. Runtime generation combines geometry and shader inputs; it never calls an LLM, Blender or an image provider.
 
 ## Next family: offices

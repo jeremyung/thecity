@@ -1,3 +1,4 @@
+import type {DisplayMode} from '../render/architecture/business-recipes';
 import type {ApartmentEra} from '../render/architecture/era-preference';
 import { DEFAULT_TILT_SHIFT, type TiltShiftSettings } from '../camera/tilt-shift';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
@@ -26,6 +27,7 @@ import ReviewRecording from './ReviewRecording';
 import ReviewCameraPose, { type ApplyReviewPose } from './ReviewCameraPose';
 
 export interface ControlsProps {
+  commercialDisplays?:DisplayMode;onCommercialDisplays?:(value:DisplayMode)=>void;
   apartmentEra?:ApartmentEra;onApartmentEra?:(value:ApartmentEra)=>void;
   world: World | null;
   ready: boolean;
@@ -493,7 +495,7 @@ export default function Controls(props: ControlsProps) {
             <div className="city-facts"><span><b>{world?.stats.buildings ?? 0}</b> buildings</span><span><b>{world?.stats.active_travelers ?? 0}</b> journeys underway</span><span><b>{world?.stats.active_projects ?? 0}</b> works in progress</span></div>
           </>}
           <ContrastToggle contrast={contrast} onContrast={onContrast} />
-          <LensControl lens={lens} onLens={onLens} />{props.apartmentEra&&props.onApartmentEra&&<label className="quality-control">Apartment architecture<select aria-label="Apartment architecture" value={props.apartmentEra} onChange={event=>props.onApartmentEra?.(event.target.value as ApartmentEra)}><option value="mixed">Mixed eras</option><option value="contemporary">Contemporary</option><option value="older">Older styles</option><option value="legacy">Existing renderer</option></select></label>}
+          <LensControl lens={lens} onLens={onLens} />{props.apartmentEra&&props.onApartmentEra&&<label className="quality-control">Building architecture<select aria-label="Building architecture" value={props.apartmentEra} onChange={event=>props.onApartmentEra?.(event.target.value as ApartmentEra)}><option value="mixed">Mixed eras</option><option value="contemporary">Contemporary</option><option value="older">Older styles</option><option value="legacy">Existing renderer</option></select></label>}{props.commercialDisplays&&props.onCommercialDisplays&&<label className="quality-control">Billboards<select aria-label="Billboards" value={props.commercialDisplays} onChange={e=>props.onCommercialDisplays?.(e.target.value as DisplayMode)}><option value="animated">Animated</option><option value="static">Static signs</option><option value="off">No advertising</option></select></label>}
           <TiltShiftControl tiltShift={tiltShift} onChange={onTiltShift} focus={focus} onFocus={onFocus} />
           <p className="lens-note">Focal length changes framing. Focus remains unchanged.</p>
           <RecentEvents events={events} />

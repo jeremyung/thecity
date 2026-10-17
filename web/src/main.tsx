@@ -120,6 +120,7 @@ function CityExperience(){
   const [world,setWorld]=useState<World|null>(null), [ready,setReady]=useState(false),[error,setError]=useState<string|null>(null),[message,setMessage]=useState<string|null>(null);
   const [preferences,setPreferences]=useState(loadViewerPreferences);
   const [apartmentEra,setApartmentEra]=useState(preferences.apartmentEra);
+  const [commercialDisplays,setCommercialDisplays]=useState(preferences.commercialDisplays);
   const [paused,setPaused]=useState(false),[speed,setSpeed]=useState(1),[style,setStyle]=useState<Style>(preferences.style),[mode,setMode]=useState<'watch'|'explore'|'overview'>('watch');
   const [preparingStyle,setPreparingStyle]=useState<Style|null>(null);
   const [fixedReviewQuality,setFixedReviewQuality]=useState(false);
@@ -141,7 +142,7 @@ function CityExperience(){
     catch(e){setError(`Graphics could not start: ${e instanceof Error?e.message:String(e)}. Try the WebGL fallback.`);return;}
     const client=new SimulationClient(),audio=new AudioDirector();runtime.current={renderer,client,audio};
     const recoveryRequested=new URLSearchParams(location.search).get('recover')==='1';
-    renderer.setLens(lens,false);renderer.setApartmentEra(apartmentEra);
+    renderer.setLens(lens,false);renderer.setApartmentEra(apartmentEra);renderer.setCommercialDisplays(commercialDisplays);
     renderer.setTiltShift(tiltShift);renderer.setFocus(focus);renderer.setQuality(recoveryRequested?'balanced':quality);audio.setLevels(musicLevel,cityLevel);
     if(recoveryRequested)setQuality('balanced');
     let disposed=false,graphicsReady=false,simReady=false,latestMetrics:Metrics|null=null,audioEpoch=0,recoveryInitPending=false;
@@ -206,6 +207,7 @@ function CityExperience(){
   return <main className="city-app">
     <div className="city-canvas" ref={mount} aria-label="Living three-dimensional Tokyo city. Drag to explore; use arrow keys to pan and plus or minus to zoom." />
     <Controls achievableSpeed={simulationMetrics?.achievableSpeed} world={world} ready={ready} error={error} message={message} paused={paused} speed={speed} style={style} preparingStyle={preparingStyle} mode={mode} sceneLabel={sceneLabel} preview={preview} sound={sound} musicLevel={musicLevel} cityLevel={cityLevel} focus={focus} tiltShift={tiltShift} onTiltShift={patch=>{const value=normalizeTiltShift({...tiltShift,...patch});setTiltShift(value);runtime.current?.renderer.setTiltShift(value);if(patch.enabled===true&&!focus){setFocus(true);storePreferences({focus:true});runtime.current?.renderer.setFocus(true);}}} contrast={contrast} lens={lens} selected={world?.buildings.find(b=>b.id===selectedId)??null} metrics={metrics} subject={subject} development={development} quality={quality} onDismissError={()=>setError(null)}
+      commercialDisplays={commercialDisplays} onCommercialDisplays={value=>{setCommercialDisplays(value);storePreferences({commercialDisplays:value});runtime.current?.renderer.setCommercialDisplays(value);}}
       apartmentEra={apartmentEra} onApartmentEra={value=>{setApartmentEra(value);storePreferences({apartmentEra:value});runtime.current?.renderer.setApartmentEra(value);}}
       onDevelopment={value=>{setDevelopment(value);runtime.current?.client.controls({development:value});}}
       onQuality={value=>{setQuality(value);storePreferences({quality:value});runtime.current?.renderer.setQuality(value);}}

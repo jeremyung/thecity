@@ -92,15 +92,19 @@ export function streetSignSurface(art: ArtMaterials) {
  * Self-lit video wall: slow drifting color fields and a soft highlight with
  * faint scanlines. It is generated from city time, not a video file.
  */
-export function videoScreenSurface(art: ArtMaterials) {
-  return art.shared('video-screen', () => {
-    const t = art.time.mul(.07), p = uv();
+export function videoScreenSurface(art: ArtMaterials, program=0) {
+  const variant=((program%3)+3)%3;
+  return art.shared(`video-screen-${variant}`, () => {
+    const t = art.time.mul(.035+variant*.012).add(variant*1.7), p = uv();
     const hue = p.x.mul(.55).add(p.y.mul(.3)).add(t);
     const field = vec3(cos(hue.mul(6.2832)), cos(hue.add(.33).mul(6.2832)), cos(hue.add(.67).mul(6.2832))).mul(.5).add(.5);
     const centre = vec2(sin(t.mul(3.1)).mul(.28).add(.5), cos(t.mul(2.3)).mul(.22).add(.5));
     const highlight = smoothstep(.42, 0, length(p.sub(centre)));
     const scan = sin(p.y.mul(260)).mul(.035).add(.965);
-    const picture = mix(field.mul(.6), vec3(color('#fff4dc')), highlight.mul(.55)).mul(scan).mul(art.night.mul(.45).add(.8));
+    const atlas=streetSignSurface(art).map!,cell=billboardCell(variant);
+    const poster=texture(atlas,p.mul(vec2(cell.u1-cell.u0,cell.v1-cell.v0)).add(vec2(cell.u0,cell.v0))).rgb;
+    const motion=mix(field,vec3(color('#fff4dc')),highlight.mul(.35));
+    const picture=mix(poster,motion,.12).mul(scan).mul(art.night.mul(.45).add(.8)).mul(art.litShop);
     // A black base keeps the screen independent of sun and shadow; the
     // picture is pure emission in both styles.
     const anime = new THREE.MeshToonNodeMaterial({ color: '#000000', gradientMap: art.toonRamp });
@@ -174,14 +178,14 @@ export function addRooftopBillboard(kit: Kit, art: ArtMaterials, frame: THREE.Ma
 }
 
 /** Large podium-front display: a bezelled video wall or a printed wall ad. */
-export function addFacadeFeature(kit: Kit, art: ArtMaterials, frame: THREE.Material, feature: FacadeFeature, m: { frontZ: number; width: number; bottom: number; height: number; seed: number }) {
+export function addFacadeFeature(kit: Kit, art: ArtMaterials, frame: THREE.Material, feature: FacadeFeature, m: { frontZ: number; width: number; bottom: number; height: number; seed: number; program?: number }) {
   const height = m.height, width = Math.min(m.width, feature === 'screen' ? height * 16 / 9 : height * 4);
   if (width < 3 || height < 2) return false;
   const y = m.bottom + height / 2;
   kit.box(0, y, m.frontZ + .17, width + .4, height + .4, .3, frame);
   const face = feature === 'screen' ? new THREE.PlaneGeometry(width, height) : mapPlane(width, height, billboardCell(m.seed + 2));
   face.translate(0, y, m.frontZ + .33);
-  kit.add(face, feature === 'screen' ? videoScreenSurface(art) : streetSignSurface(art));
+  kit.add(face, feature === 'screen' ? videoScreenSurface(art,m.program??0) : streetSignSurface(art));
   return true;
 }
 
@@ -198,7 +202,7 @@ const FEATURE_RADIUS = 220, FEATURE_SPACING = 30;
 /** A building can host a podium display: towers, and setback offices of 4–11 floors. */
 export function canHostFacadeFeature(b: Building) {
   if (b.stage !== 'open' || b.anchor || b.business_active === false) return false;
-  return (b.floors >= 12 && (b.kind === 'office' || b.kind === 'apartment')) || (b.kind === 'office' && b.floors >= 6 && b.floors <= 11);
+  return (b.floors >= 12 && (b.kind === 'office' || b.kind === 'apartment')) || (b.kind==='office' && b.floors>=6 && b.floors<=11)||(['shop','cafe'].includes(b.kind)&&b.floors>=3&&b.floors<=11);
 }
 
 /**
