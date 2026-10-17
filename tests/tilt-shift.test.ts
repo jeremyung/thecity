@@ -4,7 +4,7 @@ import {
   normalizeTiltShift,
   tiltedFocusPlane,
   tiltedRayFocus,
-} from '../web/src/camera/tilt-shift';
+} from '../web/src/optics/tilt-shift';
 describe('tilted focus plane', () => {
   it('reduces to ordinary axial focus at zero tilt', () => {
     const p = tiltedFocusPlane(100, 40, { ...DEFAULT_TILT_SHIFT, tilt: 0 });

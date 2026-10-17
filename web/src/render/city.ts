@@ -1,10 +1,10 @@
-import { miniatureOpticalScale } from '../camera/miniature-scale';
+import { miniatureOpticalScale } from '../optics/miniature-scale';
 import {
   DEFAULT_TILT_SHIFT,
   normalizeTiltShift,
   writeTiltedFocusPlane,
   type TiltShiftSettings,
-} from '../camera/tilt-shift';
+} from '../optics/tilt-shift';
 import { instanceCapacity, reuseInstances } from './reuse-instances';
 import { riverbankTreePoints } from './riverbank-planting';
 import { groundRoadFootprint, groundRoadSurfaceGeometry } from './ground-road-footprint';
@@ -128,11 +128,10 @@ import {
 import { RenderQualityController, renderQualitySettings } from './quality';
 import { FrameTiming, type FrameTimingSnapshot } from './frame-timing';
 import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
-import { CameraDirector } from '../camera/director';
-import { dampFocusDepth, focusDepthFromViewZ } from '../camera/focus';
-import type { LensPresetId } from '../camera/lens';
-import { LENS_PRESETS, verticalFovDegrees } from '../camera/lens';
-import { resolveAudioEventContext } from '../audio/event-context';
+import type { CameraRig, CameraRigFactory } from './camera-rig';
+import { dampFocusDepth, focusDepthFromViewZ } from '../optics/focus';
+import type { LensPresetId } from '../optics/lens';
+import { LENS_PRESETS, verticalFovDegrees } from '../optics/lens';
 import type { World, Style, Point, Road, Building, BuildingOriginalFootprint } from '../types';
 
 export interface StyleSwitchMetrics {
@@ -146,6 +145,21 @@ export interface StyleSwitchMetrics {
   applyMs: number;
   outcome: 'compiling' | 'applied' | 'superseded' | 'failed';
 }
+export type PresentedActor = { x: number; z: number; h: number; k: number; y: number };
+
+export interface PresentationView {
+  world: World | null;
+  listener: THREE.Vector3;
+  camera: THREE.PerspectiveCamera;
+  current: ReadonlyMap<number, PresentedActor>;
+  previous: ReadonlyMap<number, PresentedActor>;
+  motionDelta: number;
+  motionTick: number;
+  riverHalfWidth: number;
+  hour: number;
+  rain: number;
+}
+
 export interface RenderMetrics {
   timing?: FrameTimingSnapshot;
   styleSwitch?: StyleSwitchMetrics;
@@ -229,7 +243,7 @@ export class CityRenderer {
     3500,
   );
   readonly art = new ArtMaterials();
-  readonly director: CameraDirector;
+  readonly rig: CameraRig;
   readonly renderer: THREE.WebGPURenderer;
   worldState: World | null = null;
   onPick: ((id: number, kind: 'building' | 'traveler') => void) | null = null;
@@ -418,6 +432,7 @@ export class CityRenderer {
   >();
   constructor(
     readonly element: HTMLElement,
+    createRig: CameraRigFactory,
     forceWebGL = false,
   ) {
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -433,7 +448,7 @@ export class CityRenderer {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     element.appendChild(this.renderer.domElement);
-    this.director = new CameraDirector(this.camera, this.renderer.domElement);
+    this.rig = createRig(this.camera, this.renderer.domElement);
     // Range haze (clear city, veiled backdrop) plus low-lying mist: it builds
     // with distance but only near the ground and water, strongest at first
     // light and in rain, so towers rise out of it as in the dawn concept.
@@ -849,7 +864,7 @@ export class CityRenderer {
     return (this.nearbyStreetLights.enabled = !this.nearbyStreetLights.enabled);
   }
   setLens(id: LensPresetId, takeManualControl = true) {
-    this.director.setLens(id, takeManualControl);
+    this.rig.setLens(id, takeManualControl);
     const lens = LENS_PRESETS[id];
     this.lensFocalM.value = lens.focalLengthMm / 1000;
     this.lensFNumber.value = lens.fNumber;
@@ -933,7 +948,7 @@ export class CityRenderer {
     }
     this.infrastructure().request(world);
     this.worldTick = world.tick;
-    this.director.world(world);
+    this.rig.world(world);
     this.buses.setWorld(world);
     this.trains.setWorld(trainWorldWithInfrastructure(world, this.committedRoadWorld));
     this.accessPaths.setWorld(world);
@@ -2490,8 +2505,8 @@ export class CityRenderer {
     this.updateRoads();
     if (this.worldState) this.rearExtensions.flushCompleted(this.worldState);
     this.updateActors(now);
-    this.director.update(dt, now / 1000);
-    const activeLens = LENS_PRESETS[this.director.lens];
+    this.rig.update(dt, now / 1000);
+    const activeLens = LENS_PRESETS[this.rig.lens];
     this.lensFocalM.value = activeLens.focalLengthMm / 1000;
     this.lensFNumber.value = activeLens.fNumber;
     this.updateTreeDetail();
@@ -2511,11 +2526,9 @@ export class CityRenderer {
     this.rainTime.value = time;
     this.rainLines.visible = this.rain > 0.1;
     this.rainOpacity.value = 0.035 + this.rain * 0.13;
-    this.rainLines.position.set(this.director.target.x, 0, this.director.target.z);
+    this.rainLines.position.set(this.rig.target.x, 0, this.rig.target.z);
     this.camera.updateMatrixWorld();
-    this.focusTargetView
-      .copy(this.director.focusTarget)
-      .applyMatrix4(this.camera.matrixWorldInverse);
+    this.focusTargetView.copy(this.rig.focusTarget).applyMatrix4(this.camera.matrixWorldInverse);
     const focusTarget = focusDepthFromViewZ(
       this.focusTargetView.z,
       this.camera.near,
@@ -2656,7 +2669,7 @@ export class CityRenderer {
       }
       cameraPositions.push(id, x, z, current.h, current.k, surfaceY);
     }
-    this.director.setPositions(
+    this.rig.setPositions(
       new Float32Array(cameraPositions),
       this.movementPresentation.withheld(this.current),
     );
@@ -2753,7 +2766,7 @@ export class CityRenderer {
     );
     const shadowCamera = this.sun.shadow.camera;
     snapShadowAnchor(
-      this.director.controls.target,
+      this.rig.target,
       this.sun.position,
       shadowCamera.right - shadowCamera.left,
       shadowCamera.top - shadowCamera.bottom,
@@ -2806,7 +2819,7 @@ export class CityRenderer {
     this.art.cloudShadow.value =
       0.42 * Math.max(0, this.daylight * 2 - 1) * (1 - dusk * 0.6) * (1 - this.rain);
     if (this.frame % 30 === 0) {
-      const target = this.director.target;
+      const target = this.rig.target;
       const lit =
         this.worldState?.buildings
           .filter((b) => b.stage === 'open' && (b.anchor || b.kind === 'shop' || b.kind === 'cafe'))
@@ -2874,70 +2887,23 @@ export class CityRenderer {
       this.lightShafts = golden;
       this.buildPipeline();
     }
-    this.nearbyStreetLights.update(dt, this.director.target, 1 - this.daylight);
+    this.nearbyStreetLights.update(dt, this.rig.target, 1 - this.daylight);
     if (this.shine) this.shine.strength.value = 0.06 + (1 - this.daylight) * 0.2;
     this.renderer.toneMappingExposure = 1;
   }
-  getAudioContext() {
-    const world = this.worldState,
-      listener = this.director.target;
-    this.camera.getWorldDirection(v);
-    const trains: Array<{ id: number; x: number; z: number; speed: number }> = [],
-      buses: Array<{ id: number; x: number; z: number; speed: number }> = [],
-      traffic: Array<{ id: number; x: number; z: number; speed: number; distance: number }> = [];
-    let pedestrians = 0;
-    for (const [id, p] of this.current) {
-      const old = this.previous.get(id) ?? p,
-        speed = Math.hypot(p.x - old.x, p.z - old.z) / this.motionDelta,
-        distance = Math.hypot(p.x - listener.x, p.z - listener.z);
-      if (p.k === 2) trains.push({ id, x: p.x, z: p.z, speed });
-      else if (p.k === 3) buses.push({ id, x: p.x, z: p.z, speed });
-      else if (isRoadVehicle(p.k) && distance < 130)
-        traffic.push({ id, x: p.x, z: p.z, speed, distance });
-      else if (p.k === 0 && distance < 45) pedestrians++;
-    }
-    traffic.sort((a, b) => a.distance - b.distance || a.id - b.id);
-    const events = resolveAudioEventContext(world, this.current, this.motionTick);
-    let riverDistance = 800;
-    const river = world?.terrain.river ?? [];
-    for (let i = 0; i < river.length - 1; i++)
-      riverDistance = Math.min(
-        riverDistance,
-        Math.max(
-          0,
-          distanceToSegment({ x: listener.x, z: listener.z }, river[i], river[i + 1]) -
-            this.riverHalfWidth,
-        ),
-      );
-    // Listen at the observed scene, with compressed height appropriate to a
-    // miniature world, rather than silencing it from a distant aerial camera.
-    const construction = [
-      ...(world?.rear_extensions ?? [])
-        .slice(0, 2)
-        .map((e) => ({ id: e.project_id, x: e.x, z: e.z })),
-      ...(world?.buildings
-        .filter((b) => b.stage !== 'open')
-        .map((b) => ({ id: b.id, x: b.x, z: b.z })) ?? []),
-    ].slice(0, 12);
+  /** Read-only presentation state for consumers outside the renderer (audio). */
+  presentationView(): PresentationView {
     return {
+      world: this.worldState,
+      listener: this.rig.target,
+      camera: this.camera,
+      current: this.current,
+      previous: this.previous,
+      motionDelta: this.motionDelta,
+      motionTick: this.motionTick,
+      riverHalfWidth: this.riverHalfWidth,
       hour: this.hour,
       rain: this.rain,
-      riverDistance,
-      tick: this.motionTick,
-      worldKey: world?.seed,
-      developmentRate: world?.development_rate,
-      traffic: traffic.slice(0, 24),
-      pedestrians,
-      events,
-      camera: {
-        x: listener.x,
-        y: this.camera.position.y * 0.15,
-        z: listener.z,
-        forward: { x: v.x, z: v.z },
-      },
-      trains,
-      buses,
-      construction,
     };
   }
   private pointerDown = (e: PointerEvent) => {
@@ -2974,7 +2940,7 @@ export class CityRenderer {
     this.renderStartup?.dispose();
     this.renderer.setAnimationLoop(null);
     this.resize.disconnect();
-    this.director.dispose();
+    this.rig.dispose();
     this.renderer.domElement.removeEventListener('pointerdown', this.pointerDown);
     this.renderer.domElement.removeEventListener('pointerup', this.pointerUp);
     this.resetWorld();
@@ -3012,7 +2978,7 @@ export class CityRenderer {
   }
 }
 
-function distanceToSegment(p: Point, a: Point, b: Point) {
+export function distanceToSegment(p: Point, a: Point, b: Point) {
   const dx = b.x - a.x,
     dz = b.z - a.z;
   const t = Math.max(

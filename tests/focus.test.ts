@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { dampFocusDepth, focusDepthFromViewZ } from '../web/src/camera/focus';
+import { dampFocusDepth, focusDepthFromViewZ } from '../web/src/optics/focus';
 
 describe('camera focus depth', () => {
   it('uses axial camera-space depth for an off-axis target', () => {

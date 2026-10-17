@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { LENS_PRESETS, signedCircleOfConfusionPixels } from '../web/src/camera/lens';
+import { LENS_PRESETS, signedCircleOfConfusionPixels } from '../web/src/optics/lens';
 
 // This adapter evaluates the scalar TSL expression's method chain on JS
 // numbers. It does not compile a shader or exercise WebGPU/WebGL execution.

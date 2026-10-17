@@ -2,12 +2,14 @@ import {
   DEFAULT_TILT_SHIFT,
   normalizeTiltShift,
   type TiltShiftSettings,
-} from './camera/tilt-shift';
+} from './optics/tilt-shift';
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import Controls, { busLineLabel } from './ui/Controls';
 import './ui/style.css';
 import './base.css';
+import { CameraDirector } from './camera/director';
+import { audioSceneContext } from './app/audio-scene';
 import { CityRenderer, type RenderMetrics } from './render/city';
 import { ArchitectureAssetReview } from './render/asset-review';
 import { SimulationClient } from './worker/client';
@@ -22,7 +24,7 @@ import {
 } from './storage/saves';
 import { resolveStartupWorld } from './storage/recovery';
 import { createGraphicsStartupWatchdog } from './graphics-startup';
-import type { LensPresetId } from './camera/lens';
+import type { LensPresetId } from './optics/lens';
 import type { World, Style, Metrics } from './types';
 
 type Subject = {
@@ -323,6 +325,7 @@ function CityExperience() {
   const mount = useRef<HTMLDivElement>(null),
     runtime = useRef<{
       renderer: CityRenderer;
+      director: CameraDirector;
       client: SimulationClient;
       audio: AudioDirector;
     } | null>(null);
@@ -372,8 +375,14 @@ function CityExperience() {
   useEffect(() => {
     if (!mount.current) return;
     let renderer: CityRenderer;
+    let director!: CameraDirector;
     try {
-      renderer = new CityRenderer(mount.current, new URLSearchParams(location.search).has('webgl'));
+      // Composition root: the renderer gets a camera rig, never the camera module itself.
+      renderer = new CityRenderer(
+        mount.current,
+        (camera, element) => (director = new CameraDirector(camera, element)),
+        new URLSearchParams(location.search).has('webgl'),
+      );
     } catch (e) {
       setError(
         `Graphics could not start: ${e instanceof Error ? e.message : String(e)}. Try the WebGL fallback.`,
@@ -382,7 +391,7 @@ function CityExperience() {
     }
     const client = new SimulationClient(),
       audio = new AudioDirector();
-    runtime.current = { renderer, client, audio };
+    runtime.current = { renderer, director, client, audio };
     const recoveryRequested = new URLSearchParams(location.search).get('recover') === '1';
     renderer.setLens(lens, false);
     renderer.setTiltShift(tiltShift);
@@ -416,7 +425,7 @@ function CityExperience() {
           .catch(() => {});
       }
     };
-    renderer.director.onModeChange = setMode;
+    director.onModeChange = setMode;
     renderer.onMetrics = setMetrics;
     renderer.onError = (error) => {
       if (disposed) return;
@@ -501,14 +510,14 @@ function CityExperience() {
       const now = performance.now();
       audio.update(
         {
-          ...renderer.getAudioContext(),
+          ...audioSceneContext(renderer.presentationView()),
           worldKey: audioEpoch,
           playbackRate: latestMetrics?.achievableSpeed ?? 1,
         },
         Math.min(0.25, (now - lastAudio) / 1000),
       );
       lastAudio = now;
-      setSceneLabel(renderer.director.label);
+      setSceneLabel(director.label);
       if (currentWorld.current) setWorld({ ...currentWorld.current });
       const id = subjectRef.current;
       if (id !== null && now - lastInspect > 5000) {
@@ -630,8 +639,8 @@ function CityExperience() {
       setError(`Could not export: ${String(e)}`);
     }
   }
-  function resetWorldSelection(r: { renderer: CityRenderer }) {
-    r.renderer.director.setMode('watch');
+  function resetWorldSelection(r: { renderer: CityRenderer; director: CameraDirector }) {
+    r.director.setMode('watch');
     r.renderer.setSelected(null);
     setMode('watch');
     setSelectedId(null);
@@ -806,7 +815,7 @@ function CityExperience() {
         }}
         onMode={(value) => {
           setMode(value);
-          runtime.current?.renderer.director.setMode(value);
+          runtime.current?.director.setMode(value);
         }}
         onPreview={(value) => {
           setPreview(value);
@@ -864,7 +873,7 @@ function CityExperience() {
         onReviewSkyline={
           import.meta.env.DEV
             ? () => {
-                if (!runtime.current?.renderer.director.reviewSkyline())
+                if (!runtime.current?.director.reviewSkyline())
                   notice('This city has no completed tall-building scene yet.');
               }
             : undefined
@@ -872,7 +881,7 @@ function CityExperience() {
         onReviewBuilding={
           import.meta.env.DEV
             ? (id) => {
-                if (!runtime.current?.renderer.director.reviewBuilding(id))
+                if (!runtime.current?.director.reviewBuilding(id))
                   notice('This building is not available to frame.');
               }
             : undefined
@@ -881,7 +890,7 @@ function CityExperience() {
           import.meta.env.DEV
             ? () => {
                 const station = currentWorld.current?.nodes.find((n) => n.kind === 'station');
-                if (!station || !runtime.current?.renderer.director.reviewStation(station.id))
+                if (!station || !runtime.current?.director.reviewStation(station.id))
                   notice('This station is not available to frame.');
               }
             : undefined
@@ -899,7 +908,7 @@ function CityExperience() {
         onApplyCameraPose={
           import.meta.env.DEV
             ? (position, target) =>
-                runtime.current?.renderer.director.reviewPose(
+                runtime.current?.director.reviewPose(
                   { x: position[0], y: position[1], z: position[2] },
                   { x: target[0], y: target[1], z: target[2] },
                 ) ?? false
@@ -908,7 +917,7 @@ function CityExperience() {
         onReadCameraPose={
           import.meta.env.DEV
             ? () => {
-                const director = runtime.current?.renderer.director;
+                const director = runtime.current?.director;
                 if (!director) return 'Camera unavailable';
                 const bounds = director.element.getBoundingClientRect();
                 return JSON.stringify(
@@ -934,7 +943,7 @@ function CityExperience() {
         onReviewWaterfront={
           import.meta.env.DEV
             ? (preset = 'overhead') => {
-                if (!runtime.current?.renderer.director.reviewWaterfront(preset))
+                if (!runtime.current?.director.reviewWaterfront(preset))
                   notice('This city has no river view yet.');
               }
             : undefined
@@ -943,12 +952,12 @@ function CityExperience() {
           setSelectedId(null);
           setSubject(null);
           runtime.current?.renderer.setSelected(null);
-          runtime.current?.renderer.director.follow(null);
+          runtime.current?.director.follow(null);
         }}
         onFollow={(id) => {
           const r = runtime.current;
           if (!r) return;
-          r.renderer.director.follow(id);
+          r.director.follow(id);
           if (!currentWorld.current?.buildings.some((b) => b.id === id)) {
             void r.client
               .inspect(id)

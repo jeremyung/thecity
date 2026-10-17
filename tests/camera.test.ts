@@ -5,7 +5,7 @@ import { skylineBounds } from '../web/src/camera/anchors';
 import type { Anchor } from '../web/src/camera/shot';
 import { CameraDirector } from '../web/src/camera/director';
 import { cameraPathClearance } from '../web/src/camera/clearance';
-import { verticalFovDegrees } from '../web/src/camera/lens';
+import { verticalFovDegrees } from '../web/src/optics/lens';
 import type { World } from '../web/src/types';
 // @ts-expect-error Node built-in types are not included in the app TypeScript config.
 import { readFileSync } from 'node:fs';

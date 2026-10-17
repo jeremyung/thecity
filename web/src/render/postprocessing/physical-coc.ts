@@ -1,6 +1,6 @@
 import type { Node } from 'three/webgpu';
 import { float } from 'three/tsl';
-import { SENSOR_HEIGHT_MM } from '../../camera/lens';
+import { SENSOR_HEIGHT_MM } from '../../optics/lens';
 
 export interface PhysicalCoCNodes {
   /** True signed camera-space scene depth; visible surfaces have negative Z. */

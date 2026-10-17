@@ -1,4 +1,4 @@
-import type { LensPresetId } from '../camera/lens';
+import type { LensPresetId } from '../optics/lens';
 
 type SaveRecord = {
   slot: number;

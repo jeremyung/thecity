@@ -125,7 +125,7 @@ function harness() {
   // painting have their own tests and need the full foliage/material setup.
   renderer.rebuildParks = vi.fn();
   renderer.paintSeason = vi.fn();
-  renderer.director = { world: vi.fn() };
+  renderer.rig = { world: vi.fn() };
   renderer.buses = { setWorld: vi.fn() };
   renderer.trains = { setWorld: vi.fn() };
   renderer.accessPaths = { setWorld: vi.fn() };

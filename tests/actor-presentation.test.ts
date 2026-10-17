@@ -99,7 +99,7 @@ function harness(snapshot: World, commitInfrastructure: boolean): RendererHarnes
     doors: { meshes: [], ids: [] },
   };
   renderer.buses = { begin: vi.fn(), finish: vi.fn(), meshes: [], ids: [] };
-  renderer.director = { setPositions: vi.fn() };
+  renderer.rig = { setPositions: vi.fn() };
   renderer.movementPresentation = new MovementPresentation();
   renderer.visibleInfrastructure = new VisibleInfrastructure();
   renderer.visibleInfrastructure.request(snapshot);
@@ -142,7 +142,7 @@ describe('actor presentation integration', () => {
     renderer.updateActors(1011);
 
     const matrix = actorMatrix(renderer, 42);
-    const cameraTuple = renderer.director.setPositions.mock.calls.at(-1)![0] as Float32Array;
+    const cameraTuple = renderer.rig.setPositions.mock.calls.at(-1)![0] as Float32Array;
     expect(matrix.elements[12]).toBeCloseTo(7);
     expect(matrix.elements[14]).toBeCloseTo(8);
     expect(cameraTuple[1]).toBeCloseTo(matrix.elements[12]);
@@ -159,13 +159,13 @@ describe('actor presentation integration', () => {
       renderer.updateActors(1000);
       expect(renderer.current.has(99)).toBe(false);
       expect(renderer.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(0);
-      expect(renderer.director.setPositions.mock.calls.at(-1)![0]).toEqual(new Float32Array());
+      expect(renderer.rig.setPositions.mock.calls.at(-1)![0]).toEqual(new Float32Array());
 
       renderer.visibleInfrastructure.commit(renderer.visibleInfrastructure.capture(snapshot));
       renderer.updateActors(1001);
       expect(renderer.current.get(99)?.x).toBe(6);
       expect(renderer.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(1);
-      const cameraTuple = renderer.director.setPositions.mock.calls.at(-1)![0] as Float32Array;
+      const cameraTuple = renderer.rig.setPositions.mock.calls.at(-1)![0] as Float32Array;
       expect(cameraTuple.slice(0, 3)).toEqual(new Float32Array([99, 6, 7]));
       expect(actorMatrix(renderer, 99).elements[12]).toBeCloseTo(6);
       expect(actorMatrix(renderer, 99).elements[14]).toBeCloseTo(7);

@@ -4,7 +4,7 @@ import { SkylineClusterCache } from './skyline-cluster';
 import { chooseStreetWatchPosition } from './watch-visibility';
 import { MOVEMENT_STRIDE } from '../movement';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { LENS_PRESETS, verticalFovDegrees, type LensPresetId } from './lens';
+import { LENS_PRESETS, verticalFovDegrees, type LensPresetId } from '../optics/lens';
 import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from './clearance';
 import {
   chooseTrainFollowPosition,

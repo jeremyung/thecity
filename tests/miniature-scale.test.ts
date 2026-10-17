@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { miniatureOpticalScale } from '../web/src/camera/miniature-scale';
-import { signedCircleOfConfusionPixels } from '../web/src/camera/lens';
+import { miniatureOpticalScale } from '../web/src/optics/miniature-scale';
+import { signedCircleOfConfusionPixels } from '../web/src/optics/lens';
 
 function blur(focus: number, ratio: number) {
   return signedCircleOfConfusionPixels({

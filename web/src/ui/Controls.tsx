@@ -1,4 +1,4 @@
-import { DEFAULT_TILT_SHIFT, type TiltShiftSettings } from '../camera/tilt-shift';
+import { DEFAULT_TILT_SHIFT, type TiltShiftSettings } from '../optics/tilt-shift';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   AudioLines,
@@ -19,7 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Building, Style, World } from '../types';
-import { LENS_PRESETS, type LensPresetId } from '../camera/lens';
+import { LENS_PRESETS, type LensPresetId } from '../optics/lens';
 import './style.css';
 import ReviewRecording from './ReviewRecording';
 import ReviewCameraPose, { type ApplyReviewPose } from './ReviewCameraPose';

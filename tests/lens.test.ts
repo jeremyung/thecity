@@ -5,7 +5,7 @@ import {
   normalizedGatherRadiusFromDiameterPx,
   signedCircleOfConfusionPixels,
   verticalFovDegrees,
-} from '../web/src/camera/lens';
+} from '../web/src/optics/lens';
 
 describe('camera lens model', () => {
   it('derives the expected vertical field of view for the 35 mm and 50 mm presets', () => {
