@@ -77,7 +77,7 @@ export function buildCorporateSkyscraper(b:Building,art:ArtMaterials,options:Bus
    edge(a,c,y+3.12,form==='rounded'?.14:.09,.12,form==='rounded'?silver:metal);
   }
   if(f===0&&b.stage==='open'){
-   const ex=((b.appearance_seed%3)-1)*w*.2;
+   const ex=0; // Primary access remains centred for every seed.
    kit.box(ex,y+1.4,d/2+.075,2.4,2.6,.07,metal);kit.windowContext={seed:b.appearance_seed,lived};kit.box(ex,y+1.4,d/2+.12,2.15,2.4,.04,art.window('shop'));
    kit.box(ex,y+2.9,d/2+.4,4,.13,.75,silver);
    addStorefrontSign(kit,art,{x:ex,y:y+2.73,z:d/2+.16,width:2.1,height:.26,tenant:12+b.appearance_seed%6,active:b.business_active!==false});
@@ -94,5 +94,5 @@ export function buildCorporateSkyscraper(b:Building,art:ArtMaterials,options:Bus
  }
  if(b.stage==='demolition')addDemolitionSite(kit,b,art);
  if(b.stage==='foundation')kit.box(0,.24,0,w,.3,d,silver);
- const group=kit.finish();for(const template of slabTemplates.values())template.dispose();group.userData.businessArchitecture={recipe:r.id,family:r.family,towerForm:form,detail,installedFloors:installed,framedFloors:framed,roofInstalled,entryX:((b.appearance_seed%3)-1)*w*.2,tenantIds:[],bands:[{from:0,count:podium,use:'shop'},{from:podium,count:b.floors-podium,use:'office'}]};return group;
+ const group=kit.finish();for(const template of slabTemplates.values())template.dispose();group.userData.businessArchitecture={recipe:r.id,family:r.family,towerForm:form,detail,installedFloors:installed,framedFloors:framed,roofInstalled,entryX:0,tenantIds:[],bands:[{from:0,count:podium,use:'shop'},{from:podium,count:b.floors-podium,use:'office'}]};return group;
 }

@@ -32,7 +32,7 @@ export function buildCurvedMediaLandmark(b:Building,art:ArtMaterials,options:Bus
  const kit=new Kit(),detail=options.detail??'district',mode=options.displays??'animated',segments=detail==='close'?12:detail==='district'?8:4;
  const {installed,framed,complete}=apartmentConstruction(b),fh=3.25,base=.58,w=b.width-1.4,d=b.depth-2,r=Math.min(w,d)*.31,podium=Math.min(3,Math.max(2,Math.floor(b.floors*.25)));
  const metal=art.get('#26353e',.45),silver=flagshipCladding(art),wall=art.get('#647b80',.7),roof=art.get('#4d575a');
- const entryX=((architecturalChoice(b.appearance_seed,761)%3)-1)*w*.15;
+ const entryX=0; // Primary entrance follows the authoritative front-centre access axis.
  const active=b.stage==='open'&&b.business_active!==false,enabled=active&&mode!=='off'&&detail!=='far'&&Boolean(options.signage?.feature),lived=windowLived(b);
  const glass=()=>art.shared('curved-media-glass',()=>windowMaterials('shop',{night:art.night,occupancy:art.occupancy},art.toonRamp,'#688b99'));
  const plateTemplates=new Map<string,THREE.BufferGeometry>();
@@ -103,5 +103,5 @@ export function buildCurvedMediaLandmark(b:Building,art:ArtMaterials,options:Bus
  }
  if(b.stage==='foundation')plate(w,d,r,.28,.3,silver);
  if(b.stage==='demolition')addDemolitionSite(kit,b,art);
- const g=kit.finish();for(const template of plateTemplates.values())template.dispose();g.traverse(o=>{if(o instanceof THREE.Mesh&&(o.material as THREE.Material).transparent)o.castShadow=false;});g.userData.businessArchitecture={recipe:options.recipe.id,family:options.recipe.family,mediaLandmark:'curved',detail,installedFloors:installed,framedFloors:framed,roofInstalled:complete&&installed===b.floors,displayPanels:panels,campaign,tenantIds:[],bands:[{from:0,count:podium,use:'shop'}]};return g;
+ const g=kit.finish();for(const template of plateTemplates.values())template.dispose();g.traverse(o=>{if(o instanceof THREE.Mesh&&(o.material as THREE.Material).transparent)o.castShadow=false;});g.userData.businessArchitecture={recipe:options.recipe.id,family:options.recipe.family,mediaLandmark:'curved',entryX,detail,installedFloors:installed,framedFloors:framed,roofInstalled:complete&&installed===b.floors,displayPanels:panels,campaign,tenantIds:[],bands:[{from:0,count:podium,use:'shop'}]};return g;
 }

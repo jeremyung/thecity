@@ -33,10 +33,10 @@ it('keeps all recipes and construction phases within the authoritative parcel, w
   group.traverse(o=>{if(o instanceof THREE.Mesh){const p=o.geometry.getAttribute('position');expect(Array.from(p.array).every(Number.isFinite)).toBe(true);expect(owner.owns(o.material as THREE.Material)).toBe(true);}});disposeGroup(group);
  }}}finally{owner.dispose();}
 },30000);
-it('fits narrow parcels and varies facade geometry and entrances across recipes and seeds',()=>{
+it('fits narrow parcels and varies facade geometry while keeping primary entrances on the access axis',()=>{
  const owner=new ApartmentResources();try{const signatures=new Set<string>(),entries=new Set<number>();for(const recipe of BUSINESS_RECIPES){const b={...fixture().buildings[0],width:5,depth:6,floors:7};const g=buildBusinessBuilding(b,owner.art,{recipe,detail:'close',signage:{proximity:2,feature:'screen'}})!;let vertices=0;g.traverse(o=>{if(o instanceof THREE.Mesh)vertices+=o.geometry.getAttribute('position').count;});const bounds=new THREE.Box3().setFromObject(g);expect(bounds.max.x).toBeLessThanOrEqual(b.width/2+.001);expect(bounds.min.x).toBeGreaterThanOrEqual(-b.width/2-.001);expect(bounds.max.z).toBeLessThanOrEqual(b.depth/2+.001);expect(bounds.min.z).toBeGreaterThanOrEqual(-b.depth/2-.001);signatures.add(`${vertices}:${g.userData.businessArchitecture.bands.map((v:any)=>v.use)}`);disposeGroup(g);}
  expect(signatures.size).toBeGreaterThanOrEqual(10);
- const b=fixture().buildings.find(b=>selectBusinessRecipe(b)?.family==='mixed-use')!;for(let seed=0;seed<30;seed++){const g=buildBusinessBuilding({...b,appearance_seed:seed},owner.art,{recipe:selectBusinessRecipe(b)!})!;entries.add(g.userData.businessArchitecture.entryX);disposeGroup(g);}expect(entries.size).toBe(2);
+ const b=fixture().buildings.find(b=>selectBusinessRecipe(b)?.family==='mixed-use')!;for(let seed=0;seed<30;seed++){const g=buildBusinessBuilding({...b,appearance_seed:seed},owner.art,{recipe:selectBusinessRecipe(b)!})!;entries.add(g.userData.businessArchitecture.entryX);disposeGroup(g);}expect([...entries]).toEqual([0]);
  }finally{owner.dispose();}
 });
 it('uses separate home/office/retail room schedules and keeps unfinished and vacant rooms dark',()=>{
@@ -74,10 +74,10 @@ it('varies older tenant widths, preserves nonoverlap and reserves separate upper
  const owner=new ApartmentResources();try{
   const widths=new Set<string>();for(const source of fixture().buildings){const recipe=selectBusinessRecipe(source)!;
    const g=buildBusinessBuilding(source,owner.art,{recipe,detail:'far'})!,meta=g.userData.businessArchitecture,slots=meta.frontageSlots as {x:number;width:number}[];
-   for(let i=0;i<slots.length;i++){expect(slots[i].width).toBeGreaterThan(0);if(i)expect(slots[i].x-slots[i].width/2).toBeCloseTo(slots[i-1].x+slots[i-1].width/2,5);}
-   if(recipe.family==='mixed-use'&&recipe.retailFloors>0){const left=slots[0].x-slots[0].width/2,right=slots.at(-1)!.x+slots.at(-1)!.width/2;expect(meta.entryX<left||meta.entryX>right).toBe(true);}
+   for(let i=0;i<slots.length;i++){expect(slots[i].width).toBeGreaterThan(0);if(i)expect(slots[i].x-slots[i].width/2).toBeGreaterThanOrEqual(slots[i-1].x+slots[i-1].width/2-.00001);}
+   if(recipe.family==='mixed-use'&&recipe.retailFloors>0){for(const slot of slots)expect(Math.abs(slot.x-meta.entryX)-slot.width/2).toBeGreaterThanOrEqual(1.09);}
    if(recipe.era==='older'&&slots.length>1)widths.add(slots.map(s=>s.width.toFixed(2)).join(':'));
-   if(['screen','curtain','department'].includes(recipe.form))expect(slots).toHaveLength(1);
+   if(recipe.family!=='mixed-use'&&['screen','curtain','department'].includes(recipe.form))expect(slots).toHaveLength(1);
    disposeGroup(g);
   }expect(widths.size).toBeGreaterThan(3);
  }finally{owner.dispose();}

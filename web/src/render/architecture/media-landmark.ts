@@ -46,7 +46,7 @@ export function buildMediaLandmark(b:Building,art:ArtMaterials,options:BusinessB
   }
  }
  if(installed>0){
-  const ex=((architecturalChoice(b.appearance_seed,761)%3)-1)*w*.22;
+  const ex=0; // Keep the primary door aligned with authoritative walking access.
   kit.box(ex,base+1.4,front+.1,2.8,2.8,.12,metal);pane(ex,base+1.4,front+.18,2.5,2.6);
   kit.box(ex,base+3,front+.4,4.2,.15,.7,silver);
   if(active)addStorefrontSign(kit,art,{x:0,y:screenBottom-.7,z:front+.16,width:Math.min(w-1,9),height:.75,tenant:architecturalChoice(b.appearance_seed,762)%24,active});
@@ -87,5 +87,5 @@ export function buildMediaLandmark(b:Building,art:ArtMaterials,options:BusinessB
  }
  if(b.stage==='foundation')kit.box(0,.25,0,w,.3,d,silver);
  if(b.stage==='demolition')addDemolitionSite(kit,b,art);
- const group=kit.finish();group.userData.businessArchitecture={recipe:r.id,family:r.family,mediaLandmark:form,detail,installedFloors:installed,framedFloors:framed,roofInstalled:complete&&installed===b.floors,displayPanels:panels,campaign,tenantIds:[],bands:[{from:0,count:podium,use:'shop'}]};return group;
+ const group=kit.finish();group.userData.businessArchitecture={recipe:r.id,family:r.family,mediaLandmark:form,entryX:0,detail,installedFloors:installed,framedFloors:framed,roofInstalled:complete&&installed===b.floors,displayPanels:panels,campaign,tenantIds:[],bands:[{from:0,count:podium,use:'shop'}]};return group;
 }
