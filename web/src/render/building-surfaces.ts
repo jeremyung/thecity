@@ -337,6 +337,9 @@ export function windowMaterials(activity: WindowActivity, uniforms: WindowUnifor
   for (const material of [anime, miniature]) {
     if(material===anime||!corporateTint)(material as unknown as { emissiveNode: Vec3Node }).emissiveNode = radiance;
     material.userData.windowPane = true;
+    // Explicit opt-in for a future reflection mask; opaque spandrels and signs
+    // must never be inferred as glass from their colour or roughness.
+    material.userData.reflectionSurface = { version: 1, role: 'vision-glass' };
     if(corporateTint)material.userData.corporateGlass=true;
     material.userData.windowActivity = activity;
   }
