@@ -1,3 +1,4 @@
+import { RoadsLayer } from '../web/src/render/roads-layer';
 import * as THREE from 'three/webgpu';
 import { uniform } from 'three/tsl';
 import { describe, expect, it, vi } from 'vitest';
@@ -86,15 +87,16 @@ function world(overrides: Partial<World> = {}): World {
 
 function harness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.scene = new THREE.Scene();
-  renderer.roads = new THREE.Group();
-  renderer.scene.add(renderer.roads);
-  renderer.constructionRoads = new THREE.Group();
-  renderer.scene.add(renderer.constructionRoads);
-  renderer.station = new THREE.Group();
-  renderer.scene.add(renderer.station);
-  renderer.roadSignature = '';
-  renderer.completedRoadSignature = '';
+  renderer.roadsLayer.roads = new THREE.Group();
+  renderer.scene.add(renderer.roadsLayer.roads);
+  renderer.roadsLayer.constructionRoads = new THREE.Group();
+  renderer.scene.add(renderer.roadsLayer.constructionRoads);
+  renderer.roadsLayer.station = new THREE.Group();
+  renderer.scene.add(renderer.roadsLayer.station);
+  renderer.roadsLayer.roadSignature = '';
+  renderer.roadsLayer.completedRoadSignature = '';
   renderer.riverHalfWidth = 32;
   renderer.worldState = null;
   renderer.worldTick = 0;
@@ -147,9 +149,14 @@ function submitPending(renderer: any, snapshot: World) {
 // explicit so tests that exercise staging can inspect the pending frames.
 function submit(renderer: any, snapshot: World) {
   submitPending(renderer, snapshot);
-  for (let i = 0; i < 10000 && (renderer.roadBuild || renderer.queuedRoadWorld); i++)
-    renderer.updateRoads();
-  if (renderer.roadBuild || renderer.queuedRoadWorld) throw new Error('road build did not settle');
+  for (
+    let i = 0;
+    i < 10000 && (renderer.roadsLayer.roadBuild || renderer.roadsLayer.queuedRoadWorld);
+    i++
+  )
+    renderer.roadsLayer.updateRoads();
+  if (renderer.roadsLayer.roadBuild || renderer.roadsLayer.queuedRoadWorld)
+    throw new Error('road build did not settle');
 }
 
 function geometryFingerprint(group: THREE.Object3D): string[] {
@@ -202,10 +209,10 @@ describe('road batch retention', () => {
     const renderer = harness(),
       first = world();
     submit(renderer, first);
-    const pool = renderer.streetLighting,
+    const pool = renderer.roadsLayer.streetLighting,
       meshes = [...pool.meshes];
     const before = meshes.map((mesh) => Array.from(mesh.instanceMatrix.array));
-    const oldRoads = renderer.roads;
+    const oldRoads = renderer.roadsLayer.roads;
     const next = {
       ...first,
       tick: 2,
@@ -214,14 +221,14 @@ describe('road batch retention', () => {
       ),
     };
     submitPending(renderer, next);
-    expect(renderer.roads).toBe(oldRoads);
+    expect(renderer.roadsLayer.roads).toBe(oldRoads);
     expect(
       pool.meshes.map((mesh: THREE.InstancedMesh) => Array.from(mesh.instanceMatrix.array)),
     ).toEqual(before);
     let committed = false;
     for (let step = 0; step < 10000; step++) {
-      renderer.updateRoads();
-      if (renderer.roads !== oldRoads) {
+      renderer.roadsLayer.updateRoads();
+      if (renderer.roadsLayer.roads !== oldRoads) {
         committed = true;
         break;
       }
@@ -230,7 +237,7 @@ describe('road batch retention', () => {
       ).toEqual(before);
     }
     expect(committed).toBe(true);
-    expect(renderer.streetLighting).toBe(pool);
+    expect(renderer.roadsLayer.streetLighting).toBe(pool);
     expect(pool.meshes).toEqual(meshes);
     expect(pool.root.parent).toBe(renderer.scene);
     expect(
@@ -288,13 +295,13 @@ describe('road batch retention', () => {
       snapshot.revision++;
       submit(renderer, snapshot);
       if (progress === 0.7151829) {
-        cachedPartition = renderer.completedRoadSurfaces;
-        completedClaims = vi.spyOn(renderer.completedRoadSurfaces, 'claim');
+        cachedPartition = renderer.roadsLayer.completedRoadSurfaces;
+        completedClaims = vi.spyOn(renderer.roadsLayer.completedRoadSurfaces, 'claim');
       } else if (progress === 0.8582195) {
-        expect(renderer.completedRoadSurfaces).toBe(cachedPartition);
+        expect(renderer.roadsLayer.completedRoadSurfaces).toBe(cachedPartition);
         expect(completedClaims).not.toHaveBeenCalled();
         completedClaims!.mockRestore();
-      } else expect(renderer.completedRoadSurfaces).not.toBe(cachedPartition);
+      } else expect(renderer.roadsLayer.completedRoadSurfaces).not.toBe(cachedPartition);
       renderer.scene.updateMatrixWorld(true);
       // Interior of the measured overlap triangle, away from paint and mesh edges.
       const ray = new THREE.Raycaster(
@@ -302,7 +309,7 @@ describe('road batch retention', () => {
         new THREE.Vector3(0, -1, 0),
       );
       const hits = ray
-        .intersectObjects([renderer.roads, renderer.constructionRoads], true)
+        .intersectObjects([renderer.roadsLayer.roads, renderer.roadsLayer.constructionRoads], true)
         .filter((hit) => Math.abs(hit.point.y - 0.3) < 1e-5);
       expect(hits, `one surface at progress ${progress}`).toHaveLength(1);
       expect(
@@ -348,14 +355,14 @@ describe('road batch retention', () => {
     submit(renderer, snapshot);
 
     // Local edge stripe is absent in the 8.2m arterial opening, then resumes.
-    const junction = firstGroundHit(renderer.roads, 2.8, 4);
+    const junction = firstGroundHit(renderer.roadsLayer.roads, 2.8, 4);
     expect(junction).toBeDefined();
     expect(
       ((junction!.object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.getHexString(),
     ).toBe('747f7b');
     expect(junction!.point.y).toBeCloseTo(0.3, 5);
 
-    const stripe = firstGroundHit(renderer.roads, 2.8, 14);
+    const stripe = firstGroundHit(renderer.roadsLayer.roads, 2.8, 14);
     expect(stripe).toBeDefined();
     expect(
       ((stripe!.object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.getHexString(),
@@ -388,7 +395,7 @@ describe('road batch retention', () => {
     submit(renderer, snapshot);
 
     // Open-road construction markers are placed every 12 m at the road edge.
-    const edge = firstGroundHit(renderer.roads, 3.1, 24);
+    const edge = firstGroundHit(renderer.roadsLayer.roads, 3.1, 24);
     expect(edge).toBeDefined();
     expect(
       ((edge!.object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.getHexString(),
@@ -432,8 +439,8 @@ describe('road batch retention', () => {
 
     submit(renderer, snapshot);
 
-    const localSurface = firstGroundHit(renderer.roads, 0, 30);
-    const laneSurface = firstGroundHit(renderer.roads, 30, 0);
+    const localSurface = firstGroundHit(renderer.roadsLayer.roads, 0, 30);
+    const laneSurface = firstGroundHit(renderer.roadsLayer.roads, 30, 0);
     expect(localSurface).toBeDefined();
     expect(laneSurface).toBeDefined();
     expect(localSurface!.point.y).toBeCloseTo(0.3, 5);
@@ -445,15 +452,15 @@ describe('road batch retention', () => {
     const initial = world({ rail_platforms: [platform] });
     const support = { resolved: true, roads: [10], platforms: [1] };
     submitPending(renderer, initial);
-    expect(renderer.infrastructure().canPresentMovement(support)).toBe(false);
+    expect(renderer.roadsLayer.infrastructure().canPresentMovement(support)).toBe(false);
     submit(renderer, initial);
-    expect(renderer.infrastructure().canPresentMovement(support)).toBe(true);
+    expect(renderer.roadsLayer.infrastructure().canPresentMovement(support)).toBe(true);
 
     const changed = world({ rail_platforms: [{ ...platform, surface_y: 9 }] });
     submitPending(renderer, changed);
-    expect(renderer.infrastructure().canPresentMovement(support)).toBe(false);
+    expect(renderer.roadsLayer.infrastructure().canPresentMovement(support)).toBe(false);
     submit(renderer, changed);
-    expect(renderer.infrastructure().canPresentMovement(support)).toBe(true);
+    expect(renderer.roadsLayer.infrastructure().canPresentMovement(support)).toBe(true);
   });
 
   it('schedules a new commit when lane identity changes under an existing road ID', () => {
@@ -465,10 +472,10 @@ describe('road batch retention', () => {
       roads: initial.roads.map((road) => (road.id === 10 ? { ...road, lanes: 3 } : road)),
     });
     submitPending(renderer, changed);
-    expect(renderer.roadBuild || renderer.queuedRoadWorld).toBeTruthy();
-    expect(renderer.infrastructure().canPresentMovement(support)).toBe(false);
+    expect(renderer.roadsLayer.roadBuild || renderer.roadsLayer.queuedRoadWorld).toBeTruthy();
+    expect(renderer.roadsLayer.infrastructure().canPresentMovement(support)).toBe(false);
     submit(renderer, changed);
-    expect(renderer.infrastructure().canPresentMovement(support)).toBe(true);
+    expect(renderer.roadsLayer.infrastructure().canPresentMovement(support)).toBe(true);
   });
 
   it('admits a queued building only after its supporting road batch commits', () => {
@@ -499,8 +506,9 @@ describe('road batch retention', () => {
     expect(renderer.objectQueue.has(500)).toBe(true);
     expect(renderer.chunks.update).toHaveBeenLastCalledWith(new Set());
 
-    for (let i = 0; i < 10000 && renderer.roadBuild; i++) renderer.updateRoads();
-    expect(renderer.roadBuild).toBeNull();
+    for (let i = 0; i < 10000 && renderer.roadsLayer.roadBuild; i++)
+      renderer.roadsLayer.updateRoads();
+    expect(renderer.roadsLayer.roadBuild).toBeNull();
     renderer.updateBuildingBatches();
     expect(createGroup).toHaveBeenCalledOnce();
     expect(renderer.objectQueue.has(500)).toBe(false);
@@ -509,13 +517,13 @@ describe('road batch retention', () => {
 
   it('defers road kit generation until the road update phase', () => {
     const renderer = harness();
-    const roadKit = vi.spyOn(renderer, 'roadKit');
+    const roadKit = vi.spyOn(renderer.roadsLayer, 'roadKit');
 
     submitPending(renderer, world());
 
     expect(roadKit).not.toHaveBeenCalled();
-    expect(renderer.roadBuild?.preparation).toBeTruthy();
-    for (let i = 0; i < 100 && !roadKit.mock.calls.length; i++) renderer.updateRoads();
+    expect(renderer.roadsLayer.roadBuild?.preparation).toBeTruthy();
+    for (let i = 0; i < 100 && !roadKit.mock.calls.length; i++) renderer.roadsLayer.updateRoads();
     expect(roadKit).toHaveBeenCalled();
   });
 
@@ -523,7 +531,11 @@ describe('road batch retention', () => {
     const renderer = harness();
     const initial = world();
     submit(renderer, initial);
-    const committed = [renderer.roads, renderer.constructionRoads, renderer.station];
+    const committed = [
+      renderer.roadsLayer.roads,
+      renderer.roadsLayer.constructionRoads,
+      renderer.roadsLayer.station,
+    ];
     const manyNodes = Array.from({ length: 504 }, (_, i) => ({
       id: 100 + i,
       x: (i % 22) * 12,
@@ -548,7 +560,7 @@ describe('road batch retention', () => {
     };
 
     submitPending(renderer, next);
-    const candidate = renderer.roadBuild;
+    const candidate = renderer.roadsLayer.roadBuild;
     expect(candidate?.preparation).toBeTruthy();
     const returnPreparation = vi.spyOn(candidate.preparation!, 'return');
     const disposals: ReturnType<typeof vi.fn>[] = [];
@@ -563,13 +575,17 @@ describe('road batch retention', () => {
       disposals.push(disposed);
       originalAdd.call(this, geometry, material);
     });
-    for (let i = 0; i < 100 && disposals.length === 0; i++) renderer.updateRoads();
+    for (let i = 0; i < 100 && disposals.length === 0; i++) renderer.roadsLayer.updateRoads();
     add.mockRestore();
     expect(disposals.length).toBeGreaterThan(0);
-    expect(renderer.roadBuild?.preparation).toBeTruthy();
-    renderer.cancelRoadBuild();
+    expect(renderer.roadsLayer.roadBuild?.preparation).toBeTruthy();
+    renderer.roadsLayer.cancelRoadBuild();
 
-    expect([renderer.roads, renderer.constructionRoads, renderer.station]).toEqual(committed);
+    expect([
+      renderer.roadsLayer.roads,
+      renderer.roadsLayer.constructionRoads,
+      renderer.roadsLayer.station,
+    ]).toEqual(committed);
     expect(returnPreparation).toHaveBeenCalledOnce();
     for (const disposed of disposals) expect(disposed).toHaveBeenCalledOnce();
   });
@@ -583,11 +599,14 @@ describe('road batch retention', () => {
     submitPending(renderer, submitted);
     submitted.nodes.find((n) => n.id === 3)!.x = 41;
     submitted.roads[0].kind = 'arterial';
-    for (let i = 0; i < 10000 && renderer.roadBuild; i++) renderer.updateRoads();
+    for (let i = 0; i < 10000 && renderer.roadsLayer.roadBuild; i++)
+      renderer.roadsLayer.updateRoads();
 
-    expect(geometryFingerprint(renderer.roads)).toEqual(geometryFingerprint(expected.roads));
-    expect(geometryFingerprint(renderer.constructionRoads)).toEqual(
-      geometryFingerprint(expected.constructionRoads),
+    expect(geometryFingerprint(renderer.roadsLayer.roads)).toEqual(
+      geometryFingerprint(expected.roadsLayer.roads),
+    );
+    expect(geometryFingerprint(renderer.roadsLayer.constructionRoads)).toEqual(
+      geometryFingerprint(expected.roadsLayer.constructionRoads),
     );
   });
 
@@ -595,9 +614,9 @@ describe('road batch retention', () => {
     const renderer = harness();
     const first = world();
     submit(renderer, first);
-    const oldRoads = renderer.roads,
-      oldConstruction = renderer.constructionRoads,
-      oldStation = renderer.station;
+    const oldRoads = renderer.roadsLayer.roads,
+      oldConstruction = renderer.roadsLayer.constructionRoads,
+      oldStation = renderer.roadsLayer.station;
 
     submitPending(renderer, {
       ...first,
@@ -605,18 +624,20 @@ describe('road batch retention', () => {
       nodes: first.nodes.map((n) => (n.id === 3 ? { ...n, x: 15 } : n)),
     });
 
-    expect(renderer.roads).toBe(oldRoads);
-    expect(renderer.constructionRoads).toBe(oldConstruction);
-    expect(renderer.station).toBe(oldStation);
-    expect(renderer.roadBuild).toBeTruthy();
-    expect(renderer.completedRoadSignature).not.toBe(renderer.roadBuild.signature);
+    expect(renderer.roadsLayer.roads).toBe(oldRoads);
+    expect(renderer.roadsLayer.constructionRoads).toBe(oldConstruction);
+    expect(renderer.roadsLayer.station).toBe(oldStation);
+    expect(renderer.roadsLayer.roadBuild).toBeTruthy();
+    expect(renderer.roadsLayer.completedRoadSignature).not.toBe(
+      renderer.roadsLayer.roadBuild.signature,
+    );
   });
 
   it('coalesces queued worlds to the latest snapshot without restarting the active build', () => {
     const renderer = harness();
     const first = world();
     submitPending(renderer, first);
-    const active = renderer.roadBuild;
+    const active = renderer.roadsLayer.roadBuild;
     expect(active).toBeTruthy();
     const second = {
       ...first,
@@ -631,30 +652,32 @@ describe('road batch retention', () => {
 
     submitPending(renderer, second);
     submitPending(renderer, latest);
-    expect(renderer.roadBuild === active).toBe(true);
-    expect(renderer.queuedRoadWorld.world.tick).toBe(3);
+    expect(renderer.roadsLayer.roadBuild === active).toBe(true);
+    expect(renderer.roadsLayer.queuedRoadWorld.world.tick).toBe(3);
     expect(
-      renderer.queuedRoadWorld.world.nodes.find((n: World['nodes'][number]) => n.id === 3)?.x,
+      renderer.roadsLayer.queuedRoadWorld.world.nodes.find(
+        (n: World['nodes'][number]) => n.id === 3,
+      )?.x,
     ).toBe(18);
 
-    while (renderer.roadBuild) renderer.updateRoads();
-    expect(renderer.completedRoadSignature).toBe(roadBatchSignatures(first).completed);
-    expect(renderer.roads).not.toBeNull();
-    expect(renderer.queuedRoadWorld.world.tick).toBe(3);
-    renderer.updateRoads(); // queued preparation starts on the following frame
-    expect(renderer.roadBuild).toBeTruthy();
-    expect(renderer.roadBuild.signature).toBe(roadBatchSignatures(latest).completed);
+    while (renderer.roadsLayer.roadBuild) renderer.roadsLayer.updateRoads();
+    expect(renderer.roadsLayer.completedRoadSignature).toBe(roadBatchSignatures(first).completed);
+    expect(renderer.roadsLayer.roads).not.toBeNull();
+    expect(renderer.roadsLayer.queuedRoadWorld.world.tick).toBe(3);
+    renderer.roadsLayer.updateRoads(); // queued preparation starts on the following frame
+    expect(renderer.roadsLayer.roadBuild).toBeTruthy();
+    expect(renderer.roadsLayer.roadBuild.signature).toBe(roadBatchSignatures(latest).completed);
     submit(renderer, latest);
-    expect(renderer.queuedRoadWorld).toBeNull();
+    expect(renderer.roadsLayer.queuedRoadWorld).toBeNull();
   });
 
   it('cancels pending candidates while retaining the committed batches', () => {
     const renderer = harness();
     const first = world();
     submit(renderer, first);
-    const oldRoads = renderer.roads,
-      oldConstruction = renderer.constructionRoads,
-      oldStation = renderer.station;
+    const oldRoads = renderer.roadsLayer.roads,
+      oldConstruction = renderer.roadsLayer.constructionRoads,
+      oldStation = renderer.roadsLayer.station;
     submitPending(renderer, {
       ...first,
       tick: 2,
@@ -662,11 +685,11 @@ describe('road batch retention', () => {
     });
     for (
       let i = 0;
-      i < 100 && geometryFingerprint(renderer.roadBuild.construction).length === 0;
+      i < 100 && geometryFingerprint(renderer.roadsLayer.roadBuild.construction).length === 0;
       i++
     )
-      renderer.updateRoads();
-    const candidate = renderer.roadBuild;
+      renderer.roadsLayer.updateRoads();
+    const candidate = renderer.roadsLayer.roadBuild;
     const pendingGeometries: THREE.BufferGeometry[] = [];
     candidate.construction.traverse((object: THREE.Object3D) => {
       if (object instanceof THREE.Mesh) pendingGeometries.push(object.geometry);
@@ -675,29 +698,29 @@ describe('road batch retention', () => {
     expect(pendingGeometries.length).toBeGreaterThan(0);
     pendingGeometries[0].addEventListener('dispose', disposed);
 
-    renderer.cancelRoadBuild();
+    renderer.roadsLayer.cancelRoadBuild();
 
-    expect(renderer.roadBuild).toBeNull();
-    expect(renderer.queuedRoadWorld).toBeNull();
-    expect(renderer.roads).toBe(oldRoads);
-    expect(renderer.constructionRoads).toBe(oldConstruction);
-    expect(renderer.station).toBe(oldStation);
+    expect(renderer.roadsLayer.roadBuild).toBeNull();
+    expect(renderer.roadsLayer.queuedRoadWorld).toBeNull();
+    expect(renderer.roadsLayer.roads).toBe(oldRoads);
+    expect(renderer.roadsLayer.constructionRoads).toBe(oldConstruction);
+    expect(renderer.roadsLayer.station).toBe(oldStation);
     expect(disposed).toHaveBeenCalledOnce();
   });
 
   it('allows retry after queued preparation fails without retiring committed roads', () => {
     const renderer = harness();
     submit(renderer, world());
-    const committed = renderer.roads;
-    renderer.queuedRoadWorld = { world: world(), signature: 'queued' };
-    renderer.roadSignature = 'queued';
-    const prepare = vi.spyOn(renderer, 'prepareRoads').mockImplementationOnce(() => {
+    const committed = renderer.roadsLayer.roads;
+    renderer.roadsLayer.queuedRoadWorld = { world: world(), signature: 'queued' };
+    renderer.roadsLayer.roadSignature = 'queued';
+    const prepare = vi.spyOn(renderer.roadsLayer, 'prepareRoads').mockImplementationOnce(() => {
       throw new Error('preparation failed');
     });
-    expect(() => renderer.updateRoads()).toThrow('preparation failed');
-    expect(renderer.roadSignature).toBe('');
-    expect(renderer.queuedRoadWorld).toBeNull();
-    expect(renderer.roads === committed).toBe(true);
+    expect(() => renderer.roadsLayer.updateRoads()).toThrow('preparation failed');
+    expect(renderer.roadsLayer.roadSignature).toBe('');
+    expect(renderer.roadsLayer.queuedRoadWorld).toBeNull();
+    expect(renderer.roadsLayer.roads === committed).toBe(true);
     prepare.mockRestore();
   });
 
@@ -713,13 +736,13 @@ describe('road batch retention', () => {
 
     submitPending(renderer, first);
     renderer.art.setStyle('night');
-    while (renderer.roadBuild) renderer.updateRoads();
+    while (renderer.roadsLayer.roadBuild) renderer.roadsLayer.updateRoads();
 
     expect(renderer.art.variant).toHaveBeenCalledWith(expect.any(THREE.Material));
     expect(stylesSeen.length).toBeGreaterThan(0);
     expect(stylesSeen.every((style) => style === 'night')).toBe(true);
     const committedMeshes: THREE.Mesh[] = [];
-    renderer.roads.traverse((child: THREE.Object3D) => {
+    renderer.roadsLayer.roads.traverse((child: THREE.Object3D) => {
       if (child instanceof THREE.Mesh) committedMeshes.push(child);
     });
     expect(committedMeshes.length).toBeGreaterThan(0);
@@ -871,9 +894,9 @@ describe('road batch retention', () => {
       ],
     });
     submit(renderer, first);
-    const completed = renderer.roads,
-      station = renderer.station,
-      construction = renderer.constructionRoads;
+    const completed = renderer.roadsLayer.roads,
+      station = renderer.roadsLayer.station,
+      construction = renderer.roadsLayer.constructionRoads;
     const completedGeometry = geometryFingerprint(completed);
     const constructionGeometry = geometryFingerprint(construction);
 
@@ -883,18 +906,20 @@ describe('road batch retention', () => {
       roads: first.roads.map((r) => (r.id === 11 ? { ...r, progress: 0.3 } : r)),
     });
 
-    expect(renderer.roads).toBe(completed);
-    expect(renderer.station).toBe(station);
-    expect(geometryFingerprint(renderer.roads)).toEqual(completedGeometry);
-    expect(geometryFingerprint(renderer.constructionRoads)).not.toEqual(constructionGeometry);
-    expect(renderer.constructionRoads).not.toBe(construction);
+    expect(renderer.roadsLayer.roads).toBe(completed);
+    expect(renderer.roadsLayer.station).toBe(station);
+    expect(geometryFingerprint(renderer.roadsLayer.roads)).toEqual(completedGeometry);
+    expect(geometryFingerprint(renderer.roadsLayer.constructionRoads)).not.toEqual(
+      constructionGeometry,
+    );
+    expect(renderer.roadsLayer.constructionRoads).not.toBe(construction);
   });
 
   it('invalidates completed batches for unfinished crossing topology and same-count node relocation', () => {
     const renderer = harness();
     const first = world();
     submit(renderer, first);
-    const completed = renderer.roads;
+    const completed = renderer.roadsLayer.roads;
 
     const changedTopology = {
       ...first,
@@ -902,15 +927,15 @@ describe('road batch retention', () => {
       roads: first.roads.map((r) => (r.id === 11 ? { ...r, from: 2 } : r)),
     };
     submit(renderer, changedTopology);
-    expect(renderer.roads).not.toBe(completed);
-    const afterTopology = renderer.roads;
+    expect(renderer.roadsLayer.roads).not.toBe(completed);
+    const afterTopology = renderer.roadsLayer.roads;
 
     submit(renderer, {
       ...changedTopology,
       tick: 3,
       nodes: changedTopology.nodes.map((n) => (n.id === 3 ? { ...n, x: 12 } : n)),
     });
-    expect(renderer.roads).not.toBe(afterTopology);
+    expect(renderer.roadsLayer.roads).not.toBe(afterTopology);
   });
 
   it('rebuilds only when the authoritative station phase changes', () => {
@@ -933,7 +958,7 @@ describe('road batch retention', () => {
       ],
     });
     submit(renderer, base);
-    const rooflessStation = renderer.station;
+    const rooflessStation = renderer.roadsLayer.station;
     expect(rooflessStation.children[0]).toBeDefined();
     const rooflessVertices = vertexCount(rooflessStation);
 
@@ -942,24 +967,24 @@ describe('road batch retention', () => {
       tick: 2,
       projects: base.projects.map((p) => ({ ...p, progress: 0.84 })),
     });
-    expect(renderer.station).toBe(rooflessStation);
+    expect(renderer.roadsLayer.station).toBe(rooflessStation);
     submit(renderer, {
       ...base,
       tick: 3,
       rail_platforms: [{ ...platform, construction_phase: 3 }],
     });
 
-    expect(renderer.station).not.toBe(rooflessStation);
-    expect(renderer.station.children[0]).toBeDefined();
-    expect(vertexCount(renderer.station)).toBeGreaterThan(rooflessVertices);
+    expect(renderer.roadsLayer.station).not.toBe(rooflessStation);
+    expect(renderer.roadsLayer.station.children[0]).toBeDefined();
+    expect(vertexCount(renderer.roadsLayer.station)).toBeGreaterThan(rooflessVertices);
   });
 
   it('moves a completed road from construction into the completed batch', () => {
     const renderer = harness();
     const first = world();
     submit(renderer, first);
-    const completedBefore = vertexCount(renderer.roads);
-    const constructionBefore = vertexCount(renderer.constructionRoads);
+    const completedBefore = vertexCount(renderer.roadsLayer.roads);
+    const constructionBefore = vertexCount(renderer.roadsLayer.constructionRoads);
 
     submit(renderer, {
       ...first,
@@ -969,21 +994,21 @@ describe('road batch retention', () => {
       ),
     });
 
-    expect(vertexCount(renderer.roads)).toBeGreaterThan(completedBefore);
-    expect(vertexCount(renderer.constructionRoads)).toBeLessThan(constructionBefore);
+    expect(vertexCount(renderer.roadsLayer.roads)).toBeGreaterThan(completedBefore);
+    expect(vertexCount(renderer.roadsLayer.constructionRoads)).toBeLessThan(constructionBefore);
   });
 
   it('defers replaced geometry disposal while retaining persistent lights and shared Art materials', () => {
     const renderer = harness();
     const first = world();
     submit(renderer, first);
-    const oldRoads = renderer.roads as THREE.Group;
+    const oldRoads = renderer.roadsLayer.roads as THREE.Group;
     const meshes: THREE.Mesh[] = [];
     oldRoads.traverse((object: THREE.Object3D) => {
       if (object instanceof THREE.Mesh) meshes.push(object);
     });
     const geometry = meshes[0].geometry;
-    const lighting = renderer.streetLighting;
+    const lighting = renderer.roadsLayer.streetLighting;
     const lightMeshes = [...lighting.meshes];
     const ownedMaterialMesh = lightMeshes.find((mesh) => mesh.userData.ownedMaterial)!;
     const ownedMaterial = ownedMaterialMesh.material as THREE.Material;
@@ -1003,14 +1028,14 @@ describe('road batch retention', () => {
       nodes: first.nodes.map((n) => (n.id === 3 ? { ...n, x: 15 } : n)),
     });
 
-    expect(renderer.roads).not.toBe(oldRoads);
+    expect(renderer.roadsLayer.roads).not.toBe(oldRoads);
     expect(geometryDisposed).not.toHaveBeenCalled();
     expect(ownedDisposed).not.toHaveBeenCalled();
     renderer.pendingCompiles = 0;
     for (const dispose of renderer.retiredResources.splice(0)) dispose();
     expect(geometryDisposed).toHaveBeenCalledOnce();
-    expect(renderer.streetLighting).toBe(lighting);
-    expect(renderer.streetLighting.meshes).toEqual(lightMeshes);
+    expect(renderer.roadsLayer.streetLighting).toBe(lighting);
+    expect(renderer.roadsLayer.streetLighting.meshes).toEqual(lightMeshes);
     expect(ownedDisposed).not.toHaveBeenCalled();
     expect(sharedDisposed).not.toHaveBeenCalled();
   });

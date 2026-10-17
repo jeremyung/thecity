@@ -1,3 +1,4 @@
+import { RoadsLayer } from '../web/src/render/roads-layer';
 import * as THREE from 'three/webgpu';
 import { describe, expect, it, vi } from 'vitest';
 import { CityRenderer } from '../web/src/render/city';
@@ -54,12 +55,13 @@ const patch = (x: number, block = 0) => ({
 
 function rendererHarness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.worldState = null;
   renderer.hour = 0;
   renderer.rain = 0;
   renderer.terrainSeed = 17;
   renderer.worldTick = 0;
-  renderer.roadSignature = '';
+  renderer.roadsLayer.roadSignature = '';
   renderer.groundSignature = '';
   renderer.scene = new THREE.Scene();
   renderer.ground = new THREE.Group();
@@ -84,11 +86,11 @@ function rendererHarness() {
   renderer.accessPaths = { setWorld: vi.fn() };
   renderer.rearExtensions = { setWorld: vi.fn() };
   renderer.updateTrees = vi.fn();
-  renderer.rebuildRoads = vi.fn();
+  renderer.roadsLayer.rebuildRoads = vi.fn();
   renderer.pendingCompiles = 0;
   renderer.retiredResources = [];
   return renderer as Pick<CityRenderer, 'setWorld'> & {
-    rebuildRoads: ReturnType<typeof vi.fn>;
+    roadsLayer: { rebuildRoads: ReturnType<typeof vi.fn> };
     updateTrees: ReturnType<typeof vi.fn>;
   };
 }
@@ -97,14 +99,14 @@ describe('progressive ground renderer isolation', () => {
   it('updates moved ground polygons at the same count without rebuilding roads', () => {
     const renderer = rendererHarness();
     renderer.setWorld(world([patch(0)]));
-    const roads = renderer.rebuildRoads;
+    const roads = renderer.roadsLayer.rebuildRoads;
     roads.mockClear();
     const previous = (renderer as any).ground;
 
     renderer.setWorld(world([patch(24)]));
 
     expect((renderer as any).ground).not.toBe(previous);
-    expect(renderer.rebuildRoads).not.toHaveBeenCalled();
+    expect(renderer.roadsLayer.rebuildRoads).not.toHaveBeenCalled();
     expect((renderer as any).ground.children[0].geometry.boundingBox).toBeNull();
     (renderer as any).ground.children[0].geometry.computeBoundingBox();
     expect((renderer as any).ground.children[0].geometry.boundingBox!.min.x).toBe(24);
@@ -125,11 +127,11 @@ describe('progressive ground renderer isolation', () => {
     const renderer = rendererHarness();
     renderer.setWorld(world([patch(0)], 0.1));
     const ground = (renderer as any).ground;
-    renderer.rebuildRoads.mockClear();
+    renderer.roadsLayer.rebuildRoads.mockClear();
 
     renderer.setWorld(world([patch(0)], 0.2));
 
-    expect(renderer.rebuildRoads).toHaveBeenCalledOnce();
+    expect(renderer.roadsLayer.rebuildRoads).toHaveBeenCalledOnce();
     expect((renderer as any).ground).toBe(ground);
   });
 });

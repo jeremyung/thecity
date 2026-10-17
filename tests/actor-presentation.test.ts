@@ -1,3 +1,4 @@
+import { RoadsLayer } from '../web/src/render/roads-layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
@@ -63,10 +64,10 @@ function mesh() {
 }
 
 type RendererHarness = {
+  roadsLayer: any;
   fleet: VehicleFleet;
   current: Map<number, { x: number; z: number; h: number; k: number; y: number }>;
-  director: { setPositions: ReturnType<typeof vi.fn> };
-  visibleInfrastructure: VisibleInfrastructure;
+  rig: { setPositions: ReturnType<typeof vi.fn> };
   setMovement(
     data: Float32Array,
     tick: number,
@@ -88,6 +89,7 @@ function actorMatrix(renderer: RendererHarness, id: number) {
 }
 function harness(snapshot: World, commitInfrastructure: boolean): RendererHarness {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.worldState = snapshot;
   renderer.trains = {
     setMovement: vi.fn(),
@@ -101,11 +103,13 @@ function harness(snapshot: World, commitInfrastructure: boolean): RendererHarnes
   renderer.buses = { begin: vi.fn(), finish: vi.fn(), meshes: [], ids: [] };
   renderer.rig = { setPositions: vi.fn() };
   renderer.movementPresentation = new MovementPresentation();
-  renderer.visibleInfrastructure = new VisibleInfrastructure();
-  renderer.visibleInfrastructure.request(snapshot);
+  renderer.roadsLayer.visibleInfrastructure = new VisibleInfrastructure();
+  renderer.roadsLayer.visibleInfrastructure.request(snapshot);
   if (commitInfrastructure)
-    renderer.visibleInfrastructure.commit(renderer.visibleInfrastructure.capture(snapshot));
-  renderer.bridgeSpans = [];
+    renderer.roadsLayer.visibleInfrastructure.commit(
+      renderer.roadsLayer.visibleInfrastructure.capture(snapshot),
+    );
+  renderer.roadsLayer.bridgeSpans = [];
   renderer.interval = 50;
   renderer.received = performance.now();
   renderer.motionTick = 0;
@@ -161,7 +165,9 @@ describe('actor presentation integration', () => {
       expect(renderer.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(0);
       expect(renderer.rig.setPositions.mock.calls.at(-1)![0]).toEqual(new Float32Array());
 
-      renderer.visibleInfrastructure.commit(renderer.visibleInfrastructure.capture(snapshot));
+      renderer.roadsLayer.visibleInfrastructure.commit(
+        renderer.roadsLayer.visibleInfrastructure.capture(snapshot),
+      );
       renderer.updateActors(1001);
       expect(renderer.current.get(99)?.x).toBe(6);
       expect(renderer.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(1);
