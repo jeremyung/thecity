@@ -1,8 +1,8 @@
-import { retainWatchSubjects, selectWatchSubject } from './watch-selection';
+import * as THREE from 'three';
+import { selectWatchSubject } from './watch-selection';
 import { SkylineClusterCache } from './skyline-cluster';
 import { chooseStreetWatchPosition } from './watch-visibility';
 import { MOVEMENT_STRIDE } from '../movement';
-import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { LENS_PRESETS, verticalFovDegrees, type LensPresetId } from './lens';
 import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from './clearance';
@@ -13,29 +13,34 @@ import {
 } from './follow-visibility';
 import { RAIL_HEAD_Y } from '../render/rail-profile';
 import { planAutomaticCameraPath } from './automatic-path';
-import type { BusLineView, BusView, Point, Project, World } from '../types';
+import { type BusLineView, type BusView, type Point, type World } from '../types';
+import {
+  type Anchor,
+  type Extent,
+  MIN_HEIGHT,
+  OVERVIEW_DIRECTION,
+  type SkylineCluster,
+  UP,
+  WATCH_DIRECTION,
+  WORLD_LIMIT,
+} from './shot';
+import {
+  anchorDistance,
+  fitDistance,
+  fitSphereDistance,
+  headingForward,
+  validAspect,
+} from './framing';
+import {
+  buildAnchors,
+  cameraObstacleEnvelopes,
+  cameraPoint,
+  developedExtent,
+  hash,
+} from './anchors';
+export type { SkylineCluster } from './shot';
 
 export type CameraMode = 'watch' | 'explore' | 'overview';
-type StreetSubject = { x: number; z: number; roadId: number; forward: { x: number; z: number } };
-type Anchor = {
-  id: string;
-  label: string;
-  x: number;
-  z: number;
-  targetY?: number;
-  streetForward?: { x: number; z: number };
-  streetRoadId?: number;
-  streetSubjects?: StreetSubject[];
-  /** World-space direction from the framed subject toward the camera. */
-  cameraDirection?: THREE.Vector3;
-  frameRadius?: number;
-  /** Actual rotated facade/roof corners for perspective-safe skyline framing. */
-  framePoints?: THREE.Vector3[];
-  importance: number;
-  activity: number;
-  suitability: 'all' | 'night' | 'rain';
-};
-type Extent = { x: number; z: number; span: number };
 type SkylineTransition = {
   elapsed: number;
   duration: number;
@@ -78,29 +83,11 @@ type FollowWorld = World & {
   bus_lines?: BusLineView[];
 };
 
-const MAX_ANCHORS = 32;
-const WORLD_LIMIT = 430;
-const MIN_HEIGHT = 12;
-const UP = new THREE.Vector3(0, 1, 0);
-// Keep enough sky and waterfront in frame to read the city as a place, while
-// retaining the higher angle needed to understand its street fabric.
-const WATCH_DIRECTION = new THREE.Vector3(0.65, 0.28, 0.7).normalize();
-const OVERVIEW_DIRECTION = new THREE.Vector3(0.65, 0.42, 0.7).normalize();
 const KEY_TARGETS = "input, textarea, select, button, [contenteditable='true'], [role='textbox']";
-
-export type SkylineCluster = {
-  x: number;
-  z: number;
-  floors: number;
-  spread: number;
-  score: number;
-  towers: World['buildings'];
-  frameBuildings: World['buildings'];
-};
 
 /** Smooth scene direction around one shared world camera. */
 export class CameraDirector {
-  private skylineClusterCache?: SkylineClusterCache;
+  private readonly skylineClusterCache = new SkylineClusterCache();
   readonly controls: OrbitControls;
   onModeChange?: (mode: CameraMode) => void;
 
@@ -217,7 +204,7 @@ export class CameraDirector {
     this.mediaQuery?.addEventListener?.('change', this.onReducedMotionChange);
     this.mediaQuery?.addListener?.(this.onReducedMotionChange);
     this.controls.update();
-    this.framingAspect = this.validAspect();
+    this.framingAspect = validAspect(this.camera);
     this.desiredPosition.copy(camera.position);
     this.desiredTarget.copy(this.controls.target);
     this.lastClearManualPosition.copy(camera.position);
@@ -286,7 +273,7 @@ export class CameraDirector {
       this.overviewInitialized = false;
     }
     this.currentWorld = world;
-    const obstacles = this.cameraObstacleEnvelopes(world);
+    const obstacles = cameraObstacleEnvelopes(world);
     const obstacleSignature = JSON.stringify(obstacles);
     const obstacleRevisionChanged =
       initializeWatchPose || obstacleSignature !== this.obstacleSignature;
@@ -302,10 +289,10 @@ export class CameraDirector {
       width: world.buildings[index].width,
       depth: world.buildings[index].depth,
     }));
-    this.anchors = this.buildAnchors(world);
+    this.anchors = buildAnchors(this.skylineClusterCache, world);
     for (const id of this.tourVisited)
       if (!this.anchors.some((anchor) => anchor.id === id)) this.tourVisited.delete(id);
-    this.extent = this.developedExtent(world);
+    this.extent = developedExtent(world);
     if (this.baselineFootprint === 0) this.baselineFootprint = this.extent.span;
 
     // A manual view is preserved across snapshots unless a new structure now
@@ -363,7 +350,7 @@ export class CameraDirector {
         this.selectedAnchor.streetForward ||
         this.selectedAnchor.id.startsWith('founder:'))
     ) {
-      this.setAnchorPose(this.selectedAnchor, this.anchorDistance(this.selectedAnchor));
+      this.setAnchorPose(this.selectedAnchor, anchorDistance(this.camera, this.selectedAnchor));
     }
     if (
       this.currentMode === 'watch' &&
@@ -498,10 +485,10 @@ export class CameraDirector {
     this.selectedAnchor = anchor;
     this.tourVisited.add(anchor.id);
     this.holdSeconds = 0;
-    this.holdDuration = 45 + (this.hash(anchor.id) % 46);
+    this.holdDuration = 45 + (hash(anchor.id) % 46);
     this.revealSeconds = 0;
     this.blendSeconds = this.reducedMotion ? 0.5 : 5.5;
-    this.setAnchorPose(anchor, this.anchorDistance(anchor));
+    this.setAnchorPose(anchor, anchorDistance(this.camera, anchor));
     this.beginSkylineTransition(anchor);
     this.onModeChange?.('watch');
     return true;
@@ -576,7 +563,7 @@ export class CameraDirector {
     const height = 0.58 + building.floors * 3.25 + 4.05;
     const center = new THREE.Vector3(building.x, height / 2, building.z);
     const radius = Math.hypot(building.width / 2 + 1.2, building.depth / 2 + 2.6, height / 2);
-    const distance = Math.max(65, this.fitSphereDistance(radius, 1.2));
+    const distance = Math.max(65, fitSphereDistance(this.camera, radius, 1.2));
     const shot = chooseBuildingFollowPosition(center, radius, distance, this.cameraObstacles);
     const position = new THREE.Vector3(shot.position.x, shot.position.y, shot.position.z);
     const target = center.clone();
@@ -607,12 +594,10 @@ export class CameraDirector {
     )
       return false;
     if (
-      cameraPathClearance(
-        this.cameraPoint(position),
-        this.cameraPoint(position),
-        this.cameraObstacles,
-        { terrainY: 0, safetyMarginM: 1.5 },
-      ).collides
+      cameraPathClearance(cameraPoint(position), cameraPoint(position), this.cameraObstacles, {
+        terrainY: 0,
+        safetyMarginM: 1.5,
+      }).collides
     )
       return false;
 
@@ -666,7 +651,7 @@ export class CameraDirector {
       platform?.z ?? station.z,
     );
     const radius = 55;
-    const distance = Math.max(65, this.fitSphereDistance(radius, 1.2));
+    const distance = Math.max(65, fitSphereDistance(this.camera, radius, 1.2));
     const shot = chooseBuildingFollowPosition(target, radius, distance, this.cameraObstacles);
     const position = new THREE.Vector3(shot.position.x, shot.position.y, shot.position.z);
     if (
@@ -677,12 +662,10 @@ export class CameraDirector {
     )
       return false;
     if (
-      cameraPathClearance(
-        this.cameraPoint(position),
-        this.cameraPoint(position),
-        this.cameraObstacles,
-        { terrainY: 0, safetyMarginM: 1.5 },
-      ).collides
+      cameraPathClearance(cameraPoint(position), cameraPoint(position), this.cameraObstacles, {
+        terrainY: 0,
+        safetyMarginM: 1.5,
+      }).collides
     )
       return false;
 
@@ -766,33 +749,8 @@ export class CameraDirector {
     this.onModeChange?.('explore');
   }
 
-  private cameraObstacleEnvelopes(world: World): CameraObstacleBox[] {
-    return world.buildings.map((building) => {
-      const tower =
-        building.floors >= 12 && (building.kind === 'office' || building.kind === 'apartment');
-      const floors = Math.max(1, building.floors);
-      const base = 0.58;
-      const roofAllowance = building.stage !== 'open' ? 5 : tower ? 4.05 : 2.75;
-      // Use full authoritative parcel dimensions, then include facade, canopy,
-      // and construction scaffold allowances. The envelope is intentionally
-      // conservative; it is a camera obstacle, not a rendered footprint.
-      return {
-        center: { x: building.x, z: building.z },
-        rotation: building.rotation,
-        width: building.width + 2.4,
-        depth: building.depth + 5.2,
-        minY: 0,
-        maxY: base + floors * 3.25 + roofAllowance,
-      };
-    });
-  }
-
-  private cameraPoint(position: THREE.Vector3): CameraPoint3 {
-    return { x: position.x, y: position.y, z: position.z };
-  }
-
   private currentPoseNeedsRecovery(): boolean {
-    const point = this.cameraPoint(this.camera.position);
+    const point = cameraPoint(this.camera.position);
     const clearance = cameraPathClearance(point, point, this.cameraObstacles, {
       terrainY: 0,
       safetyMarginM: 1.5,
@@ -814,7 +772,7 @@ export class CameraDirector {
 
   private recoverPoseFromCurrentObstacles(): void {
     const position = this.camera.position;
-    const point = this.cameraPoint(position);
+    const point = cameraPoint(position);
     const clearance = cameraPathClearance(point, point, this.cameraObstacles, {
       terrainY: 0,
       safetyMarginM: 1.5,
@@ -842,7 +800,7 @@ export class CameraDirector {
       this.camera.lookAt(this.controls.target);
       this.camera.updateMatrixWorld(true);
 
-      const synchronized = this.cameraPoint(position);
+      const synchronized = cameraPoint(position);
       if (
         cameraPathClearance(synchronized, synchronized, this.cameraObstacles, {
           terrainY: 0,
@@ -860,8 +818,8 @@ export class CameraDirector {
 
   private validateManualMotion(): void {
     const clearance = cameraPathClearance(
-      this.cameraPoint(this.lastClearManualPosition),
-      this.cameraPoint(this.camera.position),
+      cameraPoint(this.lastClearManualPosition),
+      cameraPoint(this.camera.position),
       this.cameraObstacles,
       { terrainY: 0, safetyMarginM: 1.5 },
     );
@@ -965,8 +923,8 @@ export class CameraDirector {
         .addScaledVector(this.desiredPosition, t * t);
       if (
         cameraPathClearance(
-          this.cameraPoint(this.camera.position),
-          this.cameraPoint(nextPosition),
+          cameraPoint(this.camera.position),
+          cameraPoint(nextPosition),
           this.cameraObstacles,
           { terrainY: 0, safetyMarginM: 1.5 },
         ).collides
@@ -1009,8 +967,8 @@ export class CameraDirector {
 
     if (this.reducedMotion) {
       const plan = planAutomaticCameraPath(
-        this.cameraPoint(this.camera.position),
-        this.cameraPoint(this.desiredPosition),
+        cameraPoint(this.camera.position),
+        cameraPoint(this.desiredPosition),
         this.cameraObstacles,
         { terrainY: 0, safetyMarginM: 1.5 },
       );
@@ -1029,7 +987,7 @@ export class CameraDirector {
       this.controls.target.copy(this.desiredTarget);
       this.automaticRoute = null;
       this.controls.update();
-      const actual = this.cameraPoint(this.camera.position);
+      const actual = cameraPoint(this.camera.position);
       if (
         cameraPathClearance(actual, actual, this.cameraObstacles, {
           terrainY: 0,
@@ -1060,8 +1018,8 @@ export class CameraDirector {
     if (!this.automaticRoute) {
       this.settledAutomaticPose = null;
       const plan = planAutomaticCameraPath(
-        this.cameraPoint(this.camera.position),
-        this.cameraPoint(this.desiredPosition),
+        cameraPoint(this.camera.position),
+        cameraPoint(this.desiredPosition),
         this.cameraObstacles,
         { terrainY: 0, safetyMarginM: 1.5 },
       );
@@ -1148,8 +1106,8 @@ export class CameraDirector {
 
     if (
       !cameraPathClearance(
-        this.cameraPoint(previousPosition),
-        this.cameraPoint(this.camera.position),
+        cameraPoint(previousPosition),
+        cameraPoint(this.camera.position),
         this.cameraObstacles,
         { terrainY: 0, safetyMarginM: 1.5 },
       ).collides
@@ -1195,9 +1153,9 @@ export class CameraDirector {
     this.tourVisited.add(best.id);
     this.selectedAnchor = best;
     this.holdSeconds = 0;
-    this.holdDuration = 45 + (this.hash(best.id) % 46);
+    this.holdDuration = 45 + (hash(best.id) % 46);
     this.blendSeconds = this.reducedMotion ? 0.5 : 5.5;
-    this.setAnchorPose(best, this.anchorDistance(best));
+    this.setAnchorPose(best, anchorDistance(this.camera, best));
     if (snap) {
       this.skylineTransition = null;
       this.controls.target.copy(this.desiredTarget);
@@ -1368,7 +1326,7 @@ export class CameraDirector {
       const height = 0.58 + building.floors * 3.25 + 4.05;
       const center = new THREE.Vector3(building.x, height / 2, building.z);
       const radius = Math.hypot(building.width / 2 + 1.2, building.depth / 2 + 2.6, height / 2);
-      const distance = Math.max(65, this.fitSphereDistance(radius, 1.2));
+      const distance = Math.max(65, fitSphereDistance(this.camera, radius, 1.2));
       if (
         !this.buildingFollowShot ||
         this.buildingFollowShot.id !== building.id ||
@@ -1411,7 +1369,7 @@ export class CameraDirector {
       this.followFocusValid = true;
     }
     const lookAhead = this.followKind === 2 ? 10 : this.followKind === 3 ? 8 : 6;
-    const forward = this.headingForward(this.followHeading, this.followForward);
+    const forward = headingForward(this.followHeading, this.followForward);
     this.desiredTarget.set(
       point.x + forward.x * lookAhead,
       this.followKind === 2 ? RAIL_HEAD_Y + 1.8 : point.y,
@@ -1426,7 +1384,7 @@ export class CameraDirector {
     const distance = THREE.MathUtils.clamp(
       Math.max(
         minimum,
-        this.fitDistance(this.followKind === 2 ? 26 : 18, 1.17, this.followViewDirection),
+        fitDistance(this.camera, this.followKind === 2 ? 26 : 18, 1.17, this.followViewDirection),
       ),
       minimum,
       320,
@@ -1492,597 +1450,32 @@ export class CameraDirector {
 
   private restoreSelectedAnchor(): void {
     if (this.selectedAnchor)
-      this.setAnchorPose(this.selectedAnchor, this.anchorDistance(this.selectedAnchor));
+      this.setAnchorPose(this.selectedAnchor, anchorDistance(this.camera, this.selectedAnchor));
     this.blendSeconds = 5.5;
   }
 
-  /** Engine heading is atan2(dz, dx): zero points east (+X), π/2 north (+Z). */
-  private headingForward(heading: number, out: THREE.Vector3): THREE.Vector3 {
-    return out.set(Math.cos(heading), 0, Math.sin(heading));
-  }
-
-  private anchorDistance(anchor: Anchor): number {
-    let minimum: number;
-    let maximum: number;
-    let defaultRadius: number;
-    if (anchor.id.startsWith('skyline')) {
-      if (anchor.framePoints?.length) {
-        return this.fitSkylineDistance(
-          anchor.framePoints,
-          anchor.cameraDirection ?? WATCH_DIRECTION,
-          new THREE.Vector3(anchor.x, anchor.targetY ?? 0, anchor.z),
-        );
-      }
-      const radius = anchor.frameRadius ?? 90;
-      return THREE.MathUtils.clamp(this.fitSphereDistance(radius, 1.12), 105, 360);
-    } else if (anchor.id.startsWith('crossing:') || anchor.id === 'waterfront') {
-      minimum = 270;
-      maximum = 380;
-      defaultRadius = 86;
-    } else if (anchor.id.startsWith('founder:')) {
-      minimum = 78;
-      maximum = 170;
-      defaultRadius = 26;
-    } else if (anchor.id.startsWith('station')) {
-      minimum = 205;
-      maximum = 300;
-      defaultRadius = 50;
-    } else if (anchor.id.startsWith('district:')) {
-      minimum = 160;
-      maximum = 205;
-      defaultRadius = 46;
-    } else {
-      minimum = 190;
-      maximum = 290;
-      defaultRadius = 42;
-    }
-    const radius = anchor.frameRadius ?? defaultRadius;
-    return THREE.MathUtils.clamp(
-      Math.max(minimum, this.fitDistance(radius, 1.17)),
-      minimum,
-      maximum,
-    );
-  }
-
-  private fitDistance(radius: number, margin: number, direction = WATCH_DIRECTION): number {
-    const verticalTangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5));
-    const horizontalTangent = verticalTangent * this.validAspect();
-    const elevation = THREE.MathUtils.clamp(direction.y, 0.1, 0.95);
-    const horizontalDistance =
-      (radius * Math.sqrt(1 - elevation * elevation)) / Math.max(0.01, horizontalTangent);
-    const verticalDistance = (radius * elevation) / Math.max(0.01, verticalTangent);
-    return Math.max(horizontalDistance, verticalDistance) * margin;
-  }
-
-  /** Fit a 3D subject, including its height, instead of treating it as a ground-plane map. */
-  private fitSphereDistance(radius: number, margin: number): number {
-    const verticalTangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5));
-    const horizontalTangent = verticalTangent * this.validAspect();
-    return (radius * margin) / Math.max(0.01, Math.min(verticalTangent, horizontalTangent));
-  }
-
-  /** Fit every true 3D corner against the perspective frustum, including near-side depth. */
-  private fitSkylineDistance(
-    points: THREE.Vector3[],
-    direction: THREE.Vector3,
-    target: THREE.Vector3,
-  ): number {
-    const verticalTangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5));
-    const horizontalTangent = verticalTangent * this.validAspect();
-    const view = direction.clone().negate().normalize();
-    const right = new THREE.Vector3().crossVectors(view, UP).normalize();
-    const cameraUp = new THREE.Vector3().crossVectors(right, view).normalize();
-    const sideLimit = 0.84;
-    // Leave room for the masthead and the bottom controls/caption.
-    const verticalLimit = 0.68;
-    let distance = 45;
-    for (const point of points) {
-      const offset = point.clone().sub(target);
-      const towardCamera = offset.dot(direction);
-      const horizontal = Math.abs(offset.dot(right));
-      const vertical = Math.abs(offset.dot(cameraUp));
-      distance = Math.max(
-        distance,
-        towardCamera + horizontal / Math.max(0.01, horizontalTangent * sideLimit),
-        towardCamera + vertical / Math.max(0.01, verticalTangent * verticalLimit),
-      );
-    }
-    // Small air around the exact frustum solution keeps antialiasing and skyline edges clear.
-    return Math.min(600, distance * 1.045 + 3);
-  }
-
-  private validAspect(): number {
-    return Number.isFinite(this.camera.aspect) && this.camera.aspect > 0 ? this.camera.aspect : 1;
-  }
-
   private refreshFramingForAspect(): void {
-    const aspect = this.validAspect();
+    const aspect = validAspect(this.camera);
     if (Math.abs(aspect - this.framingAspect) < 0.06) return;
     this.framingAspect = aspect;
     if (this.followId !== null) return;
     if (this.currentMode === 'overview') {
       this.frameOverview(this.blendSeconds);
     } else if (this.currentMode === 'watch' && this.selectedAnchor && this.revealSeconds === 0) {
-      this.setAnchorPose(this.selectedAnchor, this.anchorDistance(this.selectedAnchor));
+      this.setAnchorPose(this.selectedAnchor, anchorDistance(this.camera, this.selectedAnchor));
     }
   }
 
   private frameOverview(seconds: number): void {
     this.desiredTarget.set(this.extent.x, 0, this.extent.z);
     const distance = THREE.MathUtils.clamp(
-      Math.max(320, this.fitDistance(this.extent.span * 0.55, 1.15, OVERVIEW_DIRECTION)),
+      Math.max(320, fitDistance(this.camera, this.extent.span * 0.55, 1.15, OVERVIEW_DIRECTION)),
       320,
       620,
     );
     this.desiredPosition.copy(this.desiredTarget).addScaledVector(OVERVIEW_DIRECTION, distance);
     this.blendSeconds = this.reducedMotion ? 0.5 : seconds;
     this.overviewInitialized = true;
-  }
-
-  private buildAnchors(world: World): Anchor[] {
-    const anchors: Anchor[] = [];
-    const nodes = new Map(world.nodes.map((node) => [node.id, node]));
-    const add = (anchor: Anchor) => {
-      if (anchors.some((candidate) => candidate.id === anchor.id)) return;
-      anchors.push(anchor);
-    };
-    const buildings = world.buildings;
-
-    for (const building of buildings) {
-      if (building.anchor) {
-        const river = this.closestRiverPoint(world.terrain.river, building);
-        const targetX = river ? building.x * 0.6 + river.x * 0.4 : building.x;
-        const targetZ = river ? building.z * 0.6 + river.z * 0.4 : building.z;
-        // Keep the founder as the opening subject; a small riverward offset
-        // lets the water read as context without using its length to set scale.
-        add({
-          id: `founder:${building.id}`,
-          label: building.name || 'Founding street',
-          x: building.x * 0.92 + targetX * 0.08,
-          z: building.z * 0.92 + targetZ * 0.08,
-          frameRadius: this.founderFrameRadius(building),
-          importance: 10,
-          activity: building.business_active === true ? 4 : building.occupancy,
-          suitability: 'all',
-        });
-      }
-      if (/station/i.test(building.kind)) {
-        add({
-          id: `station:${building.id}`,
-          label: 'Station street',
-          x: building.x,
-          z: building.z,
-          importance: 8,
-          activity: building.occupancy + 3,
-          suitability: 'night',
-        });
-      }
-    }
-
-    for (const road of world.roads) {
-      if (road.stage !== 'open' || !road.connected) continue;
-      if (road.kind === 'bridge') {
-        const a = nodes.get(road.from);
-        const b = nodes.get(road.to);
-        if (a && b)
-          add({
-            id: `crossing:${road.id}`,
-            label: 'River crossing',
-            x: (a.x + b.x) / 2,
-            z: (a.z + b.z) / 2,
-            importance: 8,
-            activity: road.lanes,
-            suitability: 'rain',
-          });
-      }
-    }
-
-    const connectedNodes = new Set<number>();
-    const parcelAccess = new Map(world.parcels.map((parcel) => [parcel.id, parcel.access_node]));
-    for (const road of world.roads) {
-      if (road.stage === 'open' && road.connected) {
-        connectedNodes.add(road.from);
-        connectedNodes.add(road.to);
-      }
-    }
-    for (const project of world.projects) {
-      if (project.progress >= 1) continue;
-      const point = this.projectPoint(project, world, nodes);
-      if (point) {
-        const station = project.kind === 'station';
-        add({
-          id: `${station ? 'station-project' : 'construction'}:${project.id}`,
-          label: station ? 'Station' : 'Construction',
-          x: point.x,
-          z: point.z,
-          importance: station ? 8.5 : 6.5,
-          activity: 5,
-          suitability: station ? 'night' : 'rain',
-        });
-      }
-    }
-
-    const neighborhoodBins = new Map<
-      string,
-      {
-        x: number;
-        z: number;
-        count: number;
-        activity: number;
-        minX: number;
-        maxX: number;
-        minZ: number;
-        maxZ: number;
-      }
-    >();
-    for (const building of buildings) {
-      const access = parcelAccess.get(building.parcel_id);
-      if (
-        building.stage !== 'open' ||
-        (connectedNodes.size > 0 && (access === undefined || !connectedNodes.has(access)))
-      )
-        continue;
-      const gx = Math.floor(building.x / 120);
-      const gz = Math.floor(building.z / 120);
-      const id = `${gx}:${gz}`;
-      const bin = neighborhoodBins.get(id) ?? {
-        x: 0,
-        z: 0,
-        count: 0,
-        activity: 0,
-        minX: building.x,
-        maxX: building.x,
-        minZ: building.z,
-        maxZ: building.z,
-      };
-      bin.x += building.x;
-      bin.z += building.z;
-      bin.count++;
-      bin.activity += building.business_active === true ? 4 : building.occupancy;
-      bin.minX = Math.min(bin.minX, building.x);
-      bin.maxX = Math.max(bin.maxX, building.x);
-      bin.minZ = Math.min(bin.minZ, building.z);
-      bin.maxZ = Math.max(bin.maxZ, building.z);
-      neighborhoodBins.set(id, bin);
-    }
-    // A street shot needs an actual open street, not the centroid of building roofs.
-    const streetSegments = world.roads.flatMap((road) => {
-      if (road.stage !== 'open' || !road.connected || !['local', 'arterial'].includes(road.kind))
-        return [];
-      const a = nodes.get(road.from),
-        b = nodes.get(road.to);
-      if (!a || !b || Math.hypot(b.x - a.x, b.z - a.z) < 24) return [];
-      return [{ a, b, roadId: road.id }];
-    });
-    for (const [id, bin] of neighborhoodBins) {
-      if (
-        !anchors.some(
-          (anchor) =>
-            anchor.id.startsWith('founder:') &&
-            Math.hypot(anchor.x - bin.x / bin.count, anchor.z - bin.z / bin.count) < 45,
-        )
-      ) {
-        const cx = bin.x / bin.count,
-          cz = bin.z / bin.count;
-        const candidates: Array<StreetSubject & { distance: number }> = [];
-        for (const { a, b, roadId } of streetSegments) {
-          const dx = b.x - a.x,
-            dz = b.z - a.z,
-            length = Math.hypot(dx, dz);
-          const t = THREE.MathUtils.clamp(
-            ((cx - a.x) * dx + (cz - a.z) * dz) / (length * length),
-            12 / length,
-            1 - 12 / length,
-          );
-          const x = a.x + dx * t,
-            z = a.z + dz * t,
-            distance = Math.hypot(x - cx, z - cz);
-          if (distance <= 70)
-            candidates.push({
-              x,
-              z,
-              roadId,
-              distance,
-              forward: { x: dx / length, z: dz / length },
-            });
-        }
-        candidates.sort((a, b) => a.distance - b.distance || a.roadId - b.roadId);
-        const streetSubjects = candidates.slice(0, 4),
-          street = streetSubjects[0];
-        add({
-          id: `district:${id}`,
-          label: 'Neighborhood street',
-          x: street?.x ?? cx,
-          z: street?.z ?? cz,
-          targetY: street ? 1 : 0,
-          streetForward: street?.forward,
-          streetRoadId: street?.roadId,
-          streetSubjects,
-          frameRadius: Math.max(bin.maxX - bin.minX, bin.maxZ - bin.minZ) / 2 + 12,
-          importance: 5.5,
-          activity: bin.activity,
-          suitability: 'all',
-        });
-      }
-    }
-
-    const accessibleNodes = world.nodes.filter((node) => connectedNodes.has(node.id));
-    const riverPoint = this.nearbyRiverAccess(world.terrain.river, accessibleNodes);
-    if (riverPoint)
-      add({
-        id: 'waterfront',
-        label: 'Waterfront',
-        x: riverPoint.x,
-        z: riverPoint.z,
-        importance: 4.8,
-        activity: world.stats.active_travelers * 0.02,
-        suitability: 'rain',
-      });
-
-    const skyline = this.buildSkylineAnchor(world, connectedNodes, parcelAccess);
-    if (skyline) add(skyline);
-
-    return retainWatchSubjects(anchors, MAX_ANCHORS);
-  }
-
-  /** Aim from a real nearby street or river edge toward an existing tall-building cluster. */
-  private buildSkylineAnchor(
-    world: World,
-    connectedNodes: Set<number>,
-    parcelAccess: Map<number, number>,
-  ): Anchor | null {
-    const buildings = world.buildings.filter((building) => {
-      if (building.stage !== 'open') return false;
-      const access = parcelAccess.get(building.parcel_id);
-      return connectedNodes.size === 0 || (access !== undefined && connectedNodes.has(access));
-    });
-    if (buildings.length === 0) return null;
-
-    const best = (this.skylineClusterCache ??= new SkylineClusterCache()).get(buildings);
-    if (!best) return null;
-
-    // Only the selected local tall-building cluster is framed; distant
-    // neighborhoods never inflate the shot.
-
-    let cameraSide: Point | null = null;
-    let sideDistance = Infinity;
-    for (const point of world.terrain.river) {
-      const distance = Math.hypot(point.x - best.x, point.z - best.z);
-      if (distance < sideDistance) {
-        sideDistance = distance;
-        cameraSide = point;
-      }
-    }
-    if (sideDistance > 190) cameraSide = null;
-
-    if (!cameraSide) {
-      const nearbyStreet = buildings
-        .filter((building) => building.floors < best!.floors * 0.65)
-        .map((building) => ({
-          building,
-          distance: Math.hypot(building.x - best!.x, building.z - best!.z),
-        }))
-        .filter(({ distance }) => distance >= 16 && distance <= 150)
-        .sort((a, b) => a.distance - b.distance)[0];
-      if (nearbyStreet) cameraSide = nearbyStreet.building;
-    }
-    if (!cameraSide) {
-      const neighboringBuildings = buildings.filter(
-        (building) => Math.hypot(building.x - best!.x, building.z - best!.z) > 35,
-      );
-      if (neighboringBuildings.length > 0) {
-        cameraSide = {
-          x:
-            neighboringBuildings.reduce((sum, building) => sum + building.x, 0) /
-            neighboringBuildings.length,
-          z:
-            neighboringBuildings.reduce((sum, building) => sum + building.z, 0) /
-            neighboringBuildings.length,
-        };
-      }
-    }
-    if (!cameraSide || Math.hypot(cameraSide.x - best.x, cameraSide.z - best.z) < 8) return null;
-
-    const horizontal = new THREE.Vector2(cameraSide.x - best.x, cameraSide.z - best.z).normalize();
-    const direction = new THREE.Vector3(horizontal.x, 0.38, horizontal.y).normalize();
-    const framePoints = this.skylineBounds(best.frameBuildings);
-    const view = direction.clone().negate().normalize();
-    const right = new THREE.Vector3().crossVectors(view, UP).normalize();
-    const cameraUp = new THREE.Vector3().crossVectors(right, view).normalize();
-    let minRight = Infinity,
-      maxRight = -Infinity;
-    let minUp = Infinity,
-      maxUp = -Infinity;
-    let minDepth = Infinity,
-      maxDepth = -Infinity;
-    for (const point of framePoints) {
-      const r = point.dot(right),
-        u = point.dot(cameraUp),
-        d = point.dot(direction);
-      minRight = Math.min(minRight, r);
-      maxRight = Math.max(maxRight, r);
-      minUp = Math.min(minUp, u);
-      maxUp = Math.max(maxUp, u);
-      minDepth = Math.min(minDepth, d);
-      maxDepth = Math.max(maxDepth, d);
-    }
-    const center = right
-      .multiplyScalar((minRight + maxRight) / 2)
-      .addScaledVector(cameraUp, (minUp + maxUp) / 2)
-      .addScaledVector(direction, (minDepth + maxDepth) / 2);
-    const frameRadius = Math.max(...framePoints.map((point) => point.distanceTo(center)));
-    const station = world.nodes
-      .filter(
-        (node) =>
-          node.kind === 'station' && (connectedNodes.size === 0 || connectedNodes.has(node.id)),
-      )
-      .sort(
-        (a, b) =>
-          Math.hypot(a.x - best!.x, a.z - best!.z) - Math.hypot(b.x - best!.x, b.z - best!.z),
-      )[0];
-    const stationNearby = station && Math.hypot(station.x - best.x, station.z - best.z) <= 150;
-    return {
-      id: stationNearby ? `skyline:station:${station!.id}` : 'skyline:district',
-      label: stationNearby ? 'Station skyline' : 'Neighborhood skyline',
-      x: center.x,
-      z: center.z,
-      targetY: center.y,
-      cameraDirection: direction,
-      frameRadius,
-      framePoints,
-      importance: stationNearby ? 7.4 : 6.7,
-      activity: Math.min(10, world.stats.active_travelers * 0.02),
-      suitability: 'night',
-    };
-  }
-
-  /** Match the visible footprint and rooftop equipment produced by buildingKit. */
-  private skylineBounds(buildings: World['buildings']): THREE.Vector3[] {
-    const points: THREE.Vector3[] = [];
-    for (const building of buildings) {
-      const tower =
-        building.floors >= 12 && (building.kind === 'office' || building.kind === 'apartment');
-      const width =
-        Math.max(6, building.width * (building.anchor ? 0.66 : 0.84)) + (tower ? 0.65 : 1.2);
-      // Tower entry canopies project about 2m beyond the street facade.
-      const depth = Math.max(6, building.depth * 0.84) + (tower ? 4.1 : 1.2);
-      const cos = Math.cos(building.rotation),
-        sin = Math.sin(building.rotation);
-      const base = 0.58 + building.floors * 3.25;
-      // Flat roofs carry tanks/screens; 12+ floor towers add a screened crown
-      // and a slim aerial reaching just under four meters above their floor count.
-      const roofTop = base + (tower ? 4.05 : 2.75);
-      for (const localX of [-width / 2, width / 2]) {
-        for (const localZ of [-depth / 2, depth / 2]) {
-          const x = building.x + cos * localX + sin * localZ;
-          const z = building.z - sin * localX + cos * localZ;
-          points.push(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, roofTop, z));
-        }
-      }
-    }
-    return points;
-  }
-
-  private projectPoint(project: Project, world: World, nodes: Map<number, Point>): Point | null {
-    if (project.parcel_id !== null) {
-      const parcel = world.parcels.find((candidate) => candidate.id === project.parcel_id);
-      if (parcel) return parcel;
-    }
-    if (project.from !== null && project.to !== null) {
-      const a = nodes.get(project.from);
-      const b = nodes.get(project.to);
-      if (a && b) return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
-    }
-    return null;
-  }
-
-  private nearbyRiverAccess(river: Point[], nodes: Point[]): Point | null {
-    if (!river.length || !nodes.length) return null;
-    const mid = river[Math.floor(river.length / 2)];
-    let best: Point | null = null;
-    let bestDistance = Infinity;
-    for (const node of nodes) {
-      const distance = Math.hypot(node.x - mid.x, node.z - mid.z);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = node;
-      }
-    }
-    return bestDistance <= 180 ? best : null;
-  }
-
-  private closestRiverPoint(river: Point[], point: Point): Point | null {
-    if (river.length === 0) return null;
-    let closestX = river[0].x;
-    let closestZ = river[0].z;
-    let closestDistance = Infinity;
-    for (let index = 0; index < river.length - 1; index++) {
-      const a = river[index];
-      const b = river[index + 1];
-      const dx = b.x - a.x;
-      const dz = b.z - a.z;
-      const lengthSquared = dx * dx + dz * dz;
-      const t =
-        lengthSquared > 0
-          ? THREE.MathUtils.clamp(
-              ((point.x - a.x) * dx + (point.z - a.z) * dz) / lengthSquared,
-              0,
-              1,
-            )
-          : 0;
-      const x = a.x + dx * t;
-      const z = a.z + dz * t;
-      const distance = Math.hypot(point.x - x, point.z - z);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestX = x;
-        closestZ = z;
-      }
-    }
-    if (river.length === 1) {
-      closestX = river[0].x;
-      closestZ = river[0].z;
-    }
-    return { x: closestX, z: closestZ };
-  }
-
-  private founderFrameRadius(building: World['buildings'][number]): number {
-    const footprintRadius = Math.hypot(building.width, building.depth) / 2;
-    // Frame the shop, its frontage, and a little sidewalk. The river is a
-    // background cue; its geographic distance must not shrink the focal shop.
-    return Math.max(24, footprintRadius + 10);
-  }
-
-  private developedExtent(world: World): Extent {
-    const nodes = new Map(world.nodes.map((node) => [node.id, node]));
-    const connected = new Set<number>();
-    const roadDegree = new Map<number, number>();
-    const parcelAccess = new Map(world.parcels.map((parcel) => [parcel.id, parcel.access_node]));
-    for (const road of world.roads) {
-      if (road.stage === 'open' && road.connected) {
-        connected.add(road.from);
-        connected.add(road.to);
-        roadDegree.set(road.from, (roadDegree.get(road.from) ?? 0) + 1);
-        roadDegree.set(road.to, (roadDegree.get(road.to) ?? 0) + 1);
-      }
-    }
-    const developedAccess = new Set<number>();
-    const points: Point[] = [];
-    for (const building of world.buildings) {
-      const access = parcelAccess.get(building.parcel_id);
-      if (
-        building.anchor ||
-        (building.stage === 'open' &&
-          (connected.size === 0 || (access !== undefined && connected.has(access))))
-      ) {
-        points.push(building);
-        if (access !== undefined) developedAccess.add(access);
-      }
-    }
-    for (const id of connected) {
-      const node = nodes.get(id);
-      if (node && (developedAccess.has(id) || (roadDegree.get(id) ?? 0) > 1)) points.push(node);
-    }
-    if (points.length === 0) return { x: 50, z: 20, span: 120 };
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minZ = Infinity;
-    let maxZ = -Infinity;
-    let sumX = 0;
-    let sumZ = 0;
-    for (const point of points) {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minZ = Math.min(minZ, point.z);
-      maxZ = Math.max(maxZ, point.z);
-      sumX += point.x;
-      sumZ += point.z;
-    }
-    return {
-      x: sumX / points.length,
-      z: sumZ / points.length,
-      span: Math.max(120, maxX - minX, maxZ - minZ),
-    };
   }
 
   private findEntityPoint(id: number, out: THREE.Vector3): boolean {
@@ -2287,13 +1680,6 @@ export class CameraDirector {
     if (world.nodes.some((entity) => entity.id === id)) return 'Street scene';
     if (world.roads.some((entity) => entity.id === id)) return 'Road scene';
     return null;
-  }
-
-  private hash(value: string): number {
-    let result = 2166136261;
-    for (let i = 0; i < value.length; i++)
-      result = Math.imul(result ^ value.charCodeAt(i), 16777619);
-    return result >>> 0;
   }
 }
 

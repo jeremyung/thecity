@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
+import { anchorDistance } from '../web/src/camera/framing';
+import { skylineBounds } from '../web/src/camera/anchors';
+import type { Anchor } from '../web/src/camera/shot';
 import { CameraDirector } from '../web/src/camera/director';
 import { cameraPathClearance } from '../web/src/camera/clearance';
 import { verticalFovDegrees } from '../web/src/camera/lens';
@@ -1535,12 +1538,6 @@ describe('CameraDirector', () => {
         frameRadius?: number;
         cameraDirection?: THREE.Vector3;
       }>;
-      anchorDistance: (anchor: {
-        id: string;
-        targetY?: number;
-        frameRadius?: number;
-        cameraDirection?: THREE.Vector3;
-      }) => number;
       setAnchorPose: (
         anchor: { x: number; z: number; targetY?: number; cameraDirection?: THREE.Vector3 },
         distance: number,
@@ -1554,7 +1551,7 @@ describe('CameraDirector', () => {
     expect(skyline?.targetY).toBeLessThan(40);
     expect(skyline?.frameRadius).toBeLessThan(100); // Local tower group, never full-district extent.
 
-    internals.setAnchorPose(skyline!, internals.anchorDistance(skyline!));
+    internals.setAnchorPose(skyline!, anchorDistance(camera, skyline as Anchor));
     for (let frame = 0; frame < 160; frame++) internals.applyPose(0.1, 0.1);
     camera.lookAt(director.target);
     camera.updateMatrixWorld(true);
@@ -1645,9 +1642,7 @@ describe('CameraDirector', () => {
             Math.hypot(building.x - skyline!.x, building.z - skyline!.z) <= 90,
         );
         expect(nearbyTwentyFloor).toBeDefined();
-        const expectedTwentyBounds = (
-          director as unknown as { skylineBounds(buildings: World['buildings']): THREE.Vector3[] }
-        ).skylineBounds([nearbyTwentyFloor!]);
+        const expectedTwentyBounds = skylineBounds([nearbyTwentyFloor!]);
         expect(
           expectedTwentyBounds.every((corner) =>
             skyline!.framePoints!.some((point) => point.distanceTo(corner) < 0.001),
