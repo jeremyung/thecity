@@ -150,7 +150,7 @@ export class RoadsLayer {
           return a && b ? [{ a, b }] : [];
         });
       this.committedRoadWorld = job.world;
-      this.host.trains.setWorld(
+      this.host.actors.trains.setWorld(
         trainWorldWithInfrastructure(this.host.worldState ?? job.world, job.world),
       );
       this.completedRoadSignature = job.signature;

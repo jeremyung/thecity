@@ -131,6 +131,7 @@ import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './ren
 import type { CameraRig, CameraRigFactory } from './camera-rig';
 import { RoadsLayer } from './roads-layer';
 import { LandscapeLayer } from './landscape-layer';
+import { ActorsLayer } from './actors-layer';
 import { dampFocusDepth, focusDepthFromViewZ } from '../optics/focus';
 import type { LensPresetId } from '../optics/lens';
 import { LENS_PRESETS, verticalFovDegrees } from '../optics/lens';
@@ -221,7 +222,7 @@ export const v = new THREE.Vector3(),
 // Miniature keeps crisper air, matching its tilt-shift photographic read.
 const HAZE_NEAR: Record<Style, number> = { anime: 380, miniature: 460 },
   HAZE_FAR: Record<Style, number> = { anime: 3200, miniature: 3700 };
-const personColors = ['#e8d9b6', '#bc7361', '#89a589', '#64839d', '#e3b35f', '#a897b0'].map(
+export const personColors = ['#e8d9b6', '#bc7361', '#89a589', '#64839d', '#e3b35f', '#a897b0'].map(
   (c) => new THREE.Color(c),
 );
 export function random(seed: number) {
@@ -247,6 +248,7 @@ export class CityRenderer {
     3500,
   );
   readonly art = new ArtMaterials();
+  readonly actors = new ActorsLayer(this);
   readonly rig: CameraRig;
   readonly renderer: THREE.WebGPURenderer;
   worldState: World | null = null;
@@ -321,7 +323,6 @@ export class CityRenderer {
   private parkKey = '';
   /** Latest per-building signage context; part of each building's render signature. */
   private signage = new Map<number, SignageContext>();
-  private buses = new CityBuses(this.art, (release) => this.retire(release));
   private accessPaths = new BuildingAccessPaths(this.art, (release) => this.retire(release));
   private rearExtensions = new RearExtensions(
     this.art,
@@ -340,22 +341,8 @@ export class CityRenderer {
     },
   );
   private umbrellas = new Umbrellas(2000, (hex) => this.art.get(hex));
-  private umbrellaTuples = new Float32Array(2000 * MOVEMENT_STRIDE);
-  private umbrellaCount = 0;
-  private pedestrians: THREE.InstancedMesh;
-  private heads: THREE.InstancedMesh;
-  private fleet = new VehicleFleet(this.art);
-  trains = new TrainFleet(this.art);
-  private movementPresentation = new MovementPresentation();
-  private actorSampleAt = 0;
-  private previous = new Map<number, { x: number; z: number; h: number; k: number; y: number }>();
-  private current = new Map<number, { x: number; z: number; h: number; k: number; y: number }>();
-  private received = performance.now();
-  private interval = 50;
   private lastTick = 0;
-  private motionTick = 0;
-  private motionDelta = 0.05;
-  private hour = 6;
+  hour = 6;
   private preview: number | null = null;
   private frame = 0;
   private disposed = false;
@@ -379,7 +366,6 @@ export class CityRenderer {
   private quality: 'high' | 'balanced' = 'high';
   private qualityController = new RenderQualityController();
   private fixedReviewQuality = false;
-  private actorIds = new Map<THREE.Object3D, number[]>();
   private worldTick = -1;
   private waterTime = 0;
   private rainTime = uniform(0);
@@ -429,9 +415,9 @@ export class CityRenderer {
       this.roadsLayer.station,
       this.chunks.root,
       this.umbrellas.root,
-      this.buses.root,
-      this.trains.root,
-      this.fleet.root,
+      this.actors.buses.root,
+      this.actors.trains.root,
+      this.actors.fleet.root,
       this.accessPaths.root,
       this.rearExtensions.root,
       this.hemi,
@@ -515,12 +501,12 @@ export class CityRenderer {
     // Shader displacement moves drops beyond the small undeformed geometry.
     rainGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 45, 0), 140);
     this.scene.add(this.rainLines);
-    this.pedestrians = this.instances(
+    this.actors.pedestrians = this.instances(
       new THREE.CapsuleGeometry(0.33, 0.9, 3, 5),
       this.art.get('#e7e5d9'),
       2000,
     );
-    this.heads = this.instances(
+    this.actors.heads = this.instances(
       new THREE.SphereGeometry(0.28, 6, 4),
       this.art.get('#dfbe97'),
       2000,
@@ -909,8 +895,10 @@ export class CityRenderer {
     this.roadsLayer.infrastructure().request(world);
     this.worldTick = world.tick;
     this.rig.world(world);
-    this.buses.setWorld(world);
-    this.trains.setWorld(trainWorldWithInfrastructure(world, this.roadsLayer.committedRoadWorld));
+    this.actors.buses.setWorld(world);
+    this.actors.trains.setWorld(
+      trainWorldWithInfrastructure(world, this.roadsLayer.committedRoadWorld),
+    );
     this.accessPaths.setWorld(world);
     this.rearExtensions.setWorld(world);
 
@@ -977,21 +965,6 @@ export class CityRenderer {
     }
     this.landscape.updateTrees(world);
   }
-  setMovement(
-    data: Float32Array,
-    tick: number,
-    minute: number,
-    trainDoors: Float32Array,
-    support: ReadonlyMap<number, MovementSupport>,
-  ) {
-    this.trains.setMovement(trainDoors);
-    const now = performance.now();
-    this.interval = Math.max(20, Math.min(250, now - this.received));
-    this.received = now;
-    this.motionTick = tick;
-    this.hour = minute / 60;
-    this.movementPresentation.receive(data, support, this.interval);
-  }
 
   private resetWorld() {
     this.frameTiming = new FrameTiming();
@@ -1002,12 +975,12 @@ export class CityRenderer {
     this.groundSignature = '';
     this.focusResetPending = true;
     this.umbrellas.reset();
-    this.buses.reset();
-    this.fleet.reset();
-    this.trains.reset();
+    this.actors.buses.reset();
+    this.actors.fleet.reset();
+    this.actors.trains.reset();
     this.accessPaths.reset();
     this.rearExtensions.reset();
-    this.umbrellaCount = 0;
+    this.actors.umbrellaCount = 0;
     this.qualityController.reset();
     this.chunks.clear();
     this.sidewalks.reset();
@@ -1047,13 +1020,13 @@ export class CityRenderer {
     this.retire(() => oldWater?.dispose());
     this.water = null;
     this.waterTime = 0;
-    this.motionTick = 0;
-    this.motionDelta = 0.05;
-    this.received = performance.now();
-    this.current.clear();
-    this.previous.clear();
-    this.movementPresentation?.reset();
-    this.actorSampleAt = 0;
+    this.actors.motionTick = 0;
+    this.actors.motionDelta = 0.05;
+    this.actors.received = performance.now();
+    this.actors.current.clear();
+    this.actors.previous.clear();
+    this.actors.movementPresentation?.reset();
+    this.actors.actorSampleAt = 0;
     this.roadsLayer.committedRoadWorld = null;
     this.objectQueue.clear();
     this.roadsLayer.roadSignature = '';
@@ -1096,25 +1069,25 @@ export class CityRenderer {
     this.sidewalks.update();
     this.roadsLayer.updateRoads();
     if (this.worldState) this.rearExtensions.flushCompleted(this.worldState);
-    this.updateActors(now);
+    this.actors.updateActors(now);
     this.rig.update(dt, now / 1000);
     const activeLens = LENS_PRESETS[this.rig.lens];
     this.lensFocalM.value = activeLens.focalLengthMm / 1000;
     this.lensFNumber.value = activeLens.fNumber;
     this.landscape.updateTreeDetail();
     this.updateLight(dt);
-    const alpha = Math.min(1, (now - this.received) / this.interval);
-    const time = Math.max(0, (this.motionTick - 1 + alpha) * 0.05);
+    const alpha = Math.min(1, (now - this.actors.received) / this.actors.interval);
+    const time = Math.max(0, (this.actors.motionTick - 1 + alpha) * 0.05);
     const waterDt = Math.max(0, Math.min(0.1, time - this.waterTime));
     this.water?.update(waterDt, time, this.rain, this.style, 1 - this.daylight);
     this.umbrellas.update(
-      this.umbrellaTuples.subarray(0, this.umbrellaCount * MOVEMENT_STRIDE),
+      this.actors.umbrellaTuples.subarray(0, this.actors.umbrellaCount * MOVEMENT_STRIDE),
       this.rain,
       time,
     );
     this.art.time.value = time;
     this.waterTime = time;
-    this.lastTick = this.motionTick;
+    this.lastTick = this.actors.motionTick;
     this.rainTime.value = time;
     this.rainLines.visible = this.rain > 0.1;
     this.rainOpacity.value = 0.035 + this.rain * 0.13;
@@ -1182,109 +1155,6 @@ export class CityRenderer {
         pendingRoads: this.roadsLayer.pendingRoads,
       });
     }
-  }
-  private updateActors(now: number) {
-    const t = Math.min(1, (now - this.received) / this.interval);
-    let ped = 0,
-      train = 0,
-      bus = 0;
-    this.buses.begin(now);
-    this.trains.begin();
-    this.fleet.begin();
-    const pedIds: number[] = [];
-    this.previous = this.current;
-    this.current = this.movementPresentation.sample(now, this.roadsLayer.infrastructure());
-    this.motionDelta = this.actorSampleAt
-      ? Math.max(0.001, (now - this.actorSampleAt) / 1000)
-      : 0.05;
-    this.actorSampleAt = now;
-    const cameraPositions: number[] = [];
-    for (const [id, current] of this.current) {
-      const old = this.previous.get(id) ?? current,
-        x = current.x,
-        z = current.z,
-        h = Math.PI / 2 - current.h;
-      const lift =
-        current.k === 0
-          ? pedestrianSurface(current.y, bridgeLift(current, this.roadsLayer.bridgeSpans)) -
-            PEDESTRIAN_GROUND_SURFACE
-          : current.k === 2
-            ? 0
-            : bridgeLift({ x, z }, this.roadsLayer.bridgeSpans);
-      let surfaceY = current.y;
-
-      if (current.k === 0 && ped < 2000) {
-        surfaceY = lift + PEDESTRIAN_GROUND_SURFACE;
-        const offset = ped * MOVEMENT_STRIDE;
-        this.umbrellaTuples[offset] = id;
-        this.umbrellaTuples[offset + 1] = x;
-        this.umbrellaTuples[offset + 2] = z;
-        this.umbrellaTuples[offset + 3] = Math.PI / 2 - h;
-        this.umbrellaTuples[offset + 4] = 0;
-        this.umbrellaTuples[offset + 5] = lift;
-        const moving = Math.hypot(current.x - old.x, current.z - old.z) > 0.01;
-        const step = moving ? Math.sin(this.motionTick * 0.31 + id) * 0.045 : 0;
-        dummy.position.set(x, 1.05 + step + lift, z);
-        dummy.rotation.set(0, h, moving ? step * 0.4 : 0);
-        dummy.scale.setScalar(1);
-        dummy.updateMatrix();
-        this.pedestrians.setMatrixAt(ped, dummy.matrix);
-        this.pedestrians.setColorAt(ped, personColors[id % personColors.length]);
-        dummy.position.y = 1.95 + step + lift;
-        dummy.updateMatrix();
-        this.heads.setMatrixAt(ped, dummy.matrix);
-        pedIds[ped] = id;
-        ped++;
-      } else if (isRoadVehicle(current.k)) {
-        const vehicle = vehicleSurfacePose(
-          { x, z },
-          h,
-          2.7,
-          this.roadsLayer.bridgeSpans,
-          current.y,
-        );
-        surfaceY = vehicle.lift + ROAD_SURFACE_Y;
-        this.fleet.add(id, current.k, x, z, h, vehicle.lift, vehicle.pitch, this.motionDelta);
-      } else if (current.k === 3 && bus < 2) {
-        const vehicle = bridgeVehiclePose({ x, z }, h, 5.1, this.roadsLayer.bridgeSpans);
-        surfaceY = vehicle.lift + ROAD_SURFACE_Y;
-        this.buses.set(
-          bus++,
-          id,
-          x,
-          z,
-          h,
-          this.worldState,
-          vehicle.lift + ROAD_SURFACE_Y,
-          vehicle.pitch,
-        );
-      } else if (current.k === 2 && train < 8) {
-        this.trains.add(id, x, z, h, RAIL_HEAD_Y, 0, this.motionDelta, t);
-        train++;
-      } else {
-        this.current.delete(id);
-        continue;
-      }
-      cameraPositions.push(id, x, z, current.h, current.k, surfaceY);
-    }
-    this.rig.setPositions(
-      new Float32Array(cameraPositions),
-      this.movementPresentation.withheld(this.current),
-    );
-    this.umbrellaCount = ped;
-    this.trains.finish(train);
-    for (const { mesh, ids } of this.trains.pickable) this.actorIds.set(mesh, ids);
-    this.buses.finish(bus);
-    for (const mesh of this.buses.meshes) this.actorIds.set(mesh, this.buses.ids);
-    this.actorIds.set(this.pedestrians, pedIds);
-    this.actorIds.set(this.heads, pedIds);
-    this.fleet.finish();
-    for (const { mesh, ids } of this.fleet.pickable) this.actorIds.set(mesh, ids);
-    for (const mesh of [this.pedestrians, this.heads]) {
-      mesh.count = ped;
-      mesh.instanceMatrix.needsUpdate = true;
-    }
-    if (this.pedestrians.instanceColor) this.pedestrians.instanceColor.needsUpdate = true;
   }
   private updateLight(dt: number) {
     const hour = this.preview ?? this.hour,
@@ -1495,10 +1365,10 @@ export class CityRenderer {
       world: this.worldState,
       listener: this.rig.target,
       camera: this.camera,
-      current: this.current,
-      previous: this.previous,
-      motionDelta: this.motionDelta,
-      motionTick: this.motionTick,
+      current: this.actors.current,
+      previous: this.actors.previous,
+      motionDelta: this.actors.motionDelta,
+      motionTick: this.actors.motionTick,
       riverHalfWidth: this.riverHalfWidth,
       hour: this.hour,
       rain: this.rain,
@@ -1518,7 +1388,7 @@ export class CityRenderer {
       ),
       this.camera,
     );
-    const hits = ray.intersectObjects([this.chunks.root, ...this.actorIds.keys()], true);
+    const hits = ray.intersectObjects([this.chunks.root, ...this.actors.actorIds.keys()], true);
     const hit = hits.find((candidate) => {
       for (let object: THREE.Object3D | null = candidate.object; object; object = object.parent)
         if (!object.visible) return false;
@@ -1528,7 +1398,7 @@ export class CityRenderer {
     const building = this.chunks.buildingAt(hit);
     if (building !== undefined) this.onPick?.(building, 'building');
     else if (hit.instanceId !== undefined) {
-      const id = this.actorIds.get(hit.object)?.[hit.instanceId];
+      const id = this.actors.actorIds.get(hit.object)?.[hit.instanceId];
       if (id !== undefined) this.onPick?.(id, 'traveler');
     }
   };
@@ -1546,12 +1416,12 @@ export class CityRenderer {
     this.retire(() => this.roadsLayer.streetLighting?.dispose());
     this.umbrellas.root.removeFromParent();
     this.retire(() => this.umbrellas.dispose());
-    this.buses.root.removeFromParent();
-    this.retire(() => this.buses.dispose());
-    this.trains.root.removeFromParent();
-    this.retire(() => this.trains.dispose());
-    this.fleet.root.removeFromParent();
-    this.retire(() => this.fleet.dispose());
+    this.actors.buses.root.removeFromParent();
+    this.retire(() => this.actors.buses.dispose());
+    this.actors.trains.root.removeFromParent();
+    this.retire(() => this.actors.trains.dispose());
+    this.actors.fleet.root.removeFromParent();
+    this.retire(() => this.actors.fleet.dispose());
     this.disposePipeline();
     this.scene.environment = null;
     const environment = this.skyEnvironment;

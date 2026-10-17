@@ -1,8 +1,12 @@
+import { ActorsLayer } from '../web/src/render/actors-layer';
 import { expect, it, vi } from 'vitest';
 import { CityRenderer } from '../web/src/render/city';
 
 it('retains borrowed pipeline resources through pending compilation without retiring their replacements', () => {
   const renderer = Object.create(CityRenderer.prototype) as CityRenderer;
+  (renderer as any).actors = Object.assign(Object.create(ActorsLayer.prototype), {
+    host: renderer,
+  });
   const slots = [
     'occlusion',
     'reflections',
@@ -36,6 +40,9 @@ it('retains borrowed pipeline resources through pending compilation without reti
 
 it('switches focus outputs without rebuilding shared passes and preserves the disabled path', () => {
   const renderer = Object.create(CityRenderer.prototype) as CityRenderer;
+  (renderer as any).actors = Object.assign(Object.create(ActorsLayer.prototype), {
+    host: renderer,
+  });
   const focused = {},
     unblurred = {},
     scenePass = {};
@@ -61,6 +68,9 @@ it('switches focus outputs without rebuilding shared passes and preserves the di
 
 it('disposes an active output alias only once', () => {
   const renderer = Object.create(CityRenderer.prototype) as CityRenderer;
+  (renderer as any).actors = Object.assign(Object.create(ActorsLayer.prototype), {
+    host: renderer,
+  });
   const focused = { dispose: vi.fn() },
     unblurred = { dispose: vi.fn() };
   Object.assign(renderer, {

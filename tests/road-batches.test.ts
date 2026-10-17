@@ -1,3 +1,4 @@
+import { ActorsLayer } from '../web/src/render/actors-layer';
 import { LandscapeLayer } from '../web/src/render/landscape-layer';
 import { RoadsLayer } from '../web/src/render/roads-layer';
 import * as THREE from 'three/webgpu';
@@ -88,6 +89,7 @@ function world(overrides: Partial<World> = {}): World {
 
 function harness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.actors = Object.assign(Object.create(ActorsLayer.prototype), { host: renderer });
   renderer.landscape = new LandscapeLayer(renderer);
   renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.scene = new THREE.Scene();
@@ -130,8 +132,8 @@ function harness() {
   renderer.landscape.rebuildParks = vi.fn();
   renderer.landscape.paintSeason = vi.fn();
   renderer.rig = { world: vi.fn() };
-  renderer.buses = { setWorld: vi.fn() };
-  renderer.trains = { setWorld: vi.fn() };
+  renderer.actors.buses = { setWorld: vi.fn() };
+  renderer.actors.trains = { setWorld: vi.fn() };
   renderer.accessPaths = { setWorld: vi.fn() };
   renderer.rearExtensions = { setWorld: vi.fn() };
   renderer.sidewalks = { setWorld: vi.fn() };

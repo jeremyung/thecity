@@ -1,3 +1,4 @@
+import { ActorsLayer } from '../web/src/render/actors-layer';
 import { RoadsLayer } from '../web/src/render/roads-layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
@@ -64,24 +65,15 @@ function mesh() {
 }
 
 type RendererHarness = {
+  actors: ActorsLayer;
   roadsLayer: any;
-  fleet: VehicleFleet;
-  current: Map<number, { x: number; z: number; h: number; k: number; y: number }>;
   rig: { setPositions: ReturnType<typeof vi.fn> };
-  setMovement(
-    data: Float32Array,
-    tick: number,
-    minute: number,
-    trainDoors: Float32Array,
-    support: ReadonlyMap<number, MovementSupport>,
-  ): void;
-  updateActors(now: number): void;
 };
 
 const cleanups: Array<() => void> = [];
 afterEach(() => cleanups.splice(0).forEach((cleanup) => cleanup()));
 function actorMatrix(renderer: RendererHarness, id: number) {
-  const entry = renderer.fleet.pickable.find((p) => p.ids.includes(id));
+  const entry = renderer.actors.fleet.pickable.find((p) => p.ids.includes(id));
   if (!entry) throw new Error(`Actor ${id} is not rendered`);
   const matrix = new THREE.Matrix4();
   entry.mesh.getMatrixAt(entry.ids.indexOf(id), matrix);
@@ -89,9 +81,10 @@ function actorMatrix(renderer: RendererHarness, id: number) {
 }
 function harness(snapshot: World, commitInfrastructure: boolean): RendererHarness {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.actors = Object.assign(Object.create(ActorsLayer.prototype), { host: renderer });
   renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.worldState = snapshot;
-  renderer.trains = {
+  renderer.actors.trains = {
     setMovement: vi.fn(),
     begin: vi.fn(),
     finish: vi.fn(),
@@ -100,9 +93,9 @@ function harness(snapshot: World, commitInfrastructure: boolean): RendererHarnes
     lamps: { meshes: [], ids: [] },
     doors: { meshes: [], ids: [] },
   };
-  renderer.buses = { begin: vi.fn(), finish: vi.fn(), meshes: [], ids: [] };
+  renderer.actors.buses = { begin: vi.fn(), finish: vi.fn(), meshes: [], ids: [] };
   renderer.rig = { setPositions: vi.fn() };
-  renderer.movementPresentation = new MovementPresentation();
+  renderer.actors.movementPresentation = new MovementPresentation();
   renderer.roadsLayer.visibleInfrastructure = new VisibleInfrastructure();
   renderer.roadsLayer.visibleInfrastructure.request(snapshot);
   if (commitInfrastructure)
@@ -110,21 +103,21 @@ function harness(snapshot: World, commitInfrastructure: boolean): RendererHarnes
       renderer.roadsLayer.visibleInfrastructure.capture(snapshot),
     );
   renderer.roadsLayer.bridgeSpans = [];
-  renderer.interval = 50;
-  renderer.received = performance.now();
-  renderer.motionTick = 0;
-  renderer.motionDelta = 0.05;
-  renderer.actorSampleAt = 0;
-  renderer.current = new Map();
-  renderer.previous = new Map();
-  renderer.umbrellaTuples = new Float32Array(2000 * 6);
-  renderer.actorIds = new Map();
-  renderer.pedestrians = mesh();
-  renderer.heads = mesh();
+  renderer.actors.interval = 50;
+  renderer.actors.received = performance.now();
+  renderer.actors.motionTick = 0;
+  renderer.actors.motionDelta = 0.05;
+  renderer.actors.actorSampleAt = 0;
+  renderer.actors.current = new Map();
+  renderer.actors.previous = new Map();
+  renderer.actors.umbrellaTuples = new Float32Array(2000 * 6);
+  renderer.actors.actorIds = new Map();
+  renderer.actors.pedestrians = mesh();
+  renderer.actors.heads = mesh();
   const art = new ArtMaterials();
-  renderer.fleet = new VehicleFleet(art, 10);
+  renderer.actors.fleet = new VehicleFleet(art, 10);
   cleanups.push(() => {
-    renderer.fleet.dispose();
+    renderer.actors.fleet.dispose();
     art.dispose();
   });
   return renderer as RendererHarness;
@@ -139,11 +132,11 @@ const doors = new Float32Array();
 describe('actor presentation integration', () => {
   it('sends the same interpolated car position to the director and instance matrix', () => {
     const renderer = harness(world(), true);
-    renderer.setMovement(car(42, 2, 3), 1, 360, doors, new Map([[42, carSupport]]));
-    renderer.updateActors(1000);
-    renderer.setMovement(car(42, 12, 13), 2, 360, doors, new Map([[42, carSupport]]));
-    renderer.updateActors(1001);
-    renderer.updateActors(1011);
+    renderer.actors.setMovement(car(42, 2, 3), 1, 360, doors, new Map([[42, carSupport]]));
+    renderer.actors.updateActors(1000);
+    renderer.actors.setMovement(car(42, 12, 13), 2, 360, doors, new Map([[42, carSupport]]));
+    renderer.actors.updateActors(1001);
+    renderer.actors.updateActors(1011);
 
     const matrix = actorMatrix(renderer, 42);
     const cameraTuple = renderer.rig.setPositions.mock.calls.at(-1)![0] as Float32Array;
@@ -159,18 +152,18 @@ describe('actor presentation integration', () => {
       const snapshot = world();
       const renderer = harness(snapshot, false);
       const packet = new Float32Array([99, 6, 7, 0, kind, 11]);
-      renderer.setMovement(packet, 1, 360, doors, new Map([[99, carSupport]]));
-      renderer.updateActors(1000);
-      expect(renderer.current.has(99)).toBe(false);
-      expect(renderer.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(0);
+      renderer.actors.setMovement(packet, 1, 360, doors, new Map([[99, carSupport]]));
+      renderer.actors.updateActors(1000);
+      expect(renderer.actors.current.has(99)).toBe(false);
+      expect(renderer.actors.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(0);
       expect(renderer.rig.setPositions.mock.calls.at(-1)![0]).toEqual(new Float32Array());
 
       renderer.roadsLayer.visibleInfrastructure.commit(
         renderer.roadsLayer.visibleInfrastructure.capture(snapshot),
       );
-      renderer.updateActors(1001);
-      expect(renderer.current.get(99)?.x).toBe(6);
-      expect(renderer.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(1);
+      renderer.actors.updateActors(1001);
+      expect(renderer.actors.current.get(99)?.x).toBe(6);
+      expect(renderer.actors.fleet.meshes.reduce((sum, mesh) => sum + mesh.count, 0)).toBe(1);
       const cameraTuple = renderer.rig.setPositions.mock.calls.at(-1)![0] as Float32Array;
       expect(cameraTuple.slice(0, 3)).toEqual(new Float32Array([99, 6, 7]));
       expect(actorMatrix(renderer, 99).elements[12]).toBeCloseTo(6);

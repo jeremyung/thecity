@@ -459,7 +459,7 @@ function CityExperience() {
       isReady();
     });
     client.subscribeMovement((data, tick, minute, day, trainDoors, support) => {
-      renderer.setMovement(data, tick, minute, trainDoors, support);
+      renderer.actors.setMovement(data, tick, minute, trainDoors, support);
       if (currentWorld.current) {
         currentWorld.current.tick = tick;
         currentWorld.current.minute_of_day = minute;
