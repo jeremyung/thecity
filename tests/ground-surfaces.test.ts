@@ -1,3 +1,4 @@
+import { LandscapeLayer } from '../web/src/render/landscape-layer';
 import { RoadsLayer } from '../web/src/render/roads-layer';
 import * as THREE from 'three/webgpu';
 import { describe, expect, it, vi } from 'vitest';
@@ -55,6 +56,7 @@ const patch = (x: number, block = 0) => ({
 
 function rendererHarness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.landscape = new LandscapeLayer(renderer);
   renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.worldState = null;
   renderer.hour = 0;
@@ -77,15 +79,15 @@ function rendererHarness() {
   };
   // This harness isolates road/ground publication; park geometry and seasonal
   // painting have their own tests and need the full foliage/material setup.
-  renderer.rebuildParks = vi.fn();
-  renderer.paintSeason = vi.fn();
+  renderer.landscape.rebuildParks = vi.fn();
+  renderer.landscape.paintSeason = vi.fn();
   renderer.rig = { world: vi.fn() };
   renderer.sidewalks = { setWorld: vi.fn() };
   renderer.buses = { setWorld: vi.fn() };
   renderer.trains = { setWorld: vi.fn() };
   renderer.accessPaths = { setWorld: vi.fn() };
   renderer.rearExtensions = { setWorld: vi.fn() };
-  renderer.updateTrees = vi.fn();
+  renderer.landscape.updateTrees = vi.fn();
   renderer.roadsLayer.rebuildRoads = vi.fn();
   renderer.pendingCompiles = 0;
   renderer.retiredResources = [];

@@ -751,12 +751,14 @@ export class RoadsLayer {
         for (const side of [-1, 1])
           for (let z = -390; z < 390; z += 6) {
             const a = {
-              x: this.host.riverX(world.terrain.river, z) + side * (this.host.riverHalfWidth + 5.4),
+              x:
+                this.host.landscape.riverX(world.terrain.river, z) +
+                side * (this.host.riverHalfWidth + 5.4),
               z,
             };
             const b = {
               x:
-                this.host.riverX(world.terrain.river, z + 6) +
+                this.host.landscape.riverX(world.terrain.river, z + 6) +
                 side * (this.host.riverHalfWidth + 5.4),
               z: z + 6,
             };

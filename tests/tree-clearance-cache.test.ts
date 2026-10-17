@@ -1,3 +1,4 @@
+import { LandscapeLayer } from '../web/src/render/landscape-layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { CityRenderer } from '../web/src/render/city';
@@ -65,7 +66,7 @@ function harness(
   const trunks = new THREE.InstancedMesh(geometry, material, points.length);
   trees.computeBoundingSphere = vi.fn(trees.computeBoundingSphere.bind(trees));
   trunks.computeBoundingSphere = vi.fn(trunks.computeBoundingSphere.bind(trunks));
-  const renderer = Object.create(CityRenderer.prototype) as CityRenderer;
+  const renderer = Object.create(LandscapeLayer.prototype) as LandscapeLayer;
   Object.assign(renderer, {
     treePoints: points,
     treeClearanceKey: '',
@@ -130,17 +131,20 @@ describe('tree clearance cache', () => {
           point(4.05, gateway ? 60 : -12),
           point(25, 24),
         ]);
-        CityRenderer.prototype['updateTrees'].call(renderer, world({ rail_platforms: [platform] }));
+        LandscapeLayer.prototype['updateTrees'].call(
+          renderer,
+          world({ rail_platforms: [platform] }),
+        );
         expect(hiddenAt(trees, 0)).toBe(true);
         expect(hiddenAt(trees, 1)).toBe(true);
         expect(hiddenAt(trees, 2)).toBe(false);
         const version = trees.instanceMatrix.version;
-        CityRenderer.prototype['updateTrees'].call(
+        LandscapeLayer.prototype['updateTrees'].call(
           renderer,
           world({ rail_platforms: [{ ...platform, construction_phase: 4 }] }),
         );
         expect(trees.instanceMatrix.version).toBe(version);
-        CityRenderer.prototype['updateTrees'].call(
+        LandscapeLayer.prototype['updateTrees'].call(
           renderer,
           world({ rail_platforms: [{ ...platform, x: 400 }] }),
         );
@@ -153,13 +157,13 @@ describe('tree clearance cache', () => {
 
   it('skips matrix uploads and bounds work when clearance inputs are unchanged', () => {
     const { renderer, trees, trunks } = harness();
-    CityRenderer.prototype['updateTrees'].call(renderer, world({ buildings: [building(0, 0)] }));
+    LandscapeLayer.prototype['updateTrees'].call(renderer, world({ buildings: [building(0, 0)] }));
     const treeVersion = trees.instanceMatrix.version,
       trunkVersion = trunks.instanceMatrix.version;
     vi.mocked(trees.computeBoundingSphere).mockClear();
     vi.mocked(trunks.computeBoundingSphere).mockClear();
 
-    CityRenderer.prototype['updateTrees'].call(
+    LandscapeLayer.prototype['updateTrees'].call(
       renderer,
       world({
         tick: 25,
@@ -177,12 +181,12 @@ describe('tree clearance cache', () => {
 
   it('recomputes hidden and visible matrices for same-count building and ground geometry changes', () => {
     const { renderer, trees, trunks } = harness();
-    CityRenderer.prototype['updateTrees'].call(renderer, world({ buildings: [building(0, 0)] }));
+    LandscapeLayer.prototype['updateTrees'].call(renderer, world({ buildings: [building(0, 0)] }));
     expect(hiddenAt(trees, 0)).toBe(true);
     expect(hiddenAt(trees, 1)).toBe(false);
     const initialVersion = trees.instanceMatrix.version;
 
-    CityRenderer.prototype['updateTrees'].call(renderer, world({ buildings: [building(20, 0)] }));
+    LandscapeLayer.prototype['updateTrees'].call(renderer, world({ buildings: [building(20, 0)] }));
     expect(trees.instanceMatrix.version).toBeGreaterThan(initialVersion);
     expect(hiddenAt(trees, 0)).toBe(false);
     expect(hiddenAt(trees, 1)).toBe(true);
@@ -190,7 +194,7 @@ describe('tree clearance cache', () => {
     expect(hiddenAt(trunks, 1)).toBe(true);
 
     const buildingVersion = trees.instanceMatrix.version;
-    CityRenderer.prototype['updateTrees'].call(
+    LandscapeLayer.prototype['updateTrees'].call(
       renderer,
       world({
         ground: [
@@ -213,7 +217,7 @@ describe('tree clearance cache', () => {
 
   it('rebuilds fresh tree point buffers after regeneration resets the clearance key', () => {
     const { renderer, trees } = harness();
-    CityRenderer.prototype['updateTrees'].call(renderer, world());
+    LandscapeLayer.prototype['updateTrees'].call(renderer, world());
     const firstMatrix = new THREE.Matrix4();
     trees.getMatrixAt(0, firstMatrix);
 
@@ -224,7 +228,7 @@ describe('tree clearance cache', () => {
       ],
       treeClearanceKey: '',
     });
-    CityRenderer.prototype['updateTrees'].call(renderer, world());
+    LandscapeLayer.prototype['updateTrees'].call(renderer, world());
 
     const regeneratedMatrix = new THREE.Matrix4();
     trees.getMatrixAt(0, regeneratedMatrix);

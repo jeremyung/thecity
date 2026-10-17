@@ -1,3 +1,4 @@
+import { LandscapeLayer } from '../web/src/render/landscape-layer';
 import { RoadsLayer } from '../web/src/render/roads-layer';
 import * as THREE from 'three/webgpu';
 import { uniform } from 'three/tsl';
@@ -87,6 +88,7 @@ function world(overrides: Partial<World> = {}): World {
 
 function harness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.landscape = new LandscapeLayer(renderer);
   renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.scene = new THREE.Scene();
   renderer.roadsLayer.roads = new THREE.Group();
@@ -125,8 +127,8 @@ function harness() {
   };
   // This harness isolates road/ground publication; park geometry and seasonal
   // painting have their own tests and need the full foliage/material setup.
-  renderer.rebuildParks = vi.fn();
-  renderer.paintSeason = vi.fn();
+  renderer.landscape.rebuildParks = vi.fn();
+  renderer.landscape.paintSeason = vi.fn();
   renderer.rig = { world: vi.fn() };
   renderer.buses = { setWorld: vi.fn() };
   renderer.trains = { setWorld: vi.fn() };
@@ -137,7 +139,7 @@ function harness() {
   renderer.groundSignature = JSON.stringify([]);
   renderer.buildings = new Map();
   renderer.objectQueue = new Map();
-  renderer.updateTrees = vi.fn();
+  renderer.landscape.updateTrees = vi.fn();
   return renderer;
 }
 
