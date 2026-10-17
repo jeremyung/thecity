@@ -7,7 +7,7 @@ import type { Building } from '../web/src/types';
 
 function midrise(
   kind: 'apartment' | 'office',
-  stage: 'open' | 'construction' | 'renovation',
+  stage: 'open' | 'foundation' | 'renovation',
   progress = 1,
   floors = 8,
   width = 24,
@@ -110,9 +110,9 @@ describe('midrise family geometry integration', () => {
           for (const floors of [4, 6]) {
             for (const [stage, progress] of [
               ['open', 1],
-              ['construction', 0.3],
-              ['construction', 0.8],
-              ['construction', 1],
+              ['foundation', 0.3],
+              ['foundation', 0.8],
+              ['foundation', 1],
               ['renovation', 0.5],
             ] as const) {
               const b = midrise('apartment', stage, progress, floors, 12, 14, seed);
@@ -154,7 +154,7 @@ describe('midrise family geometry integration', () => {
           for (const stage of ['open', 'renovation'] as const) {
             const b: Building = {
               ...midrise('apartment', stage, 1, floors, 8, 12, 32),
-              kind: 'home',
+              kind: 'home' as const,
             };
             const group = buildingKit(b, art);
             group.updateMatrixWorld(true);
@@ -306,9 +306,9 @@ describe('midrise family geometry integration', () => {
     ] as const;
     const stages = [
       ['open', 1],
-      ['construction', 0],
-      ['construction', 0.8],
-      ['construction', 1],
+      ['foundation', 0],
+      ['foundation', 0.8],
+      ['foundation', 1],
       ['renovation', 0.5],
     ] as const;
     for (const kind of ['apartment', 'office'] as const) {
@@ -437,7 +437,7 @@ describe('midrise family geometry integration', () => {
   it('clips upper construction to the same office-family tiers and keeps the early scaffold at street level', () => {
     const art = new ArtMaterials();
     const open = buildingKit(midrise('office', 'open'), art);
-    const construction = buildingKit(midrise('office', 'construction', 0.8), art);
+    const construction = buildingKit(midrise('office', 'foundation', 0.8), art);
     const base = 0.58,
       floor = 3.25;
     const openPoints = positions(open),
@@ -458,7 +458,7 @@ describe('midrise family geometry integration', () => {
       constructionPodium.max.z - constructionPodium.min.z,
     );
 
-    const early = buildingKit(midrise('office', 'construction', 0), art);
+    const early = buildingKit(midrise('office', 'foundation', 0), art);
     const scaffold = art.get('#8c8070', 0.72);
     const upperScaffold = positions(early, (mesh) => mesh.material === scaffold).filter(
       (point) => point.y > base + 2 * floor,
@@ -477,7 +477,7 @@ describe('midrise family geometry integration', () => {
       art.setStyle(style);
       for (const floors of [4, 8, 11]) {
         // All structural floors exist before authored cladding replaces plates.
-        const b = midrise('office', 'construction', 0.69, floors, 24, 19, 27);
+        const b = midrise('office', 'foundation', 0.69, floors, 24, 19, 27);
         const group = buildingKit(b, art);
         const concrete = positions(group, (mesh) => mesh.material === art.get('#aaa99e'));
         const atFloor = (n: number) =>

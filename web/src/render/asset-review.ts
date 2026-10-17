@@ -10,7 +10,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ArtMaterials, signTexture } from './materials';
 import { paintedSurfaceTint } from './painted-surface';
 import { buildingKit, disposeGroup, Kit } from './kit';
-import type { Building, Style } from '../types';
+import type { BuildingKind, Building, Style } from '../types';
 import { VEHICLE_KINDS, VehicleFleet } from './vehicles';
 import { CityBuses } from './buses';
 import { TrainFleet } from './trains';
@@ -249,9 +249,15 @@ export class ArchitectureAssetReview {
     this.lowriseSamples = this.lowriseSamples.map(({ building, model: previous }) => {
       this.models.remove(previous);
       disposeGroup(previous);
-      const next = buildingKit({ ...building, stage, progress: boundedProgress }, this.art, {
-        compactMidrise: this.compactMidriseReview,
-      });
+      // The review's generic 'construction' preview uses a stage no kit branch special-cases.
+      const kitStage = stage === 'construction' ? 'foundation' : stage;
+      const next = buildingKit(
+        { ...building, stage: kitStage, progress: boundedProgress },
+        this.art,
+        {
+          compactMidrise: this.compactMidriseReview,
+        },
+      );
       next.position.set(building.x, 0, building.z);
       next.traverse((object) => {
         if (object instanceof THREE.Mesh) {
@@ -367,7 +373,7 @@ export class ArchitectureAssetReview {
       name: string;
       x: number;
       z: number;
-      kind: string;
+      kind: BuildingKind;
       width: number;
       depth: number;
       floors: number;
@@ -447,6 +453,7 @@ export class ArchitectureAssetReview {
         kind: sample.kind,
         stage: 'open',
         progress: 1,
+        business_active: true,
         capacity: sample.floors * 8,
         occupancy: Math.round(sample.floors * 2.5),
         built_day: 0,

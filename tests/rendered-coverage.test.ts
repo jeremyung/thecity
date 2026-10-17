@@ -123,11 +123,12 @@ describe('projected kit coverage raster', () => {
       width: 20,
       depth: 40,
       floors: 2,
-      kind: 'apartment',
-      stage: 'open',
+      kind: 'apartment' as const,
+      stage: 'open' as const,
       progress: 1,
       capacity: 10,
       occupancy: 8,
+      business_active: false,
       built_day: 1,
       name: 'Test',
       appearance_seed: 31,
@@ -254,9 +255,9 @@ describe('projected kit coverage raster', () => {
         { id: 2, x: 18, z: 10 },
       ],
       roads: [
-        { id: 1, from: 1, to: 2, kind: 'local', stage: 'open' },
-        { id: 2, from: 1, to: 2, kind: 'local', stage: 'open' },
-        { id: 3, from: 1, to: 2, kind: 'rail', stage: 'open' },
+        { id: 1, from: 1, to: 2, kind: 'local' as const, stage: 'open' as const },
+        { id: 2, from: 1, to: 2, kind: 'local' as const, stage: 'open' as const },
+        { id: 3, from: 1, to: 2, kind: 'rail' as const, stage: 'open' as const },
       ],
       buildings: [{ id: 1, x: 10, z: 10, width: 8, depth: 8 }],
     };
@@ -306,7 +307,10 @@ describe('projected kit coverage raster', () => {
     expect(report.openStreetAdjustedDiagnostic.netProjectedKitGeometryPercent).toBeCloseTo(
       (12 / 296) * 100,
     );
-    expect(report.openStreetAdjustedDiagnostic.excludedKinds).toEqual(['rail', 'expressway']);
+    expect(report.openStreetAdjustedDiagnostic.excludedKinds).toEqual([
+      'rail',
+      'expressway',
+    ] as const);
   });
 
   it('handles absent road data and returns null when open streets consume the whole denominator', () => {
@@ -325,7 +329,7 @@ describe('projected kit coverage raster', () => {
           { id: 1, x: -1, z: 1 },
           { id: 2, x: 3, z: 1 },
         ],
-        roads: [{ from: 1, to: 2, kind: 'local', stage: 'open' }],
+        roads: [{ from: 1, to: 2, kind: 'local' as const, stage: 'open' as const }],
       },
       emptyKit,
     );

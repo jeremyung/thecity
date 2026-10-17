@@ -12,11 +12,12 @@ function building(overrides: Partial<Building> = {}): Building {
     width: 12,
     depth: 8,
     floors: 2,
-    kind: 'home',
+    kind: 'home' as const,
     stage: 'open',
     progress: 1,
     capacity: 4,
     occupancy: 2,
+    business_active: false,
     built_day: 0,
     name: 'Home',
     appearance_seed: 5,
@@ -37,7 +38,7 @@ function extension(overrides: Partial<RearExtensionView> = {}): RearExtensionVie
     depth: 4,
     rotation: 0.1,
     floors: 2,
-    stage: 'building',
+    stage: 'foundation',
     progress: 0.4,
     ...overrides,
   };
@@ -55,19 +56,19 @@ function world(overrides: Partial<World> = {}): World {
     revision: 1,
     stage: 'Founding',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
-    terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [
-      { id: 1, x: 0, z: 0, kind: 'street' },
-      { id: 2, x: 20, z: 0, kind: 'street' },
-      { id: 3, x: 40, z: 0, kind: 'street' },
+      { id: 1, x: 0, z: 0, kind: 'junction' },
+      { id: 2, x: 20, z: 0, kind: 'junction' },
+      { id: 3, x: 40, z: 0, kind: 'junction' },
     ],
     roads: [
       {
         id: 10,
         from: 1,
         to: 2,
-        kind: 'local',
+        kind: 'local' as const,
         stage: 'open',
         progress: 1,
         connected: true,
@@ -134,7 +135,7 @@ describe('treeClearanceSignature', () => {
       ),
     ).not.toBe(signature);
     expect(
-      treeClearanceSignature(world({ roads: [{ ...base.roads[0], kind: 'arterial' }] })),
+      treeClearanceSignature(world({ roads: [{ ...base.roads[0], kind: 'arterial' as const }] })),
     ).not.toBe(signature);
   });
 
@@ -144,8 +145,8 @@ describe('treeClearanceSignature', () => {
     const irrelevant = world({
       tick: 99,
       revision: 42,
-      weather: { kind: 'rain', intensity: 0.8 },
-      buildings: [building({ progress: 0.3, floors: 12, stage: 'construction' })],
+      weather: { kind: 'rain' as const, intensity: 0.8 },
+      buildings: [building({ progress: 0.3, floors: 12, stage: 'foundation' })],
       roads: [{ ...base.roads[0], stage: 'survey', progress: 0.2, connected: false, lanes: 8 }],
       ground: [{ ...base.ground![0], block: 999 }],
     });
@@ -159,7 +160,7 @@ describe('treeClearanceSignature', () => {
           id: 10,
           from: 1,
           to: 2,
-          kind: 'local',
+          kind: 'local' as const,
           stage: 'survey',
           progress: 0,
           connected: false,
@@ -170,7 +171,7 @@ describe('treeClearanceSignature', () => {
           id: 11,
           from: 2,
           to: 3,
-          kind: 'expressway',
+          kind: 'expressway' as const,
           stage: 'open',
           progress: 1,
           connected: true,
@@ -181,7 +182,7 @@ describe('treeClearanceSignature', () => {
           id: 12,
           from: 1,
           to: 404,
-          kind: 'bridge',
+          kind: 'bridge' as const,
           stage: 'open',
           progress: 1,
           connected: true,
@@ -203,7 +204,9 @@ describe('treeClearanceSignature', () => {
       treeClearanceSignature(
         world({
           ...base,
-          roads: base.roads.map((road) => (road.id === 11 ? { ...road, kind: 'local' } : road)),
+          roads: base.roads.map((road) =>
+            road.id === 11 ? { ...road, kind: 'local' as const } : road,
+          ),
         }),
       ),
     ).not.toBe(signature);
@@ -238,11 +241,13 @@ describe('treeClearanceSignature', () => {
       ),
     ).toBe(surveySignature);
     expect(
-      treeClearanceSignature(world({ rear_extensions: [extension({ stage: 'building' })] })),
+      treeClearanceSignature(world({ rear_extensions: [extension({ stage: 'foundation' })] })),
     ).not.toBe(surveySignature);
     expect(
       treeClearanceSignature(world({ rear_extensions: [extension({ stage: 'finishing' })] })),
-    ).toBe(treeClearanceSignature(world({ rear_extensions: [extension({ stage: 'building' })] })));
+    ).toBe(
+      treeClearanceSignature(world({ rear_extensions: [extension({ stage: 'foundation' })] })),
+    );
   });
 
   it('includes each tested rear-extension geometry field', () => {

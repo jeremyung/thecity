@@ -415,7 +415,6 @@ export function busLineLabel(
   if (reportedName && !/^\d+$/.test(reportedName)) return reportedName;
   const lines = world?.bus_lines ?? [];
   const line = lines.find((candidate) => candidate.id === lineId);
-  if (line?.name) return line.name;
   const index = line ? lines.indexOf(line) : -1;
   return index >= 0 ? `Neighborhood line ${index + 1}` : 'Neighborhood line';
 }

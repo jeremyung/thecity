@@ -22,18 +22,18 @@ function world(): World {
     revision: 1,
     stage: 'Founding',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
-    terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [
-      { id: 1, x: 0, z: 0, kind: 'street' },
-      { id: 2, x: 20, z: 0, kind: 'street' },
+      { id: 1, x: 0, z: 0, kind: 'junction' },
+      { id: 2, x: 20, z: 0, kind: 'junction' },
     ],
     roads: [
       {
         id: 10,
         from: 1,
         to: 2,
-        kind: 'local',
+        kind: 'local' as const,
         stage: 'open',
         progress: 1,
         connected: true,

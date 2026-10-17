@@ -27,7 +27,7 @@ afterAll(() => vi.unstubAllGlobals());
 
 function building(
   kind: 'home' | 'shop' | 'cafe',
-  stage: 'open' | 'construction' | 'renovation',
+  stage: 'open' | 'foundation' | 'renovation',
   overrides: Partial<Building> = {},
 ): Building {
   return {
@@ -44,6 +44,7 @@ function building(
     progress: 1,
     capacity: 16,
     occupancy: 8,
+    business_active: false,
     built_day: 4,
     name: `${kind} sample`,
     appearance_seed: 451,
@@ -191,7 +192,7 @@ describe('integrated low-rise families', () => {
           for (const depth of [7, 12])
             for (const floors of [1, 2, 3])
               for (const seed of [1, 8, 23])
-                for (const stage of ['open', 'construction', 'renovation'] as const) {
+                for (const stage of ['open', 'foundation', 'renovation'] as const) {
                   const b = building(kind, stage, {
                     width,
                     depth,
@@ -440,11 +441,11 @@ describe('integrated low-rise families', () => {
             envelopeDepth,
           )!;
           const open = buildingKit(b, art);
-          const framing = buildingKit({ ...b, stage: 'construction', progress: 0.8 }, art);
+          const framing = buildingKit({ ...b, stage: 'foundation', progress: 0.8 }, art);
           const renovation = buildingKit({ ...b, stage: 'renovation', progress: 0.7 }, art);
           for (const [name, group] of [
             ['open', open],
-            ['construction', framing],
+            ['foundation', framing],
             ['renovation', renovation],
           ] as const) {
             group.position.set(b.x, 0, b.z);
@@ -492,7 +493,7 @@ describe('integrated low-rise families', () => {
         art.setStyle(style);
         const b = building(kind, 'open', { width: 12, depth: 11, floors: 3, appearance_seed: 73 });
         const opened = buildingKit(b, art);
-        const late = buildingKit({ ...b, stage: 'construction', progress: 0.99 }, art);
+        const late = buildingKit({ ...b, stage: 'foundation', progress: 0.99 }, art);
         const wall = art.get(buildingPalette(b, art.palette).wall);
         expect(materialGeometrySignature(late, wall), `${kind} ${style} finished wall`).toEqual(
           materialGeometrySignature(opened, wall),
@@ -614,6 +615,7 @@ describe('integrated low-rise families', () => {
         floors: 3,
         appearance_seed: 23,
         occupancy: 0,
+        business_active: false,
       });
       const group = buildingKit(b, art);
       const front = (8 * 0.84) / 2;
@@ -717,6 +719,7 @@ describe('integrated low-rise families', () => {
           floors,
           appearance_seed: 19,
           occupancy: 5,
+          business_active: false,
           vacant_days: 0,
         });
         const occupied = buildingKit(b, art);
@@ -735,7 +738,7 @@ describe('integrated low-rise families', () => {
           vertexSignature(occupied),
           `${style} ${floors}-floor occupancy does not alter geometry`,
         ).toEqual(vertexSignature(vacant));
-        const construction = buildingKit({ ...b, stage: 'construction', progress: 0.99 }, art);
+        const construction = buildingKit({ ...b, stage: 'foundation', progress: 0.99 }, art);
         expect(
           lived(construction).every((value) => value === 0),
           `${style} ${floors}-floor late construction`,
@@ -754,6 +757,7 @@ describe('integrated low-rise families', () => {
       floors: 2,
       appearance_seed: 19,
       occupancy: 4,
+      business_active: false,
       rotation: 0.63,
     });
     const traditional = building('home', 'open', { ...selected, appearance_seed: 23 });
@@ -767,7 +771,7 @@ describe('integrated low-rise families', () => {
       art.setStyle(style);
       const open = buildingKit(selected, art);
       const plain = buildingKit(traditional, art);
-      const late = buildingKit({ ...selected, stage: 'construction', progress: 0.99 }, art);
+      const late = buildingKit({ ...selected, stage: 'foundation', progress: 0.99 }, art);
       const initialWidth = Math.max(6, selected.width * 0.84),
         depth = Math.max(6, selected.depth * 0.84);
       const width = lowriseBuildingWidth(selected, initialWidth, depth);
@@ -940,8 +944,8 @@ describe('broad home staged family', () => {
             appearance_seed: 1018519500,
             rotation: 1.8066885,
           });
-          for (const stage of ['open', 'construction', 'renovation'] as const)
-            for (const progress of stage === 'construction' ? [0.3, 0.7, 0.99] : [1]) {
+          for (const stage of ['open', 'foundation', 'renovation'] as const)
+            for (const progress of stage === 'foundation' ? [0.3, 0.7, 0.99] : [1]) {
               const group = buildingKit({ ...b, stage, progress }, art);
               group.position.set(b.x, 0, b.z);
               group.rotation.y = b.rotation;
@@ -958,7 +962,7 @@ describe('broad home staged family', () => {
               disposeGroup(group);
             }
           const open = buildingKit(b, art),
-            late = buildingKit({ ...b, stage: 'construction', progress: 0.99 }, art);
+            late = buildingKit({ ...b, stage: 'foundation', progress: 0.99 }, art);
           open.updateMatrixWorld(true);
           const upperFront = Math.max(6, depth * 0.84) / 2 - 2.4;
           const doorHit = new THREE.Raycaster(
@@ -1000,9 +1004,9 @@ describe('closed domestic gables', () => {
           w = lowriseBuildingWidth(b, 7.1, d);
         const mass = lowriseMassing(b, w, d)!.masses[0];
         expect(mass.roof).toBe('gable');
-        for (const stage of ['open', 'construction', 'renovation'] as const) {
+        for (const stage of ['open', 'foundation', 'renovation'] as const) {
           const group = buildingKit(
-            { ...b, stage, progress: stage === 'construction' ? 0.99 : 1 },
+            { ...b, stage, progress: stage === 'foundation' ? 0.99 : 1 },
             art,
           );
           group.updateMatrixWorld(true);

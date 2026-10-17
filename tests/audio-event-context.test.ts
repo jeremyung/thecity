@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resolveAudioEventContext } from '../web/src/audio/event-context';
-import type { Building, Road, World, WorldEvent, WorldNode } from '../web/src/types';
+import type { Building, Road, World, WorldEvent, WorldNode, EventKind } from '../web/src/types';
 
 type Snapshot = Pick<World, 'events' | 'roads' | 'nodes' | 'buildings'>;
 
@@ -14,7 +14,7 @@ function snapshot(overrides: Partial<Snapshot> = {}): Snapshot {
   };
 }
 
-function event(id: number, tick: number, kind: string, entity_id: number): WorldEvent {
+function event(id: number, tick: number, kind: EventKind, entity_id: number): WorldEvent {
   return { id, tick, kind, entity_id, reason: 'engine event' };
 }
 
@@ -25,8 +25,8 @@ describe('resolveAudioEventContext', () => {
         id: 30,
         from: 4,
         to: 8,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 20,
@@ -34,11 +34,12 @@ describe('resolveAudioEventContext', () => {
       },
     ];
     const nodes: WorldNode[] = [
-      { id: 4, x: -12, z: 8, kind: 'road' },
-      { id: 8, x: 24, z: -4, kind: 'road' },
+      { id: 4, x: -12, z: 8, kind: 'junction' as const },
+      { id: 8, x: 24, z: -4, kind: 'junction' as const },
     ];
     const buildings: Building[] = [
       {
+        business_active: false,
         id: 51,
         parcel_id: 7,
         x: 6,
@@ -47,8 +48,8 @@ describe('resolveAudioEventContext', () => {
         width: 12,
         depth: 16,
         floors: 2,
-        kind: 'shop',
-        stage: 'open',
+        kind: 'shop' as const,
+        stage: 'open' as const,
         progress: 1,
         capacity: 0,
         occupancy: 0,
@@ -73,6 +74,7 @@ describe('resolveAudioEventContext', () => {
   it("uses interpolated movement for train/bus arrivals and resolves the engine's BusinessReopened event", () => {
     const buildings: Building[] = [
       {
+        business_active: false,
         id: 90,
         parcel_id: 7,
         x: -8,
@@ -81,8 +83,8 @@ describe('resolveAudioEventContext', () => {
         width: 12,
         depth: 16,
         floors: 1,
-        kind: 'cafe',
-        stage: 'open',
+        kind: 'cafe' as const,
+        stage: 'open' as const,
         progress: 1,
         capacity: 0,
         occupancy: 0,
@@ -117,7 +119,7 @@ describe('resolveAudioEventContext', () => {
       event(2, 101, 'TrainStationStop', 404),
       event(3, 101, 'BusStop', 405),
       event(4, 101, 'BuildingOpened', 999),
-      event(5, 101, 'UnknownCue', 1),
+      event(5, 101, 'UnknownCue' as unknown as EventKind, 1),
       event(6, 103, 'RoadOpened', 90),
       event(7, 101, 'RoadOpened', 91),
     ];
@@ -127,15 +129,15 @@ describe('resolveAudioEventContext', () => {
         id: 91,
         from: 1,
         to: 2,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 12,
         lanes: 2,
       },
     ];
-    const nodes: WorldNode[] = [{ id: 1, x: 4, z: 5, kind: 'road' }]; // The destination node is absent.
+    const nodes: WorldNode[] = [{ id: 1, x: 4, z: 5, kind: 'junction' as const }]; // The destination node is absent.
     expect(resolveAudioEventContext(snapshot({ events, roads, nodes }), movement, 102)).toEqual([]);
   });
 
@@ -149,11 +151,12 @@ describe('resolveAudioEventContext', () => {
       width: 10,
       depth: 12,
       floors: 1,
-      kind: 'home',
-      stage: 'open',
+      kind: 'home' as const,
+      stage: 'open' as const,
       progress: 1,
       capacity: 4,
       occupancy: 2,
+      business_active: false,
       built_day: 1,
       name: `Home ${index}`,
       appearance_seed: index,

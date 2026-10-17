@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { BuildingAccessPaths } from '../web/src/render/building-access';
 import { ArtMaterials } from '../web/src/render/materials';
-import type { Building, World } from '../web/src/types';
+import type { Building, World, Stage } from '../web/src/types';
 
-function building(id: number, stage = 'open'): Building {
+function building(id: number, stage: Stage = 'open'): Building {
   return {
     id,
     parcel_id: id + 100,
@@ -14,11 +14,12 @@ function building(id: number, stage = 'open'): Building {
     width: 18,
     depth: 14,
     floors: 2,
-    kind: 'shop',
+    kind: 'shop' as const,
     stage,
     progress: 1,
     capacity: 12,
     occupancy: 4,
+    business_active: false,
     built_day: 0,
     name: `Shop ${id}`,
     appearance_seed: id,
@@ -40,8 +41,8 @@ function world(buildings: Building[], buildingAccess?: World['building_access'])
     revision: 0,
     stage: 'Founding',
     bounds: { min_x: -400, max_x: 400, min_z: -400, max_z: 400 },
-    terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [],
     roads: [],
     parcels: [],
@@ -84,8 +85,8 @@ describe('BuildingAccessPaths', () => {
         id: 9,
         from: 1,
         to: 2,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 20,
@@ -98,7 +99,7 @@ describe('BuildingAccessPaths', () => {
       for (let i = 0; i < p.count; i++) if (p.getZ(i) > 10.5) top = Math.max(top, p.getY(i));
       return top;
     };
-    for (const kind of ['local', 'lane']) {
+    for (const kind of ['local', 'lane'] as const) {
       state.roads[0].kind = kind;
       paths.setWorld(state);
       expect(landingTop()).toBeCloseTo(0.305, 5);
@@ -163,7 +164,7 @@ describe('BuildingAccessPaths', () => {
         points: [
           { x: 1, z: 2 },
           { x: 13, z: 22 },
-        ] as const,
+        ],
       },
     ];
     paths.setWorld(world(buildings, diagonal));
@@ -202,7 +203,7 @@ describe('BuildingAccessPaths', () => {
       points: [
         { x: i * 3, z: 40 },
         { x: i * 3 + 12, z: 60 },
-      ] as const,
+      ],
     }));
     paths.setWorld(world(buildings, manyPaths));
     expect(meshes(paths.root)).toHaveLength(1);
@@ -225,7 +226,7 @@ describe('BuildingAccessPaths', () => {
         points: [
           { x: 2, z: 3 },
           { x: 4, z: 5 },
-        ] as const,
+        ],
       },
       {
         building_id: construction.id,
@@ -233,7 +234,7 @@ describe('BuildingAccessPaths', () => {
         points: [
           { x: 10, z: 11 },
           { x: 12, z: 13 },
-        ] as const,
+        ],
       },
     ];
 

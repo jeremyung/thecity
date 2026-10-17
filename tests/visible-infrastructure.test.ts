@@ -14,20 +14,20 @@ function minimalWorld(overrides: Partial<World> = {}): World {
     revision: 1,
     stage: 'Founding',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
-    terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [
-      { id: 1, x: 0, z: 0, kind: 'street' },
-      { id: 2, x: 20, z: 0, kind: 'street' },
-      { id: 3, x: 40, z: 0, kind: 'street' },
+      { id: 1, x: 0, z: 0, kind: 'junction' as const },
+      { id: 2, x: 20, z: 0, kind: 'junction' as const },
+      { id: 3, x: 40, z: 0, kind: 'junction' as const },
     ],
     roads: [
       {
         id: 10,
         from: 1,
         to: 2,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 20,
@@ -37,8 +37,8 @@ function minimalWorld(overrides: Partial<World> = {}): World {
         id: 20,
         from: 2,
         to: 3,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 20,
@@ -136,8 +136,8 @@ describe('VisibleInfrastructure', () => {
           id: 10,
           from: 1,
           to: 2,
-          kind: 'expressway',
-          stage: 'open',
+          kind: 'expressway' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: false,
           length: 20,
@@ -161,7 +161,7 @@ describe('VisibleInfrastructure', () => {
     expect(gate.canPresentMovement({ resolved: true, roads: [10], platforms: [] })).toBe(true);
 
     const closed = minimalWorld({
-      roads: world.roads.map((road) => ({ ...road, stage: 'construction' })),
+      roads: world.roads.map((road) => ({ ...road, stage: 'foundation' as const })),
     });
     gate.request(closed);
     gate.commit(gate.capture(closed));
@@ -178,7 +178,7 @@ describe('VisibleInfrastructure', () => {
 
     const closed = minimalWorld({
       roads: minimalWorld().roads.map((road) =>
-        road.id === 10 ? { ...road, stage: 'construction' } : road,
+        road.id === 10 ? { ...road, stage: 'foundation' as const } : road,
       ),
     });
     gate.request(closed);
@@ -362,7 +362,7 @@ describe('VisibleInfrastructure', () => {
       'closed road',
       (world: World) => ({
         ...world,
-        roads: world.roads.map((road) => ({ ...road, stage: 'construction' })),
+        roads: world.roads.map((road) => ({ ...road, stage: 'foundation' as const })),
       }),
     ],
     [

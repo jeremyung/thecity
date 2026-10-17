@@ -29,6 +29,7 @@ function world(overrides: Partial<World> = {}): World {
     stage: 'running',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
     terrain: {
+      river_half_width: 32,
       river: [
         { x: 0, z: -500 },
         { x: 0, z: 500 },
@@ -36,19 +37,19 @@ function world(overrides: Partial<World> = {}): World {
       protected: [],
       gateways: [],
     },
-    weather: { kind: 'clear', intensity: 0 },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [
-      { id: 1, x: -60, z: 0, kind: 'station' },
-      { id: 2, x: 60, z: 0, kind: 'street' },
-      { id: 3, x: 0, z: -60, kind: 'street' },
+      { id: 1, x: -60, z: 0, kind: 'station' as const },
+      { id: 2, x: 60, z: 0, kind: 'junction' as const },
+      { id: 3, x: 0, z: -60, kind: 'junction' as const },
     ],
     roads: [
       {
         id: 10,
         from: 1,
         to: 2,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 120,
@@ -58,8 +59,8 @@ function world(overrides: Partial<World> = {}): World {
         id: 11,
         from: 1,
         to: 3,
-        kind: 'bridge',
-        stage: 'building',
+        kind: 'bridge' as const,
+        stage: 'foundation' as const,
         progress: 0.2,
         connected: false,
         length: 85,
@@ -69,8 +70,8 @@ function world(overrides: Partial<World> = {}): World {
         id: 12,
         from: 2,
         to: 3,
-        kind: 'local',
-        stage: 'building',
+        kind: 'local' as const,
+        stage: 'foundation' as const,
         progress: 0.2,
         connected: false,
         length: 85,
@@ -220,7 +221,7 @@ describe('road batch retention', () => {
       ...first,
       tick: 2,
       roads: first.roads.map((road) =>
-        road.id === 12 ? { ...road, stage: 'open', progress: 1, connected: true } : road,
+        road.id === 12 ? { ...road, stage: 'open' as const, progress: 1, connected: true } : road,
       ),
     };
     submitPending(renderer, next);
@@ -257,18 +258,18 @@ describe('road batch retention', () => {
     const renderer = harness();
     const snapshot = world({
       nodes: [
-        { id: 1736, x: 145.64136, z: 12.112568, kind: 'street' },
-        { id: 1272, x: 115.08585, z: 13.294467, kind: 'street' },
-        { id: 1777, x: 104.16684, z: 19.800463, kind: 'street' },
-        { id: 1806, x: 123.55672, z: 25.20845, kind: 'street' },
+        { id: 1736, x: 145.64136, z: 12.112568, kind: 'junction' as const },
+        { id: 1272, x: 115.08585, z: 13.294467, kind: 'junction' as const },
+        { id: 1777, x: 104.16684, z: 19.800463, kind: 'junction' as const },
+        { id: 1806, x: 123.55672, z: 25.20845, kind: 'junction' as const },
       ],
       roads: [
         {
           id: 1787,
           from: 1736,
           to: 1272,
-          kind: 'local',
-          stage: 'open',
+          kind: 'local' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: true,
           length: 30.58,
@@ -278,8 +279,8 @@ describe('road batch retention', () => {
           id: 1807,
           from: 1777,
           to: 1806,
-          kind: 'arterial',
-          stage: 'structure',
+          kind: 'arterial' as const,
+          stage: 'structure' as const,
           progress: 0.7151829,
           connected: false,
           length: 20.13,
@@ -325,17 +326,17 @@ describe('road batch retention', () => {
     const renderer = harness();
     const snapshot = world({
       nodes: [
-        { id: 1, x: 0, z: 0, kind: 'street' },
-        { id: 2, x: 0, z: 60, kind: 'street' },
-        { id: 3, x: 60, z: 0, kind: 'street' },
+        { id: 1, x: 0, z: 0, kind: 'junction' as const },
+        { id: 2, x: 0, z: 60, kind: 'junction' as const },
+        { id: 3, x: 60, z: 0, kind: 'junction' as const },
       ],
       roads: [
         {
           id: 10,
           from: 1,
           to: 2,
-          kind: 'local',
-          stage: 'open',
+          kind: 'local' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: true,
           length: 60,
@@ -345,8 +346,8 @@ describe('road batch retention', () => {
           id: 11,
           from: 1,
           to: 3,
-          kind: 'arterial',
-          stage: 'open',
+          kind: 'arterial' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: true,
           length: 60,
@@ -377,16 +378,16 @@ describe('road batch retention', () => {
     const renderer = harness();
     const snapshot = world({
       nodes: [
-        { id: 1, x: 0, z: 0, kind: 'street' },
-        { id: 2, x: 0, z: 60, kind: 'street' },
+        { id: 1, x: 0, z: 0, kind: 'junction' as const },
+        { id: 2, x: 0, z: 60, kind: 'junction' as const },
       ],
       roads: [
         {
           id: 10,
           from: 1,
           to: 2,
-          kind: 'local',
-          stage: 'open',
+          kind: 'local' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: true,
           length: 60,
@@ -410,17 +411,17 @@ describe('road batch retention', () => {
     const renderer = harness();
     const snapshot = world({
       nodes: [
-        { id: 1, x: 0, z: 0, kind: 'street' },
-        { id: 2, x: 0, z: 60, kind: 'street' },
-        { id: 3, x: 60, z: 0, kind: 'street' },
+        { id: 1, x: 0, z: 0, kind: 'junction' as const },
+        { id: 2, x: 0, z: 60, kind: 'junction' as const },
+        { id: 3, x: 60, z: 0, kind: 'junction' as const },
       ],
       roads: [
         {
           id: 10,
           from: 1,
           to: 2,
-          kind: 'local',
-          stage: 'open',
+          kind: 'local' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: true,
           length: 60,
@@ -430,8 +431,8 @@ describe('road batch retention', () => {
           id: 11,
           from: 1,
           to: 3,
-          kind: 'lane',
-          stage: 'open',
+          kind: 'lane' as const,
+          stage: 'open' as const,
           progress: 1,
           connected: true,
           length: 60,
@@ -543,7 +544,7 @@ describe('road batch retention', () => {
       id: 100 + i,
       x: (i % 22) * 12,
       z: Math.floor(i / 22) * 12,
-      kind: 'street' as const,
+      kind: 'junction' as const,
     }));
     const next = {
       ...initial,
@@ -554,7 +555,7 @@ describe('road batch retention', () => {
         from: 100 + i,
         to: 100 + ((i + 1) % 504),
         kind: 'local' as const,
-        stage: 'building' as const,
+        stage: 'foundation' as const,
         progress: 0.3,
         connected: false,
         length: 12,
@@ -779,7 +780,7 @@ describe('road batch retention', () => {
         'road kind',
         (snapshot) => ({
           ...snapshot,
-          roads: snapshot.roads.map((r) => (r.id === 10 ? { ...r, kind: 'arterial' } : r)),
+          roads: snapshot.roads.map((r) => (r.id === 10 ? { ...r, kind: 'arterial' as const } : r)),
         }),
       ],
       [
@@ -884,11 +885,11 @@ describe('road batch retention', () => {
       projects: [
         {
           id: 90,
-          kind: 'station',
+          kind: 'station' as const,
           from: 1,
           to: 2,
           parcel_id: null,
-          stage: 'building',
+          stage: 'foundation' as const,
           progress: 0.1,
           reason: '',
           duration: 1,
@@ -948,11 +949,11 @@ describe('road batch retention', () => {
       projects: [
         {
           id: 90,
-          kind: 'station',
+          kind: 'station' as const,
           from: 1,
           to: 2,
           parcel_id: null,
-          stage: 'surface',
+          stage: 'surface' as const,
           progress: 0.8,
           reason: '',
           duration: 1,
@@ -993,7 +994,7 @@ describe('road batch retention', () => {
       ...first,
       tick: 2,
       roads: first.roads.map((r) =>
-        r.id === 11 ? { ...r, stage: 'open', progress: 1, connected: true } : r,
+        r.id === 11 ? { ...r, stage: 'open' as const, progress: 1, connected: true } : r,
       ),
     });
 

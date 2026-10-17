@@ -1,14 +1,16 @@
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct BuildingAccessView {
     pub building_id: u32,
     pub road_id: u32,
     pub points: Vec<Point>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct RearExtensionView {
     pub project_id: u32,
     pub building_id: u32,
@@ -23,22 +25,26 @@ pub struct RearExtensionView {
     pub progress: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct RoadDeckView {
     pub road_id: u32,
     pub deck_height: f32,
     pub controls: [[f32; 2]; 2],
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Snapshot {
     pub schema_version: u32,
     pub engine_version: String,
     pub seed: u32,
+    #[ts(type = "number")]
     pub tick: u64,
     pub day: u32,
     pub minute_of_day: f32,
     pub development_rate: u32,
+    #[ts(type = "number")]
     pub revision: u64,
     /// Exact presentation generation; only meaningful within the worker epoch.
     pub presentation_revision: String,
@@ -77,13 +83,15 @@ pub struct Snapshot {
     pub stats: Stats,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct GroundPatch {
     pub block: u32,
     pub points: Vec<[f32; 2]>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct BusLineView {
     pub id: u32,
     pub stops: Vec<u32>,
@@ -93,7 +101,8 @@ pub struct BusLineView {
     pub stop_positions: Vec<BusStopView>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct BusStopView {
     pub node_id: u32,
     pub x: f32,
@@ -102,7 +111,8 @@ pub struct BusStopView {
     pub direction: i8,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct BusView {
     pub id: u32,
     pub line_id: u32,
@@ -115,7 +125,8 @@ pub struct BusView {
     pub waiting: u16,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct TrainView {
     pub id: u32,
     pub route: Vec<u32>,
@@ -130,7 +141,8 @@ pub struct TrainView {
     pub gateway_waiting: u16,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct ResidentView {
     pub id: u32,
     pub name: String,

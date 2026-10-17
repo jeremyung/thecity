@@ -2,16 +2,19 @@ use crate::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, VecDeque};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Event {
     pub id: u32,
+    #[ts(type = "number")]
     pub tick: u64,
     pub kind: EventKind,
     pub entity_id: u32,
     pub reason: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Stats {
     pub population: u32,
     pub active_travelers: u32,
@@ -19,7 +22,8 @@ pub struct Stats {
     pub active_projects: u32,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Weather {
     pub kind: WeatherKind,
     pub intensity: f32,

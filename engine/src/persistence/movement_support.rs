@@ -16,7 +16,7 @@ pub(crate) struct Row {
 
 impl Row {
     pub(crate) fn encode(rows: &[Self]) -> Vec<u32> {
-        let mut out = vec![1, rows.len() as u32];
+        let mut out = vec![crate::wire::MOVEMENT_PACKET_VERSION, rows.len() as u32];
         for row in rows {
             out.extend_from_slice(&[
                 row.actor_id,

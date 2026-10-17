@@ -12,7 +12,7 @@ const building = (overrides: Partial<Building> = {}): Building => ({
   width: 8,
   depth: 8,
   floors: 2,
-  kind: 'home',
+  kind: 'home' as const,
   stage: 'open',
   progress: 1,
   capacity: 12,
@@ -51,7 +51,7 @@ describe('building render signatures', () => {
   });
   it('rebuilds residential windows only when occupancy crosses the vacant boundary', () => {
     // Window panes bake whether anyone lives behind them, for homes and apartment blocks alike.
-    for (const kind of ['home', 'apartment']) {
+    for (const kind of ['home', 'apartment'] as const) {
       const vacant = building({ kind, occupancy: 0 });
       const occupied = building({ kind, occupancy: 1 });
       const fuller = building({ kind, occupancy: 2 });
@@ -64,8 +64,8 @@ describe('building render signatures', () => {
   });
 
   it('keeps every signature in step with the window occupancy the kit bakes', () => {
-    for (const kind of ['home', 'apartment', 'shop', 'cafe', 'office'])
-      for (const stage of ['open', 'construction', 'renovation'])
+    for (const kind of ['home', 'apartment', 'shop', 'cafe', 'office'] as const)
+      for (const stage of ['open', 'foundation', 'renovation'] as const)
         for (const occupancy of [0, 4])
           for (const business_active of [true, false]) {
             const a = building({ kind, stage, occupancy, business_active });
@@ -83,7 +83,7 @@ describe('building render signatures', () => {
   });
 
   it('does not rebuild businesses for occupancy changes', () => {
-    for (const kind of ['shop', 'cafe', 'office']) {
+    for (const kind of ['shop', 'cafe', 'office'] as const) {
       const empty = building({ kind, occupancy: 0 });
       const occupied = building({ kind, occupancy: 11 });
       expect(buildingRenderSignature(empty), kind).toBe(buildingRenderSignature(occupied));
@@ -92,7 +92,7 @@ describe('building render signatures', () => {
 
   it('updates occupied annex apartment glazing across the empty boundary only', () => {
     const original = { building_id: 1, x: 0, z: 0, width: 8, depth: 8, rotation: 0 };
-    const empty = building({ kind: 'apartment', depth: 16, z: -4, occupancy: 0 });
+    const empty = building({ kind: 'apartment' as const, depth: 16, z: -4, occupancy: 0 });
     expect(buildingRenderSignature(empty, original)).not.toBe(
       buildingRenderSignature({ ...empty, occupancy: 1 }, original),
     );

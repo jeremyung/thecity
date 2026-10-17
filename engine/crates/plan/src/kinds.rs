@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 macro_rules! kind_enum {
     ($(#[$meta:meta])* $name:ident { $($variant:ident = $text:literal),+ $(,)? }) => {
         $(#[$meta])*
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ts_rs::TS)]
+        #[ts(export)]
         pub enum $name {
             $(#[serde(rename = $text)] $variant),+
         }

@@ -32,11 +32,12 @@ function building(
     width: 12,
     depth: 10,
     floors,
-    kind: 'office',
+    kind: 'office' as const,
     stage: 'open',
     progress: 1,
     capacity: 8,
     occupancy: 4,
+    business_active: false,
     built_day: 1,
     name: `b${id}`,
     appearance_seed: id,
@@ -117,7 +118,7 @@ describe('skyline cluster search', () => {
       { width: 20 },
       { depth: 17 },
       { rotation: 0.5 },
-      { kind: 'apartment' },
+      { kind: 'apartment' as const },
       { anchor: true },
     ];
     for (const field of fields) {
@@ -174,7 +175,7 @@ describe('skyline cluster search', () => {
   });
 
   it('changes the cache key for every field the cluster and its frame bounds read', () => {
-    const base = [building(1, 0, 0, 12, { kind: 'apartment' }), building(2, 30, 10, 8)];
+    const base = [building(1, 0, 0, 12, { kind: 'apartment' as const }), building(2, 30, 10, 8)];
     const key = skylineClusterKey(base);
     expect(skylineClusterKey(base.map((b) => ({ ...b })))).toBe(key);
     const changes: Array<Partial<Building>> = [
@@ -185,7 +186,7 @@ describe('skyline cluster search', () => {
       { width: 12.5 },
       { depth: 10.5 },
       { rotation: 0.1 },
-      { kind: 'office' },
+      { kind: 'office' as const },
       { anchor: true },
     ];
     for (const change of changes)

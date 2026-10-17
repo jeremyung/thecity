@@ -11,17 +11,17 @@ pub(crate) const BUS_STOP_KERB: f32 = -6.2;
 
 // Movement-buffer kinds for road vehicle bodies (web/src/render/vehicles.ts).
 // Kind 1 stays the private compact so older traces and tools keep working.
-pub(crate) const VEHICLE_COMPACT: u8 = 1;
+pub(crate) const VEHICLE_COMPACT: u8 = wire::ACTOR_COMPACT;
 
-pub(crate) const VEHICLE_KEI: u8 = 4;
+pub(crate) const VEHICLE_KEI: u8 = wire::ACTOR_KEI;
 
-pub(crate) const VEHICLE_TAXI: u8 = 5;
+pub(crate) const VEHICLE_TAXI: u8 = wire::ACTOR_TAXI;
 
-pub(crate) const VEHICLE_VAN: u8 = 6;
+pub(crate) const VEHICLE_VAN: u8 = wire::ACTOR_VAN;
 
-pub(crate) const VEHICLE_TRUCK: u8 = 7;
+pub(crate) const VEHICLE_TRUCK: u8 = wire::ACTOR_TRUCK;
 
-pub(crate) const VEHICLE_MAIL: u8 = 8;
+pub(crate) const VEHICLE_MAIL: u8 = wire::ACTOR_MAIL;
 
 /// Bumper-to-bumper allowance between queued road vehicles.
 pub(crate) const VEHICLE_QUEUE_MARGIN: f32 = 0.5;

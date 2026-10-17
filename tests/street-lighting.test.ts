@@ -9,21 +9,21 @@ import {
   streetLightPlacements,
 } from '../web/src/render/street-lighting';
 import { roadWidth } from '../web/src/render/road-elevation';
-import type { World } from '../web/src/types';
+import type { World, RoadKind, Stage, NodeKind } from '../web/src/types';
 
 function streetWorld(
   segments: Array<{
     id: number;
     from: number;
     to: number;
-    kind?: string;
-    stage?: string;
+    kind?: RoadKind;
+    stage?: Stage;
     connected?: boolean;
   }>,
   points: Array<{ id: number; x: number; z: number }>,
 ): Pick<World, 'nodes' | 'roads'> {
   return {
-    nodes: points.map((point) => ({ ...point, kind: 'intersection' })),
+    nodes: points.map((point) => ({ ...point, kind: 'junction' })),
     roads: segments.map((segment) => {
       const from = points.find((point) => point.id === segment.from)!,
         to = points.find((point) => point.id === segment.to)!;
@@ -47,10 +47,10 @@ describe('procedural street lighting', () => {
     const world = streetWorld(
       [
         { id: 4, from: 1, to: 2 },
-        { id: 7, from: 2, to: 3, kind: 'arterial' },
-        { id: 8, from: 3, to: 4, kind: 'bridge' },
-        { id: 9, from: 4, to: 5, kind: 'rail' },
-        { id: 10, from: 5, to: 6, stage: 'construction' },
+        { id: 7, from: 2, to: 3, kind: 'arterial' as const },
+        { id: 8, from: 3, to: 4, kind: 'bridge' as const },
+        { id: 9, from: 4, to: 5, kind: 'rail' as const },
+        { id: 10, from: 5, to: 6, stage: 'foundation' },
         { id: 11, from: 6, to: 7, connected: false },
       ],
       [
@@ -114,7 +114,7 @@ describe('procedural street lighting', () => {
       id: 4,
       from: 4,
       to: 99,
-      kind: 'local',
+      kind: 'local' as const,
       stage: 'open',
       progress: 1,
       connected: true,
@@ -251,7 +251,7 @@ describe('procedural street lighting', () => {
     const world = streetWorld(
       [
         { id: 2, from: 1, to: 2 },
-        { id: 5, from: 3, to: 4, kind: 'arterial' },
+        { id: 5, from: 3, to: 4, kind: 'arterial' as const },
       ],
       [
         { id: 1, x: -80, z: 15 },

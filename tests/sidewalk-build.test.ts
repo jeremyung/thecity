@@ -6,13 +6,13 @@ import { arterialSidewalkPolygons } from '../web/src/render/arterial-sidewalks';
 import { sidewalkGeometry } from '../web/src/render/sidewalk-kit';
 import { SidewalkBuild } from '../web/src/render/sidewalk-build';
 
-const node = (id: number, x: number, z: number) => ({ id, x, z, kind: 'road' }) as WorldNode;
+const node = (id: number, x: number, z: number) => ({ id, x, z, kind: 'junction' }) as WorldNode;
 const road = (id: number, from: number, to: number) =>
   ({
     id,
     from,
     to,
-    kind: 'arterial',
+    kind: 'arterial' as const,
     stage: 'open',
     progress: 1,
     connected: true,

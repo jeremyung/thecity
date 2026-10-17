@@ -1,6 +1,7 @@
 use crate::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct RailPlatformView {
     pub node_id: u32,
     pub x: f32,
@@ -17,6 +18,7 @@ pub struct RailPlatformView {
     /// 0 site, 1 supports, 2 deck/access, 3 canopy, 4 complete.
     pub construction_phase: u8,
     /// Local ground centerline: street, side approach, apron, stair foot.
+    #[ts(as = "Vec<WorldPoint>")]
     pub ground_path: [WorldPoint; 5],
     pub ground_width: f32,
 }

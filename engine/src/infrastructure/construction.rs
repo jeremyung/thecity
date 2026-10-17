@@ -5,7 +5,8 @@ pub(crate) const MAX_PROJECTS: usize = 12;
 
 pub(crate) const COMPLETED_PROJECT_HISTORY: usize = 64;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Building {
     pub id: u32,
     pub parcel_id: u32,
@@ -30,7 +31,8 @@ pub struct Building {
     pub business_active: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Project {
     pub id: u32,
     pub kind: ProjectKind,
@@ -41,10 +43,12 @@ pub struct Project {
     pub progress: f32,
     pub reason: String,
     pub duration: f32,
+    #[ts(type = "number")]
     pub started_tick: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct BuildingOriginalFootprint {
     pub building_id: u32,
     pub x: f32,

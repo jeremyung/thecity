@@ -3,7 +3,7 @@ import type { Road, WorldNode } from '../web/src/types';
 import { roadMarkingTrims } from '../web/src/render/road-markings';
 
 const nodes = (rows: [number, number, number][]) =>
-  rows.map(([id, x, z]) => ({ id, x, z, kind: 'street' }) as WorldNode);
+  rows.map(([id, x, z]) => ({ id, x, z, kind: 'junction' }) as WorldNode);
 const road = (id: number, from: number, to: number, kind = 'local', stage = 'open') =>
   ({ id, from, to, kind, stage, progress: 1, connected: true, length: 1, lanes: 1 }) as Road;
 const world = (ns: WorldNode[], roads: Road[]) => ({ nodes: ns, roads });

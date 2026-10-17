@@ -5,3 +5,4 @@ pub(crate) mod limits;
 pub(crate) mod state;
 pub(crate) mod systems;
 pub(crate) mod tick;
+pub mod wire;

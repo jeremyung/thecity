@@ -5,14 +5,14 @@ impl Engine {
         self.movement_rows(false)
             .into_iter()
             .flat_map(|row| {
-                [
-                    row.actor_id as f32,
-                    row.x,
-                    row.z,
-                    row.heading,
-                    row.kind as f32,
-                    row.surface_y,
-                ]
+                let mut out = [0.0; wire::MOVEMENT_STRIDE];
+                out[wire::MOVEMENT_ID] = row.actor_id as f32;
+                out[wire::MOVEMENT_X] = row.x;
+                out[wire::MOVEMENT_Z] = row.z;
+                out[wire::MOVEMENT_HEADING] = row.heading;
+                out[wire::MOVEMENT_KIND] = row.kind as f32;
+                out[wire::MOVEMENT_SURFACE_Y] = row.surface_y;
+                out
             })
             .collect()
     }
@@ -156,7 +156,7 @@ impl Engine {
                         x: position.x,
                         z: position.z,
                         heading: 0.0,
-                        kind: 0,
+                        kind: wire::ACTOR_PERSON as u32,
                         surface_y: 8.0,
                         resolved: rail_ids.len() == 1,
                         road_ids: rail_ids,
@@ -208,7 +208,7 @@ impl Engine {
                 x: position.x,
                 z: position.z,
                 heading: 0.0,
-                kind: 0,
+                kind: wire::ACTOR_PERSON as u32,
                 surface_y: -1.0,
                 resolved: road_ids.len() == 1,
                 road_ids,
@@ -248,7 +248,7 @@ impl Engine {
                 x: pending.wait_position.x,
                 z: pending.wait_position.z,
                 heading: 0.0,
-                kind: 0,
+                kind: wire::ACTOR_PERSON as u32,
                 surface_y,
                 resolved,
                 road_ids: rail_ids,
@@ -300,7 +300,7 @@ impl Engine {
                 x,
                 z,
                 heading,
-                kind: 2,
+                kind: wire::ACTOR_TRAIN as u32,
                 surface_y: -1.0,
                 resolved: road_ids.len() == t.route.len() - 1,
                 road_ids,
@@ -335,7 +335,7 @@ impl Engine {
                     x,
                     z,
                     heading,
-                    kind: 3,
+                    kind: wire::ACTOR_BUS as u32,
                     surface_y: -1.0,
                     resolved: road_ids.len() == 1,
                     road_ids,

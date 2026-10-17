@@ -33,6 +33,8 @@ frontage-network-candidate = ["flag-passage-candidate", "city-plan/frontage-netw
 [dependencies]
 city-plan = { path = "crates/plan" }
 serde = { version = "1", features = ["derive"] }
+# TypeScript bindings for snapshot types; `cargo test export_bindings` writes web/src/generated.
+ts-rs = "=11.1.0"
 # Live planning checkpoints retain f64 polygon areas across saves.
 serde_json = { version = "1", features = ["float_roundtrip"] }
 

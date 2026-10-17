@@ -29,7 +29,15 @@ import { streetTreePlacements } from '../web/src/render/parks';
 import { EXPRESSWAY_DECK, roadWidth } from '../web/src/render/road-elevation';
 import { streetLightPlacements } from '../web/src/render/street-lighting';
 import { distanceToSegment } from '../web/src/render/tree-occlusion';
-import type { Parcel, Point, RailAlignment, RailPlatform } from '../web/src/types';
+import type {
+  Parcel,
+  Point,
+  RailAlignment,
+  RailPlatform,
+  RoadKind,
+  Stage,
+  NodeKind,
+} from '../web/src/types';
 
 /** Engine-style rail samples along a polyline: distance, x, z, unit tangent. */
 function alignment(road_id: number, points: Point[]): RailAlignment {
@@ -49,17 +57,17 @@ type Segment = {
   id: number;
   from: number;
   to: number;
-  kind?: string;
-  stage?: string;
+  kind?: RoadKind;
+  stage?: Stage;
   connected?: boolean;
 };
 function world(
   segments: Segment[],
-  points: Array<{ id: number; x: number; z: number; kind?: string }>,
+  points: Array<{ id: number; x: number; z: number; kind?: NodeKind }>,
   extra: Partial<OverheadWorld> = {},
 ): OverheadWorld {
   return {
-    nodes: points.map((point) => ({ kind: 'junction', ...point })),
+    nodes: points.map((point) => ({ kind: 'junction' as const, ...point })),
     roads: segments.map((segment) => {
       const from = points.find((point) => point.id === segment.from)!,
         to = points.find((point) => point.id === segment.to)!;
@@ -81,8 +89,8 @@ function world(
   };
 }
 /** A straight local street split at every 40 m node, with side streets making T-junctions. */
-function splitStreet(kind = 'local', length = 240, step = 40) {
-  const points: Array<{ id: number; x: number; z: number; kind?: string }> = [],
+function splitStreet(kind: RoadKind = 'local', length = 240, step = 40) {
+  const points: Array<{ id: number; x: number; z: number; kind?: NodeKind }> = [],
     segments: Segment[] = [];
   for (let i = 0; i <= length / step; i++) points.push({ id: i + 1, x: i * step, z: 0 });
   for (let i = 0; i < length / step; i++)
@@ -90,7 +98,7 @@ function splitStreet(kind = 'local', length = 240, step = 40) {
   // Side streets on the north at every interior node.
   for (let i = 1; i < length / step; i++) {
     points.push({ id: 100 + i, x: i * step, z: 60 });
-    segments.push({ id: 100 + i, from: i + 1, to: 100 + i, kind: 'local' });
+    segments.push({ id: 100 + i, from: i + 1, to: 100 + i, kind: 'local' as const });
   }
   return { points, segments };
 }
@@ -234,19 +242,19 @@ describe('street poles', () => {
       { id: 6, x: 200, z: 200 },
       { id: 7, x: 100, z: -60 },
       { id: 8, x: 100, z: 260 },
-      { id: 9, x: 0, z: 600, kind: 'station' },
+      { id: 9, x: 0, z: 600, kind: 'station' as const },
       { id: 10, x: 200, z: 600 },
       { id: 11, x: 0, z: 640 },
       { id: 12, x: 200, z: 640 },
     ];
     const w = world(
       [
-        { id: 1, from: 1, to: 2, stage: 'construction' },
+        { id: 1, from: 1, to: 2, stage: 'foundation' as const },
         { id: 2, from: 3, to: 4, connected: false },
-        { id: 3, from: 5, to: 6, kind: 'bridge' },
-        { id: 4, from: 7, to: 8, kind: 'local' },
-        { id: 5, from: 9, to: 10, kind: 'arterial' },
-        { id: 6, from: 11, to: 12, kind: 'local' },
+        { id: 3, from: 5, to: 6, kind: 'bridge' as const },
+        { id: 4, from: 7, to: 8, kind: 'local' as const },
+        { id: 5, from: 9, to: 10, kind: 'arterial' as const },
+        { id: 6, from: 11, to: 12, kind: 'local' as const },
       ],
       points,
     );
@@ -276,7 +284,7 @@ describe('street poles', () => {
     const railed = world(
       [
         { id: 1, from: 1, to: 2 },
-        { id: 2, from: 3, to: 4, kind: 'rail' },
+        { id: 2, from: 3, to: 4, kind: 'rail' as const },
       ],
       [
         { id: 1, x: 0, z: 0 },
@@ -320,14 +328,14 @@ describe('street poles', () => {
     };
     const w = world(
       [
-        { id: 1, from: 1, to: 2, kind: 'rail' },
-        { id: 2, from: 2, to: 3, kind: 'rail' },
+        { id: 1, from: 1, to: 2, kind: 'rail' as const },
+        { id: 2, from: 2, to: 3, kind: 'rail' as const },
         { id: 3, from: 4, to: 5 },
         { id: 4, from: 6, to: 7 },
       ],
       [
         { id: 1, x: -300, z: 0 },
-        { id: 2, x: 0, z: 0, kind: 'station' },
+        { id: 2, x: 0, z: 0, kind: 'station' as const },
         { id: 3, x: 300, z: 0 },
         { id: 4, x: -200, z: -9 },
         { id: 5, x: 200, z: -9 },
@@ -363,7 +371,7 @@ describe('street poles', () => {
     }
     const w = world(
       [
-        { id: 1, from: 1, to: 2, kind: 'rail' },
+        { id: 1, from: 1, to: 2, kind: 'rail' as const },
         { id: 2, from: 3, to: 4 },
       ],
       [
@@ -394,7 +402,7 @@ describe('street poles', () => {
     const w = world(
       [
         { id: 1, from: 1, to: 2 },
-        { id: 2, from: 3, to: 4, kind: 'expressway' },
+        { id: 2, from: 3, to: 4, kind: 'expressway' as const },
       ],
       [
         { id: 1, x: 0, z: 0 },
@@ -429,7 +437,7 @@ describe('street poles', () => {
     const w = world(
       [
         { id: 1, from: 1, to: 2 },
-        { id: 2, from: 3, to: 4, kind: 'expressway' },
+        { id: 2, from: 3, to: 4, kind: 'expressway' as const },
       ],
       [
         { id: 1, x: -100, z: 0 },
@@ -530,12 +538,12 @@ describe('overhead line layer', () => {
     const { points, segments } = splitStreet();
     points.push(
       { id: 500, x: -300, z: -80 },
-      { id: 501, x: 100, z: -80, kind: 'station' },
+      { id: 501, x: 100, z: -80, kind: 'station' as const },
       { id: 502, x: 500, z: -80 },
     );
     segments.push(
-      { id: 500, from: 500, to: 501, kind: 'rail' },
-      { id: 501, from: 501, to: 502, kind: 'rail' },
+      { id: 500, from: 500, to: 501, kind: 'rail' as const },
+      { id: 501, from: 501, to: 502, kind: 'rail' as const },
     );
     const art = new ArtMaterials();
     const group = buildOverheadLines(world(segments, points), art);

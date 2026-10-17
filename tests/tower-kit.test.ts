@@ -7,6 +7,7 @@ import type { Building, Style } from '../web/src/types';
 
 function tower(floors: number, profile: number, kind: 'office' | 'apartment' = 'office'): Building {
   return {
+    business_active: false,
     id: floors * 10 + profile,
     parcel_id: floors * 100 + profile,
     x: 0,

@@ -1,3 +1,4 @@
+import type { BuildingKind } from '../web/src/types';
 import { describe, expect, it } from 'vitest';
 import {
   compactMidriseEnvelope,
@@ -7,7 +8,7 @@ import {
 
 function building(
   overrides: Partial<{
-    kind: string;
+    kind: BuildingKind;
     floors: number;
     width: number;
     depth: number;
@@ -16,7 +17,7 @@ function building(
   }> = {},
 ) {
   return {
-    kind: 'apartment',
+    kind: 'apartment' as const,
     floors: 7,
     width: 18,
     depth: 14,
@@ -71,7 +72,7 @@ describe('footprint-bounded midrise massing', () => {
   it('leaves anchors, low-rise, towers, and undersized lots at their exact input dimensions', () => {
     const cases = [
       building({ anchor: true, width: 40, depth: 32 }),
-      building({ kind: 'home', floors: 2, width: 40, depth: 32 }),
+      building({ kind: 'home' as const, floors: 2, width: 40, depth: 32 }),
       building({ floors: 12, width: 40, depth: 32 }),
       building({ width: 7.99, depth: 32 }),
       building({ width: 40, depth: 7.99 }),
@@ -84,7 +85,7 @@ describe('footprint-bounded midrise massing', () => {
   });
 
   it('supports every tier across floor counts, narrow plots and seeded variations', () => {
-    for (const kind of ['apartment', 'office']) {
+    for (const kind of ['apartment', 'office'] as const) {
       for (let floors = 4; floors <= 11; floors++) {
         for (let seed = 0; seed < 64; seed++) {
           const width = 6 + (seed % 19);
@@ -196,7 +197,7 @@ describe('footprint-bounded midrise massing', () => {
 
   it('composes offices with a full-footprint podium, off-center shaft, and further-setback crown', () => {
     for (const floors of [4, 5, 8, 11]) {
-      const result = midriseMassing(building({ kind: 'office', floors }), 22, 16)!;
+      const result = midriseMassing(building({ kind: 'office' as const, floors }), 22, 16)!;
       const [podium] = result.masses;
       const shaft = result.masses.find((mass) => mass.baseFloor === 2 && mass.floors > 2);
       const crown = result.masses[result.masses.length - 1];
@@ -231,7 +232,7 @@ describe('footprint-bounded midrise massing', () => {
     const seedCount = 96;
     for (let seed = 0; seed < seedCount; seed++) {
       for (let floors = 4; floors <= 11; floors++) {
-        const input = building({ kind: 'office', floors, appearance_seed: seed });
+        const input = building({ kind: 'office' as const, floors, appearance_seed: seed });
         const result = midriseMassing(input, 24, 18)!;
         expect(midriseMassing(input, 24, 18)).toEqual(result);
         if (seed % 3 !== 0) {
@@ -292,13 +293,13 @@ describe('footprint-bounded midrise massing', () => {
   });
 
   it('keeps unsupported uses, anchors, out-of-band floors, and undersized envelopes unchanged', () => {
-    expect(midriseMassing(building({ kind: 'home' }), 18, 14)).toBeNull();
-    expect(midriseMassing(building({ kind: 'shop' }), 18, 14)).toBeNull();
+    expect(midriseMassing(building({ kind: 'home' as const }), 18, 14)).toBeNull();
+    expect(midriseMassing(building({ kind: 'shop' as const }), 18, 14)).toBeNull();
     expect(midriseMassing(building({ anchor: true }), 18, 14)).toBeNull();
     expect(midriseMassing(building({ floors: 3 }), 18, 14)).toBeNull();
     expect(midriseMassing(building({ floors: 12 }), 18, 14)).toBeNull();
     expect(midriseMassing(building({ floors: 4.5 }), 18, 14)).toBeNull();
     expect(midriseMassing(building(), 3.69, 14)).toBeNull();
-    expect(midriseMassing(building({ kind: 'office' }), 18, Number.NaN)).toBeNull();
+    expect(midriseMassing(building({ kind: 'office' as const }), 18, Number.NaN)).toBeNull();
   });
 });

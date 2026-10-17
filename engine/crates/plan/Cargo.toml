@@ -19,4 +19,6 @@ frontage-network-candidate = ["flag-passage-candidate"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
+# TypeScript bindings for snapshot types; `cargo test export_bindings` writes web/src/generated.
+ts-rs = "=11.1.0"
 serde_json = { version = "1", features = ["float_roundtrip"] }

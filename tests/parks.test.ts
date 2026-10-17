@@ -18,7 +18,15 @@ import {
   MAX_STREET_TREES,
 } from '../web/src/render/parks';
 import { streetLightPlacements } from '../web/src/render/street-lighting';
-import type { Building, BuildingAccess, Parcel, World } from '../web/src/types';
+import type {
+  Building,
+  BuildingAccess,
+  Parcel,
+  World,
+  RoadKind,
+  Stage,
+  NodeKind,
+} from '../web/src/types';
 
 type StreetWorld = Pick<World, 'nodes' | 'roads' | 'building_access' | 'bus_lines'>;
 function streetWorld(
@@ -26,8 +34,8 @@ function streetWorld(
     id: number;
     from: number;
     to: number;
-    kind?: string;
-    stage?: string;
+    kind?: RoadKind;
+    stage?: Stage;
     connected?: boolean;
   }>,
   points: Array<{ id: number; x: number; z: number }>,
@@ -70,8 +78,8 @@ describe('street trees', () => {
     const world = streetWorld(
       [
         { id: 1, from: 1, to: 2 },
-        { id: 2, from: 2, to: 3, kind: 'local' },
-        { id: 3, from: 3, to: 4, stage: 'construction' },
+        { id: 2, from: 2, to: 3, kind: 'local' as const },
+        { id: 3, from: 3, to: 4, stage: 'foundation' },
         { id: 4, from: 4, to: 5, connected: false },
       ],
       [
@@ -150,8 +158,8 @@ describe('street trees', () => {
     const crossed = streetWorld(
       [
         { id: 1, from: 1, to: 2 },
-        { id: 2, from: 3, to: 4, kind: 'local' },
-        { id: 3, from: 5, to: 6, kind: 'rail' },
+        { id: 2, from: 3, to: 4, kind: 'local' as const },
+        { id: 3, from: 5, to: 6, kind: 'rail' as const },
       ],
       [
         { id: 1, x: 0, z: 0 },
@@ -171,7 +179,7 @@ describe('street trees', () => {
     const covered = streetWorld(
       [
         { id: 1, from: 1, to: 2 },
-        { id: 2, from: 3, to: 4, kind: 'expressway' },
+        { id: 2, from: 3, to: 4, kind: 'expressway' as const },
       ],
       [
         { id: 1, x: 0, z: 0 },
@@ -364,8 +372,8 @@ describe('station plaza, shrines and the scramble crossing', () => {
       [
         { id: 1, from: 1, to: 2 },
         { id: 2, from: 1, to: 3 },
-        { id: 3, from: 1, to: 4, kind: 'local' },
-        { id: 4, from: 1, to: 5, kind: 'local' },
+        { id: 3, from: 1, to: 4, kind: 'local' as const },
+        { id: 4, from: 1, to: 5, kind: 'local' as const },
       ],
       points,
     );
@@ -381,9 +389,9 @@ describe('station plaza, shrines and the scramble crossing', () => {
     disposeGroup(group);
     const quiet = streetWorld(
       [
-        { id: 1, from: 1, to: 2, kind: 'local' },
-        { id: 2, from: 1, to: 3, kind: 'local' },
-        { id: 3, from: 1, to: 4, kind: 'local' },
+        { id: 1, from: 1, to: 2, kind: 'local' as const },
+        { id: 2, from: 1, to: 3, kind: 'local' as const },
+        { id: 3, from: 1, to: 4, kind: 'local' as const },
       ],
       points,
     );
@@ -407,7 +415,7 @@ describe('park layer invalidation', () => {
           id: 1,
           from: 1,
           to: 2,
-          kind: 'arterial',
+          kind: 'arterial' as const,
           stage: 'open',
           progress: 1,
           connected: true,

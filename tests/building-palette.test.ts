@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { buildingPalette, BUILDING_ACCENT_WALLS } from '../web/src/render/building-palette';
-import type { Building } from '../web/src/types';
+import type { Building, BuildingKind } from '../web/src/types';
 import matureSave from '../tests/fixtures/validation/early-reservation-wasm-87231-save.json?raw';
 
 const neutralWalls = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
 function sample(
-  kind: string,
+  kind: BuildingKind,
   appearance_seed: number,
   anchor = false,
 ): Pick<Building, 'kind' | 'appearance_seed' | 'anchor'> {
@@ -23,7 +23,7 @@ describe('seeded Tokyo facade palettes', () => {
       trim: '#d8cdb5',
     });
     const observed = new Set<string>();
-    for (const kind of ['home', 'shop', 'cafe', 'apartment', 'office'])
+    for (const kind of ['home', 'shop', 'cafe', 'apartment', 'office'] as const)
       for (let seed = 0; seed < 512; seed++) {
         const palette = buildingPalette(sample(kind, seed), neutralWalls);
         observed.add(palette.wall);

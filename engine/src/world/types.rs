@@ -1,13 +1,15 @@
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, ts_rs::TS)]
+#[ts(export)]
 pub struct Point {
     pub x: f32,
     pub z: f32,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Bounds {
     pub min_x: f32,
     pub max_x: f32,
@@ -15,7 +17,8 @@ pub struct Bounds {
     pub max_z: f32,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Terrain {
     pub river: Vec<Point>,
     pub river_half_width: f32,
@@ -23,7 +26,8 @@ pub struct Terrain {
     pub gateways: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub(crate) struct WorldPoint {
     pub(crate) x: f32,
     pub(crate) z: f32,

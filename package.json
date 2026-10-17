@@ -17,7 +17,8 @@
     "format": "prettier --write \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all",
     "format:check": "prettier --check \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all --check",
     "lint:deps": "depcruise web/src --config .dependency-cruiser.cjs",
-    "check:size": "node scripts/check-file-size.mjs"
+    "check:size": "node scripts/check-file-size.mjs",
+    "types": "node scripts/generate-types.mjs"
   },
   "dependencies": {
     "lucide-react": "0.577.0",

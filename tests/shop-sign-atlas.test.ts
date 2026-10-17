@@ -63,6 +63,7 @@ function building(kind: 'shop' | 'cafe', overrides: Partial<Building> = {}): Bui
     progress: 1,
     capacity: 16,
     occupancy: 8,
+    business_active: false,
     built_day: 4,
     name: `${kind} sample`,
     appearance_seed: 451,

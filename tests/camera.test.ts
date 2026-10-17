@@ -6,7 +6,7 @@ import type { Anchor } from '../web/src/camera/shot';
 import { CameraDirector } from '../web/src/camera/director';
 import { cameraPathClearance } from '../web/src/camera/clearance';
 import { verticalFovDegrees } from '../web/src/optics/lens';
-import type { World } from '../web/src/types';
+import type { World, BuildingKind, TrainView } from '../web/src/types';
 // @ts-expect-error Node built-in types are not included in the app TypeScript config.
 import { readFileSync } from 'node:fs';
 import { CityEngine, initSync } from '../public/wasm/city_engine.js';
@@ -79,6 +79,7 @@ function makeWorld(): World {
     stage: 'Founding',
     bounds: { min_x: -400, max_x: 400, min_z: -400, max_z: 400 },
     terrain: {
+      river_half_width: 32,
       river: [
         { x: 10, z: 0 },
         { x: 20, z: 0 },
@@ -87,18 +88,18 @@ function makeWorld(): World {
       protected: [],
       gateways: [],
     },
-    weather: { kind: 'clear', intensity: 0 },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [
-      { id: 1, x: 0, z: 0, kind: 'street' },
-      { id: 2, x: 100, z: 0, kind: 'station' },
+      { id: 1, x: 0, z: 0, kind: 'junction' as const },
+      { id: 2, x: 100, z: 0, kind: 'station' as const },
     ],
     roads: [
       {
         id: 4,
         from: 1,
         to: 2,
-        kind: 'rail',
-        stage: 'open',
+        kind: 'rail' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 100,
@@ -108,7 +109,7 @@ function makeWorld(): World {
     parcels: [],
     buildings: [],
     projects: [],
-    trains: [{ id: 500, route: [1, 2], progress: 15 }],
+    trains: [{ id: 500, route: [1, 2], progress: 15 } as unknown as TrainView],
     events: [],
     stats: { population: 0, active_travelers: 0, buildings: 0, active_projects: 0 },
   };
@@ -116,6 +117,7 @@ function makeWorld(): World {
 
 function makeBuilding(id: number, x: number, z: number): World['buildings'][number] {
   return {
+    business_active: false,
     id,
     parcel_id: id + 1000,
     x,
@@ -124,8 +126,8 @@ function makeBuilding(id: number, x: number, z: number): World['buildings'][numb
     width: 18,
     depth: 14,
     floors: 2,
-    kind: 'home',
-    stage: 'open',
+    kind: 'home' as const,
+    stage: 'open' as const,
     progress: 1,
     capacity: 8,
     occupancy: 4,
@@ -182,9 +184,9 @@ describe('CameraDirector', () => {
     const building = {
       ...makeBuilding(41, 100, 20),
       anchor: false,
-      kind: 'office',
+      kind: 'office' as const,
       floors: 6,
-      stage: 'demolition',
+      stage: 'demolition' as const,
       progress: 0.5,
     };
     world.buildings = [building];
@@ -198,7 +200,7 @@ describe('CameraDirector', () => {
     expect(state.desiredTarget.x).toBe(100);
     expect(state.desiredTarget.z).toBe(20);
     expect(state.desiredTarget.y).toBeGreaterThan(9);
-    world.buildings = [{ ...building, floors: 18, stage: 'structure' }];
+    world.buildings = [{ ...building, floors: 18, stage: 'structure' as const }];
     world.revision++;
     director.world(world);
     director.update(0.1, 1);
@@ -287,16 +289,16 @@ describe('CameraDirector', () => {
     const world = makeWorld();
     world.terrain.river = [];
     world.nodes = [
-      { id: 3, x: 0, z: 0, kind: 'street' },
-      { id: 4, x: 0, z: 120, kind: 'street' },
+      { id: 3, x: 0, z: 0, kind: 'junction' as const },
+      { id: 4, x: 0, z: 120, kind: 'junction' as const },
     ];
     world.roads = [
       {
         id: 20,
         from: 3,
         to: 4,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 120,
@@ -399,16 +401,16 @@ describe('CameraDirector', () => {
     const world = makeWorld();
     world.terrain.river = [];
     world.nodes = [
-      { id: 3, x: 0, z: 0, kind: 'street' },
-      { id: 4, x: 0, z: 120, kind: 'street' },
+      { id: 3, x: 0, z: 0, kind: 'junction' as const },
+      { id: 4, x: 0, z: 120, kind: 'junction' as const },
     ];
     world.roads = [
       {
         id: 20,
         from: 3,
         to: 4,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 120,
@@ -450,7 +452,7 @@ describe('CameraDirector', () => {
       ...world,
       tick: 1,
       revision: 1,
-      roads: world.roads.map((road) => ({ ...road, stage: 'closed' })),
+      roads: world.roads.map((road) => ({ ...road, stage: 'foundation' as const })),
     };
     director.world(closed);
     // There is no replacement street candidate, so the fallback is the surviving district itself.
@@ -887,7 +889,7 @@ describe('CameraDirector', () => {
     const building = makeBuilding(31, 0, 0);
     building.anchor = false;
     building.floors = 20;
-    building.stage = 'construction';
+    building.stage = 'foundation';
     world.terrain.river = [];
     world.roads = [];
     world.buildings = [building];
@@ -1512,7 +1514,13 @@ describe('CameraDirector', () => {
       { x: 0, z: 0 },
       { x: 0, z: 80 },
     ];
-    const tower = (id: number, x: number, z: number, floors: number, kind = 'office') => ({
+    const tower = (
+      id: number,
+      x: number,
+      z: number,
+      floors: number,
+      kind: BuildingKind = 'office',
+    ) => ({
       ...makeBuilding(id, x, z),
       anchor: false,
       floors,
@@ -1721,7 +1729,7 @@ describe('CameraDirector', () => {
       ...makeBuilding(id, x, z),
       anchor: false,
       floors,
-      kind: 'office',
+      kind: 'office' as const,
       width: 30,
       depth: 26,
       rotation,
@@ -1775,9 +1783,9 @@ describe('CameraDirector', () => {
       { x: -20, z: 80 },
     ];
     world.buildings = [
-      { ...makeBuilding(31, 80, 0), anchor: false, floors: 16, kind: 'office' },
-      { ...makeBuilding(32, 88, 12), anchor: false, floors: 14, kind: 'office' },
-      { ...makeBuilding(33, 30, 0), anchor: false, floors: 2, kind: 'shop' },
+      { ...makeBuilding(31, 80, 0), anchor: false, floors: 16, kind: 'office' as const },
+      { ...makeBuilding(32, 88, 12), anchor: false, floors: 14, kind: 'office' as const },
+      { ...makeBuilding(33, 30, 0), anchor: false, floors: 2, kind: 'shop' as const },
     ];
     const original = JSON.stringify(world);
     const director = new CameraDirector(
@@ -2055,7 +2063,7 @@ describe('CameraDirector', () => {
     director.world(
       withResident(
         { ...world, revision: 1 },
-        { ...resident, activity: 'at_home', location_node: 2 },
+        { ...resident, activity: 'at_home' as const, location_node: 2 },
       ),
     );
     expect(director.label).toBe('Mika Sato');
@@ -2069,7 +2077,7 @@ describe('CameraDirector', () => {
       name: 'Yuki Tanaka',
       home_building: 10,
       work_building: 11,
-      activity: 'riding_train',
+      activity: 'riding_train' as const,
       train_id: 500,
     };
     const world = withResident(makeWorld(), resident);
@@ -2122,8 +2130,8 @@ describe('CameraDirector', () => {
         id: 30,
         from: 1,
         to: 2,
-        kind: 'local',
-        stage: 'open',
+        kind: 'local' as const,
+        stage: 'open' as const,
         progress: 1,
         connected: true,
         length: 100,
@@ -2162,8 +2170,8 @@ describe('CameraDirector', () => {
       name: 'Yuki Tanaka',
       home_building: 700,
       work_building: null,
-      activity: 'commuting',
-      transfer: 'riding_bus',
+      activity: 'commuting' as const,
+      transfer: 'riding_bus' as const,
       train_id: null,
       bus_id: 600,
       bus_origin_stop: 2,
@@ -2198,8 +2206,8 @@ describe('CameraDirector', () => {
       { ...world, revision: 2, buses: [] },
       {
         ...resident,
-        activity: 'waiting_for_bus',
-        transfer: 'waiting_bus',
+        activity: 'waiting_for_bus' as const,
+        transfer: 'waiting_bus' as const,
         bus_id: null,
         bus_stop_node: 2,
       },
@@ -2215,8 +2223,8 @@ describe('CameraDirector', () => {
       { ...waiting, revision: 3 },
       {
         ...resident,
-        activity: 'walking_from_bus',
-        transfer: 'walking_from_bus',
+        activity: 'walking_from_bus' as const,
+        transfer: 'walking_from_bus' as const,
         bus_id: null,
         bus_stop_node: 1,
         location_node: null,
@@ -2237,8 +2245,8 @@ describe('CameraDirector', () => {
       name: 'Yuki Tanaka',
       home_building: 700,
       work_building: null,
-      activity: 'commuting',
-      transfer: 'riding_inbound',
+      activity: 'commuting' as const,
+      transfer: 'riding_inbound' as const,
       train_id: 500,
     };
     const director = new CameraDirector(
@@ -2253,8 +2261,8 @@ describe('CameraDirector', () => {
       { ...world, revision: 2 },
       {
         ...resident,
-        activity: 'waiting_for_route',
-        transfer: 'waiting_alight',
+        activity: 'waiting_for_route' as const,
+        transfer: 'waiting_alight' as const,
         train_id: null,
         bus_id: null,
         location_node: 2,
@@ -2308,8 +2316,8 @@ describe('CameraDirector', () => {
       name: 'Mika Sato',
       home_building: 700,
       work_building: null,
-      activity: 'waiting_for_bus',
-      transfer: 'waiting_bus',
+      activity: 'waiting_for_bus' as const,
+      transfer: 'waiting_bus' as const,
       bus_id: null,
       bus_origin_stop: 2,
       bus_destination_stop: 1,

@@ -2,7 +2,8 @@ use crate::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Node {
     pub id: u32,
     pub x: f32,
@@ -10,7 +11,8 @@ pub struct Node {
     pub kind: NodeKind,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Road {
     pub id: u32,
     pub from: u32,

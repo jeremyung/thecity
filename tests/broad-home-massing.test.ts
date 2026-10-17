@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { broadHomeMassing } from '../web/src/render/broad-home-massing';
-const home = { kind: 'home', floors: 3, anchor: false };
+const home = { kind: 'home' as const, floors: 3, anchor: false };
 describe('broad residence massing', () => {
   it('retains existing families outside the bounded residential scope', () => {
     for (const b of [
-      { ...home, kind: 'shop' },
+      { ...home, kind: 'shop' as const },
       { ...home, floors: 2 },
       { ...home, anchor: true },
     ])

@@ -1,3 +1,4 @@
+import type { BuildingKind } from '../web/src/types';
 import { describe, expect, it } from 'vitest';
 import {
   lowriseBuildingWidth,
@@ -7,7 +8,7 @@ import {
 
 function building(
   overrides: Partial<{
-    kind: string;
+    kind: BuildingKind;
     floors: number;
     width: number;
     depth: number;
@@ -16,7 +17,7 @@ function building(
   }> = {},
 ) {
   return {
-    kind: 'home',
+    kind: 'home' as const,
     floors: 2,
     width: 10,
     depth: 9,
@@ -40,7 +41,7 @@ function expectInside(layout: LowriseMassing, width: number, depth: number) {
 
 describe('seeded compact low-rise massing', () => {
   it('keeps a full-height frontage and supported one-floor rear service wing inside small parcels', () => {
-    for (const kind of ['home', 'shop', 'cafe'])
+    for (const kind of ['home', 'shop', 'cafe'] as const)
       for (const floors of [1, 2, 3])
         for (const [width, depth] of [
           [6, 6],
@@ -89,10 +90,10 @@ describe('seeded compact low-rise massing', () => {
   it('leaves anchors, other uses, unsupported floor counts and undersized envelopes to their existing kit paths', () => {
     const base = building();
     expect(lowriseBuildingWidth({ ...base, anchor: true }, 8, 8)).toBe(8);
-    expect(lowriseBuildingWidth({ ...base, kind: 'apartment' }, 8, 8)).toBe(8);
+    expect(lowriseBuildingWidth({ ...base, kind: 'apartment' as const }, 8, 8)).toBe(8);
     expect(lowriseBuildingWidth({ ...base, floors: 4 }, 8, 8)).toBe(8);
     expect(lowriseMassing({ ...base, anchor: true }, 8, 8)).toBeNull();
-    expect(lowriseMassing({ ...base, kind: 'apartment' }, 8, 8)).toBeNull();
+    expect(lowriseMassing({ ...base, kind: 'apartment' as const }, 8, 8)).toBeNull();
     expect(lowriseMassing({ ...base, floors: 4 }, 8, 8)).toBeNull();
     expect(lowriseMassing({ ...base, floors: 0 }, 8, 8)).toBeNull();
     expect(lowriseMassing({ ...base, width: 4.99 }, 4.99, 8)).toBeNull();

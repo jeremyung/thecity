@@ -8,7 +8,8 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct RailAlignmentView {
     pub road_id: u32,
     /// [arc distance, x, z, forward unit tangent x, forward unit tangent z].

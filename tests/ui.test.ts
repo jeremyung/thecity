@@ -10,7 +10,7 @@ import Controls, {
   RecentEvents,
   type ControlsProps,
 } from '../web/src/ui/Controls';
-import type { World } from '../web/src/types';
+import type { World, EventKind } from '../web/src/types';
 
 const world: World = {
   schema_version: 1,
@@ -23,8 +23,8 @@ const world: World = {
   revision: 0,
   stage: 'TransitCity',
   bounds: { min_x: -10, max_x: 10, min_z: -10, max_z: 10 },
-  terrain: { river: [], protected: [], gateways: [] },
-  weather: { kind: 'clear', intensity: 0 },
+  terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+  weather: { kind: 'clear' as const, intensity: 0 },
   nodes: [],
   roads: [],
   parcels: [],
@@ -156,7 +156,7 @@ describe('city controls', () => {
             id: 2,
             tick: 11,
             entity_id: 1,
-            kind: 'NewUnrecognizedLongEventKind',
+            kind: 'NewUnrecognizedLongEventKind' as unknown as EventKind,
             reason: 'walking_to_bus',
           },
         ],
@@ -249,7 +249,7 @@ describe('city controls', () => {
           waiting: 3,
         },
       ],
-      bus_lines: [{ id: 8, stops: [1, 2], route: [1, 2], active: false }],
+      bus_lines: [{ stop_positions: [], id: 8, stops: [1, 2], route: [1, 2], active: false }],
     };
     expect(activeBusToFollow(busWorld)).toBeNull();
     busWorld.bus_lines![0].active = true;
@@ -259,17 +259,11 @@ describe('city controls', () => {
   it('uses a friendly bus route label instead of exposing the engine line ID', () => {
     const busWorld: World = {
       ...world,
-      bus_lines: [{ id: 591, stops: [1, 2], route: [1, 2], active: true }],
+      bus_lines: [{ stop_positions: [], id: 591, stops: [1, 2], route: [1, 2], active: true }],
     };
 
     expect(busLineLabel(busWorld, 591)).toBe('Neighborhood line 1');
     expect(busLineLabel(busWorld, 591, '591')).toBe('Neighborhood line 1');
-    expect(
-      busLineLabel(
-        { ...busWorld, bus_lines: [{ ...busWorld.bus_lines![0], name: 'Riverside' }] },
-        591,
-      ),
-    ).toBe('Riverside');
   });
 
   it('shows bus line, next stop, load, dwell and waiting details in the followed subject panel', () => {

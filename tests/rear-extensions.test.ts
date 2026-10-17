@@ -28,6 +28,7 @@ function view(project_id: number, overrides: Partial<RearExtensionView> = {}): R
 
 function host(id: number): Building {
   return {
+    business_active: false,
     id,
     parcel_id: id + 100,
     x: 0,
@@ -36,7 +37,7 @@ function host(id: number): Building {
     width: 12,
     depth: 10,
     floors: 1,
-    kind: 'home',
+    kind: 'home' as const,
     stage: 'open',
     progress: 1,
     capacity: 2,
@@ -65,8 +66,8 @@ function world(
     revision: 0,
     stage: 'Founding',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
-    terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [],
     roads: [],
     parcels: [],
@@ -135,7 +136,7 @@ describe('rear annex rendering', () => {
       const delta = 8,
         s = Math.sin(rotation),
         c = Math.cos(rotation);
-      const building = { ...host(21), ...original, kind: 'apartment', floors: 7 };
+      const building = { ...host(21), ...original, kind: 'apartment' as const, floors: 7 };
       const final = {
         ...building,
         x: building.x - (s * delta) / 2,
@@ -203,6 +204,7 @@ describe('rear annex rendering', () => {
       retired: Array<() => void> = [];
     const extensions = new RearExtensions(art, (release) => retired.push(release));
     const original: Building = {
+      business_active: false,
       id: 9,
       parcel_id: 4,
       x: 10,
@@ -211,7 +213,7 @@ describe('rear annex rendering', () => {
       width: 14,
       depth: 11,
       floors: 2,
-      kind: 'home',
+      kind: 'home' as const,
       stage: 'open',
       progress: 1,
       capacity: 3,

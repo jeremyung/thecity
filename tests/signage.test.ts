@@ -47,8 +47,8 @@ function building(overrides: Partial<Building> = {}): Building {
     width: 14,
     depth: 16,
     floors: 7,
-    kind: 'office',
-    stage: 'open',
+    kind: 'office' as const,
+    stage: 'open' as const,
     progress: 1,
     capacity: 35,
     occupancy: 0,
@@ -134,7 +134,7 @@ describe('commercial signage', () => {
       // A closed business carries no signage; neither does an unfinished building.
       for (const quiet of [
         building({ appearance_seed: SIGNED_SEED, business_active: false }),
-        building({ appearance_seed: SIGNED_SEED, stage: 'construction', progress: 0.5 }),
+        building({ appearance_seed: SIGNED_SEED, stage: 'foundation' as const, progress: 0.5 }),
       ]) {
         const plain = buildingKit(quiet, art, { signage: { proximity: 2 } });
         expect(meshesWith(plain, sign)).toHaveLength(0);
@@ -174,7 +174,7 @@ describe('commercial signage', () => {
     expect(rate(1)).toBeGreaterThan(rate(0));
     expect(rate(0)).toBeGreaterThan(0);
     for (const b of [
-      building({ kind: 'apartment' }),
+      building({ kind: 'apartment' as const }),
       building({ floors: 3 }),
       building({ floors: 12 }),
       building({ anchor: true }),
@@ -189,7 +189,7 @@ describe('commercial signage', () => {
 });
 
 describe('station-area displays', () => {
-  const station = { id: 9, x: 0, z: 0, kind: 'station' };
+  const station = { id: 9, x: 0, z: 0, kind: 'station' as const };
   const world = (buildings: Building[]): Pick<World, 'nodes' | 'buildings'> => ({
     nodes: [station],
     buildings,
@@ -216,8 +216,8 @@ describe('station-area displays', () => {
       building({ id: 1, floors: 4 }),
       building({ id: 2, floors: 14, business_active: false }),
       building({ id: 3, floors: 14, x: 400 }),
-      building({ id: 4, floors: 14, stage: 'construction' }),
-      building({ id: 5, floors: 14, kind: 'home' }),
+      building({ id: 4, floors: 14, stage: 'foundation' as const }),
+      building({ id: 5, floors: 14, kind: 'home' as const }),
     ];
     expect(selectFacadeFeatures(world(buildings)).size).toBe(0);
     expect(selectFacadeFeatures({ nodes: [], buildings: [building({ floors: 14 })] }).size).toBe(0);

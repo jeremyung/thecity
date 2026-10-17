@@ -686,8 +686,9 @@ impl Engine {
     /// as movement_buffer. Tuples are [train_id, terminal_id or -1, fraction].
     pub fn train_doors(&self) -> Vec<f32> {
         let rail_length = self.rail_length_for_doors();
-        let mut out =
-            Vec::with_capacity(self.state.transit.trains.len().min(MAX_PRESENTED_TRAINS) * 3);
+        let mut out = Vec::with_capacity(
+            self.state.transit.trains.len().min(MAX_PRESENTED_TRAINS) * wire::TRAIN_DOOR_STRIDE,
+        );
         for train in self.state.transit.trains.iter().take(MAX_PRESENTED_TRAINS) {
             let (terminal, fraction) = train_door_state(train, rail_length);
             out.extend_from_slice(&[

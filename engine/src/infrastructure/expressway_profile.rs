@@ -1,7 +1,8 @@
 //! Cross sections shared with the renderer; compact remains an isolated experiment.
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, ts_rs::TS)]
+#[ts(export)]
 pub struct ExpresswayProfile {
     pub width: f32,
     pub lane_centers: [f32; 2],

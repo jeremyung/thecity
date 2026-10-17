@@ -101,7 +101,7 @@ describe('window schedules', () => {
     expect(windowLived(building('home', 2, 1))).toBe(1);
     expect(windowLived(building('home', 2, 1, { occupancy: 0 }))).toBe(0);
     expect(windowLived(building('shop', 2, 1, { business_active: false }))).toBe(0);
-    expect(windowLived(building('office', 4, 1, { stage: 'construction' }))).toBe(0);
+    expect(windowLived(building('office', 4, 1, { stage: 'foundation' }))).toBe(0);
   });
 });
 

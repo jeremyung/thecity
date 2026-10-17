@@ -1,3 +1,4 @@
+import { MOVEMENT_PACKET_VERSION } from './generated/wire';
 import { isMovementKind, MOVEMENT_STRIDE } from './movement';
 
 export interface MovementSupport {
@@ -18,7 +19,8 @@ export interface SupportedMovement {
  * Worker protocol v5 transfers this packet; the client decodes before recycling.
  */
 export function decodeMovementPacket(packet: Uint32Array): SupportedMovement {
-  if (packet.length < 2 || packet[0] !== 1) throw new Error('Unsupported movement support packet');
+  if (packet.length < 2 || packet[0] !== MOVEMENT_PACKET_VERSION)
+    throw new Error('Unsupported movement support packet');
   const rows = packet[1];
   // Validate advertised size before allocating from an untrusted row count.
   if (rows > Math.floor((packet.length - 2) / 9))

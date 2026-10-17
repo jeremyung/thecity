@@ -1,7 +1,8 @@
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct Parcel {
     pub id: u32,
     pub x: f32,

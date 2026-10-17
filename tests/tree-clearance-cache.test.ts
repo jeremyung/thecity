@@ -16,8 +16,8 @@ function world(overrides: Partial<World> = {}): World {
     revision: 1,
     stage: 'Founding',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
-    terrain: { river: [], protected: [], gateways: [] },
-    weather: { kind: 'clear', intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [],
     roads: [],
     parcels: [],
@@ -45,6 +45,7 @@ function building(x: number, z: number) {
     progress: 1,
     capacity: 1,
     occupancy: 1,
+    business_active: false,
     built_day: 0,
     name: 'Home',
     appearance_seed: 1,
@@ -168,7 +169,7 @@ describe('tree clearance cache', () => {
       world({
         tick: 25,
         revision: 99,
-        weather: { kind: 'rain', intensity: 0.7 },
+        weather: { kind: 'rain' as const, intensity: 0.7 },
         buildings: [{ ...building(0, 0), progress: 0.5, floors: 8 }],
       }),
     );

@@ -55,6 +55,7 @@ function worldWithBuildings(buildings: World['buildings']): World {
     stage: 'Founding',
     bounds: { min_x: -400, max_x: 400, min_z: -400, max_z: 400 },
     terrain: {
+      river_half_width: 32,
       river: [
         { x: 10, z: 0 },
         { x: 30, z: 0 },
@@ -62,7 +63,7 @@ function worldWithBuildings(buildings: World['buildings']): World {
       protected: [],
       gateways: [],
     },
-    weather: { kind: 'clear', intensity: 0 },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [],
     roads: [],
     parcels: [],
@@ -75,6 +76,7 @@ function worldWithBuildings(buildings: World['buildings']): World {
 }
 function building(id: number, x: number, z: number): World['buildings'][number] {
   return {
+    business_active: false,
     id,
     parcel_id: id + 1000,
     x,
@@ -83,7 +85,7 @@ function building(id: number, x: number, z: number): World['buildings'][number] 
     width: 22,
     depth: 16,
     floors: 18,
-    kind: 'office',
+    kind: 'office' as const,
     stage: 'open',
     progress: 1,
     capacity: 24,

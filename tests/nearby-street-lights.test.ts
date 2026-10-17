@@ -57,8 +57,8 @@ describe('nearby street-light sources', () => {
     const art = new ArtMaterials();
     const world = {
       nodes: [
-        { id: 1, x: -100, z: 0, kind: 'intersection' },
-        { id: 2, x: 100, z: 0, kind: 'intersection' },
+        { id: 1, x: -100, z: 0, kind: 'junction' },
+        { id: 2, x: 100, z: 0, kind: 'junction' },
       ],
       roads: [
         {
@@ -173,8 +173,8 @@ describe('nearby street-light sources', () => {
     const art = new ArtMaterials();
     const world = {
       nodes: [
-        { id: 1, x: -100, z: 0, kind: 'intersection' },
-        { id: 2, x: 100, z: 0, kind: 'intersection' },
+        { id: 1, x: -100, z: 0, kind: 'junction' },
+        { id: 2, x: 100, z: 0, kind: 'junction' },
       ],
       roads: [
         {

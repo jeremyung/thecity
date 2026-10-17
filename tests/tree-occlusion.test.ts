@@ -8,7 +8,15 @@ import {
   treeOcclusion,
   type TreePoint,
 } from '../web/src/render/tree-occlusion';
-import type { Building, Point, RearExtensionView, Road, World, WorldNode } from '../web/src/types';
+import type {
+  Building,
+  Point,
+  RearExtensionView,
+  Road,
+  World,
+  WorldNode,
+  RoadKind,
+} from '../web/src/types';
 
 function random(seed: number) {
   return () => {
@@ -29,11 +37,12 @@ function building(id: number, x: number, z: number, overrides: Partial<Building>
     width: 10,
     depth: 9,
     floors: 3,
-    kind: 'shop',
+    kind: 'shop' as const,
     stage: 'open',
     progress: 1,
     capacity: 8,
     occupancy: 4,
+    business_active: false,
     built_day: 1,
     name: `b${id}`,
     appearance_seed: id,
@@ -43,7 +52,7 @@ function building(id: number, x: number, z: number, overrides: Partial<Building>
     ...overrides,
   };
 }
-function road(id: number, from: number, to: number, kind: string): Road {
+function road(id: number, from: number, to: number, kind: RoadKind): Road {
   return { id, from, to, kind, stage: 'open', progress: 1, connected: true, length: 0, lanes: 2 };
 }
 function world(
@@ -83,7 +92,15 @@ function randomWorld(seed: number) {
     z: at(),
     kind: 'junction',
   }));
-  const kinds = ['lane', 'local', 'arterial', 'bridge', 'rail', 'expressway', 'collector'];
+  const kinds = [
+    'lane',
+    'local',
+    'arterial',
+    'bridge',
+    'rail',
+    'expressway',
+    'collector',
+  ] as RoadKind[];
   // Diagonal and long roads, plus a few with missing endpoints.
   const roads = Array.from({ length: 90 }, (_, id) =>
     road(id, Math.floor(rand() * 62), Math.floor(rand() * 60), kinds[id % kinds.length]),
@@ -97,7 +114,7 @@ function randomWorld(seed: number) {
     depth: 4 + rand() * 8,
     rotation: rand() * Math.PI,
     floors: 2,
-    stage: i === 1 ? 'survey' : 'framing',
+    stage: i === 1 ? 'survey' : 'foundation',
     progress: 0.5,
   }));
   // Varied canopy sizes, many placed exactly on or just either side of 24 m cell lines.

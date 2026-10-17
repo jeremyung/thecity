@@ -1,4 +1,12 @@
-import type { Building, RailAlignment, Point, RearExtensionView, Road, WorldNode } from '../types';
+import type {
+  Building,
+  RailAlignment,
+  Point,
+  RearExtensionView,
+  Road,
+  RoadKind,
+  WorldNode,
+} from '../types';
 
 const TREE_CELL = 24;
 
@@ -40,7 +48,7 @@ export function createTreeClearanceGrid(
   rearExtensions: readonly RearExtensionView[],
   nodes: readonly WorldNode[],
   maxCanopy: number,
-  roadReach: (kind: string) => number,
+  roadReach: (kind: RoadKind) => number,
   railAlignments: readonly RailAlignment[] = [],
 ): (point: Point) => TreeClearanceCandidates {
   const railById = new Map(railAlignments.map((path) => [path.road_id, path]));

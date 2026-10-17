@@ -9,14 +9,14 @@ import {
   partyWallBodyWidth,
 } from '../web/src/render/kit';
 import { midriseMassing } from '../web/src/render/building-massing';
-import type { Building } from '../web/src/types';
+import type { Building, Stage } from '../web/src/types';
 
 function office(
   width: number,
   depth: number,
   floors: number,
   appearance_seed: number,
-  stage: string,
+  stage: Stage,
   progress: number,
 ): Building {
   return {
@@ -28,7 +28,7 @@ function office(
     width,
     depth,
     floors,
-    kind: 'office',
+    kind: 'office' as const,
     stage,
     progress,
     capacity: 25,
@@ -82,9 +82,9 @@ describe('office parcel fitting', () => {
     ];
     const stages = [
       ['open', 1],
-      ['construction', 0],
-      ['construction', 0.8],
-      ['construction', 1],
+      ['foundation', 0],
+      ['foundation', 0.8],
+      ['foundation', 1],
       ['renovation', 0.5],
     ] as const;
 

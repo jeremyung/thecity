@@ -609,7 +609,7 @@ export function renderUrbanFacade(
       if (!doorOpening && b.kind !== 'office')
         kit.box(0, y - 1.02, z + side * 0.08, w + 0.18, 0.14, 0.2, paleConcrete);
       kit.box(0, base + (f + 1) * floor - 0.12, z + side * 0.08, w + 0.28, 0.18, 0.22, trim);
-      if (!doorOpening && baseFloor + f === 0 && (b.kind === 'office' || b.kind === 'station')) {
+      if (!doorOpening && baseFloor + f === 0 && b.kind === 'office') {
         kit.box(0, base + 1.12, z + side * 0.14, w * 0.68, 0.28, 0.08, wood);
       }
     }

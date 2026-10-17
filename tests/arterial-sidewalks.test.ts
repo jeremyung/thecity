@@ -6,7 +6,7 @@ import {
 } from '../web/src/render/arterial-sidewalks';
 
 const nodes = (rows: [number, number, number][]) =>
-  rows.map(([id, x, z]) => ({ id, x, z, kind: 'road' }) as WorldNode);
+  rows.map(([id, x, z]) => ({ id, x, z, kind: 'junction' }) as WorldNode);
 const road = (id: number, from: number, to: number, kind = 'arterial', stage = 'open') =>
   ({ id, from, to, kind, stage, progress: 1, connected: true, length: 1, lanes: 2 }) as Road;
 const world = (ns: WorldNode[], rs: Road[]) => ({ nodes: ns, roads: rs });

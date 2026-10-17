@@ -4,12 +4,12 @@ import type { Road, WorldNode } from '../web/src/types';
 import { CitySidewalks } from '../web/src/render/sidewalks';
 import { SidewalkBuild } from '../web/src/render/sidewalk-build';
 
-const node = (id: number, x: number, z: number): WorldNode => ({ id, x, z, kind: 'road' });
+const node = (id: number, x: number, z: number): WorldNode => ({ id, x, z, kind: 'junction' });
 const road = (id: number, from: number, to: number): Road => ({
   id,
   from,
   to,
-  kind: 'arterial',
+  kind: 'arterial' as const,
   stage: 'open',
   progress: 1,
   connected: true,

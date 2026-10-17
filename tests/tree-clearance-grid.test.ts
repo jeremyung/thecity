@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { Building, Point, RearExtensionView, Road, WorldNode } from '../web/src/types';
+import type {
+  Building,
+  Point,
+  RearExtensionView,
+  Road,
+  WorldNode,
+  NodeKind,
+  RoadKind,
+} from '../web/src/types';
 import { createTreeClearanceGrid } from '../web/src/render/tree-clearance-grid';
 
 const building = (
@@ -98,10 +106,10 @@ describe('tree clearance broad-phase grid', () => {
 
   it('covers diagonal and negative-coordinate roads across cell boundaries, retaining source order and excluding expressways', () => {
     const nodes: WorldNode[] = [
-      { id: 1, x: -51, z: -49, kind: 'road' },
-      { id: 2, x: 51, z: 49, kind: 'road' },
-      { id: 3, x: 24, z: -51, kind: 'road' },
-      { id: 4, x: 24, z: 51, kind: 'road' },
+      { id: 1, x: -51, z: -49, kind: 'junction' as const },
+      { id: 2, x: 51, z: 49, kind: 'junction' as const },
+      { id: 3, x: 24, z: -51, kind: 'junction' as const },
+      { id: 4, x: 24, z: 51, kind: 'junction' as const },
     ];
     const roads = [
       road(1, 1, 2),
@@ -109,7 +117,7 @@ describe('tree clearance broad-phase grid', () => {
       road(3, 1, 2, 'expressway'),
       road(4, 100, 101),
     ];
-    const reach = (kind: string) => (kind === 'lane' ? 4 : 3);
+    const reach = (kind: RoadKind) => (kind === 'lane' ? 4 : 3);
     const find = createTreeClearanceGrid([], roads, [], nodes, 0, reach);
     const points = [
       { x: 0, z: 0 },
