@@ -1,14 +1,15 @@
+// Requires npm run wasm:legacy; production WASM deliberately excludes these APIs.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { AccessDiscovery, initSync } from '../../public/wasm/city_engine.js';
+import { AccessDiscovery, initSync } from '../../.tools/wasm-legacy/city_engine.js';
 
 initSync({
-  module: readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)),
+  module: readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
 });
 const save = readFileSync(
   new URL(
-    '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+    '../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json',
     import.meta.url,
   ),
   'utf8',
@@ -61,10 +62,11 @@ function run() {
     assert.notEqual(stageName(job), beforeStage);
     if (boundary.done) break;
   }
-  const descriptorCount = JSON.parse(job.advance(0)).descriptor_count ?? 2069;
+  const descriptorCount = JSON.parse(job.advance(0)).descriptor_count;
   const descriptorBits = JSON.parse(job.descriptor_bits());
   job.free();
   return {
+    descriptor_bits: descriptorBits,
     stages: workByStage,
     total_work: total,
     descriptor_count: descriptorBits.length,
@@ -72,15 +74,40 @@ function run() {
   };
 }
 
-const result = run();
-assert.equal(result.total_work, 6_233_215);
-assert.equal(result.descriptor_count, 2_069);
+// Compare instrumented accounting to an uninterrupted run, not a historical
+// magic total that becomes stale when candidate sampling changes.
+const baseline = new AccessDiscovery(save);
+let baselineWork = 0;
+let baselineBits;
+try {
+  for (;;) {
+    const step = JSON.parse(baseline.advance(maxChunk));
+    assert.equal(step.error, null);
+    baselineWork += step.work_used;
+    if (step.done) break;
+    assert.ok(step.work_used > 0);
+  }
+  baselineBits = JSON.parse(baseline.descriptor_bits());
+} finally {
+  baseline.free();
+}
+const { descriptor_bits, ...result } = run();
+const reference = JSON.parse(
+  readFileSync(
+    new URL('../../tests/fixtures/validation/access-descriptor-reference.json', import.meta.url),
+    'utf8',
+  ),
+);
+assert.equal(result.total_work, baselineWork);
+assert.equal(result.descriptor_count, reference.descriptor_count);
+assert.equal(result.descriptor_count_reported, result.descriptor_count);
+assert.deepEqual(descriptor_bits, baselineBits);
 const report = {
-  source_save: 'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+  source_save: 'tests/fixtures/access-joins/early-reservation-wasm-87231-save.json',
   source_save_sha256: createHash('sha256').update(save).digest('hex'),
-  wasm_binary: 'public/wasm/city_engine_bg.wasm',
+  wasm_binary: '.tools/wasm-legacy/city_engine_bg.wasm',
   wasm_sha256: createHash('sha256')
-    .update(readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)))
+    .update(readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)))
     .digest('hex'),
   chunk_work: maxChunk,
   ...result,

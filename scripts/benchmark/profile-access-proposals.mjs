@@ -1,19 +1,20 @@
+// Requires npm run wasm:legacy; production WASM deliberately excludes these APIs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
-import { AccessProposalWorld, initSync } from '../../public/wasm/city_engine.js';
+import { AccessProposalWorld, initSync } from '../../.tools/wasm-legacy/city_engine.js';
 initSync({
-  module: readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)),
+  module: readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
 });
-const read = (name) =>
-  JSON.parse(readFileSync(new URL(`../../validation/${name}`, import.meta.url), 'utf8'));
+const read = (name, directory = 'tests/fixtures/validation') =>
+  JSON.parse(readFileSync(new URL(`../../${directory}/${name}`, import.meta.url), 'utf8'));
 const reference = read('access-descriptor-reference.json');
 const validationBits = [
   ...reference.ordered_descriptor_bits,
   read('accepted-access-candidate.json').bits,
 ];
-const native = read('incremental-proposal-validation.json')[0].proposals;
+const native = read('incremental-proposal-validation.json', 'validation')[0].proposals;
 const u = new Uint32Array(1),
   f = new Float32Array(u.buffer);
 const decode = (bits) => {
@@ -24,7 +25,7 @@ const begin = performance.now();
 const world = new AccessProposalWorld(
   readFileSync(
     new URL(
-      '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+      '../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json',
       import.meta.url,
     ),
     'utf8',
@@ -88,7 +89,7 @@ try {
 assert.equal(runs[0].work, runs[1].work);
 const report = {
   wasm_sha256: createHash('sha256')
-    .update(readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)))
+    .update(readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)))
     .digest('hex'),
   scope: 'Node WASM proposal validation; not browser render timing or live scheduler',
   capture_including_city_restore_ms: captureMs,

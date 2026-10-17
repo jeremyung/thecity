@@ -1,12 +1,13 @@
+// Requires npm run wasm:legacy; production WASM deliberately excludes these APIs.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { AccessDiscovery, initSync } from '../../public/wasm/city_engine.js';
+import { AccessDiscovery, initSync } from '../../.tools/wasm-legacy/city_engine.js';
 
 initSync({
-  module: readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)),
+  module: readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
 });
 const save = readFileSync(
   new URL(
-    '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+    '../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json',
     import.meta.url,
   ),
   'utf8',
@@ -224,7 +225,7 @@ for (const k of new Set([...wc.keys(), ...nc.keys()]))
 const report = {
   scope:
     'WASM frozen checkpoint stage comparison against native reference inputs/output; no reference or engine source changed.',
-  source_save: 'tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+  source_save: 'tests/fixtures/access-joins/early-reservation-wasm-87231-save.json',
   source_save_sha256: 'f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e',
   wasm_work: work,
   advance_calls: calls,

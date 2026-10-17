@@ -20,6 +20,34 @@ CI also checks formatting (`npm run format:check`), import boundaries
 `npm run types` leaves `web/src/generated` unchanged, and that the tree is clean after
 the build.
 
+## Legacy diagnostic tools
+
+These tools require the isolated legacy build and the maintained save fixtures:
+
+```sh
+npm run setup:fixtures
+npm run wasm:legacy
+node scripts/diagnose/diagnose-discovery-parity.mjs
+node scripts/diagnose/diagnose-discovery-work-breakdown.mjs
+node scripts/benchmark/profile-access-discovery.mjs
+```
+
+The proposal profiler also compares against a locally generated native report:
+
+```sh
+npm run test:engine -- --release mature_incremental_proposal_validation_matches_live_oracle -- --ignored
+node scripts/benchmark/profile-access-proposals.mjs
+```
+
+The CPU building-chunk benchmark defaults to the maintained 850-building fixture:
+
+```sh
+node scripts/benchmark/benchmark-staged-building-chunks.mjs
+```
+
+Its optional arguments remain input JSON, output JSON, and output Markdown. Reports
+are local evidence; do not commit timing changes from a diagnostic run.
+
 ## Adding things
 
 - **A simulation system:** write the function in the owning domain module, then add a

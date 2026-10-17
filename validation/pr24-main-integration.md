@@ -24,8 +24,26 @@ Validation on the integrated tree:
 - Generated type regeneration, dependency boundaries, file-size check, architecture
   asset verification, Prettier, and seven review-evidence tests passed.
 
-This merge resolution does not change the separate review findings about the moved
-staged-building benchmark root or legacy diagnostic WASM imports.
+The subsequent review fix corrects the moved benchmark root, points the legacy
+diagnostics and profilers at `.tools/wasm-legacy`, and uses the maintained save
+fixture. Setup commands are documented in CONTRIBUTING.md.
 - Headless Chromium/WebGL smoke attempt was inconclusive: the architecture-city
   page timed out while reading its body after startup. No new visual acceptance
   is claimed by this merge resolution.
+
+## Review tooling follow-up
+
+- Corrected the staged-building benchmark's repository root after its move into
+  `scripts/benchmark/`; its default input is now the maintained 850-building save.
+- Switched discovery/proposal diagnostics and profilers to the isolated legacy
+  WASM build, including recorded binary hashes, and current-schema save inputs.
+- Proposal descriptor inputs use their relocated fixture directory; its native
+  oracle report remains a locally generated prerequisite.
+- Replaced stale work/count constants in the breakdown diagnostic with an
+  independent uninterrupted-run comparison and the current descriptor fixture.
+
+Validation: the 850-building benchmark completed; discovery input parity,
+work-breakdown accounting (7,506,942 work units, 3,180 descriptors), quota/checkpoint
+profiling, and native/WASM proposal profiling completed. The native proposal oracle
+passed. All 768 web tests and the production build passed again. Dependency, size,
+formatting, and whitespace checks passed. No generated timing reports are committed.

@@ -1,15 +1,16 @@
+// Requires npm run wasm:legacy; production WASM deliberately excludes these APIs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
-import { AccessDiscovery, initSync } from '../../public/wasm/city_engine.js';
+import { AccessDiscovery, initSync } from '../../.tools/wasm-legacy/city_engine.js';
 
 initSync({
-  module: readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)),
+  module: readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)),
 });
 const save = readFileSync(
   new URL(
-    '../../tests/fixtures/validation/early-reservation-wasm-87231-save.json',
+    '../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json',
     import.meta.url,
   ),
   'utf8',
@@ -118,7 +119,7 @@ const report = {
   reference_path: referencePath,
   reference_sha256: createHash('sha256').update(referenceText).digest('hex'),
   wasm_sha256: createHash('sha256')
-    .update(readFileSync(new URL('../../public/wasm/city_engine_bg.wasm', import.meta.url)))
+    .update(readFileSync(new URL('../../.tools/wasm-legacy/city_engine_bg.wasm', import.meta.url)))
     .digest('hex'),
   scope:
     'Node WASM, not browser rendering or worker performance; advance includes WASM boundary and status JSON; construction includes city restore',

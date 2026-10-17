@@ -6,9 +6,10 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '../..');
 const inputPath = resolve(
-  process.argv[2] ?? 'validation/early-reservation-wasm-87231-snapshot.json',
+  process.argv[2] ??
+    resolve(root, 'tests/fixtures/access-joins/early-reservation-wasm-87231-save.json'),
 );
 const outputPath = resolve(process.argv[3] ?? 'validation/staged-building-chunks-benchmark.json');
 const markdownPath = resolve(process.argv[4] ?? outputPath.replace(/\.json$/i, '.md'));
