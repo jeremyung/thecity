@@ -1,3 +1,4 @@
+import {resolveMediaLandmarks} from './architecture/media-landmark-selection';
 import {applyCommercialDistrict,parseCommercialDistrict,type CommercialDistrict} from './architecture/commercial-district';
 import {buildBusinessBuilding} from './architecture/business';
 import {resolveBusinessRecipes,businessCanHostAdvertising,BUSINESS_RECIPE_VERSION,parseDisplayMode,type BusinessRecipe,type DisplayMode} from './architecture/business-recipes';
@@ -548,10 +549,11 @@ export class CityRenderer {
     for(const id of this.buildings.keys())if(!ids.has(id)){this.chunks.remove(id);this.buildings.delete(id);this.apartmentDetails.delete(id);}
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
-    const layout=world.buildings.map(b=>`${b.id}:${b.kind}:${b.anchor}:${b.appearance_seed}:${b.floors}:${b.width}:${b.depth}:${b.x}:${b.z}:${b.stage}:${originals.has(b.id)}`).join('|');
-    if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));for(const b of world.buildings){const recipe=this.businessChoices.get(b.id);if(recipe)this.businessChoices.set(b.id,applyCommercialDistrict(b,recipe,this.commercialDistrict,world.seed));}}
+    const network=world.nodes.map(n=>`${n.id}:${n.kind}:${n.x}:${n.z}`).join(',')+world.roads.map(r=>`${r.from}:${r.to}`).join(',');
+    const layout=network+world.buildings.map(b=>`${b.id}:${b.kind}:${b.anchor}:${b.appearance_seed}:${b.floors}:${b.width}:${b.depth}:${b.x}:${b.z}:${b.stage}:${originals.has(b.id)}`).join('|');
+    if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));for(const b of world.buildings){const recipe=this.businessChoices.get(b.id);if(recipe)this.businessChoices.set(b.id,applyCommercialDistrict(b,recipe,this.commercialDistrict,world.seed));}this.businessChoices=resolveMediaLandmarks(world,this.businessChoices,this.commercialDistrict);}
     const mediaEligible=new Set(world.buildings.filter(b=>{const recipe=this.businessChoices.get(b.id);return !recipe||businessCanHostAdvertising(recipe);}).map(b=>b.id));
-    const signage=this.signage=signageContexts(world,mediaEligible);
+    const signage=this.signage=signageContexts(world,mediaEligible,new Set([...this.businessChoices].filter(([,r])=>r.mediaLandmark).map(([id])=>id)));
     for(const b of world.buildings){
       const original=originals.get(b.id);
       const context=signage.get(b.id);
@@ -1112,6 +1114,7 @@ export class CityRenderer {
   private animate(){
     if(this.disposed)return;
     const now=performance.now(),frameInterval=this.lastFrame?now-this.lastFrame:1000/60,dt=Math.min(.1,frameInterval/1000);this.lastFrame=now;
+    this.art.displayTime.value+=dt;
     const begin=performance.now();
     const timingPhase=this.objectQueue.size||this.chunks.pendingCount||this.sidewalks.pendingCount||this.pendingRoads||this.pendingCompiles?'loading':'ready';
     this.updateApartmentDetail(now);
@@ -1247,7 +1250,7 @@ export class CityRenderer {
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
     const apartmentArt=this.apartmentResources.art;
-    apartmentArt.night.value=this.art.night.value;apartmentArt.wet.value=this.art.wet.value;apartmentArt.time.value=this.art.time.value;
+    apartmentArt.night.value=this.art.night.value;apartmentArt.wet.value=this.art.wet.value;apartmentArt.time.value=this.art.time.value;apartmentArt.displayTime.value=this.art.displayTime.value;
     apartmentArt.sunDirection.value.copy(this.art.sunDirection.value);apartmentArt.cloudShadow.value=this.art.cloudShadow.value;
     for(const activity of ['home','office','shop'] as const)apartmentArt.occupancy[activity].value=this.art.occupancy[activity].value;
     apartmentArt.litHome.value=this.art.litHome.value;apartmentArt.litOffice.value=this.art.litOffice.value;apartmentArt.litShop.value=this.art.litShop.value;

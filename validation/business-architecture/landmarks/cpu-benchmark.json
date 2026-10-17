@@ -1,0 +1,77 @@
+{
+  "method": "Node CPU geometry only; eight passes over all three production-selected landmark forms, each LOD and display mode. Shared resources; no GPU frame-rate claim.",
+  "report": [
+    {
+      "detail": "close",
+      "displays": "animated",
+      "samples": 24,
+      "p50BuildMs": 1.7062909999999931,
+      "p95BuildMs": 4.4495000000000005,
+      "maxTriangles": 4120
+    },
+    {
+      "detail": "close",
+      "displays": "static",
+      "samples": 24,
+      "p50BuildMs": 1.2983340000000112,
+      "p95BuildMs": 2.164457999999996,
+      "maxTriangles": 4120
+    },
+    {
+      "detail": "close",
+      "displays": "off",
+      "samples": 24,
+      "p50BuildMs": 1.4170000000000016,
+      "p95BuildMs": 2.233249999999998,
+      "maxTriangles": 5080
+    },
+    {
+      "detail": "district",
+      "displays": "animated",
+      "samples": 24,
+      "p50BuildMs": 1.2326249999999845,
+      "p95BuildMs": 1.8052920000000086,
+      "maxTriangles": 4120
+    },
+    {
+      "detail": "district",
+      "displays": "static",
+      "samples": 24,
+      "p50BuildMs": 1.3102499999999964,
+      "p95BuildMs": 1.910250000000019,
+      "maxTriangles": 4120
+    },
+    {
+      "detail": "district",
+      "displays": "off",
+      "samples": 24,
+      "p50BuildMs": 1.4430830000000014,
+      "p95BuildMs": 2.109207999999967,
+      "maxTriangles": 5080
+    },
+    {
+      "detail": "far",
+      "displays": "animated",
+      "samples": 24,
+      "p50BuildMs": 1.3093749999999886,
+      "p95BuildMs": 1.8102499999999964,
+      "maxTriangles": 4504
+    },
+    {
+      "detail": "far",
+      "displays": "static",
+      "samples": 24,
+      "p50BuildMs": 1.3869579999999928,
+      "p95BuildMs": 1.9429999999999836,
+      "maxTriangles": 4504
+    },
+    {
+      "detail": "far",
+      "displays": "off",
+      "samples": 24,
+      "p50BuildMs": 1.41274999999996,
+      "p95BuildMs": 1.784041000000002,
+      "maxTriangles": 4504
+    }
+  ]
+}

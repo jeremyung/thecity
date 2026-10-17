@@ -14,7 +14,7 @@ export function districtAt(b:Building,mode:CommercialDistrict,worldSeed=0):Dense
 /** Presentation grammar only; authoritative parcel, height, use and capacity stay intact. */
 export function applyCommercialDistrict(b:Building,r:BusinessRecipe,mode:CommercialDistrict,worldSeed=0):BusinessRecipe{
  const district=districtAt(b,mode,worldSeed);
- if(!district||r.towerForm||b.anchor||b.floors>12||b.width>36||b.depth>40||!['shop','cafe','office'].includes(b.kind)||b.kind==='office'&&(b.floors<3||b.floors>10))return r;
+ if(!district||r.mediaLandmark||r.towerForm||b.anchor||b.floors>12||b.width>36||b.depth>40||!['shop','cafe','office'].includes(b.kind)||b.kind==='office'&&(b.floors<3||b.floors>10))return r;
  const forms:Record<DenseDistrict,readonly BusinessRecipe['form'][]>= {shibuya:['media','tenant','frame'],roppongi:['tenant','ribbon','frame'],akihabara:['media','tenant','department'],shinjuku:['tenant','media','frame'],ameyoko:['loft','arcade','shop-house']};
  const market=district==='ameyoko',nightlife=district==='roppongi'||district==='shinjuku';
  return {...r,id:`${r.id}/${district}`,district,label:`${district} · ${r.label}`,form:forms[district][architecturalChoice(b.appearance_seed,535)%3],bay:market?2.4:2.8,

@@ -1,3 +1,4 @@
+import {buildMediaLandmark} from './media-landmark';
 import {districtFrontage} from './district-frontage';
 import {buildCorporateSkyscraper} from './corporate-skyscraper';
 import {businessEnvelope,businessFacadeParts,businessRoofServices,fabricAwning} from './business-components';
@@ -16,6 +17,7 @@ export interface BusinessBuildOptions {recipe:BusinessRecipe;detail?:'close'|'di
 /** Local Y-up geometry; city owns placement/batching and shared material lifetime. */
 export function buildBusinessBuilding(b:Building,art:ArtMaterials,options:BusinessBuildOptions):THREE.Group|null{
  if(!supportsBusiness(b))return null;
+ if(options.recipe.mediaLandmark)return buildMediaLandmark(b,art,options);
  if(options.recipe.towerForm)return buildCorporateSkyscraper(b,art,options);
  const r=options.recipe,detail=options.detail??'district',displays=options.displays??'animated',seed=b.appearance_seed;
  const kit=new Kit(),base=.58,fh=3.25,w=b.width-1,d=(b.depth-2.2)*(r.form==='slab'?.78:1),front=d/2,back=-d/2;

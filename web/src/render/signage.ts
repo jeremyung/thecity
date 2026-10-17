@@ -103,7 +103,7 @@ export function streetSignSurface(art: ArtMaterials) {
 export function videoScreenSurface(art: ArtMaterials, program=0) {
   const variant=((program%BILLBOARDS.length)+BILLBOARDS.length)%BILLBOARDS.length;
   return art.shared(`video-screen-${variant}`, () => {
-    const t = art.time.mul(.035+variant*.012).add(variant*1.7), p = uv();
+    const t = art.displayTime.mul(.035+variant*.012).add(variant*1.7), p = uv();
     const hue = p.x.mul(.55).add(p.y.mul(.3)).add(t);
     const field = vec3(cos(hue.mul(6.2832)), cos(hue.add(.33).mul(6.2832)), cos(hue.add(.67).mul(6.2832))).mul(.5).add(.5);
     const centre = vec2(sin(t.mul(3.1)).mul(.28).add(.5), cos(t.mul(2.3)).mul(.22).add(.5));
@@ -128,6 +128,39 @@ export function videoScreenSurface(art: ArtMaterials, program=0) {
     for (const material of [anime, miniature]) (material as unknown as { emissiveNode: typeof picture }).emissiveNode = picture;
     return { anime, miniature };
   });
+}
+
+/** Building-scale graphic campaigns: sculptural orbit, ribbons, constellation and equalizer. */
+export function mediaArtworkSurface(art:ArtMaterials,program=0){
+ const variant=((program%4)+4)%4;
+ return art.shared(`media-artwork-${variant}`,()=>{
+  const p=uv(),t=art.displayTime.mul(.17+variant*.05).add(variant*1.7),q=p.sub(vec2(.5,.55));
+  const palettes=[['#0d234a','#28d8ed','#fa614e'],['#33144f','#ff56ae','#f4d366'],['#072e34','#5ef1c9','#f6c26f'],['#1d1743','#9280ff','#f76c88']];
+  const [bg,ink,accent]=palettes[variant],radius=length(q.mul(vec2(1, .8)));
+  let hero;
+  if(variant===0){
+   const orbit=length(q.add(vec2(sin(t).mul(.12),cos(t.mul(.7)).mul(.08))).mul(vec2(1,1.4)));
+   hero=smoothstep(.012,.035,orbit.sub(.25).abs()).oneMinus().add(smoothstep(.04,.12,length(q.sub(vec2(cos(t).mul(.27),sin(t).mul(.18))))).oneMinus());
+  }else if(variant===1){
+   const wave=sin(p.y.mul(12).add(t)).mul(.16).add(.5);
+   hero=smoothstep(.03,.1,p.x.sub(wave).abs()).oneMinus().add(smoothstep(.02,.06,p.x.sub(wave.add(.22)).abs()).oneMinus().mul(.7));
+  }else if(variant===2){
+   const cell=fract(p.mul(vec2(6,9)).add(vec2(sin(t).mul(.12),t.mul(.08)))).sub(.5);
+   hero=smoothstep(.035,.12,length(cell)).oneMinus().mul(sin(p.x.mul(9).add(p.y.mul(6)).add(t)).mul(.35).add(.65));
+  }else{
+   const column=fract(p.x.mul(9)).sub(.5).abs(),height=sin(p.x.mul(13).add(t)).mul(.2).add(.5);
+   hero=smoothstep(.25,.4,column).oneMinus().mul(smoothstep(height,height.add(.025),p.y).oneMinus()).mul(smoothstep(.19,.22,p.y));
+  }
+  const background=mix(color(bg),color(accent),smoothstep(0,.5,radius).oneMinus().mul(.3));
+  const graphic=mix(background,color(ink),hero.clamp(0,1));
+  const atlas=streetSignSurface(art).map!,cell=billboardCell(variant*3);
+  const labelUV=vec2(p.x,p.y.div(.17).clamp(0,1));
+  const label=texture(atlas,labelUV.mul(vec2(cell.u1-cell.u0,cell.v1-cell.v0)).add(vec2(cell.u0,cell.v0))).rgb;
+  const picture=mix(label,graphic,smoothstep(.16,.18,p.y)).mul(art.night.mul(.4).add(.85)).mul(art.litShop);
+  const anime=new THREE.MeshToonNodeMaterial({color:'#000000',gradientMap:art.toonRamp}),miniature=new THREE.MeshStandardNodeMaterial({color:'#000000',roughness:.4});
+  for(const material of [anime,miniature]){(material as unknown as {emissiveNode:typeof picture}).emissiveNode=picture;material.userData.mediaArtwork=variant;}
+  return {anime,miniature};
+ });
 }
 
 function mapPlane(width: number, height: number, c: AtlasCell) {
@@ -247,20 +280,25 @@ const FEATURE_RADIUS = 220, FEATURE_SPACING = 30;
 /** A building can host a podium display: towers, and setback offices of 4–11 floors. */
 export function canHostFacadeFeature(b: Building) {
   if (b.stage !== 'open' || b.anchor || b.business_active === false) return false;
-  return (b.floors >= 12 && (b.kind === 'office' || b.kind === 'apartment')) || (b.kind==='office' && b.floors>=6 && b.floors<=11)||(['shop','cafe'].includes(b.kind)&&b.floors>=3&&b.floors<=11);
+  return (b.floors >= 12 && (b.kind === 'office' || b.kind === 'apartment')) || (b.kind==='office' && b.floors>=6 && b.floors<=11)||(['shop','cafe'].includes(b.kind)&&b.floors>=3&&b.floors<=20);
 }
 
 /**
  * Up to six station-area buildings carry a podium display, nearest first and
  * at least 30 m apart. Ranks alternate video wall and printed ad.
  */
-export function selectFacadeFeatures(world: Pick<World, 'nodes' | 'buildings'>, eligible?:ReadonlySet<number>): Map<number, FacadeFeature> {
+export function selectFacadeFeatures(world: Pick<World, 'nodes' | 'buildings'> & Partial<Pick<World,'roads'>>, eligible?:ReadonlySet<number>,preferredScreens?:ReadonlySet<number>): Map<number, FacadeFeature> {
   const result = new Map<number, FacadeFeature>();
   const station = world.nodes.find(node => node.kind === 'station');
-  if (!station) return result;
+  const centers=station?[station]:[];
+  if(preferredScreens?.size){
+    const degree=new Map<number,number>();for(const r of world.roads??[]){degree.set(r.from,(degree.get(r.from)??0)+1);degree.set(r.to,(degree.get(r.to)??0)+1);}
+    centers.push(...world.nodes.filter(n=>(degree.get(n.id)??0)>=3&&n.id!==station?.id));
+  }
+  if (!centers.length) return result;
   const chosen: Building[] = [];
   const candidates = world.buildings.filter(b=>canHostFacadeFeature(b)&&(!eligible||eligible.has(b.id)))
-    .map(b => ({ b, distance: Math.hypot(b.x - station.x, b.z - station.z) }))
+    .map(b => ({ b, distance: Math.min(...centers.map(n=>Math.hypot(b.x-n.x,b.z-n.z))) }))
     .filter(entry => entry.distance <= FEATURE_RADIUS)
     .sort((a, b) => a.distance - b.distance || a.b.id - b.b.id);
   for (const { b } of candidates) {
@@ -269,17 +307,23 @@ export function selectFacadeFeatures(world: Pick<World, 'nodes' | 'buildings'>, 
     chosen.push(b);
     if (chosen.length >= MAX_FACADE_FEATURES) break;
   }
+  if(preferredScreens?.size){
+    const ids=[...result.keys()],preferred=ids.filter(id=>preferredScreens.has(id));
+    const count=Math.min(Math.ceil(MAX_FACADE_FEATURES/2),Math.max(preferred.length,[...result.values()].filter(v=>v==='screen').length));
+    const order=[...preferred,...ids.filter(id=>!preferredScreens.has(id)&&result.get(id)==='screen'),...ids.filter(id=>!preferredScreens.has(id)&&result.get(id)==='ad')];
+    const screens=new Set(order.slice(0,count));for(const id of ids)result.set(id,screens.has(id)?'screen':'ad');
+  }
   return result;
 }
 
 /** Per-building signage context for one world snapshot. */
-export function signageContexts(world: Pick<World, 'nodes' | 'buildings'>, eligible?:ReadonlySet<number>): Map<number, SignageContext> {
+export function signageContexts(world: Pick<World, 'nodes' | 'buildings'> & Partial<Pick<World,'roads'>>, eligible?:ReadonlySet<number>,preferredScreens?:ReadonlySet<number>): Map<number, SignageContext> {
   const station = world.nodes.find(node => node.kind === 'station');
-  const features = selectFacadeFeatures(world,eligible);
+  const features = selectFacadeFeatures(world,eligible,preferredScreens);
   const contexts = new Map<number, SignageContext>();
   for (const b of world.buildings) {
-    const proximity = station ? stationProximity(Math.hypot(b.x - station.x, b.z - station.z)) : 0;
     const feature = features.get(b.id);
+    const proximity = station ? stationProximity(Math.hypot(b.x - station.x, b.z - station.z)) : feature?2:0;
     contexts.set(b.id, feature ? { proximity, feature } : { proximity });
   }
   return contexts;

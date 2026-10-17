@@ -16,6 +16,8 @@ export class ArtMaterials {
   readonly night = uniform(0);
   readonly wet = uniform(0);
   readonly time=uniform(0);
+  /** Presentation seconds: signs continue while simulation time is paused. */
+  readonly displayTime=uniform(0);
   readonly litHome=uniform(1);
   readonly litOffice=uniform(1);
   readonly litShop=uniform(1);

@@ -17,7 +17,8 @@
     "check:architecture": "node scripts/build-architecture-assets.mjs --check",
     "benchmark:architecture": "node scripts/benchmark-apartment-production.mjs",
     "benchmark:districts": "node scripts/benchmark-districts.mjs",
-    "benchmark:business": "node scripts/benchmark-business-architecture.mjs"
+    "benchmark:business": "node scripts/benchmark-business-architecture.mjs",
+    "benchmark:media-landmarks": "node scripts/benchmark-media-landmarks.mjs"
   },
   "dependencies": {
     "lucide-react": "0.577.0",

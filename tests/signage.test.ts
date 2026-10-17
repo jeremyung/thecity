@@ -190,3 +190,16 @@ it('preserves screen dimensions when replacing animation with a static campaign'
   }
  }finally{art.dispose();}
 });
+it('prioritizes landmark artwork without increasing host or animated-screen budgets',()=>{
+ const buildings=Array.from({length:8},(_,i)=>building({id:i+1,x:i*31,floors:14}));
+ const world={nodes:[{id:99,x:0,z:0,kind:'station'}],buildings};
+ const original=selectFacadeFeatures(world),preferred=new Set([2,4,6]),chosen=selectFacadeFeatures(world,undefined,preferred);
+ expect([...chosen.keys()]).toEqual([...original.keys()]);expect([...chosen.values()].filter(v=>v==='screen')).toHaveLength(3);
+ for(const id of preferred)expect(chosen.get(id)).toBe('screen');
+});
+it('allocates landmark media at a major junction even without a station',()=>{
+ const nodes=[{id:1,x:0,z:0,kind:'junction'},{id:2,x:-100,z:0,kind:'junction'},{id:3,x:100,z:0,kind:'junction'},{id:4,x:0,z:100,kind:'junction'}];
+ const world={nodes,roads:[{from:1,to:2},{from:1,to:3},{from:1,to:4}] as World['roads'],buildings:[building({floors:10,kind:'shop',x:12})]};
+ expect(signageContexts(world).get(1)?.feature).toBeUndefined();
+ expect(signageContexts(world,undefined,new Set([1])).get(1)).toEqual({proximity:2,feature:'screen'});
+});
