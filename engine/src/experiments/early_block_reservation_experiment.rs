@@ -3,24 +3,24 @@ use serde_json::json;
 
 fn developed_site_with_one_open_lot() -> Engine {
     let mut engine = Engine::new_legacy(41);
-    engine.state.nodes.clear();
-    engine.state.roads.clear();
-    engine.state.parcels.clear();
-    engine.state.parcel_frontages.clear();
-    engine.state.buildings.clear();
-    engine.state.projects.clear();
-    engine.state.travelers.clear();
-    engine.state.residents.clear();
-    engine.state.trains.clear();
-    engine.state.buses.clear();
-    engine.state.bus_line = None;
+    engine.state.network.nodes.clear();
+    engine.state.network.roads.clear();
+    engine.state.land.parcels.clear();
+    engine.state.land.parcel_frontages.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.construction.projects.clear();
+    engine.state.people.travelers.clear();
+    engine.state.people.residents.clear();
+    engine.state.transit.trains.clear();
+    engine.state.transit.buses.clear();
+    engine.state.transit.bus_line = None;
     engine.state.events.clear();
-    engine.state.population = 80;
-    engine.state.demand = 2.0;
-    engine.state.station_online = false;
-    engine.state.station_ready = false;
-    engine.state.neighborhood_plan = None;
-    engine.state.neighborhood_anchor_cursor = 0;
+    engine.state.people.population = 80;
+    engine.state.people.demand = 2.0;
+    engine.state.transit.station_online = false;
+    engine.state.transit.station_ready = false;
+    engine.state.legacy.neighborhood_plan = None;
+    engine.state.legacy.neighborhood_anchor_cursor = 0;
 
     let gateway = engine.add_node(365.0, 360.0, NodeKind::Gateway);
     let feeder = engine.add_node(320.0, 320.0, NodeKind::Junction);
@@ -49,6 +49,7 @@ fn developed_site_with_one_open_lot() -> Engine {
             );
             engine
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|candidate| candidate.id == building)
@@ -67,25 +68,27 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
     let mut engine = developed_site_with_one_open_lot();
     engine.state.tick = 79;
     engine.set_development_rate(60);
-    let existing_building_parcel = engine.state.parcels.last().unwrap().id;
+    let existing_building_parcel = engine.state.land.parcels.last().unwrap().id;
 
     engine.step(1);
     assert_eq!(engine.state.tick, 80);
     assert_eq!(engine.experiments.early_block_reservation_attempts, 1);
     assert_eq!(engine.experiments.early_block_reservation_admissions, 1);
     assert_eq!(engine.experiments.early_block_reservation_noops, 0);
-    let plan = engine.state.neighborhood_plan.as_ref().unwrap();
+    let plan = engine.state.legacy.neighborhood_plan.as_ref().unwrap();
     assert_eq!(
         plan.next_segment, 0,
         "reservation must not start road work immediately"
     );
     assert!(engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.kind == ProjectKind::Building));
     assert!(!engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.kind == ProjectKind::Road));
@@ -100,9 +103,9 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
     resumed.step(2_000);
     assert_eq!(engine.save_json(), resumed.save_json());
     assert!(engine.experiments.early_block_reservation_duration_ticks > 0);
-    assert!(engine.state.neighborhood_plan.is_some());
+    assert!(engine.state.legacy.neighborhood_plan.is_some());
     assert!(
-        engine.state.buildings.iter().any(|building| {
+        engine.state.construction.buildings.iter().any(|building| {
             building.parcel_id == existing_building_parcel && building.stage == Stage::Open
         }),
         "the pre-existing building project should finish during reservation"
@@ -114,17 +117,18 @@ fn early_reservation_keeps_block_safe_while_existing_building_finishes() {
 fn early_reservation_records_noop_when_existing_plan_guards_reject_candidate() {
     let mut engine = developed_site_with_one_open_lot();
     engine.state.tick = 79;
-    engine.state.demand = 0.4;
+    engine.state.people.demand = 0.4;
     engine.step(1);
 
     assert_eq!(engine.state.tick, 80);
     assert_eq!(engine.experiments.early_block_reservation_attempts, 1);
     assert_eq!(engine.experiments.early_block_reservation_admissions, 0);
     assert_eq!(engine.experiments.early_block_reservation_noops, 1);
-    assert!(engine.state.neighborhood_plan.is_none());
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
     assert_eq!(
         engine
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.kind == ProjectKind::Road)
@@ -154,18 +158,22 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
             engine
                 .validate()
                 .expect("experiment result preserves invariants");
-            assert!(engine.state.nodes.iter().all(|node| {
+            assert!(engine.state.network.nodes.iter().all(|node| {
                 node.x.is_finite()
                     && node.z.is_finite()
                     && (MIN..=MAX).contains(&node.x)
                     && (MIN..=MAX).contains(&node.z)
             }));
-            assert!(engine.state.buildings.len() <= MAX_BUILDINGS);
-            assert!(engine.state.parcels.len() <= MAX_PARCELS);
-            assert!(engine.state.roads.len() + engine.state.projects.len() <= MAX_SEGMENTS);
+            assert!(engine.state.construction.buildings.len() <= MAX_BUILDINGS);
+            assert!(engine.state.land.parcels.len() <= MAX_PARCELS);
+            assert!(
+                engine.state.network.roads.len() + engine.state.construction.projects.len()
+                    <= MAX_SEGMENTS
+            );
             assert!(
                 engine
                     .state
+                    .construction
                     .projects
                     .iter()
                     .filter(|project| project.progress < 1.0)
@@ -177,12 +185,14 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
             assert_eq!(
                 engine
                     .state
+                    .network
                     .roads
                     .iter()
                     .map(|road| (road.id, road.connected))
                     .collect::<Vec<_>>(),
                 recomputed
                     .state
+                    .network
                     .roads
                     .iter()
                     .map(|road| (road.id, road.connected))
@@ -192,6 +202,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
 
             let open: Vec<_> = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| building.stage == Stage::Open)
@@ -200,6 +211,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
             let commerce: Vec<_> = open.iter().copied().filter(|b| is_commercial(b)).collect();
             let ordinary_roads: Vec<_> = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -214,7 +226,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                 "tick": engine.state.tick,
                 "development_rate": 16,
                 "buildings_open": open.len(),
-                "buildings_total": engine.state.buildings.len(),
+                "buildings_total": engine.state.construction.buildings.len(),
                 "housing_occupancy": housing.iter().map(|b| b.occupancy as u64).sum::<u64>(),
                 "housing_capacity": housing.iter().map(|b| b.capacity as u64).sum::<u64>(),
                 "commercial_open": commerce.len(),
@@ -224,7 +236,7 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                 "floor_area_proxy_m2": open.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
                 "ordinary_road_records": ordinary_roads.len(),
                 "ordinary_road_length_m": ordinary_roads.iter().map(|r| r.length as f64).sum::<f64>(),
-                "parcels": engine.state.parcels.len(),
+                "parcels": engine.state.land.parcels.len(),
                 "reservation_attempts": engine.experiments.early_block_reservation_attempts,
                 "reservation_admissions": engine.experiments.early_block_reservation_admissions,
                 "reservation_noops": engine.experiments.early_block_reservation_noops,
@@ -237,8 +249,8 @@ fn run_matched_seeds(seeds: &[u32], report_file: &str) {
                     "full_candidates": development::MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION,
                     "spine_candidates": development::MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION
                 },
-                "plan_pending_at_capture": engine.state.neighborhood_plan.is_some(),
-                "pending_plan_next_segment": engine.state.neighborhood_plan.as_ref().map(|p| p.next_segment),
+                "plan_pending_at_capture": engine.state.legacy.neighborhood_plan.is_some(),
+                "pending_plan_next_segment": engine.state.legacy.neighborhood_plan.as_ref().map(|p| p.next_segment),
                 "elapsed_seconds": started.elapsed().as_secs_f64()
             });
             eprintln!("early-block-reservation {summary}");

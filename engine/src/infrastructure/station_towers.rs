@@ -22,10 +22,11 @@ pub(crate) fn stateless_tower_site_hash(seed: u32, x: f32, z: f32) -> u64 {
 
 impl Engine {
     pub(crate) fn is_station_tower_parcel(&self, parcel: &Parcel) -> bool {
-        if !self.state.station_online
+        if !self.state.transit.station_online
             || self.neighborhood_profile(parcel.x, parcel.z) != NeighborhoodProfile::StationCore
             || !self
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .any(|frontage| frontage.parcel_id == parcel.id)
@@ -40,6 +41,7 @@ impl Engine {
             return false;
         }
         self.state
+            .network
             .nodes
             .iter()
             .filter(|node| node.kind == NodeKind::Station)
@@ -49,11 +51,13 @@ impl Engine {
     pub(crate) fn station_tower_frontage_reservations(&self) -> usize {
         let frontage_ids: BTreeSet<u32> = self
             .state
+            .land
             .parcel_frontages
             .iter()
             .map(|frontage| frontage.parcel_id)
             .collect();
         self.state
+            .land
             .parcels
             .iter()
             .filter(|parcel| {
@@ -76,7 +80,7 @@ impl Engine {
         }
 
         let mut candidates: Vec<(f32, u64, f32, f32)> = Vec::new();
-        for road in self.state.roads.iter().filter(|road| {
+        for road in self.state.network.roads.iter().filter(|road| {
             road.stage == Stage::Open
                 && road.connected
                 && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -90,6 +94,7 @@ impl Engine {
         // another frontage slot is filled beside the construction corridor.
         for project in self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -153,6 +158,7 @@ impl Engine {
         }
         let station_distance = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| node.kind == NodeKind::Station)
@@ -188,6 +194,7 @@ impl Engine {
     ) -> Option<usize> {
         let station = self
             .state
+            .network
             .nodes
             .iter()
             .find(|node| node.kind == NodeKind::Station)?;

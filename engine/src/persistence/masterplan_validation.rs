@@ -9,7 +9,7 @@ impl Engine {
     /// Verify that persisted plan indices still refer to the world entities
     /// they claim to realize. The plan itself is regenerated at load time.
     pub(crate) fn validate_masterplan_progress(&self) -> Result<(), String> {
-        let Some(progress) = self.state.masterplan.as_ref() else {
+        let Some(progress) = self.state.network.masterplan.as_ref() else {
             return if self.plan.is_none() {
                 Ok(())
             } else {
@@ -31,18 +31,21 @@ impl Engine {
 
         let nodes = self
             .state
+            .network
             .nodes
             .iter()
             .map(|n| (n.id, n))
             .collect::<std::collections::BTreeMap<_, _>>();
         let roads = self
             .state
+            .network
             .roads
             .iter()
             .map(|r| (r.id, r))
             .collect::<std::collections::BTreeMap<_, _>>();
         let parcels = self
             .state
+            .land
             .parcels
             .iter()
             .map(|p| (p.id, p))
@@ -161,6 +164,7 @@ impl Engine {
             let road_id = progress.road_ids.get(lot.road).copied().unwrap_or(0);
             let Some(frontage) = self
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .find(|f| f.parcel_id == id)

@@ -78,6 +78,7 @@ impl Engine {
     pub(crate) fn allocate_queue_slot(&self, at_station: bool) -> Option<u16> {
         let used: BTreeSet<u16> = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| {
@@ -96,10 +97,10 @@ impl Engine {
     }
 
     pub(crate) fn rail_terminals(&self) -> Option<(u32, u32)> {
-        if !self.state.station_online {
+        if !self.state.transit.station_online {
             return None;
         }
-        let rail = self.state.roads.iter().find(|road| {
+        let rail = self.state.network.roads.iter().find(|road| {
             road.kind == RoadKind::Rail && road.stage == Stage::Open && road.connected
         })?;
         let station = [rail.from, rail.to].into_iter().find(|id| {
@@ -126,6 +127,7 @@ impl Engine {
             Transfer::WaitingGateway
         };
         self.state
+            .people
             .residents
             .iter()
             .filter(|resident| resident.rail_commuter && resident.transfer == state)
@@ -143,6 +145,7 @@ impl Engine {
         waiting
             + self
                 .state
+                .people
                 .travelers
                 .iter()
                 .filter(|traveler| Some(traveler.activity) == walking)
@@ -153,7 +156,7 @@ impl Engine {
         let Some((station, _gateway)) = self.rail_terminals() else {
             return;
         };
-        let resident = self.state.residents[index].clone();
+        let resident = self.state.people.residents[index].clone();
         let quiet = self.rail_service_quiet();
         match resident.transfer {
             Transfer::Home
@@ -169,11 +172,11 @@ impl Engine {
                 if route.is_empty() {
                     return;
                 }
-                if let Some(current) = self.state.residents.get_mut(index) {
+                if let Some(current) = self.state.people.residents.get_mut(index) {
                     current.queue_slot = Some(queue_slot);
                 }
                 if route.len() == 1 {
-                    if let Some(current) = self.state.residents.get_mut(index) {
+                    if let Some(current) = self.state.people.residents.get_mut(index) {
                         current.transfer = Transfer::WaitingStation;
                         current.activity = ResidentActivity::WaitingForTrain;
                     }
@@ -211,13 +214,13 @@ impl Engine {
                     if traveler.origin_access.is_some() {
                         traveler.access_phase = 0;
                     }
-                    self.state.travelers.push(traveler);
-                    if let Some(current) = self.state.residents.get_mut(index) {
+                    self.state.people.travelers.push(traveler);
+                    if let Some(current) = self.state.people.residents.get_mut(index) {
                         current.transfer = Transfer::WalkingToStation;
                         current.activity = ResidentActivity::WalkingToStation;
                     }
                 }
-                if let Some(current) = self.state.residents.get_mut(index) {
+                if let Some(current) = self.state.people.residents.get_mut(index) {
                     current.last_departure_day = day;
                     current.departure_tick = current.departure_tick.saturating_add(TICKS_PER_DAY);
                     push_history(
@@ -240,7 +243,7 @@ impl Engine {
                 let Some(queue_slot) = self.allocate_queue_slot(false) else {
                     return;
                 };
-                if let Some(current) = self.state.residents.get_mut(index) {
+                if let Some(current) = self.state.people.residents.get_mut(index) {
                     current.transfer = Transfer::WaitingGateway;
                     current.activity = ResidentActivity::WaitingForTrain;
                     current.queue_slot = Some(queue_slot);
@@ -270,24 +273,26 @@ impl Engine {
     pub(crate) fn advance_trains(&mut self) {
         let usable_rail = self
             .state
+            .network
             .roads
             .iter()
             .find(|r| r.kind == RoadKind::Rail && r.stage == Stage::Open && r.connected)
             .cloned();
         let Some(rail) = usable_rail
-            .filter(|r| self.state.station_online && r.length >= TRAIN_HALF_LENGTH * 2.0)
+            .filter(|r| self.state.transit.station_online && r.length >= TRAIN_HALF_LENGTH * 2.0)
         else {
-            self.state.trains.clear();
+            self.state.transit.trains.clear();
             return;
         };
         let station = self
             .state
+            .network
             .nodes
             .iter()
             .find(|n| n.kind == NodeKind::Station && (n.id == rail.from || n.id == rail.to))
             .map(|n| n.id);
         let Some(station) = station else {
-            self.state.trains.clear();
+            self.state.transit.trains.clear();
             return;
         };
         let gateway = if rail.from == station {
@@ -296,9 +301,9 @@ impl Engine {
             rail.from
         };
         let route = vec![station, gateway];
-        if self.state.trains.is_empty() {
+        if self.state.transit.trains.is_empty() {
             let id = self.id();
-            self.state.trains.push(Train {
+            self.state.transit.trains.push(Train {
                 id,
                 route: route.clone(),
                 distance: TRAIN_HALF_LENGTH,
@@ -312,7 +317,7 @@ impl Engine {
         let mut opened_terminals = Vec::new();
         let quiet = self.rail_service_quiet();
         let station_queue_empty = self.rail_waiting_count(true) == 0;
-        for train in &mut self.state.trains {
+        for train in &mut self.state.transit.trains {
             if train.route != route {
                 train.route = route.clone();
                 train.distance = TRAIN_HALF_LENGTH;
@@ -372,7 +377,13 @@ impl Engine {
         for (id, at_station) in opened_terminals {
             self.handle_train_terminal(id, at_station, station, gateway);
         }
-        let train_ids: Vec<u32> = self.state.trains.iter().map(|train| train.id).collect();
+        let train_ids: Vec<u32> = self
+            .state
+            .transit
+            .trains
+            .iter()
+            .map(|train| train.id)
+            .collect();
         for id in train_ids {
             self.board_waiting_train(id, station, gateway);
         }
@@ -387,6 +398,7 @@ impl Engine {
     ) {
         let passenger_ids = self
             .state
+            .transit
             .trains
             .iter()
             .find(|train| train.id == train_id)
@@ -396,6 +408,7 @@ impl Engine {
         for resident_id in passenger_ids {
             let Some(resident_index) = self
                 .state
+                .people
                 .residents
                 .iter()
                 .position(|resident| resident.id == resident_id)
@@ -403,12 +416,12 @@ impl Engine {
                 unloaded.insert(resident_id);
                 continue;
             };
-            let resident = self.state.residents[resident_index].clone();
+            let resident = self.state.people.residents[resident_index].clone();
             if at_station && resident.transfer == Transfer::RidingInbound {
                 let queue_slot = (resident.id % RAIL_QUEUE_CAPACITY as u32) as u16;
                 let wait_position = self.platform_position(true, queue_slot);
-                let route_attempted =
-                    resident.home_node != station && self.state.travelers.len() < MAX_TRAVELERS;
+                let route_attempted = resident.home_node != station
+                    && self.state.people.travelers.len() < MAX_TRAVELERS;
                 let route = if resident.home_node == station {
                     vec![station]
                 } else if route_attempted {
@@ -433,7 +446,7 @@ impl Engine {
                         let reason = format!(
                             "Still aboard at station {station}: pedestrian route queue is full"
                         );
-                        let current = &mut self.state.residents[resident_index];
+                        let current = &mut self.state.people.residents[resident_index];
                         if current.history.last() != Some(&reason) {
                             push_history(&mut current.history, reason);
                         }
@@ -441,7 +454,7 @@ impl Engine {
                     }
                     unloaded.insert(resident_id);
                     push_history(
-                        &mut self.state.residents[resident_index].history,
+                        &mut self.state.people.residents[resident_index].history,
                         format!(
                             "Waited at station {station} for a legal walking route at tick {}",
                             self.state.tick
@@ -456,7 +469,7 @@ impl Engine {
                 }
                 if route.len() == 1 {
                     unloaded.insert(resident_id);
-                    let current = &mut self.state.residents[resident_index];
+                    let current = &mut self.state.people.residents[resident_index];
                     current.transfer = Transfer::Home;
                     current.activity = ResidentActivity::AtHome;
                     current.at_work = false;
@@ -508,8 +521,8 @@ impl Engine {
                     if traveler.origin_access.is_some() {
                         traveler.access_phase = 0;
                     }
-                    self.state.travelers.push(traveler);
-                    let current = &mut self.state.residents[resident_index];
+                    self.state.people.travelers.push(traveler);
+                    let current = &mut self.state.people.residents[resident_index];
                     current.transfer = Transfer::WalkingHome;
                     current.activity = ResidentActivity::WalkingHome;
                     current.train_id = None;
@@ -532,7 +545,7 @@ impl Engine {
                 }
             } else if !at_station && resident.transfer == Transfer::RidingOutbound {
                 unloaded.insert(resident_id);
-                let current = &mut self.state.residents[resident_index];
+                let current = &mut self.state.people.residents[resident_index];
                 current.transfer = Transfer::WorkingExternal;
                 current.activity = ResidentActivity::WorkingExternal;
                 current.at_work = true;
@@ -560,6 +573,7 @@ impl Engine {
         if !unloaded.is_empty() {
             if let Some(train) = self
                 .state
+                .transit
                 .trains
                 .iter_mut()
                 .find(|train| train.id == train_id)
@@ -574,6 +588,7 @@ impl Engine {
     pub(crate) fn board_waiting_train(&mut self, train_id: u32, station: u32, gateway: u32) {
         let Some((dwell_ticks, passenger_count, direction, distance)) = self
             .state
+            .transit
             .trains
             .iter()
             .find(|train| train.id == train_id)
@@ -591,6 +606,7 @@ impl Engine {
         let at_station = direction >= 0 && distance <= TRAIN_HALF_LENGTH + 0.01;
         let rail_length = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.kind == RoadKind::Rail && road.stage == Stage::Open && road.connected)
@@ -622,6 +638,7 @@ impl Engine {
         };
         let next = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| resident.rail_commuter && resident.transfer == queue_state)
@@ -630,14 +647,15 @@ impl Engine {
         let Some(resident_id) = next else { return };
         let Some(index) = self
             .state
+            .people
             .residents
             .iter()
             .position(|resident| resident.id == resident_id)
         else {
             return;
         };
-        let resident_name = self.state.residents[index].name.clone();
-        let current = &mut self.state.residents[index];
+        let resident_name = self.state.people.residents[index].name.clone();
+        let current = &mut self.state.people.residents[index];
         current.transfer = riding_state;
         current.activity = ResidentActivity::RidingTrain;
         current.train_id = Some(train_id);
@@ -651,6 +669,7 @@ impl Engine {
         );
         if let Some(train) = self
             .state
+            .transit
             .trains
             .iter_mut()
             .find(|train| train.id == train_id)
@@ -674,8 +693,9 @@ impl Engine {
     /// as movement_buffer. Tuples are [train_id, terminal_id or -1, fraction].
     pub fn train_doors(&self) -> Vec<f32> {
         let rail_length = self.rail_length_for_doors();
-        let mut out = Vec::with_capacity(self.state.trains.len().min(MAX_PRESENTED_TRAINS) * 3);
-        for train in self.state.trains.iter().take(MAX_PRESENTED_TRAINS) {
+        let mut out =
+            Vec::with_capacity(self.state.transit.trains.len().min(MAX_PRESENTED_TRAINS) * 3);
+        for train in self.state.transit.trains.iter().take(MAX_PRESENTED_TRAINS) {
             let (terminal, fraction) = train_door_state(train, rail_length);
             out.extend_from_slice(&[
                 train.id as f32,
@@ -688,6 +708,7 @@ impl Engine {
 
     pub(crate) fn rail_length_for_doors(&self) -> f32 {
         self.state
+            .network
             .roads
             .iter()
             .find(|road| road.kind == RoadKind::Rail && road.stage == Stage::Open && road.connected)

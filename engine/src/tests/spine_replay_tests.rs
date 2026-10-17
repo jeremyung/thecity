@@ -6,6 +6,7 @@ fn reserved_rectangle(depth: f32) -> (Engine, [u32; 2]) {
     let mut engine = Engine::new_legacy(48123);
     let gateway = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|n| n.kind == NodeKind::Gateway)
@@ -33,9 +34,10 @@ fn reserved_rectangle(depth: f32) -> (Engine, [u32; 2]) {
     engine.recompute_connectivity();
     engine
         .state
+        .legacy
         .neighborhood_road_ids
         .extend(roads.iter().copied());
-    engine.state.neighborhood_plan = Some(NeighborhoodPlan {
+    engine.state.legacy.neighborhood_plan = Some(NeighborhoodPlan {
         anchor_node: nodes[0],
         segments: (0..4).map(|i| (nodes[i], nodes[(i + 1) % 4])).collect(),
         next_segment: 4,
@@ -58,6 +60,7 @@ fn spine_normal_ticks_match_uninterrupted_from_every_saved_stage() {
             if stage == 1 || stage == 2 {
                 uninterrupted
                     .state
+                    .legacy
                     .neighborhood_plan
                     .as_mut()
                     .unwrap()
@@ -76,12 +79,17 @@ fn spine_normal_ticks_match_uninterrupted_from_every_saved_stage() {
                 // no Road record until that project opens the final edge.
                 let index = uninterrupted
                     .state
+                    .network
                     .roads
                     .iter()
                     .position(|r| r.id == hosts[0])
                     .unwrap();
-                let road = uninterrupted.state.roads.remove(index);
-                uninterrupted.state.neighborhood_road_ids.remove(&road.id);
+                let road = uninterrupted.state.network.roads.remove(index);
+                uninterrupted
+                    .state
+                    .legacy
+                    .neighborhood_road_ids
+                    .remove(&road.id);
                 let id = uninterrupted.id();
                 uninterrupted.record_project(Project {
                     id,
@@ -105,7 +113,7 @@ fn spine_normal_ticks_match_uninterrupted_from_every_saved_stage() {
                 checkpoint,
                 "stage {stage} canonical restore"
             );
-            let initial_parcels = uninterrupted.state.parcels.len();
+            let initial_parcels = uninterrupted.state.land.parcels.len();
             let mut finished = false;
             for _ in 0..120 {
                 uninterrupted.step(100);
@@ -117,7 +125,7 @@ fn spine_normal_ticks_match_uninterrupted_from_every_saved_stage() {
                     resumed.state.tick
                 );
                 resumed.validate().unwrap();
-                if resumed.state.neighborhood_plan.is_none() {
+                if resumed.state.legacy.neighborhood_plan.is_none() {
                     finished = true;
                     break;
                 }
@@ -126,13 +134,14 @@ fn spine_normal_ticks_match_uninterrupted_from_every_saved_stage() {
                 finished,
                 "stage {stage} must complete through the normal scheduler"
             );
-            assert!(resumed.state.parcels.len() >= initial_parcels + 20);
+            assert!(resumed.state.land.parcels.len() >= initial_parcels + 20);
             let new_frontages = resumed
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|f| {
-                    resumed.state.parcels.iter().any(|p| {
+                    resumed.state.land.parcels.iter().any(|p| {
                         p.id == f.parcel_id
                             && p.x > 270.0
                             && p.x < 352.0

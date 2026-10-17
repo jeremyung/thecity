@@ -80,16 +80,19 @@ fn front_edge(rect: geometry::OrientedRect) -> (f32, f32) {
 impl Engine {
     pub(crate) fn rear_extension_views(&self) -> Vec<RearExtensionView> {
         self.state
+            .construction
             .pending_rear_extensions
             .iter()
             .filter_map(|plan| {
                 let project = self
                     .state
+                    .construction
                     .projects
                     .iter()
                     .find(|project| project.id == plan.project_id)?;
                 let building = self
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|building| building.id == plan.building_id)?;
@@ -114,11 +117,12 @@ impl Engine {
     #[cfg(feature = "legacy")]
     pub(crate) fn try_start_rear_extension(&mut self) -> bool {
         if self.state.tick % SCAN_INTERVAL != 0
-            || self.state.demand <= 1.1
-            || self.state.pending_rear_extensions.len() >= MAX_PENDING_REAR_EXTENSIONS
+            || self.state.people.demand <= 1.1
+            || self.state.construction.pending_rear_extensions.len() >= MAX_PENDING_REAR_EXTENSIONS
             || !self.project_admission_available()
             || self
                 .state
+                .construction
                 .projects
                 .iter()
                 .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -127,6 +131,7 @@ impl Engine {
         }
         let connected_ordinary_roads = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -135,29 +140,30 @@ impl Engine {
                     && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
             })
             .count();
-        if connected_ordinary_roads < 40 || self.state.buildings.is_empty() {
+        if connected_ordinary_roads < 40 || self.state.construction.buildings.is_empty() {
             return false;
         }
 
-        let count = self.state.buildings.len();
+        let count = self.state.construction.buildings.len();
         let tower_envelopes = self.available_station_tower_envelopes();
         let context = self.collision_context();
         for _ in 0..count.min(MAX_BUILDINGS_SCANNED_PER_PASS) {
-            let index = self.state.rear_extension_cursor % count;
-            self.state.rear_extension_cursor = (index + 1) % count;
-            let building = self.state.buildings[index].clone();
+            let index = self.state.construction.rear_extension_cursor % count;
+            self.state.construction.rear_extension_cursor = (index + 1) % count;
+            let building = self.state.construction.buildings[index].clone();
             if !self.rear_extension_building_eligible(&building) {
                 continue;
             }
             let Some(parcel_index) = self
                 .state
+                .land
                 .parcels
                 .iter()
                 .position(|parcel| parcel.id == building.parcel_id)
             else {
                 continue;
             };
-            let parcel = self.state.parcels[parcel_index].clone();
+            let parcel = self.state.land.parcels[parcel_index].clone();
             let Some(rotation) = parcel.rotation else {
                 continue;
             };
@@ -181,7 +187,7 @@ impl Engine {
                 continue;
             }
             let Some(candidate_context) =
-                without_own_footprint(&context, parcel.id, &self.state.parcels)
+                without_own_footprint(&context, parcel.id, &self.state.land.parcels)
             else {
                 continue;
             };
@@ -221,27 +227,30 @@ impl Engine {
                 continue;
             };
             let (expanded, delta, additional_capacity) = candidate;
-            let Some(footprint_range) = footprint_range(&self.state.parcels, parcel.id) else {
+            let Some(footprint_range) = footprint_range(&self.state.land.parcels, parcel.id) else {
                 continue;
             };
             if footprint_range.len() != 1 {
                 continue;
             }
             let project_id = self.id();
-            self.state.parcels[parcel_index].x = expanded.x;
-            self.state.parcels[parcel_index].z = expanded.z;
-            self.state.parcels[parcel_index].width = expanded.width;
-            self.state.parcels[parcel_index].depth = expanded.depth;
-            self.state.parcels[parcel_index].reservation = Some(building.id);
-            self.state.pending_rear_extensions.push(RearExtensionPlan {
-                project_id,
-                building_id: building.id,
-                parcel_id: parcel.id,
-                original,
-                expanded,
-                original_capacity: building.capacity,
-                additional_capacity,
-            });
+            self.state.land.parcels[parcel_index].x = expanded.x;
+            self.state.land.parcels[parcel_index].z = expanded.z;
+            self.state.land.parcels[parcel_index].width = expanded.width;
+            self.state.land.parcels[parcel_index].depth = expanded.depth;
+            self.state.land.parcels[parcel_index].reservation = Some(building.id);
+            self.state
+                .construction
+                .pending_rear_extensions
+                .push(RearExtensionPlan {
+                    project_id,
+                    building_id: building.id,
+                    parcel_id: parcel.id,
+                    original,
+                    expanded,
+                    original_capacity: building.capacity,
+                    additional_capacity,
+                });
             self.record_project(Project {
                 id: project_id,
                 kind: ProjectKind::Extension,
@@ -276,10 +285,11 @@ impl Engine {
             || building.capacity == 0
             || self
                 .state
+                .construction
                 .pending_rear_extensions
                 .iter()
                 .any(|plan| plan.building_id == building.id)
-            || self.state.projects.iter().any(|project| {
+            || self.state.construction.projects.iter().any(|project| {
                 project.parcel_id == Some(building.parcel_id)
                     && project.progress < 1.0
                     && matches!(project.kind, ProjectKind::Building | ProjectKind::Extension)
@@ -302,6 +312,7 @@ impl Engine {
         }
         let Some(parcel) = self
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == building.parcel_id)
@@ -313,6 +324,7 @@ impl Engine {
         }
         let Some(frontage) = self
             .state
+            .land
             .parcel_frontages
             .iter()
             .find(|frontage| frontage.parcel_id == parcel.id)
@@ -321,6 +333,7 @@ impl Engine {
         };
         let Some(road) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == frontage.road_id)
@@ -340,11 +353,13 @@ impl Engine {
     ) -> Option<(f32, f32)> {
         let frontage = self
             .state
+            .land
             .parcel_frontages
             .iter()
             .find(|frontage| frontage.parcel_id == parcel.id)?;
         let road = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == frontage.road_id)?;
@@ -411,7 +426,7 @@ impl Engine {
         let Some(context) = without_own_footprint(
             &self.collision_context(),
             plan.parcel_id,
-            &self.state.parcels,
+            &self.state.land.parcels,
         ) else {
             return false;
         };
@@ -431,11 +446,12 @@ impl Engine {
     pub(crate) fn complete_rear_extension_project(&mut self, project_id: u32) {
         let Some(plan_index) = self
             .state
+            .construction
             .pending_rear_extensions
             .iter()
             .position(|plan| plan.project_id == project_id)
         else {
-            if self.state.projects.iter().any(|project| {
+            if self.state.construction.projects.iter().any(|project| {
                 project.id == project_id
                     && project.kind == ProjectKind::Extension
                     && project.progress >= 1.0
@@ -445,8 +461,8 @@ impl Engine {
             self.keep_rear_extension_retryable(project_id);
             return;
         };
-        let plan = self.state.pending_rear_extensions[plan_index].clone();
-        let project_valid = self.state.projects.iter().any(|project| {
+        let plan = self.state.construction.pending_rear_extensions[plan_index].clone();
+        let project_valid = self.state.construction.projects.iter().any(|project| {
             project.id == project_id
                 && project.kind == ProjectKind::Extension
                 && project.progress >= 1.0
@@ -454,11 +470,13 @@ impl Engine {
         });
         let parcel = self
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == plan.parcel_id);
         let building = self
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == plan.building_id);
@@ -485,24 +503,26 @@ impl Engine {
 
         if !self
             .state
+            .construction
             .building_original_footprints
             .iter()
             .any(|footprint| footprint.building_id == plan.building_id)
         {
-            self.state
-                .building_original_footprints
-                .push(crate::BuildingOriginalFootprint {
+            self.state.construction.building_original_footprints.push(
+                crate::BuildingOriginalFootprint {
                     building_id: plan.building_id,
                     x: plan.original.x,
                     z: plan.original.z,
                     width: plan.original.width,
                     depth: plan.original.depth,
                     rotation: plan.original.rotation,
-                });
+                },
+            );
         }
 
         let building = self
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|building| building.id == plan.building_id)
@@ -514,14 +534,19 @@ impl Engine {
         building.capacity += plan.additional_capacity;
         let parcel = self
             .state
+            .land
             .parcels
             .iter_mut()
             .find(|parcel| parcel.id == plan.parcel_id)
             .expect("preflighted rear extension parcel remains present");
         parcel.reservation = None;
-        self.state.pending_rear_extensions.remove(plan_index);
+        self.state
+            .construction
+            .pending_rear_extensions
+            .remove(plan_index);
         if let Some(project) = self
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|project| project.id == project_id)
@@ -532,6 +557,7 @@ impl Engine {
         push_history(
             &mut self
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|building| building.id == plan.building_id)
@@ -555,6 +581,7 @@ impl Engine {
     fn keep_rear_extension_retryable(&mut self, project_id: u32) {
         if let Some(project) = self
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|project| project.id == project_id && project.kind == ProjectKind::Extension)
@@ -565,13 +592,13 @@ impl Engine {
     }
 
     pub(crate) fn validate_rear_extensions(&self) -> Result<(), String> {
-        if self.state.pending_rear_extensions.len() > MAX_PENDING_REAR_EXTENSIONS {
+        if self.state.construction.pending_rear_extensions.len() > MAX_PENDING_REAR_EXTENSIONS {
             return Err("pending rear-extension cap exceeded".into());
         }
         let mut project_ids = BTreeSet::new();
         let mut building_ids = BTreeSet::new();
         let mut parcel_ids = BTreeSet::new();
-        for plan in &self.state.pending_rear_extensions {
+        for plan in &self.state.construction.pending_rear_extensions {
             if !project_ids.insert(plan.project_id)
                 || !building_ids.insert(plan.building_id)
                 || !parcel_ids.insert(plan.parcel_id)
@@ -580,18 +607,21 @@ impl Engine {
             }
             let project = self
                 .state
+                .construction
                 .projects
                 .iter()
                 .find(|project| project.id == plan.project_id)
                 .ok_or_else(|| "rear-extension plan references a missing project".to_string())?;
             let parcel = self
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|parcel| parcel.id == plan.parcel_id)
                 .ok_or_else(|| "rear-extension plan references a missing parcel".to_string())?;
             let building = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.id == plan.building_id)
@@ -606,11 +636,13 @@ impl Engine {
                 .all(|(x, z)| point_in_rect(plan.expanded, (*x, *z), 0.01));
             let frontage_road_connected = self
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .find(|frontage| frontage.parcel_id == parcel.id)
                 .and_then(|frontage| {
                     self.state
+                        .network
                         .roads
                         .iter()
                         .find(|road| road.id == frontage.road_id)
@@ -674,7 +706,7 @@ impl Engine {
                 ));
             }
         }
-        let orphan_project = self.state.projects.iter().any(|project| {
+        let orphan_project = self.state.construction.projects.iter().any(|project| {
             project.kind == ProjectKind::Extension
                 && project.progress < 1.0
                 && !project_ids.contains(&project.id)
@@ -686,18 +718,20 @@ impl Engine {
     }
 
     pub(crate) fn validate_building_original_footprints(&self) -> Result<(), String> {
-        if self.state.building_original_footprints.len() > self.state.buildings.len()
-            || self.state.building_original_footprints.len() > crate::MAX_BUILDINGS
+        if self.state.construction.building_original_footprints.len()
+            > self.state.construction.buildings.len()
+            || self.state.construction.building_original_footprints.len() > crate::MAX_BUILDINGS
         {
             return Err("original building footprint metadata exceeds its host cap".into());
         }
         let mut building_ids = BTreeSet::new();
-        for original in &self.state.building_original_footprints {
+        for original in &self.state.construction.building_original_footprints {
             if !building_ids.insert(original.building_id) {
                 return Err("original building footprint metadata contains duplicate hosts".into());
             }
             let host = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.id == original.building_id)
@@ -764,6 +798,7 @@ mod tests {
         let mut engine = Engine::new_legacy(87231);
         let host = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -779,6 +814,7 @@ mod tests {
             let id = engine.add_road(host.from, host.to, RoadKind::Local, Stage::Open, 1.0);
             engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == id)
@@ -789,10 +825,11 @@ mod tests {
         // This mature fixture has no unrelated active road-construction work.
         engine
             .state
+            .construction
             .projects
             .retain(|project| project.kind != ProjectKind::Road || project.progress >= 1.0);
         engine.state.tick = 160;
-        engine.state.demand = 1.2;
+        engine.state.people.demand = 1.2;
 
         let (a, b) = (
             engine.node(host.from).unwrap(),
@@ -812,7 +849,7 @@ mod tests {
         };
         let rotation = (side as f32 * dz).atan2(-side as f32 * dx);
         let parcel_id = engine.id();
-        engine.state.parcels.push(Parcel {
+        engine.state.land.parcels.push(Parcel {
             id: parcel_id,
             x,
             z,
@@ -825,14 +862,18 @@ mod tests {
             reservation: None,
             open_space: None,
         });
-        engine.state.parcel_frontages.push(crate::ParcelFrontage {
-            parcel_id,
-            road_id: host.id,
-            along,
-            side,
-        });
+        engine
+            .state
+            .land
+            .parcel_frontages
+            .push(crate::ParcelFrontage {
+                parcel_id,
+                road_id: host.id,
+                along,
+                side,
+            });
         let building_id = engine.id();
-        engine.state.buildings.push(crate::Building {
+        engine.state.construction.buildings.push(crate::Building {
             id: building_id,
             parcel_id,
             x,
@@ -875,6 +916,7 @@ mod tests {
         let before_access = engine.building_access_segment(building_id).unwrap();
         let original_building = engine
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == building_id)
@@ -884,9 +926,10 @@ mod tests {
             engine.try_start_rear_extension(),
             "eligible mature site admits"
         );
-        let plan = engine.state.pending_rear_extensions[0].clone();
+        let plan = engine.state.construction.pending_rear_extensions[0].clone();
         let project = engine
             .state
+            .construction
             .projects
             .iter()
             .find(|project| project.id == plan.project_id)
@@ -897,6 +940,7 @@ mod tests {
         assert_eq!(
             engine
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|parcel| parcel.id == plan.parcel_id)
@@ -922,6 +966,7 @@ mod tests {
         assert_eq!(
             engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.id == building_id)
@@ -944,6 +989,7 @@ mod tests {
             assert_eq!(engine.save_json(), replay.save_json());
             if let Some(project) = engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .find(|project| project.id == plan.project_id && project.progress < 1.0)
@@ -951,6 +997,7 @@ mod tests {
                 observed_stages.insert(project.stage.clone());
                 let building = engine
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|building| building.id == building_id)
@@ -968,9 +1015,10 @@ mod tests {
         assert!(observed_stages.contains(&Stage::Structure));
         assert!(observed_stages.contains(&Stage::Surface));
         assert!(observed_stages.contains(&Stage::Finishing));
-        assert!(engine.state.pending_rear_extensions.is_empty());
+        assert!(engine.state.construction.pending_rear_extensions.is_empty());
         let completed = engine
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == building_id)
@@ -997,10 +1045,10 @@ mod tests {
             1
         );
         let completed_save = engine.save_json();
-        let original_footprint = engine.state.building_original_footprints[0];
+        let original_footprint = engine.state.construction.building_original_footprints[0];
         let persisted = Engine::restore_json(&completed_save).unwrap();
         assert_eq!(
-            persisted.state.building_original_footprints[0],
+            persisted.state.construction.building_original_footprints[0],
             original_footprint
         );
         assert_eq!(
@@ -1041,6 +1089,7 @@ mod tests {
         // facade identity must remain the earliest footprint.
         engine
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|building| building.id == building_id)
@@ -1048,14 +1097,14 @@ mod tests {
             .occupancy = completed_capacity;
         engine.state.tick = 320;
         assert!(engine.try_start_rear_extension());
-        let second_plan = engine.state.pending_rear_extensions[0].clone();
+        let second_plan = engine.state.construction.pending_rear_extensions[0].clone();
         assert!((second_plan.original.depth - completed_depth).abs() < 0.001);
         for _ in 0..24 {
             engine.advance_projects();
         }
-        assert!(engine.state.pending_rear_extensions.is_empty());
+        assert!(engine.state.construction.pending_rear_extensions.is_empty());
         assert_eq!(
-            engine.state.building_original_footprints[0],
+            engine.state.construction.building_original_footprints[0],
             original_footprint
         );
         engine.validate().unwrap();
@@ -1093,18 +1142,24 @@ mod tests {
         let mut engine = Engine::restore_json(&source).expect("restore mature rear-extension save");
         let source_tick = engine.state.tick;
         let source_seed = engine.state.seed;
-        let source_demand = engine.state.demand;
+        let source_demand = engine.state.people.demand;
         let max_steps = 48_000;
         let mut simulated_ticks = 0;
         let has_structure_phase = |engine: &Engine| {
-            engine.state.pending_rear_extensions.iter().any(|plan| {
-                engine.state.projects.iter().any(|project| {
-                    project.id == plan.project_id && project.stage == Stage::Structure
+            engine
+                .state
+                .construction
+                .pending_rear_extensions
+                .iter()
+                .any(|plan| {
+                    engine.state.construction.projects.iter().any(|project| {
+                        project.id == plan.project_id && project.stage == Stage::Structure
+                    })
                 })
-            })
         };
         while simulated_ticks < max_steps
-            && (engine.state.pending_rear_extensions.is_empty() || !has_structure_phase(&engine))
+            && (engine.state.construction.pending_rear_extensions.is_empty()
+                || !has_structure_phase(&engine))
         {
             let next = (max_steps - simulated_ticks).min(160);
             engine.step(next);
@@ -1113,18 +1168,20 @@ mod tests {
 
         let stage = engine
             .state
+            .construction
             .pending_rear_extensions
             .first()
             .and_then(|plan| {
                 engine
                     .state
+                    .construction
                     .projects
                     .iter()
                     .find(|project| project.id == plan.project_id)
                     .map(|project| project.stage.as_str())
             })
             .unwrap_or("none");
-        if !engine.state.pending_rear_extensions.is_empty() {
+        if !engine.state.construction.pending_rear_extensions.is_empty() {
             engine
                 .validate()
                 .expect("normal-scheduler extension save passes engine validation");
@@ -1145,12 +1202,14 @@ mod tests {
             source_demand,
             simulated_ticks,
             engine.state.tick,
-            engine.state.buildings.len(),
-            engine.state.roads.len(),
-            engine.state.pending_rear_extensions.len(),
+            engine.state.construction.buildings.len(),
+            engine.state.network.roads.len(),
+            engine.state.construction.pending_rear_extensions.len(),
             stage,
         );
-        assert!(engine.state.pending_rear_extensions.len() <= MAX_PENDING_REAR_EXTENSIONS);
+        assert!(
+            engine.state.construction.pending_rear_extensions.len() <= MAX_PENDING_REAR_EXTENSIONS
+        );
     }
 }
 

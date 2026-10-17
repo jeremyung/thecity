@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn project_history_admission_trims_completed_and_respects_active_cap() {
     let mut engine = Engine::new_legacy(88);
-    engine.state.projects.clear();
+    engine.state.construction.projects.clear();
     let make_project = |id, progress| Project {
         id,
         kind: ProjectKind::Road,
@@ -21,41 +21,61 @@ fn project_history_admission_trims_completed_and_respects_active_cap() {
         started_tick: 0,
     };
     for id in 1..(MAX_PROJECTS + COMPLETED_PROJECT_HISTORY) as u32 {
-        engine.state.projects.push(make_project(id, 1.0));
+        engine
+            .state
+            .construction
+            .projects
+            .push(make_project(id, 1.0));
     }
     let active_id = MAX_PROJECTS as u32 + COMPLETED_PROJECT_HISTORY as u32;
-    engine.state.projects.push(make_project(active_id, 0.5));
+    engine
+        .state
+        .construction
+        .projects
+        .push(make_project(active_id, 0.5));
     assert_eq!(
-        engine.state.projects.len(),
+        engine.state.construction.projects.len(),
         MAX_PROJECTS + COMPLETED_PROJECT_HISTORY
     );
 
     assert!(engine.project_admission_available());
     assert_eq!(
-        engine.state.projects.len(),
+        engine.state.construction.projects.len(),
         MAX_PROJECTS + COMPLETED_PROJECT_HISTORY
     );
     let next_id = active_id + 1;
     engine.record_project(make_project(next_id, 0.0));
-    assert!(engine.state.projects.len() <= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY);
+    assert!(engine.state.construction.projects.len() <= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY);
     assert!(engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.id == active_id));
     assert!(engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.id == next_id));
-    assert!(!engine.state.projects.iter().any(|project| project.id == 1));
+    assert!(!engine
+        .state
+        .construction
+        .projects
+        .iter()
+        .any(|project| project.id == 1));
 
-    engine.state.projects.clear();
+    engine.state.construction.projects.clear();
     for id in 1..=MAX_PROJECTS as u32 {
-        engine.state.projects.push(make_project(id, 0.0));
+        engine
+            .state
+            .construction
+            .projects
+            .push(make_project(id, 0.0));
     }
     let before: Vec<u32> = engine
         .state
+        .construction
         .projects
         .iter()
         .map(|project| project.id)
@@ -64,6 +84,7 @@ fn project_history_admission_trims_completed_and_respects_active_cap() {
     assert_eq!(
         engine
             .state
+            .construction
             .projects
             .iter()
             .map(|project| project.id)
@@ -100,9 +121,9 @@ fn accelerated_growth_changes_measured_stage_without_a_calendar_unlock() {
 #[test]
 fn missing_parcel_rotation_keeps_legacy_and_rendered_envelopes() {
     let mut engine = Engine::new_legacy(4);
-    engine.state.parcels.clear();
-    engine.state.buildings.clear();
-    engine.state.parcels.push(Parcel {
+    engine.state.land.parcels.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.land.parcels.push(Parcel {
         id: 10_001,
         x: 0.0,
         z: 0.0,
@@ -115,7 +136,7 @@ fn missing_parcel_rotation_keeps_legacy_and_rendered_envelopes() {
         reservation: None,
         open_space: None,
     });
-    engine.state.buildings.push(Building {
+    engine.state.construction.buildings.push(Building {
         id: 10_002,
         parcel_id: 10_001,
         x: 0.0,
@@ -168,6 +189,7 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
     let initial_next_id = engine.state.next_id;
     let initial_open_ordinary = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -184,6 +206,7 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
         engine.step(2_000);
         opened_road = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -197,12 +220,14 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
         if let Some(road_id) = opened_road {
             let accessible: BTreeSet<u32> = engine
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|frontage| frontage.road_id == road_id)
                 .filter_map(|frontage| {
                     let parcel = engine
                         .state
+                        .land
                         .parcels
                         .iter()
                         .find(|parcel| parcel.id == frontage.parcel_id)?;
@@ -213,6 +238,7 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
                 .collect();
             occupied_parcel = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| {
@@ -229,6 +255,7 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
     let road_id = opened_road.expect("growth should open an ordinary road past 160");
     let final_open_ordinary = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -243,6 +270,7 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
     );
     let new_frontages = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .filter(|frontage| frontage.road_id == road_id)
@@ -252,7 +280,7 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
         engine.state.tick,
         engine
             .state
-            .roads
+            .network.roads
             .iter()
             .filter(|road| road.stage == Stage::Open && road.connected && road.kind == RoadKind::Local)
             .count(),
@@ -262,12 +290,14 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
     );
     let frontage = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .find(|frontage| frontage.road_id == road_id && frontage.parcel_id == occupied_parcel)
         .expect("occupied building must have frontage on the new road");
     let parcel = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| parcel.id == frontage.parcel_id)
@@ -286,15 +316,15 @@ fn mature_city_grows_a_beneficial_road_beyond_old_open_road_stop() {
 fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     fn bridge_world(stage: Stage, active_opposite: bool) -> (Engine, u32) {
         let mut engine = Engine::new_legacy(87231);
-        engine.state.nodes.clear();
-        engine.state.roads.clear();
-        engine.state.parcels.clear();
-        engine.state.parcel_frontages.clear();
-        engine.state.buildings.clear();
-        engine.state.projects.clear();
-        engine.state.neighborhood_plan = None;
-        engine.state.neighborhood_road_ids.clear();
-        engine.state.demand = 3.0;
+        engine.state.network.nodes.clear();
+        engine.state.network.roads.clear();
+        engine.state.land.parcels.clear();
+        engine.state.land.parcel_frontages.clear();
+        engine.state.construction.buildings.clear();
+        engine.state.construction.projects.clear();
+        engine.state.legacy.neighborhood_plan = None;
+        engine.state.legacy.neighborhood_road_ids.clear();
+        engine.state.people.demand = 3.0;
         engine.state.tick = 8_000;
 
         let gateway = engine.add_node(70.0, 42.0, NodeKind::Gateway);
@@ -322,6 +352,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
         if stage == Stage::Open {
             assert!(engine
                 .state
+                .network
                 .roads
                 .iter()
                 .any(|road| road.id == bridge && road.connected));
@@ -342,6 +373,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
             );
             engine
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|site| site.id == building)
@@ -355,6 +387,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     closed.plan_road();
     assert!(!closed
         .state
+        .construction
         .projects
         .iter()
         .any(|project| { project.kind == ProjectKind::Road && project.from == Some(closed_west) }));
@@ -362,20 +395,27 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     let (mut disconnected, disconnected_west) = bridge_world(Stage::Open, true);
     disconnected
         .state
+        .network
         .roads
         .iter_mut()
         .find(|road| road.kind == RoadKind::Bridge)
         .unwrap()
         .connected = false;
     disconnected.plan_road();
-    assert!(!disconnected.state.projects.iter().any(|project| {
-        project.kind == ProjectKind::Road && project.from == Some(disconnected_west)
-    }));
+    assert!(!disconnected
+        .state
+        .construction
+        .projects
+        .iter()
+        .any(|project| {
+            project.kind == ProjectKind::Road && project.from == Some(disconnected_west)
+        }));
 
     let (mut quiet, quiet_west) = bridge_world(Stage::Open, false);
     quiet.plan_road();
     assert!(!quiet
         .state
+        .construction
         .projects
         .iter()
         .any(|project| { project.kind == ProjectKind::Road && project.from == Some(quiet_west) }));
@@ -383,6 +423,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     let (mut blocked, blocked_west) = bridge_world(Stage::Open, true);
     blocked
         .state
+        .network
         .nodes
         .iter_mut()
         .find(|node| node.id == blocked_west)
@@ -391,7 +432,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     assert!(!blocked.ordinary_road_clear_of_river(-184.0, 42.0, -254.0, 42.0, 4.5));
     blocked.plan_road();
     assert!(
-        !blocked.state.projects.iter().any(|project| {
+        !blocked.state.construction.projects.iter().any(|project| {
             project.kind == ProjectKind::Road && project.from == Some(blocked_west)
         }),
         "eligible bridgeheads must not bypass river clearance"
@@ -399,7 +440,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
 
     let (mut active, active_west) = bridge_world(Stage::Open, true);
     active.plan_road();
-    let first_bank_road = active.state.projects.iter().find(|project| {
+    let first_bank_road = active.state.construction.projects.iter().find(|project| {
         project.kind == ProjectKind::Road
             && project.from == Some(active_west)
             && project.progress < 1.0
@@ -407,8 +448,8 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     assert!(
         first_bank_road.is_some(),
         "an open bridge with an opposite active catchment should admit a bank-entry road; access={:?}, roads={:?}",
-        active.state.pending_interior_access.as_ref().map(|plan| (plan.host_road_id, plan.host_t)),
-        active.state.projects.iter().filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0).map(|project| (project.from, project.to, &project.reason)).collect::<Vec<_>>()
+        active.state.legacy.pending_interior_access.as_ref().map(|plan| (plan.host_road_id, plan.host_t)),
+        active.state.construction.projects.iter().filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0).map(|project| (project.from, project.to, &project.reason)).collect::<Vec<_>>()
     );
     let first_bank_road = first_bank_road.unwrap();
     let first_bank_project_id = first_bank_road.id;
@@ -421,7 +462,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     assert_eq!(
         active
             .state
-            .projects
+            .construction.projects
             .iter()
             .filter(|project| project.kind == ProjectKind::Road && project.from == Some(active_west))
             .count(),
@@ -432,6 +473,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     assert!(active.node_connected(active_west));
     let first_bank_duration = active
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.id == first_bank_project_id)
@@ -443,6 +485,7 @@ fn open_bridge_head_can_seed_only_a_connected_bank_with_opposite_catchment() {
     }
     let buildings: Vec<Building> = active
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| site_active(building))
@@ -475,12 +518,19 @@ fn current_city_bridge_grows_occupied_far_bank_neighborhood() {
             if bridge_id.is_none() {
                 bridge_id = engine
                     .state
+                    .network
                     .roads
                     .iter()
                     .find(|r| r.kind == RoadKind::Bridge)
                     .map(|r| r.id);
             }
-            let Some(bridge) = engine.state.roads.iter().find(|r| Some(r.id) == bridge_id) else {
+            let Some(bridge) = engine
+                .state
+                .network
+                .roads
+                .iter()
+                .find(|r| Some(r.id) == bridge_id)
+            else {
                 continue;
             };
             saw_bridge_construction |= bridge.stage != Stage::Open;
@@ -488,7 +538,7 @@ fn current_city_bridge_grows_occupied_far_bank_neighborhood() {
             let b = engine.node(bridge.to).unwrap();
             let west = if a.x < b.x { a.id } else { b.id };
             let west_side = |x: f32, z: f32| x < engine.river_center_x_at(z) - RIVER_HALF_WIDTH;
-            saw_bank_road_construction |= engine.state.projects.iter().any(|p| {
+            saw_bank_road_construction |= engine.state.construction.projects.iter().any(|p| {
                 p.kind == ProjectKind::Road
                     && p.progress < 1.0
                     && p.from.zip(p.to).is_some_and(|(a, b)| {
@@ -498,16 +548,17 @@ fn current_city_bridge_grows_occupied_far_bank_neighborhood() {
             });
             saw_bank_building_construction |= engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .any(|b| west_side(b.x, b.z) && b.stage != Stage::Open);
-            let bank_connected = engine.state.roads.iter().any(|r| {
+            let bank_connected = engine.state.network.roads.iter().any(|r| {
                 r.stage == Stage::Open
                     && r.connected
                     && !matches!(r.kind, RoadKind::Rail | RoadKind::Bridge)
                     && (r.from == west || r.to == west)
             });
-            let housing = engine.state.buildings.iter().find(|b| {
+            let housing = engine.state.construction.buildings.iter().find(|b| {
                 west_side(b.x, b.z) && b.stage == Stage::Open && is_housing(b) && b.occupancy > 0
             });
             if bridge.stage == Stage::Open && bridge.connected && bank_connected {
@@ -518,6 +569,7 @@ fn current_city_bridge_grows_occupied_far_bank_neighborhood() {
                     );
                     let parcel = engine
                         .state
+                        .land
                         .parcels
                         .iter()
                         .find(|p| p.id == house.parcel_id)
@@ -595,10 +647,10 @@ fn cached_neighborhood_collisions_match_reference_after_world_edits() {
     // Existing legacy parcels inherit the first building's rendered
     // orientation when their optional parcel rotation is absent.
     let mut with_building = engine_with_developed_plan_site();
-    let legacy_parcel = with_building.state.parcels[0].id;
-    with_building.state.parcels[0].rotation = None;
-    with_building.state.buildings[0].parcel_id = legacy_parcel;
-    with_building.state.buildings[0].rotation = 0.73;
+    let legacy_parcel = with_building.state.land.parcels[0].id;
+    with_building.state.land.parcels[0].rotation = None;
+    with_building.state.construction.buildings[0].parcel_id = legacy_parcel;
+    with_building.state.construction.buildings[0].rotation = 0.73;
     assert_matches(&with_building);
 
     // Empty parcels with saved orientation take the explicit rotation.
@@ -606,6 +658,7 @@ fn cached_neighborhood_collisions_match_reference_after_world_edits() {
     let empty = with_empty_rotated_parcel.add_parcel(28.0, 112.0, 17.0, 11.0, 2, 0.6, false);
     with_empty_rotated_parcel
         .state
+        .land
         .parcels
         .iter_mut()
         .find(|parcel| parcel.id == empty)
@@ -616,10 +669,10 @@ fn cached_neighborhood_collisions_match_reference_after_world_edits() {
     // Road removals and pending construction both alter the cached segment
     // vectors while preserving the reference check's outcome.
     let mut with_pending_road = engine_with_developed_plan_site();
-    let road = with_pending_road.state.roads[0].clone();
-    with_pending_road.state.roads[0].stage = Stage::Survey;
+    let road = with_pending_road.state.network.roads[0].clone();
+    with_pending_road.state.network.roads[0].stage = Stage::Survey;
     let project_id = with_pending_road.id();
-    with_pending_road.state.projects.push(Project {
+    with_pending_road.state.construction.projects.push(Project {
         id: project_id,
         kind: ProjectKind::Road,
         from: Some(road.from),
@@ -642,8 +695,8 @@ fn bounded_world_keeps_open_buildings_connected() {
         e.step(2_000);
         e.validate().unwrap();
     }
-    assert!(e.state.buildings.len() <= MAX_BUILDINGS);
-    assert!(e.state.roads.len() <= MAX_SEGMENTS);
+    assert!(e.state.construction.buildings.len() <= MAX_BUILDINGS);
+    assert!(e.state.network.roads.len() <= MAX_SEGMENTS);
 }
 
 #[test]
@@ -663,12 +716,13 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
             engine
                 .validate()
                 .unwrap_or_else(|err| panic!("seed {seed}: {err}"));
-            max_travelers = max_travelers.max(engine.state.travelers.len());
+            max_travelers = max_travelers.max(engine.state.people.travelers.len());
             let minute = engine.snapshot().minute_of_day;
             if minute >= 1230.0 || minute < 390.0 {
                 max_night_travelers = max_night_travelers.max(
                     engine
                         .state
+                        .people
                         .travelers
                         .iter()
                         .filter(|t| {
@@ -717,9 +771,16 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
                 }),
             "seed {seed} built an ordinary road inside the water/bank reserve"
         );
-        for node in engine.state.nodes.iter().filter(|node| node.id >= 7) {
+        for node in engine
+            .state
+            .network
+            .nodes
+            .iter()
+            .filter(|node| node.id >= 7)
+        {
             let incident: Vec<_> = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -762,6 +823,7 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
         }
         let ordinary_roads: Vec<_> = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -809,11 +871,12 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
             "seed {seed} failed to establish its neighborhood"
         );
         assert!(
-            engine.state.station_online,
+            engine.state.transit.station_online,
             "seed {seed} did not open rail service"
         );
         let rail_commuters = engine
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| resident.rail_commuter)
@@ -841,17 +904,18 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
             "seed {seed} has no completed external rail commute"
         );
         assert!(
-            !engine.state.trains.is_empty(),
+            !engine.state.transit.trains.is_empty(),
             "seed {seed} has no active train"
         );
-        assert!(engine.state.buses.len() <= MAX_BUSES);
-        if let Some(line) = &engine.state.bus_line {
+        assert!(engine.state.transit.buses.len() <= MAX_BUSES);
+        if let Some(line) = &engine.state.transit.bus_line {
             bus_service_seeds += 1;
             assert!(line.active);
             assert!((3..=MAX_BUS_STOPS).contains(&line.stops.len()));
             assert!(line.route.len() <= MAX_BUS_ROUTE_NODES);
             assert!(engine
                 .state
+                .transit
                 .buses
                 .iter()
                 .all(|bus| bus.line_id == line.id && bus.passengers.len() <= BUS_CAPACITY));
@@ -874,8 +938,10 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
             snapshot.stats.population
         );
         assert!(snapshot.stats.active_projects as usize <= MAX_PROJECTS);
-        assert!(engine.state.projects.len() <= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY);
-        assert!(engine.state.population <= MAX_POPULATION);
+        assert!(
+            engine.state.construction.projects.len() <= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY
+        );
+        assert!(engine.state.people.population <= MAX_POPULATION);
         totals.0 += snapshot.buildings.len();
         totals.1 += open_roads;
         totals.2 += snapshot.stats.population;
@@ -920,6 +986,7 @@ fn active_commerce_does_not_age_into_false_vacancy() {
     }
     let commercial_ids: BTreeSet<u32> = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| is_commercial(building))
@@ -927,6 +994,7 @@ fn active_commerce_does_not_age_into_false_vacancy() {
         .collect();
     for business in engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| is_commercial(building) && building.stage == Stage::Open)
@@ -946,14 +1014,14 @@ fn active_commerce_does_not_age_into_false_vacancy() {
 #[test]
 fn active_commerce_is_not_vacant_when_residential_occupancy_is_zero() {
     let mut engine = Engine::new_legacy(605);
-    let founder = &engine.state.buildings[0];
+    let founder = &engine.state.construction.buildings[0];
     assert_eq!(founder.occupancy, 0);
     assert!(founder.business_active);
     assert!(site_active(founder));
     assert!(!site_vacant(founder));
 
     let cafe_id = engine.add_building(
-        engine.state.parcels[1].id,
+        engine.state.land.parcels[1].id,
         BuildingKind::Cafe,
         2,
         Stage::Open,
@@ -965,6 +1033,7 @@ fn active_commerce_is_not_vacant_when_residential_occupancy_is_zero() {
     );
     let before = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.id == cafe_id)
@@ -973,6 +1042,7 @@ fn active_commerce_is_not_vacant_when_residential_occupancy_is_zero() {
     engine.development_day(1);
     let cafe = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.id == cafe_id)
@@ -991,7 +1061,7 @@ fn long_run_keeps_state_collections_bounded_after_expansion() {
     let mut max_travelers = 0usize;
     for batch in 0..150 {
         engine.step(2_000);
-        max_travelers = max_travelers.max(engine.state.travelers.len());
+        max_travelers = max_travelers.max(engine.state.people.travelers.len());
         if batch % 10 == 0 {
             engine.validate().unwrap();
         }
@@ -999,13 +1069,14 @@ fn long_run_keeps_state_collections_bounded_after_expansion() {
     engine.validate().unwrap();
     let snapshot = engine.snapshot();
     assert!(engine.state.events.len() <= MAX_EVENTS);
-    assert!(engine.state.projects.len() <= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY);
-    assert!(engine.state.parcels.len() <= MAX_BUILDINGS * 2);
-    assert!(engine.state.buildings.len() <= MAX_BUILDINGS);
-    assert!(engine.state.roads.len() <= MAX_SEGMENTS);
+    assert!(engine.state.construction.projects.len() <= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY);
+    assert!(engine.state.land.parcels.len() <= MAX_BUILDINGS * 2);
+    assert!(engine.state.construction.buildings.len() <= MAX_BUILDINGS);
+    assert!(engine.state.network.roads.len() <= MAX_SEGMENTS);
     assert!(max_travelers <= MAX_TRAVELERS);
     let ordinary_open_roads: BTreeSet<u32> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -1017,6 +1088,7 @@ fn long_run_keeps_state_collections_bounded_after_expansion() {
         .collect();
     let frontage_lots = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .filter(|frontage| ordinary_open_roads.contains(&frontage.road_id))
@@ -1030,14 +1102,14 @@ fn long_run_keeps_state_collections_bounded_after_expansion() {
         "long-run profile: tick={} stage={} buildings={} parcels={} open_roads={} ordinary_frontage_lots={} lots_per_ordinary_road={:.2} population={} max_travelers={} projects={} events={} elapsed_ms={}",
         snapshot.tick,
         snapshot.stage,
-        engine.state.buildings.len(),
-        engine.state.parcels.len(),
-        engine.state.roads.iter().filter(|r| r.stage == Stage::Open).count(),
+        engine.state.construction.buildings.len(),
+        engine.state.land.parcels.len(),
+        engine.state.network.roads.iter().filter(|r| r.stage == Stage::Open).count(),
         frontage_lots,
         frontage_per_road,
         snapshot.stats.population,
         max_travelers,
-        engine.state.projects.len(),
+        engine.state.construction.projects.len(),
         engine.state.events.len(),
         started.elapsed().as_millis(),
     );
@@ -1111,9 +1183,9 @@ fn time_and_rate_are_integer_deterministic() {
     assert_eq!(t.day, 0);
     assert!((t.minute_of_day - 120.0).abs() < 0.1);
     e.set_development_rate(0);
-    let pop = e.state.population;
+    let pop = e.state.people.population;
     e.step(1000);
-    assert_eq!(e.state.population, pop);
+    assert_eq!(e.state.people.population, pop);
 }
 
 #[test]
@@ -1135,14 +1207,14 @@ fn diagnose_mature_neighborhood_and_road_proposal_rejections() {
             "{name}: tick={} seed={} buildings={} roads={} parcels={} active_projects={} demand={} population={} anchor_cursor={} nodes={} neighborhood_audit={audit:?}",
             engine.state.tick,
             engine.state.seed,
-            engine.state.buildings.len(),
-            engine.state.roads.len(),
-            engine.state.parcels.len(),
-            engine.state.projects.iter().filter(|project| project.progress < 1.0).count(),
-            engine.state.demand,
-            engine.state.population,
-            engine.state.neighborhood_anchor_cursor,
-            engine.state.nodes.len(),
+            engine.state.construction.buildings.len(),
+            engine.state.network.roads.len(),
+            engine.state.land.parcels.len(),
+            engine.state.construction.projects.iter().filter(|project| project.progress < 1.0).count(),
+            engine.state.people.demand,
+            engine.state.people.population,
+            engine.state.legacy.neighborhood_anchor_cursor,
+            engine.state.network.nodes.len(),
         );
 
         // Exercise the real bounded planner over multiple cursor windows,
@@ -1150,17 +1222,18 @@ fn diagnose_mature_neighborhood_and_road_proposal_rejections() {
         let mut planner_probe =
             Engine::restore_json(&engine.save_json()).expect("diagnostic clone restores");
         let mut selected_anchor = None;
-        let start_cursor = planner_probe.state.neighborhood_anchor_cursor;
-        for _ in 0..=planner_probe.state.nodes.len() {
+        let start_cursor = planner_probe.state.legacy.neighborhood_anchor_cursor;
+        for _ in 0..=planner_probe.state.network.nodes.len() {
             if planner_probe.try_create_neighborhood_plan() {
                 selected_anchor = planner_probe
                     .state
+                    .legacy
                     .neighborhood_plan
                     .as_ref()
                     .map(|plan| plan.anchor_node);
                 break;
             }
-            if planner_probe.state.neighborhood_anchor_cursor == start_cursor {
+            if planner_probe.state.legacy.neighborhood_anchor_cursor == start_cursor {
                 break;
             }
         }
@@ -1172,11 +1245,12 @@ fn diagnose_mature_neighborhood_and_road_proposal_rejections() {
             Engine::restore_json(&engine.save_json()).expect("diagnostic clone restores");
         let mut road_proposal = None;
         for _ in 0..32 {
-            let before = road_probe.state.projects.len();
+            let before = road_probe.state.construction.projects.len();
             road_probe.plan_road();
-            if road_probe.state.projects.len() > before {
+            if road_probe.state.construction.projects.len() > before {
                 if let Some(project) = road_probe
                     .state
+                    .construction
                     .projects
                     .iter()
                     .rev()
@@ -1203,25 +1277,26 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
     let mut engine = Engine::new_legacy(8);
     let host = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind == RoadKind::Arterial && road.stage == Stage::Open)
         .unwrap()
         .clone();
     let before = engine.save_json();
-    let before_access_revision = engine.state.access_geometry_revision;
+    let before_access_revision = engine.state.network.access_geometry_revision;
     assert_eq!(
         engine.try_split_open_road(host.id, 0.001),
         Err(RoadSplitError::SegmentTooShort)
     );
     assert_eq!(engine.save_json(), before);
     assert_eq!(
-        engine.state.access_geometry_revision,
+        engine.state.network.access_geometry_revision,
         before_access_revision
     );
 
     let parcel_id = engine.add_parcel(250.0, 60.0, 14.0, 12.0, host.from, 0.8, false);
-    engine.state.parcel_frontages.push(ParcelFrontage {
+    engine.state.land.parcel_frontages.push(ParcelFrontage {
         parcel_id,
         road_id: host.id,
         along: 0.75,
@@ -1236,14 +1311,18 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
 
     // An otherwise valid host cannot be split when the route expansion
     // would cross the public per-traveler route bound.
-    engine.state.parcel_frontages.clear();
-    engine.state.parcels.retain(|parcel| parcel.id != parcel_id);
+    engine.state.land.parcel_frontages.clear();
+    engine
+        .state
+        .land
+        .parcels
+        .retain(|parcel| parcel.id != parcel_id);
     let mut route = Vec::with_capacity(MAX_ROUTE_NODES);
     for index in 0..MAX_ROUTE_NODES {
         route.push(if index % 2 == 0 { host.from } else { host.to });
     }
     let long_traveler_id = engine.id();
-    engine.state.travelers.push(Traveler {
+    engine.state.people.travelers.push(Traveler {
         id: long_traveler_id,
         kind: 1,
         route,
@@ -1273,6 +1352,7 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
     let mut bus_engine = Engine::new_legacy(9);
     let bus_host = bus_engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind == RoadKind::Arterial && road.stage == Stage::Open)
@@ -1288,7 +1368,7 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
         })
         .collect();
     let bus_line_id = bus_engine.id();
-    bus_engine.state.bus_line = Some(BusLine {
+    bus_engine.state.transit.bus_line = Some(BusLine {
         id: bus_line_id,
         stops: vec![bus_host.from, bus_host.to, bus_host.from],
         route: long_bus_route,
@@ -1305,13 +1385,14 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
     let mut project_engine = Engine::new_legacy(10);
     let project_host = project_engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind == RoadKind::Arterial && road.stage == Stage::Open)
         .unwrap()
         .clone();
     let project_id = project_engine.id();
-    project_engine.state.projects.push(Project {
+    project_engine.state.construction.projects.push(Project {
         id: project_id,
         kind: ProjectKind::Road,
         from: Some(project_host.from),
@@ -1333,12 +1414,13 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
     let mut plan_engine = Engine::new_legacy(11);
     let plan_host = plan_engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind == RoadKind::Arterial && road.stage == Stage::Open)
         .unwrap()
         .clone();
-    plan_engine.state.neighborhood_plan = Some(NeighborhoodPlan {
+    plan_engine.state.legacy.neighborhood_plan = Some(NeighborhoodPlan {
         anchor_node: plan_host.from,
         segments: vec![(plan_host.from, plan_host.to); 4],
         next_segment: 0,
@@ -1360,6 +1442,7 @@ fn indexed_connectivity_matches_source_order_scan() {
         let mut engine = Engine::new_legacy(seed);
         let gateway = engine
             .state
+            .network
             .nodes
             .iter()
             .find(|n| n.kind == NodeKind::Gateway)
@@ -1381,7 +1464,7 @@ fn indexed_connectivity_matches_source_order_scan() {
             let mut seen = BTreeSet::from([gateway]);
             let mut queue = VecDeque::from([gateway]);
             while let Some(node) = queue.pop_front() {
-                for road in &engine.state.roads {
+                for road in &engine.state.network.roads {
                     if road.stage == Stage::Open && (road.from == node || road.to == node) {
                         let next = if road.from == node {
                             road.to
@@ -1396,6 +1479,7 @@ fn indexed_connectivity_matches_source_order_scan() {
             }
             let expected = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .map(|r| r.stage == Stage::Open && seen.contains(&r.from) && seen.contains(&r.to))
@@ -1404,6 +1488,7 @@ fn indexed_connectivity_matches_source_order_scan() {
             assert_eq!(
                 engine
                     .state
+                    .network
                     .roads
                     .iter()
                     .map(|r| r.connected)

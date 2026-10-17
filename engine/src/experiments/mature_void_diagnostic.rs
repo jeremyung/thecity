@@ -131,12 +131,13 @@ fn evaluate_exact_candidate(
     }
     let split_x = start.x;
     let split_z = start.z;
-    if engine.state.nodes.iter().any(|node| {
+    if engine.state.network.nodes.iter().any(|node| {
         node.id != host.from
             && node.id != host.to
             && (node.x - split_x).hypot(node.z - split_z) < 1.0
     }) || engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.id != host.id)
@@ -151,6 +152,7 @@ fn evaluate_exact_candidate(
     }
     if engine
         .state
+        .network
         .nodes
         .iter()
         .any(|node| (node.x - end.x).hypot(node.z - end.z) < 18.0)
@@ -159,6 +161,7 @@ fn evaluate_exact_candidate(
     }
     let road_clear = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.stage == Stage::Open)
@@ -174,6 +177,7 @@ fn evaluate_exact_candidate(
         });
     let projects_clear = engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -243,9 +247,10 @@ fn evaluate_exact_candidate(
     if lots.len() < 2 {
         return (Reject::TooFewLots, Some((start, end, lots)));
     }
-    if engine.state.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
+    if engine.state.land.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
         || engine
             .state
+            .land
             .parcel_frontages
             .len()
             .saturating_add(lots.len())
@@ -264,7 +269,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     );
     let mut engine = Engine::restore_json(source).expect("mature browser save restores");
     let start_save = engine.save_json();
-    let initial_cursor = engine.state.interior_access_cursor;
+    let initial_cursor = engine.state.legacy.interior_access_cursor;
     let initial_id = engine.state.next_id;
     let audit: serde_json::Value = serde_json::from_str(include_str!(
         "../../../tests/fixtures/validation/density-void-audit.json"
@@ -300,6 +305,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
 
     let mut hosts: Vec<(u32, f32)> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -319,7 +325,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     let mut calls = 0usize;
     let mut proposals = Vec::new();
     loop {
-        engine.state.interior_access_cursor = cursor;
+        engine.state.legacy.interior_access_cursor = cursor;
         let scan = engine.propose_interior_access();
         proposals.extend(scan.proposals);
         cursor = scan.next_cursor;
@@ -336,7 +342,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
     let context = engine.collision_context();
     let mut fixed_rejections = BTreeMap::<String, usize>::new();
     let mut fixed_accepted = Vec::new();
-    for host in engine.state.roads.iter().filter(|road| {
+    for host in engine.state.network.roads.iter().filter(|road| {
         road.stage == Stage::Open
             && road.connected
             && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
@@ -369,7 +375,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
         let mut nearby_valid = Vec::new();
         let mut rejected_examples = Vec::new();
         let mut targeted = 0usize;
-        for host in engine.state.roads.iter().filter(|road| {
+        for host in engine.state.network.roads.iter().filter(|road| {
             road.stage == Stage::Open
                 && road.connected
                 && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
@@ -469,6 +475,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
             .map(|proposal| {
                 let road = engine
                     .state
+                    .network
                     .roads
                     .iter()
                     .find(|road| road.id == proposal.host_id)
@@ -565,6 +572,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
             .filter(|proposal| {
                 let road = engine
                     .state
+                    .network
                     .roads
                     .iter()
                     .find(|road| road.id == proposal.host_id)
@@ -610,7 +618,7 @@ fn diagnose_access_proposals_for_mature_browser_voids() {
                 "score": [p.score.site_area, p.score.road_length_mm]
             })
         });
-    engine.state.interior_access_cursor = initial_cursor;
+    engine.state.legacy.interior_access_cursor = initial_cursor;
     assert_eq!(
         engine.save_json(),
         start_save,

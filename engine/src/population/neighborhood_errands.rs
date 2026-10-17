@@ -56,24 +56,26 @@ impl crate::Engine {
     fn building_under_extension(&self, building_id: u32) -> bool {
         let parcel_id = self
             .state
+            .construction
             .buildings
             .iter()
             .find(|b| b.id == building_id)
             .map(|b| b.parcel_id);
         self.state
+            .construction
             .pending_rear_extensions
             .iter()
             .any(|plan| plan.building_id == building_id)
-            || self.state.projects.iter().any(|project| {
+            || self.state.construction.projects.iter().any(|project| {
                 project.kind == ProjectKind::Extension && project.parcel_id == parcel_id
             })
     }
 
     pub(crate) fn schedule_neighborhood_errands(&mut self) {
         self.advance_neighborhood_errand_dwell();
-        if self.state.neighborhood_errands.outings.len() >= MAX_ACTIVE
-            || self.state.travelers.len() >= crate::MAX_TRAVELERS
-            || self.state.buildings.is_empty()
+        if self.state.people.neighborhood_errands.outings.len() >= MAX_ACTIVE
+            || self.state.people.travelers.len() >= crate::MAX_TRAVELERS
+            || self.state.construction.buildings.is_empty()
         {
             return;
         }
@@ -84,10 +86,10 @@ impl crate::Engine {
         {
             return;
         }
-        let buildings_len = self.state.buildings.len();
-        let cursor = self.state.neighborhood_errands.cursor;
+        let buildings_len = self.state.construction.buildings.len();
+        let cursor = self.state.people.neighborhood_errands.cursor;
         let hi = (cursor.home_index % buildings_len as u64) as usize;
-        let home_building = &self.state.buildings[hi];
+        let home_building = &self.state.construction.buildings[hi];
         let mut homes = Vec::with_capacity(1);
         if is_active_home(home_building) && !self.building_under_extension(home_building.id) {
             let home_id = home_building.id;
@@ -98,6 +100,7 @@ impl crate::Engine {
                 occupied_people: home_building.occupancy as u32,
                 named_residents: self
                     .state
+                    .people
                     .residents
                     .iter()
                     .filter(|r| r.home_building == home_id)
@@ -105,6 +108,7 @@ impl crate::Engine {
                 active_aggregate_participants: self.aggregate_participants_at_home(home_id),
                 active_outings: self
                     .state
+                    .people
                     .neighborhood_errands
                     .outings
                     .iter()
@@ -121,16 +125,18 @@ impl crate::Engine {
             buildings_len.min(crate::population::neighborhood_demand::MAX_DESTINATION_CHECKS);
         let mut raw_offset = 0usize;
         while raw_offset < destination_slots {
-            let b = &self.state.buildings[(dest_start + raw_offset) % buildings_len];
+            let b = &self.state.construction.buildings[(dest_start + raw_offset) % buildings_len];
             if is_active_business(b) && !self.building_under_extension(b.id) {
                 let active_visitor_count = self
                     .state
+                    .people
                     .travelers
                     .iter()
                     .filter(|t| t.destination_building == Some(b.id) && !t.activity.is_errand())
                     .count() as u32;
                 let reserved = self
                     .state
+                    .people
                     .neighborhood_errands
                     .outings
                     .iter()
@@ -158,7 +164,7 @@ impl crate::Engine {
         } else {
             cursor.destination_round
         };
-        self.state.neighborhood_errands.cursor = ScanCursor {
+        self.state.people.neighborhood_errands.cursor = ScanCursor {
             home_index: next_home as u64,
             destination_index: next_destination as u64,
             destination_round: next_round,
@@ -168,7 +174,7 @@ impl crate::Engine {
             &destinations,
             minute,
             self.state.seed as u64,
-            self.state.neighborhood_errands.outings.len() as u32,
+            self.state.people.neighborhood_errands.outings.len() as u32,
             crate::population::neighborhood_demand::ScanCursor {
                 home_index: 0,
                 destination_round: cursor.destination_round,
@@ -181,13 +187,14 @@ impl crate::Engine {
     }
 
     fn admit_errand(&mut self, home_id: u32, destination_id: u32) {
-        if self.state.travelers.len() >= crate::MAX_TRAVELERS
-            || self.state.neighborhood_errands.outings.len() >= MAX_ACTIVE
+        if self.state.people.travelers.len() >= crate::MAX_TRAVELERS
+            || self.state.people.neighborhood_errands.outings.len() >= MAX_ACTIVE
         {
             return;
         }
         let Some(home) = self
             .state
+            .construction
             .buildings
             .iter()
             .find(|b| b.id == home_id)
@@ -197,6 +204,7 @@ impl crate::Engine {
         };
         let Some(destination) = self
             .state
+            .construction
             .buildings
             .iter()
             .find(|b| b.id == destination_id)
@@ -204,11 +212,18 @@ impl crate::Engine {
         else {
             return;
         };
-        let Some(home_parcel) = self.state.parcels.iter().find(|p| p.id == home.parcel_id) else {
+        let Some(home_parcel) = self
+            .state
+            .land
+            .parcels
+            .iter()
+            .find(|p| p.id == home.parcel_id)
+        else {
             return;
         };
         let Some(destination_parcel) = self
             .state
+            .land
             .parcels
             .iter()
             .find(|p| p.id == destination.parcel_id)
@@ -265,7 +280,7 @@ impl crate::Engine {
         let dwell_ticks = DWELL_MIN
             + mix(self.state.seed as u64 ^ (id as u64).rotate_left(21) ^ self.state.tick)
                 % DWELL_SPAN;
-        self.state.neighborhood_errands.outings.push(Outing {
+        self.state.people.neighborhood_errands.outings.push(Outing {
             home_id,
             destination_id,
             traveler_id: id,
@@ -275,7 +290,7 @@ impl crate::Engine {
             dwell_ticks,
             return_traveler: returning,
         });
-        self.state.travelers.push(outbound);
+        self.state.people.travelers.push(outbound);
     }
 
     pub(crate) fn handle_neighborhood_errand_arrival(
@@ -284,6 +299,7 @@ impl crate::Engine {
     ) -> bool {
         let Some(index) = self
             .state
+            .people
             .neighborhood_errands
             .outings
             .iter()
@@ -291,7 +307,7 @@ impl crate::Engine {
         else {
             return false;
         };
-        let outing = &mut self.state.neighborhood_errands.outings[index];
+        let outing = &mut self.state.people.neighborhood_errands.outings[index];
         match outing.phase {
             Phase::Outbound
                 if traveler.activity == crate::TravelerActivity::NeighborhoodErrandOutbound =>
@@ -303,7 +319,7 @@ impl crate::Engine {
             Phase::Returning
                 if traveler.activity == crate::TravelerActivity::NeighborhoodErrandReturning =>
             {
-                self.state.neighborhood_errands.outings.remove(index);
+                self.state.people.neighborhood_errands.outings.remove(index);
                 true
             }
             _ => false,
@@ -311,12 +327,13 @@ impl crate::Engine {
     }
 
     fn advance_neighborhood_errand_dwell(&mut self) {
-        let room = crate::MAX_TRAVELERS.saturating_sub(self.state.travelers.len());
+        let room = crate::MAX_TRAVELERS.saturating_sub(self.state.people.travelers.len());
         if room == 0 {
             return;
         }
         for outing in self
             .state
+            .people
             .neighborhood_errands
             .outings
             .iter_mut()
@@ -324,12 +341,16 @@ impl crate::Engine {
             .take(room)
         {
             outing.phase = Phase::Returning;
-            self.state.travelers.push(outing.return_traveler.clone());
+            self.state
+                .people
+                .travelers
+                .push(outing.return_traveler.clone());
         }
     }
 
     pub(crate) fn errand_references_building(&self, id: u32) -> bool {
         self.state
+            .people
             .neighborhood_errands
             .outings
             .iter()
@@ -338,6 +359,7 @@ impl crate::Engine {
 
     pub(crate) fn errand_references_road_edge(&self, from: u32, to: u32) -> bool {
         self.state
+            .people
             .neighborhood_errands
             .outings
             .iter()
@@ -351,6 +373,7 @@ impl crate::Engine {
 
     pub(crate) fn aggregate_participants_at_home(&self, id: u32) -> u32 {
         self.state
+            .people
             .neighborhood_errands
             .outings
             .iter()
@@ -360,7 +383,7 @@ impl crate::Engine {
     }
 
     pub(crate) fn validate_neighborhood_errands(&self) -> Result<(), String> {
-        let state = &self.state.neighborhood_errands;
+        let state = &self.state.people.neighborhood_errands;
         if state.outings.len() > MAX_ACTIVE {
             return Err("too many active neighborhood errands".into());
         }
@@ -373,6 +396,7 @@ impl crate::Engine {
                 || !(DWELL_MIN..DWELL_MIN + DWELL_SPAN).contains(&outing.dwell_ticks)
                 || self
                     .state
+                    .people
                     .residents
                     .iter()
                     .any(|r| r.id == outing.traveler_id)
@@ -381,18 +405,21 @@ impl crate::Engine {
             }
             let home = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|b| b.id == outing.home_id && is_active_home(b))
                 .ok_or("errand home is missing or inactive")?;
             let dest = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|b| b.id == outing.destination_id && is_active_business(b))
                 .ok_or("errand business is missing or inactive")?;
             let home_node = self
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|p| p.id == home.parcel_id)
@@ -400,6 +427,7 @@ impl crate::Engine {
                 .ok_or("errand home parcel missing")?;
             let dest_node = self
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|p| p.id == dest.parcel_id)
@@ -445,6 +473,7 @@ impl crate::Engine {
             }
             let named = self
                 .state
+                .people
                 .residents
                 .iter()
                 .filter(|r| r.home_building == outing.home_id)
@@ -456,6 +485,7 @@ impl crate::Engine {
             }
             let travelers: Vec<_> = self
                 .state
+                .people
                 .travelers
                 .iter()
                 .filter(|t| t.id == outing.traveler_id)
@@ -544,6 +574,7 @@ impl crate::Engine {
         }
         for traveler in self
             .state
+            .people
             .travelers
             .iter()
             .filter(|t| t.activity.is_errand())
@@ -554,6 +585,7 @@ impl crate::Engine {
         }
         for dest in self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| is_active_business(b))
@@ -576,7 +608,7 @@ impl crate::Engine {
             return false;
         }
         route.windows(2).zip(lengths).all(|(edge, length)| {
-            self.state.roads.iter().any(|road| {
+            self.state.network.roads.iter().any(|road| {
                 road.connected
                     && road.stage == Stage::Open
                     && road.kind != RoadKind::Rail
@@ -671,14 +703,15 @@ mod tests {
 
     fn errand_engine() -> crate::Engine {
         let mut engine = crate::Engine::new_legacy(731);
-        engine.state.buildings.clear();
-        engine.state.parcels.clear();
-        engine.state.parcel_frontages.clear();
-        engine.state.travelers.clear();
-        engine.state.residents.clear();
-        engine.state.neighborhood_errands = ErrandState::default();
+        engine.state.construction.buildings.clear();
+        engine.state.land.parcels.clear();
+        engine.state.land.parcel_frontages.clear();
+        engine.state.people.travelers.clear();
+        engine.state.people.residents.clear();
+        engine.state.people.neighborhood_errands = ErrandState::default();
         let road = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|r| r.connected && r.stage == Stage::Open && r.kind != RoadKind::Rail)
@@ -715,6 +748,7 @@ mod tests {
         );
         engine
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|b| b.id == home)
@@ -762,12 +796,12 @@ mod tests {
         let mut engine = errand_engine();
         engine.schedule_neighborhood_errands();
         assert_eq!(
-            engine.state.neighborhood_errands.outings.len(),
+            engine.state.people.neighborhood_errands.outings.len(),
             1,
             "fixture must admit one real routed errand"
         );
         engine.validate_neighborhood_errands().unwrap();
-        let outbound = &engine.state.travelers[0];
+        let outbound = &engine.state.people.travelers[0];
         assert_eq!(outbound.access_phase, 0);
         assert!(outbound.origin_access.as_ref().unwrap().points.len() >= 2);
         assert!(outbound.destination_access.as_ref().unwrap().points.len() >= 2);
@@ -785,12 +819,14 @@ mod tests {
             engine.validate_neighborhood_errands().unwrap();
             if engine
                 .state
+                .people
                 .neighborhood_errands
                 .outings
                 .first()
                 .is_some_and(|o| o.phase == Phase::Dwelling)
                 && restored
                     .state
+                    .people
                     .neighborhood_errands
                     .outings
                     .first()
@@ -802,6 +838,7 @@ mod tests {
             }
             if engine
                 .state
+                .people
                 .neighborhood_errands
                 .outings
                 .first()
@@ -811,15 +848,15 @@ mod tests {
                 restored = crate::Engine::restore_json(&engine.save_json()).unwrap();
                 restored_at_return = true;
             }
-            if engine.state.neighborhood_errands.outings.is_empty() {
+            if engine.state.people.neighborhood_errands.outings.is_empty() {
                 break;
             }
         }
         assert!(
-            engine.state.neighborhood_errands.outings.is_empty(),
+            engine.state.people.neighborhood_errands.outings.is_empty(),
             "physical errand did not finish within the movement bound"
         );
-        assert!(engine.state.travelers.is_empty());
+        assert!(engine.state.people.travelers.is_empty());
         assert!(restored_at_dwell && restored_at_return);
         engine.validate_neighborhood_errands().unwrap();
     }
@@ -860,12 +897,12 @@ mod tests {
         let mut engine = errand_engine();
         engine.schedule_neighborhood_errands();
         assert_eq!(
-            engine.aggregate_participants_at_home(engine.state.buildings[0].id),
+            engine.aggregate_participants_at_home(engine.state.construction.buildings[0].id),
             1
         );
         for _ in 0..8 {
             engine.schedule_neighborhood_errands();
         }
-        assert_eq!(engine.state.neighborhood_errands.outings.len(), 1);
+        assert_eq!(engine.state.people.neighborhood_errands.outings.len(), 1);
     }
 }

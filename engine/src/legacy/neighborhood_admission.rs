@@ -293,9 +293,10 @@ impl Engine {
         let spine_road_reservation = if spine_plan.is_some() { 3 } else { 0 };
         if self
             .state
+            .network
             .roads
             .len()
-            .saturating_add(self.state.projects.len())
+            .saturating_add(self.state.construction.projects.len())
             .saturating_add(required_segments)
             .saturating_add(spine_road_reservation)
             > MAX_SEGMENTS
@@ -407,11 +408,19 @@ impl Engine {
         {
             return Err(NeighborhoodRejection::NoncanonicalSelectedLots);
         }
-        if self.state.parcels.len().saturating_add(proposed_lots.len()) > MAX_PARCELS {
+        if self
+            .state
+            .land
+            .parcels
+            .len()
+            .saturating_add(proposed_lots.len())
+            > MAX_PARCELS
+        {
             return Err(NeighborhoodRejection::ParcelCapacity);
         }
         if self
             .state
+            .land
             .parcel_frontages
             .len()
             .saturating_add(proposed_lots.len())
@@ -527,7 +536,7 @@ impl Engine {
             let b = &corner_nodes[(index + 1) % 4];
             let is_reused_edge = reused_edge.is_some_and(|(edge_index, road_id)| {
                 edge_index == index
-                    && self.state.roads.iter().any(|road| {
+                    && self.state.network.roads.iter().any(|road| {
                         road.id == road_id
                             && road.stage == Stage::Open
                             && road.connected
@@ -578,6 +587,7 @@ impl Engine {
             }
             for road in self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| road.stage == Stage::Open)
@@ -596,7 +606,7 @@ impl Engine {
                     return Err(NeighborhoodRejection::ExistingRoadProximity);
                 }
             }
-            if self.state.projects.iter().any(|project| {
+            if self.state.construction.projects.iter().any(|project| {
                 if project.kind != ProjectKind::Road || project.progress >= 1.0 {
                     return false;
                 }

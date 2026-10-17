@@ -66,6 +66,7 @@ fn matching_plan_road_ids(engine: &Engine, plan: &NeighborhoodPlan) -> Vec<u32> 
         .filter_map(|(from, to)| {
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| {
@@ -91,6 +92,7 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
     // its proposed block interior to the normal geometry helper.
     let same_plan = counterfactual
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .is_some_and(|current| current.segments == plan.segments);
@@ -98,7 +100,7 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
         same_plan,
         "restored diagnostic copy must retain the observed plan"
     );
-    counterfactual.state.neighborhood_plan = None;
+    counterfactual.state.legacy.neighborhood_plan = None;
     let excluded_parcel_count = 0;
 
     let mut context = counterfactual.collision_context();
@@ -201,7 +203,7 @@ fn evaluate_plan(engine: &Engine, observed_tick: u64, plan: &NeighborhoodPlan) -
         next_segment: plan.next_segment,
         planned_perimeter_segments_checked: 4,
         excluded_parcel_count,
-        preserved_parcel_count: engine.state.parcels.len(),
+        preserved_parcel_count: engine.state.land.parcels.len(),
         preserved_collision_footprint_count,
         variants,
     }
@@ -216,7 +218,7 @@ fn run_seed(seed: u32) -> SeedReport {
 
     while engine.state.tick < CAPTURE_TICK {
         engine.step(SAMPLE_TICKS);
-        let Some(plan) = engine.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = engine.state.legacy.neighborhood_plan.as_ref() else {
             continue;
         };
         if !plan.coordinated_lots || plan.spine.is_some() || plan.segments.len() != 4 {

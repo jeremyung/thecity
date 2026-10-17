@@ -23,22 +23,25 @@ impl Engine {
     pub(crate) fn development_day(&mut self, day: u32) {
         let occupied: usize = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| site_active(b))
             .count();
         let vacancies: usize = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| site_vacant(b))
             .count();
-        self.state.demand = (0.35 + self.state.population as f32 / 42.0 + occupied as f32 * 0.055
-            - vacancies as f32 * 0.18)
-            .clamp(0.12, 4.0);
-        let population = self.state.population;
+        self.state.people.demand =
+            (0.35 + self.state.people.population as f32 / 42.0 + occupied as f32 * 0.055
+                - vacancies as f32 * 0.18)
+                .clamp(0.12, 4.0);
+        let population = self.state.people.population;
         let mut household_arrivals = 0u32;
-        for b in &mut self.state.buildings {
+        for b in &mut self.state.construction.buildings {
             if site_vacant(b) {
                 b.vacant_days = b.vacant_days.saturating_add(1);
             }
@@ -50,14 +53,15 @@ impl Engine {
                 household_arrivals += (b.occupancy - previous) as u32;
             }
         }
-        self.state.population = self
+        self.state.people.population = self
             .state
+            .people
             .population
             .saturating_add(household_arrivals)
             .min(MAX_POPULATION);
         self.advance_projects();
         self.sync_residents();
-        if day > 0 && day % 3 == 0 && self.state.last_renewal_day != day {
+        if day > 0 && day % 3 == 0 && self.state.construction.last_renewal_day != day {
             self.renewal(day);
         }
     }
@@ -72,16 +76,24 @@ impl Engine {
         }
         let homes: Vec<(f32, f32)> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| is_housing(b) && site_active(b))
             .map(|b| (b.x, b.z))
             .collect();
-        let built: BTreeSet<u32> = self.state.buildings.iter().map(|b| b.parcel_id).collect();
+        let built: BTreeSet<u32> = self
+            .state
+            .construction
+            .buildings
+            .iter()
+            .map(|b| b.parcel_id)
+            .collect();
         // Only pocket parks count toward the quota and spacing; the station
         // plaza and neighborhood shrines are separate open space.
         let parks: Vec<(f32, f32)> = self
             .state
+            .land
             .parcels
             .iter()
             .filter(|p| is_pocket_park(p) && !built.contains(&p.id))
@@ -93,7 +105,7 @@ impl Engine {
             return;
         }
         let mut best: Option<(usize, u32)> = None;
-        for parcel in &self.state.parcels {
+        for parcel in &self.state.land.parcels {
             if parcel.protected
                 || parcel.reservation.is_some()
                 || built.contains(&parcel.id)
@@ -118,7 +130,13 @@ impl Engine {
         let Some((nearby, parcel_id)) = best else {
             return;
         };
-        if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+        if let Some(parcel) = self
+            .state
+            .land
+            .parcels
+            .iter_mut()
+            .find(|p| p.id == parcel_id)
+        {
             parcel.protected = true;
             parcel.open_space = Some("park".into());
         }
@@ -133,6 +151,7 @@ impl Engine {
     pub(crate) fn evaluate_growth(&mut self) {
         if self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.progress < 1.0)
@@ -141,7 +160,9 @@ impl Engine {
         {
             return;
         }
-        if self.state.buildings.len() >= MAX_BUILDINGS || self.state.roads.len() >= MAX_SEGMENTS {
+        if self.state.construction.buildings.len() >= MAX_BUILDINGS
+            || self.state.network.roads.len() >= MAX_SEGMENTS
+        {
             return;
         }
         if self.masterplan_active() {
@@ -156,13 +177,14 @@ impl Engine {
         if !self.project_admission_available() {
             return;
         }
-        self.state.last_renewal_day = day;
+        self.state.construction.last_renewal_day = day;
         if self.try_start_height_redevelopment() {
             return;
         }
         self.try_close_business_for_turnover(day);
         let candidates: Vec<u32> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| {
@@ -172,6 +194,7 @@ impl Engine {
                     && b.vacant_days > 5
                     && !self
                         .state
+                        .construction
                         .pending_rear_extensions
                         .iter()
                         .any(|plan| plan.building_id == b.id)
@@ -183,7 +206,12 @@ impl Engine {
         }
         let i = (rng_next(&mut self.state.rng_growth) as usize) % candidates.len();
         let id = candidates[i];
-        let (parcel_id, msg) = if let Some(b) = self.state.buildings.iter_mut().find(|b| b.id == id)
+        let (parcel_id, msg) = if let Some(b) = self
+            .state
+            .construction
+            .buildings
+            .iter_mut()
+            .find(|b| b.id == id)
         {
             let msg = format!("{} is renovated after a quiet period", b.name);
             b.history.push(msg.clone());
@@ -198,7 +226,13 @@ impl Engine {
         } else {
             return;
         };
-        if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+        if let Some(parcel) = self
+            .state
+            .land
+            .parcels
+            .iter_mut()
+            .find(|p| p.id == parcel_id)
+        {
             parcel.reservation = Some(id);
         }
         self.mark_access_geometry_changed();
@@ -224,17 +258,17 @@ impl Engine {
     }
 
     pub(crate) fn try_close_business_for_turnover(&mut self, day: u32) -> bool {
-        if day == 0 || day % 30 != 0 || self.state.last_business_turnover_day == day {
+        if day == 0 || day % 30 != 0 || self.state.construction.last_business_turnover_day == day {
             return false;
         }
-        self.state.last_business_turnover_day = day;
+        self.state.construction.last_business_turnover_day = day;
         let mut referenced = BTreeSet::new();
-        for resident in &self.state.residents {
+        for resident in &self.state.people.residents {
             if let Some(building_id) = resident.work_building {
                 referenced.insert(building_id);
             }
         }
-        for traveler in &self.state.travelers {
+        for traveler in &self.state.people.travelers {
             if let Some(building_id) = traveler.destination_building {
                 referenced.insert(building_id);
             }
@@ -243,13 +277,14 @@ impl Engine {
             }
         }
         let mut active_by_kind = BTreeMap::<BuildingKind, usize>::new();
-        for building in &self.state.buildings {
+        for building in &self.state.construction.buildings {
             if is_commercial(building) && site_active(building) {
                 *active_by_kind.entry(building.kind).or_default() += 1;
             }
         }
         let eligible: Vec<u32> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| {
@@ -259,6 +294,7 @@ impl Engine {
                     && !building.anchor
                     && !self
                         .state
+                        .construction
                         .pending_rear_extensions
                         .iter()
                         .any(|plan| plan.building_id == building.id)
@@ -275,6 +311,7 @@ impl Engine {
         let chosen = eligible[rng_next(&mut self.state.rng_growth) as usize % eligible.len()];
         let Some(building) = self
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|building| building.id == chosen)

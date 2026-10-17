@@ -8,6 +8,7 @@ fn reusable_office_engine() -> (Engine, u32) {
     let mut engine = Engine::new(912);
     let lot_index = engine
         .state
+        .network
         .masterplan
         .as_ref()
         .unwrap()
@@ -23,10 +24,17 @@ fn reusable_office_engine() -> (Engine, u32) {
                 .then_some(index)
         })
         .unwrap();
-    let parcel_id = engine.state.masterplan.as_ref().unwrap().lot_parcels[lot_index];
-    engine.state.station_online = true;
+    let parcel_id = engine
+        .state
+        .network
+        .masterplan
+        .as_ref()
+        .unwrap()
+        .lot_parcels[lot_index];
+    engine.state.transit.station_online = true;
     let building_id = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.parcel_id == parcel_id)
@@ -46,6 +54,7 @@ fn reusable_office_engine() -> (Engine, u32) {
         });
     let building = engine
         .state
+        .construction
         .buildings
         .iter_mut()
         .find(|building| building.id == building_id)
@@ -64,6 +73,7 @@ fn reusable_office_engine() -> (Engine, u32) {
 fn station_core_candidate(engine: &Engine, building_id: u32) -> (Building, usize) {
     let building = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.id == building_id)
@@ -71,6 +81,7 @@ fn station_core_candidate(engine: &Engine, building_id: u32) -> (Building, usize
         .clone();
     let lot_index = engine
         .state
+        .network
         .masterplan
         .as_ref()
         .unwrap()
@@ -86,11 +97,17 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
     let (mut engine, building_id) = reusable_office_engine();
     engine.set_development_rate(16);
     assert!(engine.begin_height_redevelopment(building_id));
-    let pending = engine.state.height_redevelopment.clone().unwrap();
+    let pending = engine
+        .state
+        .construction
+        .height_redevelopment
+        .clone()
+        .unwrap();
     assert_eq!(pending.building_id, building_id);
     assert_eq!(
         engine
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == building_id)
@@ -104,6 +121,7 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
     assert!(
         engine
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == building_id)
@@ -119,6 +137,7 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
     assert_eq!(
         restored
             .state
+            .construction
             .height_redevelopment
             .as_ref()
             .unwrap()
@@ -129,6 +148,7 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
     restored.step(400);
     let reconstruction = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.id == building_id)
@@ -151,10 +171,11 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
         "construction replay must remain deterministic through completion"
     );
     assert_eq!(engine.save_json(), restored_reconstruction.save_json());
-    assert!(engine.state.height_redevelopment.is_none());
+    assert!(engine.state.construction.height_redevelopment.is_none());
     assert_eq!(
         engine
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == building_id)
@@ -168,9 +189,15 @@ fn height_redevelopment_keeps_the_host_id_and_round_trips_mid_demolition() {
 fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
     let (mut engine, building_id) = reusable_office_engine();
     assert!(engine.begin_height_redevelopment(building_id));
-    let plan = engine.state.height_redevelopment.clone().unwrap();
+    let plan = engine
+        .state
+        .construction
+        .height_redevelopment
+        .clone()
+        .unwrap();
     let project = engine
         .state
+        .construction
         .projects
         .iter_mut()
         .find(|project| project.id == plan.project_id)
@@ -180,6 +207,7 @@ fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
     assert_eq!(
         engine
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == building_id)
@@ -190,6 +218,7 @@ fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
     engine.complete_project(plan.project_id);
     let building = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.id == building_id)
@@ -200,6 +229,7 @@ fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
     assert_eq!(
         engine
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == plan.parcel_id)
@@ -207,10 +237,11 @@ fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
             .reservation,
         None
     );
-    assert!(engine.state.height_redevelopment.is_none());
+    assert!(engine.state.construction.height_redevelopment.is_none());
     assert_eq!(
         engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.parcel_id == plan.parcel_id)
@@ -222,10 +253,11 @@ fn height_redevelopment_completes_in_place_and_releases_its_reservation() {
 #[test]
 fn actor_references_and_character_fraction_disqualify_office_candidate() {
     let (mut engine, building_id) = reusable_office_engine();
-    engine.state.station_online = true;
+    engine.state.transit.station_online = true;
     let (mut building, lot_index) = station_core_candidate(&engine, building_id);
     let other_office = engine
         .state
+        .construction
         .buildings
         .iter_mut()
         .find(|building| building.id != building_id)
@@ -242,12 +274,12 @@ fn actor_references_and_character_fraction_disqualify_office_candidate() {
         "zero commercial occupancy is not vacancy while the business is active"
     );
     assert!(engine.height_redevelopment_candidate(&building, lot_index, MIN_BUILDING_AGE_DAYS));
-    engine.state.residents.push(Resident {
+    engine.state.people.residents.push(Resident {
         id: 900_001,
         name: "Test resident".into(),
         home_building: building_id,
         work_building: None,
-        home_node: engine.state.parcels[0].access_node,
+        home_node: engine.state.land.parcels[0].access_node,
         work_node: None,
         mode: 0,
         routine: ResidentRoutine::Worker,
@@ -277,6 +309,7 @@ fn station_core_lot_class_and_eight_tower_cap_gate_candidates() {
     let (building, core_lot_index) = station_core_candidate(&engine, building_id);
     let other_office = engine
         .state
+        .construction
         .buildings
         .iter_mut()
         .find(|building| building.id != building_id)
@@ -307,7 +340,7 @@ fn station_core_lot_class_and_eight_tower_cap_gate_candidates() {
         tower.id = 900_100 + id as u32;
         tower.floors = MIN_OFFICE_FLOORS;
         tower.capacity = tower.floors as u16 * 5;
-        engine.state.buildings.push(tower);
+        engine.state.construction.buildings.push(tower);
     }
     assert!(!engine.height_redevelopment_candidate(
         &building,
@@ -319,14 +352,14 @@ fn station_core_lot_class_and_eight_tower_cap_gate_candidates() {
 #[test]
 fn ordinary_growth_does_not_start_redevelopment_before_the_mature_gate() {
     let mut engine = Engine::new(913);
-    engine.state.station_online = true;
-    engine.state.demand = MIN_DEVELOPMENT_DEMAND - 0.01;
-    let before = engine.state.projects.len();
+    engine.state.transit.station_online = true;
+    engine.state.people.demand = MIN_DEVELOPMENT_DEMAND - 0.01;
+    let before = engine.state.construction.projects.len();
     assert!(!engine.try_start_height_redevelopment());
-    assert_eq!(engine.state.projects.len(), before);
-    assert!(engine.state.height_redevelopment.is_none());
+    assert_eq!(engine.state.construction.projects.len(), before);
+    assert!(engine.state.construction.height_redevelopment.is_none());
 
-    engine.state.demand = MIN_DEVELOPMENT_DEMAND;
+    engine.state.people.demand = MIN_DEVELOPMENT_DEMAND;
     assert!(
         !engine.try_start_height_redevelopment(),
         "the 300-active-building gate still applies at the demand threshold"
@@ -338,6 +371,7 @@ fn redevelopment_waits_for_eighty_five_percent_lot_realization() {
     let (mut engine, building_id) = reusable_office_engine();
     let template = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.id == building_id)
@@ -348,18 +382,25 @@ fn redevelopment_waits_for_eighty_five_percent_lot_realization() {
         active.id = 910_000 + index;
         active.stage = Stage::Open;
         active.business_active = true;
-        engine.state.buildings.push(active);
+        engine.state.construction.buildings.push(active);
     }
-    engine.state.station_online = true;
-    engine.state.demand = MIN_DEVELOPMENT_DEMAND;
-    let realization = &mut engine.state.masterplan.as_mut().unwrap().lot_parcels;
+    engine.state.transit.station_online = true;
+    engine.state.people.demand = MIN_DEVELOPMENT_DEMAND;
+    let realization = &mut engine
+        .state
+        .network
+        .masterplan
+        .as_mut()
+        .unwrap()
+        .lot_parcels;
     let realized_count = ((realization.len() as f32) * 0.84).floor() as usize;
     realization.fill(0);
     realization[..realized_count].fill(template.parcel_id);
     assert!(!engine.try_start_height_redevelopment());
-    assert!(engine.state.height_redevelopment.is_none());
+    assert!(engine.state.construction.height_redevelopment.is_none());
     assert!(engine
         .state
+        .construction
         .projects
         .iter()
         .all(|project| project.kind != ProjectKind::Redevelopment));
@@ -372,6 +413,7 @@ fn restore_rejects_a_corrupted_pending_redevelopment_project() {
     let mut invalid: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
     let project_id = engine
         .state
+        .construction
         .height_redevelopment
         .as_ref()
         .unwrap()

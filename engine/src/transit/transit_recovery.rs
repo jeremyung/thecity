@@ -36,13 +36,14 @@ impl Engine {
         wait_position: WorldPoint,
         route_checked: bool,
     ) -> bool {
-        if self.state.pending_alight_ids.len() >= MAX_PENDING_ALIGHT_WAITERS {
+        if self.state.transit.pending_alight_ids.len() >= MAX_PENDING_ALIGHT_WAITERS {
             return false;
         }
         let geometry_revision = self.access_geometry_revision_token();
         let tick = self.state.tick;
         let Some(resident) = self
             .state
+            .people
             .residents
             .iter_mut()
             .find(|resident| resident.id == resident_id)
@@ -71,26 +72,30 @@ impl Engine {
         resident.bus_id = None;
         resident.train_id = None;
         resident.bus_stop_node = Some(stop_node);
-        self.state.pending_alight_ids.push(resident_id);
+        self.state.transit.pending_alight_ids.push(resident_id);
         true
     }
 
     pub(crate) fn advance_pending_alights(&mut self) {
         let examined = self
             .state
+            .transit
             .pending_alight_ids
             .len()
             .min(PENDING_ALIGHT_WORK_PER_TICK);
         for _ in 0..examined {
-            if self.state.pending_alight_ids.is_empty() {
-                self.state.pending_alight_cursor = 0;
+            if self.state.transit.pending_alight_ids.is_empty() {
+                self.state.transit.pending_alight_cursor = 0;
                 break;
             }
-            let index = self.state.pending_alight_cursor % self.state.pending_alight_ids.len();
-            let resident_id = self.state.pending_alight_ids[index];
-            self.state.pending_alight_cursor = (index + 1) % self.state.pending_alight_ids.len();
+            let index = self.state.transit.pending_alight_cursor
+                % self.state.transit.pending_alight_ids.len();
+            let resident_id = self.state.transit.pending_alight_ids[index];
+            self.state.transit.pending_alight_cursor =
+                (index + 1) % self.state.transit.pending_alight_ids.len();
             let Some(resident_index) = self
                 .state
+                .people
                 .residents
                 .iter()
                 .position(|resident| resident.id == resident_id)
@@ -98,7 +103,10 @@ impl Engine {
                 self.remove_pending_alight(resident_id);
                 continue;
             };
-            let Some(pending) = self.state.residents[resident_index].pending_alight.clone() else {
+            let Some(pending) = self.state.people.residents[resident_index]
+                .pending_alight
+                .clone()
+            else {
                 self.remove_pending_alight(resident_id);
                 continue;
             };
@@ -109,8 +117,9 @@ impl Engine {
                 if destination_node != pending.destination_node
                     || destination_building != pending.destination_building
                 {
-                    if let Some(current) =
-                        self.state.residents[resident_index].pending_alight.as_mut()
+                    if let Some(current) = self.state.people.residents[resident_index]
+                        .pending_alight
+                        .as_mut()
                     {
                         current.destination_node = destination_node;
                         current.destination_building = destination_building;
@@ -129,8 +138,10 @@ impl Engine {
             }
             // Actor capacity is independent of road geometry. Defer without a
             // route search and check again on the bounded cadence.
-            if self.state.travelers.len() >= MAX_TRAVELERS {
-                if let Some(pending) = self.state.residents[resident_index].pending_alight.as_mut()
+            if self.state.people.travelers.len() >= MAX_TRAVELERS {
+                if let Some(pending) = self.state.people.residents[resident_index]
+                    .pending_alight
+                    .as_mut()
                 {
                     pending.retry_after_tick =
                         self.state.tick.saturating_add(PENDING_ALIGHT_RETRY_TICKS);
@@ -139,6 +150,7 @@ impl Engine {
             }
             let destination_open = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.id == pending.destination_building)
@@ -149,11 +161,14 @@ impl Engine {
             if !destination_open
                 || !self
                     .state
+                    .network
                     .nodes
                     .iter()
                     .any(|node| node.id == pending.destination_node)
             {
-                if let Some(current) = self.state.residents[resident_index].pending_alight.as_mut()
+                if let Some(current) = self.state.people.residents[resident_index]
+                    .pending_alight
+                    .as_mut()
                 {
                     // Availability can change without a road geometry revision
                     // (for example, a building can finish construction). Keep
@@ -168,7 +183,9 @@ impl Engine {
                 continue;
             }
             if !graph_changed {
-                if let Some(pending) = self.state.residents[resident_index].pending_alight.as_mut()
+                if let Some(pending) = self.state.people.residents[resident_index]
+                    .pending_alight
+                    .as_mut()
                 {
                     pending.retry_after_tick = self
                         .state
@@ -179,7 +196,9 @@ impl Engine {
             }
             let route = self.route(pending.stop_node, pending.destination_node, false);
             if route.is_empty() || route.len() > MAX_ROUTE_NODES {
-                if let Some(current) = self.state.residents[resident_index].pending_alight.as_mut()
+                if let Some(current) = self.state.people.residents[resident_index]
+                    .pending_alight
+                    .as_mut()
                 {
                     current.last_checked_geometry_revision = revision;
                     current.retry_after_tick = self
@@ -200,7 +219,7 @@ impl Engine {
                 destination: pending.destination_node,
                 activity: pending.activity.clone(),
                 resident: resident_id,
-                name: self.state.residents[resident_index].name.clone(),
+                name: self.state.people.residents[resident_index].name.clone(),
                 origin_building: None,
                 destination_building: Some(pending.destination_building),
                 wait_ticks: 0,
@@ -249,9 +268,11 @@ impl Engine {
                 resident_id,
                 0,
             );
-            let name = self.state.residents[resident_index].name.clone();
-            self.state.residents[resident_index].pending_alight.take();
-            let resident = &mut self.state.residents[resident_index];
+            let name = self.state.people.residents[resident_index].name.clone();
+            self.state.people.residents[resident_index]
+                .pending_alight
+                .take();
+            let resident = &mut self.state.people.residents[resident_index];
             resident.transfer = pending.transfer_after_route.clone();
             resident.activity = match pending.transfer_after_route {
                 Transfer::WalkingFromBus if pending.activity == TravelerActivity::Return => {
@@ -267,7 +288,7 @@ impl Engine {
                     pending.stop_node, self.state.tick
                 ),
             );
-            self.state.travelers.push(traveler);
+            self.state.people.travelers.push(traveler);
             self.remove_pending_alight(resident_id);
             self.record(
                 EventKind::TransitAlightRouteResumed,
@@ -283,15 +304,17 @@ impl Engine {
     fn remove_pending_alight(&mut self, resident_id: u32) {
         if let Some(index) = self
             .state
+            .transit
             .pending_alight_ids
             .iter()
             .position(|id| *id == resident_id)
         {
-            self.state.pending_alight_ids.remove(index);
-            if self.state.pending_alight_ids.is_empty() {
-                self.state.pending_alight_cursor = 0;
+            self.state.transit.pending_alight_ids.remove(index);
+            if self.state.transit.pending_alight_ids.is_empty() {
+                self.state.transit.pending_alight_cursor = 0;
             } else {
-                self.state.pending_alight_cursor %= self.state.pending_alight_ids.len();
+                self.state.transit.pending_alight_cursor %=
+                    self.state.transit.pending_alight_ids.len();
             }
         }
     }
@@ -301,7 +324,7 @@ impl Engine {
         resident_index: usize,
         pending: &PendingAlight,
     ) -> Option<(u32, u32)> {
-        let resident = self.state.residents.get(resident_index)?;
+        let resident = self.state.people.residents.get(resident_index)?;
         Some(match pending.activity {
             TravelerActivity::Return | TravelerActivity::WalkingHome => {
                 (resident.home_node, resident.home_building)

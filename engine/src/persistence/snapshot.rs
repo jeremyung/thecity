@@ -155,13 +155,20 @@ impl Engine {
         if let Some(value) = self.inspect_expressway_trip(id) {
             return value.to_string();
         }
-        let value = if let Some(b) = self.state.buildings.iter().find(|b| b.id == id) {
+        let value = if let Some(b) = self
+            .state
+            .construction
+            .buildings
+            .iter()
+            .find(|b| b.id == id)
+        {
             serde_json::json!({"entityType":"building","id":b.id,"name":b.name,"kind":b.kind,"stage":b.stage,"occupancy":b.occupancy,"capacity":b.capacity,"history":b.history})
-        } else if let Some(r) = self.state.roads.iter().find(|r| r.id == id) {
+        } else if let Some(r) = self.state.network.roads.iter().find(|r| r.id == id) {
             serde_json::json!({"entityType":"road","id":r.id,"kind":r.kind,"stage":r.stage,"connected":r.connected,"length":r.length})
-        } else if let Some(t) = self.state.travelers.iter().find(|t| t.id == id) {
+        } else if let Some(t) = self.state.people.travelers.iter().find(|t| t.id == id) {
             let history: Vec<String> = if t.resident != 0 {
                 self.state
+                    .people
                     .residents
                     .iter()
                     .find(|r| r.id == t.resident)
@@ -176,9 +183,9 @@ impl Engine {
                     .collect()
             };
             serde_json::json!({"entityType":"traveler","id":t.id,"name":t.name,"activity":t.activity,"kind":if t.kind == 1 {"car"} else {"pedestrian"},"vehicle":if t.kind == 1 {Some(vehicle_name(Self::vehicle_body(t, self.station_node())))} else {None},"origin":t.origin_building,"destination":t.destination_building,"history":history,"wait_ticks":t.wait_ticks})
-        } else if let Some(r) = self.state.residents.iter().find(|r| r.id == id) {
+        } else if let Some(r) = self.state.people.residents.iter().find(|r| r.id == id) {
             serde_json::json!({"entityType":"resident","id":r.id,"name":r.name,"activity":r.activity,"kind":if r.train_id.is_some() {"rail passenger"} else if r.bus_id.is_some() {"bus passenger"} else if r.mode == 1 {"car"} else {"pedestrian"},"origin":r.home_building,"destination":r.work_building,"home_building":r.home_building,"work_building":r.work_building,"transfer":r.transfer,"train_id":r.train_id,"bus_id":r.bus_id,"bus_origin_stop":r.bus_origin_stop,"bus_destination_stop":r.bus_destination_stop,"bus_stop_node":r.bus_stop_node,"pending_alight":r.pending_alight,"location_node":self.resident_location_node(r),"history":r.history})
-        } else if let Some(t) = self.state.trains.iter().find(|t| t.id == id) {
+        } else if let Some(t) = self.state.transit.trains.iter().find(|t| t.id == id) {
             let terminal = if t.direction >= 0 {
                 *t.route.last().unwrap_or(&0)
             } else {
@@ -192,9 +199,10 @@ impl Engine {
                 .map(|e| e.reason.clone())
                 .collect();
             serde_json::json!({"entityType":"train","id":t.id,"name":"Neighborhood Shuttle","activity":if t.dwell_ticks > 0 {"at terminal"} else {"in transit"},"kind":"rail","origin":t.route.first(),"destination":terminal,"history":history,"direction":t.direction,"passengers":t.passengers.len(),"capacity":RAIL_TRAIN_CAPACITY,"station_waiting":self.rail_waiting_count(true),"gateway_waiting":self.rail_waiting_count(false)})
-        } else if let Some(bus) = self.state.buses.iter().find(|bus| bus.id == id) {
+        } else if let Some(bus) = self.state.transit.buses.iter().find(|bus| bus.id == id) {
             let line = self
                 .state
+                .transit
                 .bus_line
                 .as_ref()
                 .filter(|line| line.id == bus.line_id);
@@ -221,12 +229,18 @@ impl Engine {
 
     pub(crate) fn building_access_views(&self) -> Vec<BuildingAccessView> {
         self.state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage != Stage::Demolished)
             .filter_map(|building| {
                 let (road_id, access) = self.building_access_segment(building.id)?;
-                let road = self.state.roads.iter().find(|road| road.id == road_id)?;
+                let road = self
+                    .state
+                    .network
+                    .roads
+                    .iter()
+                    .find(|road| road.id == road_id)?;
                 if road.stage != Stage::Open || !road.connected || road.kind == RoadKind::Rail {
                     return None;
                 }
@@ -243,18 +257,21 @@ impl Engine {
         let (day, minute) = clock_at(self.state.tick);
         let road_count = self
             .state
+            .network
             .roads
             .iter()
             .filter(|r| r.stage == Stage::Open)
             .count();
         let active_sites = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| site_active(b))
             .count();
         let developable_lots = self
             .state
+            .land
             .parcels
             .iter()
             .filter(|p| {
@@ -268,17 +285,17 @@ impl Engine {
         } else {
             active_sites as f32 / developable_lots as f32
         };
-        let stage = if active_sites < 3 || self.state.population < 20 {
+        let stage = if active_sites < 3 || self.state.people.population < 20 {
             "Founding"
-        } else if road_count < 7 || self.state.population < 200 {
+        } else if road_count < 7 || self.state.people.population < 200 {
             "Settlement"
         } else if road_count >= 100 && active_sites >= 300 && infill_ratio >= 0.9
-            || self.state.population >= 24_000
+            || self.state.people.population >= 24_000
         {
             "Maturity"
-        } else if !self.state.station_online || self.state.population < 1500 {
+        } else if !self.state.transit.station_online || self.state.people.population < 1500 {
             "Neighborhoods"
-        } else if self.state.population < 7000 {
+        } else if self.state.people.population < 7000 {
             "TransitCity"
         } else {
             "Metropolis"
@@ -329,27 +346,33 @@ impl Engine {
                 ]],
                 gateways: self
                     .state
+                    .network
                     .nodes
                     .iter()
                     .filter(|n| n.kind == NodeKind::Gateway)
                     .map(|n| n.id)
                     .collect(),
             },
-            nodes: self.state.nodes.clone(),
-            roads: self.state.roads.clone(),
+            nodes: self.state.network.nodes.clone(),
+            roads: self.state.network.roads.clone(),
             road_decks: self.masterplan_road_decks(),
             expressway_profile: infrastructure::expressway_profile::active(),
             rail_platforms: self.rail_platform_views(),
             rail_alignments: self.rail_alignment_views(),
-            parcels: self.state.parcels.clone(),
-            buildings: self.state.buildings.clone(),
+            parcels: self.state.land.parcels.clone(),
+            buildings: self.state.construction.buildings.clone(),
             building_access: self.building_access_views(),
             rear_extensions: self.rear_extension_views(),
             ground: self.masterplan_ground(),
-            building_original_footprints: self.state.building_original_footprints.clone(),
-            projects: self.state.projects.clone(),
+            building_original_footprints: self
+                .state
+                .construction
+                .building_original_footprints
+                .clone(),
+            projects: self.state.construction.projects.clone(),
             trains: self
                 .state
+                .transit
                 .trains
                 .iter()
                 .map(|t| TrainView {
@@ -368,6 +391,7 @@ impl Engine {
                 .collect(),
             bus_lines: self
                 .state
+                .transit
                 .bus_line
                 .iter()
                 .map(|line| BusLineView {
@@ -380,11 +404,13 @@ impl Engine {
                 .collect(),
             buses: self
                 .state
+                .transit
                 .buses
                 .iter()
                 .map(|bus| {
                     let line = self
                         .state
+                        .transit
                         .bus_line
                         .as_ref()
                         .filter(|line| line.id == bus.line_id);
@@ -404,6 +430,7 @@ impl Engine {
                 .collect(),
             residents: self
                 .state
+                .people
                 .residents
                 .iter()
                 .map(|r| ResidentView {
@@ -423,16 +450,17 @@ impl Engine {
                 .collect(),
             events: self.state.events.iter().cloned().collect(),
             stats: Stats {
-                population: self.state.population,
-                active_travelers: (self.state.travelers.len()
-                    + self.state.expressway_traffic.trips.len()
-                    + self.state.pending_alight_ids.len()
+                population: self.state.people.population,
+                active_travelers: (self.state.people.travelers.len()
+                    + self.state.transit.expressway_traffic.trips.len()
+                    + self.state.transit.pending_alight_ids.len()
                     + self.rail_waiting_count(true)
                     + self.rail_waiting_count(false)
                     + self.bus_platform_waiting_count()) as u32,
-                buildings: self.state.buildings.len() as u32,
+                buildings: self.state.construction.buildings.len() as u32,
                 active_projects: self
                     .state
+                    .construction
                     .projects
                     .iter()
                     .filter(|p| p.progress < 1.0)

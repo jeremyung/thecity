@@ -762,6 +762,7 @@ mod tests {
         .expect("saved mature world restores");
         let nodes = engine
             .state
+            .network
             .nodes
             .iter()
             .map(|node| RoadFaceNode {
@@ -772,6 +773,7 @@ mod tests {
             .collect::<Vec<_>>();
         let edges = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -821,6 +823,7 @@ mod tests {
                 if distance <= COINCIDENT_EPSILON {
                     let a_kind = engine
                         .state
+                        .network
                         .roads
                         .iter()
                         .find(|road| road.id == a_edge.id)
@@ -829,6 +832,7 @@ mod tests {
                         .as_str();
                     let b_kind = engine
                         .state
+                        .network
                         .roads
                         .iter()
                         .find(|road| road.id == b_edge.id)
@@ -882,24 +886,28 @@ mod tests {
             let engine = crate::Engine::new_legacy(seed);
             let market = engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .find(|node| node.kind == NodeKind::Market)
                 .unwrap();
             let station = engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .find(|node| node.kind == NodeKind::Station)
                 .unwrap();
             let gateway = engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .find(|node| node.kind == NodeKind::Gateway)
                 .unwrap();
             let center = engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .filter(|node| node.kind == NodeKind::Junction)
@@ -912,6 +920,7 @@ mod tests {
 
             let ordinary = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -925,6 +934,7 @@ mod tests {
                 .collect::<BTreeSet<_>>();
             let nodes = engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .filter(|node| participating_ids.contains(&node.id))
@@ -992,10 +1002,11 @@ mod tests {
                 engine.node(connector.from).unwrap(),
                 engine.node(connector.to).unwrap(),
             );
-            for parcel in &engine.state.parcels {
-                let fronts_this_connector = engine.state.parcel_frontages.iter().any(|frontage| {
-                    frontage.parcel_id == parcel.id && frontage.road_id == connector.id
-                });
+            for parcel in &engine.state.land.parcels {
+                let fronts_this_connector =
+                    engine.state.land.parcel_frontages.iter().any(|frontage| {
+                        frontage.parcel_id == parcel.id && frontage.road_id == connector.id
+                    });
                 if fronts_this_connector {
                     continue;
                 }
@@ -1044,6 +1055,7 @@ mod tests {
         for (label, engine) in worlds {
             let roads = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -1063,6 +1075,7 @@ mod tests {
                 .collect::<BTreeSet<_>>();
             let nodes = engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .filter(|node| participating.contains(&node.id))
@@ -1186,7 +1199,7 @@ mod tests {
 
         let mut excluded = BTreeMap::<String, usize>::new();
         let mut selected = Vec::new();
-        for road in &engine.state.roads {
+        for road in &engine.state.network.roads {
             let reason = if road.stage != Stage::Open {
                 Some("not_open")
             } else if !road.connected {
@@ -1216,6 +1229,7 @@ mod tests {
             .collect::<BTreeSet<_>>();
         let nodes = engine
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| participating.contains(&node.id))
@@ -1243,7 +1257,7 @@ mod tests {
             "source": "public WASM at seed 87231, rate 16, tick 242000; restored natively for read-only graph audit",
             "tick": engine.tick(),
             "seed": engine.state.seed,
-            "all_road_records": engine.state.roads.len(),
+            "all_road_records": engine.state.network.roads.len(),
             "ordinary_open_connected_edges": selected.len(),
             "participating_nodes": nodes.len(),
             "bounded_faces": faces.len(),

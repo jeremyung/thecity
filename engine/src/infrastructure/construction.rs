@@ -122,7 +122,14 @@ impl Engine {
         anchor: bool,
         history: Vec<String>,
     ) -> u32 {
-        let Some(p) = self.state.parcels.iter().find(|p| p.id == parcel).cloned() else {
+        let Some(p) = self
+            .state
+            .land
+            .parcels
+            .iter()
+            .find(|p| p.id == parcel)
+            .cloned()
+        else {
             return 0;
         };
         let id = self.id();
@@ -132,7 +139,7 @@ impl Engine {
         } else {
             p.rotation.unwrap_or_else(|| self.frontage_rotation(parcel))
         };
-        self.state.buildings.push(Building {
+        self.state.construction.buildings.push(Building {
             id,
             parcel_id: parcel,
             x: p.x,
@@ -160,7 +167,7 @@ impl Engine {
     pub(crate) fn advance_projects(&mut self) {
         let mut completed = Vec::new();
         let mut spine_road_progress = Vec::new();
-        for p in &mut self.state.projects {
+        for p in &mut self.state.construction.projects {
             if p.progress >= 1.0 {
                 continue;
             }
@@ -181,6 +188,7 @@ impl Engine {
                 if let Some(parcel_id) = p.parcel_id {
                     if let Some(building) = self
                         .state
+                        .construction
                         .buildings
                         .iter_mut()
                         .find(|b| b.parcel_id == parcel_id && b.stage != Stage::Open)
@@ -193,13 +201,15 @@ impl Engine {
             if p.kind == ProjectKind::Road
                 && self
                     .state
+                    .legacy
                     .pending_interior_access
                     .as_ref()
                     .is_some_and(|plan| plan.project_id == p.id)
             {
-                if let Some(plan) = self.state.pending_interior_access.as_ref() {
+                if let Some(plan) = self.state.legacy.pending_interior_access.as_ref() {
                     if let Some(road) = self
                         .state
+                        .network
                         .roads
                         .iter_mut()
                         .find(|road| road.id == plan.branch_road_id)
@@ -227,11 +237,19 @@ impl Engine {
     }
 
     pub(crate) fn complete_project(&mut self, id: u32) {
-        let Some(p) = self.state.projects.iter().find(|p| p.id == id).cloned() else {
+        let Some(p) = self
+            .state
+            .construction
+            .projects
+            .iter()
+            .find(|p| p.id == id)
+            .cloned()
+        else {
             return;
         };
         if self
             .state
+            .legacy
             .pending_interior_access
             .as_ref()
             .is_some_and(|plan| plan.project_id == id)
@@ -271,7 +289,7 @@ impl Engine {
                     } else {
                         RoadKind::Local
                     };
-                    let rid = if let Some(road) = self.state.roads.iter_mut().find(|r| {
+                    let rid = if let Some(road) = self.state.network.roads.iter_mut().find(|r| {
                         ((r.from == a && r.to == b) || (r.from == b && r.to == a))
                             && r.stage != Stage::Open
                     }) {
@@ -283,7 +301,7 @@ impl Engine {
                     };
                     self.recompute_connectivity();
                     self.remember_neighborhood_plan_road(rid, a, b);
-                    if let Some(r) = self.state.roads.iter_mut().find(|r| r.id == rid) {
+                    if let Some(r) = self.state.network.roads.iter_mut().find(|r| r.id == rid) {
                         if r.connected {
                             self.record(
                                 EventKind::RoadOpened,
@@ -295,10 +313,17 @@ impl Engine {
                             );
                         }
                     }
-                    if self.state.roads.iter().any(|r| r.id == rid && r.connected) {
+                    if self
+                        .state
+                        .network
+                        .roads
+                        .iter()
+                        .any(|r| r.id == rid && r.connected)
+                    {
                         #[cfg(test)]
                         let frontage_roads = if self.try_plan_access_at_road_opening(rid) {
                             self.state
+                                .legacy
                                 .pending_interior_access
                                 .as_ref()
                                 .map(|plan| vec![plan.host_road_id, plan.host_second_half_road_id])
@@ -308,13 +333,13 @@ impl Engine {
                         };
                         #[cfg(not(test))]
                         let frontage_roads = vec![rid];
-                        let previous_parcels = self.state.parcels.len();
+                        let previous_parcels = self.state.land.parcels.len();
                         for frontage_road in frontage_roads {
                             self.add_frontage_parcels(frontage_road);
                         }
-                        if self.state.parcels.len() > previous_parcels {
-                            self.state.road_infill_due =
-                                self.state.road_infill_due.saturating_add(2).min(9);
+                        if self.state.land.parcels.len() > previous_parcels {
+                            self.state.legacy.road_infill_due =
+                                self.state.legacy.road_infill_due.saturating_add(2).min(9);
                         }
                     }
                 }
@@ -322,7 +347,7 @@ impl Engine {
             ProjectKind::Building => {
                 if let Some(pid) = p.parcel_id {
                     let mut released_parcel_reservation = false;
-                    if let Some(parcel) = self.state.parcels.iter_mut().find(|x| x.id == pid) {
+                    if let Some(parcel) = self.state.land.parcels.iter_mut().find(|x| x.id == pid) {
                         released_parcel_reservation = parcel.reservation.take().is_some();
                     }
                     if released_parcel_reservation {
@@ -330,6 +355,7 @@ impl Engine {
                     }
                     if let Some(b) = self
                         .state
+                        .construction
                         .buildings
                         .iter_mut()
                         .find(|b| b.parcel_id == pid && b.stage != Stage::Open)
@@ -366,14 +392,16 @@ impl Engine {
                                 format!("{} opens as a {}", name, kind),
                             );
                         }
-                        self.state.population = self.state.population.saturating_add(added);
-                        self.state.population = self.state.population.min(MAX_POPULATION);
+                        self.state.people.population =
+                            self.state.people.population.saturating_add(added);
+                        self.state.people.population =
+                            self.state.people.population.min(MAX_POPULATION);
                     }
                 }
             }
             ProjectKind::Rail => {
                 let mut opened_rail = false;
-                if let Some(road) = self.state.roads.iter_mut().find(|r| {
+                if let Some(road) = self.state.network.roads.iter_mut().find(|r| {
                     r.kind == RoadKind::Rail && Some(r.from) == p.from && Some(r.to) == p.to
                 }) {
                     opened_rail = road.stage != Stage::Open;
@@ -389,12 +417,12 @@ impl Engine {
                     id,
                     "The completed rail link joins the connected transport network".into(),
                 );
-                self.state.station_online =
-                    self.state.station_ready
-                        && self.state.roads.iter().any(|r| {
+                self.state.transit.station_online =
+                    self.state.transit.station_ready
+                        && self.state.network.roads.iter().any(|r| {
                             r.kind == RoadKind::Rail && r.stage == Stage::Open && r.connected
                         });
-                if self.state.station_online {
+                if self.state.transit.station_online {
                     self.record(
                         EventKind::StationServiceStarted,
                         id,
@@ -403,13 +431,14 @@ impl Engine {
                 }
             }
             ProjectKind::Station => {
-                self.state.station_ready = true;
-                self.state.station_online = self
+                self.state.transit.station_ready = true;
+                self.state.transit.station_online = self
                     .state
+                    .network
                     .roads
                     .iter()
                     .any(|r| r.kind == RoadKind::Rail && r.stage == Stage::Open && r.connected);
-                if self.state.station_online {
+                if self.state.transit.station_online {
                     self.record(
                         EventKind::StationServiceStarted,
                         id,
@@ -430,25 +459,33 @@ impl Engine {
     }
 
     pub(crate) fn trim_completed_projects(&mut self) {
-        while self.state.projects.len() > MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
-            let Some(index) = self.state.projects.iter().position(|p| p.progress >= 1.0) else {
+        while self.state.construction.projects.len() > MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
+            let Some(index) = self
+                .state
+                .construction
+                .projects
+                .iter()
+                .position(|p| p.progress >= 1.0)
+            else {
                 break;
             };
-            self.state.projects.remove(index);
+            self.state.construction.projects.remove(index);
         }
     }
 
     pub(crate) fn project_admission_available(&self) -> bool {
         let active = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.progress < 1.0)
             .count();
         active < MAX_PROJECTS
-            && (self.state.projects.len() < MAX_PROJECTS + COMPLETED_PROJECT_HISTORY
+            && (self.state.construction.projects.len() < MAX_PROJECTS + COMPLETED_PROJECT_HISTORY
                 || self
                     .state
+                    .construction
                     .projects
                     .iter()
                     .any(|project| project.progress >= 1.0))
@@ -456,18 +493,19 @@ impl Engine {
 
     pub(crate) fn record_project(&mut self, project: Project) {
         let adds_pending_road = project.kind == ProjectKind::Road && project.progress < 1.0;
-        while self.state.projects.len() >= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
+        while self.state.construction.projects.len() >= MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
             let Some(index) = self
                 .state
+                .construction
                 .projects
                 .iter()
                 .position(|entry| entry.progress >= 1.0)
             else {
                 unreachable!("active project capacity must leave completed history to trim");
             };
-            self.state.projects.remove(index);
+            self.state.construction.projects.remove(index);
         }
-        self.state.projects.push(project);
+        self.state.construction.projects.push(project);
         if adds_pending_road {
             self.mark_access_geometry_changed();
         }
@@ -476,17 +514,19 @@ impl Engine {
     pub(crate) fn neighborhood_profile(&self, x: f32, z: f32) -> NeighborhoodProfile {
         let station_distance = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| node.kind == NodeKind::Station)
             .map(|node| (node.x - x).hypot(node.z - z))
             .min_by(f32::total_cmp)
             .unwrap_or(f32::INFINITY);
-        if self.state.station_online && station_distance <= 112.0 {
+        if self.state.transit.station_online && station_distance <= 112.0 {
             return NeighborhoodProfile::StationCore;
         }
         let market_distance = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| node.kind == NodeKind::Market)
@@ -495,7 +535,7 @@ impl Engine {
             .unwrap_or(f32::INFINITY);
         if market_distance <= 118.0 {
             NeighborhoodProfile::HistoricCore
-        } else if self.state.station_online && station_distance <= 205.0 {
+        } else if self.state.transit.station_online && station_distance <= 205.0 {
             NeighborhoodProfile::StationFringe
         } else {
             NeighborhoodProfile::OuterNeighborhood
@@ -530,7 +570,7 @@ impl Engine {
         // exact use classes so homes and apartments can still form coherent runs.
         let mut local_use_counts = [0usize; 5];
         let mut local_floor_counts = [0usize; 46];
-        for building in self.state.buildings.iter().filter(|building| {
+        for building in self.state.construction.buildings.iter().filter(|building| {
             building.stage == Stage::Open
                 && (building.x - parcel.x).hypot(building.z - parcel.z) <= 58.0
         }) {
@@ -727,22 +767,29 @@ impl Engine {
     }
 
     pub(crate) fn plan_building(&mut self, day: u32) {
-        if self.state.buildings.len() + self.state.projects.len() >= MAX_BUILDINGS
+        if self.state.construction.buildings.len() + self.state.construction.projects.len()
+            >= MAX_BUILDINGS
             || !self.project_admission_available()
         {
             return;
         }
         let mut choices: Vec<usize> = self
             .state
+            .land
             .parcels
             .iter()
             .enumerate()
             .filter(|(_, p)| {
                 !p.protected
                     && p.reservation.is_none()
-                    && (self.state.station_online || !self.is_station_tower_lot(p))
+                    && (self.state.transit.station_online || !self.is_station_tower_lot(p))
                     && self.parcel_clear_of_river(p.x, p.z, p.width, p.depth)
-                    && self.state.buildings.iter().all(|b| b.parcel_id != p.id)
+                    && self
+                        .state
+                        .construction
+                        .buildings
+                        .iter()
+                        .all(|b| b.parcel_id != p.id)
                     && self.node_connected(p.access_node)
             })
             .map(|(i, _)| i)
@@ -752,15 +799,21 @@ impl Engine {
             self.create_frontier_parcels();
             choices = self
                 .state
+                .land
                 .parcels
                 .iter()
                 .enumerate()
                 .filter(|(_, p)| {
                     !p.protected
                         && p.reservation.is_none()
-                        && (self.state.station_online || !self.is_station_tower_lot(p))
+                        && (self.state.transit.station_online || !self.is_station_tower_lot(p))
                         && self.parcel_clear_of_river(p.x, p.z, p.width, p.depth)
-                        && self.state.buildings.iter().all(|b| b.parcel_id != p.id)
+                        && self
+                            .state
+                            .construction
+                            .buildings
+                            .iter()
+                            .all(|b| b.parcel_id != p.id)
                         && self.node_connected(p.access_node)
                 })
                 .map(|(i, _)| i)
@@ -772,7 +825,7 @@ impl Engine {
         let scored_candidates: Vec<_> = choices
             .iter()
             .map(|&parcel_index| {
-                let parcel = &self.state.parcels[parcel_index];
+                let parcel = &self.state.land.parcels[parcel_index];
                 infrastructure::development::BuildingSiteCandidate {
                     parcel_index,
                     parcel_id: parcel.id,
@@ -783,6 +836,7 @@ impl Engine {
             .collect();
         let open_buildings: Vec<_> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)
@@ -795,20 +849,22 @@ impl Engine {
         let Some(selection) = infrastructure::development::select_building_site(
             &scored_candidates,
             &open_buildings,
-            self.state.growth_cursor,
+            self.state.construction.growth_cursor,
         ) else {
             return;
         };
-        self.state.growth_cursor = selection.next_cursor;
-        let parcel = self.state.parcels[selection.parcel_index].clone();
+        self.state.construction.growth_cursor = selection.next_cursor;
+        let parcel = self.state.land.parcels[selection.parcel_index].clone();
         let homes = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| matches!(b.kind, BuildingKind::Home | BuildingKind::Apartment))
             .count();
         let shops = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.kind == BuildingKind::Shop || b.kind == BuildingKind::Cafe)
@@ -837,7 +893,13 @@ impl Engine {
             false,
             history,
         );
-        if let Some(p) = self.state.parcels.iter_mut().find(|p| p.id == parcel.id) {
+        if let Some(p) = self
+            .state
+            .land
+            .parcels
+            .iter_mut()
+            .find(|p| p.id == parcel.id)
+        {
             p.reservation = Some(building);
         }
         self.mark_access_geometry_changed();
@@ -855,7 +917,7 @@ impl Engine {
             duration,
             started_tick: self.state.tick,
         });
-        self.state.road_infill_due = self.state.road_infill_due.saturating_sub(1);
+        self.state.legacy.road_infill_due = self.state.legacy.road_infill_due.saturating_sub(1);
         self.state.revision += 1;
     }
 }

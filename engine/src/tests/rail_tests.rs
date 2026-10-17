@@ -13,6 +13,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     let train_id = engine.id();
     let resident = engine
         .state
+        .people
         .residents
         .iter_mut()
         .find(|resident| resident.id == resident_id)
@@ -21,7 +22,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     resident.at_work = true;
     resident.transfer = Transfer::RidingInbound;
     resident.train_id = Some(train_id);
-    engine.state.trains.push(Train {
+    engine.state.transit.trains.push(Train {
         id: train_id,
         route: vec![station, gateway],
         distance: TRAIN_HALF_LENGTH,
@@ -35,6 +36,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     engine.handle_train_terminal(train_id, true, station, gateway);
     let waiting = engine
         .state
+        .people
         .residents
         .iter()
         .find(|resident| resident.id == resident_id)
@@ -42,7 +44,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     assert_eq!(waiting.transfer, Transfer::WaitingAlight);
     assert_eq!(waiting.train_id, None);
     assert_eq!(waiting.pending_alight.as_ref().unwrap().stop_node, station);
-    assert_eq!(engine.state.trains[0].passengers, Vec::<u32>::new());
+    assert_eq!(engine.state.transit.trains[0].passengers, Vec::<u32>::new());
     let platform_position = waiting.pending_alight.as_ref().unwrap().wait_position;
     assert_eq!(engine.resident_location_node(waiting), Some(station));
     engine.validate().unwrap();
@@ -55,6 +57,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     restored.step(1);
     let traveler = restored
         .state
+        .people
         .travelers
         .iter()
         .find(|traveler| traveler.resident == resident_id)
@@ -64,8 +67,11 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
     let origin = &traveler.origin_access.as_ref().unwrap().points[0];
     assert_eq!(origin.x, platform_position.x);
     assert_eq!(origin.z, platform_position.z);
-    assert_eq!(restored.state.residents[0].transfer, Transfer::WalkingHome);
-    assert!(restored.state.trains[0].passengers.is_empty());
+    assert_eq!(
+        restored.state.people.residents[0].transfer,
+        Transfer::WalkingHome
+    );
+    assert!(restored.state.transit.trains[0].passengers.is_empty());
     restored.validate().unwrap();
 }
 
@@ -76,10 +82,17 @@ fn master_plan_keeps_a_station_plaza_and_spaced_neighborhood_shrines() {
     for _ in 0..12 {
         engine.step(2_000);
     }
-    let built: BTreeSet<u32> = engine.state.buildings.iter().map(|b| b.parcel_id).collect();
+    let built: BTreeSet<u32> = engine
+        .state
+        .construction
+        .buildings
+        .iter()
+        .map(|b| b.parcel_id)
+        .collect();
     let kind = |kind: &str| -> Vec<Parcel> {
         engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|p| p.open_space.as_deref() == Some(kind))
@@ -133,6 +146,7 @@ fn master_plan_keeps_a_station_plaza_and_spaced_neighborhood_shrines() {
     let open_spaces = |engine: &Engine| -> Vec<(u32, Option<String>)> {
         engine
             .state
+            .land
             .parcels
             .iter()
             .map(|p| (p.id, p.open_space.clone()))
@@ -146,6 +160,7 @@ fn train_shuttle_dwells_and_reverses_inside_rail_end_clearances() {
     let mut engine = Engine::new_legacy(77);
     let rail = engine
         .state
+        .network
         .roads
         .iter_mut()
         .find(|road| road.kind == RoadKind::Rail)
@@ -153,8 +168,8 @@ fn train_shuttle_dwells_and_reverses_inside_rail_end_clearances() {
     rail.stage = Stage::Open;
     rail.connected = true;
     let rail_length = rail.length;
-    engine.state.station_ready = true;
-    engine.state.station_online = true;
+    engine.state.transit.station_ready = true;
+    engine.state.transit.station_online = true;
     let min_center = TRAIN_HALF_LENGTH;
     let max_center = rail_length - TRAIN_HALF_LENGTH;
     assert!(max_center > min_center);
@@ -165,7 +180,7 @@ fn train_shuttle_dwells_and_reverses_inside_rail_end_clearances() {
     for _ in 0..2_000 {
         engine.state.tick += 1;
         engine.advance_trains();
-        let train = &engine.state.trains[0];
+        let train = &engine.state.transit.trains[0];
         assert!(train.distance >= min_center - 0.001);
         assert!(train.distance <= max_center + 0.001);
         let movement = engine.movement_buffer();
@@ -202,6 +217,7 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
     {
         let resident = engine
             .state
+            .people
             .residents
             .iter_mut()
             .find(|resident| resident.id == resident_id)
@@ -210,7 +226,7 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
         resident.activity = ResidentActivity::WaitingForTrain;
     }
     let train_id = engine.id();
-    engine.state.trains.push(Train {
+    engine.state.transit.trains.push(Train {
         id: train_id,
         route: vec![station, gateway],
         distance: TRAIN_HALF_LENGTH,
@@ -224,44 +240,46 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
         engine.state.tick += 1;
         engine.advance_trains();
     }
-    assert_eq!(engine.state.trains[0].dwell_ticks, 201);
-    assert!(engine.state.trains[0].passengers.is_empty());
+    assert_eq!(engine.state.transit.trains[0].dwell_ticks, 201);
+    assert!(engine.state.transit.trains[0].passengers.is_empty());
     assert!((engine.snapshot().trains[0].door_open_fraction - 0.95).abs() < 0.001);
 
     engine.state.tick = 0;
     engine.advance_trains();
-    assert_eq!(engine.state.trains[0].dwell_ticks, 200);
-    assert_eq!(engine.state.trains[0].passengers, vec![resident_id]);
+    assert_eq!(engine.state.transit.trains[0].dwell_ticks, 200);
+    assert_eq!(engine.state.transit.trains[0].passengers, vec![resident_id]);
     assert_eq!(engine.snapshot().trains[0].door_open_fraction, 1.0);
     assert_eq!(engine.snapshot().trains[0].door_terminal, Some(station));
 
     let resident = engine
         .state
+        .people
         .residents
         .iter_mut()
         .find(|resident| resident.id == resident_id)
         .unwrap();
     resident.transfer = Transfer::RidingInbound;
     resident.train_id = Some(train_id);
-    engine.state.trains[0].dwell_ticks = 201;
+    engine.state.transit.trains[0].dwell_ticks = 201;
     engine.state.tick = 1;
-    assert_eq!(engine.state.trains[0].passengers, vec![resident_id]);
+    assert_eq!(engine.state.transit.trains[0].passengers, vec![resident_id]);
     assert_eq!(engine.snapshot().trains[0].door_open_fraction, 0.95);
     assert!(!engine.state.events.iter().any(|event| {
         event.kind == EventKind::TrainPassengerAlighted && event.tick == engine.state.tick
     }));
     engine.advance_trains();
-    assert_eq!(engine.state.trains[0].dwell_ticks, 200);
-    assert!(engine.state.trains[0].passengers.is_empty());
+    assert_eq!(engine.state.transit.trains[0].dwell_ticks, 200);
+    assert!(engine.state.transit.trains[0].passengers.is_empty());
     assert!(engine.state.events.iter().any(|event| {
         event.kind == EventKind::TrainPassengerAlighted && event.tick == engine.state.tick
     }));
 
-    engine.state.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
+    engine.state.transit.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
     engine.state.tick = 23_000;
-    engine.state.trains[0].passengers.push(resident_id);
+    engine.state.transit.trains[0].passengers.push(resident_id);
     let resident = engine
         .state
+        .people
         .residents
         .iter_mut()
         .find(|resident| resident.id == resident_id)
@@ -271,13 +289,13 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
     let save = engine.save_json();
     let mut resumed = Engine::restore_json(&save).unwrap();
     assert_eq!(engine.snapshot().trains[0].door_open_fraction, 1.0);
-    let station_distance = engine.state.trains[0].distance;
+    let station_distance = engine.state.transit.trains[0].distance;
     for _ in 0..TRAIN_DOOR_PHASE_TICKS - 1 {
         engine.state.tick += 1;
         resumed.state.tick += 1;
         engine.advance_trains();
         resumed.advance_trains();
-        assert_eq!(engine.state.trains[0].distance, station_distance);
+        assert_eq!(engine.state.transit.trains[0].distance, station_distance);
         assert!(engine.snapshot().trains[0].door_open_fraction > 0.0);
         assert_eq!(engine.save_json(), resumed.save_json());
     }
@@ -286,23 +304,23 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
     engine.advance_trains();
     resumed.advance_trains();
     assert_eq!(engine.snapshot().trains[0].door_open_fraction, 0.0);
-    assert_eq!(engine.state.trains[0].distance, station_distance);
+    assert_eq!(engine.state.transit.trains[0].distance, station_distance);
     assert_eq!(engine.save_json(), resumed.save_json());
 
     engine.state.tick += 1;
     resumed.state.tick += 1;
     engine.advance_trains();
     resumed.advance_trains();
-    assert!(engine.state.trains[0].distance > station_distance);
+    assert!(engine.state.transit.trains[0].distance > station_distance);
     assert_eq!(engine.save_json(), resumed.save_json());
-    assert_eq!(engine.state.trains[0].id, train_id);
+    assert_eq!(engine.state.transit.trains[0].id, train_id);
 }
 
 #[test]
 fn train_door_buffer_matches_snapshot_metadata_and_is_bounded() {
     let (mut engine, station, gateway) = rail_test_engine(86);
     let train_id = engine.id();
-    engine.state.trains.push(Train {
+    engine.state.transit.trains.push(Train {
         id: train_id,
         route: vec![station, gateway],
         distance: TRAIN_HALF_LENGTH,
@@ -340,12 +358,12 @@ fn train_door_buffer_matches_snapshot_metadata_and_is_bounded() {
         assert_matches_snapshot(&engine);
         assert_eq!(engine.train_doors(), restored.train_doors());
     }
-    engine.state.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
+    engine.state.transit.trains[0].dwell_ticks = TRAIN_DOOR_PHASE_TICKS;
     assert_matches_snapshot(&engine);
     let mut restored = Engine::restore_json(&engine.save_json()).unwrap();
     assert_matches_snapshot(&restored);
-    engine.state.trains[0].dwell_ticks = 0;
-    restored.state.trains[0].dwell_ticks = 0;
+    engine.state.transit.trains[0].dwell_ticks = 0;
+    restored.state.transit.trains[0].dwell_ticks = 0;
     assert_matches_snapshot(&engine);
     assert_matches_snapshot(&restored);
 }
@@ -355,7 +373,7 @@ fn rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn() {
     let (mut engine, station, gateway) = rail_test_engine(84);
     engine.state.tick = 19_500; // 01:30 city time
     engine.advance_trains();
-    let train = &engine.state.trains[0];
+    let train = &engine.state.transit.trains[0];
     assert_eq!(train.distance, TRAIN_HALF_LENGTH);
     assert_eq!(train.dwell_ticks, TRAIN_STATION_DWELL_TICKS);
 
@@ -364,6 +382,7 @@ fn rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn() {
     assert_eq!(
         engine
             .state
+            .people
             .residents
             .iter()
             .find(|resident| resident.id == resident_id)
@@ -377,6 +396,7 @@ fn rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn() {
     engine.schedule_residents(0);
     let commuter = engine
         .state
+        .people
         .residents
         .iter()
         .find(|resident| resident.id == resident_id)
@@ -395,6 +415,7 @@ fn rail_transfer_boards_to_capacity_and_keeps_platform_queue_visible_and_bounded
         let id = add_rail_test_resident(&mut engine, gateway);
         let resident = engine
             .state
+            .people
             .residents
             .iter_mut()
             .find(|resident| resident.id == id)
@@ -403,12 +424,12 @@ fn rail_transfer_boards_to_capacity_and_keeps_platform_queue_visible_and_bounded
         resident.activity = ResidentActivity::WaitingForTrain;
     }
     engine.advance_trains();
-    engine.state.trains[0].dwell_ticks = TRAIN_STATION_DWELL_TICKS;
+    engine.state.transit.trains[0].dwell_ticks = TRAIN_STATION_DWELL_TICKS;
     for _ in 0..208 {
         engine.state.tick += 1;
         engine.advance_trains();
     }
-    let train = &engine.state.trains[0];
+    let train = &engine.state.transit.trains[0];
     assert_eq!(train.passengers.len(), RAIL_TRAIN_CAPACITY);
     assert_eq!(engine.rail_waiting_count(true), 4);
     assert!(engine.rail_waiting_count(true) <= RAIL_QUEUE_CAPACITY);
@@ -425,6 +446,7 @@ fn named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save() {
     let resident_id = add_rail_test_resident(&mut engine, gateway);
     let home_node = engine
         .state
+        .people
         .residents
         .iter()
         .find(|resident| resident.id == resident_id)
@@ -437,6 +459,7 @@ fn named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save() {
         engine.step_one();
         if engine
             .state
+            .people
             .residents
             .iter()
             .any(|resident| resident.id == resident_id && resident.train_id.is_some())
@@ -449,6 +472,7 @@ fn named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save() {
     let mut replay = Engine::restore_json(&save).unwrap();
     assert!(replay
         .state
+        .transit
         .trains
         .iter()
         .any(|train| train.passengers.contains(&resident_id)));
@@ -459,6 +483,7 @@ fn named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save() {
     assert_eq!(engine.save_json(), replay.save_json());
     let resident = engine
         .state
+        .people
         .residents
         .iter()
         .find(|resident| resident.id == resident_id)
@@ -496,15 +521,19 @@ fn station_queue_positions_are_rail_aligned_reserved_and_continuous() {
     let first_id = add_rail_test_resident(&mut engine, gateway);
     let first_index = engine
         .state
+        .people
         .residents
         .iter()
         .position(|resident| resident.id == first_id)
         .unwrap();
     engine.schedule_rail_resident(first_index, 0);
-    let slot = engine.state.residents[first_index].queue_slot.unwrap();
+    let slot = engine.state.people.residents[first_index]
+        .queue_slot
+        .unwrap();
     let platform = engine.platform_position(true, slot).unwrap();
     let entry = engine
         .state
+        .people
         .travelers
         .iter()
         .find(|traveler| traveler.id == first_id)
@@ -540,6 +569,7 @@ fn station_queue_positions_are_rail_aligned_reserved_and_continuous() {
             * 0.5;
     let traveler = mid_access
         .state
+        .people
         .travelers
         .iter_mut()
         .find(|traveler| traveler.id == first_id)
@@ -555,12 +585,12 @@ fn station_queue_positions_are_rail_aligned_reserved_and_continuous() {
     for _ in 0..4_000 {
         engine.state.tick += 1;
         engine.advance_travelers();
-        if engine.state.residents[first_index].transfer == Transfer::WaitingStation {
+        if engine.state.people.residents[first_index].transfer == Transfer::WaitingStation {
             break;
         }
     }
     assert_eq!(
-        engine.state.residents[first_index].transfer,
+        engine.state.people.residents[first_index].transfer,
         Transfer::WaitingStation
     );
     let position_for = |engine: &Engine, id: u32| {
@@ -586,12 +616,16 @@ fn station_queue_positions_are_rail_aligned_reserved_and_continuous() {
     let second_id = add_rail_test_resident(&mut engine, gateway);
     let second_index = engine
         .state
+        .people
         .residents
         .iter()
         .position(|resident| resident.id == second_id)
         .unwrap();
     engine.schedule_rail_resident(second_index, 0);
-    assert_ne!(engine.state.residents[second_index].queue_slot, Some(slot));
+    assert_ne!(
+        engine.state.people.residents[second_index].queue_slot,
+        Some(slot)
+    );
     let still_waiting = position_for(&engine, first_id);
     assert!((still_waiting.x - waiting_position.x).abs() < 0.01);
     assert!((still_waiting.z - waiting_position.z).abs() < 0.01);
@@ -657,7 +691,7 @@ fn rail_access_connectors_follow_rotated_and_translated_axes() {
             x: origin.x + angle.cos() * 300.0,
             z: origin.z + angle.sin() * 300.0,
         };
-        for node in &mut engine.state.nodes {
+        for node in &mut engine.state.network.nodes {
             if node.id == station {
                 node.x = origin.x;
                 node.z = origin.z;
@@ -720,18 +754,21 @@ fn mature_neighborhoods_keep_low_rise_core_and_tall_station_cluster() {
         }
         let station = engine
             .state
+            .network
             .nodes
             .iter()
             .find(|node| node.kind == NodeKind::Station)
             .unwrap();
         let market = engine
             .state
+            .network
             .nodes
             .iter()
             .find(|node| node.kind == NodeKind::Market)
             .unwrap();
         let open: Vec<&Building> = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)
@@ -847,12 +884,14 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     engine.validate().unwrap();
     let station = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.kind == NodeKind::Station)
         .unwrap();
     let towers: Vec<_> = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| {
@@ -865,6 +904,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     for tower in &towers {
         let parcel = engine
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == tower.parcel_id)
@@ -885,6 +925,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     }
     let founder = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.anchor && building.name == "Kissa Aoba")
@@ -892,6 +933,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     assert!(founder.floors <= 3);
     let midrise = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| {
@@ -903,7 +945,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     let mut candidate_sites = 0usize;
     let mut geometry_valid_sites = 0usize;
     let mut demand_ready_sites = 0usize;
-    for road in engine.state.roads.iter().filter(|road| {
+    for road in engine.state.network.roads.iter().filter(|road| {
         road.stage == Stage::Open
             && road.connected
             && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -919,19 +961,26 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
             geometry_valid_sites += 1;
             let mut local_open = 0usize;
             let mut local_occupied = 0usize;
-            for building in engine.state.buildings.iter().filter(|building| {
-                building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
-            }) {
+            for building in engine
+                .state
+                .construction
+                .buildings
+                .iter()
+                .filter(|building| {
+                    building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
+                })
+            {
                 local_open += 1;
                 local_occupied += usize::from(site_active(building));
             }
-            if local_open >= 4 && local_occupied >= 3 && engine.state.demand >= 1.2 {
+            if local_open >= 4 && local_occupied >= 3 && engine.state.people.demand >= 1.2 {
                 demand_ready_sites += 1;
             }
         }
     }
     let building_footprint: f32 = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| building.stage != Stage::Demolished)
@@ -939,13 +988,14 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .sum();
     let planned_segment_count = engine
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .map(|plan| {
             plan.segments
                 .iter()
                 .filter(|(from, to)| {
-                    engine.state.roads.iter().any(|road| {
+                    engine.state.network.roads.iter().any(|road| {
                         road.stage == Stage::Open
                             && ((road.from == *from && road.to == *to)
                                 || (road.from == *to && road.to == *from))
@@ -957,9 +1007,10 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     let mut historic_graph: BTreeMap<u32, BTreeSet<u32>> = BTreeMap::new();
     for road in engine
         .state
+        .network
         .roads
         .iter()
-        .filter(|road| engine.state.neighborhood_road_ids.contains(&road.id))
+        .filter(|road| engine.state.legacy.neighborhood_road_ids.contains(&road.id))
     {
         historic_graph.entry(road.from).or_default().insert(road.to);
         historic_graph.entry(road.to).or_default().insert(road.from);
@@ -986,10 +1037,10 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         let edges = degree_sum / 2;
         completed_neighborhood_blocks += edges.saturating_add(1).saturating_sub(component.len());
     }
-    let mut planned_road_ids = engine.state.neighborhood_road_ids.clone();
-    if let Some(plan) = &engine.state.neighborhood_plan {
+    let mut planned_road_ids = engine.state.legacy.neighborhood_road_ids.clone();
+    if let Some(plan) = &engine.state.legacy.neighborhood_plan {
         for (from, to) in &plan.segments {
-            if let Some(road) = engine.state.roads.iter().find(|road| {
+            if let Some(road) = engine.state.network.roads.iter().find(|road| {
                 (road.from == *from && road.to == *to) || (road.from == *to && road.to == *from)
             }) {
                 planned_road_ids.insert(road.id);
@@ -998,6 +1049,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     }
     let planned_parcel_ids: BTreeSet<u32> = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .filter(|frontage| planned_road_ids.contains(&frontage.road_id))
@@ -1005,6 +1057,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .collect();
     let planned_buildings: Vec<_> = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| planned_parcel_ids.contains(&building.parcel_id))
@@ -1027,6 +1080,7 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         .count();
     let planned_parcel_area: f32 = engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|parcel| planned_parcel_ids.contains(&parcel.id))
@@ -1039,8 +1093,8 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
     println!(
         "station skyline seed=87231 tick={} buildings={} parcels={} towers={} midrise_fringe={} footprint_m2={:.0} coverage={:.1}% frontage_candidates={} geometry_valid={} demand_ready={} stage={} completed_blocks={} block_plan={}/4 planned_lots={} plan_parcel_area_m2={:.0} planned_buildings={} plan_residential={} plan_commercial={} plan_occupied_residences={} plan_occupied_footprint_m2={:.0}",
         engine.state.tick,
-        engine.state.buildings.len(),
-        engine.state.parcels.len(),
+        engine.state.construction.buildings.len(),
+        engine.state.land.parcels.len(),
         towers.len(),
         midrise,
         building_footprint,
@@ -1072,9 +1126,10 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
         "seed 87231 formed only {completed_neighborhood_blocks} completed compact blocks by tick {}",
         engine.state.tick
     );
-    assert!(engine.state.neighborhood_road_ids.iter().all(|id| {
+    assert!(engine.state.legacy.neighborhood_road_ids.iter().all(|id| {
         engine
             .state
+            .network
             .roads
             .iter()
             .any(|road| road.id == *id && road.stage == Stage::Open && road.connected)
@@ -1094,12 +1149,12 @@ fn seed_87231_builds_bounded_station_towers_on_connected_large_lots() {
 #[test]
 fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
     let mut engine = Engine::new_legacy(31415);
-    engine.state.nodes.clear();
-    engine.state.roads.clear();
-    engine.state.parcels.clear();
-    engine.state.parcel_frontages.clear();
-    engine.state.buildings.clear();
-    engine.state.station_online = false;
+    engine.state.network.nodes.clear();
+    engine.state.network.roads.clear();
+    engine.state.land.parcels.clear();
+    engine.state.land.parcel_frontages.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.transit.station_online = false;
     let station = engine.add_node(0.0, 200.0, NodeKind::Station);
     let left_a = engine.add_node(-40.0, 150.0, NodeKind::Junction);
     let left_b = engine.add_node(40.0, 150.0, NodeKind::Junction);
@@ -1113,12 +1168,14 @@ fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
     assert_eq!(engine.station_tower_frontage_reservations(), 1);
     let first_reservation = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| parcel.width >= STATION_TOWER_PARCEL_WIDTH)
         .unwrap();
     assert!(engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|parcel| parcel.width < STATION_TOWER_PARCEL_WIDTH)
@@ -1132,6 +1189,7 @@ fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
 
     let reservations: Vec<_> = engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|parcel| {
@@ -1140,19 +1198,19 @@ fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
         .collect();
     assert_eq!(reservations.len(), MIN_STATION_TOWER_FRONTAGE_RESERVATIONS);
     assert_eq!(engine.station_tower_frontage_reservations(), 2);
-    assert!(engine.state.parcel_frontages.iter().any(|frontage| {
+    assert!(engine.state.land.parcel_frontages.iter().any(|frontage| {
         frontage.road_id == lower
             && reservations
                 .iter()
                 .any(|parcel| parcel.id == frontage.parcel_id)
     }));
-    assert!(engine.state.parcel_frontages.iter().any(|frontage| {
+    assert!(engine.state.land.parcel_frontages.iter().any(|frontage| {
         frontage.road_id == upper
             && reservations
                 .iter()
                 .any(|parcel| parcel.id == frontage.parcel_id)
     }));
-    assert!(engine.state.buildings.is_empty());
+    assert!(engine.state.construction.buildings.is_empty());
     assert_eq!(engine.state.rng_growth, growth_rng);
     assert_eq!(
         engine.save_json(),
@@ -1160,5 +1218,5 @@ fn station_tower_frontages_are_reserved_before_rail_and_small_lots() {
             .unwrap()
             .save_json()
     );
-    assert_eq!(station, engine.state.nodes[0].id);
+    assert_eq!(station, engine.state.network.nodes[0].id);
 }

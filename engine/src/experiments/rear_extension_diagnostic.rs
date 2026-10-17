@@ -115,19 +115,19 @@ struct CandidateGeometry {
 fn build_candidates(engine: &Engine) -> Vec<Candidate> {
     let mut result = Vec::new();
     let mut buildings_by_parcel = BTreeMap::new();
-    for building in &engine.state.buildings {
+    for building in &engine.state.construction.buildings {
         buildings_by_parcel
             .entry(building.parcel_id)
             .or_insert(building);
     }
     let mut frontage_by_parcel = BTreeMap::new();
-    for frontage in &engine.state.parcel_frontages {
+    for frontage in &engine.state.land.parcel_frontages {
         frontage_by_parcel
             .entry(frontage.parcel_id)
             .or_insert(frontage);
     }
     let mut road_positions = BTreeMap::new();
-    for road in &engine.state.roads {
+    for road in &engine.state.network.roads {
         if road.stage != Stage::Open
             || !road.connected
             || matches!(road.kind, crate::RoadKind::Rail | crate::RoadKind::Bridge)
@@ -140,7 +140,7 @@ fn build_candidates(engine: &Engine) -> Vec<Candidate> {
         road_positions.insert(road.id, ((from.x, from.z), (to.x, to.z)));
     }
 
-    let mut parcels: Vec<_> = engine.state.parcels.iter().collect();
+    let mut parcels: Vec<_> = engine.state.land.parcels.iter().collect();
     parcels.sort_by_key(|parcel| parcel.id);
     for parcel in parcels {
         let (Some(building), Some(frontage)) = (
@@ -346,7 +346,7 @@ fn rear_extension_geometry_opportunity() {
     let engine = Engine::restore_json(&input).expect("diagnostic save restores");
     let before = engine.save_json();
     let candidates = build_candidates(&engine);
-    let parcels = engine.state.parcels.clone();
+    let parcels = engine.state.land.parcels.clone();
     let base_context = engine.collision_context();
     let towers = engine.available_station_tower_envelopes();
 
@@ -484,7 +484,7 @@ fn rear_extension_geometry_opportunity() {
         "source_unchanged": engine.save_json() == before,
         "eligible_parcel_buildings": candidates.len(),
         "baseline_valid_candidates_delta_0": baseline_valid_count,
-        "reserved_parcels_excluded": engine.state.parcels.iter().filter(|parcel| parcel.reservation.is_some()).count(),
+        "reserved_parcels_excluded": engine.state.land.parcels.iter().filter(|parcel| parcel.reservation.is_some()).count(),
         "eligibility": "open non-anchor buildings with 1..=8 floors on unreserved parcels, explicit parcel rotation, frontage metadata to an open connected local road, connected parcel access, and unambiguous source-geometry frontage alignment",
         "preserved_checks": ["existing parcel footprints other than candidate's own", "protected area", "river", "world bounds", "open and pending roads", "interior access reservations", "neighborhood corridors", "station tower envelopes checked against the expanded rectangle's world-axis bounds", "connected access node"],
         "extension_depth_cap_m": DEPTH_CAP,

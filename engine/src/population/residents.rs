@@ -51,29 +51,29 @@ impl Engine {
     pub(crate) fn advance_district_measurement(&mut self) {
         let tick = self.state.tick;
         if self.district_runtime.accumulator.is_none()
-            && self.state.district_controller.pending.is_none()
-            && tick >= self.state.district_controller.next_refresh_tick
+            && self.state.people.district_controller.pending.is_none()
+            && tick >= self.state.people.district_controller.next_refresh_tick
         {
             let (buildings, frontages) = population::district_controller::make_samples(
-                &self.state.buildings,
-                &self.state.parcel_frontages,
+                &self.state.construction.buildings,
+                &self.state.land.parcel_frontages,
             );
             let Ok(accumulator) = population::district_density::MeasurementAccumulator::begin(
                 population::district_controller::DISTRICT_GRID,
                 &buildings,
                 &frontages,
             ) else {
-                self.state.district_controller.next_refresh_tick =
+                self.state.people.district_controller.next_refresh_tick =
                     tick.saturating_add(population::district_controller::REFRESH_INTERVAL_TICKS);
                 return;
             };
             let Ok(checkpoint) = accumulator.checkpoint() else {
-                self.state.district_controller.next_refresh_tick =
+                self.state.people.district_controller.next_refresh_tick =
                     tick.saturating_add(population::district_controller::REFRESH_INTERVAL_TICKS);
                 return;
             };
-            self.state.district_controller.pending = Some(checkpoint);
-            self.state.district_controller.pending_capture_tick = tick;
+            self.state.people.district_controller.pending = Some(checkpoint);
+            self.state.people.district_controller.pending_capture_tick = tick;
             self.district_runtime.accumulator = Some(accumulator);
         }
 
@@ -87,9 +87,9 @@ impl Engine {
             .is_err()
         {
             self.district_runtime.accumulator = None;
-            self.state.district_controller.pending = None;
-            self.state.district_controller.pending_capture_tick = 0;
-            self.state.district_controller.next_refresh_tick =
+            self.state.people.district_controller.pending = None;
+            self.state.people.district_controller.pending_capture_tick = 0;
+            self.state.people.district_controller.next_refresh_tick =
                 tick.saturating_add(population::district_controller::REFRESH_INTERVAL_TICKS);
             return;
         }
@@ -99,6 +99,7 @@ impl Engine {
             let accumulator = self.district_runtime.accumulator.take().unwrap();
             let mut checkpoint = self
                 .state
+                .people
                 .district_controller
                 .pending
                 .take()
@@ -109,29 +110,31 @@ impl Engine {
                     .finish()
                     .expect("successful completed measurement can be finalized"),
             );
-            let controller = &mut self.state.district_controller;
+            let controller = &mut self.state.people.district_controller;
             controller.completed_capture_tick = controller.pending_capture_tick;
             controller.completed_tick = tick;
             controller.completed = Some(checkpoint);
             controller.pending_capture_tick = 0;
             controller.next_refresh_tick =
                 tick.saturating_add(population::district_controller::REFRESH_INTERVAL_TICKS);
-        } else if let Some(checkpoint) = self.state.district_controller.pending.as_mut() {
+        } else if let Some(checkpoint) = self.state.people.district_controller.pending.as_mut() {
             checkpoint.processed_samples = processed;
         }
     }
 
     pub(crate) fn sync_residents(&mut self) {
-        if self.state.residents.len() >= MAX_RESIDENTS {
+        if self.state.people.residents.len() >= MAX_RESIDENTS {
             return;
         }
         let homes: Vec<(u32, u16, u32)> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| is_housing(b) && b.stage == Stage::Open && b.occupancy > 0)
             .filter_map(|b| {
                 self.state
+                    .land
                     .parcels
                     .iter()
                     .find(|p| p.id == b.parcel_id)
@@ -140,11 +143,13 @@ impl Engine {
             .collect();
         let destinations: Vec<(u32, u32, BuildingKind, u16)> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| is_commercial(b) && site_active(b))
             .filter_map(|b| {
                 self.state
+                    .land
                     .parcels
                     .iter()
                     .find(|p| p.id == b.parcel_id)
@@ -155,11 +160,11 @@ impl Engine {
             return;
         }
         let mut current_by_home = BTreeMap::<u32, u16>::new();
-        for resident in &self.state.residents {
+        for resident in &self.state.people.residents {
             *current_by_home.entry(resident.home_building).or_default() += 1;
         }
         let mut assigned_by_work = BTreeMap::<u32, u16>::new();
-        for resident in &self.state.residents {
+        for resident in &self.state.people.residents {
             if resident.routine == ResidentRoutine::Worker {
                 let Some(work) = resident.work_building else {
                     continue;
@@ -169,6 +174,7 @@ impl Engine {
         }
         let mut existing_worker_count = self
             .state
+            .people
             .residents
             .iter()
             .filter(|r| r.routine == ResidentRoutine::Worker)
@@ -188,7 +194,7 @@ impl Engine {
             let available =
                 occupancy.saturating_sub(self.aggregate_participants_at_home(home_id) as u16);
             for ordinal in current..available {
-                if self.state.residents.len() >= MAX_RESIDENTS {
+                if self.state.people.residents.len() >= MAX_RESIDENTS {
                     return;
                 }
                 let mut choices: Vec<(u32, u32, BuildingKind, u16)> = destinations.clone();
@@ -290,7 +296,7 @@ impl Engine {
                 } else {
                     0
                 };
-                self.state.residents.push(Resident {
+                self.state.people.residents.push(Resident {
                     id,
                     name: format!("{first} {family}"),
                     home_building: home_id,
@@ -325,21 +331,22 @@ impl Engine {
     }
 
     pub(crate) fn schedule_residents(&mut self, day: u32) {
-        if self.state.travelers.len() >= MAX_TRAVELERS {
+        if self.state.people.travelers.len() >= MAX_TRAVELERS {
             return;
         }
         let active: BTreeSet<u32> = self
             .state
+            .people
             .travelers
             .iter()
             .filter(|t| t.resident != 0)
             .map(|t| t.resident)
             .collect();
-        for index in 0..self.state.residents.len() {
-            if self.state.travelers.len() >= MAX_TRAVELERS {
+        for index in 0..self.state.people.residents.len() {
+            if self.state.people.travelers.len() >= MAX_TRAVELERS {
                 break;
             }
-            let resident = self.state.residents[index].clone();
+            let resident = self.state.people.residents[index].clone();
             if active.contains(&resident.id) {
                 continue;
             }
@@ -456,8 +463,8 @@ impl Engine {
             if traveler.origin_access.is_some() {
                 traveler.access_phase = 0;
             }
-            self.state.travelers.push(traveler);
-            if let Some(r) = self.state.residents.get_mut(index) {
+            self.state.people.travelers.push(traveler);
+            if let Some(r) = self.state.people.residents.get_mut(index) {
                 if r.at_work {
                     r.last_return_day = day;
                     r.return_tick = r.return_tick.saturating_add(TICKS_PER_DAY);
@@ -485,25 +492,29 @@ impl Engine {
     }
 
     pub(crate) fn schedule_deliveries(&mut self) {
-        if self.state.tick < self.state.next_delivery_tick {
+        if self.state.tick < self.state.people.next_delivery_tick {
             return;
         }
-        self.state.next_delivery_tick = self
+        self.state.people.next_delivery_tick = self
             .state
+            .people
             .next_delivery_tick
             .saturating_add(TICKS_PER_DAY / 7);
         let active_deliveries = self
             .state
+            .people
             .travelers
             .iter()
             .filter(|t| t.activity.is_delivery())
             .count();
-        if active_deliveries >= MAX_ACTIVE_DELIVERIES || self.state.travelers.len() >= MAX_TRAVELERS
+        if active_deliveries >= MAX_ACTIVE_DELIVERIES
+            || self.state.people.travelers.len() >= MAX_TRAVELERS
         {
             return;
         }
         let Some(gateway) = self
             .state
+            .network
             .nodes
             .iter()
             .find(|n| n.kind == NodeKind::Gateway)
@@ -513,11 +524,13 @@ impl Engine {
         };
         let businesses: Vec<(u32, u32, String)> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| matches!(b.kind, BuildingKind::Shop | BuildingKind::Cafe) && site_active(b))
             .filter_map(|b| {
                 self.state
+                    .land
                     .parcels
                     .iter()
                     .find(|p| p.id == b.parcel_id)
@@ -528,14 +541,14 @@ impl Engine {
             return;
         }
         let (building_id, destination, shop_name) =
-            businesses[self.state.delivery_cursor % businesses.len()].clone();
+            businesses[self.state.people.delivery_cursor % businesses.len()].clone();
         let route = self.route(gateway, destination, false);
         if route.len() < 2 {
             return;
         }
         let route_lengths = self.route_lengths(&route);
         let id = self.id();
-        self.state.delivery_cursor = self.state.delivery_cursor.saturating_add(1);
+        self.state.people.delivery_cursor = self.state.people.delivery_cursor.saturating_add(1);
         let mut traveler = Traveler {
             id,
             kind: 1,
@@ -563,7 +576,7 @@ impl Engine {
             traveler.id,
             traveler.kind,
         );
-        self.state.travelers.push(traveler);
+        self.state.people.travelers.push(traveler);
         self.record(
             EventKind::DeliveryDispatched,
             id,
@@ -574,6 +587,7 @@ impl Engine {
     pub(crate) fn resident_location_node(&self, resident: &Resident) -> Option<u32> {
         if self
             .state
+            .people
             .travelers
             .iter()
             .any(|traveler| traveler.resident == resident.id)

@@ -27,6 +27,7 @@ fn early_access_scheduling_matched_seeds() {
 
             let open_buildings: Vec<_> = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| building.stage == Stage::Open)
@@ -43,6 +44,7 @@ fn early_access_scheduling_matched_seeds() {
                 .collect();
             let connected_roads: Vec<_> = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| road.stage == Stage::Open && road.connected)
@@ -67,7 +69,7 @@ fn early_access_scheduling_matched_seeds() {
                 "early_access_enabled": enabled,
                 "district_policy_enabled": false,
                 "buildings_open": open_buildings.len(),
-                "buildings_total": engine.state.buildings.len(),
+                "buildings_total": engine.state.construction.buildings.len(),
                 "housing_open": housing.len(),
                 "housing_occupancy": housing.iter().map(|building| building.occupancy as u64).sum::<u64>(),
                 "housing_capacity": housing.iter().map(|building| building.capacity as u64).sum::<u64>(),
@@ -76,19 +78,19 @@ fn early_access_scheduling_matched_seeds() {
                 "commercial_active_capacity": commerce.iter().filter(|building| building.business_active).map(|building| building.capacity as u64).sum::<u64>(),
                 "envelope_area_proxy_m2": envelope_proxy_m2,
                 "floor_area_proxy_m2": floor_area_proxy_m2,
-                "parcels": engine.state.parcels.len(),
+                "parcels": engine.state.land.parcels.len(),
                 "connected_open_roads": connected_roads.len(),
                 "ordinary_road_length_m": road_length_m,
                 "ordinary_road_records": ordinary_roads.len(),
-                "total_road_records": engine.state.roads.len(),
+                "total_road_records": engine.state.network.roads.len(),
                 "early_access_attempts": engine.experiments.early_access_attempts,
                 "early_access_admissions": engine.experiments.early_access_admissions,
                 "interior_access_completions": engine.experiments.interior_access_completions,
-                "pending_access_lots": engine.state.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
-                "pending_access_project": engine.state.pending_interior_access.as_ref().map(|plan| plan.project_id),
-                "unbuilt_parcels": engine.state.parcels.iter().filter(|parcel| !engine.state.buildings.iter().any(|building| building.parcel_id == parcel.id)).count(),
-                "demand": engine.state.demand,
-                "population": engine.state.population,
+                "pending_access_lots": engine.state.legacy.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
+                "pending_access_project": engine.state.legacy.pending_interior_access.as_ref().map(|plan| plan.project_id),
+                "unbuilt_parcels": engine.state.land.parcels.iter().filter(|parcel| !engine.state.construction.buildings.iter().any(|building| building.parcel_id == parcel.id)).count(),
+                "demand": engine.state.people.demand,
+                "population": engine.state.people.population,
                 "elapsed_seconds": started.elapsed().as_secs_f64(),
             });
             eprintln!("early-access-experiment {summary}");

@@ -3,7 +3,13 @@ use super::*;
 #[test]
 fn district_measurement_is_frozen_bounded_and_save_resumable() {
     let mut original = engine_with_pending_measurement();
-    let frozen = original.state.district_controller.pending.clone().unwrap();
+    let frozen = original
+        .state
+        .people
+        .district_controller
+        .pending
+        .clone()
+        .unwrap();
     let mut expected_accumulator =
         district_density::MeasurementAccumulator::resume(frozen).unwrap();
     while !expected_accumulator.is_complete() {
@@ -12,12 +18,13 @@ fn district_measurement_is_frozen_bounded_and_save_resumable() {
     let expected_metrics = expected_accumulator.finish().unwrap();
 
     // Live-world changes after capture do not restart or alter frozen work.
-    original.state.demand = 1.17;
+    original.state.people.demand = 1.17;
     let before_rng = original.state.rng_growth;
     original.step(1);
     assert_eq!(
         original
             .state
+            .people
             .district_controller
             .pending
             .as_ref()
@@ -34,10 +41,20 @@ fn district_measurement_is_frozen_bounded_and_save_resumable() {
     original.step(1);
     restored.step(1);
     assert_eq!(original.save_json(), restored.save_json());
-    assert!(original.state.district_controller.pending.is_none());
-    assert_eq!(original.state.district_controller.completed_capture_tick, 1);
-    assert_eq!(original.state.district_controller.completed_tick, 3);
-    assert_eq!(original.state.district_controller.next_refresh_tick, 203);
+    assert!(original.state.people.district_controller.pending.is_none());
+    assert_eq!(
+        original
+            .state
+            .people
+            .district_controller
+            .completed_capture_tick,
+        1
+    );
+    assert_eq!(original.state.people.district_controller.completed_tick, 3);
+    assert_eq!(
+        original.state.people.district_controller.next_refresh_tick,
+        203
+    );
     assert_eq!(
         original.district_runtime.metrics.as_ref(),
         Some(&expected_metrics)
@@ -52,7 +69,7 @@ fn district_measurement_is_frozen_bounded_and_save_resumable() {
 fn district_measurement_completes_and_reconstructs_cached_metrics() {
     let mut engine = Engine::new_legacy(982);
     engine.step(1);
-    let controller = &engine.state.district_controller;
+    let controller = &engine.state.people.district_controller;
     assert!(controller.pending.is_none());
     assert!(controller.completed.is_some());
     assert_eq!(controller.completed_capture_tick, 1);
@@ -72,23 +89,31 @@ fn district_measurement_rejects_malformed_checkpoints_and_accepts_legacy_saves()
     let mut invalid_cursor = engine_with_pending_measurement();
     let mut checkpoint = invalid_cursor
         .state
+        .people
         .district_controller
         .pending
         .clone()
         .unwrap();
     checkpoint.processed_samples = checkpoint.buildings.len() + checkpoint.frontages.len() + 1;
-    invalid_cursor.state.district_controller.pending = Some(checkpoint);
+    invalid_cursor.state.people.district_controller.pending = Some(checkpoint);
     assert!(Engine::restore_json(&invalid_cursor.save_json()).is_err());
 
     let mut duplicate = engine_with_pending_measurement();
-    let mut checkpoint = duplicate.state.district_controller.pending.clone().unwrap();
+    let mut checkpoint = duplicate
+        .state
+        .people
+        .district_controller
+        .pending
+        .clone()
+        .unwrap();
     checkpoint.buildings[1].id = checkpoint.buildings[0].id;
-    duplicate.state.district_controller.pending = Some(checkpoint);
+    duplicate.state.people.district_controller.pending = Some(checkpoint);
     assert!(Engine::restore_json(&duplicate.save_json()).is_err());
 
     let mut unsupported_frontage = engine_with_pending_measurement();
     let mut checkpoint = unsupported_frontage
         .state
+        .people
         .district_controller
         .pending
         .clone()
@@ -101,11 +126,15 @@ fn district_measurement_rejects_malformed_checkpoints_and_accepts_legacy_saves()
         end_z: 0.0,
         occupied: false,
     });
-    unsupported_frontage.state.district_controller.pending = Some(checkpoint);
+    unsupported_frontage
+        .state
+        .people
+        .district_controller
+        .pending = Some(checkpoint);
     assert!(Engine::restore_json(&unsupported_frontage.save_json()).is_err());
 
     let mut future = engine_with_pending_measurement();
-    future.state.district_controller.next_refresh_tick = u64::MAX;
+    future.state.people.district_controller.next_refresh_tick = u64::MAX;
     assert!(Engine::restore_json(&future.save_json()).is_err());
 
     let engine = Engine::new_legacy(983);
@@ -115,7 +144,7 @@ fn district_measurement_rejects_malformed_checkpoints_and_accepts_legacy_saves()
         .unwrap()
         .remove("district_controller");
     let restored = Engine::restore_json(&legacy.to_string()).unwrap();
-    assert!(restored.state.district_controller.is_empty());
+    assert!(restored.state.people.district_controller.is_empty());
     let canonical: serde_json::Value = serde_json::from_str(&restored.save_json()).unwrap();
     assert!(canonical.get("district_controller").is_none());
 }
@@ -124,13 +153,19 @@ fn district_measurement_rejects_malformed_checkpoints_and_accepts_legacy_saves()
 fn district_measurement_advances_at_most_sixteen_samples_per_fixed_tick() {
     let mut engine = Engine::new_legacy(984);
     engine.state.tick = 1;
-    engine.state.district_controller.pending = Some(synthetic_district_checkpoint(80, 0));
-    engine.state.district_controller.pending_capture_tick = 1;
+    engine.state.people.district_controller.pending = Some(synthetic_district_checkpoint(80, 0));
+    engine.state.people.district_controller.pending_capture_tick = 1;
     engine.district_runtime =
-        district_controller::Runtime::restore(&engine.state.district_controller).unwrap();
+        district_controller::Runtime::restore(&engine.state.people.district_controller).unwrap();
     let before_growth_rng = engine.state.rng_growth;
     engine.step(1);
-    let checkpoint = engine.state.district_controller.pending.as_ref().unwrap();
+    let checkpoint = engine
+        .state
+        .people
+        .district_controller
+        .pending
+        .as_ref()
+        .unwrap();
     assert_eq!(checkpoint.processed_samples, 16);
     assert_eq!(engine.state.rng_growth, before_growth_rng);
     assert_eq!(engine.state.tick, 2);
@@ -252,12 +287,14 @@ fn district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero() {
             engine.validate().unwrap();
             let open_roads: Vec<_> = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| road.stage == Stage::Open && road.connected)
                 .collect();
             let envelope_area: f64 = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| building.stage == Stage::Open)
@@ -265,6 +302,7 @@ fn district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero() {
                 .sum();
             let floor_area: f64 = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| building.stage == Stage::Open)
@@ -277,7 +315,7 @@ fn district_policy_experiment_uses_normal_step_for_seed_87231_and_seed_zero() {
                 .sum();
             eprintln!(
                 "district-policy seed={seed} enabled={enabled} buildings={} connected_open_roads={} road_length={road_length:.1}m envelope_proxy={envelope_area:.1} floor_proxy={floor_area:.1} comparisons={} access_wins={} frontier_wins={} elapsed={:.2}s",
-                engine.state.buildings.iter().filter(|b| b.stage == Stage::Open).count(),
+                engine.state.construction.buildings.iter().filter(|b| b.stage == Stage::Open).count(),
                 open_roads.len(),
                 engine.experiments.district_policy_comparisons,
                 engine.experiments.district_policy_access_wins,

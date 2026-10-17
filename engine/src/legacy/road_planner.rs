@@ -33,24 +33,28 @@ impl Engine {
         let day = (self.state.tick / TICKS_PER_DAY) as u32;
         let open_roads = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open)
             .count();
         let homes = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| is_housing(b) && site_active(b))
             .count();
         let businesses = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| is_commercial(b) && site_active(b))
             .count();
         let active = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.progress < 1.0)
@@ -60,19 +64,25 @@ impl Engine {
         }
         // Finish starter parcels first, then spend each new street's infill quota
         // before considering another frontier extension.
-        if self.state.buildings.len() < 5
-            && !self.state.parcels.iter().any(|p| p.reservation.is_some())
+        if self.state.construction.buildings.len() < 5
+            && !self
+                .state
+                .land
+                .parcels
+                .iter()
+                .any(|p| p.reservation.is_some())
         {
             self.plan_building(day);
             return;
         }
-        let usable_infill = self.state.parcels.iter().any(|parcel| {
+        let usable_infill = self.state.land.parcels.iter().any(|parcel| {
             !parcel.protected
                 && parcel.reservation.is_none()
-                && (self.state.station_online || !self.is_station_tower_lot(parcel))
+                && (self.state.transit.station_online || !self.is_station_tower_lot(parcel))
                 && self.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
                 && !self
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .any(|b| b.parcel_id == parcel.id)
@@ -80,12 +90,14 @@ impl Engine {
         });
         let active_building_projects = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
             .count();
         let active_road_projects = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -95,7 +107,7 @@ impl Engine {
         // records the plan; perimeter construction remains on the existing
         // later 80-tick scheduler.
         let early_block_reserved = self.try_reserve_early_coordinated_block(active_road_projects);
-        if self.state.road_infill_due > 0 {
+        if self.state.legacy.road_infill_due > 0 {
             if usable_infill {
                 if self.state.tick % 80 == 0 {
                     self.plan_building(day);
@@ -104,7 +116,7 @@ impl Engine {
             }
             // This quota prioritizes newly opened frontage while usable lots
             // remain. Do not let an exhausted lot pool freeze network growth.
-            self.state.road_infill_due = 0;
+            self.state.legacy.road_infill_due = 0;
         }
         if usable_infill || active_building_projects > 0 {
             if usable_infill && self.state.tick % 80 == 0 {
@@ -114,6 +126,7 @@ impl Engine {
         }
         let connected_ordinary_roads = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -128,19 +141,21 @@ impl Engine {
             && self.state.tick % 160 == 0
             && active_road_projects == 0
             && active == 0
-            && self.state.neighborhood_plan.is_none()
+            && self.state.legacy.neighborhood_plan.is_none()
             && !self.neighborhood_block_has_unbuilt_frontage()
             && homes + businesses >= 3
-            && road_demand_is_sufficient(self.state.demand)
+            && road_demand_is_sufficient(self.state.people.demand)
             && self
                 .state
+                .network
                 .roads
                 .len()
-                .saturating_add(self.state.projects.len())
+                .saturating_add(self.state.construction.projects.len())
                 < MAX_SEGMENTS
         {
             let active_buildings: Vec<Building> = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| site_active(building))
@@ -176,8 +191,8 @@ impl Engine {
         // extensions, after existing usable frontage has had priority. The
         // former 1,600-tick phase made block planning depend on tick alignment
         // and often let frontier roads consume the available geometry first.
-        if self.state.neighborhood_plan.is_none()
-            && self.state.road_infill_due == 0
+        if self.state.legacy.neighborhood_plan.is_none()
+            && self.state.legacy.road_infill_due == 0
             && active == 0
             && !self.neighborhood_block_has_unbuilt_frontage()
             && self.state.tick % 80 == 0
@@ -188,6 +203,7 @@ impl Engine {
         }
         if self
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .is_some_and(|plan| plan.next_segment < plan.segments.len() || plan.spine.is_some())
@@ -201,13 +217,14 @@ impl Engine {
         }
         if connected_ordinary_roads >= 40
             && self.state.tick % 160 == 0
-            && self.state.demand > 1.1
+            && self.state.people.demand > 1.1
             && self.try_start_rear_extension()
         {
             return;
         }
         let connected_nodes: BTreeSet<u32> = self
             .state
+            .network
             .roads
             .iter()
             .filter(|r| r.connected && r.stage == Stage::Open)
@@ -215,6 +232,7 @@ impl Engine {
             .collect();
         let isolated = self
             .state
+            .network
             .roads
             .iter()
             .filter(|r| r.kind == RoadKind::Bridge && r.stage != Stage::Open)
@@ -224,13 +242,14 @@ impl Engine {
         // including the district-policy comparison below. Keep ordinary
         // capacity proposals out of that comparison at demand <= 0.8.
         let needs_road = homes + businesses >= 3
-            && self.state.roads.len() + self.state.projects.len() < MAX_SEGMENTS
-            && road_demand_is_sufficient(self.state.demand);
+            && self.state.network.roads.len() + self.state.construction.projects.len()
+                < MAX_SEGMENTS
+            && road_demand_is_sufficient(self.state.people.demand);
         if needs_road && !isolated && connected_nodes.len() > 1 && self.state.tick % 80 == 0 {
             self.plan_road();
             return;
         }
-        if (self.state.demand > 0.75 || day < 5) && self.state.tick % 80 == 0 {
+        if (self.state.people.demand > 0.75 || day < 5) && self.state.tick % 80 == 0 {
             self.plan_building(day);
         }
     }
@@ -238,7 +257,7 @@ impl Engine {
     #[cfg(feature = "legacy")]
     pub(crate) fn ordinary_road_bearings(&self, node_id: u32) -> Vec<f32> {
         let mut bearings = Vec::new();
-        for road in self.state.roads.iter().filter(|road| {
+        for road in self.state.network.roads.iter().filter(|road| {
             road.connected
                 && road.stage == Stage::Open
                 && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -255,7 +274,7 @@ impl Engine {
                 }
             }
         }
-        for project in self.state.projects.iter().filter(|project| {
+        for project in self.state.construction.projects.iter().filter(|project| {
             project.kind == ProjectKind::Road
                 && project.progress < 1.0
                 && (project.from == Some(node_id) || project.to == Some(node_id))
@@ -278,6 +297,7 @@ impl Engine {
     pub(crate) fn ordinary_road_degree(&self, node_id: u32) -> usize {
         let open = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -289,6 +309,7 @@ impl Engine {
             .count();
         let planned = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| {
@@ -338,7 +359,7 @@ impl Engine {
         open_buildings: &[Building],
     ) -> BTreeMap<u32, f32> {
         let mut headings = BTreeMap::new();
-        for bridge in self.state.roads.iter().filter(|road| {
+        for bridge in self.state.network.roads.iter().filter(|road| {
             road.kind == RoadKind::Bridge && road.stage == Stage::Open && road.connected
         }) {
             for (head_id, opposite_id) in [(bridge.from, bridge.to), (bridge.to, bridge.from)] {
@@ -348,28 +369,30 @@ impl Engine {
                 let Some(opposite) = self.node(opposite_id) else {
                     continue;
                 };
-                let ordinary_open_or_planned = self.state.roads.iter().any(|road| {
-                    (road.from == head_id || road.to == head_id)
-                        && road.stage == Stage::Open
-                        && road.connected
-                        && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
-                }) || self.state.projects.iter().any(|project| {
-                    let (Some(from), Some(to)) = (project.from, project.to) else {
-                        return false;
-                    };
-                    if project.kind != ProjectKind::Road
-                        || project.progress >= 1.0
-                        || (from != head_id && to != head_id)
-                    {
-                        return false;
-                    }
-                    let matches_nonordinary_road = self.state.roads.iter().any(|road| {
-                        matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
-                            && ((road.from == from && road.to == to)
-                                || (road.to == from && road.from == to))
+                let ordinary_open_or_planned =
+                    self.state.network.roads.iter().any(|road| {
+                        (road.from == head_id || road.to == head_id)
+                            && road.stage == Stage::Open
+                            && road.connected
+                            && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
+                    }) || self.state.construction.projects.iter().any(|project| {
+                        let (Some(from), Some(to)) = (project.from, project.to) else {
+                            return false;
+                        };
+                        if project.kind != ProjectKind::Road
+                            || project.progress >= 1.0
+                            || (from != head_id && to != head_id)
+                        {
+                            return false;
+                        }
+                        let matches_nonordinary_road =
+                            self.state.network.roads.iter().any(|road| {
+                                matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
+                                    && ((road.from == from && road.to == to)
+                                        || (road.to == from && road.from == to))
+                            });
+                        !matches_nonordinary_road
                     });
-                    !matches_nonordinary_road
-                });
                 if ordinary_open_or_planned {
                     continue;
                 }
@@ -405,6 +428,7 @@ impl Engine {
         });
         let connected_nodes: BTreeSet<u32> = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.connected && road.stage == Stage::Open)
@@ -416,6 +440,7 @@ impl Engine {
         // has already claimed the bridgehead.
         let mut candidates: Vec<(Node, f32, Option<f32>)> = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| connected_nodes.contains(&node.id))
@@ -452,7 +477,7 @@ impl Engine {
         if candidates.is_empty() {
             return legacy::frontier::FrontierScan {
                 proposal: None,
-                next_cursor: self.state.road_origin_cursor,
+                next_cursor: self.state.legacy.road_origin_cursor,
                 next_rng: self.state.rng_growth,
                 allow_access_fallback: false,
             };
@@ -460,7 +485,7 @@ impl Engine {
 
         let mut rng = self.state.rng_growth;
         let choice_count = candidates.len();
-        let first_choice = self.state.road_origin_cursor % choice_count;
+        let first_choice = self.state.legacy.road_origin_cursor % choice_count;
         let origin_count = choice_count.min(MAX_ROAD_ORIGINS_PER_EVALUATION);
         let mut next_cursor = (first_choice + origin_count) % choice_count;
         for attempt in 0..origin_count {
@@ -468,7 +493,7 @@ impl Engine {
             next_cursor = (idx + 1) % choice_count;
             let start = candidates[idx].0.clone();
             let bridgehead_heading = candidates[idx].2;
-            if self.state.projects.iter().any(|p| {
+            if self.state.construction.projects.iter().any(|p| {
                 p.kind == ProjectKind::Road && p.from == Some(start.id) && p.progress < 1.0
             }) {
                 continue;
@@ -488,6 +513,7 @@ impl Engine {
             headings.rotate_left(rotate);
             let mut loop_targets: Vec<Node> = self
                 .state
+                .network
                 .nodes
                 .iter()
                 .filter(|node| node.id != start.id && connected_nodes.contains(&node.id))
@@ -495,11 +521,11 @@ impl Engine {
                     let distance = (node.x - start.x).hypot(node.z - start.z);
                     distance >= 45.0
                         && distance <= 90.0
-                        && !self.state.roads.iter().any(|road| {
+                        && !self.state.network.roads.iter().any(|road| {
                             (road.from == start.id && road.to == node.id)
                                 || (road.to == start.id && road.from == node.id)
                         })
-                        && !self.state.projects.iter().any(|project| {
+                        && !self.state.construction.projects.iter().any(|project| {
                             project.kind == ProjectKind::Road
                                 && project.progress < 1.0
                                 && ((project.from == Some(start.id) && project.to == Some(node.id))
@@ -557,6 +583,7 @@ impl Engine {
                 if loop_target.is_none()
                     && self
                         .state
+                        .network
                         .nodes
                         .iter()
                         .any(|node| (node.x - x).hypot(node.z - z) < 18.0)
@@ -573,6 +600,7 @@ impl Engine {
                 let endpoint_id = loop_target.as_ref().map(|node| node.id);
                 let road_clear = self
                     .state
+                    .network
                     .roads
                     .iter()
                     .filter(|road| road.stage == Stage::Open)
@@ -591,6 +619,7 @@ impl Engine {
                     });
                 let projects_clear = self
                     .state
+                    .construction
                     .projects
                     .iter()
                     .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -647,7 +676,9 @@ impl Engine {
 
     #[cfg(feature = "legacy")]
     pub(crate) fn plan_road_with_policy(&mut self, use_district_policy: bool) {
-        if self.state.roads.len() + self.state.projects.len() + self.spine_reserved_road_records()
+        if self.state.network.roads.len()
+            + self.state.construction.projects.len()
+            + self.spine_reserved_road_records()
             >= MAX_SEGMENTS
             || !self.project_admission_available()
         {
@@ -655,6 +686,7 @@ impl Engine {
         }
         let open_buildings: Vec<Building> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| site_active(building))
@@ -689,9 +721,9 @@ impl Engine {
             && self
                 .state
                 .tick
-                .saturating_sub(self.state.district_controller.completed_capture_tick)
+                .saturating_sub(self.state.people.district_controller.completed_capture_tick)
                 <= legacy::district_policy::METRICS_MAX_AGE_TICKS
-            && road_demand_is_sufficient(self.state.demand);
+            && road_demand_is_sufficient(self.state.people.demand);
         if can_compare {
             #[cfg(test)]
             {
@@ -703,9 +735,9 @@ impl Engine {
             let access_scan = self.propose_interior_access();
             // Both read-only scans advance their deterministic cursors once,
             // even when their proposal loses this comparison.
-            self.state.road_origin_cursor = scan.next_cursor;
+            self.state.legacy.road_origin_cursor = scan.next_cursor;
             self.state.rng_growth = scan.next_rng;
-            self.state.interior_access_cursor = access_scan.next_cursor;
+            self.state.legacy.interior_access_cursor = access_scan.next_cursor;
             if self.try_admit_ranked_district_road(scan.proposal, access_scan.proposals) {
                 return;
             }
@@ -713,7 +745,7 @@ impl Engine {
         }
         let Some(proposal) = scan.proposal.clone() else {
             if scan.allow_access_fallback && self.access_fallback_not_attempted_this_tick() {
-                self.state.road_origin_cursor = scan.next_cursor;
+                self.state.legacy.road_origin_cursor = scan.next_cursor;
                 self.state.rng_growth = scan.next_rng;
                 self.try_plan_interior_access();
             }
@@ -743,7 +775,7 @@ impl Engine {
         scan: legacy::frontier::FrontierScan,
         proposal: legacy::frontier::FrontierProposal,
     ) {
-        self.state.road_origin_cursor = scan.next_cursor;
+        self.state.legacy.road_origin_cursor = scan.next_cursor;
         self.state.rng_growth = scan.next_rng;
         if !self.project_admission_available() {
             return;
@@ -799,7 +831,7 @@ impl Engine {
         let mut access_by_id = BTreeMap::new();
         let mut frontier_by_id = None;
         let building_samples = self.live_catchment_buildings();
-        let demand_fit = legacy::district_policy::demand_fit(self.state.demand);
+        let demand_fit = legacy::district_policy::demand_fit(self.state.people.demand);
 
         if let Some(proposal) = frontier_proposal {
             let Some(start) = self.node(proposal.start_id) else {
@@ -851,7 +883,7 @@ impl Engine {
                 legacy::district_policy::catchment_at(&building_samples, start.x, start.z);
             let source_market_accepts =
                 legacy::district_policy::source_market_accepts_capacity(catchment);
-            let feasible = self.state.demand > 0.8 && source_market_accepts;
+            let feasible = self.state.people.demand > 0.8 && source_market_accepts;
             #[cfg(test)]
             {
                 diagnostic.frontier_source_rejected =
@@ -890,6 +922,7 @@ impl Engine {
             }
             let Some(host) = self
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == proposal.host_id)
@@ -905,7 +938,7 @@ impl Engine {
                 legacy::district_policy::catchment_at(&building_samples, source_x, source_z);
             let source_market_accepts =
                 legacy::district_policy::source_market_accepts_capacity(catchment);
-            let feasible = self.state.demand > 0.8 && source_market_accepts;
+            let feasible = self.state.people.demand > 0.8 && source_market_accepts;
             let rects: Vec<_> = proposal
                 .selected_lots
                 .iter()
@@ -1059,7 +1092,7 @@ impl Engine {
                 if stable_id == candidate.stable_id {
                     let scan = legacy::frontier::FrontierScan {
                         proposal: None,
-                        next_cursor: self.state.road_origin_cursor,
+                        next_cursor: self.state.legacy.road_origin_cursor,
                         next_rng: self.state.rng_growth,
                         allow_access_fallback: false,
                     };
@@ -1116,6 +1149,7 @@ impl Engine {
     pub(crate) fn live_catchment_buildings(&self) -> Vec<legacy::district_policy::ServedBuilding> {
         let connected_nodes: BTreeSet<u32> = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.connected && road.stage == Stage::Open)
@@ -1123,11 +1157,13 @@ impl Engine {
             .collect();
         let access_nodes: BTreeMap<u32, u32> = self
             .state
+            .land
             .parcels
             .iter()
             .map(|parcel| (parcel.id, parcel.access_node))
             .collect();
         self.state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)

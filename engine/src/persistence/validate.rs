@@ -7,46 +7,53 @@ impl Engine {
         self.validate_expressway_traffic()?;
         self.validate_neighborhood_errands()?;
         self.validate_masterplan_progress()?;
-        legacy::access_live_engine::validate_face_history(&self.state.exhausted_access_faces)?;
-        if self.state.access_geometry_revision_exhausted
-            && self.state.access_geometry_revision != u64::MAX
+        legacy::access_live_engine::validate_face_history(
+            &self.state.legacy.exhausted_access_faces,
+        )?;
+        if self.state.network.access_geometry_revision_exhausted
+            && self.state.network.access_geometry_revision != u64::MAX
         {
             return Err("exhausted access geometry revision is not saturated".into());
         }
-        self.state.district_controller.validate(self.state.tick)?;
+        self.state
+            .people
+            .district_controller
+            .validate(self.state.tick)?;
         let building_rotations: BTreeMap<u32, f32> = self
             .state
+            .construction
             .buildings
             .iter()
             .map(|building| (building.parcel_id, building.rotation))
             .collect();
-        if self.state.road_infill_due > 9 {
+        if self.state.legacy.road_infill_due > 9 {
             return Err("road infill quota exceeded its cap".into());
         }
-        if self.state.frontage_road_cursor > self.state.roads.len()
-            || self.state.frontage_slot_cursor as usize > MAX_FRONTAGE_SITES_PER_ROAD
-            || self.state.road_origin_cursor > self.state.nodes.len()
-            || self.state.neighborhood_anchor_cursor > self.state.nodes.len()
+        if self.state.legacy.frontage_road_cursor > self.state.network.roads.len()
+            || self.state.legacy.frontage_slot_cursor as usize > MAX_FRONTAGE_SITES_PER_ROAD
+            || self.state.legacy.road_origin_cursor > self.state.network.nodes.len()
+            || self.state.legacy.neighborhood_anchor_cursor > self.state.network.nodes.len()
         {
             return Err("frontage scan cursor is outside its bounded range".into());
         }
-        if self.state.interior_access_cursor
+        if self.state.legacy.interior_access_cursor
             > self
                 .state
+                .network
                 .roads
                 .len()
                 .saturating_mul(legacy::interior_access::PROPOSALS_PER_HOST)
         {
             return Err("interior access scan cursor is outside its bounded range".into());
         }
-        if self.state.rear_extension_cursor > self.state.buildings.len() {
+        if self.state.construction.rear_extension_cursor > self.state.construction.buildings.len() {
             return Err("rear extension scan cursor is outside its bounded range".into());
         }
         self.validate_rear_extensions()?;
         self.validate_building_original_footprints()?;
         self.validate_height_redevelopment()?;
-        if let Some(plan) = &self.state.pending_interior_access {
-            if self.state.neighborhood_plan.is_some() {
+        if let Some(plan) = &self.state.legacy.pending_interior_access {
+            if self.state.legacy.neighborhood_plan.is_some() {
                 return Err("neighborhood and interior access plans cannot overlap".into());
             }
             if !plan.host_t.is_finite()
@@ -55,12 +62,14 @@ impl Engine {
                     .contains(&plan.selected_lots.len())
                 || self
                     .state
+                    .land
                     .parcels
                     .len()
                     .saturating_add(plan.selected_lots.len())
                     > MAX_PARCELS
                 || self
                     .state
+                    .land
                     .parcel_frontages
                     .len()
                     .saturating_add(plan.selected_lots.len())
@@ -72,9 +81,10 @@ impl Engine {
                     .is_none()
                 || self
                     .state
+                    .network
                     .roads
                     .len()
-                    .saturating_add(self.state.projects.len())
+                    .saturating_add(self.state.construction.projects.len())
                     > MAX_SEGMENTS
             {
                 return Err(
@@ -83,12 +93,14 @@ impl Engine {
             }
             let retained = self
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == plan.host_road_id)
                 .ok_or_else(|| "interior access plan references a missing host half".to_string())?;
             let second = self
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == plan.host_second_half_road_id)
@@ -97,6 +109,7 @@ impl Engine {
                 })?;
             let branch = self
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == plan.branch_road_id)
@@ -129,6 +142,7 @@ impl Engine {
             }
             let project = self
                 .state
+                .construction
                 .projects
                 .iter()
                 .find(|project| project.id == plan.project_id)
@@ -206,7 +220,7 @@ impl Engine {
                 let difference = (branch_heading - bearing).rem_euclid(std::f32::consts::TAU);
                 difference.min(std::f32::consts::TAU - difference) >= std::f32::consts::PI / 6.0
             };
-            for road in self.state.roads.iter().filter(|road| {
+            for road in self.state.network.roads.iter().filter(|road| {
                 road.stage == Stage::Open
                     && road.connected
                     && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -225,7 +239,7 @@ impl Engine {
                     return Err("interior access branch violates junction angle clearance".into());
                 }
             }
-            for other in self.state.projects.iter().filter(|other| {
+            for other in self.state.construction.projects.iter().filter(|other| {
                 other.id != plan.project_id
                     && other.kind == ProjectKind::Road
                     && other.progress < 1.0
@@ -245,13 +259,13 @@ impl Engine {
                     return Err("interior access branch violates junction angle clearance".into());
                 }
             }
-            if self.state.nodes.iter().any(|node| {
+            if self.state.network.nodes.iter().any(|node| {
                 node.id != plan.branch_endpoint_id
                     && (node.x - branch_b.x).hypot(node.z - branch_b.z) < 18.0
             }) {
                 return Err("interior access endpoint violates junction spacing".into());
             }
-            for road in self.state.roads.iter().filter(|road| {
+            for road in self.state.network.roads.iter().filter(|road| {
                 road.stage == Stage::Open
                     && road.id != retained.id
                     && road.id != second.id
@@ -278,6 +292,7 @@ impl Engine {
                 branch_b.z,
             ) || self
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|other| {
@@ -343,7 +358,7 @@ impl Engine {
                 reserved_rects.push(rect);
             }
         }
-        if let Some(plan) = &self.state.neighborhood_plan {
+        if let Some(plan) = &self.state.legacy.neighborhood_plan {
             if plan.segments.len() != 4 || plan.next_segment > plan.segments.len() {
                 return Err("neighborhood plan is outside its bounded shape".into());
             }
@@ -383,7 +398,7 @@ impl Engine {
                 if lot_count < 4 {
                     return Err("coordinated block has invalid geometry".into());
                 }
-                if self.state.parcels.len().saturating_add(lot_count) > MAX_PARCELS {
+                if self.state.land.parcels.len().saturating_add(lot_count) > MAX_PARCELS {
                     return Err("coordinated block parcel reservation exceeds capacity".into());
                 }
             } else if plan.selected_lots.is_some() {
@@ -401,41 +416,44 @@ impl Engine {
                 return Err("neighborhood plan references a missing junction".into());
             }
         }
-        if self.state.neighborhood_road_ids.len() > MAX_SEGMENTS
+        if self.state.legacy.neighborhood_road_ids.len() > MAX_SEGMENTS
             || self
                 .state
+                .legacy
                 .neighborhood_road_ids
                 .iter()
-                .any(|id| !self.state.roads.iter().any(|road| road.id == *id))
+                .any(|id| !self.state.network.roads.iter().any(|road| road.id == *id))
         {
             return Err("historic neighborhood road index is invalid or over capacity".into());
         }
-        if self.state.buildings.len() > MAX_BUILDINGS {
+        if self.state.construction.buildings.len() > MAX_BUILDINGS {
             return Err("building cap exceeded".into());
         }
-        if self.state.roads.len() > MAX_SEGMENTS {
+        if self.state.network.roads.len() > MAX_SEGMENTS {
             return Err("network segment cap exceeded".into());
         }
-        if self.state.travelers.len() > MAX_TRAVELERS {
+        if self.state.people.travelers.len() > MAX_TRAVELERS {
             return Err("traveler cap exceeded".into());
         }
-        if self.state.residents.len() > MAX_RESIDENTS {
+        if self.state.people.residents.len() > MAX_RESIDENTS {
             return Err("resident cast cap exceeded".into());
         }
-        if self.state.parcels.len() > MAX_PARCELS {
+        if self.state.land.parcels.len() > MAX_PARCELS {
             return Err("parcel cap exceeded".into());
         }
-        if self.state.parcel_frontages.len() > MAX_PARCELS {
+        if self.state.land.parcel_frontages.len() > MAX_PARCELS {
             return Err("parcel frontage cap exceeded".into());
         }
-        for frontage in &self.state.parcel_frontages {
+        for frontage in &self.state.land.parcel_frontages {
             if !self
                 .state
+                .land
                 .parcels
                 .iter()
                 .any(|parcel| parcel.id == frontage.parcel_id)
                 || !self
                     .state
+                    .network
                     .roads
                     .iter()
                     .any(|road| road.id == frontage.road_id)
@@ -449,29 +467,31 @@ impl Engine {
                 ));
             }
         }
-        if self.state.projects.len() > MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
+        if self.state.construction.projects.len() > MAX_PROJECTS + COMPLETED_PROJECT_HISTORY {
             return Err("project history cap exceeded".into());
         }
-        if self.state.population > MAX_POPULATION {
+        if self.state.people.population > MAX_POPULATION {
             return Err("represented population cap exceeded".into());
         }
-        if self.state.pending_alight_ids.len()
+        if self.state.transit.pending_alight_ids.len()
             > transit::transit_recovery::MAX_PENDING_ALIGHT_WAITERS
         {
             return Err("pending transit alighting queue exceeded its cap".into());
         }
-        if (self.state.pending_alight_ids.is_empty() && self.state.pending_alight_cursor != 0)
-            || (!self.state.pending_alight_ids.is_empty()
-                && self.state.pending_alight_cursor >= self.state.pending_alight_ids.len())
+        if (self.state.transit.pending_alight_ids.is_empty()
+            && self.state.transit.pending_alight_cursor != 0)
+            || (!self.state.transit.pending_alight_ids.is_empty()
+                && self.state.transit.pending_alight_cursor
+                    >= self.state.transit.pending_alight_ids.len())
         {
             return Err("pending transit alighting cursor is invalid".into());
         }
         let mut pending_alight_ids = BTreeSet::new();
-        for resident_id in &self.state.pending_alight_ids {
+        for resident_id in &self.state.transit.pending_alight_ids {
             if !pending_alight_ids.insert(*resident_id) {
                 return Err(format!("resident {resident_id} is queued to alight twice"));
             }
-            if !self.state.residents.iter().any(|resident| {
+            if !self.state.people.residents.iter().any(|resident| {
                 resident.id == *resident_id
                     && resident.transfer == Transfer::WaitingAlight
                     && resident.pending_alight.is_some()
@@ -484,12 +504,13 @@ impl Engine {
             }
         }
         let mut resident_ids = BTreeSet::new();
-        for resident in &self.state.residents {
+        for resident in &self.state.people.residents {
             if !resident_ids.insert(resident.id) {
                 return Err(format!("duplicate resident id {}", resident.id));
             }
             let home = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|b| b.id == resident.home_building)
@@ -500,7 +521,13 @@ impl Engine {
                     resident.id
                 ));
             }
-            if !self.state.nodes.iter().any(|n| n.id == resident.home_node) {
+            if !self
+                .state
+                .network
+                .nodes
+                .iter()
+                .any(|n| n.id == resident.home_node)
+            {
                 return Err(format!(
                     "resident {} references a missing home access node",
                     resident.id
@@ -508,7 +535,7 @@ impl Engine {
             }
             if resident
                 .work_node
-                .is_some_and(|node| !self.state.nodes.iter().any(|n| n.id == node))
+                .is_some_and(|node| !self.state.network.nodes.iter().any(|n| n.id == node))
             {
                 return Err(format!(
                     "resident {} references a missing work access node",
@@ -527,16 +554,19 @@ impl Engine {
                     || !pending.wait_position.z.is_finite()
                     || !self
                         .state
+                        .network
                         .nodes
                         .iter()
                         .any(|node| node.id == pending.stop_node)
                     || !self
                         .state
+                        .network
                         .nodes
                         .iter()
                         .any(|node| node.id == pending.destination_node)
                     || !self
                         .state
+                        .construction
                         .buildings
                         .iter()
                         .any(|building| building.id == pending.destination_building)
@@ -616,13 +646,13 @@ impl Engine {
         {
             return Err("rail terminal queue exceeded its capacity".into());
         }
-        if self.state.buses.len() > MAX_BUSES {
+        if self.state.transit.buses.len() > MAX_BUSES {
             return Err("bus fleet exceeded its cap".into());
         }
         if self.bus_waiting_count() > BUS_QUEUE_CAPACITY {
             return Err("bus stop queues exceeded their shared capacity".into());
         }
-        if let Some(line) = &self.state.bus_line {
+        if let Some(line) = &self.state.transit.bus_line {
             if line.stops.len() > MAX_BUS_STOPS || line.route.len() > MAX_BUS_ROUTE_NODES {
                 return Err("bus line exceeded its route or stop cap".into());
             }
@@ -633,7 +663,7 @@ impl Engine {
                 return Err("bus line contains a stop outside its route".into());
             }
             for edge in line.route.windows(2) {
-                if !self.state.roads.iter().any(|road| {
+                if !self.state.network.roads.iter().any(|road| {
                     road.stage == Stage::Open
                         && road.connected
                         && road.kind != RoadKind::Rail
@@ -645,12 +675,13 @@ impl Engine {
             }
         }
         let mut bus_passengers = BTreeSet::new();
-        for bus in &self.state.buses {
+        for bus in &self.state.transit.buses {
             if bus.passengers.len() > BUS_CAPACITY {
                 return Err(format!("bus {} exceeded passenger capacity", bus.id));
             }
             let line = self
                 .state
+                .transit
                 .bus_line
                 .as_ref()
                 .filter(|line| line.id == bus.line_id)
@@ -667,7 +698,7 @@ impl Engine {
                 if !bus_passengers.insert(*resident_id) {
                     return Err(format!("resident {resident_id} boarded more than one bus"));
                 }
-                if !self.state.residents.iter().any(|resident| {
+                if !self.state.people.residents.iter().any(|resident| {
                     resident.id == *resident_id
                         && resident.bus_id == Some(bus.id)
                         && resident.transfer == Transfer::RidingBus
@@ -676,7 +707,7 @@ impl Engine {
                 }
             }
         }
-        for resident in &self.state.residents {
+        for resident in &self.state.people.residents {
             if (resident.transfer == Transfer::RidingBus) != bus_passengers.contains(&resident.id) {
                 return Err(format!(
                     "resident {} has inconsistent bus occupancy",
@@ -691,6 +722,7 @@ impl Engine {
             let mut slots = BTreeSet::new();
             for resident in self
                 .state
+                .people
                 .residents
                 .iter()
                 .filter(|resident| states.contains(&resident.transfer))
@@ -707,7 +739,7 @@ impl Engine {
             }
         }
         let mut passenger_ids = BTreeSet::new();
-        for train in &self.state.trains {
+        for train in &self.state.transit.trains {
             if train.passengers.len() > RAIL_TRAIN_CAPACITY {
                 return Err(format!("train {} exceeded passenger capacity", train.id));
             }
@@ -717,17 +749,22 @@ impl Engine {
                         "resident {resident_id} boarded more than one train"
                     ));
                 }
-                if !self.state.residents.iter().any(|resident| {
+                if !self.state.people.residents.iter().any(|resident| {
                     resident.id == *resident_id && resident.train_id == Some(train.id)
                 }) {
                     return Err(format!("train {} has an unlinked passenger", train.id));
                 }
             }
         }
-        for resident in &self.state.residents {
+        for resident in &self.state.people.residents {
             if let Some(train_id) = resident.train_id {
                 if !passenger_ids.contains(&resident.id)
-                    || !self.state.trains.iter().any(|train| train.id == train_id)
+                    || !self
+                        .state
+                        .transit
+                        .trains
+                        .iter()
+                        .any(|train| train.id == train_id)
                 {
                     return Err(format!(
                         "resident {} references a missing passenger seat",
@@ -737,7 +774,7 @@ impl Engine {
             }
         }
         let mut active_actor_ids = BTreeSet::new();
-        for traveler in &self.state.travelers {
+        for traveler in &self.state.people.travelers {
             if !active_actor_ids.insert(traveler.id) {
                 return Err(format!("duplicate active traveler id {}", traveler.id));
             }
@@ -799,13 +836,13 @@ impl Engine {
                             .origin_access
                             .as_ref()
                             .is_some_and(|rail| std::ptr::eq(rail, path))
-                        && self.state.residents.iter().any(|resident| {
+                        && self.state.people.residents.iter().any(|resident| {
                             resident.id == traveler.resident && resident.rail_commuter
                         }));
                 // Historical legacy-planner fixtures predate explicit rail surfaces.
                 // Current master-plan worlds must always carry them; obsolete master plans
                 // are rejected by the layout-version digest before this validation.
-                if self.state.masterplan.is_some()
+                if self.state.network.masterplan.is_some()
                     && path_requires_rail_surface
                     && path.surface_y.len() != path.points.len()
                 {
@@ -901,11 +938,12 @@ impl Engine {
                 ));
             }
         }
-        if !self.state.station_online && !self.state.trains.is_empty() {
+        if !self.state.transit.station_online && !self.state.transit.trains.is_empty() {
             return Err("train service exists before station and rail are usable".into());
         }
         if self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.progress < 1.0)
@@ -914,21 +952,23 @@ impl Engine {
         {
             return Err("project cap exceeded".into());
         }
-        let ids: BTreeSet<u32> = self.state.nodes.iter().map(|n| n.id).collect();
+        let ids: BTreeSet<u32> = self.state.network.nodes.iter().map(|n| n.id).collect();
         if self
             .state
+            .network
             .roads
             .iter()
             .any(|r| !ids.contains(&r.from) || !ids.contains(&r.to))
         {
             return Err("road references missing node".into());
         }
-        for b in &self.state.buildings {
+        for b in &self.state.construction.buildings {
             if b.occupancy > b.capacity {
                 return Err(format!("building {} occupancy exceeds capacity", b.id));
             }
             let p = self
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|p| p.id == b.parcel_id)
@@ -947,6 +987,7 @@ impl Engine {
             }
             if self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .any(|other| other.id != b.id && other.parcel_id == b.parcel_id)
@@ -957,7 +998,7 @@ impl Engine {
                 ));
             }
         }
-        for (i, p) in self.state.parcels.iter().enumerate() {
+        for (i, p) in self.state.land.parcels.iter().enumerate() {
             let footprint = parcel_envelope(p);
             if !footprint.finite_positive() {
                 return Err(format!("parcel {} has invalid geometry", p.id));
@@ -966,6 +1007,7 @@ impl Engine {
                 let facing = self.frontage_rotation(p.id);
                 if !self
                     .state
+                    .land
                     .parcel_frontages
                     .iter()
                     .any(|frontage| frontage.parcel_id == p.id)
@@ -996,7 +1038,7 @@ impl Engine {
                     rect
                 }
             };
-            for other in self.state.parcels.iter().skip(i + 1) {
+            for other in self.state.land.parcels.iter().skip(i + 1) {
                 if party_wall && ((other.x - p.x).abs() > 60.0 || (other.z - p.z).abs() > 60.0) {
                     continue;
                 }
@@ -1022,6 +1064,7 @@ impl Engine {
             }
             for road in self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|r| r.stage == Stage::Open && r.kind != RoadKind::Expressway)
@@ -1065,43 +1108,52 @@ impl Engine {
             if let Some(building_id) = p.reservation {
                 let building = self
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|b| b.id == building_id && b.parcel_id == p.id)
                     .ok_or_else(|| format!("parcel {} reserves a missing building", p.id))?;
                 let rear_extension_reserved = self
                     .state
+                    .construction
                     .pending_rear_extensions
                     .iter()
                     .any(|plan| plan.building_id == building_id && plan.parcel_id == p.id);
                 if building.stage == Stage::Open && !rear_extension_reserved {
                     return Err(format!("parcel {} reserves an open building", p.id));
                 }
-                if !self.state.projects.iter().any(|project| {
+                if !self.state.construction.projects.iter().any(|project| {
                     project.kind == ProjectKind::Building
                         && project.parcel_id == Some(p.id)
                         && project.progress < 1.0
-                }) && !self.state.pending_rear_extensions.iter().any(|plan| {
-                    plan.building_id == building_id
-                        && plan.parcel_id == p.id
-                        && self.state.projects.iter().any(|project| {
-                            project.kind == ProjectKind::Extension
-                                && project.id == plan.project_id
-                                && project.progress < 1.0
-                        })
                 }) && !self
                     .state
-                    .height_redevelopment
-                    .as_ref()
-                    .is_some_and(|plan| {
+                    .construction
+                    .pending_rear_extensions
+                    .iter()
+                    .any(|plan| {
                         plan.building_id == building_id
                             && plan.parcel_id == p.id
-                            && self.state.projects.iter().any(|project| {
-                                project.id == plan.project_id
-                                    && project.kind == ProjectKind::Redevelopment
+                            && self.state.construction.projects.iter().any(|project| {
+                                project.kind == ProjectKind::Extension
+                                    && project.id == plan.project_id
                                     && project.progress < 1.0
                             })
                     })
+                    && !self
+                        .state
+                        .construction
+                        .height_redevelopment
+                        .as_ref()
+                        .is_some_and(|plan| {
+                            plan.building_id == building_id
+                                && plan.parcel_id == p.id
+                                && self.state.construction.projects.iter().any(|project| {
+                                    project.id == plan.project_id
+                                        && project.kind == ProjectKind::Redevelopment
+                                        && project.progress < 1.0
+                                })
+                        })
                 {
                     return Err(format!(
                         "parcel {} has no active construction project",

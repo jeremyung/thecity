@@ -47,16 +47,24 @@ pub(crate) struct Bus {
 
 impl Engine {
     pub(crate) fn ensure_bus_service(&mut self) {
-        if self.state.tick < self.state.next_bus_evaluation_tick {
+        if self.state.tick < self.state.transit.next_bus_evaluation_tick {
             return;
         }
-        self.state.next_bus_evaluation_tick = self.state.tick.saturating_add(BUS_RETRY_TICKS);
-        if self.state.bus_line.as_ref().is_some_and(|line| line.active) {
-            if self.state.buses.len() < MAX_BUSES {
+        self.state.transit.next_bus_evaluation_tick =
+            self.state.tick.saturating_add(BUS_RETRY_TICKS);
+        if self
+            .state
+            .transit
+            .bus_line
+            .as_ref()
+            .is_some_and(|line| line.active)
+        {
+            if self.state.transit.buses.len() < MAX_BUSES {
                 let waiting = self.bus_waiting_count();
                 if waiting >= 12 {
                     if let Some((line_id, terminal)) = self
                         .state
+                        .transit
                         .bus_line
                         .as_ref()
                         .map(|line| (line.id, line.stops.last().copied()))
@@ -66,7 +74,7 @@ impl Engine {
                     {
                         if let Some(progress) = self.bus_stop_distance(terminal) {
                             let bus_id = self.id();
-                            self.state.buses.push(Bus {
+                            self.state.transit.buses.push(Bus {
                                 id: bus_id,
                                 line_id,
                                 progress,
@@ -93,6 +101,7 @@ impl Engine {
         }
         let open_roads = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -101,11 +110,13 @@ impl Engine {
             .count();
         let developed: Vec<u32> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| site_active(building))
             .filter_map(|building| {
                 self.state
+                    .land
                     .parcels
                     .iter()
                     .find(|parcel| parcel.id == building.parcel_id)
@@ -113,7 +124,7 @@ impl Engine {
             })
             .filter(|node| self.node_has_open_road(*node))
             .collect();
-        if !self.state.station_online || open_roads < 6 || developed.len() < 3 {
+        if !self.state.transit.station_online || open_roads < 6 || developed.len() < 3 {
             return;
         }
         let mut candidates: Vec<u32> = developed;
@@ -128,6 +139,7 @@ impl Engine {
         }
         let Some(station) = self
             .state
+            .network
             .nodes
             .iter()
             .find(|node| node.kind == NodeKind::Station && self.node_has_open_road(node.id))
@@ -144,6 +156,7 @@ impl Engine {
         stop_candidates.dedup();
         let demand: Vec<(u32, u32)> = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| !resident.rail_commuter)
@@ -286,7 +299,7 @@ impl Engine {
             return;
         }
         let line_id = self.id();
-        self.state.bus_line = Some(BusLine {
+        self.state.transit.bus_line = Some(BusLine {
             id: line_id,
             stops: stops.clone(),
             route,
@@ -294,7 +307,7 @@ impl Engine {
             graph_revision: open_roads as u64,
         });
         let bus_id = self.id();
-        self.state.buses.push(Bus {
+        self.state.transit.buses.push(Bus {
             id: bus_id,
             line_id,
             progress: 0.0,
@@ -315,13 +328,14 @@ impl Engine {
     }
 
     pub(crate) fn bus_stop_distance(&self, stop: u32) -> Option<f32> {
-        let line = self.state.bus_line.as_ref()?;
+        let line = self.state.transit.bus_line.as_ref()?;
         let index = line.route.iter().position(|node| *node == stop)?;
         Some(self.route_lengths(&line.route[..=index]).iter().sum())
     }
 
     pub(crate) fn bus_waiting_count(&self) -> usize {
         self.state
+            .people
             .residents
             .iter()
             .filter(|resident| {
@@ -335,6 +349,7 @@ impl Engine {
 
     pub(crate) fn bus_platform_waiting_count(&self) -> usize {
         self.state
+            .people
             .residents
             .iter()
             .filter(|resident| resident.transfer == Transfer::WaitingBus)
@@ -358,7 +373,7 @@ impl Engine {
         slot: u16,
     ) -> Option<(WorldPoint, [u32; 2])> {
         let node = self.node(node_id)?;
-        let line = self.state.bus_line.as_ref()?;
+        let line = self.state.transit.bus_line.as_ref()?;
         let route_index = line
             .route
             .iter()
@@ -436,6 +451,7 @@ impl Engine {
     pub(crate) fn allocate_bus_queue_slot(&self) -> Option<u16> {
         let used: BTreeSet<u16> = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| {
@@ -458,7 +474,13 @@ impl Engine {
         origin_building: u32,
         destination_building: Option<u32>,
     ) -> bool {
-        let Some(line) = self.state.bus_line.clone().filter(|line| line.active) else {
+        let Some(line) = self
+            .state
+            .transit
+            .bus_line
+            .clone()
+            .filter(|line| line.active)
+        else {
             return false;
         };
         if self.rail_service_quiet()
@@ -502,7 +524,7 @@ impl Engine {
         if route.is_empty() || route.len() > MAX_ROUTE_NODES {
             return false;
         }
-        let id = self.state.residents[index].id;
+        let id = self.state.people.residents[index].id;
         let origin_queue = self.bus_queue_position(origin_stop, direction, queue_slot);
         let route_lengths = self.route_lengths(&route);
         let mut traveler = Traveler {
@@ -516,7 +538,7 @@ impl Engine {
             destination: origin_stop,
             activity: TravelerActivity::WalkingToBus,
             resident: id,
-            name: self.state.residents[index].name.clone(),
+            name: self.state.people.residents[index].name.clone(),
             origin_building: Some(origin_building),
             destination_building: None,
             wait_ticks: 0,
@@ -539,8 +561,8 @@ impl Engine {
         if traveler.origin_access.is_some() {
             traveler.access_phase = 0;
         }
-        self.state.travelers.push(traveler);
-        if let Some(resident) = self.state.residents.get_mut(index) {
+        self.state.people.travelers.push(traveler);
+        if let Some(resident) = self.state.people.residents.get_mut(index) {
             resident.transfer = Transfer::WalkingToBus;
             resident.activity = ResidentActivity::WalkingToBus;
             resident.bus_id = None;
@@ -593,7 +615,13 @@ impl Engine {
     }
 
     pub(crate) fn advance_buses(&mut self) {
-        let Some(line) = self.state.bus_line.clone().filter(|line| line.active) else {
+        let Some(line) = self
+            .state
+            .transit
+            .bus_line
+            .clone()
+            .filter(|line| line.active)
+        else {
             return;
         };
         if line.route.len() < 2 || line.route.len() > MAX_BUS_ROUTE_NODES {
@@ -613,32 +641,38 @@ impl Engine {
             })
             .collect();
         let quiet = self.rail_service_quiet();
-        for bus_index in 0..self.state.buses.len() {
-            if self.state.buses[bus_index].dwell_ticks > 0 {
-                let at_terminal = self.state.buses[bus_index].progress <= 0.01
-                    || self.state.buses[bus_index].progress >= route_length - 0.01;
-                let stop = self.state.buses[bus_index].last_stop.or_else(|| {
-                    self.stop_at_progress(&stop_distances, self.state.buses[bus_index].progress)
+        for bus_index in 0..self.state.transit.buses.len() {
+            if self.state.transit.buses[bus_index].dwell_ticks > 0 {
+                let at_terminal = self.state.transit.buses[bus_index].progress <= 0.01
+                    || self.state.transit.buses[bus_index].progress >= route_length - 0.01;
+                let stop = self.state.transit.buses[bus_index].last_stop.or_else(|| {
+                    self.stop_at_progress(
+                        &stop_distances,
+                        self.state.transit.buses[bus_index].progress,
+                    )
                 });
                 if let Some(stop) = stop {
                     self.handle_bus_stop(bus_index, stop, &line, quiet);
                 }
-                if (quiet && self.state.buses[bus_index].passengers.is_empty())
+                if (quiet && self.state.transit.buses[bus_index].passengers.is_empty())
                     || (at_terminal
-                        && self.state.tick < self.state.buses[bus_index].next_departure_tick)
+                        && self.state.tick
+                            < self.state.transit.buses[bus_index].next_departure_tick)
                 {
-                    self.state.buses[bus_index].dwell_ticks = 1;
+                    self.state.transit.buses[bus_index].dwell_ticks = 1;
                 } else {
-                    self.state.buses[bus_index].dwell_ticks =
-                        self.state.buses[bus_index].dwell_ticks.saturating_sub(1);
+                    self.state.transit.buses[bus_index].dwell_ticks = self.state.transit.buses
+                        [bus_index]
+                        .dwell_ticks
+                        .saturating_sub(1);
                 }
                 continue;
             }
-            if quiet && self.state.buses[bus_index].passengers.is_empty() {
+            if quiet && self.state.transit.buses[bus_index].passengers.is_empty() {
                 // Empty buses wait at the next stop during the quiet service window.
             }
-            let direction = self.state.buses[bus_index].direction;
-            let progress = self.state.buses[bus_index].progress;
+            let direction = self.state.transit.buses[bus_index].direction;
+            let progress = self.state.transit.buses[bus_index].progress;
             let next_stop = Self::next_bus_stop(
                 &stop_distances,
                 direction,
@@ -697,7 +731,7 @@ impl Engine {
                         }
                     }
                 }
-                for car in self.state.travelers.iter().filter(|traveler| {
+                for car in self.state.people.travelers.iter().filter(|traveler| {
                     traveler.kind == 1
                         && traveler.access_phase == 1
                         && traveler.edge_index < traveler.route_lengths.len()
@@ -716,14 +750,14 @@ impl Engine {
                 }
             }
             // Maintain a deterministic gap when buses travel in the same direction.
-            for other_index in 0..self.state.buses.len() {
+            for other_index in 0..self.state.transit.buses.len() {
                 if other_index == bus_index
-                    || self.state.buses[other_index].direction != direction
-                    || self.state.buses[other_index].dwell_ticks > 0
+                    || self.state.transit.buses[other_index].direction != direction
+                    || self.state.transit.buses[other_index].dwell_ticks > 0
                 {
                     continue;
                 }
-                let other = self.state.buses[other_index].progress;
+                let other = self.state.transit.buses[other_index].progress;
                 let gap = if direction > 0 {
                     other - progress
                 } else {
@@ -744,7 +778,7 @@ impl Engine {
             };
             if stop_crossed {
                 target = next_stop.1;
-                let bus = &mut self.state.buses[bus_index];
+                let bus = &mut self.state.transit.buses[bus_index];
                 bus.progress = target;
                 bus.last_stop = Some(next_stop.0);
                 bus.dwell_ticks = BUS_DWELL_TICKS;
@@ -754,15 +788,15 @@ impl Engine {
                 }
                 self.record(
                     EventKind::BusStop,
-                    self.state.buses[bus_index].id,
+                    self.state.transit.buses[bus_index].id,
                     format!(
                         "Bus {} arrives at stop {}",
-                        self.state.buses[bus_index].id, next_stop.0
+                        self.state.transit.buses[bus_index].id, next_stop.0
                     ),
                 );
                 self.handle_bus_stop(bus_index, next_stop.0, &line, quiet);
             } else {
-                self.state.buses[bus_index].progress = target;
+                self.state.transit.buses[bus_index].progress = target;
             }
         }
     }
@@ -846,13 +880,14 @@ impl Engine {
         line: &BusLine,
         quiet: bool,
     ) {
-        let bus_id = self.state.buses[bus_index].id;
-        let mut alight: Vec<u32> = self.state.buses[bus_index]
+        let bus_id = self.state.transit.buses[bus_index].id;
+        let mut alight: Vec<u32> = self.state.transit.buses[bus_index]
             .passengers
             .iter()
             .copied()
             .filter(|resident_id| {
                 self.state
+                    .people
                     .residents
                     .iter()
                     .find(|resident| resident.id == *resident_id)
@@ -863,13 +898,14 @@ impl Engine {
         for resident_id in alight {
             self.alight_bus_passenger(bus_index, resident_id, stop);
         }
-        if quiet || self.state.buses[bus_index].passengers.len() >= BUS_CAPACITY {
+        if quiet || self.state.transit.buses[bus_index].passengers.len() >= BUS_CAPACITY {
             return;
         }
-        let direction = self.state.buses[bus_index].direction;
+        let direction = self.state.transit.buses[bus_index].direction;
         let stop_index = line.stops.iter().position(|candidate| *candidate == stop);
         let mut waiting: Vec<u32> = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| {
@@ -895,12 +931,15 @@ impl Engine {
             .collect();
         waiting.sort_unstable();
         for resident_id in waiting {
-            if self.state.buses[bus_index].passengers.len() >= BUS_CAPACITY {
+            if self.state.transit.buses[bus_index].passengers.len() >= BUS_CAPACITY {
                 break;
             }
-            self.state.buses[bus_index].passengers.push(resident_id);
+            self.state.transit.buses[bus_index]
+                .passengers
+                .push(resident_id);
             if let Some(resident) = self
                 .state
+                .people
                 .residents
                 .iter_mut()
                 .find(|resident| resident.id == resident_id)
@@ -929,13 +968,14 @@ impl Engine {
     pub(crate) fn alight_bus_passenger(&mut self, bus_index: usize, resident_id: u32, stop: u32) {
         let Some(resident_index) = self
             .state
+            .people
             .residents
             .iter()
             .position(|resident| resident.id == resident_id)
         else {
             return;
         };
-        let resident = self.state.residents[resident_index].clone();
+        let resident = self.state.people.residents[resident_index].clone();
         let target_node = if resident.at_work {
             resident.home_node
         } else {
@@ -948,6 +988,7 @@ impl Engine {
         };
         let wait_position = self
             .state
+            .transit
             .buses
             .get(bus_index)
             .and_then(|bus| {
@@ -967,7 +1008,7 @@ impl Engine {
         } else {
             TravelerActivity::Commute
         };
-        let route_attempted = self.state.travelers.len() < MAX_TRAVELERS;
+        let route_attempted = self.state.people.travelers.len() < MAX_TRAVELERS;
         let route = if route_attempted {
             self.route(stop, target_node, false)
         } else {
@@ -986,18 +1027,18 @@ impl Engine {
             );
             if !queued {
                 let reason = format!("Still aboard at stop {stop}: pedestrian route queue is full");
-                let current = &mut self.state.residents[resident_index];
+                let current = &mut self.state.people.residents[resident_index];
                 if current.history.last() != Some(&reason) {
                     push_history(&mut current.history, reason);
                 }
                 return;
             }
-            let bus_id = self.state.buses[bus_index].id;
-            self.state.buses[bus_index]
+            let bus_id = self.state.transit.buses[bus_index].id;
+            self.state.transit.buses[bus_index]
                 .passengers
                 .retain(|id| *id != resident_id);
             push_history(
-                &mut self.state.residents[resident_index].history,
+                &mut self.state.people.residents[resident_index].history,
                 format!(
                     "Waited at stop {stop} for a legal walking route at tick {}",
                     self.state.tick
@@ -1032,7 +1073,7 @@ impl Engine {
         };
         if let Some(slot) = resident.queue_slot.or(Some(0)) {
             if let Some(queue) =
-                self.bus_queue_position(stop, self.state.buses[bus_index].direction, slot)
+                self.bus_queue_position(stop, self.state.transit.buses[bus_index].direction, slot)
             {
                 if let Some(endpoint) =
                     self.route_endpoint_position(&traveler.route, true, resident.id, 0)
@@ -1049,11 +1090,11 @@ impl Engine {
         if traveler.origin_access.is_some() {
             traveler.access_phase = 0;
         }
-        let bus_id = self.state.buses[bus_index].id;
-        self.state.buses[bus_index]
+        let bus_id = self.state.transit.buses[bus_index].id;
+        self.state.transit.buses[bus_index]
             .passengers
             .retain(|id| *id != resident_id);
-        if let Some(resident) = self.state.residents.get_mut(resident_index) {
+        if let Some(resident) = self.state.people.residents.get_mut(resident_index) {
             resident.transfer = Transfer::WalkingFromBus;
             resident.activity = if resident.at_work {
                 ResidentActivity::WalkingHomeFromBus
@@ -1071,7 +1112,7 @@ impl Engine {
                 ),
             );
         }
-        self.state.travelers.push(traveler);
+        self.state.people.travelers.push(traveler);
         self.record(
             EventKind::BusPassengerAlighted,
             resident_id,
@@ -1080,7 +1121,7 @@ impl Engine {
     }
 
     pub(crate) fn bus_trip_direction(&self, resident: &Resident) -> Option<i8> {
-        let line = self.state.bus_line.as_ref()?;
+        let line = self.state.transit.bus_line.as_ref()?;
         let origin = line
             .stops
             .iter()
@@ -1119,6 +1160,7 @@ impl Engine {
     pub(crate) fn bus_waiting_at(&self, stop: Option<u32>) -> usize {
         let Some(stop) = stop else { return 0 };
         self.state
+            .people
             .residents
             .iter()
             .filter(|resident| {

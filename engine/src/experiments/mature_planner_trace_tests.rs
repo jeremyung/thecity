@@ -144,6 +144,7 @@ fn plan_summary(plan: Option<&NeighborhoodPlan>) -> Option<PlanSummary> {
 fn ordinary_connected_roads(engine: &Engine) -> Vec<Road> {
     engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -158,20 +159,24 @@ fn ordinary_connected_roads(engine: &Engine) -> Vec<Road> {
 fn gate_inputs(engine: &Engine) -> GateInputs {
     let active_buildings = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| site_active(building))
         .count();
-    let roads_plus_projects = engine.state.roads.len() + engine.state.projects.len() + 3;
+    let roads_plus_projects =
+        engine.state.network.roads.len() + engine.state.construction.projects.len() + 3;
     let active_projects = active_projects(engine);
     let active_road_projects = engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .count();
     let active_building_projects = engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
@@ -183,6 +188,7 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
         .collect();
     let local_qualified_anchors = engine
         .state
+        .network
         .nodes
         .iter()
         .filter(|anchor| {
@@ -190,6 +196,7 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
                 && engine.ordinary_road_degree(anchor.id) > 0
                 && engine
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .filter(|building| {
@@ -200,6 +207,7 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
                     >= 8
                 && engine
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .filter(|building| {
@@ -212,20 +220,20 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
         })
         .count();
     GateInputs {
-        plan_absent: engine.state.neighborhood_plan.is_none(),
-        pending_interior_access_absent: engine.state.pending_interior_access.is_none(),
-        demand: engine.state.demand,
-        demand_pass: engine.state.demand >= 1.1,
+        plan_absent: engine.state.legacy.neighborhood_plan.is_none(),
+        pending_interior_access_absent: engine.state.legacy.pending_interior_access.is_none(),
+        demand: engine.state.people.demand,
+        demand_pass: engine.state.people.demand >= 1.1,
         active_buildings,
         active_buildings_pass: active_buildings >= 10,
-        population: engine.state.population,
-        population_pass: engine.state.population >= 24,
+        population: engine.state.people.population,
+        population_pass: engine.state.people.population >= 24,
         roads_plus_projects,
         segment_capacity_pass: roads_plus_projects <= crate::MAX_SEGMENTS,
         active_projects,
         active_road_projects,
         active_building_projects,
-        node_count: engine.state.nodes.len(),
+        node_count: engine.state.network.nodes.len(),
         connected_ordinary_roads: ordinary_roads.len(),
         local_qualified_anchors,
     }
@@ -234,6 +242,7 @@ fn gate_inputs(engine: &Engine) -> GateInputs {
 fn active_projects(engine: &Engine) -> usize {
     engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.progress < 1.0)
@@ -241,13 +250,14 @@ fn active_projects(engine: &Engine) -> usize {
 }
 
 fn usable_infill(engine: &Engine) -> bool {
-    engine.state.parcels.iter().any(|parcel| {
+    engine.state.land.parcels.iter().any(|parcel| {
         !parcel.protected
             && parcel.reservation.is_none()
-            && (engine.state.station_online || !engine.is_station_tower_lot(parcel))
+            && (engine.state.transit.station_online || !engine.is_station_tower_lot(parcel))
             && engine.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
             && !engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .any(|building| building.parcel_id == parcel.id)
@@ -257,17 +267,18 @@ fn usable_infill(engine: &Engine) -> bool {
 
 fn planner_frontdoor_blockers(engine: &Engine) -> Vec<&'static str> {
     let mut blockers = Vec::new();
-    if engine.state.neighborhood_plan.is_some() {
+    if engine.state.legacy.neighborhood_plan.is_some() {
         blockers.push("neighborhood_plan_already_active");
     }
-    if engine.state.pending_interior_access.is_some() {
+    if engine.state.legacy.pending_interior_access.is_some() {
         blockers.push("pending_interior_access_active");
     }
-    if engine.state.demand < 1.1 {
+    if engine.state.people.demand < 1.1 {
         blockers.push("demand_below_neighborhood_threshold");
     }
     if engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| site_active(building))
@@ -276,17 +287,20 @@ fn planner_frontdoor_blockers(engine: &Engine) -> Vec<&'static str> {
     {
         blockers.push("active_buildings_below_neighborhood_threshold");
     }
-    if engine.state.population < 24 {
+    if engine.state.people.population < 24 {
         blockers.push("population_below_neighborhood_threshold");
     }
-    if engine.state.roads.len() + engine.state.projects.len() + 3 > crate::MAX_SEGMENTS {
+    if engine.state.network.roads.len() + engine.state.construction.projects.len() + 3
+        > crate::MAX_SEGMENTS
+    {
         blockers.push("road_and_project_capacity_exhausted");
     }
-    if engine.state.road_infill_due != 0 {
+    if engine.state.legacy.road_infill_due != 0 {
         blockers.push("road_infill_quota_nonzero");
     }
     if engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -295,6 +309,7 @@ fn planner_frontdoor_blockers(engine: &Engine) -> Vec<&'static str> {
     }
     if engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
@@ -317,37 +332,39 @@ fn normal_trace(source: &Engine) -> NormalTickTrace {
     let mut engine =
         Engine::restore_json(&source.save_json()).expect("normal-trace clone restores");
     let start_tick = engine.state.tick;
-    let start_buildings = engine.state.buildings.len();
-    let start_parcels = engine.state.parcels.len();
-    let start_roads = engine.state.roads.len();
-    let start_projects = engine.state.projects.len();
-    let start_anchor_cursor = engine.state.neighborhood_anchor_cursor;
+    let start_buildings = engine.state.construction.buildings.len();
+    let start_parcels = engine.state.land.parcels.len();
+    let start_roads = engine.state.network.roads.len();
+    let start_projects = engine.state.construction.projects.len();
+    let start_anchor_cursor = engine.state.legacy.neighborhood_anchor_cursor;
     let start_early_access_attempts = engine.experiments.early_access_attempts;
     let start_early_block_attempts = engine.experiments.early_block_reservation_attempts;
     let mut samples = Vec::new();
     for _ in 0..(TRACE_TICKS / 80) {
-        let cursor_before = engine.state.neighborhood_anchor_cursor;
+        let cursor_before = engine.state.legacy.neighborhood_anchor_cursor;
         engine.step(80);
         let sample_blockers = planner_frontdoor_blockers(&engine);
         samples.push(NormalTickSample {
             tick: engine.state.tick,
-            anchor_cursor: engine.state.neighborhood_anchor_cursor,
-            anchor_cursor_changed: cursor_before != engine.state.neighborhood_anchor_cursor,
+            anchor_cursor: engine.state.legacy.neighborhood_anchor_cursor,
+            anchor_cursor_changed: cursor_before != engine.state.legacy.neighborhood_anchor_cursor,
             early_access_attempts: engine.experiments.early_access_attempts,
             early_block_reservation_attempts: engine.experiments.early_block_reservation_attempts,
-            plan: plan_summary(engine.state.neighborhood_plan.as_ref()),
-            buildings: engine.state.buildings.len(),
-            parcels: engine.state.parcels.len(),
-            roads: engine.state.roads.len(),
+            plan: plan_summary(engine.state.legacy.neighborhood_plan.as_ref()),
+            buildings: engine.state.construction.buildings.len(),
+            parcels: engine.state.land.parcels.len(),
+            roads: engine.state.network.roads.len(),
             active_projects: active_projects(&engine),
             active_road_projects: engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .count(),
             active_building_projects: engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
@@ -362,21 +379,21 @@ fn normal_trace(source: &Engine) -> NormalTickTrace {
         start_tick,
         end_tick: engine.state.tick,
         start_buildings,
-        end_buildings: engine.state.buildings.len(),
+        end_buildings: engine.state.construction.buildings.len(),
         start_parcels,
-        end_parcels: engine.state.parcels.len(),
+        end_parcels: engine.state.land.parcels.len(),
         start_roads,
-        end_roads: engine.state.roads.len(),
+        end_roads: engine.state.network.roads.len(),
         start_projects,
-        end_projects: engine.state.projects.len(),
+        end_projects: engine.state.construction.projects.len(),
         start_anchor_cursor,
-        end_anchor_cursor: engine.state.neighborhood_anchor_cursor,
+        end_anchor_cursor: engine.state.legacy.neighborhood_anchor_cursor,
         start_early_access_attempts,
         end_early_access_attempts: engine.experiments.early_access_attempts,
         start_early_block_reservation_attempts: start_early_block_attempts,
         end_early_block_reservation_attempts: engine.experiments.early_block_reservation_attempts,
         samples_at_80_tick_boundaries: samples,
-        final_plan: plan_summary(engine.state.neighborhood_plan.as_ref()),
+        final_plan: plan_summary(engine.state.legacy.neighborhood_plan.as_ref()),
         planner_frontdoor_eligible_at_end: blockers.is_empty(),
         planner_frontdoor_blockers_at_end: blockers,
     }
@@ -389,9 +406,9 @@ fn build_report() -> Report {
     let source_before = source_engine.save_json();
     let mut engine = Engine::restore_json(&source_before).expect("planner clone restores");
     let source_tick = engine.state.tick;
-    let source_demand = engine.state.demand;
+    let source_demand = engine.state.people.demand;
     let gates = gate_inputs(&engine);
-    let node_count = engine.state.nodes.len();
+    let node_count = engine.state.network.nodes.len();
     // A call can stop early when a per-type candidate budget fills, so use a
     // hard node-count bound rather than assuming each call scans 24 anchors.
     let max_calls = node_count.saturating_add(1);
@@ -411,7 +428,7 @@ fn build_report() -> Report {
         && node_count > 0
     {
         for call_index in 0..max_calls {
-            let cursor_start = engine.state.neighborhood_anchor_cursor % node_count;
+            let cursor_start = engine.state.legacy.neighborhood_anchor_cursor % node_count;
             let (accepted_this_call, mut geometry_rejection_capture) =
                 crate::legacy::neighborhood_admission::capture_rejections(|| {
                     engine.try_create_neighborhood_plan()
@@ -429,7 +446,7 @@ fn build_report() -> Report {
             // Keep per-window reason counts, while storing only the first
             // eight geometric witnesses per reason for the whole trace.
             geometry_rejection_capture.witnesses.clear();
-            let cursor_end = engine.state.neighborhood_anchor_cursor % node_count;
+            let cursor_end = engine.state.legacy.neighborhood_anchor_cursor % node_count;
             let cursor_delta = (cursor_end + node_count - cursor_start) % node_count;
             let examined = if cursor_delta == 0 && !accepted_this_call {
                 node_count
@@ -439,7 +456,7 @@ fn build_report() -> Report {
             for offset in 0..examined {
                 covered.insert((cursor_start + offset) % node_count);
             }
-            let accepted_plan = plan_summary(engine.state.neighborhood_plan.as_ref());
+            let accepted_plan = plan_summary(engine.state.legacy.neighborhood_plan.as_ref());
             calls.push(PlannerCall {
                 call: call_index + 1,
                 cursor_start,
@@ -462,7 +479,7 @@ fn build_report() -> Report {
         }
     }
 
-    let source_save_unchanged = source_demand == engine.state.demand
+    let source_save_unchanged = source_demand == engine.state.people.demand
         && source_engine.save_json() == source_before
         && std::fs::read_to_string(&input_path).expect("fixture remains readable") == raw;
     assert!(
@@ -470,7 +487,7 @@ fn build_report() -> Report {
         "trace must not mutate original fixture inputs"
     );
     assert_eq!(
-        engine.state.demand, source_demand,
+        engine.state.people.demand, source_demand,
         "planner probes preserve demand"
     );
     assert!(calls.len() <= max_calls, "planner trace remains bounded");

@@ -32,7 +32,14 @@ pub(crate) const FRONTAGE_ENDPOINT_CLEARANCE: f32 = 9.0;
 
 impl Engine {
     pub(crate) fn add_frontage_parcels(&mut self, road_id: u32) {
-        let Some(road) = self.state.roads.iter().find(|r| r.id == road_id).cloned() else {
+        let Some(road) = self
+            .state
+            .network
+            .roads
+            .iter()
+            .find(|r| r.id == road_id)
+            .cloned()
+        else {
             return;
         };
         if road.kind == RoadKind::Rail || road.kind == RoadKind::Bridge {
@@ -104,7 +111,7 @@ impl Engine {
                         false,
                     );
                     if parcel_id != 0 {
-                        self.state.parcel_frontages.push(ParcelFrontage {
+                        self.state.land.parcel_frontages.push(ParcelFrontage {
                             parcel_id,
                             road_id,
                             along: tower_candidate.3,
@@ -160,7 +167,7 @@ impl Engine {
             if parcel_id == 0 {
                 break;
             }
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id,
                 along,
@@ -499,11 +506,12 @@ impl Engine {
 
     #[cfg(feature = "legacy")]
     pub(crate) fn try_progressive_frontage_infill(&mut self) -> bool {
-        if self.state.parcels.len() >= MAX_PARCELS
-            || self.state.buildings.len() >= MAX_BUILDINGS
-            || self.state.demand < 1.2
+        if self.state.land.parcels.len() >= MAX_PARCELS
+            || self.state.construction.buildings.len() >= MAX_BUILDINGS
+            || self.state.people.demand < 1.2
             || self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|b| site_active(b))
@@ -513,8 +521,12 @@ impl Engine {
             return false;
         }
 
-        let mut road_index = self.state.frontage_road_cursor.min(self.state.roads.len());
-        let mut slot_index = self.state.frontage_slot_cursor as usize;
+        let mut road_index = self
+            .state
+            .legacy
+            .frontage_road_cursor
+            .min(self.state.network.roads.len());
+        let mut slot_index = self.state.legacy.frontage_slot_cursor as usize;
         let mut roads_visited = 0;
         let mut sites_visited = 0;
         let mut wrapped = false;
@@ -526,17 +538,17 @@ impl Engine {
         while roads_visited < MAX_FRONTAGE_ROADS_PER_EVALUATION
             && sites_visited < MAX_FRONTAGE_SITES_PER_EVALUATION
         {
-            if road_index >= self.state.roads.len() {
+            if road_index >= self.state.network.roads.len() {
                 if wrapped {
-                    self.state.frontage_road_cursor = 0;
-                    self.state.frontage_slot_cursor = 0;
+                    self.state.legacy.frontage_road_cursor = 0;
+                    self.state.legacy.frontage_slot_cursor = 0;
                     return false;
                 }
                 road_index = 0;
                 slot_index = 0;
                 wrapped = true;
             }
-            let road = &self.state.roads[road_index];
+            let road = &self.state.network.roads[road_index];
             let road_id = road.id;
             if matches!(road.kind, RoadKind::Rail | RoadKind::Bridge) {
                 road_index += 1;
@@ -596,13 +608,13 @@ impl Engine {
             let tower_site = slot_index == 0 && *has_tower_candidate;
             slot_index += 1;
             sites_visited += 1;
-            self.state.frontage_road_cursor = road_index;
-            self.state.frontage_slot_cursor = slot_index.min(u16::MAX as usize) as u16;
+            self.state.legacy.frontage_road_cursor = road_index;
+            self.state.legacy.frontage_slot_cursor = slot_index.min(u16::MAX as usize) as u16;
 
             // Keep one compact station-frontage opportunity clear until rail
             // service is real. The deterministic cursor will revisit it after
             // the line opens; ordinary sites continue to infill meanwhile.
-            if tower_site && !self.state.station_online {
+            if tower_site && !self.state.transit.station_online {
                 continue;
             }
             if !tower_site
@@ -660,7 +672,7 @@ impl Engine {
             if !geometry_clear {
                 continue;
             }
-            let nearby = self.state.buildings.iter().filter(|building| {
+            let nearby = self.state.construction.buildings.iter().filter(|building| {
                 building.stage == Stage::Open
                     && (building.x - parcel_x).hypot(building.z - parcel_z) <= 78.0
             });
@@ -685,7 +697,7 @@ impl Engine {
             if parcel_id == 0 {
                 return false;
             }
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id,
                 along,
@@ -693,32 +705,41 @@ impl Engine {
             });
             self.mark_access_geometry_changed();
             if let Some(rotation) = parcel_rotation {
-                if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+                if let Some(parcel) = self
+                    .state
+                    .land
+                    .parcels
+                    .iter_mut()
+                    .find(|p| p.id == parcel_id)
+                {
                     parcel.rotation = Some(rotation);
                 }
             }
-            self.state.road_infill_due = self.state.road_infill_due.saturating_add(1).min(9);
+            self.state.legacy.road_infill_due =
+                self.state.legacy.road_infill_due.saturating_add(1).min(9);
             self.state.revision = self.state.revision.saturating_add(1);
             return true;
         }
-        self.state.frontage_road_cursor = road_index.min(self.state.roads.len());
-        self.state.frontage_slot_cursor = slot_index.min(u16::MAX as usize) as u16;
+        self.state.legacy.frontage_road_cursor = road_index.min(self.state.network.roads.len());
+        self.state.legacy.frontage_slot_cursor = slot_index.min(u16::MAX as usize) as u16;
         false
     }
 
     #[cfg(feature = "legacy")]
     pub(crate) fn create_frontier_parcels(&mut self) {
-        if self.state.parcels.len() >= MAX_PARCELS {
+        if self.state.land.parcels.len() >= MAX_PARCELS {
             return;
         }
         let mut candidates: Vec<(Node, f32)> = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| self.node_connected(node.id))
             .filter_map(|node| {
                 let distance = self
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .filter(|building| site_active(building))
@@ -731,7 +752,7 @@ impl Engine {
             return;
         }
         candidates.sort_by(|(a, da), (b, db)| da.total_cmp(db).then_with(|| a.id.cmp(&b.id)));
-        let first = self.state.growth_cursor % candidates.len();
+        let first = self.state.construction.growth_cursor % candidates.len();
         for attempt in 0..candidates.len() {
             let (node, _) = &candidates[(first + attempt) % candidates.len()];
             let offsets = if attempt % 2 == 0 {
@@ -749,7 +770,8 @@ impl Engine {
                 let suitability = 0.55 + random_unit(&mut self.state.rng_growth) * 0.4;
                 let parcel_id = self.add_parcel(x, z, 14.0, 12.0, node.id, suitability, false);
                 self.remember_nearest_frontage(parcel_id, node.id);
-                self.state.growth_cursor = self.state.growth_cursor.saturating_add(1);
+                self.state.construction.growth_cursor =
+                    self.state.construction.growth_cursor.saturating_add(1);
                 return;
             }
         }

@@ -5,6 +5,7 @@ fn cars_sharing_a_driveway_queue_instead_of_overlapping() {
     let mut engine = Engine::new_legacy(81);
     let road = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
@@ -20,7 +21,7 @@ fn cars_sharing_a_driveway_queue_instead_of_overlapping() {
     };
     // Two residents of one building leave by car on the same tick.
     for id in [900_001, 900_002] {
-        engine.state.travelers.push(Traveler {
+        engine.state.people.travelers.push(Traveler {
             id,
             kind: 1,
             route: vec![from, to],
@@ -42,7 +43,13 @@ fn cars_sharing_a_driveway_queue_instead_of_overlapping() {
         });
     }
     let progress = |engine: &Engine, id| {
-        let t = engine.state.travelers.iter().find(|t| t.id == id).unwrap();
+        let t = engine
+            .state
+            .people
+            .travelers
+            .iter()
+            .find(|t| t.id == id)
+            .unwrap();
         (t.access_phase, t.access_progress)
     };
     for _ in 0..400 {
@@ -77,6 +84,7 @@ fn a_car_held_at_a_driveway_survives_save_and_restore() {
     assert_eq!(
         engine
             .state
+            .people
             .travelers
             .iter()
             .find(|t| t.id == ids[1])
@@ -95,6 +103,7 @@ fn a_car_held_at_a_driveway_survives_save_and_restore() {
     let (mut legacy, len, ids) = arrival_contention_engine();
     let old = legacy
         .state
+        .people
         .travelers
         .iter_mut()
         .find(|t| t.id == ids[1])
@@ -105,6 +114,7 @@ fn a_car_held_at_a_driveway_survives_save_and_restore() {
     legacy.advance_travelers();
     let held = legacy
         .state
+        .people
         .travelers
         .iter()
         .find(|t| t.id == ids[1])
@@ -128,6 +138,7 @@ fn road_trips_choose_bodies_and_queue_by_length() {
     let mut engine = Engine::new_legacy(81);
     let road = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
@@ -136,7 +147,7 @@ fn road_trips_choose_bodies_and_queue_by_length() {
     let len = distance(engine.node(from).unwrap(), engine.node(to).unwrap());
     let ids: Vec<u32> = (800_000..800_240).collect();
     for &id in &ids {
-        engine.state.travelers.push(Traveler {
+        engine.state.people.travelers.push(Traveler {
             id,
             kind: 1,
             route: vec![from, to],
@@ -193,6 +204,7 @@ fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
             let mut engine = Engine::new_legacy(81);
             let road = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
@@ -208,7 +220,7 @@ fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
             let len = distance(&a, &b);
             let route = vec![from, to];
             for (id, kind) in [(700_001, 1), (700_002, 0), (700_003, 0)] {
-                engine.state.travelers.push(Traveler {
+                engine.state.people.travelers.push(Traveler {
                     id,
                     kind,
                     route: route.clone(),

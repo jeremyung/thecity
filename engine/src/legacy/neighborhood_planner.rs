@@ -101,8 +101,8 @@ impl Engine {
             return false;
         }
         if self.state.tick % 80 != 0
-            || self.state.neighborhood_plan.is_some()
-            || self.state.pending_interior_access.is_some()
+            || self.state.legacy.neighborhood_plan.is_some()
+            || self.state.legacy.pending_interior_access.is_some()
             || active_road_projects > 0
         {
             return false;
@@ -155,25 +155,36 @@ impl Engine {
     pub(crate) fn record_early_block_noop(&mut self) {}
 
     pub(crate) fn is_neighborhood_plan_road(&self, road_id: u32) -> bool {
-        self.state.neighborhood_road_ids.contains(&road_id)
-            || self.state.neighborhood_plan.as_ref().is_some_and(|plan| {
-                self.state.roads.iter().any(|road| {
-                    road.id == road_id
-                        && plan.segments.iter().any(|(from, to)| {
-                            (road.from == *from && road.to == *to)
-                                || (road.from == *to && road.to == *from)
-                        })
+        self.state.legacy.neighborhood_road_ids.contains(&road_id)
+            || self
+                .state
+                .legacy
+                .neighborhood_plan
+                .as_ref()
+                .is_some_and(|plan| {
+                    self.state.network.roads.iter().any(|road| {
+                        road.id == road_id
+                            && plan.segments.iter().any(|(from, to)| {
+                                (road.from == *from && road.to == *to)
+                                    || (road.from == *to && road.to == *from)
+                            })
+                    })
                 })
-            })
     }
 
     #[cfg(feature = "legacy")]
     pub(crate) fn neighborhood_block_has_unbuilt_frontage(&self) -> bool {
         let block_parcels: BTreeSet<u32> = self
             .state
+            .land
             .parcel_frontages
             .iter()
-            .filter(|frontage| self.state.neighborhood_road_ids.contains(&frontage.road_id))
+            .filter(|frontage| {
+                self.state
+                    .legacy
+                    .neighborhood_road_ids
+                    .contains(&frontage.road_id)
+            })
             .map(|frontage| frontage.parcel_id)
             .collect();
         if block_parcels.is_empty() {
@@ -181,15 +192,16 @@ impl Engine {
         }
         let built_parcels: BTreeSet<u32> = self
             .state
+            .construction
             .buildings
             .iter()
             .map(|building| building.parcel_id)
             .collect();
-        self.state.parcels.iter().any(|parcel| {
+        self.state.land.parcels.iter().any(|parcel| {
             block_parcels.contains(&parcel.id)
                 && !parcel.protected
                 && parcel.reservation.is_none()
-                && (self.state.station_online || !self.is_station_tower_lot(parcel))
+                && (self.state.transit.station_online || !self.is_station_tower_lot(parcel))
                 && self.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
                 && self.node_connected(parcel.access_node)
                 && !built_parcels.contains(&parcel.id)
@@ -197,18 +209,23 @@ impl Engine {
     }
 
     pub(crate) fn remember_neighborhood_plan_road(&mut self, road_id: u32, from: u32, to: u32) {
-        let belongs_to_plan = self.state.neighborhood_plan.as_ref().is_some_and(|plan| {
-            plan.segments
-                .iter()
-                .any(|(a, b)| (*a == from && *b == to) || (*a == to && *b == from))
-        });
-        if belongs_to_plan && self.state.neighborhood_road_ids.insert(road_id) {
+        let belongs_to_plan = self
+            .state
+            .legacy
+            .neighborhood_plan
+            .as_ref()
+            .is_some_and(|plan| {
+                plan.segments
+                    .iter()
+                    .any(|(a, b)| (*a == from && *b == to) || (*a == to && *b == from))
+            });
+        if belongs_to_plan && self.state.legacy.neighborhood_road_ids.insert(road_id) {
             self.mark_access_geometry_changed();
         }
     }
 
     pub(crate) fn retire_completed_neighborhood_plan(&mut self) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         if plan.segments.len() != 4 || plan.next_segment != plan.segments.len() {
@@ -225,12 +242,12 @@ impl Engine {
         let coordinated_lots = plan.coordinated_lots;
         let selected_lots = plan.selected_lots.clone();
         let ready = segments.iter().all(|(from, to)| {
-            self.state.roads.iter().any(|road| {
+            self.state.network.roads.iter().any(|road| {
                 road.stage == Stage::Open
                     && road.connected
                     && ((road.from == *from && road.to == *to)
                         || (road.from == *to && road.to == *from))
-            }) && !self.state.projects.iter().any(|project| {
+            }) && !self.state.construction.projects.iter().any(|project| {
                 project.kind == ProjectKind::Road
                     && project.progress < 1.0
                     && project
@@ -252,13 +269,13 @@ impl Engine {
             return false;
         }
         for (from, to) in &segments {
-            if let Some(road) = self.state.roads.iter().find(|road| {
+            if let Some(road) = self.state.network.roads.iter().find(|road| {
                 (road.from == *from && road.to == *to) || (road.from == *to && road.to == *from)
             }) {
-                self.state.neighborhood_road_ids.insert(road.id);
+                self.state.legacy.neighborhood_road_ids.insert(road.id);
             }
         }
-        self.state.neighborhood_plan = None;
+        self.state.legacy.neighborhood_plan = None;
         // Clearing a coordinated plan releases its reserved interior even if
         // the plan admitted no new parcels (legacy plans included).
         self.mark_access_geometry_changed();
@@ -287,7 +304,7 @@ impl Engine {
                 x: node.x,
                 z: node.z,
             };
-            let Some(road) = self.state.roads.iter().find(|road| {
+            let Some(road) = self.state.network.roads.iter().find(|road| {
                 road.stage == Stage::Open
                     && road.connected
                     && ((road.from == *from && road.to == *to)
@@ -317,7 +334,13 @@ impl Engine {
                 continue;
             }
             let road_id = road_ids[lot.frontage_edge];
-            let Some(road) = self.state.roads.iter().find(|road| road.id == road_id) else {
+            let Some(road) = self
+                .state
+                .network
+                .roads
+                .iter()
+                .find(|road| road.id == road_id)
+            else {
                 continue;
             };
             let (Some(a), Some(b)) = (self.node(road.from), self.node(road.to)) else {
@@ -340,10 +363,10 @@ impl Engine {
             if parcel_id == 0 {
                 break;
             }
-            if let Some(parcel) = self.state.parcels.last_mut() {
+            if let Some(parcel) = self.state.land.parcels.last_mut() {
                 parcel.rotation = Some(rect.rotation);
             }
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id,
                 along,
@@ -406,7 +429,7 @@ impl Engine {
     }
 
     pub(crate) fn coordinated_plan_lot_count(&self) -> Option<usize> {
-        let plan = self.state.neighborhood_plan.as_ref()?;
+        let plan = self.state.legacy.neighborhood_plan.as_ref()?;
         if !plan.coordinated_lots {
             return None;
         }
@@ -426,13 +449,13 @@ impl Engine {
         segments: &[(u32, u32)],
         lots: &[infrastructure::blocks::BlockLot],
     ) -> bool {
-        if self.state.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
+        if self.state.land.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
             || !self.selected_block_layout_valid(segments, lots)
         {
             return false;
         }
         segments.iter().all(|(from, to)| {
-            self.state.roads.iter().any(|road| {
+            self.state.network.roads.iter().any(|road| {
                 road.stage == Stage::Open
                     && road.connected
                     && ((road.from == *from && road.to == *to)
@@ -455,7 +478,7 @@ impl Engine {
         let Some((reuse_from, reuse_to)) = segments.first() else {
             return false;
         };
-        if !self.state.roads.iter().any(|road| {
+        if !self.state.network.roads.iter().any(|road| {
             road.stage == Stage::Open
                 && road.connected
                 && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -559,7 +582,7 @@ impl Engine {
         width: f32,
         depth: f32,
     ) -> bool {
-        let Some(plan) = &self.state.neighborhood_plan else {
+        let Some(plan) = &self.state.legacy.neighborhood_plan else {
             return true;
         };
         if plan.coordinated_lots && plan.segments.len() == 4 {
@@ -595,7 +618,7 @@ impl Engine {
         end: &Node,
         start_id: u32,
     ) -> bool {
-        let Some(plan) = &self.state.neighborhood_plan else {
+        let Some(plan) = &self.state.legacy.neighborhood_plan else {
             return true;
         };
         if plan.coordinated_lots {
@@ -785,22 +808,24 @@ impl Engine {
 
     #[cfg(feature = "legacy")]
     pub(crate) fn try_create_neighborhood_plan(&mut self) -> bool {
-        if self.state.neighborhood_plan.is_some()
-            || self.state.pending_interior_access.is_some()
-            || self.state.demand < 1.1
+        if self.state.legacy.neighborhood_plan.is_some()
+            || self.state.legacy.pending_interior_access.is_some()
+            || self.state.people.demand < 1.1
             || self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|b| site_active(b))
                 .count()
                 < 10
-            || self.state.population < 24
-            || self.state.roads.len() + self.state.projects.len() + 3 > MAX_SEGMENTS
+            || self.state.people.population < 24
+            || self.state.network.roads.len() + self.state.construction.projects.len() + 3
+                > MAX_SEGMENTS
         {
             return false;
         }
-        let node_count = self.state.nodes.len();
+        let node_count = self.state.network.nodes.len();
         if node_count == 0 {
             return false;
         }
@@ -810,6 +835,7 @@ impl Engine {
         let mut reusable_edges_by_node: BTreeMap<u32, Vec<Road>> = BTreeMap::new();
         for road in self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.connected && road.stage == Stage::Open)
@@ -828,19 +854,25 @@ impl Engine {
             }
         }
         let attempts = node_count.min(MAX_NEIGHBORHOOD_ANCHORS_PER_EVALUATION);
-        let first = self.state.neighborhood_anchor_cursor % node_count;
+        let first = self.state.legacy.neighborhood_anchor_cursor % node_count;
         let mut examined_reuse_edges = BTreeSet::new();
         let mut budget = infrastructure::development::NeighborhoodCandidateBudget::default();
         let mut best_candidate: Option<NeighborhoodCandidate> = None;
         for offset in 0..attempts {
             let index = (first + offset) % node_count;
-            self.state.neighborhood_anchor_cursor = (index + 1) % node_count;
-            let anchor = self.state.nodes[index].clone();
+            self.state.legacy.neighborhood_anchor_cursor = (index + 1) % node_count;
+            let anchor = self.state.network.nodes[index].clone();
             if !connected.contains(&anchor.id) || self.ordinary_road_degree(anchor.id) == 0 {
                 continue;
             }
             let (mut local_buildings, mut occupied_buildings) = (0, 0);
-            for building in self.state.buildings.iter().filter(|b| site_active(b)) {
+            for building in self
+                .state
+                .construction
+                .buildings
+                .iter()
+                .filter(|b| site_active(b))
+            {
                 if (building.x - anchor.x).hypot(building.z - anchor.z) <= 112.0 {
                     local_buildings += 1;
                     occupied_buildings += usize::from(site_active(building));
@@ -1275,9 +1307,9 @@ impl Engine {
             .map(|index| (ids[index], ids[(index + 1) % 4]))
             .collect();
         if let Some((_, road_id)) = candidate.reused_edge {
-            self.state.neighborhood_road_ids.insert(road_id);
+            self.state.legacy.neighborhood_road_ids.insert(road_id);
         }
-        self.state.neighborhood_plan = Some(NeighborhoodPlan {
+        self.state.legacy.neighborhood_plan = Some(NeighborhoodPlan {
             anchor_node: candidate.anchor_node,
             segments,
             next_segment: 0,
@@ -1293,7 +1325,7 @@ impl Engine {
     #[cfg(feature = "legacy")]
     pub(crate) fn plan_next_neighborhood_segment(&mut self) -> bool {
         loop {
-            let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+            let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
                 return false;
             };
             if plan.next_segment >= plan.segments.len() {
@@ -1306,6 +1338,7 @@ impl Engine {
             let (from, to) = plan.segments[plan.next_segment];
             if let Some(road_id) = self
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| {
@@ -1316,12 +1349,18 @@ impl Engine {
                 .map(|road| road.id)
             {
                 self.remember_neighborhood_plan_road(road_id, from, to);
-                self.state.neighborhood_plan.as_mut().unwrap().next_segment += 1;
+                self.state
+                    .legacy
+                    .neighborhood_plan
+                    .as_mut()
+                    .unwrap()
+                    .next_segment += 1;
                 self.retire_completed_neighborhood_plan();
                 continue;
             }
             if !self.node_connected(from)
-                || self.state.roads.len() + self.state.projects.len() >= MAX_SEGMENTS
+                || self.state.network.roads.len() + self.state.construction.projects.len()
+                    >= MAX_SEGMENTS
                 || !self.project_admission_available()
             {
                 return true;
@@ -1341,7 +1380,12 @@ impl Engine {
                 duration,
                 started_tick,
             });
-            self.state.neighborhood_plan.as_mut().unwrap().next_segment += 1;
+            self.state
+                .legacy
+                .neighborhood_plan
+                .as_mut()
+                .unwrap()
+                .next_segment += 1;
             self.state.revision = self.state.revision.saturating_add(1);
             return true;
         }
@@ -1359,9 +1403,10 @@ impl Engine {
     ) -> bool {
         if !self.project_admission_available()
             || open_buildings.len() < 12
-            || self.state.demand <= 0.8
+            || self.state.people.demand <= 0.8
             || self
                 .state
+                .construction
                 .projects
                 .iter()
                 .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -1371,6 +1416,7 @@ impl Engine {
 
         let connected: BTreeSet<u32> = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -1382,6 +1428,7 @@ impl Engine {
             .collect();
         let mut origins: Vec<(Node, f32)> = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| connected.contains(&node.id))
@@ -1408,18 +1455,19 @@ impl Engine {
             b_radius.total_cmp(&a_radius).then_with(|| a.id.cmp(&b.id))
         });
 
-        let first = self.state.road_origin_cursor % origins.len();
+        let first = self.state.legacy.road_origin_cursor % origins.len();
         let count = origins.len().min(MAX_ROAD_ORIGINS_PER_EVALUATION);
         for offset in 0..count {
             let origin_index = (first + offset) % origins.len();
             let start = origins[origin_index].0.clone();
-            self.state.road_origin_cursor = (origin_index + 1) % origins.len();
+            self.state.legacy.road_origin_cursor = (origin_index + 1) % origins.len();
             if start.id >= 7 && self.ordinary_road_degree(start.id) >= 4 {
                 continue;
             }
 
             let mut targets: Vec<(Node, f32)> = self
                 .state
+                .network
                 .nodes
                 .iter()
                 .filter(|node| node.id > start.id && connected.contains(&node.id))
@@ -1436,10 +1484,10 @@ impl Engine {
                 if target.id >= 7 && self.ordinary_road_degree(target.id) >= 4 {
                     continue;
                 }
-                if self.state.roads.iter().any(|road| {
+                if self.state.network.roads.iter().any(|road| {
                     (road.from == start.id && road.to == target.id)
                         || (road.from == target.id && road.to == start.id)
-                }) || self.state.projects.iter().any(|project| {
+                }) || self.state.construction.projects.iter().any(|project| {
                     project.kind == ProjectKind::Road
                         && project.progress < 1.0
                         && ((project.from == Some(start.id) && project.to == Some(target.id))
@@ -1488,6 +1536,7 @@ impl Engine {
                 );
                 let road_clear = self
                     .state
+                    .network
                     .roads
                     .iter()
                     .filter(|road| road.stage == Stage::Open)
@@ -1506,6 +1555,7 @@ impl Engine {
                     });
                 let projects_clear = self
                     .state
+                    .construction
                     .projects
                     .iter()
                     .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)

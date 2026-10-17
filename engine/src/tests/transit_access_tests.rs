@@ -12,7 +12,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
             z,
             kind: NodeKind::Junction,
         };
-        engine.state.nodes.push(node);
+        engine.state.network.nodes.push(node);
         id
     };
     let approach = make_node(-20.0, 0.0);
@@ -30,7 +30,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         let a = engine.node(from).unwrap();
         let b = engine.node(to).unwrap();
         let length = (b.x - a.x).hypot(b.z - a.z);
-        engine.state.roads.push(Road {
+        engine.state.network.roads.push(Road {
             id,
             from,
             to,
@@ -43,7 +43,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         });
     }
     let line_id = engine.id();
-    engine.state.bus_line = Some(BusLine {
+    engine.state.transit.bus_line = Some(BusLine {
         id: line_id,
         stops: vec![first_stop, middle_stop, last_stop],
         route: vec![first_stop, middle_stop, last_stop],
@@ -51,7 +51,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         graph_revision: 1,
     });
     let bus_id = engine.id();
-    engine.state.buses.push(Bus {
+    engine.state.transit.buses.push(Bus {
         id: bus_id,
         line_id,
         progress: 0.0,
@@ -62,9 +62,9 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         last_stop: None,
     });
 
-    let building = engine.state.buildings[0].id;
+    let building = engine.state.construction.buildings[0].id;
     let resident_id = engine.id();
-    engine.state.residents.push(Resident {
+    engine.state.people.residents.push(Resident {
         id: resident_id,
         name: "Transit endpoint test".into(),
         home_building: building,
@@ -101,15 +101,16 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
     ));
     let traveler_index = engine
         .state
+        .people
         .travelers
         .iter()
         .position(|traveler| traveler.id == resident_id)
         .unwrap();
-    let scheduled_route = engine.state.travelers[traveler_index].route.clone();
+    let scheduled_route = engine.state.people.travelers[traveler_index].route.clone();
     let scheduled_endpoint = engine
         .route_endpoint_position(&scheduled_route, false, resident_id, 0)
         .unwrap();
-    let scheduled_connector = engine.state.travelers[traveler_index]
+    let scheduled_connector = engine.state.people.travelers[traveler_index]
         .destination_access
         .as_ref()
         .expect("scheduled trip has a queue connector");
@@ -119,9 +120,9 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         (scheduled_endpoint.x, scheduled_endpoint.z)
     );
 
-    engine.state.travelers.clear();
+    engine.state.people.travelers.clear();
     {
-        let resident = &mut engine.state.residents[0];
+        let resident = &mut engine.state.people.residents[0];
         resident.transfer = crate::Transfer::RidingBus;
         resident.bus_id = Some(bus_id);
         resident.bus_origin_stop = Some(first_stop);
@@ -129,11 +130,12 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         resident.bus_stop_node = Some(last_stop);
         resident.queue_slot = Some(2);
     }
-    engine.state.buses[0].passengers.push(resident_id);
+    engine.state.transit.buses[0].passengers.push(resident_id);
     engine.alight_bus_passenger(0, resident_id, last_stop);
 
     let alighting = engine
         .state
+        .people
         .travelers
         .iter()
         .find(|traveler| traveler.id == resident_id)
@@ -155,10 +157,11 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
 #[test]
 fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
     let mut engine = Engine::new_legacy(477);
-    engine.state.station_online = true;
+    engine.state.transit.station_online = true;
     let (from, to) = {
         let rail = engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|road| road.kind == RoadKind::Rail)
@@ -179,7 +182,7 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
     let destination = {
         let node = engine.node(station).unwrap().clone();
         let id = engine.id();
-        engine.state.nodes.push(Node {
+        engine.state.network.nodes.push(Node {
             id,
             x: node.x + 24.0,
             z: node.z - 18.0,
@@ -187,11 +190,11 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         });
         id
     };
-    let building = engine.state.buildings[0].id;
-    engine.state.buildings[0].kind = BuildingKind::Home;
-    engine.state.buildings[0].stage = Stage::Open;
+    let building = engine.state.construction.buildings[0].id;
+    engine.state.construction.buildings[0].kind = BuildingKind::Home;
+    engine.state.construction.buildings[0].stage = Stage::Open;
     let resident_id = engine.id();
-    engine.state.residents.push(Resident {
+    engine.state.people.residents.push(Resident {
         id: resident_id,
         name: "Recovered rail alight".into(),
         home_building: building,
@@ -231,6 +234,7 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
     let road_id = engine.add_road(station, destination, RoadKind::Local, Stage::Open, 1.0);
     engine
         .state
+        .network
         .roads
         .iter_mut()
         .find(|road| road.id == road_id)
@@ -241,6 +245,7 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
 
     let traveler = engine
         .state
+        .people
         .travelers
         .iter()
         .find(|traveler| traveler.id == resident_id)
@@ -263,7 +268,7 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         (expected_endpoint.x, expected_endpoint.z)
     );
     assert_eq!(
-        engine.state.residents[0].transfer,
+        engine.state.people.residents[0].transfer,
         crate::Transfer::WalkingHome
     );
 }

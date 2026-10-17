@@ -100,6 +100,7 @@ fn own_footprint_index(parcels: &[Parcel], parcel_id: u32) -> Option<usize> {
 fn ordinary_connected_road_count(engine: &Engine) -> usize {
     engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -113,6 +114,7 @@ fn ordinary_connected_road_count(engine: &Engine) -> usize {
 fn routable_station_for(engine: &Engine, access_node: u32) -> Option<u32> {
     engine
         .state
+        .network
         .nodes
         .iter()
         .filter(|station| {
@@ -150,7 +152,7 @@ pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parc
         reject("not_standard_12m_depth");
         return parcel;
     }
-    if !engine.state.station_online {
+    if !engine.state.transit.station_online {
         reject("station_offline");
         return parcel;
     }
@@ -164,6 +166,7 @@ pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parc
     }
     let Some(frontage) = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .find(|frontage| frontage.parcel_id == parcel.id)
@@ -173,6 +176,7 @@ pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parc
     };
     let Some(road) = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == frontage.road_id)
@@ -204,7 +208,7 @@ pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parc
         rotation,
     };
     let expanded = expanded_rect(original);
-    let Some(footprint_index) = own_footprint_index(&engine.state.parcels, parcel.id) else {
+    let Some(footprint_index) = own_footprint_index(&engine.state.land.parcels, parcel.id) else {
         reject("own_footprint_not_found");
         return parcel;
     };
@@ -237,7 +241,13 @@ pub(crate) fn maybe_expand_selected_parcel(engine: &mut Engine, mut parcel: Parc
     parcel.x = expanded.x;
     parcel.z = expanded.z;
     parcel.depth = expanded.depth;
-    if let Some(stored) = engine.state.parcels.iter_mut().find(|p| p.id == parcel.id) {
+    if let Some(stored) = engine
+        .state
+        .land
+        .parcels
+        .iter_mut()
+        .find(|p| p.id == parcel.id)
+    {
         stored.x = parcel.x;
         stored.z = parcel.z;
         stored.depth = parcel.depth;
@@ -384,7 +394,7 @@ fn metrics(engine: &Engine) -> (f64, f64, u64, BTreeMap<String, u64>) {
     let mut floor_area = 0.0_f64;
     let mut capacity = 0_u64;
     let mut by_kind = BTreeMap::new();
-    for building in &engine.state.buildings {
+    for building in &engine.state.construction.buildings {
         let area = f64::from(building.width) * f64::from(building.depth);
         footprint += area;
         floor_area += area * f64::from(building.floors);
@@ -414,10 +424,10 @@ fn run_arm(seed: u32, treatment: bool, raw_dir: &std::path::Path) -> ArmResult {
     let diagnostics = treatment.then(take_diagnostics);
     let (nominal_footprint_m2, nominal_floor_area_m2, capacity_slots, capacity_by_kind) =
         metrics(&engine);
-    let buildings = engine.state.buildings.len();
-    let roads = engine.state.roads.len();
+    let buildings = engine.state.construction.buildings.len();
+    let roads = engine.state.network.roads.len();
     let ordinary_roads = ordinary_connected_road_count(&engine);
-    let parcels = engine.state.parcels.len();
+    let parcels = engine.state.land.parcels.len();
     let suffix = if treatment { "depth18" } else { "baseline" };
     let save_path = raw_dir.join(format!("seed-{seed}-{suffix}-tick242000-save.json"));
     let snapshot_path = raw_dir.join(format!("seed-{seed}-{suffix}-tick242000-snapshot.json"));

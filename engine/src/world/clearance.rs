@@ -46,6 +46,7 @@ impl Engine {
         };
         if self
             .state
+            .land
             .parcels
             .iter()
             .any(|p| world::geometry::rects_overlap(&candidate, &parcel_envelope(p), 2.0))
@@ -53,7 +54,13 @@ impl Engine {
             return false;
         }
         let clearance = (w.max(d) * 0.5 + 4.0).max(9.0);
-        for road in self.state.roads.iter().filter(|r| r.stage == Stage::Open) {
+        for road in self
+            .state
+            .network
+            .roads
+            .iter()
+            .filter(|r| r.stage == Stage::Open)
+        {
             let (Some(a), Some(b)) = (self.node(road.from).cloned(), self.node(road.to).cloned())
             else {
                 continue;
@@ -64,6 +71,7 @@ impl Engine {
         }
         for project in self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.kind == ProjectKind::Road && p.progress < 1.0)
@@ -117,7 +125,7 @@ impl Engine {
         if world::geometry::rects_overlap(rect, &protected, 0.0) {
             return false;
         }
-        for parcel in &self.state.parcels {
+        for parcel in &self.state.land.parcels {
             // New footprints also respect the actual rendered orientation of
             // legacy frontage, without rewriting historical save geometry.
             let mut existing = parcel_envelope(parcel);
@@ -130,6 +138,7 @@ impl Engine {
                 }
                 existing.rotation = self
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|building| building.parcel_id == parcel.id)
@@ -142,6 +151,7 @@ impl Engine {
         }
         for road in self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open)
@@ -155,6 +165,7 @@ impl Engine {
         }
         for project in self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.kind == ProjectKind::Road && p.progress < 1.0)
@@ -175,28 +186,28 @@ impl Engine {
 
     pub(crate) fn collision_context(&self) -> CollisionContext {
         let mut node_positions = BTreeMap::new();
-        for node in &self.state.nodes {
+        for node in &self.state.network.nodes {
             node_positions.entry(node.id).or_insert((node.x, node.z));
         }
         let mut roads_by_id = BTreeMap::new();
-        for road in &self.state.roads {
+        for road in &self.state.network.roads {
             roads_by_id.entry(road.id).or_insert((road.from, road.to));
         }
         let mut building_rotations = BTreeMap::new();
-        for building in &self.state.buildings {
+        for building in &self.state.construction.buildings {
             building_rotations
                 .entry(building.parcel_id)
                 .or_insert(building.rotation);
         }
         let mut frontages = BTreeMap::new();
-        for frontage in &self.state.parcel_frontages {
+        for frontage in &self.state.land.parcel_frontages {
             frontages
                 .entry(frontage.parcel_id)
                 .or_insert((frontage.road_id, frontage.side));
         }
 
-        let mut parcel_footprints = Vec::with_capacity(self.state.parcels.len());
-        for parcel in &self.state.parcels {
+        let mut parcel_footprints = Vec::with_capacity(self.state.land.parcels.len());
+        for parcel in &self.state.land.parcels {
             let mut footprint = parcel_envelope(parcel);
             if parcel.rotation.is_none() {
                 parcel_footprints.push(footprint);
@@ -220,6 +231,7 @@ impl Engine {
         let mut open_roads = Vec::new();
         for road in self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open)
@@ -239,6 +251,7 @@ impl Engine {
         let mut pending_roads = Vec::new();
         for project in self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -395,7 +408,7 @@ impl Engine {
         rect: &world::geometry::OrientedRect,
         completing_own_plan: bool,
     ) -> bool {
-        let Some(plan) = &self.state.pending_interior_access else {
+        let Some(plan) = &self.state.legacy.pending_interior_access else {
             return true;
         };
         if completing_own_plan {
@@ -423,7 +436,7 @@ impl Engine {
         depth: f32,
         side: i8,
     ) -> bool {
-        if self.state.pending_interior_access.is_none() {
+        if self.state.legacy.pending_interior_access.is_none() {
             return true;
         }
         let rotation = (side as f32 * (b.z - a.z)).atan2(-side as f32 * (b.x - a.x));
@@ -441,11 +454,12 @@ impl Engine {
 
     #[cfg(feature = "legacy")]
     pub(crate) fn interior_plan_reserves_road(&self, ax: f32, az: f32, bx: f32, bz: f32) -> bool {
-        let Some(plan) = &self.state.pending_interior_access else {
+        let Some(plan) = &self.state.legacy.pending_interior_access else {
             return false;
         };
         let Some(road) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == plan.branch_road_id)
@@ -467,6 +481,7 @@ impl Engine {
         bz: f32,
     ) -> bool {
         self.state
+            .legacy
             .pending_interior_access
             .as_ref()
             .is_none_or(|plan| {

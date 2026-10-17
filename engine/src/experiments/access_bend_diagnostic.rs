@@ -86,7 +86,7 @@ fn diagnose_destination_first_access_witness() {
     let original_save = engine.save_json();
     let proposal = access_proposal_capture::capture(&engine).expect("capture immutable proposal");
     let discovery_input = access_capture::capture(&engine).expect("capture face graph");
-    let mut excluded = engine.state.exhausted_access_faces.clone();
+    let mut excluded = engine.state.legacy.exhausted_access_faces.clone();
     excluded.retain(|identity| identity.as_slice() != TARGET);
     let mut discovery = DiscoveryJob::new_excluding(discovery_input.clone(), excluded)
         .expect("start target face discovery");
@@ -397,7 +397,7 @@ fn diagnose_two_segment_bend_witness() {
     let engine = Engine::restore_json(&save).expect("restore diagnostic save");
     let proposal = access_proposal_capture::capture(&engine).expect("capture viability");
     let discovery_input = access_capture::capture(&engine).expect("capture face graph");
-    let mut excluded = engine.state.exhausted_access_faces.clone();
+    let mut excluded = engine.state.legacy.exhausted_access_faces.clone();
     excluded.retain(|identity| identity.as_slice() != TARGET);
     let mut discovery = DiscoveryJob::new_excluding(discovery_input.clone(), excluded)
         .expect("start target face discovery");

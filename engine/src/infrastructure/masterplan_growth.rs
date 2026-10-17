@@ -93,7 +93,7 @@ impl Engine {
     /// Regenerate the plan for a restored world and check that the saved
     /// progress belongs to it.
     pub(crate) fn load_masterplan(&mut self) -> Result<(), String> {
-        let Some(progress) = self.state.masterplan.as_ref() else {
+        let Some(progress) = self.state.network.masterplan.as_ref() else {
             self.plan = None;
             if cfg!(feature = "legacy") {
                 return Ok(());
@@ -116,7 +116,7 @@ impl Engine {
     }
 
     pub(crate) fn masterplan_active(&self) -> bool {
-        self.state.masterplan.is_some() && self.plan.is_some()
+        self.state.network.masterplan.is_some() && self.plan.is_some()
     }
 
     fn plan_runtime(&self) -> Arc<PlanRuntime> {
@@ -127,7 +127,7 @@ impl Engine {
     pub(crate) fn initialize_masterplan_world(&mut self, initial_plan: Option<MasterPlan>) {
         let plan =
             initial_plan.unwrap_or_else(|| masterplan::generate(&self.masterplan_geography()));
-        self.state.masterplan = Some(MasterplanProgress {
+        self.state.network.masterplan = Some(MasterplanProgress {
             node_ids: vec![0; plan.nodes.len()],
             road_ids: vec![0; plan.roads.len()],
             lot_parcels: vec![0; plan.lots.len()],
@@ -146,6 +146,7 @@ impl Engine {
         if let Some(node) = self.plan_node_id(plan.founding_market) {
             if let Some(node) = self
                 .state
+                .network
                 .nodes
                 .iter_mut()
                 .find(|candidate| candidate.id == node)
@@ -161,12 +162,14 @@ impl Engine {
         // The founding shop takes the released lot closest to the market.
         let market = self
             .state
+            .network
             .nodes
             .iter()
             .find(|node| node.kind == crate::NodeKind::Market)
             .map(|node| (node.x, node.z));
         let founder_parcel = market.and_then(|(mx, mz)| {
             self.state
+                .land
                 .parcels
                 .iter()
                 .min_by(|a, b| {
@@ -188,7 +191,13 @@ impl Engine {
                 true,
                 vec!["Opened as the first neighborhood shop".into()],
             );
-            if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+            if let Some(parcel) = self
+                .state
+                .land
+                .parcels
+                .iter_mut()
+                .find(|p| p.id == parcel_id)
+            {
                 parcel.reservation = None;
             }
             self.record(
@@ -197,7 +206,7 @@ impl Engine {
                 "A small kissa opens beside the first lane".into(),
             );
         }
-        self.state.population = 8;
+        self.state.people.population = 8;
 
         // The served rail segment and station platform begin construction at
         // founding; service starts once streets reach the station.
@@ -205,7 +214,7 @@ impl Engine {
         let rail_gateway = self.realize_plan_node(plan.rail_gateway);
         self.realize_plan_road(plan.rail_service, Stage::Foundation, 0.0);
         let rail_project_id = self.id();
-        self.state.projects.push(Project {
+        self.state.construction.projects.push(Project {
             id: rail_project_id,
             kind: ProjectKind::Rail,
             from: Some(station),
@@ -219,7 +228,7 @@ impl Engine {
             started_tick: 0,
         });
         let station_project_id = self.id();
-        self.state.projects.push(Project {
+        self.state.construction.projects.push(Project {
             id: station_project_id,
             kind: ProjectKind::Station,
             from: Some(station),
@@ -236,7 +245,13 @@ impl Engine {
     }
 
     pub(crate) fn plan_node_id(&self, index: usize) -> Option<u32> {
-        let id = *self.state.masterplan.as_ref()?.node_ids.get(index)?;
+        let id = *self
+            .state
+            .network
+            .masterplan
+            .as_ref()?
+            .node_ids
+            .get(index)?;
         (id != 0).then_some(id)
     }
 
@@ -246,7 +261,7 @@ impl Engine {
         }
         let node = self.plan_runtime().plan.nodes[index];
         let id = self.add_node(node.p.x, node.p.z, node.kind.world());
-        if let Some(progress) = self.state.masterplan.as_mut() {
+        if let Some(progress) = self.state.network.masterplan.as_mut() {
             progress.node_ids[index] = id;
         }
         id
@@ -255,6 +270,7 @@ impl Engine {
     fn realize_plan_road(&mut self, index: usize, stage: Stage, progress: f32) -> u32 {
         if let Some(id) = self
             .state
+            .network
             .masterplan
             .as_ref()
             .map(|p| p.road_ids[index])
@@ -267,11 +283,11 @@ impl Engine {
         let b = self.realize_plan_node(road.b);
         let id = self.add_road(a, b, road.kind.world(), stage, progress);
         if let Some(path) = self.plan_runtime().rail_paths.get(&index) {
-            if let Some(realized) = self.state.roads.iter_mut().find(|r| r.id == id) {
+            if let Some(realized) = self.state.network.roads.iter_mut().find(|r| r.id == id) {
                 realized.length = path.length();
             }
         }
-        if let Some(state) = self.state.masterplan.as_mut() {
+        if let Some(state) = self.state.network.masterplan.as_mut() {
             state.road_ids[index] = id;
         }
         id
@@ -279,6 +295,7 @@ impl Engine {
 
     fn plan_road_index(&self, road_id: u32) -> Option<usize> {
         self.state
+            .network
             .masterplan
             .as_ref()?
             .road_ids
@@ -291,6 +308,7 @@ impl Engine {
         let runtime = self.plan_runtime();
         let Some(road_id) = self
             .state
+            .network
             .masterplan
             .as_ref()
             .map(|p| p.road_ids[road_index])
@@ -300,6 +318,7 @@ impl Engine {
         };
         let Some(road) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == road_id)
@@ -318,6 +337,7 @@ impl Engine {
         for &lot_index in &runtime.lots_by_road[road_index] {
             if self
                 .state
+                .network
                 .masterplan
                 .as_ref()
                 .is_some_and(|p| p.lot_parcels[lot_index] != 0)
@@ -362,7 +382,7 @@ impl Engine {
                 break;
             }
             let open_space = self.open_space_for_released_lot(&lot, &runtime.plan);
-            if let Some(parcel) = self.state.parcels.last_mut() {
+            if let Some(parcel) = self.state.land.parcels.last_mut() {
                 parcel.rotation = Some(lot.rotation);
                 if let Some(kind) = open_space {
                     parcel.protected = true;
@@ -382,7 +402,7 @@ impl Engine {
                 ),
                 None => {}
             }
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id,
                 along,
@@ -393,10 +413,16 @@ impl Engine {
             let facing = lot
                 .passage_rotation()
                 .unwrap_or_else(|| self.frontage_rotation(parcel_id));
-            if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+            if let Some(parcel) = self
+                .state
+                .land
+                .parcels
+                .iter_mut()
+                .find(|p| p.id == parcel_id)
+            {
                 parcel.rotation = Some(facing);
             }
-            if let Some(progress) = self.state.masterplan.as_mut() {
+            if let Some(progress) = self.state.network.masterplan.as_mut() {
                 progress.lot_parcels[lot_index] = parcel_id;
             }
             released += 1;
@@ -409,6 +435,7 @@ impl Engine {
     pub(crate) fn masterplan_lot_for_parcel(&self, parcel_id: u32) -> Option<masterplan::PlanLot> {
         let index = self
             .state
+            .network
             .masterplan
             .as_ref()?
             .lot_parcels
@@ -420,12 +447,14 @@ impl Engine {
     /// Surface only realized building sites, not the stock of released parcels.
     /// Building records survive vacancy/renewal, so their ground does too.
     pub(crate) fn masterplan_ground(&self) -> Vec<crate::GroundPatch> {
-        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref())
+        let (Some(progress), Some(runtime)) =
+            (self.state.network.masterplan.as_ref(), self.plan.as_ref())
         else {
             return Vec::new();
         };
         let developed: std::collections::BTreeSet<u32> = self
             .state
+            .construction
             .buildings
             .iter()
             .map(|building| building.parcel_id)
@@ -451,7 +480,8 @@ impl Engine {
     /// Deck elevations for realized expressway roads, derived from the
     /// regenerated plan and its persisted road ID mapping.
     pub(crate) fn masterplan_road_decks(&self) -> Vec<crate::RoadDeckView> {
-        let (Some(progress), Some(runtime)) = (self.state.masterplan.as_ref(), self.plan.as_ref())
+        let (Some(progress), Some(runtime)) =
+            (self.state.network.masterplan.as_ref(), self.plan.as_ref())
         else {
             return Vec::new();
         };
@@ -482,6 +512,7 @@ impl Engine {
         }
         let updates: Vec<(u32, u32, Stage, f32)> = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| {
@@ -490,7 +521,7 @@ impl Engine {
             .filter_map(|p| Some((p.from?, p.to?, p.stage, p.progress)))
             .collect();
         for (from, to, stage, progress) in updates {
-            if let Some(road) = self.state.roads.iter_mut().find(|road| {
+            if let Some(road) = self.state.network.roads.iter_mut().find(|road| {
                 road.stage != Stage::Open
                     && ((road.from == from && road.to == to)
                         || (road.from == to && road.to == from))
@@ -514,6 +545,7 @@ impl Engine {
         };
         let Some(road_id) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -526,7 +558,13 @@ impl Engine {
             return false;
         };
         let mut kind = None;
-        if let Some(road) = self.state.roads.iter_mut().find(|road| road.id == road_id) {
+        if let Some(road) = self
+            .state
+            .network
+            .roads
+            .iter_mut()
+            .find(|road| road.id == road_id)
+        {
             road.stage = Stage::Open;
             road.progress = 1.0;
             kind = Some(road.kind);
@@ -542,6 +580,7 @@ impl Engine {
         self.recompute_connectivity();
         if self
             .state
+            .network
             .roads
             .iter()
             .any(|r| r.id == road_id && r.connected)
@@ -563,9 +602,9 @@ impl Engine {
         }
         // Opening a connection can also connect earlier roads; release lots
         // on every open plan road whose frontage was waiting.
-        self.state.station_online =
-            self.state.station_ready
-                && self.state.roads.iter().any(|r| {
+        self.state.transit.station_online =
+            self.state.transit.station_ready
+                && self.state.network.roads.iter().any(|r| {
                     r.kind == crate::RoadKind::Rail && r.stage == Stage::Open && r.connected
                 });
         true
@@ -573,6 +612,7 @@ impl Engine {
 
     fn active_projects(&self, kind: ProjectKind) -> usize {
         self.state
+            .construction
             .projects
             .iter()
             .filter(|p| p.progress < 1.0 && p.kind == kind)
@@ -583,6 +623,7 @@ impl Engine {
     pub(crate) fn masterplan_growth(&mut self) {
         let active = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.progress < 1.0)
@@ -595,12 +636,14 @@ impl Engine {
 
         let open = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.stage == Stage::Open)
             .count();
         let vacant = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| site_vacant(b))
@@ -615,9 +658,9 @@ impl Engine {
             building_slots = 0;
         }
         for _ in 0..building_slots.min(available) {
-            let before = self.state.projects.len();
+            let before = self.state.construction.projects.len();
             self.plan_building(day);
-            if self.state.projects.len() == before {
+            if self.state.construction.projects.len() == before {
                 break;
             }
         }
@@ -626,6 +669,7 @@ impl Engine {
             && self.active_projects(ProjectKind::Road) < MAX_ACTIVE_ROAD_PROJECTS
             && self
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|p| p.progress < 1.0)
@@ -650,6 +694,7 @@ impl Engine {
         }
         let reserved = |kind: &'static str| {
             self.state
+                .land
                 .parcels
                 .iter()
                 .filter(move |p| p.open_space.as_deref() == Some(kind))
@@ -678,9 +723,15 @@ impl Engine {
     }
 
     fn available_masterplan_parcels(&self) -> usize {
-        let built: std::collections::BTreeSet<u32> =
-            self.state.buildings.iter().map(|b| b.parcel_id).collect();
+        let built: std::collections::BTreeSet<u32> = self
+            .state
+            .construction
+            .buildings
+            .iter()
+            .map(|b| b.parcel_id)
+            .collect();
         self.state
+            .land
             .parcels
             .iter()
             .filter(|p| {
@@ -695,17 +746,19 @@ impl Engine {
     fn start_masterplan_road(&mut self) {
         let runtime = self.plan_runtime();
         let plan = &runtime.plan;
-        let Some(progress) = self.state.masterplan.as_ref() else {
+        let Some(progress) = self.state.network.masterplan.as_ref() else {
             return;
         };
         let connected: BTreeMap<u32, bool> = self
             .state
+            .network
             .nodes
             .iter()
             .map(|node| (node.id, self.node_connected(node.id)))
             .collect();
         let busy: std::collections::BTreeSet<u32> = self
             .state
+            .construction
             .projects
             .iter()
             .filter(|p| p.progress < 1.0)
@@ -713,6 +766,7 @@ impl Engine {
             .collect();
         let points: Vec<(f32, f32, bool)> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.stage == Stage::Open)
@@ -725,11 +779,12 @@ impl Engine {
                 && plan.roads[index].kind.is_street()
                 && self
                     .state
+                    .network
                     .roads
                     .iter()
                     .any(|r| r.id == *id && r.stage == Stage::Open)
         });
-        let population = self.state.population;
+        let population = self.state.people.population;
         let mut best: Option<(f32, usize)> = None;
         for (index, road) in plan.roads.iter().enumerate() {
             if progress.road_ids[index] != 0 || !road.kind.is_street() {
@@ -781,7 +836,14 @@ impl Engine {
         };
         let kind = plan.roads[index].kind;
         let id = self.realize_plan_road(index, Stage::Survey, 0.0);
-        let Some(road) = self.state.roads.iter().find(|r| r.id == id).cloned() else {
+        let Some(road) = self
+            .state
+            .network
+            .roads
+            .iter()
+            .find(|r| r.id == id)
+            .cloned()
+        else {
             return;
         };
         let duration = match kind {
@@ -817,12 +879,12 @@ impl Engine {
     fn start_transit_infrastructure(&mut self) {
         let runtime = self.plan_runtime();
         let plan = &runtime.plan;
-        let Some(progress) = self.state.masterplan.clone() else {
+        let Some(progress) = self.state.network.masterplan.clone() else {
             return;
         };
         if !progress.rail_extension_started
-            && self.state.station_online
-            && self.state.population >= 1_500
+            && self.state.transit.station_online
+            && self.state.people.population >= 1_500
         {
             let station = self.realize_plan_node(plan.station);
             let terminus = self.realize_plan_node(plan.rail_terminus);
@@ -840,19 +902,26 @@ impl Engine {
                 duration: 12.0,
                 started_tick: self.state.tick,
             });
-            if let Some(state) = self.state.masterplan.as_mut() {
+            if let Some(state) = self.state.network.masterplan.as_mut() {
                 state.rail_extension_started = true;
             }
             return;
         }
         let next = progress.expressway_next as usize;
         if next < plan.expressway.len()
-            && self.state.population >= 3_500
+            && self.state.people.population >= 3_500
             && self.active_projects(ProjectKind::Expressway) == 0
         {
             let index = plan.expressway[next];
             let id = self.realize_plan_road(index, Stage::Survey, 0.0);
-            let Some(road) = self.state.roads.iter().find(|r| r.id == id).cloned() else {
+            let Some(road) = self
+                .state
+                .network
+                .roads
+                .iter()
+                .find(|r| r.id == id)
+                .cloned()
+            else {
                 return;
             };
             let project_id = self.id();
@@ -869,7 +938,7 @@ impl Engine {
                 duration: 14.0,
                 started_tick: self.state.tick,
             });
-            if let Some(state) = self.state.masterplan.as_mut() {
+            if let Some(state) = self.state.network.masterplan.as_mut() {
                 state.expressway_next += 1;
             }
         }
@@ -887,10 +956,12 @@ impl Engine {
             return (kind, capacity, floors);
         };
         let roll = random_unit(&mut self.state.rng_growth);
-        let station_core = lot.district == District::StationCore && self.state.station_online;
+        let station_core =
+            lot.district == District::StationCore && self.state.transit.station_online;
         // A small tower cluster on the largest served station-core lots.
         let towers = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.floors >= 14)
@@ -972,18 +1043,21 @@ mod tests {
     fn summary(engine: &Engine) -> String {
         let open = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.stage == Stage::Open)
             .count();
         let roads = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|r| r.stage == Stage::Open)
             .count();
         let footprint: f32 = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.stage == Stage::Open)
@@ -992,12 +1066,12 @@ mod tests {
         format!(
             "tick {} buildings {} open {} roads {} parcels {} population {} station {} footprint {:.0}",
             engine.state.tick,
-            engine.state.buildings.len(),
+            engine.state.construction.buildings.len(),
             open,
             roads,
-            engine.state.parcels.len(),
-            engine.state.population,
-            engine.state.station_online,
+            engine.state.land.parcels.len(),
+            engine.state.people.population,
+            engine.state.transit.station_online,
             footprint
         )
     }
@@ -1008,27 +1082,31 @@ mod tests {
         assert!(engine.masterplan_active());
         assert!(engine
             .state
+            .network
             .roads
             .iter()
             .any(|r| r.kind == crate::RoadKind::Arterial && r.connected));
         assert!(engine
             .state
+            .construction
             .buildings
             .iter()
             .any(|b| b.anchor && b.stage == Stage::Open));
         assert!(
-            engine.state.parcels.len() >= 4,
+            engine.state.land.parcels.len() >= 4,
             "founding row releases lots"
         );
         let ground = engine.masterplan_ground();
         let developed_parcels: std::collections::BTreeSet<u32> = engine
             .state
+            .construction
             .buildings
             .iter()
             .map(|building| building.parcel_id)
             .collect();
         let mapped_developed = engine
             .state
+            .network
             .masterplan
             .as_ref()
             .unwrap()
@@ -1038,7 +1116,7 @@ mod tests {
             .count();
         assert_eq!(ground.len(), mapped_developed);
         assert!(
-            ground.len() < engine.state.parcels.len(),
+            ground.len() < engine.state.land.parcels.len(),
             "released vacant parcels stay unpaved"
         );
         engine.validate().unwrap();
@@ -1051,12 +1129,14 @@ mod tests {
         assert!(!before.is_empty(), "normal growth realizes buildings");
         let built_parcels: std::collections::BTreeSet<u32> = engine
             .state
+            .construction
             .buildings
             .iter()
             .map(|building| building.parcel_id)
             .collect();
         let expected = engine
             .state
+            .network
             .masterplan
             .as_ref()
             .unwrap()
@@ -1075,6 +1155,7 @@ mod tests {
         {
             let building = engine
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|building| building.stage == Stage::Open)
@@ -1089,6 +1170,7 @@ mod tests {
         );
         engine
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|building| building.stage == Stage::Open)
@@ -1185,17 +1267,23 @@ mod tests {
     fn master_plan_city_grows_connected_without_overlaps_and_replays() {
         let mut engine = grown(87231, 40_000);
         eprintln!("{}", summary(&engine));
-        assert!(engine.state.buildings.len() > 60, "{}", summary(&engine));
+        assert!(
+            engine.state.construction.buildings.len() > 60,
+            "{}",
+            summary(&engine)
+        );
         engine.validate().unwrap();
         // Every parcel with a building is reachable.
         for building in engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.stage == Stage::Open)
         {
             let parcel = engine
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|p| p.id == building.parcel_id)
@@ -1208,6 +1296,7 @@ mod tests {
         // No parcel overlaps another.
         let rects: Vec<geometry::OrientedRect> = engine
             .state
+            .land
             .parcels
             .iter()
             .map(|p| geometry::OrientedRect {
@@ -1240,6 +1329,7 @@ mod tests {
             let mut engine = grown(seed, 40_000);
             let id = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|b| {
@@ -1254,14 +1344,14 @@ mod tests {
                 .id;
             // Arrange vacancy on real generated geometry. This exercises renewal,
             // not the separate policy that decides when a business closes.
-            for building in &mut engine.state.buildings {
+            for building in &mut engine.state.construction.buildings {
                 building.vacant_days = 0;
                 if building.id == id {
                     building.business_active = false;
                     building.vacant_days = 6;
                 }
             }
-            engine.state.demand = 0.0; // Isolate renovation from height redevelopment.
+            engine.state.people.demand = 0.0; // Isolate renovation from height redevelopment.
             let before = engine.building_access_segment(id).unwrap();
             assert!(before.1.len() > 2);
             let saved = engine.save_json();
@@ -1272,6 +1362,7 @@ mod tests {
             assert_eq!(
                 engine
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|b| b.id == id)
@@ -1298,6 +1389,7 @@ mod tests {
                 }
                 if engine
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|b| b.id == id)

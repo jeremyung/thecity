@@ -116,9 +116,16 @@ fn classify_candidate(
     }
     let mut local_open = 0;
     let mut local_active = 0;
-    for building in engine.state.buildings.iter().filter(|building| {
-        building.stage == Stage::Open && (building.x - rect.x).hypot(building.z - rect.z) <= 78.0
-    }) {
+    for building in engine
+        .state
+        .construction
+        .buildings
+        .iter()
+        .filter(|building| {
+            building.stage == Stage::Open
+                && (building.x - rect.x).hypot(building.z - rect.z) <= 78.0
+        })
+    {
         local_open += 1;
         local_active += usize::from(site_active(building));
     }
@@ -129,7 +136,7 @@ fn classify_candidate(
 }
 
 fn overlapping_existing_parcel(engine: &Engine, rect: &geometry::OrientedRect) -> Option<u32> {
-    engine.state.parcels.iter().find_map(|parcel| {
+    engine.state.land.parcels.iter().find_map(|parcel| {
         let mut envelope = parcel_envelope(parcel);
         if geometry::rects_overlap(rect, &envelope, 2.0) {
             return Some(parcel.id);
@@ -137,6 +144,7 @@ fn overlapping_existing_parcel(engine: &Engine, rect: &geometry::OrientedRect) -
         if parcel.rotation.is_none() {
             envelope.rotation = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.parcel_id == parcel.id)
@@ -172,6 +180,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
     let access_scan = engine.propose_interior_access();
     let access_host_count = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -181,7 +190,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         })
         .count();
     let access_candidate_count = access_host_count * interior_access::PROPOSALS_PER_HOST;
-    let mut access_cycle_cursor = engine.state.interior_access_cursor;
+    let mut access_cycle_cursor = engine.state.legacy.interior_access_cursor;
     let mut access_cycle_examined = 0usize;
     let mut access_cycle_proposals = Vec::new();
     while access_cycle_examined < access_candidate_count {
@@ -226,7 +235,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         let mut fully_inside_face_count = 0usize;
         let mut boundary_distances = Vec::new();
 
-        for road in &engine.state.roads {
+        for road in &engine.state.network.roads {
             if road.stage != Stage::Open
                 || !road.connected
                 || !matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
@@ -286,7 +295,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
                     continue;
                 }
                 candidate_count += 1;
-                let reason = if slot == 0 && has_tower && !engine.state.station_online {
+                let reason = if slot == 0 && has_tower && !engine.state.transit.station_online {
                     "station_not_online"
                 } else {
                     classify_candidate(&engine, &context, &rect, access_node)
@@ -302,6 +311,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
                     let blocker_building = blocker.and_then(|parcel_id| {
                         engine
                             .state
+                            .construction
                             .buildings
                             .iter()
                             .find(|building| building.parcel_id == parcel_id)
@@ -325,6 +335,7 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         for proposal in &access_cycle_proposals {
             let Some(host) = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == proposal.host_id)
@@ -396,18 +407,21 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
 
     let active_housing = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| building.stage == Stage::Open && is_housing(building))
         .collect::<Vec<_>>();
     let active_commerce = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| building.stage == Stage::Open && is_commercial(building))
         .collect::<Vec<_>>();
     let ordinary_open = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -421,37 +435,37 @@ fn early_reservation_mature_gaps_use_current_admission_predicates() {
         "checkpoint_sha256": "f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e",
         "seed": engine.state.seed,
         "tick": engine.state.tick,
-        "demand": engine.state.demand,
-        "population": engine.state.population,
-        "buildings": engine.state.buildings.len(),
-        "parcels": engine.state.parcels.len(),
-        "unbuilt_parcels": engine.state.parcels.iter().filter(|parcel| !engine.state.buildings.iter().any(|building| building.parcel_id == parcel.id)).count(),
-        "roads": engine.state.roads.len(),
+        "demand": engine.state.people.demand,
+        "population": engine.state.people.population,
+        "buildings": engine.state.construction.buildings.len(),
+        "parcels": engine.state.land.parcels.len(),
+        "unbuilt_parcels": engine.state.land.parcels.iter().filter(|parcel| !engine.state.construction.buildings.iter().any(|building| building.parcel_id == parcel.id)).count(),
+        "roads": engine.state.network.roads.len(),
         "open_connected_ordinary_roads": ordinary_open.len(),
         "ordinary_road_cap": MAX_SEGMENTS,
         "building_cap": MAX_BUILDINGS,
         "parcel_cap": MAX_PARCELS,
-        "active_projects": engine.state.projects.iter().filter(|project| project.progress < 1.0).count(),
+        "active_projects": engine.state.construction.projects.iter().filter(|project| project.progress < 1.0).count(),
         "housing_occupancy": active_housing.iter().map(|building| building.occupancy as u64).sum::<u64>(),
         "housing_capacity": active_housing.iter().map(|building| building.capacity as u64).sum::<u64>(),
         "commercial_active_count": active_commerce.iter().filter(|building| building.business_active).count(),
         "commercial_open_count": active_commerce.len(),
         "commercial_active_capacity": active_commerce.iter().filter(|building| building.business_active).map(|building| building.capacity as u64).sum::<u64>(),
-        "neighborhood_plan": engine.state.neighborhood_plan.as_ref().map(|plan| json!({"next_segment":plan.next_segment,"segments":plan.segments.len()})),
-        "pending_interior_access": engine.state.pending_interior_access.is_some(),
+        "neighborhood_plan": engine.state.legacy.neighborhood_plan.as_ref().map(|plan| json!({"next_segment":plan.next_segment,"segments":plan.segments.len()})),
+        "pending_interior_access": engine.state.legacy.pending_interior_access.is_some(),
         "bounded_interior_access_proposal_count": access_scan.proposals.len(),
         "bounded_interior_access_next_cursor": access_scan.next_cursor,
-        "bounded_interior_access_start_cursor": engine.state.interior_access_cursor,
+        "bounded_interior_access_start_cursor": engine.state.legacy.interior_access_cursor,
         "bounded_interior_access_candidates_examined": (interior_access::MAX_PROPOSALS_PER_EVALUATION)
             .min(ordinary_open.len() * interior_access::PROPOSALS_PER_HOST),
         "full_interior_access_cycle_candidates": access_candidate_count,
         "full_interior_access_cycle_examined": access_cycle_examined,
         "full_interior_access_cycle_proposal_count": access_cycle_proposals.len(),
         "growth_cursors": {
-            "frontage_road_cursor": engine.state.frontage_road_cursor,
-            "frontage_slot_cursor": engine.state.frontage_slot_cursor,
-            "road_origin_cursor": engine.state.road_origin_cursor,
-            "neighborhood_anchor_cursor": engine.state.neighborhood_anchor_cursor
+            "frontage_road_cursor": engine.state.legacy.frontage_road_cursor,
+            "frontage_slot_cursor": engine.state.legacy.frontage_slot_cursor,
+            "road_origin_cursor": engine.state.legacy.road_origin_cursor,
+            "neighborhood_anchor_cursor": engine.state.legacy.neighborhood_anchor_cursor
         },
         "voids": region_reports,
         "methodology": "Exact saved-WASM world restored natively without advancing it. The UI-provided polygons are approximate face masks used only to associate candidate centers with the three sampled gaps. Candidate generation uses the engine's production functions. Classification invokes the production oriented geometry and progressive-frontage predicates; only the 4-neighbor/3-active local support is applied as the next gate. This samples generated candidates, not every possible parcel center or unproposed alley."

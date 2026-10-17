@@ -311,7 +311,7 @@ impl Engine {
         let Some(runtime) = self.plan.as_ref() else {
             return;
         };
-        for trip in &self.state.expressway_traffic.trips {
+        for trip in &self.state.transit.expressway_traffic.trips {
             let Some(route) = runtime.expressway_network.routes.get(trip.route_index) else {
                 continue;
             };
@@ -322,6 +322,7 @@ impl Engine {
             };
             let road_ids = if include_support {
                 self.state
+                    .network
                     .masterplan
                     .as_ref()
                     .map(|progress| {
@@ -359,7 +360,7 @@ impl Engine {
         let Some(runtime) = self.plan.as_ref().cloned() else {
             return;
         };
-        if self.state.masterplan.is_none() {
+        if self.state.network.masterplan.is_none() {
             return;
         }
         let network = &runtime.expressway_network;
@@ -370,7 +371,7 @@ impl Engine {
             .collect();
         let dt = 1.0 / TICKS_PER_SECOND as f32;
         {
-            let state = &mut self.state.expressway_traffic;
+            let state = &mut self.state.transit.expressway_traffic;
             for trip in &mut state.trips {
                 if route_active.get(trip.route_index).copied().unwrap_or(false) {
                     trip.progress += SPEED_METRES_PER_SECOND * dt;
@@ -383,7 +384,7 @@ impl Engine {
                 })
             });
         }
-        if self.state.tick < self.state.expressway_traffic.next_departure_tick {
+        if self.state.tick < self.state.transit.expressway_traffic.next_departure_tick {
             return;
         }
         let (_, minute) = crate::clock_at(self.state.tick);
@@ -392,9 +393,9 @@ impl Engine {
         } else {
             NIGHT_DEPARTURE_INTERVAL_TICKS
         };
-        self.state.expressway_traffic.next_departure_tick =
+        self.state.transit.expressway_traffic.next_departure_tick =
             self.state.tick.saturating_add(interval);
-        if self.state.expressway_traffic.trips.len() >= MAX_EXPRESSWAY_TRIPS {
+        if self.state.transit.expressway_traffic.trips.len() >= MAX_EXPRESSWAY_TRIPS {
             return;
         }
         if network.routes.is_empty() {
@@ -403,7 +404,7 @@ impl Engine {
         if self.state.next_id >= EXACT_F32_ID_LIMIT {
             return;
         }
-        let sequence = self.state.expressway_traffic.departure_sequence;
+        let sequence = self.state.transit.expressway_traffic.departure_sequence;
         let route_count = network.routes.len();
         let route_index = (0..route_count)
             .map(|offset| (sequence as usize + offset) % route_count)
@@ -424,7 +425,7 @@ impl Engine {
         if id >= EXACT_F32_ID_LIMIT {
             return;
         }
-        let state = &mut self.state.expressway_traffic;
+        let state = &mut self.state.transit.expressway_traffic;
         state.departure_sequence = state.departure_sequence.saturating_add(1);
         state.trips.push(Trip {
             id,
@@ -439,7 +440,7 @@ impl Engine {
         let Some(runtime) = self.plan.as_ref() else {
             return;
         };
-        for trip in &self.state.expressway_traffic.trips {
+        for trip in &self.state.transit.expressway_traffic.trips {
             if let Some((point, heading, height)) = runtime
                 .expressway_network
                 .routes
@@ -452,7 +453,7 @@ impl Engine {
     }
 
     pub(crate) fn validate_expressway_traffic(&self) -> Result<(), String> {
-        let traffic = &self.state.expressway_traffic;
+        let traffic = &self.state.transit.expressway_traffic;
         if traffic.trips.len() > MAX_EXPRESSWAY_TRIPS {
             return Err("too many expressway trips".into());
         }
@@ -481,15 +482,60 @@ impl Engine {
             if trip.progress < 0.0 || trip.progress >= route.length || !route_is_open(self, route) {
                 return Err("expressway trip is outside an open connected route".into());
             }
-            if self.state.nodes.iter().any(|actor| actor.id == trip.id)
-                || self.state.roads.iter().any(|actor| actor.id == trip.id)
-                || self.state.parcels.iter().any(|actor| actor.id == trip.id)
-                || self.state.buildings.iter().any(|actor| actor.id == trip.id)
-                || self.state.projects.iter().any(|actor| actor.id == trip.id)
-                || self.state.residents.iter().any(|actor| actor.id == trip.id)
-                || self.state.travelers.iter().any(|actor| actor.id == trip.id)
-                || self.state.trains.iter().any(|actor| actor.id == trip.id)
-                || self.state.buses.iter().any(|actor| actor.id == trip.id)
+            if self
+                .state
+                .network
+                .nodes
+                .iter()
+                .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .network
+                    .roads
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .land
+                    .parcels
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .construction
+                    .buildings
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .construction
+                    .projects
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .people
+                    .residents
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .people
+                    .travelers
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .transit
+                    .trains
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
+                || self
+                    .state
+                    .transit
+                    .buses
+                    .iter()
+                    .any(|actor| actor.id == trip.id)
             {
                 return Err("expressway trip ID collides with an active actor".into());
             }
@@ -509,6 +555,7 @@ impl Engine {
     pub(crate) fn inspect_expressway_trip(&self, id: u32) -> Option<serde_json::Value> {
         let trip = self
             .state
+            .transit
             .expressway_traffic
             .trips
             .iter()
@@ -519,7 +566,7 @@ impl Engine {
             .expressway_network
             .routes
             .get(trip.route_index)?;
-        let masterplan = self.state.masterplan.as_ref()?;
+        let masterplan = self.state.network.masterplan.as_ref()?;
         let from_index = if trip.direction > 0 {
             route.from_node
         } else {
@@ -543,7 +590,7 @@ impl Engine {
 }
 
 fn route_is_open(engine: &Engine, route: &Route) -> bool {
-    let Some(progress) = engine.state.masterplan.as_ref() else {
+    let Some(progress) = engine.state.network.masterplan.as_ref() else {
         return false;
     };
     route.segments.iter().all(|segment| {
@@ -559,10 +606,22 @@ fn route_is_open(engine: &Engine, route: &Route) -> bool {
         if road_id == 0 || from_id == 0 || to_id == 0 {
             return false;
         }
-        let Some(from) = engine.state.nodes.iter().find(|node| node.id == from_id) else {
+        let Some(from) = engine
+            .state
+            .network
+            .nodes
+            .iter()
+            .find(|node| node.id == from_id)
+        else {
             return false;
         };
-        let Some(to) = engine.state.nodes.iter().find(|node| node.id == to_id) else {
+        let Some(to) = engine
+            .state
+            .network
+            .nodes
+            .iter()
+            .find(|node| node.id == to_id)
+        else {
             return false;
         };
         let endpoints_match = (from.x - segment.a.x).abs() <= 0.001
@@ -570,7 +629,7 @@ fn route_is_open(engine: &Engine, route: &Route) -> bool {
             && (to.x - segment.b.x).abs() <= 0.001
             && (to.z - segment.b.z).abs() <= 0.001;
         endpoints_match
-            && engine.state.roads.iter().any(|road| {
+            && engine.state.network.roads.iter().any(|road| {
                 road.id == road_id
                     && road.kind == RoadKind::Expressway
                     && road.stage == Stage::Open
@@ -589,17 +648,18 @@ mod tests {
         let route = engine.plan.as_ref().unwrap().expressway_network.routes[route_index].clone();
         for segment in route.segments {
             for node_index in [segment.from_node, segment.to_node] {
-                let mapped = engine.state.masterplan.as_ref().unwrap().node_ids[node_index];
+                let mapped = engine.state.network.masterplan.as_ref().unwrap().node_ids[node_index];
                 if mapped == 0 {
                     let node_plan = plan.nodes[node_index];
                     let id = engine.add_node(node_plan.p.x, node_plan.p.z, node_plan.kind.world());
-                    engine.state.masterplan.as_mut().unwrap().node_ids[node_index] = id;
+                    engine.state.network.masterplan.as_mut().unwrap().node_ids[node_index] = id;
                 }
             }
-            let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
+            let road_id =
+                engine.state.network.masterplan.as_ref().unwrap().road_ids[segment.road_index];
             if road_id == 0 {
                 let road_plan = plan.roads[segment.road_index];
-                let mapping = &engine.state.masterplan.as_ref().unwrap().node_ids;
+                let mapping = &engine.state.network.masterplan.as_ref().unwrap().node_ids;
                 let (from, to) = (mapping[road_plan.a], mapping[road_plan.b]);
                 let id = engine.add_road(
                     from,
@@ -608,9 +668,10 @@ mod tests {
                     if open { Stage::Open } else { Stage::Survey },
                     if open { 1.0 } else { 0.2 },
                 );
-                engine.state.masterplan.as_mut().unwrap().road_ids[segment.road_index] = id;
+                engine.state.network.masterplan.as_mut().unwrap().road_ids[segment.road_index] = id;
             } else if let Some(road) = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == road_id)
@@ -618,9 +679,11 @@ mod tests {
                 road.stage = if open { Stage::Open } else { Stage::Survey };
                 road.progress = if open { 1.0 } else { 0.2 };
             }
-            let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
+            let road_id =
+                engine.state.network.masterplan.as_ref().unwrap().road_ids[segment.road_index];
             if let Some(road) = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == road_id)
@@ -641,13 +704,13 @@ mod tests {
         let mut engine = Engine::new(3);
         engine.set_development_rate(16);
         for _ in 0..750 {
-            if !engine.state.expressway_traffic.trips.is_empty() {
+            if !engine.state.transit.expressway_traffic.trips.is_empty() {
                 break;
             }
             engine.step(80);
         }
         assert!(
-            !engine.state.expressway_traffic.trips.is_empty(),
+            !engine.state.transit.expressway_traffic.trips.is_empty(),
             "seed 3 did not dispatch expressway traffic within 60,000 ticks"
         );
         engine
@@ -719,9 +782,10 @@ mod tests {
         let route = engine.plan.as_ref().unwrap().expressway_network.routes[0].clone();
         set_route_open(&mut engine, 0, false);
         let one_road = route.segments[0].road_index;
-        let road_id = engine.state.masterplan.as_ref().unwrap().road_ids[one_road];
+        let road_id = engine.state.network.masterplan.as_ref().unwrap().road_ids[one_road];
         engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|r| r.id == road_id)
@@ -729,31 +793,35 @@ mod tests {
             .stage = Stage::Open;
         engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|r| r.id == road_id)
             .unwrap()
             .connected = true;
-        engine.state.tick = engine.state.expressway_traffic.next_departure_tick;
+        engine.state.tick = engine.state.transit.expressway_traffic.next_departure_tick;
         engine.advance_expressway_traffic();
-        assert!(engine.state.expressway_traffic.trips.is_empty());
+        assert!(engine.state.transit.expressway_traffic.trips.is_empty());
 
         set_route_open(&mut engine, 0, true);
-        engine.state.tick = engine.state.expressway_traffic.next_departure_tick;
+        engine.state.tick = engine.state.transit.expressway_traffic.next_departure_tick;
         engine.advance_expressway_traffic();
-        assert_eq!(engine.state.expressway_traffic.trips.len(), 1);
+        assert_eq!(engine.state.transit.expressway_traffic.trips.len(), 1);
 
         let mut other = Engine::new(3);
         set_route_open(&mut other, 1, true);
-        other.state.tick = other.state.expressway_traffic.next_departure_tick;
+        other.state.tick = other.state.transit.expressway_traffic.next_departure_tick;
         other.advance_expressway_traffic();
-        assert_eq!(other.state.expressway_traffic.trips.len(), 1);
-        assert_eq!(other.state.expressway_traffic.trips[0].route_index, 1);
+        assert_eq!(other.state.transit.expressway_traffic.trips.len(), 1);
+        assert_eq!(
+            other.state.transit.expressway_traffic.trips[0].route_index,
+            1
+        );
 
         let (mut full, route_index) = ready_engine();
         for index in 0..MAX_EXPRESSWAY_TRIPS {
             let id = full.id();
-            full.state.expressway_traffic.trips.push(Trip {
+            full.state.transit.expressway_traffic.trips.push(Trip {
                 id,
                 route_index,
                 direction: if index % 2 == 0 { 1 } else { -1 },
@@ -761,14 +829,14 @@ mod tests {
                 progress: 100.0,
             });
         }
-        let deadline = full.state.expressway_traffic.next_departure_tick;
+        let deadline = full.state.transit.expressway_traffic.next_departure_tick;
         full.state.tick = deadline;
         full.advance_expressway_traffic();
         assert_eq!(
-            full.state.expressway_traffic.trips.len(),
+            full.state.transit.expressway_traffic.trips.len(),
             MAX_EXPRESSWAY_TRIPS
         );
-        assert!(full.state.expressway_traffic.next_departure_tick > full.state.tick);
+        assert!(full.state.transit.expressway_traffic.next_departure_tick > full.state.tick);
     }
 
     #[test]
@@ -784,12 +852,14 @@ mod tests {
         for segment in &route.segments {
             let road_id = disconnected_ground
                 .state
+                .network
                 .masterplan
                 .as_ref()
                 .unwrap()
                 .road_ids[segment.road_index];
             disconnected_ground
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == road_id)
@@ -798,58 +868,118 @@ mod tests {
         }
         disconnected_ground.state.tick = disconnected_ground
             .state
+            .transit
             .expressway_traffic
             .next_departure_tick;
         disconnected_ground.advance_expressway_traffic();
-        assert_eq!(disconnected_ground.state.expressway_traffic.trips.len(), 1);
+        assert_eq!(
+            disconnected_ground
+                .state
+                .transit
+                .expressway_traffic
+                .trips
+                .len(),
+            1
+        );
 
         let (mut missing_mapping, _) = ready_engine();
         let segment = &route.segments[route.segments.len() / 2];
-        missing_mapping.state.masterplan.as_mut().unwrap().road_ids[segment.road_index] = 0;
-        missing_mapping.state.tick = missing_mapping.state.expressway_traffic.next_departure_tick;
+        missing_mapping
+            .state
+            .network
+            .masterplan
+            .as_mut()
+            .unwrap()
+            .road_ids[segment.road_index] = 0;
+        missing_mapping.state.tick = missing_mapping
+            .state
+            .transit
+            .expressway_traffic
+            .next_departure_tick;
         missing_mapping.advance_expressway_traffic();
-        assert!(missing_mapping.state.expressway_traffic.trips.is_empty());
+        assert!(missing_mapping
+            .state
+            .transit
+            .expressway_traffic
+            .trips
+            .is_empty());
 
         let (mut wrong_endpoints, _) = ready_engine();
         let segment = &route.segments[route.segments.len() / 2];
-        let road_id =
-            wrong_endpoints.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
+        let road_id = wrong_endpoints
+            .state
+            .network
+            .masterplan
+            .as_ref()
+            .unwrap()
+            .road_ids[segment.road_index];
         let other_node = wrong_endpoints
             .state
+            .network
             .nodes
             .iter()
             .find(|node| {
                 node.id
-                    != wrong_endpoints.state.masterplan.as_ref().unwrap().node_ids
-                        [segment.from_node]
+                    != wrong_endpoints
+                        .state
+                        .network
+                        .masterplan
+                        .as_ref()
+                        .unwrap()
+                        .node_ids[segment.from_node]
             })
             .unwrap()
             .id;
         wrong_endpoints
             .state
+            .network
             .roads
             .iter_mut()
             .find(|road| road.id == road_id)
             .unwrap()
             .from = other_node;
-        wrong_endpoints.state.tick = wrong_endpoints.state.expressway_traffic.next_departure_tick;
+        wrong_endpoints.state.tick = wrong_endpoints
+            .state
+            .transit
+            .expressway_traffic
+            .next_departure_tick;
         wrong_endpoints.advance_expressway_traffic();
-        assert!(wrong_endpoints.state.expressway_traffic.trips.is_empty());
+        assert!(wrong_endpoints
+            .state
+            .transit
+            .expressway_traffic
+            .trips
+            .is_empty());
 
         let (mut missing_middle, _) = ready_engine();
         let segment = &route.segments[route.segments.len() / 2];
-        let road_id =
-            missing_middle.state.masterplan.as_ref().unwrap().road_ids[segment.road_index];
+        let road_id = missing_middle
+            .state
+            .network
+            .masterplan
+            .as_ref()
+            .unwrap()
+            .road_ids[segment.road_index];
         missing_middle
             .state
+            .network
             .roads
             .iter_mut()
             .find(|road| road.id == road_id)
             .unwrap()
             .stage = Stage::Survey;
-        missing_middle.state.tick = missing_middle.state.expressway_traffic.next_departure_tick;
+        missing_middle.state.tick = missing_middle
+            .state
+            .transit
+            .expressway_traffic
+            .next_departure_tick;
         missing_middle.advance_expressway_traffic();
-        assert!(missing_middle.state.expressway_traffic.trips.is_empty());
+        assert!(missing_middle
+            .state
+            .transit
+            .expressway_traffic
+            .trips
+            .is_empty());
     }
 
     #[test]
@@ -857,16 +987,16 @@ mod tests {
         let (mut engine, route_index) = ready_engine();
         let route = engine.plan.as_ref().unwrap().expressway_network.routes[route_index].clone();
         let id = engine.id();
-        engine.state.expressway_traffic.trips.push(Trip {
+        engine.state.transit.expressway_traffic.trips.push(Trip {
             id,
             route_index,
             direction: 1,
             lane: 0,
             progress: route.length - 0.5,
         });
-        engine.state.expressway_traffic.next_departure_tick = u64::MAX;
+        engine.state.transit.expressway_traffic.next_departure_tick = u64::MAX;
         engine.advance_expressway_traffic();
-        assert!(engine.state.expressway_traffic.trips.is_empty());
+        assert!(engine.state.transit.expressway_traffic.trips.is_empty());
 
         let forward = route.sample(route.length * 0.5, 1, 0).unwrap();
         let reverse = route.sample(route.length * 0.5, -1, 0).unwrap();
@@ -885,18 +1015,18 @@ mod tests {
         // The trip may have spawned on the final tick of the 80-tick batch.
         // Advance it onto the corridor before constructing its opposing peer.
         live.step(2);
-        let id = live.state.expressway_traffic.trips[0].id;
-        let mut opposing = live.state.expressway_traffic.trips[0].clone();
+        let id = live.state.transit.expressway_traffic.trips[0].id;
+        let mut opposing = live.state.transit.expressway_traffic.trips[0].clone();
         opposing.id = live.id();
         opposing.direction = -opposing.direction;
         let route_length =
             live.plan.as_ref().unwrap().expressway_network.routes[opposing.route_index].length;
         opposing.progress = route_length - opposing.progress;
-        live.state.expressway_traffic.trips.push(opposing);
+        live.state.transit.expressway_traffic.trips.push(opposing);
         let movement = live.movement_buffer();
         assert_eq!(movement.len() % 6, 0);
-        let first = live.state.expressway_traffic.trips[0].id as f32;
-        let second = live.state.expressway_traffic.trips[1].id as f32;
+        let first = live.state.transit.expressway_traffic.trips[0].id as f32;
+        let second = live.state.transit.expressway_traffic.trips[1].id as f32;
         let first_offset = movement
             .chunks_exact(6)
             .position(|entry| entry[0] == first)
@@ -924,7 +1054,7 @@ mod tests {
             assert_eq!(live.save_json(), restored.save_json());
             assert_eq!(live.movement_buffer(), restored.movement_buffer());
         }
-        assert_eq!(live.state.expressway_traffic.trips[0].id, id);
+        assert_eq!(live.state.transit.expressway_traffic.trips[0].id, id);
     }
 
     #[test]
@@ -944,14 +1074,14 @@ mod tests {
         reject(outside_route);
 
         let mut colliding_id = baseline.clone();
-        let entity_id = engine.state.nodes[0].id;
+        let entity_id = engine.state.network.nodes[0].id;
         colliding_id["expressway_traffic"]["trips"][0]["id"] = serde_json::json!(entity_id);
         reject(colliding_id);
 
-        let trip = &engine.state.expressway_traffic.trips[0];
+        let trip = &engine.state.transit.expressway_traffic.trips[0];
         let route = &engine.plan.as_ref().unwrap().expressway_network.routes[trip.route_index];
-        let road_id =
-            engine.state.masterplan.as_ref().unwrap().road_ids[route.segments[0].road_index];
+        let road_id = engine.state.network.masterplan.as_ref().unwrap().road_ids
+            [route.segments[0].road_index];
         let mut closed_road = baseline;
         for road in closed_road["roads"].as_array_mut().unwrap() {
             if road["id"] == serde_json::json!(road_id) {

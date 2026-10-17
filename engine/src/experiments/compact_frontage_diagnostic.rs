@@ -182,6 +182,7 @@ fn rect_inside_crop(rect: &geometry::OrientedRect) -> bool {
 fn nearby_building_counts(engine: &Engine, x: f32, z: f32) -> (usize, usize) {
     engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| {
@@ -193,11 +194,12 @@ fn nearby_building_counts(engine: &Engine, x: f32, z: f32) -> (usize, usize) {
 }
 
 fn global_frontage_gate(engine: &Engine) -> bool {
-    engine.state.parcels.len() < crate::MAX_PARCELS
-        && engine.state.buildings.len() < crate::MAX_BUILDINGS
-        && engine.state.demand >= 1.2
+    engine.state.land.parcels.len() < crate::MAX_PARCELS
+        && engine.state.construction.buildings.len() < crate::MAX_BUILDINGS
+        && engine.state.people.demand >= 1.2
         && engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| site_active(b))
@@ -358,6 +360,7 @@ fn build_report() -> Report {
     let source_before = engine.save_json();
     let roads: Vec<Road> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| ordinary_connected(road))
@@ -381,7 +384,7 @@ fn build_report() -> Report {
     Report {
         seed: engine.state.seed,
         tick: engine.state.tick,
-        demand: engine.state.demand,
+        demand: engine.state.people.demand,
         crop_bounds: CROP,
         ordinary_connected_roads_in_crop_scope: crop_roads.len(),
         full_world_ordinary_connected_roads: roads.len(),
@@ -411,6 +414,7 @@ fn compact_frontage_width_comparison_at_crop_host() {
     let source_before = engine.save_json();
     let road = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == 2985 && ordinary_connected(road))
@@ -604,13 +608,14 @@ fn compact_frontage_width_comparison_at_crop_host() {
         Engine::restore_json(MATURE_SAVE).expect("mature save restores for admission");
     let host_road_index = admission
         .state
+        .network
         .roads
         .iter()
         .position(|host| host.id == road.id)
         .expect("host road index exists");
     let admission_context = admission.collision_context();
     let admission_towers = admission.available_station_tower_envelopes();
-    let admission_road = admission.state.roads[host_road_index].clone();
+    let admission_road = admission.state.network.roads[host_road_index].clone();
     let admission_a = admission
         .node(admission_road.from)
         .cloned()
@@ -641,13 +646,14 @@ fn compact_frontage_width_comparison_at_crop_host() {
         .expect("production admission generator includes exact narrow witness");
     let (target_x, target_z, target_access, target_along, target_side) =
         admission_candidates.0[admission_slot];
-    admission.state.frontage_road_cursor = host_road_index;
-    admission.state.frontage_slot_cursor = admission_slot as u16;
-    let before_parcels = admission.state.parcels.len();
+    admission.state.legacy.frontage_road_cursor = host_road_index;
+    admission.state.legacy.frontage_slot_cursor = admission_slot as u16;
+    let before_parcels = admission.state.land.parcels.len();
     assert!(admission.try_progressive_frontage_infill());
-    assert_eq!(admission.state.parcels.len(), before_parcels + 1);
+    assert_eq!(admission.state.land.parcels.len(), before_parcels + 1);
     let admitted = admission
         .state
+        .land
         .parcels
         .last()
         .expect("admitted parcel exists")
@@ -657,6 +663,7 @@ fn compact_frontage_width_comparison_at_crop_host() {
     assert!(admission.node_connected(admitted.access_node));
     let frontage = admission
         .state
+        .land
         .parcel_frontages
         .iter()
         .find(|frontage| frontage.parcel_id == admitted.id)
@@ -674,7 +681,7 @@ fn compact_frontage_width_comparison_at_crop_host() {
     admission.step(80);
     resumed.step(80);
     assert_eq!(admission.save_json(), resumed.save_json());
-    let construction_started = admission.state.projects.iter().any(|project| {
+    let construction_started = admission.state.construction.projects.iter().any(|project| {
         project.kind == ProjectKind::Building
             && project.progress < 1.0
             && project.parcel_id == Some(admitted.id)

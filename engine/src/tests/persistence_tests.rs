@@ -9,12 +9,13 @@ fn building_picker_bounds_window_wraps_cursor_and_replays() {
         let z = 280.0 + (index / 8) as f32 * 13.0;
         candidate_ids.push(engine.add_parcel(x, z, 8.0, 8.0, access_node, 0.8, false));
     }
-    engine.state.growth_cursor = 38;
+    engine.state.construction.growth_cursor = 38;
 
     engine.plan_building(1);
-    assert_eq!(engine.state.growth_cursor, 30);
+    assert_eq!(engine.state.construction.growth_cursor, 30);
     let selected = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Building)
@@ -28,7 +29,10 @@ fn building_picker_bounds_window_wraps_cursor_and_replays() {
     engine.plan_building(1);
     replay.plan_building(1);
     assert_eq!(engine.save_json(), replay.save_json());
-    assert_eq!(engine.state.growth_cursor, replay.state.growth_cursor);
+    assert_eq!(
+        engine.state.construction.growth_cursor,
+        replay.state.construction.growth_cursor
+    );
 }
 
 #[test]
@@ -43,12 +47,14 @@ fn admitted_interior_branch_with_exact_clearance_restores_without_radial_rejecti
     let engine = Engine::restore_json(saved).expect("recorded organic branch restores");
     let plan = engine
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .expect("fixture captures a pending access plan");
     let branch_id = plan.branch_road_id;
     let branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == branch_id)
@@ -98,6 +104,7 @@ fn admitted_interior_branch_with_exact_clearance_restores_without_radial_rejecti
     for _ in 0..12 {
         if completed
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == branch_id)
@@ -109,6 +116,7 @@ fn admitted_interior_branch_with_exact_clearance_restores_without_radial_rejecti
     }
     let branch = completed
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == branch_id)
@@ -135,6 +143,7 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
     let mut engine = Engine::new_legacy(49);
     let founder = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.anchor)
@@ -142,6 +151,7 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
         .clone();
     let parcel = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| parcel.id == founder.parcel_id)
@@ -149,6 +159,7 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
     let access_node = parcel.access_node;
     let station = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.kind == NodeKind::Station)
@@ -182,7 +193,7 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
         traveler.id,
         traveler.kind,
     );
-    engine.state.travelers.push(traveler);
+    engine.state.people.travelers.push(traveler);
     let mut old_save: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
     let state = old_save.as_object_mut().unwrap();
     state.remove("parcel_frontages");
@@ -200,30 +211,30 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
         resident.as_object_mut().unwrap().remove("queue_slot");
     }
     let restored = Engine::restore_json(&old_save.to_string()).unwrap();
-    let restored_traveler = &restored.state.travelers[0];
+    let restored_traveler = &restored.state.people.travelers[0];
     assert_eq!(restored_traveler.access_phase, 1);
     assert!(restored_traveler.origin_access.is_none());
-    assert!(restored.state.parcel_frontages.is_empty());
-    assert_eq!(restored.state.frontage_road_cursor, 0);
-    assert_eq!(restored.state.frontage_slot_cursor, 0);
-    assert_eq!(restored.state.road_origin_cursor, 0);
+    assert!(restored.state.land.parcel_frontages.is_empty());
+    assert_eq!(restored.state.legacy.frontage_road_cursor, 0);
+    assert_eq!(restored.state.legacy.frontage_slot_cursor, 0);
+    assert_eq!(restored.state.legacy.road_origin_cursor, 0);
     let movement = restored.movement_buffer();
     assert_eq!(movement[0] as u32, restored_traveler.id);
-    let door = engine.state.travelers[0]
+    let door = engine.state.people.travelers[0]
         .origin_access
         .as_ref()
         .unwrap()
         .points[0];
     assert!((movement[1] - door.x).hypot(movement[2] - door.z) > 1.0);
 
-    while engine.state.parcels.len() < MAX_PARCELS {
+    while engine.state.land.parcels.len() < MAX_PARCELS {
         let _ = engine.add_parcel(0.0, 0.0, 1.0, 1.0, access_node, 0.5, false);
     }
     assert_eq!(
         engine.add_parcel(1.0, 1.0, 1.0, 1.0, access_node, 0.5, false),
         0
     );
-    assert_eq!(engine.state.parcels.len(), MAX_PARCELS);
+    assert_eq!(engine.state.land.parcels.len(), MAX_PARCELS);
 }
 
 #[test]
@@ -233,7 +244,7 @@ fn seed_87231_natural_growth_uses_a_saved_partial_shared_edge_layout() {
     let mut observed_shared_plan = false;
     for _ in 0..121 {
         engine.step(2_000);
-        if let Some(plan) = engine.state.neighborhood_plan.as_ref() {
+        if let Some(plan) = engine.state.legacy.neighborhood_plan.as_ref() {
             if let Some(selected) = plan.selected_lots.as_ref() {
                 assert!(selected.len() >= 4);
                 assert!(selected.len() < 10, "existing frontage should be retained");
@@ -258,19 +269,19 @@ fn save_restore_preserves_residents_and_active_trips() {
     for _ in 0..12 {
         engine.step(2_000);
     }
-    assert!(!engine.state.residents.is_empty());
+    assert!(!engine.state.people.residents.is_empty());
     // Capture an active named journey, not only the resident roster and deadlines.
     for _ in 0..120 {
         engine.step(200);
-        if !engine.state.travelers.is_empty() {
+        if !engine.state.people.travelers.is_empty() {
             break;
         }
     }
     assert!(
-        !engine.state.travelers.is_empty(),
+        !engine.state.people.travelers.is_empty(),
         "no scheduled trip became active"
     );
-    let active_id = engine.state.travelers[0].id;
+    let active_id = engine.state.people.travelers[0].id;
     let inspected: serde_json::Value =
         serde_json::from_str(&engine.inspect_json(active_id)).unwrap();
     assert_eq!(inspected["entityType"], "traveler");
@@ -291,6 +302,7 @@ fn save_restore_replays_pending_projects() {
     a.step(1_337);
     assert!(a
         .state
+        .construction
         .projects
         .iter()
         .any(|p| p.progress > 0.0 && p.progress < 1.0));

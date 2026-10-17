@@ -6,6 +6,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     engine.state.development_rate = 0;
     let founder = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.anchor)
@@ -14,12 +15,14 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     assert_eq!(founder.rotation, 0.0);
     let home_parcel = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| {
-            parcel.access_node != engine.state.parcels[0].access_node
+            parcel.access_node != engine.state.land.parcels[0].access_node
                 && engine
                     .state
+                    .land
                     .parcel_frontages
                     .iter()
                     .any(|frontage| frontage.parcel_id == parcel.id)
@@ -40,6 +43,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     let route = engine.route(
         engine
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == founder.parcel_id)
@@ -118,6 +122,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     let frontage_road = home_access.road_id;
     let original_frontage_road = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == frontage_road)
@@ -125,6 +130,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
         .clone();
     engine
         .state
+        .network
         .roads
         .iter_mut()
         .find(|road| road.id == frontage_road)
@@ -137,6 +143,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
         .any(|access| access.building_id == home_id));
     let road = engine
         .state
+        .network
         .roads
         .iter_mut()
         .find(|road| road.id == frontage_road)
@@ -150,6 +157,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
         .any(|access| access.building_id == home_id));
     let road = engine
         .state
+        .network
         .roads
         .iter_mut()
         .find(|road| road.id == frontage_road)
@@ -163,7 +171,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     };
     assert!((door.x - expected_door.x).hypot(door.z - expected_door.z) < 0.01);
     traveler.access_phase = 0;
-    engine.state.travelers.push(traveler);
+    engine.state.people.travelers.push(traveler);
     let first = &engine.movement_buffer()[..6];
     assert!((first[1] - door.x).abs() < 0.01 && (first[2] - door.z).abs() < 0.01);
     let save = engine.save_json();
@@ -179,6 +187,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     for _ in 0..4_000 {
         let Some(traveler) = engine
             .state
+            .people
             .travelers
             .iter()
             .find(|traveler| traveler.id == id)
@@ -211,6 +220,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
     );
     assert!(!engine
         .state
+        .people
         .travelers
         .iter()
         .any(|traveler| traveler.id == id));
@@ -227,7 +237,7 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
     let tower_envelopes = engine.available_station_tower_envelopes();
     let mut target = None;
 
-    'roads: for (road_index, road) in engine.state.roads.iter().enumerate() {
+    'roads: for (road_index, road) in engine.state.network.roads.iter().enumerate() {
         if road.stage != Stage::Open
             || !road.connected
             || matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -260,9 +270,15 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
                 continue;
             }
             let (mut local_open, mut local_active) = (0usize, 0usize);
-            for building in engine.state.buildings.iter().filter(|building| {
-                building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
-            }) {
+            for building in engine
+                .state
+                .construction
+                .buildings
+                .iter()
+                .filter(|building| {
+                    building.stage == Stage::Open && (building.x - x).hypot(building.z - z) <= 78.0
+                })
+            {
                 local_open += 1;
                 local_active += usize::from(site_active(building));
             }
@@ -272,6 +288,7 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
             let road_length = (b.x - a.x).hypot(b.z - a.z);
             let left_flanker = engine
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|frontage| {
@@ -281,6 +298,7 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
                 .min_by(f32::total_cmp);
             let right_flanker = engine
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|frontage| {
@@ -311,22 +329,22 @@ fn progressive_gap_infill_admits_compact_frontage_with_access_and_replay() {
 
     let (road_index, road_id, slot, x, z, width, access_node, along, side, rotation) =
         target.expect("mature active frontage has an admissible compact gap lot");
-    engine.state.frontage_road_cursor = road_index;
-    engine.state.frontage_slot_cursor = slot as u16;
+    engine.state.legacy.frontage_road_cursor = road_index;
+    engine.state.legacy.frontage_slot_cursor = slot as u16;
     assert!(slot < MAX_FRONTAGE_SITES_PER_ROAD);
-    let old_parcels = engine.state.parcels.len();
+    let old_parcels = engine.state.land.parcels.len();
     assert!(engine.try_progressive_frontage_infill());
-    assert_eq!(engine.state.parcels.len(), old_parcels + 1);
-    assert_eq!(engine.state.frontage_road_cursor, road_index);
-    assert_eq!(engine.state.frontage_slot_cursor as usize, slot + 1);
+    assert_eq!(engine.state.land.parcels.len(), old_parcels + 1);
+    assert_eq!(engine.state.legacy.frontage_road_cursor, road_index);
+    assert_eq!(engine.state.legacy.frontage_slot_cursor as usize, slot + 1);
 
-    let parcel = engine.state.parcels.last().unwrap().clone();
+    let parcel = engine.state.land.parcels.last().unwrap().clone();
     assert!((parcel.x - x).hypot(parcel.z - z) < 1e-4);
     assert_eq!(parcel.width, width);
     assert_eq!(parcel.depth, 12.0);
     assert!((8.0..14.0).contains(&parcel.width));
     assert_eq!(parcel.rotation, Some(rotation));
-    let frontage = engine.state.parcel_frontages.last().unwrap();
+    let frontage = engine.state.land.parcel_frontages.last().unwrap();
     assert_eq!(frontage.parcel_id, parcel.id);
     assert_eq!(frontage.road_id, road_id);
     assert_eq!(parcel.access_node, access_node);
@@ -403,6 +421,7 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
     assert!(
         engine
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .unwrap()
@@ -414,6 +433,7 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
             assert!(world.plan_next_neighborhood_segment());
             let project = world
                 .state
+                .construction
                 .projects
                 .iter_mut()
                 .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -425,6 +445,7 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
         assert_eq!(engine.save_json(), replay.save_json());
         let count = engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|parcel| parcel.rotation.is_some())
@@ -438,9 +459,10 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
             );
         }
     }
-    assert!(engine.state.neighborhood_plan.is_none());
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
     let lots: Vec<_> = engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|parcel| parcel.rotation.is_some())
@@ -449,12 +471,14 @@ fn coordinated_block_lots_wait_for_perimeter_and_preserve_access_on_restore() {
     for parcel in &lots {
         let frontage = engine
             .state
+            .land
             .parcel_frontages
             .iter()
             .find(|frontage| frontage.parcel_id == parcel.id)
             .unwrap();
         let road = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == frontage.road_id)
@@ -490,6 +514,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     assert_eq!(first.save_json(), replay.save_json());
     let project = first
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -497,7 +522,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
         .expect("a clear occupied neighborhood should reserve a local chord");
     assert_eq!(project.from, Some(start));
     assert_eq!(project.to, Some(target));
-    assert!(!first.state.roads.iter().any(|road| {
+    assert!(!first.state.network.roads.iter().any(|road| {
         road.stage == Stage::Open
             && ((road.from == start && road.to == target)
                 || (road.from == target && road.to == start))
@@ -512,6 +537,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     }
     for road in first
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.stage == Stage::Open)
@@ -528,9 +554,10 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     let active_save = first.save_json();
     let mut resumed = Engine::restore_json(&active_save).unwrap();
     assert_eq!(resumed.save_json(), active_save);
-    let initial_parcels = first.state.parcels.len();
+    let initial_parcels = first.state.land.parcels.len();
     let initial_local_envelope_area: f32 = first
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| (building.x - 30.0).hypot(building.z - 300.0) <= 80.0)
@@ -539,34 +566,36 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     for engine in [&mut first, &mut resumed] {
         engine
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|candidate| candidate.id == project.id)
             .unwrap()
             .duration = 2.0;
         engine.advance_projects();
-        assert!(!engine.state.roads.iter().any(|road| {
+        assert!(!engine.state.network.roads.iter().any(|road| {
             road.stage == Stage::Open
                 && ((road.from == start && road.to == target)
                     || (road.from == target && road.to == start))
         }));
         engine.advance_projects();
-        assert!(engine.state.roads.iter().any(|road| {
+        assert!(engine.state.network.roads.iter().any(|road| {
             road.stage == Stage::Open
                 && road.connected
                 && ((road.from == start && road.to == target)
                     || (road.from == target && road.to == start))
         }));
-        assert!(engine.state.parcels.len() > initial_parcels);
+        assert!(engine.state.land.parcels.len() > initial_parcels);
     }
     assert_eq!(first.save_json(), resumed.save_json());
 
     let new_parcels: BTreeSet<u32> = first
         .state
+        .land
         .parcel_frontages
         .iter()
         .filter(|frontage| {
-            first.state.roads.iter().any(|road| {
+            first.state.network.roads.iter().any(|road| {
                 road.id == frontage.road_id
                     && ((road.from == start && road.to == target)
                         || (road.from == target && road.to == start))
@@ -579,6 +608,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     first.plan_building((first.state.tick / TICKS_PER_DAY) as u32);
     let building_project = first
         .state
+        .construction
         .projects
         .iter()
         .find(|candidate| {
@@ -591,7 +621,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
         .cloned()
         .expect("the completed chord should provide a buildable, connected lot");
     for _ in 0..=6 {
-        if first.state.buildings.iter().any(|building| {
+        if first.state.construction.buildings.iter().any(|building| {
             building.parcel_id == building_project.parcel_id.unwrap()
                 && building.stage == Stage::Open
         }) {
@@ -601,6 +631,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     }
     let new_building = first
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.parcel_id == building_project.parcel_id.unwrap())
@@ -609,7 +640,12 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     let (access_road, points) = first
         .building_access_segment(new_building.id)
         .expect("the new building has a real frontage access segment");
-    assert!(first.state.roads.iter().any(|road| road.id == access_road));
+    assert!(first
+        .state
+        .network
+        .roads
+        .iter()
+        .any(|road| road.id == access_road));
     assert!(points[0].x.is_finite() && points[1].x.is_finite());
     let walk = first
         .building_access_path(new_building.id, &[start, target], true, new_building.id, 0)
@@ -617,6 +653,7 @@ fn local_chord_construction_opens_connected_frontage_and_adds_accessible_density
     assert!(walk.points.len() >= 2);
     let final_local_envelope_area: f32 = first
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| (building.x - 30.0).hypot(building.z - 300.0) <= 80.0)
@@ -683,6 +720,7 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
             .unwrap_or_else(|error| panic!("{name}: source fixture did not restore: {error}"));
         let host = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == host_id)
@@ -694,18 +732,21 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
         );
         let before_positions: Vec<_> = engine
             .state
+            .people
             .travelers
             .iter()
             .map(|traveler| route_position(&engine, traveler))
             .collect();
         let before_access: Vec<_> = engine
             .state
+            .land
             .parcel_frontages
             .iter()
             .filter(|frontage| frontage.road_id == host_id)
             .filter_map(|frontage| {
                 let building = engine
                     .state
+                    .construction
                     .buildings
                     .iter()
                     .find(|building| building.parcel_id == frontage.parcel_id)?;
@@ -714,15 +755,17 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
                     .map(|(_, segment)| (building.id, segment))
             })
             .collect();
-        let bus_pose = engine.state.bus_line.as_ref().and_then(|line| {
+        let bus_pose = engine.state.transit.bus_line.as_ref().and_then(|line| {
             engine
                 .state
+                .transit
                 .buses
                 .first()
                 .and_then(|bus| engine.bus_pose(line, bus))
         });
         let train_distances: Vec<_> = engine
             .state
+            .transit
             .trains
             .iter()
             .map(|train| train.distance)
@@ -733,7 +776,7 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
             .try_split_open_road(host_id, t)
             .unwrap_or_else(|error| panic!("{name}: expected safe split, got {error:?}"));
         assert_eq!(outcome.retained_road_id, host_id, "{name}");
-        for (index, traveler) in engine.state.travelers.iter().enumerate() {
+        for (index, traveler) in engine.state.people.travelers.iter().enumerate() {
             let after = route_position(&engine, traveler);
             assert!(
                 (before_positions[index].x - after.x).abs() < 0.002
@@ -757,8 +800,8 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
         if let Some(before) = bus_pose {
             let after = engine
                 .bus_pose(
-                    engine.state.bus_line.as_ref().unwrap(),
-                    engine.state.buses.first().unwrap(),
+                    engine.state.transit.bus_line.as_ref().unwrap(),
+                    engine.state.transit.buses.first().unwrap(),
                 )
                 .unwrap();
             assert!(
@@ -769,6 +812,7 @@ fn mature_fixture_road_splits_preserve_routes_access_and_replay() {
         assert_eq!(
             engine
                 .state
+                .transit
                 .trains
                 .iter()
                 .map(|train| train.distance)
@@ -807,12 +851,13 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature public city fixture restores");
-    assert!(engine.state.neighborhood_plan.is_none());
-    assert!(engine.state.pending_interior_access.is_none());
-    engine.state.demand = 1.2;
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
+    assert!(engine.state.legacy.pending_interior_access.is_none());
+    engine.state.people.demand = 1.2;
 
     let proposal_bound = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -833,10 +878,11 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         }
     }
     assert!(admitted, "mature feasible frontage was never admitted");
-    let plan = engine.state.pending_interior_access.clone().unwrap();
+    let plan = engine.state.legacy.pending_interior_access.clone().unwrap();
     assert!((2..=interior_access::MAX_SELECTED_LOTS).contains(&plan.selected_lots.len()));
     let branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == plan.branch_road_id)
@@ -845,6 +891,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     assert!(!branch.connected);
     let project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.id == plan.project_id)
@@ -857,7 +904,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         .roads
         .iter()
         .any(|road| road.id == plan.branch_road_id && road.stage != Stage::Open));
-    let parcels_before = engine.state.parcels.len();
+    let parcels_before = engine.state.land.parcels.len();
     for lot in &plan.selected_lots {
         let rect = geometry::OrientedRect {
             x: lot.x,
@@ -874,6 +921,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     let first_lot = plan.selected_lots[0];
     let branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == plan.branch_road_id)
@@ -896,16 +944,18 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         ) >= 8.0
     );
     assert!(!engine.interior_plan_lots_clear_of_road(probe_a.0, probe_a.1, probe_b.0, probe_b.1));
-    assert_eq!(engine.state.parcels.len(), parcels_before);
+    assert_eq!(engine.state.land.parcels.len(), parcels_before);
     engine.advance_projects();
     let progressed_branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == plan.branch_road_id)
         .unwrap();
     let progressed_project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.id == plan.project_id)
@@ -924,18 +974,25 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     let mut resumed = Engine::restore_json(&save).expect("pending plan restores canonically");
     assert_eq!(resumed.save_json(), save);
     let mut invalid = Engine::restore_json(&save).unwrap();
-    let corrupt_plan = invalid.state.pending_interior_access.as_mut().unwrap();
+    let corrupt_plan = invalid
+        .state
+        .legacy
+        .pending_interior_access
+        .as_mut()
+        .unwrap();
     corrupt_plan.project_id = u32::MAX;
     assert!(Engine::restore_json(&invalid.save_json()).is_err());
     let mut invalid_fraction = Engine::restore_json(&save).unwrap();
     let plan_t = invalid_fraction
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .unwrap()
         .host_t;
     invalid_fraction
         .state
+        .legacy
         .pending_interior_access
         .as_mut()
         .unwrap()
@@ -948,12 +1005,14 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     let mut invalid_branch = Engine::restore_json(&save).unwrap();
     let endpoint = invalid_branch
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .unwrap()
         .branch_endpoint_id;
     let endpoint_node = invalid_branch
         .state
+        .network
         .nodes
         .iter_mut()
         .find(|node| node.id == endpoint)
@@ -961,24 +1020,31 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     endpoint_node.x += 1.0;
     assert!(Engine::restore_json(&invalid_branch.save_json()).is_err());
     let mut blocked = Engine::restore_json(&save).unwrap();
-    let existing = blocked.state.parcels[0].clone();
-    let blocked_plan = blocked.state.pending_interior_access.as_mut().unwrap();
+    let existing = blocked.state.land.parcels[0].clone();
+    let blocked_plan = blocked
+        .state
+        .legacy
+        .pending_interior_access
+        .as_mut()
+        .unwrap();
     blocked_plan.selected_lots[0].x = existing.x;
     blocked_plan.selected_lots[0].z = existing.z;
     blocked
         .state
+        .construction
         .projects
         .iter_mut()
         .find(|project| project.id == plan.project_id)
         .unwrap()
         .duration = 1.0;
-    let blocked_parcel_count = blocked.state.parcels.len();
+    let blocked_parcel_count = blocked.state.land.parcels.len();
     blocked.advance_projects();
-    assert!(blocked.state.pending_interior_access.is_some());
-    assert_eq!(blocked.state.parcels.len(), blocked_parcel_count);
+    assert!(blocked.state.legacy.pending_interior_access.is_some());
+    assert_eq!(blocked.state.land.parcels.len(), blocked_parcel_count);
     assert_ne!(
         blocked
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == plan.branch_road_id)
@@ -989,6 +1055,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     assert!(
         blocked
             .state
+            .construction
             .projects
             .iter()
             .find(|project| project.id == plan.project_id)
@@ -999,6 +1066,7 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     for instance in [&mut engine, &mut resumed] {
         let project = instance
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|project| project.id == plan.project_id)
@@ -1014,9 +1082,10 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
         resumed.save_json(),
         "completion replays identically"
     );
-    assert!(engine.state.pending_interior_access.is_none());
+    assert!(engine.state.legacy.pending_interior_access.is_none());
     let branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == plan.branch_road_id)
@@ -1024,12 +1093,13 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
     assert_eq!(branch.stage, Stage::Open);
     assert!(branch.connected);
     assert_eq!(
-        engine.state.parcels.len(),
+        engine.state.land.parcels.len(),
         parcels_before + plan.selected_lots.len()
     );
     assert_eq!(
         engine
             .state
+            .land
             .parcel_frontages
             .iter()
             .filter(|frontage| frontage.road_id == plan.branch_road_id)
@@ -1041,22 +1111,25 @@ fn interior_access_plan_is_visible_reserved_atomic_and_replayable() {
 #[test]
 fn interior_access_capacity_preflight_does_not_split_or_allocate() {
     let mut engine = Engine::new_legacy(41);
-    engine.state.demand = 1.2;
+    engine.state.people.demand = 1.2;
     engine.state.next_id = u32::MAX - 4;
-    let before_nodes = engine.state.nodes.clone();
-    let before_roads = engine.state.roads.clone();
-    let before_projects = engine.state.projects.clone();
-    let before_parcels = engine.state.parcels.clone();
+    let before_nodes = engine.state.network.nodes.clone();
+    let before_roads = engine.state.network.roads.clone();
+    let before_projects = engine.state.construction.projects.clone();
+    let before_parcels = engine.state.land.parcels.clone();
     let before_id = engine.state.next_id;
-    let before_cursor = engine.state.interior_access_cursor;
+    let before_cursor = engine.state.legacy.interior_access_cursor;
     assert!(!engine.try_plan_interior_access());
-    assert_eq!(engine.state.nodes.len(), before_nodes.len());
-    assert_eq!(engine.state.roads.len(), before_roads.len());
-    assert_eq!(engine.state.projects.len(), before_projects.len());
-    assert_eq!(engine.state.parcels.len(), before_parcels.len());
+    assert_eq!(engine.state.network.nodes.len(), before_nodes.len());
+    assert_eq!(engine.state.network.roads.len(), before_roads.len());
+    assert_eq!(
+        engine.state.construction.projects.len(),
+        before_projects.len()
+    );
+    assert_eq!(engine.state.land.parcels.len(), before_parcels.len());
     assert_eq!(engine.state.next_id, before_id);
-    assert_eq!(engine.state.interior_access_cursor, before_cursor);
-    assert!(engine.state.pending_interior_access.is_none());
+    assert_eq!(engine.state.legacy.interior_access_cursor, before_cursor);
+    assert!(engine.state.legacy.pending_interior_access.is_none());
 }
 
 #[test]
@@ -1065,9 +1138,10 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature public city fixture restores");
-    engine.state.demand = 1.2;
+    engine.state.people.demand = 1.2;
     let proposal_bound = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -1085,7 +1159,7 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         let before = engine.save_json();
         let before_rng = engine.state.rng_growth;
         let before_id = engine.state.next_id;
-        let before_cursor = engine.state.interior_access_cursor;
+        let before_cursor = engine.state.legacy.interior_access_cursor;
         let scan = engine.propose_interior_access();
         assert_eq!(
             engine.save_json(),
@@ -1094,12 +1168,12 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         );
         assert_eq!(engine.state.rng_growth, before_rng);
         assert_eq!(engine.state.next_id, before_id);
-        assert_eq!(engine.state.interior_access_cursor, before_cursor);
+        assert_eq!(engine.state.legacy.interior_access_cursor, before_cursor);
         if !scan.proposals.is_empty() {
             found_proposal = true;
             break;
         }
-        engine.state.interior_access_cursor = scan.next_cursor;
+        engine.state.legacy.interior_access_cursor = scan.next_cursor;
     }
     assert!(
         found_proposal,
@@ -1110,8 +1184,8 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature public city fixture restores");
-    planner.state.demand = 1.2;
-    let revision_before_admission = planner.state.access_geometry_revision;
+    planner.state.people.demand = 1.2;
+    let revision_before_admission = planner.state.network.access_geometry_revision;
     let mut admitted = false;
     for _ in 0..scan_count {
         if planner.try_plan_interior_access() {
@@ -1123,8 +1197,8 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
         admitted,
         "production planner should admit an enumerated proposal"
     );
-    assert!(planner.state.access_geometry_revision > revision_before_admission);
-    assert!(planner.state.pending_interior_access.is_some());
+    assert!(planner.state.network.access_geometry_revision > revision_before_admission);
+    assert!(planner.state.legacy.pending_interior_access.is_some());
     planner
         .validate()
         .expect("admitted proposal remains connected and restorable");
@@ -1138,53 +1212,55 @@ fn interior_access_proposal_scan_is_read_only_and_leaves_admission_unchanged() {
 #[test]
 fn access_geometry_revision_tracks_effective_writers_and_ignores_ticks() {
     let mut engine = Engine::new_legacy(31);
-    let initial = engine.state.access_geometry_revision;
+    let initial = engine.state.network.access_geometry_revision;
 
     // Snapshot/weather activity is outside the frozen access geometry.
     engine.state.tick = engine.state.tick.saturating_add(40);
     engine.state.weather_intensity = 0.4;
     engine.state.revision = engine.state.revision.saturating_add(1);
     engine.recompute_connectivity();
-    assert_eq!(engine.state.access_geometry_revision, initial);
+    assert_eq!(engine.state.network.access_geometry_revision, initial);
 
     let node = engine.add_node(260.0, 260.0, NodeKind::Junction);
-    let after_node = engine.state.access_geometry_revision;
+    let after_node = engine.state.network.access_geometry_revision;
     assert!(after_node > initial);
     let road = engine.add_road(1, node, RoadKind::Local, Stage::Open, 1.0);
-    let after_road = engine.state.access_geometry_revision;
+    let after_road = engine.state.network.access_geometry_revision;
     assert!(after_road > after_node);
     engine.recompute_connectivity();
-    assert!(engine.state.access_geometry_revision > after_road);
+    assert!(engine.state.network.access_geometry_revision > after_road);
 
     let parcel = engine.add_parcel(255.0, 250.0, 8.0, 8.0, node, 0.7, false);
-    let after_parcel = engine.state.access_geometry_revision;
+    let after_parcel = engine.state.network.access_geometry_revision;
     assert!(after_parcel > after_road);
-    let before_frontage = engine.state.access_geometry_revision;
+    let before_frontage = engine.state.network.access_geometry_revision;
     engine.remember_nearest_frontage(parcel, node);
-    assert!(engine.state.access_geometry_revision > before_frontage);
+    assert!(engine.state.network.access_geometry_revision > before_frontage);
     assert!(engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .any(|frontage| frontage.parcel_id == parcel));
 
     // The normal building planner reserves a parcel. That reservation
     // changes which sites a concurrent access proposal may consume.
-    let before_building_reservation = engine.state.access_geometry_revision;
+    let before_building_reservation = engine.state.network.access_geometry_revision;
     engine.plan_building(1);
-    assert!(engine.state.access_geometry_revision > before_building_reservation);
+    assert!(engine.state.network.access_geometry_revision > before_building_reservation);
 
     let building_project = engine
         .state
+        .construction
         .projects
         .iter()
         .rev()
         .find(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
         .unwrap()
         .clone();
-    let before_reservation_release = engine.state.access_geometry_revision;
+    let before_reservation_release = engine.state.network.access_geometry_revision;
     engine.complete_project(building_project.id);
-    assert!(engine.state.access_geometry_revision > before_reservation_release);
+    assert!(engine.state.network.access_geometry_revision > before_reservation_release);
 }
 
 #[test]
@@ -1192,19 +1268,20 @@ fn access_geometry_revision_tracks_road_opening_and_plan_reservations() {
     let mut engine = Engine::new_legacy(33);
     let bridge_project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Road)
         .unwrap()
         .id;
-    let before_open = engine.state.access_geometry_revision;
+    let before_open = engine.state.network.access_geometry_revision;
     engine.complete_project(bridge_project);
-    assert!(engine.state.access_geometry_revision > before_open);
+    assert!(engine.state.network.access_geometry_revision > before_open);
 
     let mut planner = engine_with_developed_plan_site_without_reusable_edge();
-    let before_plan = planner.state.access_geometry_revision;
+    let before_plan = planner.state.network.access_geometry_revision;
     assert!(planner.try_create_neighborhood_plan());
-    assert!(planner.state.access_geometry_revision > before_plan);
+    assert!(planner.state.network.access_geometry_revision > before_plan);
     planner.validate().unwrap();
 }
 
@@ -1216,16 +1293,16 @@ fn access_geometry_revision_is_backward_compatible_and_fails_closed_at_overflow(
     state.remove("access_geometry_revision");
     state.remove("access_geometry_revision_exhausted");
     let restored = Engine::restore_json(&old_save.to_string()).unwrap();
-    assert_eq!(restored.state.access_geometry_revision, 0);
-    assert!(!restored.state.access_geometry_revision_exhausted);
+    assert_eq!(restored.state.network.access_geometry_revision, 0);
+    assert!(!restored.state.network.access_geometry_revision_exhausted);
     assert_eq!(restored.access_geometry_revision_token(), Some(0));
 
     let mut exhausted = restored;
-    exhausted.state.access_geometry_revision = u64::MAX;
+    exhausted.state.network.access_geometry_revision = u64::MAX;
     assert_eq!(exhausted.access_geometry_revision_token(), Some(u64::MAX));
     exhausted.add_node(0.0, 0.0, NodeKind::Junction);
-    assert!(exhausted.state.access_geometry_revision_exhausted);
-    assert_eq!(exhausted.state.access_geometry_revision, u64::MAX);
+    assert!(exhausted.state.network.access_geometry_revision_exhausted);
+    assert_eq!(exhausted.state.network.access_geometry_revision, u64::MAX);
     assert_eq!(exhausted.access_geometry_revision_token(), None);
     exhausted.add_node(1.0, 1.0, NodeKind::Junction);
     assert_eq!(exhausted.access_geometry_revision_token(), None);

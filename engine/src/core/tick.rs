@@ -69,7 +69,7 @@ impl Engine {
             .early_block_reservation_started_tick
             .is_some()
         {
-            if self.state.neighborhood_plan.is_some() {
+            if self.state.legacy.neighborhood_plan.is_some() {
                 self.experiments.early_block_reservation_duration_ticks = self
                     .experiments
                     .early_block_reservation_duration_ticks

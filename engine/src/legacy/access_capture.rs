@@ -84,6 +84,7 @@ pub(crate) fn capture_viability(engine: &Engine) -> FrozenViabilityInput {
     let collision = engine.collision_context();
     let reserved_lots = engine
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .map(|plan| {
@@ -101,11 +102,12 @@ pub(crate) fn capture_viability(engine: &Engine) -> FrozenViabilityInput {
         .unwrap_or_default();
     let neighborhood_segments = engine
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .map(|plan| {
             let mut node_positions = BTreeMap::new();
-            for node in &engine.state.nodes {
+            for node in &engine.state.network.nodes {
                 node_positions.entry(node.id).or_insert((node.x, node.z));
             }
             plan.segments
@@ -119,13 +121,18 @@ pub(crate) fn capture_viability(engine: &Engine) -> FrozenViabilityInput {
                 .collect()
         })
         .unwrap_or_default();
-    let neighborhood_interior = engine.state.neighborhood_plan.as_ref().and_then(|plan| {
-        if plan.coordinated_lots && plan.segments.len() == 4 {
-            engine.coordinated_block_interior(&plan.segments)
-        } else {
-            None
-        }
-    });
+    let neighborhood_interior = engine
+        .state
+        .legacy
+        .neighborhood_plan
+        .as_ref()
+        .and_then(|plan| {
+            if plan.coordinated_lots && plan.segments.len() == 4 {
+                engine.coordinated_block_interior(&plan.segments)
+            } else {
+                None
+            }
+        });
     let river = engine.river_control_points();
     FrozenViabilityInput {
         parcel_footprints: collision.parcel_footprints,
@@ -173,12 +180,13 @@ pub(crate) fn capture_viability(engine: &Engine) -> FrozenViabilityInput {
 /// match the existing frozen diagnostic oracle.
 #[cfg(feature = "legacy")]
 pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
-    if engine.state.nodes.len() > MAX_PREPARED_INPUT_NODES {
+    if engine.state.network.nodes.len() > MAX_PREPARED_INPUT_NODES {
         return Err(CaptureError::TooManyCandidateNodes);
     }
 
     let ordinary_road_count = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -196,6 +204,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
 
     let projected_footprint_count = engine
         .state
+        .land
         .parcels
         .iter()
         .map(|parcel| 1 + usize::from(parcel.rotation.is_none()))
@@ -205,6 +214,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
     }
     let open_road_count = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.stage == Stage::Open)
@@ -214,6 +224,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
     }
     let pending_road_count = engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -224,6 +235,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
 
     let ordinary_roads = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -244,6 +256,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
         .collect::<BTreeSet<_>>();
     let graph_nodes = engine
         .state
+        .network
         .nodes
         .iter()
         .filter(|node| used_node_ids.contains(&node.id))
@@ -268,6 +281,7 @@ pub(crate) fn capture(engine: &Engine) -> Result<DiscoveryInput, CaptureError> {
 
     let all_nodes = engine
         .state
+        .network
         .nodes
         .iter()
         .map(|node| CandidateNode {
@@ -302,7 +316,7 @@ mod tests {
         ))
         .expect("mature save restores");
         let mut legacy = Engine::new_legacy(43);
-        legacy.state.parcels[0].rotation = None;
+        legacy.state.land.parcels[0].rotation = None;
         for engine in [&initial, &mature, &legacy] {
             let (discovery, proposal) = capture_pair(engine).expect("both bounded captures fit");
             assert_eq!(
@@ -324,6 +338,7 @@ mod tests {
         let mut discovery_over = Engine::new_legacy(42);
         let road = discovery_over
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -337,7 +352,7 @@ mod tests {
             .unwrap()
             .clone();
         for _ in 0..=MAX_FACE_GRAPH_EDGES {
-            discovery_over.state.roads.push(road.clone());
+            discovery_over.state.network.roads.push(road.clone());
         }
         let before = discovery_over.save_json();
         assert!(matches!(
@@ -347,7 +362,7 @@ mod tests {
         assert_eq!(discovery_over.save_json(), before);
 
         let mut proposal_over = Engine::new_legacy(44);
-        proposal_over.state.projects.resize_with(
+        proposal_over.state.construction.projects.resize_with(
             MAX_PROJECTS + crate::COMPLETED_PROJECT_HISTORY + 1,
             || crate::Project {
                 id: 0,
@@ -375,16 +390,16 @@ mod tests {
     #[test]
     fn shared_neighborhood_projection_keeps_first_duplicate_and_skips_missing_endpoints() {
         let mut engine = Engine::new_legacy(45);
-        let first = engine.state.nodes[0].clone();
-        let second = engine.state.nodes[1].clone();
-        engine.state.nodes.push(crate::Node {
+        let first = engine.state.network.nodes[0].clone();
+        let second = engine.state.network.nodes[1].clone();
+        engine.state.network.nodes.push(crate::Node {
             id: first.id,
             x: first.x + 123.0,
             z: first.z - 321.0,
             kind: crate::NodeKind::Junction,
         });
         let missing = u32::MAX;
-        engine.state.neighborhood_plan = Some(crate::NeighborhoodPlan {
+        engine.state.legacy.neighborhood_plan = Some(crate::NeighborhoodPlan {
             anchor_node: first.id,
             segments: vec![
                 (first.id, second.id),
@@ -414,6 +429,7 @@ mod tests {
 
         let ordinary = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -431,6 +447,7 @@ mod tests {
             .collect::<BTreeSet<_>>();
         let graph_nodes = engine
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| used.contains(&node.id))
@@ -450,6 +467,7 @@ mod tests {
             .collect::<Vec<_>>();
         let all_nodes = engine
             .state
+            .network
             .nodes
             .iter()
             .map(|node| CandidateNode {
@@ -487,6 +505,7 @@ mod tests {
         let mut engine = Engine::new_legacy(42);
         let road = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -499,16 +518,16 @@ mod tests {
             })
             .expect("founding city has an ordinary open road")
             .clone();
-        let original = engine.state.roads.clone();
+        let original = engine.state.network.roads.clone();
         for _ in 0..=MAX_FACE_GRAPH_EDGES {
-            engine.state.roads.push(road.clone());
+            engine.state.network.roads.push(road.clone());
         }
         let before_capture = engine.save_json();
         let result = capture(&engine);
         assert!(matches!(result, Err(CaptureError::TooManyGraphEdges)));
         assert_eq!(engine.save_json(), before_capture);
         assert_eq!(
-            engine.state.roads.len(),
+            engine.state.network.roads.len(),
             original.len() + MAX_FACE_GRAPH_EDGES + 1
         );
     }

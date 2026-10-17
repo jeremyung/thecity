@@ -97,7 +97,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
             let mut seen_spines = BTreeMap::<[u32; 8], Option<u32>>::new();
             for _ in 0..12_100 {
                 engine.step(20);
-                if let Some(plan) = engine.state.neighborhood_plan.as_ref() {
+                if let Some(plan) = engine.state.legacy.neighborhood_plan.as_ref() {
                     if let Some(key) = signature(plan) {
                         selected_spines.insert(key);
                         let spine_road_id = match plan.spine.as_ref().unwrap().stage {
@@ -115,12 +115,13 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
             }
             assert_eq!(engine.state.tick, 242_000);
             engine.validate().unwrap();
-            assert!(engine.state.roads.len() <= MAX_SEGMENTS);
-            assert!(engine.state.parcels.len() <= MAX_PARCELS);
-            assert!(engine.state.buildings.len() <= MAX_BUILDINGS);
+            assert!(engine.state.network.roads.len() <= MAX_SEGMENTS);
+            assert!(engine.state.land.parcels.len() <= MAX_PARCELS);
+            assert!(engine.state.construction.buildings.len() <= MAX_BUILDINGS);
 
             let open: Vec<_> = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| building.stage == Stage::Open)
@@ -134,6 +135,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .sum();
             let road_length_m: f64 = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| road.stage == Stage::Open && road.connected)
@@ -141,6 +143,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .sum();
             let ordinary_road_length_m: f64 = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -152,6 +155,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .sum();
             let rail_length_m: f64 = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -161,6 +165,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .sum();
             let bridge_length_m: f64 = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -180,6 +185,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 .sum();
             let active_spine_plan_at_capture = engine
                 .state
+                .legacy
                 .neighborhood_plan
                 .as_ref()
                 .is_some_and(|p| p.spine.is_some());
@@ -188,7 +194,7 @@ fn compare_spine_ranking_by_area_vs_sites_per_road() {
                 spine_road_ids
                     .into_iter()
                     .filter(|id| {
-                        engine.state.roads.iter().any(|road| {
+                        engine.state.network.roads.iter().any(|road| {
                             road.id == *id && road.stage == Stage::Open && road.connected
                         })
                     })

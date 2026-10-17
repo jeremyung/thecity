@@ -114,6 +114,7 @@ impl Engine {
         let length = distance(a, b).max(1.0);
         let walking_offset = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -149,9 +150,15 @@ impl Engine {
         kind: u8,
     ) -> Option<AccessPath> {
         let (access_road_id, segment) = self.building_access_segment(building_id)?;
-        let building = self.state.buildings.iter().find(|b| b.id == building_id)?;
+        let building = self
+            .state
+            .construction
+            .buildings
+            .iter()
+            .find(|b| b.id == building_id)?;
         let parcel = self
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == building.parcel_id)?;
@@ -159,11 +166,13 @@ impl Engine {
             self.route_endpoint_position(route, from_building, traveler_id, kind)?;
         let road = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == access_road_id)?;
         let frontage = self
             .state
+            .land
             .parcel_frontages
             .iter()
             .find(|frontage| frontage.parcel_id == parcel.id)?;
@@ -231,19 +240,27 @@ impl Engine {
         &self,
         building_id: u32,
     ) -> Option<(u32, Vec<WorldPoint>)> {
-        let building = self.state.buildings.iter().find(|b| b.id == building_id)?;
+        let building = self
+            .state
+            .construction
+            .buildings
+            .iter()
+            .find(|b| b.id == building_id)?;
         let parcel = self
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == building.parcel_id)?;
         let frontage = self
             .state
+            .land
             .parcel_frontages
             .iter()
             .find(|frontage| frontage.parcel_id == parcel.id)?;
         let road = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == frontage.road_id)?;

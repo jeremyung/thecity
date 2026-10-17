@@ -108,6 +108,7 @@ impl Engine {
 
     pub(crate) fn signalized_state(state: &WorldState, node_id: u32) -> bool {
         state
+            .network
             .nodes
             .iter()
             .find(|n| n.id == node_id)
@@ -133,14 +134,14 @@ impl Engine {
         let from = traveler.route[traveler.edge_index];
         let next = traveler.route[traveler.edge_index + 2];
         let (Some(a), Some(b)) = (
-            state.nodes.iter().find(|n| n.id == from),
-            state.nodes.iter().find(|n| n.id == node_id),
+            state.network.nodes.iter().find(|n| n.id == from),
+            state.network.nodes.iter().find(|n| n.id == node_id),
         ) else {
             return false;
         };
         let (Some(c), Some(d)) = (
-            state.nodes.iter().find(|n| n.id == node_id),
-            state.nodes.iter().find(|n| n.id == next),
+            state.network.nodes.iter().find(|n| n.id == node_id),
+            state.network.nodes.iter().find(|n| n.id == next),
         ) else {
             return false;
         };
@@ -170,7 +171,7 @@ impl Engine {
         dz: f32,
         len: f32,
     ) -> (f32, f32) {
-        let road = self.state.roads.iter().find(|r| {
+        let road = self.state.network.roads.iter().find(|r| {
             r.stage == Stage::Open
                 && r.kind != RoadKind::Rail
                 && ((r.from == from && r.to == to) || (r.from == to && r.to == from))

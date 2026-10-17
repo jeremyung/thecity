@@ -3,11 +3,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 impl Engine {
     pub(crate) fn complete_interior_access_project(&mut self, project_id: u32) {
-        let Some(plan) = self.state.pending_interior_access.clone() else {
+        let Some(plan) = self.state.legacy.pending_interior_access.clone() else {
             return;
         };
         let Some(project) = self
             .state
+            .construction
             .projects
             .iter()
             .find(|project| project.id == project_id)
@@ -17,6 +18,7 @@ impl Engine {
         };
         let Some(branch) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == plan.branch_road_id)
@@ -32,6 +34,7 @@ impl Engine {
             || branch.kind == RoadKind::Rail
             || self
                 .state
+                .land
                 .parcels
                 .len()
                 .saturating_add(plan.selected_lots.len())
@@ -86,6 +89,7 @@ impl Engine {
 
         if let Some(road) = self
             .state
+            .network
             .roads
             .iter_mut()
             .find(|road| road.id == plan.branch_road_id)
@@ -96,12 +100,14 @@ impl Engine {
         self.recompute_connectivity();
         if !self
             .state
+            .network
             .roads
             .iter()
             .any(|road| road.id == plan.branch_road_id && road.connected)
         {
             if let Some(road) = self
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == plan.branch_road_id)
@@ -114,7 +120,7 @@ impl Engine {
             return;
         }
 
-        self.state.pending_interior_access = None;
+        self.state.legacy.pending_interior_access = None;
         self.mark_access_geometry_changed();
         for lot in &plan.selected_lots {
             let along_meters = lot.along * branch.length;
@@ -129,10 +135,16 @@ impl Engine {
             let parcel_id =
                 self.add_parcel(lot.x, lot.z, lot.width, lot.depth, access_node, 0.72, false);
             assert_ne!(parcel_id, 0, "preflighted access-lot capacity is reserved");
-            if let Some(parcel) = self.state.parcels.iter_mut().find(|p| p.id == parcel_id) {
+            if let Some(parcel) = self
+                .state
+                .land
+                .parcels
+                .iter_mut()
+                .find(|p| p.id == parcel_id)
+            {
                 parcel.rotation = Some(lot.rotation);
             }
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id: plan.branch_road_id,
                 along: lot.along,
@@ -142,6 +154,7 @@ impl Engine {
         }
         if let Some(project) = self
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|project| project.id == project_id)
@@ -149,8 +162,9 @@ impl Engine {
             project.progress = 1.0;
             project.stage = Stage::Finishing;
         }
-        self.state.road_infill_due = self
+        self.state.legacy.road_infill_due = self
             .state
+            .legacy
             .road_infill_due
             .saturating_add(plan.selected_lots.len() as u8)
             .min(9);
@@ -174,6 +188,7 @@ impl Engine {
         let mut restored_pending_road = false;
         if let Some(project) = self
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|project| project.id == project_id)
@@ -185,9 +200,10 @@ impl Engine {
         if restored_pending_road {
             self.mark_access_geometry_changed();
         }
-        if let Some(plan) = &self.state.pending_interior_access {
+        if let Some(plan) = &self.state.legacy.pending_interior_access {
             if let Some(road) = self
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == plan.branch_road_id)
@@ -203,7 +219,7 @@ impl Engine {
     #[cfg(feature = "legacy")]
     pub(crate) fn try_plan_interior_access(&mut self) -> bool {
         let mut scan = self.propose_interior_access();
-        self.state.interior_access_cursor = scan.next_cursor;
+        self.state.legacy.interior_access_cursor = scan.next_cursor;
         scan.proposals
             .sort_by(|left, right| right.score.compare(left.score));
         for proposal in scan.proposals {
@@ -225,13 +241,19 @@ impl Engine {
     #[cfg(test)]
     pub(crate) fn try_plan_access_at_road_opening(&mut self, road_id: u32) -> bool {
         if !self.experiments.road_opening_access_experiment
-            || self.state.neighborhood_plan.is_some()
-            || self.state.pending_interior_access.is_some()
-            || self.state.neighborhood_road_ids.contains(&road_id)
+            || self.state.legacy.neighborhood_plan.is_some()
+            || self.state.legacy.pending_interior_access.is_some()
+            || self.state.legacy.neighborhood_road_ids.contains(&road_id)
         {
             return false;
         }
-        let Some(host) = self.state.roads.iter().find(|road| road.id == road_id) else {
+        let Some(host) = self
+            .state
+            .network
+            .roads
+            .iter()
+            .find(|road| road.id == road_id)
+        else {
             return false;
         };
         if host.stage != Stage::Open
@@ -242,6 +264,7 @@ impl Engine {
         }
         let established_roads = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -252,6 +275,7 @@ impl Engine {
             .count();
         let active_buildings = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)
@@ -261,6 +285,7 @@ impl Engine {
         }
         let open_buildings: Vec<_> = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)
@@ -311,6 +336,7 @@ impl Engine {
                     .saturating_add(1);
                 self.experiments.road_opening_access_branch = self
                     .state
+                    .legacy
                     .pending_interior_access
                     .as_ref()
                     .map(|plan| plan.branch_road_id);
@@ -324,7 +350,7 @@ impl Engine {
     /// state. The caller commits the returned cursor before attempting admission.
     #[cfg(feature = "legacy")]
     pub(crate) fn propose_interior_access(&self) -> legacy::interior_access::AccessScan {
-        self.propose_interior_access_from(None, self.state.interior_access_cursor)
+        self.propose_interior_access_from(None, self.state.legacy.interior_access_cursor)
     }
 
     #[cfg(any(test, feature = "legacy"))]
@@ -382,24 +408,26 @@ impl Engine {
             rejection_counts: [0; 8],
         };
 
-        if self.state.pending_interior_access.is_some()
-            || self.state.neighborhood_plan.is_some()
-            || self.state.demand <= 0.8
+        if self.state.legacy.pending_interior_access.is_some()
+            || self.state.legacy.neighborhood_plan.is_some()
+            || self.state.people.demand <= 0.8
             || !self.project_admission_available()
             || self
                 .state
+                .network
                 .roads
                 .len()
-                .saturating_add(self.state.projects.len())
+                .saturating_add(self.state.construction.projects.len())
                 .saturating_add(3)
                 > MAX_SEGMENTS
-            || self.state.parcels.len().saturating_add(2) > MAX_PARCELS
+            || self.state.land.parcels.len().saturating_add(2) > MAX_PARCELS
             || self.state.next_id.checked_add(5).is_none()
         {
             return unchanged();
         }
         if self
             .state
+            .construction
             .projects
             .iter()
             .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -421,6 +449,7 @@ impl Engine {
         let explicit_host_ids = (!explicit_host_ids.is_empty()).then_some(explicit_host_ids);
         let mut hosts: Vec<&Road> = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -600,12 +629,13 @@ impl Engine {
             }
             let split_x = start.x;
             let split_z = start.z;
-            if self.state.nodes.iter().any(|node| {
+            if self.state.network.nodes.iter().any(|node| {
                 node.id != host.from
                     && node.id != host.to
                     && (node.x - split_x).hypot(node.z - split_z) < 1.0
             }) || self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| road.id != host.id)
@@ -623,6 +653,7 @@ impl Engine {
             }
             let endpoint_too_close = self
                 .state
+                .network
                 .nodes
                 .iter()
                 .any(|node| (node.x - end.x).hypot(node.z - end.z) < 18.0);
@@ -634,6 +665,7 @@ impl Engine {
             }
             let road_clear = self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| road.stage == Stage::Open)
@@ -650,6 +682,7 @@ impl Engine {
                 });
             let projects_clear = self
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -730,8 +763,14 @@ impl Engine {
                 }
             }
             if lots.len() < 2
-                || self.state.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
-                || self.state.parcel_frontages.len().saturating_add(lots.len()) > MAX_PARCELS
+                || self.state.land.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
+                || self
+                    .state
+                    .land
+                    .parcel_frontages
+                    .len()
+                    .saturating_add(lots.len())
+                    > MAX_PARCELS
             {
                 #[cfg(test)]
                 reject_candidate!(5);
@@ -783,14 +822,22 @@ impl Engine {
         // candidate because split rejection is guaranteed mutation-free.
         if self
             .state
+            .network
             .roads
             .len()
-            .saturating_add(self.state.projects.len())
+            .saturating_add(self.state.construction.projects.len())
             .saturating_add(3)
             > MAX_SEGMENTS
-            || self.state.parcels.len().saturating_add(selected_lots.len()) > MAX_PARCELS
             || self
                 .state
+                .land
+                .parcels
+                .len()
+                .saturating_add(selected_lots.len())
+                > MAX_PARCELS
+            || self
+                .state
+                .land
                 .parcel_frontages
                 .len()
                 .saturating_add(selected_lots.len())
@@ -832,16 +879,17 @@ impl Engine {
             started_tick: self.state.tick,
         };
         self.record_project(project);
-        self.state.pending_interior_access = Some(legacy::interior_access::InteriorAccessPlan {
-            host_road_id: host_id,
-            host_second_half_road_id: split.new_road_id,
-            host_t,
-            split_node_id: split.split_node_id,
-            branch_endpoint_id: endpoint_id,
-            branch_road_id,
-            project_id,
-            selected_lots,
-        });
+        self.state.legacy.pending_interior_access =
+            Some(legacy::interior_access::InteriorAccessPlan {
+                host_road_id: host_id,
+                host_second_half_road_id: split.new_road_id,
+                host_t,
+                split_node_id: split.split_node_id,
+                branch_endpoint_id: endpoint_id,
+                branch_road_id,
+                project_id,
+                selected_lots,
+            });
         self.mark_access_geometry_changed();
         self.state.revision = self.state.revision.saturating_add(1);
         true

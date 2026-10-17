@@ -14,6 +14,7 @@ const SEED: u32 = 87_231;
 fn split_host(engine: &Engine) -> Road {
     engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -33,6 +34,7 @@ fn route_away_from_split(engine: &Engine, host: &Road) -> Road {
     let (sx, sz) = ((a.x + b.x) * 0.5, (a.z + b.z) * 0.5);
     engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.id != host.id && road.stage == Stage::Open && road.length > 0.0)
@@ -56,6 +58,7 @@ fn route_after_host_split(
     let (sx, sz) = ((a.x + b.x) * 0.5, (a.z + b.z) * 0.5);
     let continuation = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.id != host.id && road.stage == Stage::Open)
@@ -125,7 +128,7 @@ fn add_travelers(
             )
         };
         let id = engine.id();
-        engine.state.travelers.push(Traveler {
+        engine.state.people.travelers.push(Traveler {
             id,
             kind: 0,
             route,
@@ -159,7 +162,7 @@ fn add_disjoint_road_geometry(engine: &mut Engine, host: &Road, target_roads: us
     // has unique endpoints and IDs; they stay well outside the host split
     // point's one-metre node and half-metre segment exclusion radii.
     let mut index = 0usize;
-    while engine.state.roads.len() < target_roads {
+    while engine.state.network.roads.len() < target_roads {
         let col = index % 71;
         let row = index / 71;
         assert!(row < 71, "grid is large enough for MAX_SEGMENTS");
@@ -173,20 +176,20 @@ fn add_disjoint_road_geometry(engine: &mut Engine, host: &Road, target_roads: us
         }
         let from = engine.id();
         let to = engine.id();
-        engine.state.nodes.push(Node {
+        engine.state.network.nodes.push(Node {
             id: from,
             x,
             z,
             kind: NodeKind::Junction,
         });
-        engine.state.nodes.push(Node {
+        engine.state.network.nodes.push(Node {
             id: to,
             x: x + 1.0,
             z,
             kind: NodeKind::Junction,
         });
         let road_id = engine.id();
-        engine.state.roads.push(Road {
+        engine.state.network.roads.push(Road {
             id: road_id,
             from,
             to,
@@ -228,13 +231,14 @@ fn add_connected_road_geometry(engine: &mut Engine, host: &Road, target_roads: u
         .all(|(x, z)| x.abs() <= 400.0 && z.abs() <= 400.0));
     assert!(path.iter().all(|(_, z)| *z > 250.0));
     assert!(path.iter().all(|(x, z)| (x - sx).hypot(z - sz) >= 1.0));
-    let needed = target_roads.saturating_sub(engine.state.roads.len());
+    let needed = target_roads.saturating_sub(engine.state.network.roads.len());
     if needed == 0 {
         return;
     }
 
     let gateway = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.kind == NodeKind::Gateway)
@@ -243,18 +247,18 @@ fn add_connected_road_geometry(engine: &mut Engine, host: &Road, target_roads: u
     let mut previous = gateway.id;
     let mut previous_point = (gateway.x, gateway.z);
     for point in std::iter::once(path[0]).chain(path.into_iter().skip(1)) {
-        if engine.state.roads.len() >= target_roads {
+        if engine.state.network.roads.len() >= target_roads {
             break;
         }
         let node_id = engine.id();
-        engine.state.nodes.push(Node {
+        engine.state.network.nodes.push(Node {
             id: node_id,
             x: point.0,
             z: point.1,
             kind: NodeKind::Junction,
         });
         let road_id = engine.id();
-        engine.state.roads.push(Road {
+        engine.state.network.roads.push(Road {
             id: road_id,
             from: previous,
             to: node_id,
@@ -268,7 +272,7 @@ fn add_connected_road_geometry(engine: &mut Engine, host: &Road, target_roads: u
         previous = node_id;
         previous_point = point;
     }
-    assert_eq!(engine.state.roads.len(), target_roads);
+    assert_eq!(engine.state.network.roads.len(), target_roads);
 }
 
 fn route_position(engine: &Engine, traveler: &Traveler) -> (f32, f32) {
@@ -295,8 +299,8 @@ fn make_case(
     let mut engine = Engine::new_legacy(SEED);
     let host = split_host(&engine);
     add_travelers(&mut engine, &host, travelers, route_nodes, all_affected);
-    let target_roads = roads.max(engine.state.roads.len());
-    if target_roads > engine.state.roads.len() {
+    let target_roads = roads.max(engine.state.network.roads.len());
+    if target_roads > engine.state.network.roads.len() {
         if connected_geometry {
             add_connected_road_geometry(&mut engine, &host, target_roads);
         } else {
@@ -355,8 +359,8 @@ fn measure(
     samples: usize,
 ) {
     let (base, host_id) = make_case(travelers, route_nodes, roads, connected_geometry, false);
-    let roads_before = base.state.roads.len();
-    let nodes_before = base.state.nodes.len();
+    let roads_before = base.state.network.roads.len();
+    let nodes_before = base.state.network.nodes.len();
     let saved = base.save_json();
     let mut durations = Vec::with_capacity(samples);
     for _ in 0..samples {
@@ -367,7 +371,7 @@ fn measure(
             .expect("profile split succeeds");
         durations.push(start.elapsed());
         assert!(engine.node(outcome.split_node_id).is_some());
-        assert_eq!(engine.state.roads.len(), roads_before + 1);
+        assert_eq!(engine.state.network.roads.len(), roads_before + 1);
     }
     durations.sort_unstable();
     let total = durations.iter().copied().sum::<Duration>();
@@ -386,25 +390,27 @@ fn measure(
 #[test]
 fn atomic_split_preserves_actor_positions_and_late_failure_writes_nothing() {
     let (mut engine, host_id) = make_case(32, 128, 0, false, false);
-    let roads_before = engine.state.roads.len();
+    let roads_before = engine.state.network.roads.len();
     let before_positions: Vec<_> = engine
         .state
+        .people
         .travelers
         .iter()
         .map(|actor| route_position(&engine, actor))
         .collect();
     let before_routes: Vec<_> = engine
         .state
+        .people
         .travelers
         .iter()
         .map(|actor| actor.route.clone())
         .collect();
     let outcome = engine.try_split_open_road(host_id, 0.5).unwrap();
-    assert_eq!(engine.state.roads.len(), roads_before + 1);
-    let affected = &engine.state.travelers[0];
+    assert_eq!(engine.state.network.roads.len(), roads_before + 1);
+    let affected = &engine.state.people.travelers[0];
     assert_eq!(affected.route.len(), 128);
     assert_eq!(affected.route[1], outcome.split_node_id);
-    for (index, actor) in engine.state.travelers.iter().enumerate() {
+    for (index, actor) in engine.state.people.travelers.iter().enumerate() {
         let after = route_position(&engine, actor);
         assert!((before_positions[index].0 - after.0).abs() < 1e-4);
         assert!((before_positions[index].1 - after.1).abs() < 1e-4);
@@ -416,6 +422,7 @@ fn atomic_split_preserves_actor_positions_and_late_failure_writes_nothing() {
     let (mut rejected, host_id) = make_case(8, 128, 0, false, false);
     rejected
         .state
+        .people
         .travelers
         .last_mut()
         .unwrap()
@@ -473,8 +480,8 @@ fn profile_atomic_open_road_split_cost() {
         println!(
             "road_split_profile all_affected_connected_road_cap: travelers={MAX_TRAVELERS}, affected_travelers={MAX_TRAVELERS}, route_nodes={}, roads_before={}, nodes_before={}, samples={samples}, mean_us={}, p50_us={}, p95_us={}, max_us={}",
             MAX_ROUTE_NODES,
-            base.state.roads.len(),
-            base.state.nodes.len(),
+            base.state.network.roads.len(),
+            base.state.network.nodes.len(),
             (durations.iter().copied().sum::<Duration>() / samples as u32).as_micros(),
             percentile(&durations, 0.50).as_micros(),
             percentile(&durations, 0.95).as_micros(),

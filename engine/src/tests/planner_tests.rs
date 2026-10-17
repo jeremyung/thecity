@@ -66,12 +66,14 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
     engine.plan_road();
     let after = engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
         .count();
     let admitted: Vec<_> = engine
         .state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -103,12 +105,14 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
     let milestone = engine.snapshot();
     let active_sites = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|b| site_active(b))
         .count();
     let developable_lots = engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|p| {
@@ -120,6 +124,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
     let profile = |engine: &Engine| {
         let building_footprint: f32 = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage != Stage::Demolished)
@@ -127,6 +132,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
             .sum();
         let open_ordinary: Vec<_> = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -138,12 +144,14 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         let ordinary_length: f32 = open_ordinary.iter().map(|road| road.length).sum();
         let active = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| site_active(b))
             .count();
         let usable_empty = engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|parcel| {
@@ -153,6 +161,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
                     && engine.node_connected(parcel.access_node)
                     && !engine
                         .state
+                        .construction
                         .buildings
                         .iter()
                         .any(|building| building.parcel_id == parcel.id)
@@ -161,30 +170,30 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         format!(
             "tick={} buildings={} footprint_m2={:.0} roads={} ordinary_length_m={:.0} active_sites={} unbuilt_usable={} historic_roads={} demand={:.2} population={} plan={:?} infill_due={} road_projects={} building_projects={}",
             engine.state.tick,
-            engine.state.buildings.len(),
+            engine.state.construction.buildings.len(),
             building_footprint,
             open_ordinary.len(),
             ordinary_length,
             active,
             usable_empty,
-            engine.state.neighborhood_road_ids.len(),
-            engine.state.demand,
-            engine.state.population,
+            engine.state.legacy.neighborhood_road_ids.len(),
+            engine.state.people.demand,
+            engine.state.people.population,
             engine
                 .state
-                .neighborhood_plan
+                .legacy.neighborhood_plan
                 .as_ref()
                 .map(|plan| (plan.next_segment, plan.segments.len())),
-            engine.state.road_infill_due,
+            engine.state.legacy.road_infill_due,
             engine
                 .state
-                .projects
+                .construction.projects
                 .iter()
                 .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
                 .count(),
             engine
                 .state
-                .projects
+                .construction.projects
                 .iter()
                 .filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0)
                 .count(),
@@ -203,6 +212,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
     assert!(active_sites >= 200);
     let ordinary_roads: BTreeSet<u32> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -214,17 +224,19 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         .collect();
     let frontage_count = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .filter(|frontage| ordinary_roads.contains(&frontage.road_id))
         .count();
     assert!(frontage_count as f32 / ordinary_roads.len() as f32 > 2.0);
-    assert!(engine.state.parcels.iter().all(|parcel| {
+    assert!(engine.state.land.parcels.iter().all(|parcel| {
         engine.parcel_clear_of_river(parcel.x, parcel.z, parcel.width, parcel.depth)
             && engine.node_connected(parcel.access_node)
     }));
     assert!(engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.stage == Stage::Open)
@@ -241,6 +253,7 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
         probe.plan_road();
         if probe
             .state
+            .construction
             .projects
             .iter()
             .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -251,18 +264,19 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
     }
     println!(
         "seed0 bounded road-plan probe found project={probe_project} cursor={}",
-        probe.state.road_origin_cursor
+        probe.state.legacy.road_origin_cursor
     );
     assert!(
-        engine.state.travelers.len() > 0,
+        engine.state.people.travelers.len() > 0,
         "mature city stopped daily trips"
     );
     assert!(engine
         .state
+        .construction
         .buildings
         .iter()
         .any(|building| { is_commercial(building) && site_active(building) }));
-    assert!(engine.state.buildings.iter().all(|building| {
+    assert!(engine.state.construction.buildings.iter().all(|building| {
         !is_commercial(building) || !building.business_active || building.vacant_days == 0
     }));
 }
@@ -270,8 +284,8 @@ fn road_planner_keeps_frontier_candidates_connected_and_bounded() {
 #[test]
 fn rotated_parcel_corner_blocks_a_corridor_that_passes_center_clearance() {
     let mut engine = Engine::new_legacy(3);
-    engine.state.parcels.clear();
-    engine.state.parcels.push(Parcel {
+    engine.state.land.parcels.clear();
+    engine.state.land.parcels.push(Parcel {
         id: 10_000,
         x: 0.0,
         z: 0.0,
@@ -303,8 +317,8 @@ fn rotated_parcel_corner_blocks_a_corridor_that_passes_center_clearance() {
 #[test]
 fn parcel_corridor_uses_exact_clearance_instead_of_max_dimension_radius() {
     let mut engine = Engine::new_legacy(3);
-    engine.state.parcels.clear();
-    engine.state.parcels.push(Parcel {
+    engine.state.land.parcels.clear();
+    engine.state.land.parcels.push(Parcel {
         id: 10_000,
         x: 0.0,
         z: 0.0,
@@ -348,6 +362,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
     assert!(
         engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open)
@@ -356,6 +371,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
     );
     let open_buildings: Vec<&Building> = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| building.stage == Stage::Open)
@@ -368,6 +384,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
     });
     let connected: BTreeSet<u32> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.connected && road.stage == Stage::Open)
@@ -375,6 +392,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         .collect();
     let mut origins: Vec<&Node> = engine
         .state
+        .network
         .nodes
         .iter()
         .filter(|node| connected.contains(&node.id))
@@ -394,6 +412,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
     let blocked_origin = origins[0].id;
     let neighbor = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.connected && (road.from == blocked_origin || road.to == blocked_origin))
@@ -406,7 +425,7 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         })
         .unwrap();
     let blocker_id = engine.id();
-    engine.state.projects.push(Project {
+    engine.state.construction.projects.push(Project {
         id: blocker_id,
         kind: ProjectKind::Road,
         from: Some(blocked_origin),
@@ -418,10 +437,11 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
         duration: 2.0,
         started_tick: engine.state.tick,
     });
-    engine.state.road_origin_cursor = 0;
+    engine.state.legacy.road_origin_cursor = 0;
     engine.plan_road();
     let later_project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| {
@@ -431,10 +451,12 @@ fn bounded_frontier_cursor_reaches_later_viable_origins() {
     assert_ne!(later_project.from, Some(blocked_origin));
     engine
         .state
+        .construction
         .projects
         .retain(|project| project.id != blocker_id);
     let project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -519,7 +541,10 @@ fn spine_candidate_validation_and_score_include_deep_road_cost() {
     assert!(shallow_as_spine.validate().is_err());
 
     let mut engine = engine_with_developed_plan_site_without_reusable_edge();
-    let planner_anchor = engine.node(engine.state.nodes[2].id).unwrap().clone();
+    let planner_anchor = engine
+        .node(engine.state.network.nodes[2].id)
+        .unwrap()
+        .clone();
     let collision = engine.collision_context();
     let tower_envelopes = engine.available_station_tower_envelopes();
     let mut feasible_spines = 0;
@@ -630,6 +655,7 @@ fn spine_candidate_validation_and_score_include_deep_road_cost() {
     assert!(engine.try_create_neighborhood_plan());
     assert!(engine
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .unwrap()
@@ -641,7 +667,7 @@ fn spine_candidate_validation_and_score_include_deep_road_cost() {
 fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
     let mut engine = engine_with_developed_plan_site_without_reusable_edge();
     assert!(engine.try_create_neighborhood_plan());
-    let plan = engine.state.neighborhood_plan.clone().unwrap();
+    let plan = engine.state.legacy.neighborhood_plan.clone().unwrap();
     assert_eq!(plan.segments.len(), 4);
     assert_eq!(plan.next_segment, 0);
 
@@ -665,6 +691,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
     assert!(engine.plan_next_neighborhood_segment());
     let pending = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -672,7 +699,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         .expect("first plan edge is ordinary road construction");
     assert_eq!(pending.from, Some(plan.segments[0].0));
     assert_eq!(pending.to, Some(plan.segments[0].1));
-    assert!(!engine.state.roads.iter().any(|road| {
+    assert!(!engine.state.network.roads.iter().any(|road| {
         road.from == plan.segments[0].0
             && road.to == plan.segments[0].1
             && road.stage == Stage::Open
@@ -716,6 +743,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
     let pending_id = pending.id;
     engine
         .state
+        .construction
         .projects
         .iter_mut()
         .find(|project| project.id == pending_id)
@@ -723,6 +751,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         .progress = 1.0;
     replay
         .state
+        .construction
         .projects
         .iter_mut()
         .find(|project| project.id == pending_id)
@@ -733,15 +762,17 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
     assert_eq!(engine.save_json(), replay.save_json());
     let opened = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.from == plan.segments[0].0 && road.to == plan.segments[0].1)
         .unwrap();
     assert_eq!(opened.stage, Stage::Open);
     assert!(opened.connected);
-    assert!(engine.state.parcels.iter().any(|parcel| {
+    assert!(engine.state.land.parcels.iter().any(|parcel| {
         engine
             .state
+            .land
             .parcel_frontages
             .iter()
             .any(|frontage| frontage.parcel_id == parcel.id && frontage.road_id == opened.id)
@@ -751,6 +782,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
     assert!(engine.plan_next_neighborhood_segment());
     let second = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -767,6 +799,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
             assert!(engine.plan_next_neighborhood_segment());
             engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .find(|project| {
@@ -782,6 +815,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         assert_eq!(project.to, Some(to));
         engine
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|candidate| candidate.id == project.id)
@@ -790,6 +824,7 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         engine.complete_project(project.id);
         let road = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.from == from && road.to == to)
@@ -797,11 +832,12 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         assert_eq!(road.stage, Stage::Open);
         assert!(road.connected);
     }
-    assert!(engine.state.neighborhood_plan.is_none());
-    assert_eq!(engine.state.neighborhood_road_ids.len(), 4);
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
+    assert_eq!(engine.state.legacy.neighborhood_road_ids.len(), 4);
     assert!(plan.segments.iter().all(|(from, to)| {
         engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -823,11 +859,12 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         .unwrap()
         .remove("neighborhood_road_ids");
     let migrated = Engine::restore_json(&legacy_completed.to_string()).unwrap();
-    assert!(migrated.state.neighborhood_plan.is_none());
-    assert_eq!(migrated.state.neighborhood_road_ids.len(), 4);
+    assert!(migrated.state.legacy.neighborhood_plan.is_none());
+    assert_eq!(migrated.state.legacy.neighborhood_road_ids.len(), 4);
     assert!(plan.segments.iter().all(|(from, to)| {
         migrated
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -843,14 +880,16 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
 
     let accessible_lots: Vec<_> = engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|parcel| {
             engine.node_connected(parcel.access_node)
-                && engine.state.parcel_frontages.iter().any(|frontage| {
+                && engine.state.land.parcel_frontages.iter().any(|frontage| {
                     frontage.parcel_id == parcel.id
                         && engine
                             .state
+                            .network
                             .roads
                             .iter()
                             .any(|road| road.id == frontage.road_id && road.connected)
@@ -892,12 +931,14 @@ fn neighborhood_plan_reserves_connected_corridors_and_replays_pending_work() {
         };
         let road = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.from == *from && road.to == *to)
             .unwrap();
         let road_lots: Vec<_> = engine
             .state
+            .land
             .parcel_frontages
             .iter()
             .filter(|frontage| frontage.road_id == road.id)
@@ -940,6 +981,7 @@ fn neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence() {
     let mut engine = engine_with_developed_plan_site_without_reusable_edge();
     let gateway = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.kind == NodeKind::Gateway)
@@ -951,15 +993,16 @@ fn neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence() {
     engine.state.tick = 80;
 
     assert_ne!(engine.state.tick % 1_600, 0);
-    assert_eq!(engine.state.road_infill_due, 0);
+    assert_eq!(engine.state.legacy.road_infill_due, 0);
     assert!(!engine.neighborhood_block_has_unbuilt_frontage());
-    assert!(engine.state.projects.is_empty());
-    assert!(engine.state.neighborhood_plan.is_none());
+    assert!(engine.state.construction.projects.is_empty());
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
 
     engine.evaluate_growth();
 
     let plan = engine
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .expect("a feasible neighborhood is reserved at the ordinary road cadence");
@@ -969,16 +1012,18 @@ fn neighborhood_block_is_reserved_before_frontier_and_starts_next_cadence() {
     );
     assert!(!engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0));
 
     engine.state.tick = 160;
     engine.evaluate_growth();
-    let plan = engine.state.neighborhood_plan.as_ref().unwrap();
+    let plan = engine.state.legacy.neighborhood_plan.as_ref().unwrap();
     assert_eq!(plan.next_segment, 1);
     assert!(engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| { project.kind == ProjectKind::Road && project.progress < 1.0 }));
@@ -990,12 +1035,13 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
     let mut base = engine_with_developed_plan_site();
     let mut engine = Engine::restore_json(&base.save_json()).unwrap();
     assert!(engine.try_create_neighborhood_plan());
-    let plan = engine.state.neighborhood_plan.clone().unwrap();
+    let plan = engine.state.legacy.neighborhood_plan.clone().unwrap();
     assert_eq!(plan.segments.len(), 4);
     assert_eq!(plan.next_segment, 0);
     let (reuse_from, reuse_to) = plan.segments[0];
     let reused = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| {
@@ -1009,6 +1055,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
     assert_eq!(
         engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -1076,8 +1123,8 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
         Some((0, reused.id)),
         Some(&filtered),
     ));
-    let original_parcel_count = base.state.parcels.len();
-    let original_frontages = base.state.parcel_frontages.clone();
+    let original_parcel_count = base.state.land.parcels.len();
+    let original_frontages = base.state.land.parcel_frontages.clone();
     let new_corner_c = base.add_node(corners[2].x, corners[2].z, NodeKind::Junction);
     let new_corner_d = base.add_node(corners[3].x, corners[3].z, NodeKind::Junction);
     let selected_plan = NeighborhoodPlan {
@@ -1093,26 +1140,26 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
         selected_lots: Some(filtered.clone()),
         spine: None,
     };
-    base.state.neighborhood_plan = Some(selected_plan.clone());
-    base.state.neighborhood_road_ids.insert(reused.id);
+    base.state.legacy.neighborhood_plan = Some(selected_plan.clone());
+    base.state.legacy.neighborhood_road_ids.insert(reused.id);
     let selected = selected_plan.selected_lots.as_ref().unwrap();
     assert!(selected.len() >= 4 && selected.len() < 10);
-    assert_eq!(base.state.parcels.len(), original_parcel_count);
+    assert_eq!(base.state.land.parcels.len(), original_parcel_count);
     assert_eq!(
-        serde_json::to_value(&base.state.parcel_frontages).unwrap(),
+        serde_json::to_value(&base.state.land.parcel_frontages).unwrap(),
         serde_json::to_value(&original_frontages).unwrap()
     );
     assert_eq!(base.coordinated_plan_lot_count(), Some(selected.len()));
     let mut partial_capacity = Engine::restore_json(&base.save_json()).unwrap();
     let reserved_partial_lots = partial_capacity.coordinated_plan_lot_count().unwrap();
-    while partial_capacity.state.parcels.len() + reserved_partial_lots < MAX_PARCELS {
+    while partial_capacity.state.land.parcels.len() + reserved_partial_lots < MAX_PARCELS {
         assert_ne!(
             partial_capacity.add_parcel(0.0, 0.0, 1.0, 1.0, plan.anchor_node, 0.5, false),
             0
         );
     }
     assert_eq!(
-        partial_capacity.state.parcels.len() + reserved_partial_lots,
+        partial_capacity.state.land.parcels.len() + reserved_partial_lots,
         MAX_PARCELS
     );
     assert_eq!(
@@ -1143,6 +1190,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
             let (from, to) = selected_plan.segments[edge];
             let project = world
                 .state
+                .construction
                 .projects
                 .iter_mut()
                 .find(|project| {
@@ -1159,6 +1207,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
         assert_eq!(base.save_json(), partial_replay.save_json());
         let admitted_lots = base
             .state
+            .land
             .parcels
             .iter()
             .filter(|parcel| parcel.rotation.is_some())
@@ -1170,10 +1219,11 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
             );
         } else {
             assert_eq!(admitted_lots, partial_lot_count);
-            assert!(base.state.parcels.len() >= original_parcel_count + partial_lot_count);
+            assert!(base.state.land.parcels.len() >= original_parcel_count + partial_lot_count);
             for lot in selected {
                 assert_eq!(
                     base.state
+                        .land
                         .parcels
                         .iter()
                         .filter(|parcel| {
@@ -1189,10 +1239,10 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
             }
         }
     }
-    assert!(base.state.neighborhood_plan.is_none());
+    assert!(base.state.legacy.neighborhood_plan.is_none());
     for frontage in &original_frontages {
         assert!(
-            base.state.parcel_frontages.iter().any(|current| {
+            base.state.land.parcel_frontages.iter().any(|current| {
                 current.parcel_id == frontage.parcel_id
                     && current.road_id == frontage.road_id
                     && (current.along - frontage.along).abs() < 1.0e-5
@@ -1204,6 +1254,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
     for lot in selected {
         let parcel_id = base
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| {
@@ -1216,13 +1267,14 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
             .id;
         assert!(
             base.state
+                .land
                 .parcel_frontages
                 .iter()
                 .any(|frontage| frontage.parcel_id == parcel_id),
             "every selected lot has frontage metadata"
         );
     }
-    assert!(base.state.parcel_frontages.len() >= original_frontages.len() + partial_lot_count);
+    assert!(base.state.land.parcel_frontages.len() >= original_frontages.len() + partial_lot_count);
     base.validate().unwrap();
     let mut replay = Engine::restore_json(&engine.save_json()).unwrap();
     assert_eq!(engine.save_json(), replay.save_json());
@@ -1232,6 +1284,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
     assert_eq!(
         engine
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .unwrap()
@@ -1240,13 +1293,19 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
     );
     assert!(engine
         .state
+        .construction
         .projects
         .iter()
         .all(|project| { project.from != Some(reuse_from) || project.to != Some(reuse_to) }));
-    assert!(engine.state.neighborhood_road_ids.contains(&reused.id));
+    assert!(engine
+        .state
+        .legacy
+        .neighborhood_road_ids
+        .contains(&reused.id));
     assert_eq!(
         engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|parcel| parcel.rotation.is_some())
@@ -1262,6 +1321,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
             let (from, to) = plan.segments[edge];
             let project = world
                 .state
+                .construction
                 .projects
                 .iter_mut()
                 .find(|project| {
@@ -1278,6 +1338,7 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
         assert_eq!(engine.save_json(), replay.save_json());
         let lots = engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|parcel| parcel.rotation.is_some())
@@ -1288,8 +1349,8 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
             assert_eq!(lots, 10);
         }
     }
-    assert!(engine.state.neighborhood_plan.is_none());
-    assert_eq!(engine.state.neighborhood_road_ids.len(), 4);
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
+    assert_eq!(engine.state.legacy.neighborhood_road_ids.len(), 4);
     engine.validate().unwrap();
     let canonical = engine.save_json();
     assert_eq!(
@@ -1302,9 +1363,11 @@ fn coordinated_block_reuses_open_edge_and_waits_for_three_new_streets() {
 fn neighborhood_plan_is_bounded_and_legacy_saves_restore_without_one() {
     let mut engine = engine_with_developed_plan_site_without_reusable_edge();
     assert!(engine.try_create_neighborhood_plan());
-    assert!(engine.state.roads.len() + engine.state.projects.len() <= MAX_SEGMENTS);
-    assert!(engine.state.parcels.len() <= MAX_PARCELS);
-    assert!(engine.state.buildings.len() <= MAX_BUILDINGS);
+    assert!(
+        engine.state.network.roads.len() + engine.state.construction.projects.len() <= MAX_SEGMENTS
+    );
+    assert!(engine.state.land.parcels.len() <= MAX_PARCELS);
+    assert!(engine.state.construction.buildings.len() <= MAX_BUILDINGS);
     let mut legacy: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
     legacy.as_object_mut().unwrap().remove("neighborhood_plan");
     legacy
@@ -1312,12 +1375,12 @@ fn neighborhood_plan_is_bounded_and_legacy_saves_restore_without_one() {
         .unwrap()
         .remove("neighborhood_anchor_cursor");
     let restored = Engine::restore_json(&legacy.to_string()).unwrap();
-    assert!(restored.state.neighborhood_plan.is_none());
-    assert_eq!(restored.state.neighborhood_anchor_cursor, 0);
+    assert!(restored.state.legacy.neighborhood_plan.is_none());
+    assert_eq!(restored.state.legacy.neighborhood_anchor_cursor, 0);
 
     let mut malformed: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
     malformed["neighborhood_plan"] = serde_json::json!({
-        "anchor_node": engine.state.neighborhood_plan.as_ref().unwrap().anchor_node,
+        "anchor_node": engine.state.legacy.neighborhood_plan.as_ref().unwrap().anchor_node,
         "segments": [],
         "next_segment": 0
     });
@@ -1327,8 +1390,8 @@ fn neighborhood_plan_is_bounded_and_legacy_saves_restore_without_one() {
 #[test]
 fn neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers() {
     let mut engine = engine_with_developed_plan_site_without_reusable_edge();
-    let first_anchor = engine.state.nodes[2].id;
-    let original_node_count = engine.state.nodes.len();
+    let first_anchor = engine.state.network.nodes[2].id;
+    let original_node_count = engine.state.network.nodes.len();
 
     // Put the first anchor at the start of the scan and give it enough
     // connected spoke edges to consume the shared-edge candidate budget.
@@ -1350,7 +1413,7 @@ fn neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers(
     let far_south = engine.add_node(360.0, -350.0, NodeKind::Junction);
     let west_south = engine.add_node(-160.0, -350.0, NodeKind::Junction);
     let later_feeder = engine.add_node(-190.0, -310.0, NodeKind::Junction);
-    let gateway = engine.state.nodes[0].id;
+    let gateway = engine.state.network.nodes[0].id;
     engine.add_road(gateway, far_south, RoadKind::Local, Stage::Open, 1.0);
     engine.add_road(far_south, west_south, RoadKind::Local, Stage::Open, 1.0);
     engine.add_road(west_south, later_feeder, RoadKind::Local, Stage::Open, 1.0);
@@ -1386,6 +1449,7 @@ fn neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers(
             );
             engine
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|candidate| candidate.id == building)
@@ -1398,24 +1462,24 @@ fn neighborhood_candidate_cap_resumes_at_later_anchor_without_allocating_losers(
     // candidate cap, but all candidates fail its degree constraint. The
     // cursor must point past this anchor, and losing probes allocate no
     // corner nodes or plan state.
-    engine.state.neighborhood_anchor_cursor = 2;
-    let before_first_scan_nodes = engine.state.nodes.len();
+    engine.state.legacy.neighborhood_anchor_cursor = 2;
+    let before_first_scan_nodes = engine.state.network.nodes.len();
     assert!(!engine.try_create_neighborhood_plan());
     assert_eq!(
-        engine.state.nodes.len(),
+        engine.state.network.nodes.len(),
         before_first_scan_nodes,
         "rejected candidates must not allocate corner nodes"
     );
-    assert!(engine.state.neighborhood_plan.is_none());
-    assert_eq!(engine.state.neighborhood_anchor_cursor, 3);
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
+    assert_eq!(engine.state.legacy.neighborhood_anchor_cursor, 3);
 
     // The following planner evaluation starts at that later cursor and
     // finds the independently eligible catchment rather than rescanning
     // or starving it behind the capped anchor.
     assert!(engine.try_create_neighborhood_plan());
-    let plan = engine.state.neighborhood_plan.as_ref().unwrap();
+    let plan = engine.state.legacy.neighborhood_plan.as_ref().unwrap();
     assert_eq!(plan.anchor_node, later_anchor);
-    assert!(engine.state.nodes.len() >= original_node_count + 16 + 3);
+    assert!(engine.state.network.nodes.len() >= original_node_count + 16 + 3);
 }
 
 #[test]
@@ -1425,35 +1489,35 @@ fn coordinated_block_reserves_all_parcel_slots_until_retirement() {
     let reserved = engine.coordinated_plan_lot_count().unwrap();
     assert_eq!(reserved, 10);
 
-    while engine.state.parcels.len() + reserved < MAX_PARCELS {
+    while engine.state.land.parcels.len() + reserved < MAX_PARCELS {
         let parcel = engine.add_parcel(0.0, 0.0, 1.0, 1.0, 2, 0.5, false);
         assert_ne!(
             parcel, 0,
             "exterior parcel admission should use unreserved capacity"
         );
     }
-    assert_eq!(engine.state.parcels.len(), MAX_PARCELS - reserved);
+    assert_eq!(engine.state.land.parcels.len(), MAX_PARCELS - reserved);
     assert_eq!(engine.add_parcel(1.0, 0.0, 1.0, 1.0, 2, 0.5, false), 0);
-    assert_eq!(engine.state.parcels.len() + reserved, MAX_PARCELS);
+    assert_eq!(engine.state.land.parcels.len() + reserved, MAX_PARCELS);
 
     // A new coordinated block must fail atomically when the world has
     // fewer parcel slots than its deterministic subdivision requires.
     let mut near_cap = engine_with_developed_plan_site();
-    while near_cap.state.parcels.len() < MAX_PARCELS - reserved + 1 {
+    while near_cap.state.land.parcels.len() < MAX_PARCELS - reserved + 1 {
         assert_ne!(near_cap.add_parcel(0.0, 0.0, 1.0, 1.0, 2, 0.5, false), 0);
     }
-    let before_nodes = near_cap.state.nodes.len();
-    let before_parcels = near_cap.state.parcels.len();
+    let before_nodes = near_cap.state.network.nodes.len();
+    let before_parcels = near_cap.state.land.parcels.len();
     assert!(!near_cap.try_create_neighborhood_plan());
-    assert_eq!(near_cap.state.nodes.len(), before_nodes);
-    assert_eq!(near_cap.state.parcels.len(), before_parcels);
+    assert_eq!(near_cap.state.network.nodes.len(), before_nodes);
+    assert_eq!(near_cap.state.land.parcels.len(), before_parcels);
 
     // Invalid restored state cannot claim more slots than the hard cap.
     let mut invalid = engine_with_developed_plan_site();
     assert!(invalid.try_create_neighborhood_plan());
-    while invalid.state.parcels.len() < MAX_PARCELS - reserved + 1 {
-        invalid.state.parcels.push(Parcel {
-            id: 1_000_000 + invalid.state.parcels.len() as u32,
+    while invalid.state.land.parcels.len() < MAX_PARCELS - reserved + 1 {
+        invalid.state.land.parcels.push(Parcel {
+            id: 1_000_000 + invalid.state.land.parcels.len() as u32,
             x: 0.0,
             z: 0.0,
             width: 1.0,
@@ -1476,7 +1540,7 @@ fn coordinated_block_reserves_all_parcel_slots_until_retirement() {
 fn coordinated_block_road_clearance_protects_interior_and_allows_perimeter() {
     let mut engine = engine_with_developed_plan_site();
     assert!(engine.try_create_neighborhood_plan());
-    let plan = engine.state.neighborhood_plan.as_ref().unwrap();
+    let plan = engine.state.legacy.neighborhood_plan.as_ref().unwrap();
     let anchor = engine.node(plan.anchor_node).unwrap().clone();
     let interior = engine.coordinated_block_interior(&plan.segments).unwrap();
     let spur = Node {
@@ -1495,13 +1559,13 @@ fn coordinated_block_road_clearance_protects_interior_and_allows_perimeter() {
 #[test]
 fn oriented_admission_respects_legacy_saved_and_rendered_envelopes() {
     let mut engine = Engine::new_legacy(87231);
-    let mut building = engine.state.buildings[0].clone();
-    engine.state.parcels.clear();
-    engine.state.buildings.clear();
-    engine.state.roads.clear();
-    engine.state.projects.clear();
-    engine.state.parcel_frontages.clear();
-    engine.state.neighborhood_plan = None;
+    let mut building = engine.state.construction.buildings[0].clone();
+    engine.state.land.parcels.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.network.roads.clear();
+    engine.state.construction.projects.clear();
+    engine.state.land.parcel_frontages.clear();
+    engine.state.legacy.neighborhood_plan = None;
     let probes =
         [(262.0, 250.0), (250.0, 262.0), (280.0, 280.0)].map(|(x, z)| geometry::OrientedRect {
             x,
@@ -1516,8 +1580,8 @@ fn oriented_admission_respects_legacy_saved_and_rendered_envelopes() {
     let parcel = engine.add_parcel(250.0, 250.0, 30.0, 8.0, 2, 0.7, false);
     building.parcel_id = parcel;
     building.rotation = std::f32::consts::FRAC_PI_2;
-    engine.state.buildings.push(building);
-    let stored = parcel_envelope(&engine.state.parcels[0]);
+    engine.state.construction.buildings.push(building);
+    let stored = parcel_envelope(&engine.state.land.parcels[0]);
     let rendered = geometry::OrientedRect {
         rotation: std::f32::consts::FRAC_PI_2,
         ..stored
@@ -1543,13 +1607,14 @@ fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
     // proposal in its bounded scan. Keep the positive scan/admission case
     // separate from the exhausted-city case below. Independent live access
     // search interaction/replay is covered in access_live_engine.
-    engine.state.next_face_access_tick = u64::MAX;
+    engine.state.legacy.next_face_access_tick = u64::MAX;
     engine.set_development_rate(60);
     for _ in 0..6 {
         engine.step(2_000);
     }
     let open_buildings: Vec<Building> = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| site_active(building))
@@ -1561,7 +1626,7 @@ fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
     assert!(!engine.try_plan_local_chord(&open_buildings, &collision_context));
     let before = engine.save_json();
     let before_rng = engine.state.rng_growth;
-    let before_cursor = engine.state.road_origin_cursor;
+    let before_cursor = engine.state.legacy.road_origin_cursor;
     let scan =
         engine.propose_frontier_road(&open_buildings, &bridgehead_headings, &collision_context);
     let repeated =
@@ -1572,7 +1637,7 @@ fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
         "frontier scan mutated serialized state"
     );
     assert_eq!(engine.state.rng_growth, before_rng);
-    assert_eq!(engine.state.road_origin_cursor, before_cursor);
+    assert_eq!(engine.state.legacy.road_origin_cursor, before_cursor);
     let proposal = scan
         .proposal
         .expect("fixture should contain a viable frontier proposal");
@@ -1590,9 +1655,10 @@ fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
         "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature public city fixture restores");
-    exhausted.state.demand = 1.2;
+    exhausted.state.people.demand = 1.2;
     let exhausted_buildings: Vec<Building> = exhausted
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| site_active(building))
@@ -1613,11 +1679,17 @@ fn frontier_proposal_scan_is_read_only_and_plan_road_replays() {
 
     let mut left = Engine::restore_json(&before_chord).unwrap();
     let mut right = Engine::restore_json(&before_chord).unwrap();
-    let project_ids_before: BTreeSet<_> = left.state.projects.iter().map(|p| p.id).collect();
+    let project_ids_before: BTreeSet<_> = left
+        .state
+        .construction
+        .projects
+        .iter()
+        .map(|p| p.id)
+        .collect();
     left.plan_road();
     right.plan_road();
     assert!(
-        left.state.projects.iter().any(|p| {
+        left.state.construction.projects.iter().any(|p| {
             !project_ids_before.contains(&p.id)
                 && p.kind == ProjectKind::Road
                 && p.from == Some(proposal.start_id)

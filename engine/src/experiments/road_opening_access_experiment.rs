@@ -341,13 +341,15 @@ fn explicit_host_window_matches_legacy_wrapper_geometry_and_order() {
         "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
-    engine.state.demand = 4.0;
+    engine.state.people.demand = 4.0;
     engine
         .state
+        .construction
         .projects
         .retain(|project| project.progress >= 1.0);
     let host_id = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -947,6 +949,7 @@ impl Engine {
     ) -> Option<Vec<interior_access::AccessProposal>> {
         let eligible_roads = self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -961,6 +964,7 @@ impl Engine {
             .collect::<std::collections::BTreeSet<_>>();
         let nodes = self
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| participating.contains(&node.id))
@@ -987,6 +991,7 @@ impl Engine {
             .collect::<Vec<_>>();
         let parcel_rects = self
             .state
+            .land
             .parcels
             .iter()
             .map(|parcel| geometry::OrientedRect {
@@ -1126,17 +1131,18 @@ fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
         "../../../tests/fixtures/access-joins/mature-world.ranked-blocks.json"
     ))
     .expect("mature save restores");
-    engine.state.demand = 4.0;
+    engine.state.people.demand = 4.0;
     engine.experiments.road_opening_access_experiment = true;
     let host_ids = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
             road.stage == Stage::Open
                 && road.connected
                 && matches!(road.kind, RoadKind::Local | RoadKind::Arterial)
-                && !engine.state.neighborhood_road_ids.contains(&road.id)
+                && !engine.state.legacy.neighborhood_road_ids.contains(&road.id)
         })
         .map(|road| road.id)
         .collect::<Vec<_>>();
@@ -1150,9 +1156,9 @@ fn road_opening_access_noop_keeps_global_planner_state_unchanged() {
         })
         .expect("mature fixture has an ordinary host with no feasible access geometry");
     let before = engine.save_json();
-    let cursor = engine.state.interior_access_cursor;
+    let cursor = engine.state.legacy.interior_access_cursor;
     assert!(!engine.try_plan_access_at_road_opening(host));
-    assert_eq!(engine.state.interior_access_cursor, cursor);
+    assert_eq!(engine.state.legacy.interior_access_cursor, cursor);
     assert_eq!(engine.save_json(), before);
     assert_eq!(engine.experiments.road_opening_access_attempts, 1);
     assert_eq!(engine.experiments.road_opening_access_admissions, 0);
@@ -1170,7 +1176,7 @@ fn opening_host_frontage_uses_rendered_rotation_against_reserved_lots() {
         along: 0.33229166,
         side: 1,
     };
-    engine.state.pending_interior_access = Some(interior_access::InteriorAccessPlan {
+    engine.state.legacy.pending_interior_access = Some(interior_access::InteriorAccessPlan {
         host_road_id: 1,
         host_second_half_road_id: 2,
         host_t: 0.5,
@@ -1236,7 +1242,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         engine.experiments.road_opening_access_attempts
     );
 
-    let plan = engine.state.pending_interior_access.clone().unwrap();
+    let plan = engine.state.legacy.pending_interior_access.clone().unwrap();
     assert_eq!(
         engine.experiments.road_opening_access_branch,
         Some(plan.branch_road_id)
@@ -1244,10 +1250,12 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     let completions_before = engine.experiments.interior_access_completions;
     assert!(!engine
         .state
+        .legacy
         .neighborhood_road_ids
         .contains(&plan.host_road_id));
     let branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == plan.branch_road_id)
@@ -1256,6 +1264,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     assert!(!branch.connected);
     let project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.id == plan.project_id)
@@ -1296,6 +1305,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     let host_ids = [plan.host_road_id, plan.host_second_half_road_id];
     let frontages = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .filter(|frontage| host_ids.contains(&frontage.road_id))
@@ -1303,6 +1313,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     for frontage in frontages {
         let parcel = engine
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == frontage.parcel_id)
@@ -1345,6 +1356,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     for _ in 0..24_000 {
         let opened = engine
             .state
+            .network
             .roads
             .iter()
             .any(|road| road.id == plan.branch_road_id && road.stage == Stage::Open);
@@ -1356,6 +1368,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
         assert_eq!(engine.save_json(), resumed.save_json());
         if engine
             .state
+            .network
             .roads
             .iter()
             .any(|road| road.id == plan.branch_road_id && road.stage == Stage::Open)
@@ -1369,6 +1382,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     }
     assert!(engine
         .state
+        .network
         .roads
         .iter()
         .any(|road| road.id == plan.branch_road_id && road.stage == Stage::Open));
@@ -1382,6 +1396,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     );
     let opened_branch = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == plan.branch_road_id)
@@ -1391,6 +1406,7 @@ fn road_opening_access_reserves_before_frontage_and_completes_after_restore() {
     assert_eq!(
         engine
             .state
+            .land
             .parcel_frontages
             .iter()
             .filter(|frontage| frontage.road_id == plan.branch_road_id)
@@ -1430,7 +1446,7 @@ fn road_opening_access_matched_seeds() {
         }
         assert_eq!(engine.state.tick, 242_000);
         if let Err(error) = engine.validate() {
-            if let Some(plan) = &engine.state.pending_interior_access {
+            if let Some(plan) = &engine.state.legacy.pending_interior_access {
                 let context = engine.collision_context();
                 eprintln!(
                     "invalid pending plan at tick {}: {error}; plan={plan:?}",
@@ -1529,6 +1545,7 @@ fn road_opening_access_matched_seeds() {
 
         let open_buildings: Vec<_> = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)
@@ -1545,6 +1562,7 @@ fn road_opening_access_matched_seeds() {
             .collect();
         let connected_roads: Vec<_> = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open && road.connected)
@@ -1569,16 +1587,16 @@ fn road_opening_access_matched_seeds() {
             "commercial_active_capacity": commerce.iter().filter(|b| b.business_active).map(|b| b.capacity as u64).sum::<u64>(),
             "envelope_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth) as f64).sum::<f64>(),
             "floor_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
-            "parcel_count": engine.state.parcels.len(),
+            "parcel_count": engine.state.land.parcels.len(),
             "connected_open_roads": connected_roads.len(),
             "ordinary_road_records": ordinary_roads.len(),
             "ordinary_road_length_m": ordinary_roads.iter().map(|r| r.length as f64).sum::<f64>(),
             "access_attempts": engine.experiments.road_opening_access_attempts,
             "access_admissions": engine.experiments.road_opening_access_admissions,
             "access_completions": engine.experiments.interior_access_completions,
-            "pending_access_lots": engine.state.pending_interior_access.as_ref().map_or(0, |p| p.selected_lots.len()),
-            "demand": engine.state.demand,
-            "population": engine.state.population,
+            "pending_access_lots": engine.state.legacy.pending_interior_access.as_ref().map_or(0, |p| p.selected_lots.len()),
+            "demand": engine.state.people.demand,
+            "population": engine.state.people.population,
             "elapsed_seconds": started.elapsed().as_secs_f64(),
         });
         eprintln!("road-opening-access-experiment {summary}");
@@ -1663,6 +1681,7 @@ fn face_conditioned_road_opening_access_matched_seeds() {
 
         let open_buildings = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| building.stage == Stage::Open)
@@ -1677,6 +1696,7 @@ fn face_conditioned_road_opening_access_matched_seeds() {
             .collect::<Vec<_>>();
         let connected_roads = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open && road.connected)
@@ -1701,17 +1721,17 @@ fn face_conditioned_road_opening_access_matched_seeds() {
             "active_commercial_capacity": commerce.iter().filter(|b| b.business_active).map(|b| b.capacity as u64).sum::<u64>(),
             "nominal_envelope_area_m2": open_buildings.iter().map(|b| (b.width * b.depth) as f64).sum::<f64>(),
             "floor_area_proxy_m2": open_buildings.iter().map(|b| (b.width * b.depth * b.floors as f32) as f64).sum::<f64>(),
-            "parcels": engine.state.parcels.len(),
+            "parcels": engine.state.land.parcels.len(),
             "connected_open_roads": connected_roads.len(),
             "ordinary_open_roads": ordinary_roads.len(),
             "ordinary_road_length_m": ordinary_roads.iter().map(|road| road.length as f64).sum::<f64>(),
             "attempts": engine.experiments.road_opening_access_attempts,
             "admissions": engine.experiments.road_opening_access_admissions,
             "completions": engine.experiments.interior_access_completions,
-            "pending_selected_lots": engine.state.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
-            "pending_branch_id": engine.state.pending_interior_access.as_ref().map(|plan| plan.branch_road_id),
-            "demand": engine.state.demand,
-            "population": engine.state.population,
+            "pending_selected_lots": engine.state.legacy.pending_interior_access.as_ref().map_or(0, |plan| plan.selected_lots.len()),
+            "pending_branch_id": engine.state.legacy.pending_interior_access.as_ref().map(|plan| plan.branch_road_id),
+            "demand": engine.state.people.demand,
+            "population": engine.state.people.population,
             "elapsed_seconds": started.elapsed().as_secs_f64(),
         });
         eprintln!("face-conditioned-access-experiment {summary}");

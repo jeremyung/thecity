@@ -27,14 +27,14 @@ impl Engine {
         include_support: bool,
     ) -> Vec<persistence::movement_support::Row> {
         let mut out = Vec::with_capacity(
-            self.state.travelers.len()
-                + self.state.expressway_traffic.trips.len()
-                + self.state.trains.len()
-                + self.state.buses.len()
-                + self.state.residents.len(),
+            self.state.people.travelers.len()
+                + self.state.transit.expressway_traffic.trips.len()
+                + self.state.transit.trains.len()
+                + self.state.transit.buses.len()
+                + self.state.people.residents.len(),
         );
         let station = self.station_node();
-        for t in &self.state.travelers {
+        for t in &self.state.people.travelers {
             if t.access_phase == 0 || t.access_phase == 2 {
                 // A car still at the start of its driveway has not pulled out:
                 // it waits off-screen behind the car ahead (see driveway_queues).
@@ -91,6 +91,7 @@ impl Engine {
             let heading = (b.z - a.z).atan2(b.x - a.x);
             let road_ids = if include_support {
                 self.state
+                    .network
                     .roads
                     .iter()
                     .find(|r| {
@@ -124,6 +125,7 @@ impl Engine {
                 };
                 let mut waiting: Vec<&Resident> = self
                     .state
+                    .people
                     .residents
                     .iter()
                     .filter(|resident| {
@@ -165,6 +167,7 @@ impl Engine {
         }
         let mut bus_waiting: Vec<&Resident> = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| resident.transfer == Transfer::WaitingBus)
@@ -184,6 +187,7 @@ impl Engine {
             };
             let road_ids: Vec<u32> = if include_support {
                 self.state
+                    .network
                     .roads
                     .iter()
                     .find(|r| {
@@ -213,6 +217,7 @@ impl Engine {
         }
         let mut pending_alights: Vec<&Resident> = self
             .state
+            .people
             .residents
             .iter()
             .filter(|resident| resident.transfer == Transfer::WaitingAlight)
@@ -254,7 +259,7 @@ impl Engine {
                 },
             });
         }
-        for t in &self.state.trains {
+        for t in &self.state.transit.trains {
             if t.route.len() < 2 {
                 continue;
             }
@@ -274,6 +279,7 @@ impl Engine {
                     .windows(2)
                     .filter_map(|edge| {
                         self.state
+                            .network
                             .roads
                             .iter()
                             .find(|r| {
@@ -301,13 +307,14 @@ impl Engine {
                 platform_node_ids: Vec::new(),
             });
         }
-        if let Some(line) = &self.state.bus_line {
-            for bus in &self.state.buses {
+        if let Some(line) = &self.state.transit.bus_line {
+            for bus in &self.state.transit.buses {
                 let Some(((x, z, heading), edge)) = self.bus_pose_with_edge(line, bus) else {
                     continue;
                 };
                 let road_ids: Vec<u32> = if include_support {
                     self.state
+                        .network
                         .roads
                         .iter()
                         .find(|r| {

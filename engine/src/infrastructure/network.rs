@@ -79,6 +79,7 @@ pub(crate) fn pedestrian_road_offset(kind: Option<RoadKind>) -> f32 {
 impl Engine {
     pub(crate) fn station_node(&self) -> Option<u32> {
         self.state
+            .network
             .nodes
             .iter()
             .find(|n| n.kind == NodeKind::Station)
@@ -86,12 +87,12 @@ impl Engine {
     }
 
     pub(crate) fn node(&self, id: u32) -> Option<&Node> {
-        self.state.nodes.iter().find(|n| n.id == id)
+        self.state.network.nodes.iter().find(|n| n.id == id)
     }
 
     pub(crate) fn add_node(&mut self, x: f32, z: f32, kind: NodeKind) -> u32 {
         let id = self.id();
-        self.state.nodes.push(Node {
+        self.state.network.nodes.push(Node {
             id,
             x: x.clamp(MIN, MAX),
             z: z.clamp(MIN, MAX),
@@ -114,7 +115,7 @@ impl Engine {
             (Some(a), Some(b)) => distance(a, b),
             _ => 1.0,
         };
-        self.state.roads.push(Road {
+        self.state.network.roads.push(Road {
             id,
             from,
             to,
@@ -131,6 +132,7 @@ impl Engine {
 
     pub(crate) fn node_connected(&self, id: u32) -> bool {
         self.state
+            .network
             .roads
             .iter()
             .any(|r| r.stage == Stage::Open && r.connected && (r.from == id || r.to == id))
@@ -139,6 +141,7 @@ impl Engine {
     pub(crate) fn recompute_connectivity(&mut self) {
         let gateway = self
             .state
+            .network
             .nodes
             .iter()
             .find(|n| n.kind == NodeKind::Gateway)
@@ -152,6 +155,7 @@ impl Engine {
         let mut adjacency: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
         for road in self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open)
@@ -171,7 +175,7 @@ impl Engine {
             }
         }
         let mut connectivity_changed = false;
-        for road in &mut self.state.roads {
+        for road in &mut self.state.network.roads {
             let connected =
                 road.stage == Stage::Open && seen.contains(&road.from) && seen.contains(&road.to);
             connectivity_changed |= road.connected != connected;
@@ -183,7 +187,7 @@ impl Engine {
     }
 
     pub(crate) fn node_has_open_road(&self, node_id: u32) -> bool {
-        self.state.roads.iter().any(|road| {
+        self.state.network.roads.iter().any(|road| {
             road.connected
                 && road.stage == Stage::Open
                 && road.kind != RoadKind::Rail
@@ -230,9 +234,10 @@ impl Engine {
         // Keep source order, including parallel edges, so equal-cost choices
         // match the full-road scan. This index lives only for this immutable
         // query; road openings and splits cannot leave a stale route cache.
-        let mut adjacency = Vec::with_capacity(self.state.roads.len() * 2);
+        let mut adjacency = Vec::with_capacity(self.state.network.roads.len() * 2);
         for (index, road) in self
             .state
+            .network
             .roads
             .iter()
             .enumerate()
@@ -260,7 +265,7 @@ impl Engine {
                 .iter()
                 .take_while(|(node, _)| *node == current)
             {
-                let r = &self.state.roads[index];
+                let r = &self.state.network.roads[index];
                 let next = if r.from == current { r.to } else { r.from };
                 if blocked.contains(&next) && next != goal {
                     continue;

@@ -57,33 +57,34 @@ fn capture_inner(
     shared_viability: Option<FrozenViabilityInput>,
 ) -> Result<ProposalValidationInput, CaptureError> {
     let state = &engine.state;
-    if state.nodes.len() > MAX_NODES {
+    if state.network.nodes.len() > MAX_NODES {
         return Err(CaptureError::TooManyNodes);
     }
-    if state.roads.len() > MAX_SEGMENTS {
+    if state.network.roads.len() > MAX_SEGMENTS {
         return Err(CaptureError::TooManyRoads);
     }
-    if state.projects.len() > MAX_PROJECT_RECORDS {
+    if state.construction.projects.len() > MAX_PROJECT_RECORDS {
         return Err(CaptureError::TooManyProjects);
     }
-    if state.parcels.len() > MAX_PARCELS {
+    if state.land.parcels.len() > MAX_PARCELS {
         return Err(CaptureError::TooManyParcels);
     }
-    if state.parcel_frontages.len() > MAX_PARCELS {
+    if state.land.parcel_frontages.len() > MAX_PARCELS {
         return Err(CaptureError::TooManyFrontages);
     }
-    let footprint_count = state.parcels.iter().fold(0_usize, |count, parcel| {
+    let footprint_count = state.land.parcels.iter().fold(0_usize, |count, parcel| {
         count.saturating_add(1 + usize::from(parcel.rotation.is_none()))
     });
     if footprint_count > MAX_PARCELS.saturating_mul(2) {
         return Err(CaptureError::TooManyFootprints);
     }
-    if state.neighborhood_plan.as_ref().is_some_and(|plan| {
+    if state.legacy.neighborhood_plan.as_ref().is_some_and(|plan| {
         plan.segments.len().saturating_sub(plan.next_segment) > MAX_NEIGHBORHOOD_SEGMENTS
     }) {
         return Err(CaptureError::TooManyNeighborhoodSegments);
     }
     if state
+        .legacy
         .pending_interior_access
         .as_ref()
         .is_some_and(|plan| plan.selected_lots.len() > MAX_PARCELS)
@@ -91,6 +92,7 @@ fn capture_inner(
         return Err(CaptureError::TooManyReservedLots);
     }
     if state
+        .construction
         .projects
         .iter()
         .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -104,11 +106,12 @@ fn capture_inner(
     // Build that index once rather than repeating a linear scan per road or
     // project. BTreeMap preserves deterministic construction and lookup.
     let mut node_positions = BTreeMap::new();
-    for node in &state.nodes {
+    for node in &state.network.nodes {
         node_positions.entry(node.id).or_insert((node.x, node.z));
     }
 
     let mut hosts = state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -130,6 +133,7 @@ fn capture_inner(
     hosts.sort_by_key(|host| host.id);
 
     let nodes = state
+        .network
         .nodes
         .iter()
         .map(|node| ProposalNode {
@@ -140,6 +144,7 @@ fn capture_inner(
         .collect::<Vec<_>>();
 
     let roads = state
+        .network
         .roads
         .iter()
         .map(|road| ProposalRoad {
@@ -153,6 +158,7 @@ fn capture_inner(
         .collect::<Vec<_>>();
 
     let projects = state
+        .construction
         .projects
         .iter()
         .map(|project| {
@@ -173,15 +179,20 @@ fn capture_inner(
         })
         .collect::<Vec<_>>();
 
-    let pending_access_branch = state.pending_interior_access.as_ref().and_then(|plan| {
-        let road = state
-            .roads
-            .iter()
-            .find(|road| road.id == plan.branch_road_id)?;
-        let (ax, az) = *node_positions.get(&road.from)?;
-        let (bx, bz) = *node_positions.get(&road.to)?;
-        Some(Segment { ax, az, bx, bz })
-    });
+    let pending_access_branch = state
+        .legacy
+        .pending_interior_access
+        .as_ref()
+        .and_then(|plan| {
+            let road = state
+                .network
+                .roads
+                .iter()
+                .find(|road| road.id == plan.branch_road_id)?;
+            let (ax, az) = *node_positions.get(&road.from)?;
+            let (bx, bz) = *node_positions.get(&road.to)?;
+            Some(Segment { ax, az, bx, bz })
+        });
 
     let viability = shared_viability
         .unwrap_or_else(|| crate::legacy::access_capture::capture_viability(engine));
@@ -193,13 +204,13 @@ fn capture_inner(
         projects,
         viability,
         gates: AdmissionGates {
-            demand: state.demand,
-            has_pending_interior_plan: state.pending_interior_access.is_some(),
-            has_neighborhood_plan: state.neighborhood_plan.is_some(),
-            road_count: state.roads.len(),
-            project_count: state.projects.len(),
-            parcel_count: state.parcels.len(),
-            frontage_count: state.parcel_frontages.len(),
+            demand: state.people.demand,
+            has_pending_interior_plan: state.legacy.pending_interior_access.is_some(),
+            has_neighborhood_plan: state.legacy.neighborhood_plan.is_some(),
+            road_count: state.network.roads.len(),
+            project_count: state.construction.projects.len(),
+            parcel_count: state.land.parcels.len(),
+            frontage_count: state.land.parcel_frontages.len(),
             next_id: state.next_id,
             project_admission_available: engine.project_admission_available(),
             pending_access_branch,
@@ -232,6 +243,7 @@ mod tests {
         };
         let mut hosts = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -253,6 +265,7 @@ mod tests {
             hosts,
             nodes: engine
                 .state
+                .network
                 .nodes
                 .iter()
                 .map(|node| ProposalNode {
@@ -263,6 +276,7 @@ mod tests {
                 .collect(),
             roads: engine
                 .state
+                .network
                 .roads
                 .iter()
                 .map(|road| ProposalRoad {
@@ -273,6 +287,7 @@ mod tests {
                 .collect(),
             projects: engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .map(|project| ProposalProject {
@@ -289,25 +304,29 @@ mod tests {
                 .unwrap()
                 .viability,
             gates: AdmissionGates {
-                demand: engine.state.demand,
-                has_pending_interior_plan: engine.state.pending_interior_access.is_some(),
-                has_neighborhood_plan: engine.state.neighborhood_plan.is_some(),
-                road_count: engine.state.roads.len(),
-                project_count: engine.state.projects.len(),
-                parcel_count: engine.state.parcels.len(),
-                frontage_count: engine.state.parcel_frontages.len(),
+                demand: engine.state.people.demand,
+                has_pending_interior_plan: engine.state.legacy.pending_interior_access.is_some(),
+                has_neighborhood_plan: engine.state.legacy.neighborhood_plan.is_some(),
+                road_count: engine.state.network.roads.len(),
+                project_count: engine.state.construction.projects.len(),
+                parcel_count: engine.state.land.parcels.len(),
+                frontage_count: engine.state.land.parcel_frontages.len(),
                 next_id: engine.state.next_id,
                 project_admission_available: engine.project_admission_available(),
-                pending_access_branch: engine.state.pending_interior_access.as_ref().and_then(
-                    |plan| {
+                pending_access_branch: engine
+                    .state
+                    .legacy
+                    .pending_interior_access
+                    .as_ref()
+                    .and_then(|plan| {
                         engine
                             .state
+                            .network
                             .roads
                             .iter()
                             .find(|road| road.id == plan.branch_road_id)
                             .and_then(|road| segment(road.from, road.to))
-                    },
-                ),
+                    }),
             },
         };
         assert_eq!(capture(engine).unwrap(), expected);
@@ -353,19 +372,19 @@ mod tests {
             next_id += 1;
             let to = next_id;
             next_id += 1;
-            engine.state.nodes.push(crate::Node {
+            engine.state.network.nodes.push(crate::Node {
                 id: from,
                 x: -300.0 + (index % 25) as f32 * 10.0,
                 z: -300.0 + (index / 25) as f32 * 10.0,
                 kind: NodeKind::Junction,
             });
-            engine.state.nodes.push(crate::Node {
+            engine.state.network.nodes.push(crate::Node {
                 id: to,
                 x: -299.0 + (index % 25) as f32 * 10.0,
                 z: -300.0 + (index / 25) as f32 * 10.0,
                 kind: NodeKind::Junction,
             });
-            engine.state.roads.push(crate::Road {
+            engine.state.network.roads.push(crate::Road {
                 id: next_id,
                 from,
                 to,
@@ -381,7 +400,7 @@ mod tests {
         engine.state.next_id = next_id;
         let captured = capture(&engine).unwrap();
         assert!(captured.hosts.len() >= 513);
-        assert_eq!(captured.roads.len(), engine.state.roads.len());
+        assert_eq!(captured.roads.len(), engine.state.network.roads.len());
         assert!(
             crate::legacy::access_proposal_validation::ProposalValidationContext::new(captured)
                 .is_ok()
@@ -392,7 +411,7 @@ mod tests {
     fn over_cap_state_fails_before_projection_and_does_not_mutate_engine() {
         let mut engine = Engine::new_legacy(19);
         for index in 0..=MAX_NODES {
-            engine.state.nodes.push(crate::Node {
+            engine.state.network.nodes.push(crate::Node {
                 id: 100_000 + index as u32,
                 x: index as f32,
                 z: 0.0,

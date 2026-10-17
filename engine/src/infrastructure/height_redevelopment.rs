@@ -45,23 +45,26 @@ impl Engine {
     }
 
     pub(crate) fn try_start_height_redevelopment(&mut self) -> bool {
-        if self.state.height_redevelopment.is_some() || !self.project_admission_available() {
+        if self.state.construction.height_redevelopment.is_some()
+            || !self.project_admission_available()
+        {
             return false;
         }
         let Some(plan) = self.plan.as_ref() else {
             return false;
         };
-        let Some(progress) = self.state.masterplan.as_ref() else {
+        let Some(progress) = self.state.network.masterplan.as_ref() else {
             return false;
         };
-        if !self.state.station_online
-            || self.state.demand < MIN_DEVELOPMENT_DEMAND
+        if !self.state.transit.station_online
+            || self.state.people.demand < MIN_DEVELOPMENT_DEMAND
             || plan.plan.lots.is_empty()
             || (progress.lot_parcels.iter().filter(|id| **id != 0).count() as f32)
                 / (plan.plan.lots.len() as f32)
                 < MIN_REALIZED_LOT_FRACTION
             || self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .filter(|building| site_active(building))
@@ -75,7 +78,7 @@ impl Engine {
         if count == 0 {
             return false;
         }
-        let start = self.state.height_redevelopment_cursor % count;
+        let start = self.state.construction.height_redevelopment_cursor % count;
         let scanned = SCAN_PER_RENEWAL.min(count);
         let day = (self.state.tick / TICKS_PER_DAY) as u32;
         let mut chosen = None;
@@ -91,6 +94,7 @@ impl Engine {
             };
             let Some(building) = self
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.parcel_id == parcel_id)
@@ -103,7 +107,7 @@ impl Engine {
             chosen = Some(building.id);
             break;
         }
-        self.state.height_redevelopment_cursor = (start + scanned) % count;
+        self.state.construction.height_redevelopment_cursor = (start + scanned) % count;
         let Some(building_id) = chosen else {
             return false;
         };
@@ -127,19 +131,21 @@ impl Engine {
             || building.appearance_seed % 4 == 0
             || self
                 .state
+                .construction
                 .pending_rear_extensions
                 .iter()
                 .any(|plan| plan.building_id == building.id)
             || self
                 .state
+                .construction
                 .building_original_footprints
                 .iter()
                 .any(|entry| entry.building_id == building.id)
             || self.errand_references_building(building.id)
-            || self.state.residents.iter().any(|resident| {
+            || self.state.people.residents.iter().any(|resident| {
                 resident.home_building == building.id || resident.work_building == Some(building.id)
             })
-            || self.state.travelers.iter().any(|traveler| {
+            || self.state.people.travelers.iter().any(|traveler| {
                 traveler.origin_building == Some(building.id)
                     || traveler.destination_building == Some(building.id)
             })
@@ -148,6 +154,7 @@ impl Engine {
         }
         let Some(parcel) = self
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == building.parcel_id)
@@ -158,12 +165,13 @@ impl Engine {
             || parcel.reservation.is_some()
             || parcel.rotation.is_none()
             || parcel.width * parcel.depth < MIN_REDEVELOPMENT_SITE_AREA
-            || !self.state.station_online
+            || !self.state.transit.station_online
         {
             return false;
         }
         let mapped_to_building = self
             .state
+            .network
             .masterplan
             .as_ref()
             .and_then(|progress| progress.lot_parcels.get(lot_index))
@@ -184,6 +192,7 @@ impl Engine {
         // Work availability comes from explicit resident assignments, not the commercial occupancy field.
         let has_spare_office_capacity = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|other| {
@@ -192,6 +201,7 @@ impl Engine {
             .any(|other| {
                 let assigned = self
                     .state
+                    .people
                     .residents
                     .iter()
                     .filter(|resident| {
@@ -206,12 +216,14 @@ impl Engine {
         }
         let tower_count = self
             .state
+            .construction
             .buildings
             .iter()
             .filter(|other| other.floors >= MIN_OFFICE_FLOORS && other.stage != Stage::Demolished)
             .count()
             + self
                 .state
+                .construction
                 .height_redevelopment
                 .iter()
                 .filter(|pending| pending.target_floors >= MIN_OFFICE_FLOORS)
@@ -222,15 +234,17 @@ impl Engine {
     pub(crate) fn begin_height_redevelopment(&mut self, building_id: u32) -> bool {
         let Some(index) = self
             .state
+            .construction
             .buildings
             .iter()
             .position(|building| building.id == building_id)
         else {
             return false;
         };
-        let building = self.state.buildings[index].clone();
+        let building = self.state.construction.buildings[index].clone();
         let Some(parcel) = self
             .state
+            .land
             .parcels
             .iter_mut()
             .find(|parcel| parcel.id == building.parcel_id)
@@ -252,13 +266,16 @@ impl Engine {
             "{} begins a staged station-core height renewal",
             building.name
         );
-        push_history(&mut self.state.buildings[index].history, reason.clone());
-        self.state.buildings[index].business_active = false;
-        self.state.buildings[index].stage = Stage::Demolition;
-        self.state.buildings[index].progress = 0.0;
+        push_history(
+            &mut self.state.construction.buildings[index].history,
+            reason.clone(),
+        );
+        self.state.construction.buildings[index].business_active = false;
+        self.state.construction.buildings[index].stage = Stage::Demolition;
+        self.state.construction.buildings[index].progress = 0.0;
         parcel.reservation = Some(building.id);
         let project_id = self.id();
-        self.state.height_redevelopment = Some(HeightRedevelopment {
+        self.state.construction.height_redevelopment = Some(HeightRedevelopment {
             project_id,
             building_id,
             parcel_id: building.parcel_id,
@@ -285,20 +302,22 @@ impl Engine {
     }
 
     pub(crate) fn advance_height_redevelopment(&mut self) {
-        let Some(plan) = self.state.height_redevelopment.clone() else {
+        let Some(plan) = self.state.construction.height_redevelopment.clone() else {
             return;
         };
         let Some(project_index) = self
             .state
+            .construction
             .projects
             .iter()
             .position(|project| project.id == plan.project_id)
         else {
             return;
         };
-        let progress = self.state.projects[project_index].progress;
+        let progress = self.state.construction.projects[project_index].progress;
         let Some(building_index) = self
             .state
+            .construction
             .buildings
             .iter()
             .position(|building| building.id == plan.building_id)
@@ -307,9 +326,9 @@ impl Engine {
         };
         if progress < DEMOLITION_FRACTION {
             let phase = (progress / DEMOLITION_FRACTION).clamp(0.0, 1.0);
-            self.state.buildings[building_index].stage = Stage::Demolition;
-            self.state.buildings[building_index].progress = phase;
-            self.state.projects[project_index].stage = Stage::Demolition;
+            self.state.construction.buildings[building_index].stage = Stage::Demolition;
+            self.state.construction.buildings[building_index].progress = phase;
+            self.state.construction.projects[project_index].stage = Stage::Demolition;
         } else {
             let phase =
                 ((progress - DEMOLITION_FRACTION) / (1.0 - DEMOLITION_FRACTION)).clamp(0.0, 1.0);
@@ -324,18 +343,19 @@ impl Engine {
             } else {
                 Stage::Finishing
             };
-            let building = &mut self.state.buildings[building_index];
+            let building = &mut self.state.construction.buildings[building_index];
             building.floors = plan.target_floors;
             building.capacity = plan.target_capacity;
             building.stage = stage;
             building.progress = phase;
-            self.state.projects[project_index].stage = stage;
+            self.state.construction.projects[project_index].stage = stage;
         }
     }
 
     pub(crate) fn complete_height_redevelopment(&mut self, project_id: u32) -> bool {
         let Some(plan) = self
             .state
+            .construction
             .height_redevelopment
             .clone()
             .filter(|plan| plan.project_id == project_id)
@@ -344,6 +364,7 @@ impl Engine {
         };
         if !self
             .state
+            .construction
             .projects
             .iter()
             .any(|project| project.id == project_id && project.progress >= 1.0)
@@ -352,6 +373,7 @@ impl Engine {
         }
         if let Some(building) = self
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|building| building.id == plan.building_id)
@@ -371,13 +393,14 @@ impl Engine {
         }
         if let Some(parcel) = self
             .state
+            .land
             .parcels
             .iter_mut()
             .find(|parcel| parcel.id == plan.parcel_id)
         {
             parcel.reservation = None;
         }
-        self.state.height_redevelopment = None;
+        self.state.construction.height_redevelopment = None;
         self.record(
             EventKind::BuildingRedeveloped,
             plan.building_id,
@@ -392,26 +415,27 @@ impl Engine {
     }
 
     pub(crate) fn validate_height_redevelopment(&self) -> Result<(), String> {
-        if self.state.height_redevelopment_cursor > MAX_PARCELS {
+        if self.state.construction.height_redevelopment_cursor > MAX_PARCELS {
             return Err("height-redevelopment cursor exceeds its cap".into());
         }
         match self.height_redevelopment_lots.len() {
             eligible_count
                 if eligible_count > 0
-                    && self.state.height_redevelopment_cursor >= eligible_count =>
+                    && self.state.construction.height_redevelopment_cursor >= eligible_count =>
             {
                 return Err(
                     "height-redevelopment cursor exceeds eligible station-core lots".into(),
                 );
             }
-            0 if self.state.height_redevelopment_cursor != 0 => {
+            0 if self.state.construction.height_redevelopment_cursor != 0 => {
                 return Err("height-redevelopment cursor exists without a master plan".into());
             }
             _ => {}
         }
-        let Some(plan) = &self.state.height_redevelopment else {
+        let Some(plan) = &self.state.construction.height_redevelopment else {
             if self
                 .state
+                .construction
                 .projects
                 .iter()
                 .any(|project| project.kind == ProjectKind::Redevelopment && project.progress < 1.0)
@@ -422,24 +446,28 @@ impl Engine {
         };
         let project = self
             .state
+            .construction
             .projects
             .iter()
             .find(|project| project.id == plan.project_id)
             .ok_or("height-redevelopment plan has no project")?;
         let building = self
             .state
+            .construction
             .buildings
             .iter()
             .find(|building| building.id == plan.building_id)
             .ok_or("height-redevelopment plan has no building")?;
         let parcel = self
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == plan.parcel_id)
             .ok_or("height-redevelopment plan has no parcel")?;
         let lot_index = self
             .state
+            .network
             .masterplan
             .as_ref()
             .and_then(|progress| {
@@ -529,17 +557,17 @@ impl Engine {
             return Err("height-redevelopment plan, host, parcel, and project disagree".into());
         }
         if self.errand_references_building(building.id)
-            || self.state.residents.iter().any(|resident| {
+            || self.state.people.residents.iter().any(|resident| {
                 resident.home_building == building.id || resident.work_building == Some(building.id)
             })
-            || self.state.travelers.iter().any(|traveler| {
+            || self.state.people.travelers.iter().any(|traveler| {
                 traveler.origin_building == Some(building.id)
                     || traveler.destination_building == Some(building.id)
             })
         {
             return Err("height-redevelopment host still has actor references".into());
         }
-        if self.state.projects.iter().any(|other| {
+        if self.state.construction.projects.iter().any(|other| {
             other.id != plan.project_id
                 && other.kind == ProjectKind::Redevelopment
                 && other.progress < 1.0

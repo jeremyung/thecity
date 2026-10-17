@@ -45,6 +45,7 @@ impl crate::Engine {
         // The platform frame is authored for this service axis. Additional
         // rail branches at a terminal do not change that platform's support.
         self.state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -71,6 +72,7 @@ impl crate::Engine {
         };
         let road_for = |edge: &[u32]| {
             self.state
+                .network
                 .roads
                 .iter()
                 .find(|road| {
@@ -91,6 +93,7 @@ impl crate::Engine {
         if let Some(building) = building {
             let (id, _) = self.building_access_segment(building)?;
             self.state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == id && road.stage == Stage::Open && road.connected)?;
@@ -133,6 +136,7 @@ impl crate::Engine {
         // against the exact directional queue construction, not its proximity.
         let resident = self
             .state
+            .people
             .residents
             .iter()
             .find(|resident| resident.id == traveler.resident)?;
@@ -230,6 +234,7 @@ mod tests {
                 for id in &packet[cursor..cursor + road_count] {
                     let road = engine
                         .state
+                        .network
                         .roads
                         .iter()
                         .find(|road| road.id == *id)
@@ -237,8 +242,18 @@ mod tests {
                     assert_eq!(road.stage, crate::Stage::Open);
                     if road.kind == crate::RoadKind::Expressway {
                         assert_eq!(row[4], 1);
-                        assert!(engine.state.nodes.iter().any(|node| node.id == road.from));
-                        assert!(engine.state.nodes.iter().any(|node| node.id == road.to));
+                        assert!(engine
+                            .state
+                            .network
+                            .nodes
+                            .iter()
+                            .any(|node| node.id == road.from));
+                        assert!(engine
+                            .state
+                            .network
+                            .nodes
+                            .iter()
+                            .any(|node| node.id == road.to));
                     } else {
                         assert!(road.connected, "ordinary movement road must be connected");
                     }
@@ -256,6 +271,7 @@ mod tests {
         let mut engine = Engine::new(87231);
         let road = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| {
@@ -269,7 +285,7 @@ mod tests {
         let b = engine.node(road.to).unwrap().clone();
         let length = (b.x - a.x).hypot(b.z - a.z);
         let traveler_id = engine.id();
-        engine.state.travelers.push(crate::Traveler {
+        engine.state.people.travelers.push(crate::Traveler {
             id: traveler_id,
             kind: 1,
             route: vec![road.from, road.to],
@@ -313,7 +329,7 @@ mod tests {
         let mut node_ids = Vec::new();
         for (x, z) in [(0.0, 0.0), (40.0, 0.0), (40.0, 40.0)] {
             let id = engine.id();
-            engine.state.nodes.push(crate::Node {
+            engine.state.network.nodes.push(crate::Node {
                 id,
                 x,
                 z,
@@ -324,7 +340,7 @@ mod tests {
         let mut road_ids = Vec::new();
         for edge in node_ids.windows(2) {
             let id = engine.id();
-            engine.state.roads.push(crate::Road {
+            engine.state.network.roads.push(crate::Road {
                 id,
                 from: edge[0],
                 to: edge[1],
@@ -338,7 +354,7 @@ mod tests {
             road_ids.push(id);
         }
         let line_id = engine.id();
-        engine.state.bus_line = Some(crate::BusLine {
+        engine.state.transit.bus_line = Some(crate::BusLine {
             id: line_id,
             stops: vec![node_ids[0], node_ids[2]],
             route: node_ids.clone(),
@@ -346,7 +362,7 @@ mod tests {
             graph_revision: 1,
         });
         let bus_id = engine.id();
-        engine.state.buses.push(crate::Bus {
+        engine.state.transit.buses.push(crate::Bus {
             id: bus_id,
             line_id,
             progress: 40.0,
@@ -356,14 +372,14 @@ mod tests {
             next_departure_tick: 0,
             last_stop: None,
         });
-        let line = engine.state.bus_line.as_ref().unwrap().clone();
+        let line = engine.state.transit.bus_line.as_ref().unwrap().clone();
         let junction_distance = 40.0f32;
         let mut exact_junction_roads = Vec::new();
 
         for direction in [1, -1] {
             for offset in [-0.0005, 0.0, 0.0005] {
                 let bus_snapshot = {
-                    let bus = &mut engine.state.buses[0];
+                    let bus = &mut engine.state.transit.buses[0];
                     bus.direction = direction;
                     bus.progress = junction_distance + offset;
                     bus.clone()
@@ -406,7 +422,7 @@ mod tests {
         let mut node_ids = Vec::new();
         for (x, z) in [(0.0, 0.0), (40.0, 0.0), (80.0, 0.0), (40.0, 40.0)] {
             let id = engine.id();
-            engine.state.nodes.push(crate::Node {
+            engine.state.network.nodes.push(crate::Node {
                 id,
                 x,
                 z,
@@ -425,7 +441,7 @@ mod tests {
             let id = engine.id();
             let a = engine.node(from).unwrap().clone();
             let b = engine.node(to).unwrap().clone();
-            engine.state.roads.push(crate::Road {
+            engine.state.network.roads.push(crate::Road {
                 id,
                 from,
                 to,
@@ -439,7 +455,7 @@ mod tests {
             road_ids.push(id);
         }
         let line_id = engine.id();
-        engine.state.bus_line = Some(crate::BusLine {
+        engine.state.transit.bus_line = Some(crate::BusLine {
             id: line_id,
             stops: vec![node_ids[0], node_ids[1], node_ids[2]],
             route: vec![node_ids[0], node_ids[1], node_ids[2]],
@@ -447,8 +463,8 @@ mod tests {
             graph_revision: 1,
         });
         let resident_id = engine.id();
-        let home_building = engine.state.buildings[0].id;
-        engine.state.residents.push(crate::Resident {
+        let home_building = engine.state.construction.buildings[0].id;
+        engine.state.people.residents.push(crate::Resident {
             id: resident_id,
             name: "Queue support test".into(),
             home_building,
@@ -474,11 +490,11 @@ mod tests {
             bus_stop_node: Some(node_ids[1]),
             pending_alight: None,
         });
-        let line = engine.state.bus_line.as_ref().unwrap().clone();
+        let line = engine.state.transit.bus_line.as_ref().unwrap().clone();
         let expected = [(1, road_ids[1]), (-1, road_ids[0])];
         for (direction, expected_road) in expected {
             {
-                let resident = &mut engine.state.residents[0];
+                let resident = &mut engine.state.people.residents[0];
                 if direction > 0 {
                     resident.bus_origin_stop = Some(node_ids[0]);
                     resident.bus_destination_stop = Some(node_ids[2]);
@@ -547,6 +563,7 @@ mod tests {
         let (from, to, rail_id) = {
             let rail = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.kind == crate::RoadKind::Rail)
@@ -564,12 +581,12 @@ mod tests {
             })
             .expect("rail fixture has a station terminal");
         let gateway = if station == from { to } else { from };
-        engine.state.station_online = true;
+        engine.state.transit.station_online = true;
 
         for (at_station, terminal) in [(true, station), (false, gateway)] {
             let terminal_node = engine.node(terminal).unwrap().clone();
             let ground = engine.id();
-            engine.state.nodes.push(crate::Node {
+            engine.state.network.nodes.push(crate::Node {
                 id: ground,
                 x: terminal_node.x + 35.0,
                 z: terminal_node.z + 20.0,
@@ -577,7 +594,7 @@ mod tests {
             });
             let ground_node = engine.node(ground).unwrap().clone();
             let local_road = engine.id();
-            engine.state.roads.push(crate::Road {
+            engine.state.network.roads.push(crate::Road {
                 id: local_road,
                 from: terminal,
                 to: ground,
@@ -664,10 +681,11 @@ mod tests {
     #[test]
     fn extra_open_rail_branch_does_not_ambiguate_waiting_platform_support() {
         let mut engine = Engine::new_legacy(48);
-        engine.state.station_online = true;
+        engine.state.transit.station_online = true;
         let (from, to, service_rail_id) = {
             let rail = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.kind == crate::RoadKind::Rail)
@@ -688,14 +706,14 @@ mod tests {
         let gateway = if station == from { to } else { from };
         let terminal = engine.node(station).unwrap().clone();
         let branch_node = engine.id();
-        engine.state.nodes.push(crate::Node {
+        engine.state.network.nodes.push(crate::Node {
             id: branch_node,
             x: terminal.x + 30.0,
             z: terminal.z + 30.0,
             kind: crate::NodeKind::Junction,
         });
         let branch_road_id = engine.id();
-        engine.state.roads.push(crate::Road {
+        engine.state.network.roads.push(crate::Road {
             id: branch_road_id,
             from: station,
             to: branch_node,
@@ -707,8 +725,8 @@ mod tests {
             lanes: 2,
         });
         let resident_id = engine.id();
-        let building = engine.state.buildings[0].id;
-        engine.state.residents.push(crate::Resident {
+        let building = engine.state.construction.buildings[0].id;
+        engine.state.people.residents.push(crate::Resident {
             id: resident_id,
             name: "Platform branch test".into(),
             home_building: building,

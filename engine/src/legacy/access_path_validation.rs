@@ -8,7 +8,7 @@ impl Engine {
     /// explicit save-schema decision and updated regression fixtures; silently
     /// snapping a connector would also change its length and saved progress.
     pub(crate) fn validate_access_route_joins(&self) -> Result<(), String> {
-        for traveler in &self.state.travelers {
+        for traveler in &self.state.people.travelers {
             for (at_start, path) in [
                 (true, &traveler.origin_access),
                 (false, &traveler.destination_access),

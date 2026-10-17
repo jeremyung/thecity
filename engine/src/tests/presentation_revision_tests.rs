@@ -78,6 +78,7 @@ fn presentation_revision_tracks_station_visual_threshold_and_service_state() {
         let before = engine.presentation_revision();
         engine
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|p| p.kind == ProjectKind::Station)
@@ -92,6 +93,7 @@ fn presentation_revision_tracks_station_visual_threshold_and_service_state() {
         }
         engine
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|p| p.kind == ProjectKind::Station)
@@ -100,10 +102,10 @@ fn presentation_revision_tracks_station_visual_threshold_and_service_state() {
         assert_eq!(engine.presentation_revision(), revision);
     }
     let built = engine.presentation_revision();
-    engine.state.station_ready = true;
+    engine.state.transit.station_ready = true;
     let ready = engine.presentation_revision();
     assert_ne!(ready, built);
-    engine.state.station_online = true;
+    engine.state.transit.station_online = true;
     assert_ne!(engine.presentation_revision(), ready);
     assert_eq!(
         engine.snapshot().presentation_revision,
@@ -151,6 +153,7 @@ fn expressway_completion_through_complete_project_changes_presentation_revision(
             engine.step(80);
             engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .find(|project| project.kind == ProjectKind::Expressway && project.progress < 1.0)
@@ -162,6 +165,7 @@ fn expressway_completion_through_complete_project_changes_presentation_revision(
     assert_ne!(engine.presentation_revision(), before);
     assert!(engine
         .state
+        .network
         .roads
         .iter()
         .any(|road| road.kind == RoadKind::Expressway
@@ -173,12 +177,12 @@ fn expressway_completion_through_complete_project_changes_presentation_revision(
 #[test]
 fn presentation_revision_preserves_u64_generations_and_uses_tick_after_exhaustion() {
     let mut engine = Engine::new(87231);
-    engine.state.access_geometry_revision = 9_007_199_254_740_993;
+    engine.state.network.access_geometry_revision = 9_007_199_254_740_993;
     let exact = engine.presentation_revision();
     assert!(exact.starts_with("g9007199254740993:"));
 
-    engine.state.access_geometry_revision = u64::MAX;
-    engine.state.access_geometry_revision_exhausted = true;
+    engine.state.network.access_geometry_revision = u64::MAX;
+    engine.state.network.access_geometry_revision_exhausted = true;
     engine.state.tick = 41;
     let exhausted = engine.presentation_revision();
     assert!(exhausted.starts_with("t41:"));

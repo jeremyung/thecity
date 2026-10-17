@@ -16,6 +16,7 @@ fn mature_district_measurements_conserve_capacity_without_mutating_worlds() {
         let before = engine.save_json();
         let mut samples: Vec<_> = engine
             .state
+            .construction
             .buildings
             .iter()
             .map(|building| BuildingSample {
@@ -67,6 +68,7 @@ fn mature_district_measurements_conserve_capacity_without_mutating_worlds() {
         assert_eq!(resumed.finish().unwrap(), metrics);
         let open: Vec<_> = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|b| b.stage == Stage::Open)

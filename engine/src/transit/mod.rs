@@ -4,5 +4,6 @@ pub(crate) mod rail;
 pub(crate) mod rail_alignment;
 pub(crate) mod rail_platform;
 pub(crate) mod rail_runtime;
+pub(crate) mod state;
 pub(crate) mod traffic;
 pub(crate) mod transit_recovery;

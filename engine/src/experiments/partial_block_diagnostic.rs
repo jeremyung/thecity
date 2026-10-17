@@ -187,12 +187,14 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
     let (((planner_calls, anchors_visited), capture), partial_full_block) =
         capture_partial_candidates(|| {
             neighborhood_admission::capture_rejections(|| {
-                let anchor_count = engine.state.nodes.len();
+                let anchor_count = engine.state.network.nodes.len();
                 let mut visited = std::collections::BTreeSet::new();
                 for call in 1..=25 {
-                    let before = engine.state.neighborhood_anchor_cursor % anchor_count.max(1);
+                    let before =
+                        engine.state.legacy.neighborhood_anchor_cursor % anchor_count.max(1);
                     let accepted = engine.try_create_neighborhood_plan();
-                    let after = engine.state.neighborhood_anchor_cursor % anchor_count.max(1);
+                    let after =
+                        engine.state.legacy.neighborhood_anchor_cursor % anchor_count.max(1);
                     let mut index = before;
                     while index != after {
                         visited.insert(index);
@@ -206,7 +208,7 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
             })
         });
     let valid_after_eval = engine.validate().is_ok();
-    let plan = engine.state.neighborhood_plan.as_ref();
+    let plan = engine.state.legacy.neighborhood_plan.as_ref();
     let plan_segments = plan.map_or_else(Vec::new, |plan| plan.segments.clone());
     let accepted = plan.is_some();
     let anchor_node = plan.map(|plan| plan.anchor_node);
@@ -239,6 +241,7 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
             let matches = engine.save_json() == resumed.save_json();
             let road_projects = engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -254,7 +257,7 @@ fn outcome(mut engine: Engine, partial_enabled: bool, original_save: &str) -> Ca
         accepted,
         planner_calls,
         anchors_visited,
-        anchor_count: engine.state.nodes.len(),
+        anchor_count: engine.state.network.nodes.len(),
         anchor_node,
         plan_segments,
         road_projects_after_replay,

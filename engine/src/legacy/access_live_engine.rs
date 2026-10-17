@@ -38,21 +38,23 @@ impl Engine {
     #[cfg(feature = "legacy")]
     fn face_access_admission_available(&self) -> bool {
         self.access_geometry_revision_token().is_some()
-            && self.state.pending_interior_access.is_none()
-            && self.state.neighborhood_plan.is_none()
-            && self.state.demand > 0.8
+            && self.state.legacy.pending_interior_access.is_none()
+            && self.state.legacy.neighborhood_plan.is_none()
+            && self.state.people.demand > 0.8
             && self.project_admission_available()
             && self
                 .state
+                .network
                 .roads
                 .len()
-                .saturating_add(self.state.projects.len())
+                .saturating_add(self.state.construction.projects.len())
                 .saturating_add(3)
                 <= MAX_SEGMENTS
-            && self.state.parcels.len().saturating_add(2) <= MAX_PARCELS
+            && self.state.land.parcels.len().saturating_add(2) <= MAX_PARCELS
             && self.state.next_id.checked_add(5).is_some()
             && !self
                 .state
+                .construction
                 .projects
                 .iter()
                 .any(|p| p.kind == ProjectKind::Road && p.progress < 1.0)
@@ -76,7 +78,7 @@ impl Engine {
             discovery,
             proposal,
             revision,
-            self.state.exhausted_access_faces.clone(),
+            self.state.legacy.exhausted_access_faces.clone(),
         ) else {
             return false;
         };
@@ -93,13 +95,14 @@ impl Engine {
             return;
         }
         if self.live_access.is_none() {
-            if self.state.tick < self.state.next_face_access_tick {
+            if self.state.tick < self.state.legacy.next_face_access_tick {
                 return;
             }
-            self.state.next_face_access_tick =
+            self.state.legacy.next_face_access_tick =
                 self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
             let roads = self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|r| {
@@ -151,7 +154,7 @@ impl Engine {
                     proposal.selected_lots.clone(),
                 )
             {
-                self.state.next_face_access_tick =
+                self.state.legacy.next_face_access_tick =
                     self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
                 return;
             }
@@ -162,14 +165,17 @@ impl Engine {
             // job must not make a face appear searched or reset its history.
             if !job.failed() {
                 if let Some(identity) = job.selected_face_identity() {
-                    remember_exhausted_face(&mut self.state.exhausted_access_faces, identity);
+                    remember_exhausted_face(
+                        &mut self.state.legacy.exhausted_access_faces,
+                        identity,
+                    );
                 } else {
                     // No viable unvisited face remains. Retry all faces on the
                     // next sweep, including ones whose surroundings changed.
-                    self.state.exhausted_access_faces.clear();
+                    self.state.legacy.exhausted_access_faces.clear();
                 }
             }
-            self.state.next_face_access_tick =
+            self.state.legacy.next_face_access_tick =
                 self.state.tick.saturating_add(SEARCH_INTERVAL_TICKS);
         } else {
             self.live_access = Some(job);
@@ -195,7 +201,7 @@ mod tests {
                 discovery,
                 proposal,
                 control.access_geometry_revision_token().unwrap(),
-                control.state.exhausted_access_faces.clone(),
+                control.state.legacy.exhausted_access_faces.clone(),
             )
             .unwrap(),
         ));
@@ -262,7 +268,7 @@ mod tests {
         let report = serde_json::json!({
             "scope": "native release synchronous capture only; excludes job construction, output destruction, WASM, browser worker and rendering",
             "fixture": "early-reservation-wasm-87231-save.json", "tick": city.state.tick,
-            "nodes": city.state.nodes.len(), "roads": city.state.roads.len(), "parcels": city.state.parcels.len(),
+            "nodes": city.state.network.nodes.len(), "roads": city.state.network.roads.len(), "parcels": city.state.land.parcels.len(),
             "both_inputs_byte_equal": true, "world_unchanged": true, "rounds": rounds,
         });
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -292,10 +298,13 @@ mod tests {
         assert!(job.is_exhausted() && !job.failed());
         let first = job.selected_face_identity().unwrap().to_vec();
         let next_id = city.state.next_id;
-        let road_count = city.state.roads.len();
+        let road_count = city.state.network.roads.len();
         city.live_access = Some(job);
         city.advance_face_access();
-        assert_eq!(city.state.exhausted_access_faces, vec![first.clone()]);
+        assert_eq!(
+            city.state.legacy.exhausted_access_faces,
+            vec![first.clone()]
+        );
         let saved = city.save_json();
         let mut city = Engine::restore_json(&saved).unwrap();
         assert_eq!(city.save_json(), saved);
@@ -310,7 +319,7 @@ mod tests {
         assert!(!job.failed());
         assert_ne!(job.selected_face_identity().unwrap(), first.as_slice());
         assert_eq!(city.state.next_id, next_id);
-        assert_eq!(city.state.roads.len(), road_count);
+        assert_eq!(city.state.network.roads.len(), road_count);
     }
 
     #[test]
@@ -333,9 +342,9 @@ mod tests {
             "../../../tests/fixtures/access-joins/early-reservation-wasm-87231-save.json"
         );
         let mut city = Engine::restore_json(source).unwrap();
-        city.state.exhausted_access_faces = vec![vec![1, 2]];
+        city.state.legacy.exhausted_access_faces = vec![vec![1, 2]];
         assert!(Engine::restore_json(&city.save_json()).is_err());
-        city.state.exhausted_access_faces = vec![vec![1; 1025]];
+        city.state.legacy.exhausted_access_faces = vec![vec![1; 1025]];
         assert!(Engine::restore_json(&city.save_json()).is_err());
     }
 
@@ -348,7 +357,7 @@ mod tests {
         assert!(uninterrupted.start_face_access());
         let mut resumed = Engine::restore_json(&uninterrupted.save_json()).unwrap();
         let mut steps = 0;
-        while uninterrupted.state.pending_interior_access.is_none() && steps < 10_000 {
+        while uninterrupted.state.legacy.pending_interior_access.is_none() && steps < 10_000 {
             // Exercise the real tick-boundary hook and actor movement while
             // holding unrelated development constant for a controlled fixture.
             for city in [&mut uninterrupted, &mut resumed] {
@@ -362,13 +371,14 @@ mod tests {
             }
         }
         assert!(
-            uninterrupted.state.pending_interior_access.is_some(),
+            uninterrupted.state.legacy.pending_interior_access.is_some(),
             "live job failed to admit after {steps} slices"
         );
         assert_eq!(uninterrupted.save_json(), resumed.save_json());
         uninterrupted.validate().unwrap();
         let plan = uninterrupted
             .state
+            .legacy
             .pending_interior_access
             .as_ref()
             .unwrap();
@@ -386,12 +396,14 @@ mod tests {
             }
             let branch = uninterrupted
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|r| r.id == branch_id)
                 .unwrap();
             let frontages = uninterrupted
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|f| f.road_id == branch_id)

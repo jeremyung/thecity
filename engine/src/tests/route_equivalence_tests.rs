@@ -26,7 +26,7 @@ fn bus_uses_collectors_while_walkers_keep_the_lane_shortcut() {
     assert!(engine
         .bus_route_avoiding(0, 4, &BTreeSet::from([2]))
         .is_empty());
-    engine.state.roads[3].stage = Stage::Survey;
+    engine.state.network.roads[3].stage = Stage::Survey;
     assert!(engine.bus_route_avoiding(0, 4, &BTreeSet::new()).is_empty());
     assert_eq!(engine.route(0, 4, false), vec![0, 1, 4]);
 }
@@ -54,39 +54,44 @@ fn delivery_does_not_spawn_midway_along_an_oversized_route() {
         .map(|id| road(id, id, id + 1, RoadKind::Local, Stage::Open, true, 1.0))
         .collect();
     let mut engine = engine_with_graph(count, roads);
-    engine.state.nodes[0].kind = NodeKind::Gateway;
-    engine.state.buildings.truncate(1);
-    let business = &mut engine.state.buildings[0];
+    engine.state.network.nodes[0].kind = NodeKind::Gateway;
+    engine.state.construction.buildings.truncate(1);
+    let business = &mut engine.state.construction.buildings[0];
     business.kind = BuildingKind::Shop;
     business.stage = Stage::Open;
     business.business_active = true;
     let parcel_id = business.parcel_id;
     engine
         .state
+        .land
         .parcels
         .iter_mut()
         .find(|p| p.id == parcel_id)
         .unwrap()
         .access_node = count - 1;
-    engine.state.travelers.clear();
-    engine.state.next_delivery_tick = engine.state.tick;
-    let cursor = engine.state.delivery_cursor;
+    engine.state.people.travelers.clear();
+    engine.state.people.next_delivery_tick = engine.state.tick;
+    let cursor = engine.state.people.delivery_cursor;
     engine.schedule_deliveries();
-    assert!(engine.state.travelers.is_empty());
-    assert_eq!(engine.state.delivery_cursor, cursor);
+    assert!(engine.state.people.travelers.is_empty());
+    assert_eq!(engine.state.people.delivery_cursor, cursor);
     // Make the journey fit: dispatch must still work from the real gateway.
     engine
         .state
+        .land
         .parcels
         .iter_mut()
         .find(|p| p.id == parcel_id)
         .unwrap()
         .access_node = count - 2;
-    engine.state.next_delivery_tick = engine.state.tick;
+    engine.state.people.next_delivery_tick = engine.state.tick;
     engine.schedule_deliveries();
-    assert_eq!(engine.state.travelers.len(), 1);
-    assert_eq!(engine.state.travelers[0].route.first(), Some(&0));
-    assert_eq!(engine.state.travelers[0].route.last(), Some(&(count - 2)));
+    assert_eq!(engine.state.people.travelers.len(), 1);
+    assert_eq!(engine.state.people.travelers[0].route.first(), Some(&0));
+    assert_eq!(
+        engine.state.people.travelers[0].route.last(),
+        Some(&(count - 2))
+    );
 }
 
 // Frozen copy of Engine::route_avoiding before adjacency indexing. Keep this
@@ -113,7 +118,7 @@ fn route_avoiding_scan(
             break;
         }
         let base = *dist.get(&current).unwrap_or(&f32::INFINITY);
-        for r in engine.state.roads.iter().filter(|r| {
+        for r in engine.state.network.roads.iter().filter(|r| {
             r.connected
                 && r.stage == Stage::Open
                 && ((rail && r.kind == RoadKind::Rail) || (!rail && r.kind != RoadKind::Rail))
@@ -149,7 +154,7 @@ fn route_avoiding_scan(
 
 fn engine_with_graph(node_count: u32, roads: Vec<Road>) -> Engine {
     let mut engine = Engine::new_legacy(17);
-    engine.state.nodes = (0..node_count)
+    engine.state.network.nodes = (0..node_count)
         .map(|id| Node {
             id,
             x: id as f32 * 10.0,
@@ -157,7 +162,7 @@ fn engine_with_graph(node_count: u32, roads: Vec<Road>) -> Engine {
             kind: NodeKind::Junction,
         })
         .collect();
-    engine.state.roads = roads;
+    engine.state.network.roads = roads;
     engine
 }
 
@@ -296,7 +301,7 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
     const NODE_COUNT: u32 = 200;
     let node_id = |index: u32| 10_003 + index * 17;
     let mut engine = Engine::new_legacy(91);
-    engine.state.nodes = (0..NODE_COUNT)
+    engine.state.network.nodes = (0..NODE_COUNT)
         .map(|index| Node {
             id: node_id(index),
             x: index as f32,
@@ -349,7 +354,7 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
         true,
         0.625,
     ));
-    engine.state.roads = roads;
+    engine.state.network.roads = roads;
 
     let long_path =
         engine.route_avoiding(node_id(0), node_id(NODE_COUNT - 1), false, &BTreeSet::new());
@@ -363,18 +368,18 @@ fn large_sparse_id_graph_matches_after_live_road_mutations() {
     // Exercise each adjacency input across repeated calls. A per-call index
     // must immediately reflect mutations to status, connectivity, endpoints,
     // cost, and source ordering.
-    engine.state.roads[0].stage = Stage::Survey;
+    engine.state.network.roads[0].stage = Stage::Survey;
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
-    engine.state.roads[0].stage = Stage::Open;
-    engine.state.roads[0].connected = false;
+    engine.state.network.roads[0].stage = Stage::Open;
+    engine.state.network.roads[0].connected = false;
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
-    engine.state.roads[0].connected = true;
-    engine.state.roads[0].to = node_id(4);
+    engine.state.network.roads[0].connected = true;
+    engine.state.network.roads[0].to = node_id(4);
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
-    engine.state.roads[0].to = node_id(1);
-    engine.state.roads[199].length = 0.0625;
+    engine.state.network.roads[0].to = node_id(1);
+    engine.state.network.roads[199].length = 0.0625;
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
-    engine.state.roads.reverse();
+    engine.state.network.roads.reverse();
     assert_matches_oracle(&engine, node_id(0), node_id(NODE_COUNT - 1), false, &[]);
     assert_matches_oracle(&engine, node_id(0), node_id(2), true, &[]);
 }

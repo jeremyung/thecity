@@ -10,6 +10,7 @@ fn shrines_and_plazas_do_not_use_the_pocket_park_quota_or_spacing() {
     let parks = |engine: &Engine| -> Vec<u32> {
         engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|p| p.open_space.as_deref() == Some("park"))
@@ -30,12 +31,14 @@ fn shrines_and_plazas_do_not_use_the_pocket_park_quota_or_spacing() {
     // parks, placed beside the chosen lot so park spacing would block it.
     let homes = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|b| is_housing(b) && site_active(b))
         .count();
     let site = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|p| p.id == expected[0])
@@ -55,6 +58,7 @@ fn shrines_and_plazas_do_not_use_the_pocket_park_quota_or_spacing() {
         assert_ne!(id, 0);
         let parcel = engine
             .state
+            .land
             .parcels
             .iter_mut()
             .find(|p| p.id == id)
@@ -77,9 +81,16 @@ fn mature_neighborhoods_keep_spaced_pocket_parks_on_vacant_lots() {
     for _ in 0..12 {
         engine.step(2_000);
     }
-    let built: BTreeSet<u32> = engine.state.buildings.iter().map(|b| b.parcel_id).collect();
+    let built: BTreeSet<u32> = engine
+        .state
+        .construction
+        .buildings
+        .iter()
+        .map(|b| b.parcel_id)
+        .collect();
     let parks: Vec<&Parcel> = engine
         .state
+        .land
         .parcels
         .iter()
         .filter(|p| p.protected && !built.contains(&p.id))
@@ -91,6 +102,7 @@ fn mature_neighborhoods_keep_spaced_pocket_parks_on_vacant_lots() {
     );
     let homes = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|b| is_housing(b) && site_active(b))
@@ -119,6 +131,7 @@ fn mature_neighborhoods_keep_spaced_pocket_parks_on_vacant_lots() {
     let protected = |engine: &Engine| -> Vec<u32> {
         engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|p| p.protected)

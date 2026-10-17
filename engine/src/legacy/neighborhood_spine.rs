@@ -16,7 +16,7 @@ impl Engine {
     /// represented only by a pending project. Each will still consume a record.
     #[cfg(feature = "legacy")]
     pub(crate) fn spine_reserved_road_records(&self) -> usize {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return 0;
         };
         let Some(spine) = plan.spine.as_ref() else {
@@ -29,7 +29,7 @@ impl Engine {
             .segments
             .iter()
             .filter(|(from, to)| {
-                !self.state.roads.iter().any(|road| {
+                !self.state.network.roads.iter().any(|road| {
                     (road.from == *from && road.to == *to) || (road.from == *to && road.to == *from)
                 })
             })
@@ -41,7 +41,7 @@ impl Engine {
     /// construction. Returns true when it changed state or owns the current
     /// neighborhood planning opportunity.
     pub(crate) fn advance_neighborhood_spine(&mut self) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         let Some(spine) = plan.spine.as_ref() else {
@@ -61,7 +61,7 @@ impl Engine {
             let Some(hosts) = self.resolve_spine_hosts(&plan.segments) else {
                 return false;
             };
-            if let Some(active) = self.state.neighborhood_plan.as_mut() {
+            if let Some(active) = self.state.legacy.neighborhood_plan.as_mut() {
                 if let Some(spine) = active.spine.as_mut() {
                     spine.stage = SpineStage::PerimeterReady {
                         host_road_ids: hosts,
@@ -73,6 +73,7 @@ impl Engine {
 
         let current = self
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .and_then(|plan| plan.spine.as_ref())
@@ -87,7 +88,7 @@ impl Engine {
     }
 
     fn start_neighborhood_spine(&mut self, host_road_ids: &[u32; 2]) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         let Some(spine) = plan.spine.as_ref() else {
@@ -100,10 +101,16 @@ impl Engine {
         // Preflight every resource consumed by the two splits, new spine road,
         // visible road project, and promised frontage lots before either host
         // road is mutated.
-        if self.state.pending_interior_access.is_some()
-            || self.state.roads.len().saturating_add(3) > MAX_SEGMENTS
-            || self.state.parcels.len().saturating_add(lot_count) > MAX_PARCELS
-            || self.state.parcel_frontages.len().saturating_add(lot_count) > MAX_PARCELS
+        if self.state.legacy.pending_interior_access.is_some()
+            || self.state.network.roads.len().saturating_add(3) > MAX_SEGMENTS
+            || self.state.land.parcels.len().saturating_add(lot_count) > MAX_PARCELS
+            || self
+                .state
+                .land
+                .parcel_frontages
+                .len()
+                .saturating_add(lot_count)
+                > MAX_PARCELS
             || !self.project_admission_available()
             || self
                 .state
@@ -122,7 +129,7 @@ impl Engine {
         };
         let [start, end] = [splits[0].split_node_id, splits[1].split_node_id];
         let road_id = self.add_road(start, end, RoadKind::Local, Stage::Survey, 0.0);
-        self.state.neighborhood_road_ids.insert(road_id);
+        self.state.legacy.neighborhood_road_ids.insert(road_id);
         let project_id = self.id();
         let duration = 3.0 + random_unit(&mut self.state.rng_growth) * 4.0;
         self.record_project(Project {
@@ -139,6 +146,7 @@ impl Engine {
         });
         if let Some(spine) = self
             .state
+            .legacy
             .neighborhood_plan
             .as_mut()
             .and_then(|plan| plan.spine.as_mut())
@@ -162,6 +170,7 @@ impl Engine {
     ) {
         let road_id = self
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .and_then(|plan| plan.spine.as_ref())
@@ -174,7 +183,13 @@ impl Engine {
                 _ => None,
             });
         if let Some(road_id) = road_id {
-            if let Some(road) = self.state.roads.iter_mut().find(|road| road.id == road_id) {
+            if let Some(road) = self
+                .state
+                .network
+                .roads
+                .iter_mut()
+                .find(|road| road.id == road_id)
+            {
                 road.stage = stage;
                 road.progress = progress;
             }
@@ -182,7 +197,7 @@ impl Engine {
     }
 
     pub(crate) fn complete_neighborhood_spine_project(&mut self, project_id: u32) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         let Some(spine) = plan.spine.as_ref() else {
@@ -202,6 +217,7 @@ impl Engine {
         }
         let Some(project) = self
             .state
+            .construction
             .projects
             .iter()
             .find(|p| p.id == project_id)
@@ -211,6 +227,7 @@ impl Engine {
         };
         let Some(branch) = self
             .state
+            .network
             .roads
             .iter()
             .find(|r| r.id == spine_road_id)
@@ -232,9 +249,16 @@ impl Engine {
             || branch.stage == Stage::Open
             || branch.kind != RoadKind::Local
             || layout.lots.len() < crate::legacy::spine_plan::MIN_SPINE_LOTS
-            || self.state.parcels.len().saturating_add(layout.lots.len()) > MAX_PARCELS
             || self
                 .state
+                .land
+                .parcels
+                .len()
+                .saturating_add(layout.lots.len())
+                > MAX_PARCELS
+            || self
+                .state
+                .land
                 .parcel_frontages
                 .len()
                 .saturating_add(layout.lots.len())
@@ -291,12 +315,13 @@ impl Engine {
 
         let segments = self
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .unwrap()
             .segments
             .clone();
-        let perimeter_ids = perimeter_road_ids(&self.state.roads, &segments);
+        let perimeter_ids = perimeter_road_ids(&self.state.network.roads, &segments);
         let mut frontage_specs = Vec::with_capacity(layout.lots.len());
         for lot in &layout.lots {
             let road_id = match lot.frontage {
@@ -308,7 +333,7 @@ impl Engine {
                 crate::legacy::spine_blocks::SpineFrontage::Perimeter(_) => 0,
                 crate::legacy::spine_blocks::SpineFrontage::Spine(_) => spine_road_id,
             };
-            let Some(road) = self.state.roads.iter().find(|road| {
+            let Some(road) = self.state.network.roads.iter().find(|road| {
                 road.id == road_id
                     && if road_id == spine_road_id {
                         road.stage != Stage::Open
@@ -346,18 +371,31 @@ impl Engine {
         }
         // The split endpoints are already connected through their perimeter
         // hosts. Opening the spine therefore cannot create disconnected travel.
-        if let Some(road) = self.state.roads.iter_mut().find(|r| r.id == spine_road_id) {
+        if let Some(road) = self
+            .state
+            .network
+            .roads
+            .iter_mut()
+            .find(|r| r.id == spine_road_id)
+        {
             road.stage = Stage::Open;
             road.progress = 1.0;
         }
         self.recompute_connectivity();
         if !self
             .state
+            .network
             .roads
             .iter()
             .any(|r| r.id == spine_road_id && r.connected)
         {
-            if let Some(road) = self.state.roads.iter_mut().find(|r| r.id == spine_road_id) {
+            if let Some(road) = self
+                .state
+                .network
+                .roads
+                .iter_mut()
+                .find(|r| r.id == spine_road_id)
+            {
                 road.stage = Stage::Finishing;
                 road.progress = 0.999;
             }
@@ -368,13 +406,16 @@ impl Engine {
 
         // Releasing the plan reservation immediately before insertion avoids
         // double-counting its own promised parcels in add_parcel().
-        self.state.neighborhood_plan = None;
+        self.state.legacy.neighborhood_plan = None;
         for (edge, road_id) in perimeter_ids.into_iter().enumerate() {
             if (edge == 0 || edge == 2) && road_id != 0 {
-                self.state.neighborhood_road_ids.insert(road_id);
+                self.state.legacy.neighborhood_road_ids.insert(road_id);
             }
         }
-        self.state.neighborhood_road_ids.insert(spine_road_id);
+        self.state
+            .legacy
+            .neighborhood_road_ids
+            .insert(spine_road_id);
         for (lot, (road_id, along, side, access)) in layout.lots.iter().zip(frontage_specs) {
             let parcel_id = self.add_parcel(
                 lot.center.x,
@@ -386,8 +427,8 @@ impl Engine {
                 false,
             );
             assert_ne!(parcel_id, 0, "spine parcel capacity was preflighted");
-            self.state.parcels.last_mut().unwrap().rotation = Some(lot.rotation);
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcels.last_mut().unwrap().rotation = Some(lot.rotation);
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id,
                 along,
@@ -407,11 +448,23 @@ impl Engine {
     }
 
     fn keep_spine_project_retryable(&mut self, project_id: u32, spine_road_id: u32) {
-        if let Some(project) = self.state.projects.iter_mut().find(|p| p.id == project_id) {
+        if let Some(project) = self
+            .state
+            .construction
+            .projects
+            .iter_mut()
+            .find(|p| p.id == project_id)
+        {
             project.progress = 0.999;
             project.stage = Stage::Finishing;
         }
-        if let Some(road) = self.state.roads.iter_mut().find(|r| r.id == spine_road_id) {
+        if let Some(road) = self
+            .state
+            .network
+            .roads
+            .iter_mut()
+            .find(|r| r.id == spine_road_id)
+        {
             if road.stage != Stage::Open {
                 road.progress = 0.999;
                 road.stage = Stage::Finishing;
@@ -435,9 +488,16 @@ impl Engine {
         {
             return Err("neighborhood spine must match a canonical coordinated perimeter".into());
         }
-        if self.state.parcels.len().saturating_add(layout.lots.len()) > MAX_PARCELS
+        if self
+            .state
+            .land
+            .parcels
+            .len()
+            .saturating_add(layout.lots.len())
+            > MAX_PARCELS
             || self
                 .state
+                .land
                 .parcel_frontages
                 .len()
                 .saturating_add(layout.lots.len())
@@ -453,12 +513,12 @@ impl Engine {
         let mut future_perimeter_ids = 0_usize;
         if preconstruction {
             for (from, to) in &plan.segments {
-                let has_road = self.state.roads.iter().any(|road| {
+                let has_road = self.state.network.roads.iter().any(|road| {
                     (road.from == *from && road.to == *to) || (road.from == *to && road.to == *from)
                 });
                 if !has_road {
                     future_perimeter_roads += 1;
-                    let has_project = self.state.projects.iter().any(|project| {
+                    let has_project = self.state.construction.projects.iter().any(|project| {
                         project.kind == ProjectKind::Road
                             && project.progress < 1.0
                             && ((project.from == Some(*from) && project.to == Some(*to))
@@ -474,7 +534,13 @@ impl Engine {
         let future_spine_ids = if preconstruction { 6 } else { 0 };
         let reserved_roads = future_perimeter_roads + future_spine_roads;
         let reserved_ids = future_perimeter_ids + future_spine_ids + layout.lots.len();
-        if self.state.roads.len().saturating_add(reserved_roads) > MAX_SEGMENTS
+        if self
+            .state
+            .network
+            .roads
+            .len()
+            .saturating_add(reserved_roads)
+            > MAX_SEGMENTS
             || self
                 .state
                 .next_id
@@ -510,7 +576,7 @@ impl Engine {
                 }
                 for edge in [0_usize, 2] {
                     let (from, to) = plan.segments[edge];
-                    if !self.state.roads.iter().any(|road| {
+                    if !self.state.network.roads.iter().any(|road| {
                         road.stage == Stage::Open
                             && road.connected
                             && ((road.from == from && road.to == to)
@@ -531,12 +597,14 @@ impl Engine {
                 }
                 let branch = self
                     .state
+                    .network
                     .roads
                     .iter()
                     .find(|r| r.id == *spine_road_id)
                     .ok_or_else(|| "neighborhood spine road is missing".to_string())?;
                 let project = self
                     .state
+                    .construction
                     .projects
                     .iter()
                     .find(|p| p.id == *project_id)
@@ -556,9 +624,10 @@ impl Engine {
                 {
                     return Err("neighborhood spine construction project is inconsistent".into());
                 }
-                if self.state.roads.len() > MAX_SEGMENTS
+                if self.state.network.roads.len() > MAX_SEGMENTS
                     || self
                         .state
+                        .construction
                         .projects
                         .iter()
                         .filter(|p| p.progress < 1.0)
@@ -580,7 +649,7 @@ impl Engine {
     }
 
     fn spine_corners_match_plan(&self, spine: &SpinePlan) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         if plan.segments.len() != 4 {
@@ -611,7 +680,7 @@ impl Engine {
         let mut ids = [0; 2];
         for (slot, edge) in [3_usize, 1].into_iter().enumerate() {
             let (from, to) = segments[edge];
-            let road = self.state.roads.iter().find(|road| {
+            let road = self.state.network.roads.iter().find(|road| {
                 road.stage == Stage::Open
                     && road.connected
                     && road.kind != RoadKind::Rail
@@ -624,14 +693,14 @@ impl Engine {
     }
 
     fn spine_hosts_match_segments(&self, ids: &[u32; 2]) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         [3_usize, 1].into_iter().enumerate().all(|(slot, edge)| {
             let Some((from, to)) = plan.segments.get(edge) else {
                 return false;
             };
-            self.state.roads.iter().any(|road| {
+            self.state.network.roads.iter().any(|road| {
                 road.id == ids[slot]
                     && road.stage == Stage::Open
                     && road.connected
@@ -643,11 +712,11 @@ impl Engine {
     }
 
     fn spine_perimeter_ready(&self) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         plan.segments.iter().all(|(from, to)| {
-            self.state.roads.iter().any(|road| {
+            self.state.network.roads.iter().any(|road| {
                 road.stage == Stage::Open
                     && road.connected
                     && road.kind != RoadKind::Rail
@@ -658,7 +727,7 @@ impl Engine {
     }
 
     fn spine_hosts_are_split_and_connected(&self, ids: [u32; 2], split_nodes: [u32; 2]) -> bool {
-        let Some(plan) = self.state.neighborhood_plan.as_ref() else {
+        let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() else {
             return false;
         };
         [3_usize, 1].into_iter().enumerate().all(|(slot, edge)| {
@@ -675,6 +744,7 @@ impl Engine {
             }
             let halves = self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -811,6 +881,7 @@ impl Engine {
         };
         for road in self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open && road.kind != RoadKind::Rail)
@@ -833,6 +904,7 @@ impl Engine {
         };
         for project in self
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.progress < 1.0 && Some(project.id) != current_project_id)
@@ -882,6 +954,7 @@ mod tests {
         let mut engine = Engine::new_legacy(seed);
         let gateway = engine
             .state
+            .network
             .nodes
             .iter()
             .find(|node| node.kind == NodeKind::Gateway)
@@ -910,6 +983,7 @@ mod tests {
         assert!(
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.id == connector)
@@ -918,6 +992,7 @@ mod tests {
         );
         assert!(perimeter.iter().all(|id| engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == *id)
@@ -933,8 +1008,8 @@ mod tests {
         let segments = (0..4)
             .map(|index| (corners[index], corners[(index + 1) % 4]))
             .collect();
-        engine.state.neighborhood_road_ids.extend(perimeter);
-        engine.state.neighborhood_plan = Some(NeighborhoodPlan {
+        engine.state.legacy.neighborhood_road_ids.extend(perimeter);
+        engine.state.legacy.neighborhood_plan = Some(NeighborhoodPlan {
             anchor_node: corners[0],
             segments,
             next_segment: 4,
@@ -960,6 +1035,7 @@ mod tests {
         let host_ids = [
             restored
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.from == corners[3] && road.to == corners[0])
@@ -967,6 +1043,7 @@ mod tests {
                 .id,
             restored
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.from == corners[1] && road.to == corners[2])
@@ -975,6 +1052,7 @@ mod tests {
         ];
         restored
             .state
+            .legacy
             .neighborhood_plan
             .as_mut()
             .unwrap()
@@ -990,6 +1068,7 @@ mod tests {
         assert!(restored.advance_neighborhood_spine());
         let stage = &restored
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .unwrap()
@@ -1007,12 +1086,14 @@ mod tests {
         };
         let road = restored
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == spine_road_id)
             .unwrap();
         let project = restored
             .state
+            .construction
             .projects
             .iter()
             .find(|project| project.id == project_id)
@@ -1026,25 +1107,27 @@ mod tests {
         let construction_save = restored.save_json();
         let mut resumed = Engine::restore_json(&construction_save).unwrap();
         assert_eq!(resumed.save_json(), construction_save);
-        let parcels_before = resumed.state.parcels.len();
-        let frontages_before = resumed.state.parcel_frontages.len();
+        let parcels_before = resumed.state.land.parcels.len();
+        let frontages_before = resumed.state.land.parcel_frontages.len();
         for _ in 0..16 {
-            if resumed.state.neighborhood_plan.is_none() {
+            if resumed.state.legacy.neighborhood_plan.is_none() {
                 break;
             }
             resumed.advance_projects();
         }
         assert!(
-            resumed.state.neighborhood_plan.is_none(),
+            resumed.state.legacy.neighborhood_plan.is_none(),
             "stage={:?} projects={:?}",
             resumed
                 .state
+                .legacy
                 .neighborhood_plan
                 .as_ref()
                 .and_then(|p| p.spine.as_ref())
                 .map(|s| &s.stage),
             resumed
                 .state
+                .construction
                 .projects
                 .iter()
                 .map(|p| (p.id, p.kind.as_str(), p.progress, p.stage.as_str()))
@@ -1052,17 +1135,22 @@ mod tests {
         );
         let opened = resumed
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == spine_road_id)
             .unwrap();
         assert_eq!(opened.stage, Stage::Open);
         assert!(opened.connected);
-        assert_eq!(resumed.state.parcels.len() - parcels_before, 20);
-        assert_eq!(resumed.state.parcel_frontages.len() - frontages_before, 20);
+        assert_eq!(resumed.state.land.parcels.len() - parcels_before, 20);
+        assert_eq!(
+            resumed.state.land.parcel_frontages.len() - frontages_before,
+            20
+        );
         assert!(
             resumed
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|frontage| frontage.road_id == spine_road_id)
@@ -1072,11 +1160,13 @@ mod tests {
         assert!(
             resumed
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .filter(|frontage| frontage.road_id != spine_road_id
                     && resumed
                         .state
+                        .legacy
                         .neighborhood_road_ids
                         .contains(&frontage.road_id))
                 .count()
@@ -1096,9 +1186,10 @@ mod tests {
     #[test]
     fn temporary_project_pressure_does_not_invalidate_a_reserved_spine_save() {
         let (mut engine, _) = square_fixture(9195);
-        let template = engine.state.projects[0].clone();
+        let template = engine.state.construction.projects[0].clone();
         while engine
             .state
+            .construction
             .projects
             .iter()
             .filter(|project| project.progress < 1.0)
@@ -1107,7 +1198,7 @@ mod tests {
         {
             let mut project = template.clone();
             project.id = engine.id();
-            engine.state.projects.push(project);
+            engine.state.construction.projects.push(project);
         }
         assert!(!engine.project_admission_available());
         let save = engine.save_json();
@@ -1119,12 +1210,12 @@ mod tests {
     #[test]
     fn reserved_spine_corridor_rejects_a_parcel_in_the_street_gap() {
         let (mut engine, _) = square_fixture(9196);
-        let plan = engine.state.neighborhood_plan.clone().unwrap();
+        let plan = engine.state.legacy.neighborhood_plan.clone().unwrap();
         let id = engine.id();
         let spine = plan.spine.as_ref().unwrap();
         let layout = spine.validate().unwrap();
         let (a, b) = (layout.spine[0], layout.spine[1]);
-        engine.state.parcels.push(crate::Parcel {
+        engine.state.land.parcels.push(crate::Parcel {
             id,
             x: (a.x + b.x) * 0.5,
             z: (a.z + b.z) * 0.5,
@@ -1145,6 +1236,7 @@ mod tests {
         let (mut engine, corners) = square_fixture(9193);
         let road_id = engine
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.from == corners[3] && road.to == corners[0])
@@ -1153,6 +1245,7 @@ mod tests {
         let project_id = engine.id();
         let road = engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|road| road.id == road_id)
@@ -1183,6 +1276,7 @@ mod tests {
         let host_ids = [
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.from == corners[3] && road.to == corners[0])
@@ -1190,6 +1284,7 @@ mod tests {
                 .id,
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.from == corners[1] && road.to == corners[2])
@@ -1198,6 +1293,7 @@ mod tests {
         ];
         engine
             .state
+            .legacy
             .neighborhood_plan
             .as_mut()
             .unwrap()
@@ -1211,6 +1307,7 @@ mod tests {
         let before = engine.save_json();
         let SpineStage::PerimeterReady { host_road_ids } = engine
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .unwrap()
@@ -1237,6 +1334,7 @@ mod tests {
         let host_ids = [
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.from == corners[3] && road.to == corners[0])
@@ -1244,6 +1342,7 @@ mod tests {
                 .id,
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|road| road.from == corners[1] && road.to == corners[2])
@@ -1253,6 +1352,7 @@ mod tests {
         for id in host_ids {
             let road = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|road| road.id == id)
@@ -1264,6 +1364,7 @@ mod tests {
         assert!(engine.advance_neighborhood_spine());
         let project_id = match engine
             .state
+            .legacy
             .neighborhood_plan
             .as_ref()
             .unwrap()
@@ -1278,12 +1379,12 @@ mod tests {
         engine.validate().unwrap();
         for _ in 0..16 {
             engine.advance_projects();
-            if engine.state.neighborhood_plan.is_none() {
+            if engine.state.legacy.neighborhood_plan.is_none() {
                 break;
             }
         }
         assert!(
-            engine.state.neighborhood_plan.is_none(),
+            engine.state.legacy.neighborhood_plan.is_none(),
             "spine project {project_id} did not complete"
         );
         engine.validate().unwrap();

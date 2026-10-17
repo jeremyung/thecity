@@ -108,6 +108,7 @@ fn probe_mid_edge_access(
     }
     for road in engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.stage == Stage::Open)
@@ -188,7 +189,7 @@ fn probe_mid_edge_access(
 fn audit_mid_edge_access_candidates(engine: &Engine) -> MidEdgeProbeAudit {
     let context = engine.collision_context();
     let mut audit = MidEdgeProbeAudit::default();
-    for host in engine.state.roads.iter().filter(|road| {
+    for host in engine.state.network.roads.iter().filter(|road| {
         road.stage == Stage::Open
             && road.connected
             && !matches!(road.kind, RoadKind::Bridge | RoadKind::Rail)
@@ -257,7 +258,7 @@ fn audit_lot_geometry(
     if geometry::rects_overlap(&rect, &protected, 0.0) {
         return "lot_protected";
     }
-    for parcel in &engine.state.parcels {
+    for parcel in &engine.state.land.parcels {
         let legacy = parcel_envelope(parcel);
         if parcel.rotation.is_none() && geometry::rects_overlap(&rect, &legacy, 2.0) {
             return "lot_legacy_envelope";
@@ -267,6 +268,7 @@ fn audit_lot_geometry(
         } else {
             let rotation = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|building| building.parcel_id == parcel.id)
@@ -311,9 +313,10 @@ fn audit_neighborhood_candidate(
     let required_segments = 4 - usize::from(reused_edge.is_some());
     if engine
         .state
+        .network
         .roads
         .len()
-        .saturating_add(engine.state.projects.len())
+        .saturating_add(engine.state.construction.projects.len())
         .saturating_add(required_segments)
         > MAX_SEGMENTS
     {
@@ -347,7 +350,7 @@ fn audit_neighborhood_candidate(
     }
     if lots.len() > 64
         || lots.iter().any(|lot| !canonical.contains(lot))
-        || engine.state.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
+        || engine.state.land.parcels.len().saturating_add(lots.len()) > MAX_PARCELS
     {
         return "parcel_capacity_or_noncanonical_lots";
     }
@@ -403,7 +406,7 @@ fn audit_neighborhood_candidate(
         let b = &corner_nodes[(edge + 1) % 4];
         let is_reused = reused_edge.is_some_and(|(reused, road_id)| {
             reused == edge
-                && engine.state.roads.iter().any(|road| {
+                && engine.state.network.roads.iter().any(|road| {
                     road.id == road_id
                         && road.stage == Stage::Open
                         && road.connected
@@ -435,7 +438,7 @@ fn audit_neighborhood_candidate(
             }
         }
         if !is_reused {
-            let legacy = engine.state.parcels.iter().any(|parcel| {
+            let legacy = engine.state.land.parcels.iter().any(|parcel| {
                 point_segment_distance(parcel.x, parcel.z, a.x, a.z, b.x, b.z)
                     <= parcel.width.max(parcel.depth) * 0.5 + 5.0
             });
@@ -451,6 +454,7 @@ fn audit_neighborhood_candidate(
         }
         for road in engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.stage == Stage::Open)
@@ -469,7 +473,7 @@ fn audit_neighborhood_candidate(
                 return "existing_road_segment_intersection";
             }
         }
-        if engine.state.projects.iter().any(|project| {
+        if engine.state.construction.projects.iter().any(|project| {
             if project.kind != ProjectKind::Road || project.progress >= 1.0 {
                 return false;
             }
@@ -487,7 +491,7 @@ fn audit_neighborhood_candidate(
         }) {
             return "active_road_project_intersection";
         }
-        if !is_reused && engine.state.neighborhood_plan.is_some() {
+        if !is_reused && engine.state.legacy.neighborhood_plan.is_some() {
             return "reserved_neighborhood_corridor";
         }
         if tower_envelopes
@@ -504,18 +508,20 @@ fn audit_neighborhood_candidate(
 }
 fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
     let mut audit = MatureProposalAudit::default();
-    let node_count = engine.state.nodes.len();
+    let node_count = engine.state.network.nodes.len();
     if node_count == 0 {
         return audit;
     }
     let active_buildings: Vec<_> = engine
         .state
+        .construction
         .buildings
         .iter()
         .filter(|building| site_active(building))
         .collect();
     let connected: BTreeSet<u32> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.connected && road.stage == Stage::Open)
@@ -524,6 +530,7 @@ fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
     let mut reusable: BTreeMap<u32, Vec<Road>> = BTreeMap::new();
     for road in engine
         .state
+        .network
         .roads
         .iter()
         .filter(|road| road.connected && road.stage == Stage::Open)
@@ -535,7 +542,7 @@ fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
     }
     let tower_envelopes = engine.available_station_tower_envelopes();
     let collision = engine.collision_context();
-    let mut cursor = engine.state.neighborhood_anchor_cursor % node_count;
+    let mut cursor = engine.state.legacy.neighborhood_anchor_cursor % node_count;
     let mut visited = BTreeSet::new();
     while visited.len() < node_count && audit.windows <= node_count {
         audit.windows += 1;
@@ -547,7 +554,7 @@ fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
             visited.insert(index);
             cursor = (index + 1) % node_count;
             audit.anchors_seen += 1;
-            let anchor = &engine.state.nodes[index];
+            let anchor = &engine.state.network.nodes[index];
             if !connected.contains(&anchor.id) || engine.ordinary_road_degree(anchor.id) == 0 {
                 continue;
             }
@@ -716,21 +723,22 @@ fn audit_mature_neighborhood_proposals(engine: &Engine) -> MatureProposalAudit {
 }
 fn building_picker_engine() -> (Engine, u32) {
     let mut engine = Engine::new_legacy(731);
-    engine.state.parcels.clear();
-    engine.state.parcel_frontages.clear();
-    engine.state.buildings.clear();
-    engine.state.projects.clear();
-    engine.state.residents.clear();
-    engine.state.travelers.clear();
-    engine.state.buses.clear();
-    engine.state.trains.clear();
-    engine.state.bus_line = None;
-    engine.state.neighborhood_plan = None;
-    engine.state.station_online = true;
-    engine.state.demand = 4.0;
+    engine.state.land.parcels.clear();
+    engine.state.land.parcel_frontages.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.construction.projects.clear();
+    engine.state.people.residents.clear();
+    engine.state.people.travelers.clear();
+    engine.state.transit.buses.clear();
+    engine.state.transit.trains.clear();
+    engine.state.transit.bus_line = None;
+    engine.state.legacy.neighborhood_plan = None;
+    engine.state.transit.station_online = true;
+    engine.state.people.demand = 4.0;
 
     let access_node = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.stage == Stage::Open && road.connected && road.kind != RoadKind::Rail)
@@ -751,6 +759,7 @@ fn building_picker_engine() -> (Engine, u32) {
         );
         let resident_building = engine
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|item| item.id == building)
@@ -762,13 +771,20 @@ fn building_picker_engine() -> (Engine, u32) {
 }
 fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
     let mut engine = Engine::new_legacy(217);
-    let founder = engine.state.buildings.first().unwrap().id;
-    let parcel_id = engine.state.buildings.first().unwrap().parcel_id;
-    engine.state.buildings[0].kind = BuildingKind::Home;
-    engine.state.buildings[0].stage = Stage::Open;
-    engine.state.buildings[0].occupancy = 1;
+    let founder = engine.state.construction.buildings.first().unwrap().id;
+    let parcel_id = engine
+        .state
+        .construction
+        .buildings
+        .first()
+        .unwrap()
+        .parcel_id;
+    engine.state.construction.buildings[0].kind = BuildingKind::Home;
+    engine.state.construction.buildings[0].stage = Stage::Open;
+    engine.state.construction.buildings[0].occupancy = 1;
     let start = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| parcel.id == parcel_id)
@@ -785,7 +801,7 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
             _ => 135.0,
         };
         let id = engine.id();
-        engine.state.nodes.push(Node {
+        engine.state.network.nodes.push(Node {
             id,
             x: start_node.x + x_offset,
             z: start_node.z + 7.0,
@@ -794,7 +810,7 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
         let from = engine.node(previous).unwrap().clone();
         let to = engine.node(id).unwrap().clone();
         let road_id = engine.id();
-        engine.state.roads.push(Road {
+        engine.state.network.roads.push(Road {
             id: road_id,
             from: previous,
             to: id,
@@ -810,7 +826,7 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
     }
     let stops = vec![route[0], route[2], route[3]];
     let line_id = engine.id();
-    engine.state.bus_line = Some(BusLine {
+    engine.state.transit.bus_line = Some(BusLine {
         id: line_id,
         stops: stops.clone(),
         route: route[..=3].to_vec(),
@@ -818,7 +834,7 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
         graph_revision: 1,
     });
     let bus_id = engine.id();
-    engine.state.buses.push(Bus {
+    engine.state.transit.buses.push(Bus {
         id: bus_id,
         line_id,
         progress: 0.0,
@@ -832,7 +848,7 @@ fn bus_test_engine(residents: usize) -> (Engine, Vec<u32>) {
     for index in 0..residents {
         let id = engine.id();
         ids.push(id);
-        engine.state.residents.push(Resident {
+        engine.state.people.residents.push(Resident {
             id,
             name: format!("Bus Rider {index}"),
             home_building: founder,
@@ -866,6 +882,7 @@ fn rail_test_engine(seed: u32) -> (Engine, u32, u32) {
     let (from, to) = {
         let rail = engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|road| road.kind == RoadKind::Rail)
@@ -883,14 +900,15 @@ fn rail_test_engine(seed: u32) -> (Engine, u32, u32) {
         })
         .unwrap();
     let gateway = if from == station { to } else { from };
-    engine.state.station_ready = true;
-    engine.state.station_online = true;
+    engine.state.transit.station_ready = true;
+    engine.state.transit.station_online = true;
     engine.recompute_connectivity();
     (engine, station, gateway)
 }
 fn add_rail_test_resident(engine: &mut Engine, gateway: u32) -> u32 {
     let existing_home = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| building.name == "Test Rail Home")
@@ -898,12 +916,14 @@ fn add_rail_test_resident(engine: &mut Engine, gateway: u32) -> u32 {
     let (home_id, home_node) = if let Some(home) = existing_home {
         let parcel = engine
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| parcel.id == home.parcel_id)
             .unwrap();
         if let Some(building) = engine
             .state
+            .construction
             .buildings
             .iter_mut()
             .find(|building| building.id == home.id)
@@ -914,12 +934,14 @@ fn add_rail_test_resident(engine: &mut Engine, gateway: u32) -> u32 {
     } else {
         let parcel = engine
             .state
+            .land
             .parcels
             .iter()
             .find(|parcel| {
                 parcel.reservation.is_none()
                     && engine
                         .state
+                        .construction
                         .buildings
                         .iter()
                         .all(|building| building.parcel_id != parcel.id)
@@ -937,11 +959,17 @@ fn add_rail_test_resident(engine: &mut Engine, gateway: u32) -> u32 {
             false,
             vec!["Opened for rail transfer test".into()],
         );
-        engine.state.buildings.last_mut().unwrap().occupancy = 1;
+        engine
+            .state
+            .construction
+            .buildings
+            .last_mut()
+            .unwrap()
+            .occupancy = 1;
         (home_id, parcel.access_node)
     };
     let id = engine.id();
-    engine.state.residents.push(Resident {
+    engine.state.people.residents.push(Resident {
         id,
         name: format!("Commuter {id}"),
         home_building: home_id,
@@ -971,23 +999,23 @@ fn add_rail_test_resident(engine: &mut Engine, gateway: u32) -> u32 {
 }
 fn engine_with_clear_local_chord() -> (Engine, u32, u32) {
     let mut engine = Engine::new_legacy(87231);
-    engine.state.nodes.clear();
-    engine.state.roads.clear();
-    engine.state.parcels.clear();
-    engine.state.parcel_frontages.clear();
-    engine.state.buildings.clear();
-    engine.state.projects.clear();
-    engine.state.travelers.clear();
-    engine.state.residents.clear();
-    engine.state.trains.clear();
-    engine.state.buses.clear();
-    engine.state.bus_line = None;
+    engine.state.network.nodes.clear();
+    engine.state.network.roads.clear();
+    engine.state.land.parcels.clear();
+    engine.state.land.parcel_frontages.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.construction.projects.clear();
+    engine.state.people.travelers.clear();
+    engine.state.people.residents.clear();
+    engine.state.transit.trains.clear();
+    engine.state.transit.buses.clear();
+    engine.state.transit.bus_line = None;
     engine.state.events.clear();
-    engine.state.population = 300;
-    engine.state.demand = 2.0;
-    engine.state.station_online = false;
-    engine.state.station_ready = false;
-    engine.state.road_origin_cursor = 0;
+    engine.state.people.population = 300;
+    engine.state.people.demand = 2.0;
+    engine.state.transit.station_online = false;
+    engine.state.transit.station_ready = false;
+    engine.state.legacy.road_origin_cursor = 0;
 
     let gateway = engine.add_node(365.0, 360.0, NodeKind::Gateway);
     let hub = engine.add_node(30.0, 400.0, NodeKind::Junction);
@@ -1018,6 +1046,7 @@ fn engine_with_clear_local_chord() -> (Engine, u32, u32) {
             );
             engine
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|building| building.id == building_id)
@@ -1029,24 +1058,24 @@ fn engine_with_clear_local_chord() -> (Engine, u32, u32) {
 }
 fn engine_with_developed_plan_site() -> Engine {
     let mut engine = Engine::new_legacy(41);
-    engine.state.nodes.clear();
-    engine.state.roads.clear();
-    engine.state.parcels.clear();
-    engine.state.parcel_frontages.clear();
-    engine.state.buildings.clear();
-    engine.state.projects.clear();
-    engine.state.travelers.clear();
-    engine.state.residents.clear();
-    engine.state.trains.clear();
-    engine.state.buses.clear();
-    engine.state.bus_line = None;
+    engine.state.network.nodes.clear();
+    engine.state.network.roads.clear();
+    engine.state.land.parcels.clear();
+    engine.state.land.parcel_frontages.clear();
+    engine.state.construction.buildings.clear();
+    engine.state.construction.projects.clear();
+    engine.state.people.travelers.clear();
+    engine.state.people.residents.clear();
+    engine.state.transit.trains.clear();
+    engine.state.transit.buses.clear();
+    engine.state.transit.bus_line = None;
     engine.state.events.clear();
-    engine.state.population = 80;
-    engine.state.demand = 2.0;
-    engine.state.station_online = false;
-    engine.state.station_ready = false;
-    engine.state.neighborhood_plan = None;
-    engine.state.neighborhood_anchor_cursor = 0;
+    engine.state.people.population = 80;
+    engine.state.people.demand = 2.0;
+    engine.state.transit.station_online = false;
+    engine.state.transit.station_ready = false;
+    engine.state.legacy.neighborhood_plan = None;
+    engine.state.legacy.neighborhood_anchor_cursor = 0;
 
     let gateway = engine.add_node(365.0, 360.0, NodeKind::Gateway);
     let feeder = engine.add_node(310.0, 315.0, NodeKind::Junction);
@@ -1075,6 +1104,7 @@ fn engine_with_developed_plan_site() -> Engine {
             );
             engine
                 .state
+                .construction
                 .buildings
                 .iter_mut()
                 .find(|candidate| candidate.id == building)
@@ -1088,9 +1118,10 @@ fn engine_with_developed_plan_site_without_reusable_edge() -> Engine {
     let mut engine = engine_with_developed_plan_site();
     // Keep the same occupied catchment, but move the feeder junction so
     // both existing roads fall outside the shared-edge length bands.
-    let feeder_id = engine.state.roads[1].from;
+    let feeder_id = engine.state.network.roads[1].from;
     let feeder = engine
         .state
+        .network
         .nodes
         .iter_mut()
         .find(|node| node.id == feeder_id)
@@ -1106,6 +1137,7 @@ fn arrival_contention_engine() -> (Engine, f32, Vec<u32>) {
     let mut engine = Engine::new_legacy(81);
     let road = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.kind != RoadKind::Rail && road.stage == Stage::Open)
@@ -1146,10 +1178,22 @@ fn arrival_contention_engine() -> (Engine, f32, Vec<u32>) {
         access_progress: 0.0,
     };
     // 1: in the driveway mouth. 2: 0.1 m from the mouth. 3, 4: queued behind.
-    engine.state.travelers.push(car(910_001, 2, len));
-    engine.state.travelers.push(car(910_002, 1, len - 0.1));
-    engine.state.travelers.push(car(910_003, 1, len - 6.0));
-    engine.state.travelers.push(car(910_004, 1, len - 12.0));
+    engine.state.people.travelers.push(car(910_001, 2, len));
+    engine
+        .state
+        .people
+        .travelers
+        .push(car(910_002, 1, len - 0.1));
+    engine
+        .state
+        .people
+        .travelers
+        .push(car(910_003, 1, len - 6.0));
+    engine
+        .state
+        .people
+        .travelers
+        .push(car(910_004, 1, len - 12.0));
     (engine, len, vec![910_001, 910_002, 910_003, 910_004])
 }
 fn movement_of(engine: &Engine, id: u32) -> Option<(f32, f32)> {
@@ -1254,9 +1298,9 @@ fn synthetic_district_checkpoint(
 fn engine_with_pending_measurement() -> Engine {
     let mut engine = Engine::new_legacy(981);
     engine.state.tick = 1;
-    engine.state.district_controller.pending = Some(synthetic_district_checkpoint(40, 16));
-    engine.state.district_controller.pending_capture_tick = 1;
+    engine.state.people.district_controller.pending = Some(synthetic_district_checkpoint(40, 16));
+    engine.state.people.district_controller.pending_capture_tick = 1;
     engine.district_runtime =
-        district_controller::Runtime::restore(&engine.state.district_controller).unwrap();
+        district_controller::Runtime::restore(&engine.state.people.district_controller).unwrap();
     engine
 }

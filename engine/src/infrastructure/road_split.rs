@@ -47,11 +47,12 @@ impl Engine {
             .ok_or(RoadSplitError::Capacity)?;
         let host_index = self
             .state
+            .network
             .roads
             .iter()
             .position(|road| road.id == host_road_id)
             .ok_or(RoadSplitError::MissingRoad)?;
-        let host = &self.state.roads[host_index];
+        let host = &self.state.network.roads[host_index];
         if host.stage != Stage::Open
             || !host.connected
             || !matches!(host.kind, RoadKind::Local | RoadKind::Arterial)
@@ -67,8 +68,8 @@ impl Engine {
         if !t.is_finite() || !(0.0..1.0).contains(&t) {
             return Err(RoadSplitError::InvalidFraction);
         }
-        if (self.state.neighborhood_plan.is_some() && !authorized_spine_pair)
-            || self.state.pending_interior_access.is_some()
+        if (self.state.legacy.neighborhood_plan.is_some() && !authorized_spine_pair)
+            || self.state.legacy.pending_interior_access.is_some()
         {
             return Err(RoadSplitError::ActivePlan);
         }
@@ -81,7 +82,7 @@ impl Engine {
             host.connected,
             host.lanes,
         );
-        if self.state.projects.iter().any(|project| {
+        if self.state.construction.projects.iter().any(|project| {
             project.kind == ProjectKind::Road
                 && project.progress < 1.0
                 && matches!((project.from, project.to), (Some(from), Some(to))
@@ -89,9 +90,19 @@ impl Engine {
         }) {
             return Err(RoadSplitError::ActiveProject);
         }
-        if self.state.roads.len().saturating_add(extra) >= MAX_SEGMENTS
-            || (self.state.neighborhood_road_ids.contains(&host_road_id)
-                && self.state.neighborhood_road_ids.len().saturating_add(extra) >= MAX_SEGMENTS)
+        if self.state.network.roads.len().saturating_add(extra) >= MAX_SEGMENTS
+            || (self
+                .state
+                .legacy
+                .neighborhood_road_ids
+                .contains(&host_road_id)
+                && self
+                    .state
+                    .legacy
+                    .neighborhood_road_ids
+                    .len()
+                    .saturating_add(extra)
+                    >= MAX_SEGMENTS)
             || expected_next_id.checked_add(2).is_none()
         {
             return Err(RoadSplitError::Capacity);
@@ -99,7 +110,7 @@ impl Engine {
         // Preserve Engine::node's first-source-match semantics while avoiding
         // a complete node scan for each road during split preflight.
         let mut node_index = std::collections::BTreeMap::new();
-        for node in &self.state.nodes {
+        for node in &self.state.network.nodes {
             node_index.entry(node.id).or_insert(node);
         }
         let prospective_split_node_id = expected_next_id;
@@ -133,10 +144,11 @@ impl Engine {
         {
             return Err(RoadSplitError::IneligibleRoad);
         }
-        if self.state.nodes.iter().any(|node| {
+        if self.state.network.nodes.iter().any(|node| {
             node.id != a_id && node.id != b_id && (node.x - split_x).hypot(node.z - split_z) < 1.0
         }) || self
             .state
+            .network
             .roads
             .iter()
             .filter(|road| road.id != host_road_id)
@@ -154,11 +166,11 @@ impl Engine {
         // Validate every frontage remap before mutation. Its parcel's access
         // node must stay an endpoint of the half that receives the frontage.
         let mut parcel_index = std::collections::BTreeMap::new();
-        for parcel in &self.state.parcels {
+        for parcel in &self.state.land.parcels {
             parcel_index.entry(parcel.id).or_insert(parcel);
         }
         let mut frontage_remaps = Vec::new();
-        for (index, frontage) in self.state.parcel_frontages.iter().enumerate() {
+        for (index, frontage) in self.state.land.parcel_frontages.iter().enumerate() {
             if frontage.road_id != host_road_id {
                 continue;
             }
@@ -193,8 +205,8 @@ impl Engine {
         // Precompute traveler routes and cursor positions. Traveler lengths
         // are saved state, so split each affected saved length by the same
         // fraction and copy untouched lengths byte-for-byte.
-        let mut traveler_remaps = Vec::with_capacity(self.state.travelers.len());
-        for (index, traveler) in self.state.travelers.iter().enumerate() {
+        let mut traveler_remaps = Vec::with_capacity(self.state.people.travelers.len());
+        for (index, traveler) in self.state.people.travelers.iter().enumerate() {
             let (route, route_lengths, old_edge_index, old_edge_progress) = match prior {
                 Some(split) => {
                     let remap = &split.traveler_remaps[index];
@@ -256,7 +268,7 @@ impl Engine {
             traveler_remaps.push((expanded.route, lengths, edge_index, edge_progress));
         }
 
-        let bus_route = if let Some(line) = self.state.bus_line.as_ref() {
+        let bus_route = if let Some(line) = self.state.transit.bus_line.as_ref() {
             let input = prior
                 .and_then(|split| split.bus_route.as_ref())
                 .unwrap_or(&line.route);
@@ -276,8 +288,8 @@ impl Engine {
         } else {
             None
         };
-        let mut train_routes = Vec::with_capacity(self.state.trains.len());
-        for (index, train) in self.state.trains.iter().enumerate() {
+        let mut train_routes = Vec::with_capacity(self.state.transit.trains.len());
+        for (index, train) in self.state.transit.trains.iter().enumerate() {
             let input = prior
                 .map(|split| &split.train_routes[index])
                 .unwrap_or(&train.route);
@@ -325,6 +337,7 @@ impl Engine {
         debug_assert_eq!(self.state.next_id, prepared.expected_next_id);
         debug_assert_eq!(
             self.state
+                .network
                 .roads
                 .get(prepared.host_index)
                 .map(|road| road.id),
@@ -332,6 +345,7 @@ impl Engine {
         );
         debug_assert_eq!(
             self.state
+                .network
                 .roads
                 .get(prepared.host_index)
                 .map(|road| (road.from, road.to)),
@@ -342,18 +356,18 @@ impl Engine {
         debug_assert_eq!(split_node_id, prepared.split_node_id);
         let new_road_id = self.id();
         debug_assert_eq!(new_road_id, prepared.new_road_id);
-        self.state.nodes.push(Node {
+        self.state.network.nodes.push(Node {
             id: split_node_id,
             x: prepared.split_x,
             z: prepared.split_z,
             kind: NodeKind::Junction,
         });
         {
-            let retained = &mut self.state.roads[prepared.host_index];
+            let retained = &mut self.state.network.roads[prepared.host_index];
             retained.to = split_node_id;
             retained.length = prepared.first_length;
         }
-        self.state.roads.push(Road {
+        self.state.network.roads.push(Road {
             id: new_road_id,
             from: split_node_id,
             to: prepared.b_id,
@@ -365,7 +379,7 @@ impl Engine {
             lanes: prepared.lanes,
         });
         for (index, new_half, along) in prepared.frontage_remaps {
-            let frontage = &mut self.state.parcel_frontages[index];
+            let frontage = &mut self.state.land.parcel_frontages[index];
             frontage.road_id = if new_half {
                 new_road_id
             } else {
@@ -375,6 +389,7 @@ impl Engine {
         }
         for (traveler, (route, lengths, edge_index, edge_progress)) in self
             .state
+            .people
             .travelers
             .iter_mut()
             .zip(prepared.traveler_remaps)
@@ -384,26 +399,35 @@ impl Engine {
             traveler.edge_index = edge_index;
             traveler.edge_progress = edge_progress;
         }
-        if let (Some(line), Some(route)) = (&mut self.state.bus_line, prepared.bus_route) {
+        if let (Some(line), Some(route)) = (&mut self.state.transit.bus_line, prepared.bus_route) {
             line.route = route;
         }
-        for (train, route) in self.state.trains.iter_mut().zip(prepared.train_routes) {
+        for (train, route) in self
+            .state
+            .transit
+            .trains
+            .iter_mut()
+            .zip(prepared.train_routes)
+        {
             train.route = route;
         }
         if self
             .state
+            .legacy
             .neighborhood_road_ids
             .remove(&prepared.host_road_id)
         {
             self.state
+                .legacy
                 .neighborhood_road_ids
                 .insert(prepared.host_road_id);
-            self.state.neighborhood_road_ids.insert(new_road_id);
+            self.state.legacy.neighborhood_road_ids.insert(new_road_id);
         }
         self.recompute_connectivity();
-        if let Some(line) = self.state.bus_line.as_mut() {
+        if let Some(line) = self.state.transit.bus_line.as_mut() {
             line.graph_revision = self
                 .state
+                .network
                 .roads
                 .iter()
                 .filter(|road| {
@@ -428,15 +452,15 @@ impl Engine {
         &mut self,
         hosts: [(u32, f32); 2],
     ) -> Result<[RoadSplitOutcome; 2], RoadSplitError> {
-        if self.state.pending_interior_access.is_some() {
+        if self.state.legacy.pending_interior_access.is_some() {
             return Err(RoadSplitError::ActivePlan);
         }
-        let authorized = if let Some(plan) = self.state.neighborhood_plan.as_ref() {
+        let authorized = if let Some(plan) = self.state.legacy.neighborhood_plan.as_ref() {
             let segment_matches = |edge: usize, road_id: u32| {
                 let Some((from, to)) = plan.segments.get(edge) else {
                     return false;
                 };
-                self.state.roads.iter().any(|road| {
+                self.state.network.roads.iter().any(|road| {
                     road.id == road_id
                         && ((road.from == *from && road.to == *to)
                             || (road.from == *to && road.to == *from))
@@ -462,7 +486,7 @@ impl Engine {
             // a neighborhood reservation is active.
             false
         };
-        if self.state.neighborhood_plan.is_some() && !authorized {
+        if self.state.legacy.neighborhood_plan.is_some() && !authorized {
             return Err(RoadSplitError::ActivePlan);
         }
         let first = self.prepare_open_road_split(hosts[0].0, hosts[0].1, None, authorized)?;
@@ -495,6 +519,7 @@ mod tests {
     fn adjacent_hosts(engine: &Engine) -> Option<(Road, Road, Vec<u32>)> {
         let roads: Vec<Road> = engine
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -538,11 +563,11 @@ mod tests {
         let (first, second, forward) =
             adjacent_hosts(&engine).expect("seed should provide a connected pair of open roads");
         let reverse = forward.iter().copied().rev().collect::<Vec<_>>();
-        engine.state.travelers.clear();
-        engine.state.buses.clear();
-        engine.state.bus_line = None;
-        engine.state.trains.clear();
-        engine.state.residents.clear();
+        engine.state.people.travelers.clear();
+        engine.state.transit.buses.clear();
+        engine.state.transit.bus_line = None;
+        engine.state.transit.trains.clear();
+        engine.state.people.residents.clear();
 
         for (route, edge_index, fraction) in [
             (forward.clone(), 0usize, 0.31f32),
@@ -553,7 +578,7 @@ mod tests {
             let route_lengths = engine.route_lengths(&route);
             let edge_progress = route_lengths[edge_index] * fraction;
             let id = engine.id();
-            engine.state.travelers.push(Traveler {
+            engine.state.people.travelers.push(Traveler {
                 id,
                 kind: 0,
                 route: route.clone(),
@@ -577,7 +602,7 @@ mod tests {
 
         let forward_lengths = engine.route_lengths(&forward);
         let line_id = engine.id();
-        engine.state.bus_line = Some(BusLine {
+        engine.state.transit.bus_line = Some(BusLine {
             id: line_id,
             stops: forward.clone(),
             route: forward.clone(),
@@ -585,7 +610,7 @@ mod tests {
             graph_revision: 4,
         });
         let bus_id = engine.id();
-        engine.state.buses.push(Bus {
+        engine.state.transit.buses.push(Bus {
             id: bus_id,
             line_id,
             progress: forward_lengths[0] + forward_lengths[1] * 0.43,
@@ -597,8 +622,8 @@ mod tests {
         });
         let reverse_lengths = engine.route_lengths(&reverse);
         let train_id = engine.id();
-        engine.state.station_online = true;
-        engine.state.trains.push(Train {
+        engine.state.transit.station_online = true;
+        engine.state.transit.trains.push(Train {
             id: train_id,
             route: reverse,
             distance: reverse_lengths[0] + reverse_lengths[1] * 0.36,
@@ -626,17 +651,23 @@ mod tests {
         assert_eq!(paired.save_json(), sequential.save_json());
 
         let reverse = forward.iter().copied().rev().collect::<Vec<_>>();
-        for traveler in &paired.state.travelers {
+        for traveler in &paired.state.people.travelers {
             assert!(traveler.route.contains(&paired_outcomes[0].split_node_id));
             assert!(traveler.route.contains(&paired_outcomes[1].split_node_id));
             assert_eq!(traveler.route_lengths.len(), traveler.route.len() - 1);
         }
-        assert_eq!(paired.state.travelers[0].route[0], forward[0]);
-        assert_eq!(paired.state.travelers[2].route[0], reverse[0]);
-        assert_eq!(paired.state.bus_line.as_ref().unwrap().route[0], forward[0]);
-        assert_eq!(paired.state.bus_line.as_ref().unwrap().route.len(), 5);
-        assert_eq!(paired.state.trains[0].route[0], reverse[0]);
-        assert_eq!(paired.state.trains[0].route.len(), 5);
+        assert_eq!(paired.state.people.travelers[0].route[0], forward[0]);
+        assert_eq!(paired.state.people.travelers[2].route[0], reverse[0]);
+        assert_eq!(
+            paired.state.transit.bus_line.as_ref().unwrap().route[0],
+            forward[0]
+        );
+        assert_eq!(
+            paired.state.transit.bus_line.as_ref().unwrap().route.len(),
+            5
+        );
+        assert_eq!(paired.state.transit.trains[0].route[0], reverse[0]);
+        assert_eq!(paired.state.transit.trains[0].route.len(), 5);
         paired.validate().unwrap();
     }
 
@@ -660,8 +691,12 @@ mod tests {
     #[test]
     fn combined_segment_and_route_capacity_failures_leave_state_unchanged() {
         let (mut segment_limited, hosts, _) = actor_fixture(733);
-        let filler = segment_limited.state.roads[0].clone();
-        segment_limited.state.roads.resize(MAX_SEGMENTS - 1, filler);
+        let filler = segment_limited.state.network.roads[0].clone();
+        segment_limited
+            .state
+            .network
+            .roads
+            .resize(MAX_SEGMENTS - 1, filler);
         let before = segment_limited.save_json();
         assert!(segment_limited
             .prepare_open_road_split(hosts[0], 0.5, None, false)
@@ -677,6 +712,7 @@ mod tests {
         let excluded: std::collections::BTreeSet<u32> = forward.iter().copied().collect();
         let spare: Vec<u32> = route_limited
             .state
+            .network
             .nodes
             .iter()
             .map(|node| node.id)
@@ -692,7 +728,7 @@ mod tests {
         assert!(route_lengths
             .iter()
             .all(|length| length.is_finite() && *length > 0.0));
-        let traveler = &mut route_limited.state.travelers[0];
+        let traveler = &mut route_limited.state.people.travelers[0];
         traveler.route = route;
         traveler.route_lengths = route_lengths;
         traveler.edge_index = 1;

@@ -10,7 +10,7 @@ fn current_growth_validates_access_joins_rejects_tampering_and_replays() {
     // continue to 12,000 ticks if needed to observe both kinds of join.
     for _ in 0..20 {
         live.step(200);
-        if live.state.travelers.iter().any(|traveler| {
+        if live.state.people.travelers.iter().any(|traveler| {
             traveler.origin_access.is_some() && traveler.destination_access.is_some()
         }) {
             break;
@@ -18,13 +18,14 @@ fn current_growth_validates_access_joins_rejects_tampering_and_replays() {
     }
     if !live
         .state
+        .people
         .travelers
         .iter()
         .any(|traveler| traveler.origin_access.is_some() && traveler.destination_access.is_some())
     {
         for _ in 0..40 {
             live.step(200);
-            if live.state.travelers.iter().any(|traveler| {
+            if live.state.people.travelers.iter().any(|traveler| {
                 traveler.origin_access.is_some() && traveler.destination_access.is_some()
             }) {
                 break;
@@ -34,6 +35,7 @@ fn current_growth_validates_access_joins_rejects_tampering_and_replays() {
 
     let both_id = live
         .state
+        .people
         .travelers
         .iter()
         .find(|traveler| traveler.origin_access.is_some() && traveler.destination_access.is_some())
@@ -41,6 +43,7 @@ fn current_growth_validates_access_joins_rejects_tampering_and_replays() {
     let origin_id = both_id
         .or_else(|| {
             live.state
+                .people
                 .travelers
                 .iter()
                 .find(|traveler| traveler.origin_access.is_some())
@@ -50,6 +53,7 @@ fn current_growth_validates_access_joins_rejects_tampering_and_replays() {
     let destination_id = both_id
         .or_else(|| {
             live.state
+                .people
                 .travelers
                 .iter()
                 .find(|traveler| traveler.destination_access.is_some())
@@ -111,6 +115,7 @@ fn generated_delivery_return_origin_connector_meets_outgoing_route_start() {
         engine.step(200);
         returning = engine
             .state
+            .people
             .travelers
             .iter()
             .find(|traveler| {

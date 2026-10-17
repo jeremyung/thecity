@@ -4,7 +4,7 @@ use std::collections::{BTreeSet, VecDeque};
 /// Authoritative deterministic simulation. Public methods form the coarse WASM boundary.
 pub struct Engine {
     pub(crate) state: WorldState,
-    /// Regenerated master plan for `state.masterplan`; never serialized.
+    /// Regenerated master plan for `state.network.masterplan`; never serialized.
     pub(crate) plan: Option<std::sync::Arc<infrastructure::masterplan_growth::PlanRuntime>>,
     /// Bounded station-core renewal index derived from the regenerated plan.
     pub(crate) height_redevelopment_lots: Vec<usize>,
@@ -32,8 +32,8 @@ impl Engine {
     /// `None` is fail-closed: a proposal cannot be admitted against an
     /// exhausted generation because subsequent mutations cannot be ordered.
     pub(crate) fn access_geometry_revision_token(&self) -> Option<u64> {
-        (!self.state.access_geometry_revision_exhausted)
-            .then_some(self.state.access_geometry_revision)
+        (!self.state.network.access_geometry_revision_exhausted)
+            .then_some(self.state.network.access_geometry_revision)
     }
 
     /// Roads/nodes change through the access generation. Platform construction
@@ -48,7 +48,9 @@ impl Engine {
         };
         format!(
             "{generation}:{}:{}:{}",
-            platform_phase, self.state.station_ready as u8, self.state.station_online as u8
+            platform_phase,
+            self.state.transit.station_ready as u8,
+            self.state.transit.station_online as u8
         )
     }
 
@@ -85,60 +87,72 @@ impl Engine {
                 development_rate: 4,
                 development_accum: 0,
                 revision: 1,
-                access_geometry_revision: 0,
-                access_geometry_revision_exhausted: false,
                 next_id: 1,
                 next_event_id: 1,
-                nodes: vec![],
-                roads: vec![],
-                parcels: vec![],
-                parcel_frontages: vec![],
-                buildings: vec![],
-                projects: vec![],
-                travelers: vec![],
-                neighborhood_errands: population::neighborhood_errands::ErrandState::default(),
-                expressway_traffic: transit::expressway_traffic::TrafficState::default(),
-                residents: vec![],
-                trains: vec![],
-                bus_line: None,
-                buses: vec![],
-                next_bus_evaluation_tick: 0,
-                pending_alight_ids: Vec::new(),
-                pending_alight_cursor: 0,
                 events: VecDeque::new(),
-                population: 3,
-                demand: 0.6,
-                growth_cursor: 0,
-                road_origin_cursor: 0,
-                road_infill_due: 0,
-                frontage_road_cursor: 0,
-                frontage_slot_cursor: 0,
-                neighborhood_plan: None,
-                pending_interior_access: None,
-                pending_rear_extensions: Vec::new(),
-                rear_extension_cursor: 0,
-                building_original_footprints: Vec::new(),
-                height_redevelopment: None,
-                height_redevelopment_cursor: 0,
-                interior_access_cursor: 0,
-                next_face_access_tick: 0,
-                exhausted_access_faces: Vec::new(),
-                live_access_checkpoint: None,
-                masterplan: None,
-                neighborhood_road_ids: BTreeSet::new(),
-                neighborhood_anchor_cursor: 0,
-                station_online: false,
-                station_ready: false,
                 weather_day: 0,
                 weather_kind: WeatherKind::Clear,
                 weather_intensity: 0.0,
-                last_departure_day: u32::MAX,
-                last_renewal_day: u32::MAX,
-                last_business_turnover_day: 0,
-                next_delivery_tick: TICKS_PER_DAY / 6,
-                delivery_cursor: 0,
-                district_controller:
-                    population::district_controller::DistrictControllerState::default(),
+                network: NetworkState {
+                    access_geometry_revision: 0,
+                    access_geometry_revision_exhausted: false,
+                    nodes: vec![],
+                    roads: vec![],
+                    masterplan: None,
+                },
+                land: LandState {
+                    parcels: vec![],
+                    parcel_frontages: vec![],
+                },
+                construction: ConstructionState {
+                    buildings: vec![],
+                    projects: vec![],
+                    growth_cursor: 0,
+                    pending_rear_extensions: Vec::new(),
+                    rear_extension_cursor: 0,
+                    building_original_footprints: Vec::new(),
+                    height_redevelopment: None,
+                    height_redevelopment_cursor: 0,
+                    last_renewal_day: u32::MAX,
+                    last_business_turnover_day: 0,
+                },
+                people: PeopleState {
+                    travelers: vec![],
+                    neighborhood_errands: population::neighborhood_errands::ErrandState::default(),
+                    residents: vec![],
+                    population: 3,
+                    demand: 0.6,
+                    last_departure_day: u32::MAX,
+                    next_delivery_tick: TICKS_PER_DAY / 6,
+                    delivery_cursor: 0,
+                    district_controller:
+                        population::district_controller::DistrictControllerState::default(),
+                },
+                transit: TransitState {
+                    expressway_traffic: transit::expressway_traffic::TrafficState::default(),
+                    trains: vec![],
+                    bus_line: None,
+                    buses: vec![],
+                    next_bus_evaluation_tick: 0,
+                    pending_alight_ids: Vec::new(),
+                    pending_alight_cursor: 0,
+                    station_online: false,
+                    station_ready: false,
+                },
+                legacy: LegacyPlannerState {
+                    road_origin_cursor: 0,
+                    road_infill_due: 0,
+                    frontage_road_cursor: 0,
+                    frontage_slot_cursor: 0,
+                    neighborhood_plan: None,
+                    pending_interior_access: None,
+                    interior_access_cursor: 0,
+                    next_face_access_tick: 0,
+                    exhausted_access_faces: Vec::new(),
+                    live_access_checkpoint: None,
+                    neighborhood_road_ids: BTreeSet::new(),
+                    neighborhood_anchor_cursor: 0,
+                },
             },
             planned_progress: Vec::new(),
             wait_scratch: Vec::new(),
@@ -183,7 +197,7 @@ impl Engine {
         // center-to-east lane. The station instead joins at center.
         self.add_road(center, station, RoadKind::Local, Stage::Open, 1.0);
         self.add_road(east, west, RoadKind::Bridge, Stage::Survey, 0.0);
-        let bridge_id = self.state.roads.last().unwrap().id;
+        let bridge_id = self.state.network.roads.last().unwrap().id;
         let parcel_id = self.add_parcel(founder_x, founder_z, 24.0, 18.0, market, 0.93, false);
         self.remember_nearest_frontage(parcel_id, market);
         let founder = self.add_building(
@@ -198,7 +212,7 @@ impl Engine {
             vec!["Opened as the first neighborhood shop".into()],
         );
         let _ = founder;
-        self.state.population = 8;
+        self.state.people.population = 8;
         let parcel = self.add_parcel(91.0, 72.0, 19.0, 16.0, center, 0.82, false);
         self.remember_nearest_frontage(parcel, center);
         let parcel = self.add_parcel(145.0, 18.0, 21.0, 18.0, market, 0.88, false);
@@ -208,7 +222,7 @@ impl Engine {
         let rail_b = self.add_node(300.0, 115.0, NodeKind::RailGateway);
         let rail_id = self.add_road(station, rail_b, RoadKind::Rail, Stage::Foundation, 0.0);
         let rail_project_id = self.id();
-        self.state.projects.push(Project {
+        self.state.construction.projects.push(Project {
             id: rail_project_id,
             kind: ProjectKind::Rail,
             from: Some(station),
@@ -222,7 +236,7 @@ impl Engine {
             started_tick: 0,
         });
         let station_id = self.id();
-        self.state.projects.push(Project {
+        self.state.construction.projects.push(Project {
             id: station_id,
             kind: ProjectKind::Station,
             from: Some(station),
@@ -236,7 +250,7 @@ impl Engine {
             started_tick: 0,
         });
         let bridge_project_id = self.id();
-        self.state.projects.push(Project {
+        self.state.construction.projects.push(Project {
             id: bridge_project_id,
             kind: ProjectKind::Road,
             from: Some(east),

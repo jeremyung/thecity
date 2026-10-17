@@ -104,7 +104,7 @@ pub(crate) fn paths(plan: &MasterPlan) -> BTreeMap<usize, Path> {
 
 impl Engine {
     pub(crate) fn rail_alignment_views(&self) -> Vec<RailAlignmentView> {
-        let (Some(runtime), Some(progress)) = (&self.plan, &self.state.masterplan) else {
+        let (Some(runtime), Some(progress)) = (&self.plan, &self.state.network.masterplan) else {
             return Vec::new();
         };
         runtime
@@ -122,7 +122,7 @@ impl Engine {
 
     /// Route-oriented pose; the straight fallback is for plans without a curve.
     pub(crate) fn rail_pose(&self, from: u32, to: u32, distance: f32) -> Option<(P, P)> {
-        if let (Some(runtime), Some(progress)) = (&self.plan, &self.state.masterplan) {
+        if let (Some(runtime), Some(progress)) = (&self.plan, &self.state.network.masterplan) {
             for (index, path) in &runtime.rail_paths {
                 if progress.road_ids[*index] == 0 {
                     continue;
@@ -244,6 +244,7 @@ mod tests {
         let mut engine = candidate(87231);
         let rail = engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|r| r.kind == crate::RoadKind::Rail)
@@ -252,17 +253,17 @@ mod tests {
         rail.progress = 1.0;
         rail.connected = true;
         let (from, to, length) = (rail.from, rail.to, rail.length);
-        engine.state.station_online = true;
-        engine.state.station_ready = true;
+        engine.state.transit.station_online = true;
+        engine.state.transit.station_ready = true;
         engine.advance_trains();
-        let train = &mut engine.state.trains[0];
+        let train = &mut engine.state.transit.trains[0];
         train.distance = length * 0.55;
         train.direction = 1;
         train.dwell_ticks = 0;
         let initial = train.distance;
         let speed = train.speed;
         engine.advance_trains();
-        let train = &engine.state.trains[0];
+        let train = &engine.state.transit.trains[0];
         assert!((train.distance - initial - speed / crate::TICKS_PER_SECOND as f32).abs() < 0.0001);
         let (position, tangent) = engine.rail_pose(from, to, train.distance).unwrap();
         let movement = engine
@@ -280,11 +281,11 @@ mod tests {
             "fixture must exercise a real bend"
         );
 
-        let train = &mut engine.state.trains[0];
+        let train = &mut engine.state.transit.trains[0];
         train.distance = length - crate::TRAIN_HALF_LENGTH - 0.1;
         train.dwell_ticks = 0;
         engine.advance_trains();
-        let train = &engine.state.trains[0];
+        let train = &engine.state.transit.trains[0];
         assert_eq!(train.direction, -1);
         assert_eq!(train.distance, length - crate::TRAIN_HALF_LENGTH);
         let movement = engine
@@ -318,6 +319,7 @@ mod tests {
         engine.validate_masterplan_progress().unwrap();
         engine
             .state
+            .network
             .roads
             .iter_mut()
             .find(|r| r.kind == crate::RoadKind::Rail)

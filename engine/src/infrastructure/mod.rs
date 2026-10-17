@@ -12,4 +12,5 @@ pub(crate) mod network_split;
 pub(crate) mod rear_extensions;
 pub(crate) mod road_curve;
 pub(crate) mod road_split;
+pub(crate) mod state;
 pub(crate) mod station_towers;

@@ -44,6 +44,7 @@ fn audit_largest_face_direct_access_candidate() {
     );
     let endpoint_spacing = split_probe
         .state
+        .network
         .nodes
         .iter()
         .map(|node| (node.x - end.x).hypot(node.z - end.z))
@@ -63,13 +64,13 @@ fn audit_largest_face_direct_access_candidate() {
         "protected_land_passed": !corridor_crosses_protected(split_node.x, split_node.z, end.x, end.z),
         "existing_parcel_corridor_passed": split_probe.road_corridor_clear_of_parcels_with_context(split_node.x, split_node.z, end.x, end.z, &context),
         "junction_heading_passed": split_probe.ordinary_heading_clear(split_node.id, heading),
-        "endpoint_degree": split_probe.ordinary_road_degree(split_probe.state.roads.iter().find(|r|r.id==3317).unwrap().to),
+        "endpoint_degree": split_probe.ordinary_road_degree(split_probe.state.network.roads.iter().find(|r|r.id==3317).unwrap().to),
     });
 
     // Check the straight chord against every existing road. The two split host
     // halves meet this branch at its start; all other edges retain the ordinary
     // eight-metre centerline separation rule.
-    let road_separations_passed = split_probe.state.roads.iter().all(|road| {
+    let road_separations_passed = split_probe.state.network.roads.iter().all(|road| {
         if road.from == split.split_node_id || road.to == split.split_node_id {
             return true;
         }
@@ -97,7 +98,7 @@ fn audit_largest_face_direct_access_candidate() {
         "river":split_probe.ordinary_road_clear_of_river(*ax,*az,*bx,*bz,4.5),
         "protected":!corridor_crosses_protected(*ax,*az,*bx,*bz),
         "parcel_corridor":split_probe.road_corridor_clear_of_parcels_with_context(*ax,*az,*bx,*bz,&context),
-        "nearest_existing_node_m":split_probe.state.nodes.iter().map(|n|(n.x-(*bx)).hypot(n.z-(*bz))).fold(f32::INFINITY,f32::min),
+        "nearest_existing_node_m":split_probe.state.network.nodes.iter().map(|n|(n.x-(*bx)).hypot(n.z-(*bz))).fold(f32::INFINITY,f32::min),
     })).collect::<Vec<_>>();
     let mut dogleg_context = context.clone();
     for (ax, az, bx, bz) in dogleg_legs {
@@ -259,6 +260,7 @@ fn generalized_access_candidate_engine() -> (Engine, usize) {
         .node(
             engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|r| r.id == 3317)
@@ -268,7 +270,16 @@ fn generalized_access_candidate_engine() -> (Engine, usize) {
         .unwrap()
         .clone();
     let host_b = engine
-        .node(engine.state.roads.iter().find(|r| r.id == 3317).unwrap().to)
+        .node(
+            engine
+                .state
+                .network
+                .roads
+                .iter()
+                .find(|r| r.id == 3317)
+                .unwrap()
+                .to,
+        )
         .unwrap()
         .clone();
     let branch_length = (end.x - (host_a.x + (host_b.x - host_a.x) * host_t))
@@ -334,13 +345,13 @@ fn generalized_access_candidate_engine() -> (Engine, usize) {
         lots.len() >= 2,
         "candidate must reserve at least two exact-clear lots"
     );
-    let parcels_before = engine.state.parcels.len();
+    let parcels_before = engine.state.land.parcels.len();
     let lot_count = lots.len();
     assert!(engine.admit_interior_access(3317, host_t, end, lots));
     engine
         .validate()
         .expect("generalized geometry validation accepts this saved plan");
-    assert_eq!(engine.state.parcels.len(), parcels_before);
+    assert_eq!(engine.state.land.parcels.len(), parcels_before);
     (engine, lot_count)
 }
 
@@ -371,6 +382,7 @@ fn explicit_angled_access_candidate_uses_branch_frontage_and_restores() {
     let start = {
         let host = source
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == 3317)
@@ -436,6 +448,7 @@ fn map_known_branch_local_sensitivity() {
     let engine = Engine::restore_json(SAVE).expect("mature checkpoint restores");
     let host = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == HOST_ID)
@@ -556,18 +569,20 @@ fn map_known_branch_local_sensitivity() {
 #[test]
 fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     let (mut engine, lot_count) = generalized_access_candidate_engine();
-    let parcels_before = engine.state.parcels.len();
+    let parcels_before = engine.state.land.parcels.len();
     let canonical = engine.save_json();
     let mut resumed = Engine::restore_json(&canonical).expect("candidate pending plan restores");
     assert_eq!(resumed.save_json(), canonical);
     let branch_id = engine
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .unwrap()
         .branch_road_id;
     let plan = engine
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .unwrap()
@@ -576,6 +591,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     let mut near_endpoint = Engine::restore_json(&canonical).unwrap();
     near_endpoint
         .state
+        .legacy
         .pending_interior_access
         .as_mut()
         .unwrap()
@@ -585,12 +601,14 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     let mut acute = Engine::restore_json(&canonical).unwrap();
     let acute_plan = acute
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .unwrap()
         .clone();
     let retained = acute
         .state
+        .network
         .roads
         .iter()
         .find(|r| r.id == acute_plan.host_road_id)
@@ -598,6 +616,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
         .clone();
     let second = acute
         .state
+        .network
         .roads
         .iter()
         .find(|r| r.id == acute_plan.host_second_half_road_id)
@@ -612,6 +631,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     let branch_length = 24.0;
     let endpoint = acute
         .state
+        .network
         .nodes
         .iter_mut()
         .find(|n| n.id == acute_plan.branch_endpoint_id)
@@ -620,6 +640,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     endpoint.z = split.z + dz * branch_length;
     acute
         .state
+        .network
         .roads
         .iter_mut()
         .find(|r| r.id == acute_plan.branch_road_id)
@@ -630,6 +651,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     let mut nonfinite = Engine::restore_json(&canonical).unwrap();
     nonfinite
         .state
+        .legacy
         .pending_interior_access
         .as_mut()
         .unwrap()
@@ -640,6 +662,7 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
     for instance in [&mut engine, &mut resumed] {
         let project = instance
             .state
+            .construction
             .projects
             .iter_mut()
             .find(|p| p.id == plan.project_id)
@@ -655,13 +678,14 @@ fn geometry_valid_noncanonical_interior_access_plan_restores_and_completes() {
         resumed.save_json(),
         "completion and replay agree"
     );
-    assert!(engine.state.pending_interior_access.is_none());
+    assert!(engine.state.legacy.pending_interior_access.is_none());
     assert!(engine
         .state
+        .network
         .roads
         .iter()
         .any(|r| r.id == branch_id && r.stage == Stage::Open && r.connected));
-    assert_eq!(engine.state.parcels.len(), parcels_before + lot_count);
+    assert_eq!(engine.state.land.parcels.len(), parcels_before + lot_count);
 }
 
 fn diagnostic_point_in_face(point: (f32, f32), polygon: &[(f32, f32)]) -> bool {
@@ -704,6 +728,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     let source_before = source.save_json();
     let ordinary = source
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -718,6 +743,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
         .collect::<BTreeSet<_>>();
     let nodes = source
         .state
+        .network
         .nodes
         .iter()
         .filter(|node| used_nodes.contains(&node.id))
@@ -855,6 +881,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     for (_, x, z) in scored_targets {
         let far_from_nodes = source
             .state
+            .network
             .nodes
             .iter()
             .all(|node| (node.x - x).hypot(node.z - z) >= 20.0);
@@ -870,6 +897,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     }
     let candidate_nodes = source
         .state
+        .network
         .nodes
         .iter()
         .map(|node| access_candidates::CandidateNode {
@@ -1174,7 +1202,12 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
     admitted
         .validate()
         .expect("geometry-discovered plan fully validates");
-    let pending = admitted.state.pending_interior_access.as_ref().unwrap();
+    let pending = admitted
+        .state
+        .legacy
+        .pending_interior_access
+        .as_ref()
+        .unwrap();
     assert_eq!(pending.selected_lots.len(), proposal.selected_lots.len());
     assert_eq!(
         Engine::restore_json(&admitted.save_json())
@@ -1207,12 +1240,14 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
             .expect("discovered road construction remains valid");
         let branch = admitted
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == branch_id)
             .unwrap();
         let frontage_count = admitted
             .state
+            .land
             .parcel_frontages
             .iter()
             .filter(|frontage| frontage.road_id == branch_id)
@@ -1222,6 +1257,7 @@ fn exhaustive_prepared_pages_measure_mature_face_access_candidates() {
             assert_eq!(frontage_count, proposal.selected_lots.len());
             assert!(admitted
                 .state
+                .legacy
                 .pending_interior_access
                 .as_ref()
                 .is_none_or(|plan| plan.branch_road_id != branch_id));
@@ -1333,7 +1369,7 @@ fn export_generalized_access_pending_fixture() {
         "purpose": "Native-generated pending save for WASM save/restore and continuation validation",
         "tick": engine.state.tick,
         "seed": engine.state.seed,
-        "pending_plan": engine.state.pending_interior_access,
+        "pending_plan": engine.state.legacy.pending_interior_access,
         "save_file": "generalized-access-pending-save.json",
         "snapshot_file": "generalized-access-pending-snapshot.json"
     });
@@ -1347,6 +1383,7 @@ fn export_generalized_access_pending_fixture() {
         engine.state.tick,
         engine
             .state
+            .legacy
             .pending_interior_access
             .as_ref()
             .unwrap()
@@ -1367,6 +1404,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
     let before = engine.save_json();
     let ordinary: Vec<_> = engine
         .state
+        .network
         .roads
         .iter()
         .filter(|r| {
@@ -1378,6 +1416,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
     let used_nodes: BTreeSet<u32> = ordinary.iter().flat_map(|r| [r.from, r.to]).collect();
     let face_nodes: Vec<_> = engine
         .state
+        .network
         .nodes
         .iter()
         .filter(|n| used_nodes.contains(&n.id))
@@ -1460,6 +1499,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
         for proposal in scan.proposals {
             let host = engine
                 .state
+                .network
                 .roads
                 .iter()
                 .find(|r| r.id == proposal.host_id)
@@ -1498,7 +1538,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
                 "river": split_probe.ordinary_road_clear_of_river(split_node.x,split_node.z,end.x,end.z,4.5),
                 "protected": !corridor_crosses_protected(split_node.x,split_node.z,end.x,end.z),
                 "parcels": split_probe.road_corridor_clear_of_parcels_with_context(split_node.x,split_node.z,end.x,end.z,&branch_context),
-                "endpoint_spacing_m": split_probe.state.nodes.iter().map(|n|(n.x-end.x).hypot(n.z-end.z)).fold(f32::INFINITY,f32::min),
+                "endpoint_spacing_m": split_probe.state.network.nodes.iter().map(|n|(n.x-end.x).hypot(n.z-end.z)).fold(f32::INFINITY,f32::min),
                 "junction_heading": split_probe.ordinary_heading_clear(split.split_node_id,(end.z-split_node.z).atan2(end.x-split_node.x)),
             });
             let branch_context_ok = branch_gates["bounds"] == true
@@ -1631,6 +1671,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
                 Some("bounds")
             } else if split_probe
                 .state
+                .network
                 .nodes
                 .iter()
                 .any(|n| (n.x - endpoint_x).hypot(n.z - sample_z) < 18.0)
@@ -1648,7 +1689,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
                 start.x, start.z, endpoint_x, sample_z, &context,
             ) {
                 Some("parcel_corridor")
-            } else if split_probe.state.roads.iter().any(|road| {
+            } else if split_probe.state.network.roads.iter().any(|road| {
                 if road.from == split.split_node_id || road.to == split.split_node_id {
                     return false;
                 }
@@ -1794,7 +1835,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
     let mut host_focus = Vec::new();
     let host_ids: Vec<u32> = face.boundary_edge_ids.iter().copied().collect();
     for host_id in host_ids {
-        let Some(host) = engine.state.roads.iter().find(|r| r.id == host_id) else {
+        let Some(host) = engine.state.network.roads.iter().find(|r| r.id == host_id) else {
             continue;
         };
         if !matches!(host.kind, RoadKind::Local | RoadKind::Arterial)
@@ -1848,6 +1889,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
                         Some("junction_angle")
                     } else if probe
                         .state
+                        .network
                         .nodes
                         .iter()
                         .any(|n| (n.x - end.x).hypot(n.z - end.z) < 18.0)
@@ -1863,7 +1905,7 @@ fn scan_exact_planner_for_access_into_largest_face() {
                         start.x, start.z, end.x, end.z, &context,
                     ) {
                         Some("parcel_corridor")
-                    } else if probe.state.roads.iter().any(|road| {
+                    } else if probe.state.network.roads.iter().any(|road| {
                         if road.from == split.split_node_id || road.to == split.split_node_id {
                             return false;
                         }
@@ -1985,6 +2027,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
     .unwrap();
     let roads = source
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -1999,6 +2042,7 @@ fn mature_graph_preflight_preserves_indexed_edges() {
         .collect::<BTreeSet<_>>();
     let nodes = source
         .state
+        .network
         .nodes
         .iter()
         .filter(|node| used.contains(&node.id))
@@ -2382,6 +2426,7 @@ fn mature_composed_face_trace_matches_reference() {
     .unwrap();
     let roads = source
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -2396,6 +2441,7 @@ fn mature_composed_face_trace_matches_reference() {
         .collect::<BTreeSet<_>>();
     let nodes = source
         .state
+        .network
         .nodes
         .iter()
         .filter(|node| used.contains(&node.id))
@@ -2467,6 +2513,7 @@ pub(crate) fn frozen_target_viability_input(
     let river = source.river_control_points();
     let reserved_lots = source
         .state
+        .legacy
         .pending_interior_access
         .as_ref()
         .map(|plan| {
@@ -2484,6 +2531,7 @@ pub(crate) fn frozen_target_viability_input(
         .unwrap_or_default();
     let neighborhood_segments = source
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .map(|plan| {
@@ -2502,13 +2550,18 @@ pub(crate) fn frozen_target_viability_input(
                 .collect()
         })
         .unwrap_or_default();
-    let neighborhood_interior = source.state.neighborhood_plan.as_ref().and_then(|plan| {
-        if plan.coordinated_lots && plan.segments.len() == 4 {
-            source.coordinated_block_interior(&plan.segments)
-        } else {
-            None
-        }
-    });
+    let neighborhood_interior = source
+        .state
+        .legacy
+        .neighborhood_plan
+        .as_ref()
+        .and_then(|plan| {
+            if plan.coordinated_lots && plan.segments.len() == 4 {
+                source.coordinated_block_interior(&plan.segments)
+            } else {
+                None
+            }
+        });
     FrozenViabilityInput {
         parcel_footprints: context.parcel_footprints,
         reserved_lots,
@@ -2776,6 +2829,7 @@ fn mature_target_ranking_matches_reference() {
         .collect::<Vec<_>>();
     let nodes = source
         .state
+        .network
         .nodes
         .iter()
         .map(|n| (n.x, n.z))
@@ -2919,6 +2973,7 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
     .unwrap();
     let ordinary = source
         .state
+        .network
         .roads
         .iter()
         .filter(|road| {
@@ -2933,6 +2988,7 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
         .collect::<BTreeSet<_>>();
     let nodes = source
         .state
+        .network
         .nodes
         .iter()
         .filter(|node| used.contains(&node.id))
@@ -3017,7 +3073,13 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
                     bz: r.bz,
                 })
                 .collect(),
-            source.state.nodes.iter().map(|n| (n.x, n.z)).collect(),
+            source
+                .state
+                .network
+                .nodes
+                .iter()
+                .map(|n| (n.x, n.z))
+                .collect(),
         )
         .unwrap();
         drain!(
@@ -3045,6 +3107,7 @@ fn mature_incremental_pipeline_matches_exact_evaluator() {
             .collect::<Vec<_>>();
         let candidate_nodes = source
             .state
+            .network
             .nodes
             .iter()
             .map(|n| access_candidates::CandidateNode {
@@ -3126,6 +3189,7 @@ fn mature_access_capture_cost() {
         let start = std::time::Instant::now();
         let ordinary = source
             .state
+            .network
             .roads
             .iter()
             .filter(|road| {
@@ -3140,6 +3204,7 @@ fn mature_access_capture_cost() {
             .collect::<BTreeSet<_>>();
         let graph_nodes = source
             .state
+            .network
             .nodes
             .iter()
             .filter(|node| used.contains(&node.id))
@@ -3159,6 +3224,7 @@ fn mature_access_capture_cost() {
             .collect::<Vec<_>>();
         let all_nodes = source
             .state
+            .network
             .nodes
             .iter()
             .map(|n| access_candidates::CandidateNode {
@@ -3181,7 +3247,7 @@ fn mature_access_capture_cost() {
     assert!(sizes.iter().all(|(size, _)| *size == sizes[0].0));
     let report = serde_json::json!({
         "scope":"native release only; current synchronous helper measured on one mature fixture, not worst-case caps, WASM, or browser timing",
-        "seed":source.state.seed,"tick":source.state.tick,"buildings":source.state.buildings.len(),
+        "seed":source.state.seed,"tick":source.state.tick,"buildings":source.state.construction.buildings.len(),
         "runs":32,"capture_median_ns":durations[16],"capture_p95_ns":durations[30],"capture_max_ns":durations[31],
         "json_bytes":sizes[0].0,"encode_median_ns":encoding_ns[16],"encode_p95_ns":encoding_ns[30],
         "decision":"measure browser/WASM and cap-scale capture before accepting a synchronous setup boundary; do not treat this sample as a tick-budget guarantee"
@@ -3201,6 +3267,7 @@ fn mature_discovery_job_matches_reference() {
     .unwrap();
     let ordinary = source
         .state
+        .network
         .roads
         .iter()
         .filter(|r| {
@@ -3216,6 +3283,7 @@ fn mature_discovery_job_matches_reference() {
     let input = DiscoveryInput {
         graph_nodes: source
             .state
+            .network
             .nodes
             .iter()
             .filter(|n| used.contains(&n.id))
@@ -3235,6 +3303,7 @@ fn mature_discovery_job_matches_reference() {
             .collect(),
         all_nodes: source
             .state
+            .network
             .nodes
             .iter()
             .map(|n| access_candidates::CandidateNode {
@@ -3332,6 +3401,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
     };
     let mut hosts = source
         .state
+        .network
         .roads
         .iter()
         .filter(|r| {
@@ -3353,6 +3423,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
         hosts,
         nodes: source
             .state
+            .network
             .nodes
             .iter()
             .map(|n| ProposalNode {
@@ -3363,6 +3434,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
             .collect(),
         roads: source
             .state
+            .network
             .roads
             .iter()
             .map(|r| ProposalRoad {
@@ -3373,6 +3445,7 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
             .collect(),
         projects: source
             .state
+            .construction
             .projects
             .iter()
             .map(|p| ProposalProject {
@@ -3389,19 +3462,19 @@ fn mature_incremental_proposal_validation_matches_live_oracle() {
             .unwrap()
             .viability,
         gates: AdmissionGates {
-            demand: source.state.demand,
-            has_pending_interior_plan: source.state.pending_interior_access.is_some(),
-            has_neighborhood_plan: source.state.neighborhood_plan.is_some(),
-            road_count: source.state.roads.len(),
-            project_count: source.state.projects.len(),
-            parcel_count: source.state.parcels.len(),
-            frontage_count: source.state.parcel_frontages.len(),
+            demand: source.state.people.demand,
+            has_pending_interior_plan: source.state.legacy.pending_interior_access.is_some(),
+            has_neighborhood_plan: source.state.legacy.neighborhood_plan.is_some(),
+            road_count: source.state.network.roads.len(),
+            project_count: source.state.construction.projects.len(),
+            parcel_count: source.state.land.parcels.len(),
+            frontage_count: source.state.land.parcel_frontages.len(),
             next_id: source.state.next_id,
             project_admission_available: source.project_admission_available(),
             pending_access_branch: None,
         },
     };
-    assert!(source.state.pending_interior_access.is_none());
+    assert!(source.state.legacy.pending_interior_access.is_none());
     let captured = crate::legacy::access_proposal_capture::capture(&source).unwrap();
     assert_eq!(
         serde_json::to_value(&captured).unwrap(),

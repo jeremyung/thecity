@@ -48,7 +48,7 @@ impl Engine {
     /// and the road mouths whose arrival driveway is still occupied.
     pub(crate) fn driveway_queues(&self) -> (Vec<f32>, BTreeSet<(i32, i32)>) {
         let station = self.station_node();
-        let travelers = &self.state.travelers;
+        let travelers = &self.state.people.travelers;
         let mut limit = vec![f32::INFINITY; travelers.len()];
         // (phase, queues at the path start?, end point) -> (index, rank, path length).
         // Rank grows toward the back of the queue.
@@ -107,17 +107,17 @@ impl Engine {
     }
 
     pub(crate) fn advance_travelers(&mut self) {
-        if self.state.travelers.is_empty() {
+        if self.state.people.travelers.is_empty() {
             return;
         }
-        let count = self.state.travelers.len();
+        let count = self.state.people.travelers.len();
         self.planned_progress.resize(count, 0.0);
         self.wait_scratch.resize(count, 0);
         let mut skip_road = vec![false; count];
         let mut arrivals = Vec::new();
         let (driveway_limit, mut driveway_entry_busy) = self.driveway_queues();
         for index in 0..count {
-            let traveler = &mut self.state.travelers[index];
+            let traveler = &mut self.state.people.travelers[index];
             match traveler.access_phase {
                 0 => {
                     skip_road[index] = true;
@@ -192,7 +192,7 @@ impl Engine {
             self.wait_scratch[index] = traveler.wait_ticks;
         }
         for index in 0..count {
-            let t = &self.state.travelers[index];
+            let t = &self.state.people.travelers[index];
             if skip_road[index] {
                 continue;
             }
@@ -220,7 +220,7 @@ impl Engine {
             self.planned_progress[index] = target;
         }
         for index in 0..count {
-            self.state.travelers[index].wait_ticks = self.wait_scratch[index];
+            self.state.people.travelers[index].wait_ticks = self.wait_scratch[index];
         }
         // Deterministic car-following queues by directed lane. Followers slow and stop
         // behind the leader before reaching the intersection approach. Runs every
@@ -231,13 +231,13 @@ impl Engine {
             self.lane_order.clear();
             self.lane_order.extend((0..count).filter(|index| {
                 !skip_road[*index]
-                    && self.state.travelers[*index].access_phase == 1
-                    && self.state.travelers[*index].edge_index
-                        < self.state.travelers[*index].route_lengths.len()
+                    && self.state.people.travelers[*index].access_phase == 1
+                    && self.state.people.travelers[*index].edge_index
+                        < self.state.people.travelers[*index].route_lengths.len()
             }));
             self.lane_order.sort_by(|&a, &b| {
-                let ta = &self.state.travelers[a];
-                let tb = &self.state.travelers[b];
+                let ta = &self.state.people.travelers[a];
+                let tb = &self.state.people.travelers[b];
                 let ka = ta
                     .route
                     .get(ta.edge_index..=ta.edge_index + 1)
@@ -255,13 +255,13 @@ impl Engine {
             let mut start = 0;
             while start < self.lane_order.len() {
                 let first = self.lane_order[start];
-                let Some(key) = self.state.travelers[first]
+                let Some(key) = self.state.people.travelers[first]
                     .route
                     .get(
-                        self.state.travelers[first].edge_index
-                            ..=self.state.travelers[first].edge_index + 1,
+                        self.state.people.travelers[first].edge_index
+                            ..=self.state.people.travelers[first].edge_index + 1,
                     )
-                    .map(|r| lane_key(&self.state.travelers[first], r[0], r[1]))
+                    .map(|r| lane_key(&self.state.people.travelers[first], r[0], r[1]))
                 else {
                     start += 1;
                     continue;
@@ -269,26 +269,28 @@ impl Engine {
                 let mut end = start + 1;
                 while end < self.lane_order.len() {
                     let next = self.lane_order[end];
-                    let next_key = self.state.travelers[next]
+                    let next_key = self.state.people.travelers[next]
                         .route
                         .get(
-                            self.state.travelers[next].edge_index
-                                ..=self.state.travelers[next].edge_index + 1,
+                            self.state.people.travelers[next].edge_index
+                                ..=self.state.people.travelers[next].edge_index + 1,
                         )
-                        .map(|r| lane_key(&self.state.travelers[next], r[0], r[1]));
+                        .map(|r| lane_key(&self.state.people.travelers[next], r[0], r[1]));
                     if next_key != Some(key) {
                         break;
                     }
                     end += 1;
                 }
-                let len = self.state.travelers[first].route_lengths
-                    [self.state.travelers[first].edge_index]
+                let len = self.state.people.travelers[first].route_lengths
+                    [self.state.people.travelers[first].edge_index]
                     .max(1.0);
                 for i in start + 1..end {
                     let lead = self.lane_order[i - 1];
                     let follower = self.lane_order[i];
-                    let (lead_t, follower_t) =
-                        (&self.state.travelers[lead], &self.state.travelers[follower]);
+                    let (lead_t, follower_t) = (
+                        &self.state.people.travelers[lead],
+                        &self.state.people.travelers[follower],
+                    );
                     let gap = if lead_t.kind == 1 && follower_t.kind == 1 {
                         vehicle_gap(
                             Self::vehicle_body(lead_t, station),
@@ -305,7 +307,7 @@ impl Engine {
                         self.planned_progress[lead] - gap
                     };
                     self.planned_progress[follower] = self.planned_progress[follower]
-                        .min(safe.max(self.state.travelers[follower].edge_progress));
+                        .min(safe.max(self.state.people.travelers[follower].edge_progress));
                 }
                 start = end;
             }
@@ -313,10 +315,11 @@ impl Engine {
         // Buses are persistent vehicles outside the pedestrian/car traveler list.
         // Include them in the same directed left-lane following relationship so a
         // car cannot advance through a stopped or slow bus at a shared road edge.
-        if let Some(line) = &self.state.bus_line {
+        if let Some(line) = &self.state.transit.bus_line {
             let lengths = self.route_lengths(&line.route);
             let bus_lanes: Vec<(u32, u32, f32)> = self
                 .state
+                .transit
                 .buses
                 .iter()
                 .filter(|bus| bus.line_id == line.id)
@@ -326,7 +329,7 @@ impl Engine {
                 })
                 .collect();
             for index in 0..count {
-                let traveler = &self.state.travelers[index];
+                let traveler = &self.state.people.travelers[index];
                 if traveler.kind != 1
                     || traveler.access_phase != 1
                     || traveler.edge_index >= traveler.route_lengths.len()
@@ -353,7 +356,7 @@ impl Engine {
         // different approaches on one tick cannot both enter.
         let station = self.station_node();
         let mut lane_tail: BTreeMap<(u32, u32), (f32, u8)> = BTreeMap::new();
-        for (index, t) in self.state.travelers.iter().enumerate() {
+        for (index, t) in self.state.people.travelers.iter().enumerate() {
             if t.kind != 1 || skip_road[index] {
                 continue;
             }
@@ -366,7 +369,7 @@ impl Engine {
                 }
             }
         }
-        let (travelers, planned) = (&mut self.state.travelers, &self.planned_progress);
+        let (travelers, planned) = (&mut self.state.people.travelers, &self.planned_progress);
         for (index, t) in travelers.iter_mut().enumerate() {
             if skip_road[index] {
                 continue;
@@ -454,6 +457,7 @@ impl Engine {
         }
         let arrived_ids: BTreeSet<u32> = arrivals.iter().map(|t| t.id).collect();
         self.state
+            .people
             .travelers
             .retain(|t| !arrived_ids.contains(&t.id));
         let mut return_vehicles = Vec::new();
@@ -464,6 +468,7 @@ impl Engine {
             if arrived.resident != 0 {
                 if let Some(resident) = self
                     .state
+                    .people
                     .residents
                     .iter_mut()
                     .find(|r| r.id == arrived.resident)
@@ -576,6 +581,6 @@ impl Engine {
                 );
             }
         }
-        self.state.travelers.extend(return_vehicles);
+        self.state.people.travelers.extend(return_vehicles);
     }
 }

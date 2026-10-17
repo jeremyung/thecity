@@ -51,10 +51,17 @@ fn passage_world() -> (Engine, usize, masterplan::PlanLot) {
 #[test]
 fn passage_facing_survives_release_building_and_access() {
     let (mut engine, index, lot) = passage_world();
-    let parcel_id = engine.state.masterplan.as_ref().unwrap().lot_parcels[index];
+    let parcel_id = engine
+        .state
+        .network
+        .masterplan
+        .as_ref()
+        .unwrap()
+        .lot_parcels[index];
     assert_ne!(parcel_id, 0);
     let parcel = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|p| p.id == parcel_id)
@@ -63,6 +70,7 @@ fn passage_facing_survives_release_building_and_access() {
     assert_eq!(engine.frontage_rotation(parcel_id), lot.rotation);
     assert!(!engine
         .state
+        .construction
         .buildings
         .iter()
         .any(|b| b.parcel_id == parcel_id));
@@ -79,6 +87,7 @@ fn passage_facing_survives_release_building_and_access() {
     );
     let building = engine
         .state
+        .construction
         .buildings
         .iter()
         .find(|b| b.id == building_id)
@@ -87,7 +96,7 @@ fn passage_facing_survives_release_building_and_access() {
     let (road, points) = engine.building_access_segment(building_id).unwrap();
     assert_eq!(
         road,
-        engine.state.masterplan.as_ref().unwrap().road_ids[lot.road]
+        engine.state.network.masterplan.as_ref().unwrap().road_ids[lot.road]
     );
     assert_eq!(points.len(), 5);
     for (actual, expected) in points[1..4].iter().zip(lot.passage.unwrap()) {
@@ -99,6 +108,7 @@ fn passage_facing_survives_release_building_and_access() {
     // orientation is rejected rather than silently repaired on save/load.
     engine
         .state
+        .land
         .parcels
         .iter_mut()
         .find(|p| p.id == parcel_id)
@@ -145,9 +155,16 @@ fn generated_parent_sites_build_with_clear_access_and_replay() {
         }
         engine.validate().unwrap();
         for &index in &sites {
-            let parcel_id = engine.state.masterplan.as_ref().unwrap().lot_parcels[index];
+            let parcel_id = engine
+                .state
+                .network
+                .masterplan
+                .as_ref()
+                .unwrap()
+                .lot_parcels[index];
             let building = engine
                 .state
+                .construction
                 .buildings
                 .iter()
                 .find(|b| b.parcel_id == parcel_id)
@@ -155,6 +172,7 @@ fn generated_parent_sites_build_with_clear_access_and_replay() {
             let (road, path) = engine.building_access_segment(building.id).unwrap();
             let parcel = engine
                 .state
+                .land
                 .parcels
                 .iter()
                 .find(|p| p.id == parcel_id)
@@ -162,10 +180,11 @@ fn generated_parent_sites_build_with_clear_access_and_replay() {
             assert!(engine.node_connected(parcel.access_node));
             assert!(engine
                 .state
+                .network
                 .roads
                 .iter()
                 .any(|r| r.id == road && r.stage == crate::Stage::Open));
-            for other in &engine.state.parcels {
+            for other in &engine.state.land.parcels {
                 if other.id == parcel_id {
                     continue;
                 }

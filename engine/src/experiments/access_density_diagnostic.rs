@@ -22,7 +22,7 @@ fn diagnose_one_exhausted_face() {
     let discovery_input = access_capture::capture(&engine).expect("capture discovery");
     let proposal_input = access_proposal_capture::capture(&engine).expect("capture validator");
     let footprint_data = proposal_input.viability.clone();
-    let mut excluded = engine.state.exhausted_access_faces.clone();
+    let mut excluded = engine.state.legacy.exhausted_access_faces.clone();
     excluded.retain(|identity| identity.as_slice() != TARGET);
     let mut discovery =
         DiscoveryJob::new_excluding(discovery_input, excluded).expect("start discovery");

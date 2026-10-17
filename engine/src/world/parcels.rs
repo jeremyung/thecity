@@ -81,12 +81,14 @@ impl Engine {
             .unwrap_or(0)
             .saturating_add(
                 self.state
+                    .legacy
                     .pending_interior_access
                     .as_ref()
                     .map_or(0, |plan| plan.selected_lots.len()),
             );
         if self
             .state
+            .land
             .parcels
             .len()
             .saturating_add(1)
@@ -96,7 +98,7 @@ impl Engine {
             return 0;
         }
         let id = self.id();
-        self.state.parcels.push(Parcel {
+        self.state.land.parcels.push(Parcel {
             id,
             x,
             z,
@@ -117,17 +119,18 @@ impl Engine {
         if parcel_id == 0
             || self
                 .state
+                .land
                 .parcel_frontages
                 .iter()
                 .any(|f| f.parcel_id == parcel_id)
         {
             return;
         }
-        let Some(parcel) = self.state.parcels.iter().find(|p| p.id == parcel_id) else {
+        let Some(parcel) = self.state.land.parcels.iter().find(|p| p.id == parcel_id) else {
             return;
         };
         let mut best: Option<(u32, f32, i8, f32)> = None;
-        for road in self.state.roads.iter().filter(|road| {
+        for road in self.state.network.roads.iter().filter(|road| {
             road.stage == Stage::Open
                 && !matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
                 && (road.from == access_node || road.to == access_node)
@@ -162,7 +165,7 @@ impl Engine {
             best = Some((road.id, along, side, distance));
         }
         if let Some((road_id, along, side, _)) = best {
-            self.state.parcel_frontages.push(ParcelFrontage {
+            self.state.land.parcel_frontages.push(ParcelFrontage {
                 parcel_id,
                 road_id,
                 along,
@@ -183,6 +186,7 @@ impl Engine {
         }
         let Some(frontage) = self
             .state
+            .land
             .parcel_frontages
             .iter()
             .find(|frontage| frontage.parcel_id == parcel_id)
@@ -191,6 +195,7 @@ impl Engine {
         };
         let Some(road) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == frontage.road_id)

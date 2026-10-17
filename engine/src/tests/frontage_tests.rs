@@ -11,10 +11,11 @@ fn building_picker_prefers_connected_infill_and_excludes_invalid_sites() {
 
     // The former sort-then-cycle picker selected the isolated site at
     // cursor 1 despite having ranked the infill site first.
-    engine.state.growth_cursor = 1;
+    engine.state.construction.growth_cursor = 1;
     engine.plan_building(1);
     let project = engine
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Building)
@@ -85,10 +86,10 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
         for _ in 0..6 {
             engine.step(2_000);
         }
-        engine.state.projects.clear();
+        engine.state.construction.projects.clear();
         engine.state.tick = engine.state.tick.div_ceil(80) * 80;
-        engine.state.demand = 4.0;
-        engine.state.road_infill_due = 1;
+        engine.state.people.demand = 4.0;
+        engine.state.legacy.road_infill_due = 1;
         engine
     }
 
@@ -96,9 +97,10 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
     // while the station is offline. It must not leave the infill quota stuck
     // forever and suppress ordinary road planning.
     let mut tower_only = developed_engine();
-    tower_only.state.station_online = false;
+    tower_only.state.transit.station_online = false;
     let station = tower_only
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.kind == NodeKind::Station)
@@ -106,6 +108,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
         .clone();
     let access_node = tower_only
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.stage == Stage::Open && road.connected && road.kind != RoadKind::Rail)
@@ -122,16 +125,18 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
     );
     tower_only
         .state
+        .land
         .parcels
         .retain(|parcel| parcel.id == tower_parcel);
-    let initial_parcel_count = tower_only.state.parcels.len();
-    assert!(tower_only.is_station_tower_lot(&tower_only.state.parcels[0]));
-    assert!(!tower_only.state.station_online);
+    let initial_parcel_count = tower_only.state.land.parcels.len();
+    assert!(tower_only.is_station_tower_lot(&tower_only.state.land.parcels[0]));
+    assert!(!tower_only.state.transit.station_online);
     assert!(tower_only.node_connected(access_node));
     tower_only.evaluate_growth();
-    assert_eq!(tower_only.state.road_infill_due, 0);
+    assert_eq!(tower_only.state.legacy.road_infill_due, 0);
     let road_target = tower_only
         .state
+        .construction
         .projects
         .iter()
         .find(|project| project.kind == ProjectKind::Road && project.progress < 1.0)
@@ -145,36 +150,43 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
     assert!(
         tower_only
             .state
+            .network
             .roads
             .iter()
             .any(|road| { road.to == road_target && road.stage == Stage::Open && road.connected }),
         "the admitted neighborhood road must complete and connect"
     );
-    assert!(tower_only.state.parcels.len() > initial_parcel_count);
+    assert!(tower_only.state.land.parcels.len() > initial_parcel_count);
     assert!(
-        tower_only.state.buildings.iter().any(|building| {
-            tower_only.state.parcels.iter().any(|parcel| {
-                parcel.id == building.parcel_id
-                    && parcel.id != tower_parcel
-                    && !tower_only.is_station_tower_lot(parcel)
-                    && tower_only.node_connected(parcel.access_node)
-            })
-        }),
+        tower_only
+            .state
+            .construction
+            .buildings
+            .iter()
+            .any(|building| {
+                tower_only.state.land.parcels.iter().any(|parcel| {
+                    parcel.id == building.parcel_id
+                        && parcel.id != tower_parcel
+                        && !tower_only.is_station_tower_lot(parcel)
+                        && tower_only.node_connected(parcel.access_node)
+                })
+            }),
         "ordinary frontage must enter construction after the road opens"
     );
 
     // If an ordinary usable lot exists alongside an ineligible tower lot,
     // the scheduler should spend the quota on that lot before road growth.
     let mut mixed = developed_engine();
-    mixed.state.station_online = false;
+    mixed.state.transit.station_online = false;
     // Reuse an actual developed lot with a resolved access segment rather
     // than inventing a disconnected lot far from its declared access node.
     let usable_building = mixed
         .state
+        .construction
         .buildings
         .iter()
         .find(|building| {
-            mixed.state.parcels.iter().any(|parcel| {
+            mixed.state.land.parcels.iter().any(|parcel| {
                 parcel.id == building.parcel_id
                     && !parcel.protected
                     && parcel.reservation.is_none()
@@ -188,6 +200,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
     let usable = usable_building.parcel_id;
     let connected = mixed
         .state
+        .land
         .parcels
         .iter()
         .find(|p| p.id == usable)
@@ -195,6 +208,7 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
         .access_node;
     mixed
         .state
+        .construction
         .buildings
         .retain(|building| building.id != usable_building.id);
     let ineligible = mixed.add_parcel(
@@ -208,27 +222,29 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
     );
     mixed
         .state
+        .land
         .parcels
         .retain(|parcel| parcel.id == usable || parcel.id == ineligible);
-    assert!(!mixed.state.station_online);
-    assert!(mixed.state.parcels.iter().any(|parcel| {
+    assert!(!mixed.state.transit.station_online);
+    assert!(mixed.state.land.parcels.iter().any(|parcel| {
         parcel.id == usable
             && !mixed.is_station_tower_lot(parcel)
             && mixed.node_connected(parcel.access_node)
     }));
     mixed.evaluate_growth();
     assert!(
-        mixed.state.projects.iter().any(|project| {
+        mixed.state.construction.projects.iter().any(|project| {
             project.kind == ProjectKind::Building
                 && project.parcel_id == Some(usable)
                 && project.progress < 1.0
         }),
         "usable ordinary frontage was bypassed"
     );
-    assert_eq!(mixed.state.road_infill_due, 0);
+    assert_eq!(mixed.state.legacy.road_infill_due, 0);
     assert!(
         !mixed
             .state
+            .construction
             .projects
             .iter()
             .any(|project| { project.kind == ProjectKind::Road && project.progress < 1.0 }),
@@ -239,14 +255,14 @@ fn exhausted_infill_quota_does_not_block_road_growth_or_skip_available_lots() {
 #[test]
 fn frontage_cursor_accepts_exact_candidate_cap_and_rejects_overflow() {
     let mut engine = Engine::new_legacy(17);
-    engine.state.frontage_slot_cursor = MAX_FRONTAGE_SITES_PER_ROAD as u16;
+    engine.state.legacy.frontage_slot_cursor = MAX_FRONTAGE_SITES_PER_ROAD as u16;
     let at_cap = Engine::restore_json(&engine.save_json()).unwrap();
     assert_eq!(
-        at_cap.state.frontage_slot_cursor as usize,
+        at_cap.state.legacy.frontage_slot_cursor as usize,
         MAX_FRONTAGE_SITES_PER_ROAD
     );
 
-    engine.state.frontage_slot_cursor = MAX_FRONTAGE_SITES_PER_ROAD as u16 + 1;
+    engine.state.legacy.frontage_slot_cursor = MAX_FRONTAGE_SITES_PER_ROAD as u16 + 1;
     assert!(Engine::restore_json(&engine.save_json()).is_err());
 
     let a = Node {
@@ -340,6 +356,7 @@ fn shallow_frontage_fallback_preserves_existing_prefix_and_bounded_shapes() {
     let towers = engine.available_station_tower_envelopes();
     let road = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.stage == Stage::Open && road.connected && road.kind == RoadKind::Local)
@@ -446,9 +463,10 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
         let mut engine = Engine::restore_json(save).expect("area-policy save restores");
         engine.set_development_rate(16);
         let start_tick = engine.state.tick;
-        let initial_roads = engine.state.roads.len();
+        let initial_roads = engine.state.network.roads.len();
         let initial_max_parcel_id = engine
             .state
+            .land
             .parcels
             .iter()
             .map(|parcel| parcel.id)
@@ -460,6 +478,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
             engine.step(200);
             let shallow_ids: BTreeSet<u32> = engine
                 .state
+                .land
                 .parcels
                 .iter()
                 .filter(|parcel| {
@@ -469,7 +488,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
                 .map(|parcel| parcel.id)
                 .collect();
             if !pending_replay_checked
-                && engine.state.projects.iter().any(|project| {
+                && engine.state.construction.projects.iter().any(|project| {
                     project.kind == ProjectKind::Building
                         && project.progress < 1.0
                         && project
@@ -492,6 +511,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
         assert_eq!(engine.state.tick, start_tick + 20_000);
         let shallow_parcels: Vec<&Parcel> = engine
             .state
+            .land
             .parcels
             .iter()
             .filter(|parcel| {
@@ -502,6 +522,7 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
         let shallow_ids: BTreeSet<u32> = shallow_parcels.iter().map(|parcel| parcel.id).collect();
         let shallow_buildings: Vec<&Building> = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| shallow_ids.contains(&building.parcel_id))
@@ -538,13 +559,13 @@ fn shallow_frontage_mature_continuations_construct_and_replay_pending_lots() {
             "end_tick": engine.state.tick,
             "development_rate": engine.state.development_rate,
             "initial_roads": initial_roads,
-            "final_roads": engine.state.roads.len(),
-            "road_delta": engine.state.roads.len().saturating_sub(initial_roads),
+            "final_roads": engine.state.network.roads.len(),
+            "road_delta": engine.state.network.roads.len().saturating_sub(initial_roads),
             "shallow_parcels_added": shallow_parcels.len(),
             "shallow_nominal_envelope_area_m2": shallow_parcels.iter().map(|parcel| (parcel.width * parcel.depth) as f64).sum::<f64>(),
             "shallow_buildings": shallow_buildings.len(),
             "shallow_open_buildings": open_shallow,
-            "shallow_construction_projects_pending": engine.state.projects.iter().filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0 && project.parcel_id.is_some_and(|id| shallow_ids.contains(&id))).count(),
+            "shallow_construction_projects_pending": engine.state.construction.projects.iter().filter(|project| project.kind == ProjectKind::Building && project.progress < 1.0 && project.parcel_id.is_some_and(|id| shallow_ids.contains(&id))).count(),
             "canonical_pending_project_replay_checked": pending_replay_checked,
             "validation_passed": true,
         });
@@ -590,8 +611,8 @@ fn shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds() {
     let mut worlds = Vec::new();
     for (seed, save) in fixtures {
         let engine = Engine::restore_json(save).expect("area-policy save restores");
-        assert!(engine.state.parcels.len() < MAX_PARCELS);
-        assert!(engine.state.buildings.len() < MAX_BUILDINGS);
+        assert!(engine.state.land.parcels.len() < MAX_PARCELS);
+        assert!(engine.state.construction.buildings.len() < MAX_BUILDINGS);
         let towers = engine.available_station_tower_envelopes();
         let base_context = engine.collision_context();
         let evaluate = |depth: f32, offset: f32| {
@@ -605,7 +626,7 @@ fn shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds() {
             let mut roads_with_candidates = BTreeSet::new();
             let mut roads_with_sites = BTreeSet::new();
 
-            for road in &engine.state.roads {
+            for road in &engine.state.network.roads {
                 if road.stage != Stage::Open
                     || !road.connected
                     || matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -706,10 +727,16 @@ fn shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds() {
                         continue;
                     }
                     let (mut local_open, mut local_active) = (0usize, 0usize);
-                    for building in engine.state.buildings.iter().filter(|building| {
-                        building.stage == Stage::Open
-                            && (building.x - x).hypot(building.z - z) <= 78.0
-                    }) {
+                    for building in engine
+                        .state
+                        .construction
+                        .buildings
+                        .iter()
+                        .filter(|building| {
+                            building.stage == Stage::Open
+                                && (building.x - x).hypot(building.z - z) <= 78.0
+                        })
+                    {
                         local_open += 1;
                         local_active += usize::from(site_active(building));
                     }
@@ -759,10 +786,10 @@ fn shallow_frontage_gap_diagnostic_on_area_policy_mature_worlds() {
         worlds.push(json!({
             "seed": seed,
             "tick": engine.state.tick,
-            "buildings": engine.state.buildings.len(),
-            "parcels": engine.state.parcels.len(),
-            "roads": engine.state.roads.len(),
-            "demand": engine.state.demand,
+            "buildings": engine.state.construction.buildings.len(),
+            "parcels": engine.state.land.parcels.len(),
+            "roads": engine.state.network.roads.len(),
+            "demand": engine.state.people.demand,
             "baseline_12m_depth_15m_offset": evaluate(12.0, 15.0),
             "shallow_8m_depth_12m_offset": evaluate(8.0, 12.0),
         }));
@@ -783,7 +810,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
     let tower_envelopes = engine.available_station_tower_envelopes();
     let mut target = None;
 
-    for road in &engine.state.roads {
+    for road in &engine.state.network.roads {
         if road.stage != Stage::Open
             || !road.connected
             || matches!(road.kind, RoadKind::Rail | RoadKind::Bridge)
@@ -803,7 +830,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
             continue;
         };
         let tower_site = tower_candidate.is_some();
-        if tower_site && !engine.state.station_online {
+        if tower_site && !engine.state.transit.station_online {
             continue;
         }
         if !tower_site
@@ -846,6 +873,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
         }
         let nearby: Vec<_> = engine
             .state
+            .construction
             .buildings
             .iter()
             .filter(|building| {
@@ -871,29 +899,34 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
         Stage::Survey,
         0.5,
     );
-    assert_eq!(engine.state.roads.last().unwrap().id, blocked_road_id);
-    assert!(!engine.state.roads.last().unwrap().connected);
-    let blocked_road = engine.state.roads.pop().unwrap();
+    assert_eq!(
+        engine.state.network.roads.last().unwrap().id,
+        blocked_road_id
+    );
+    assert!(!engine.state.network.roads.last().unwrap().connected);
+    let blocked_road = engine.state.network.roads.pop().unwrap();
     let target_index = engine
         .state
+        .network
         .roads
         .iter()
         .position(|road| road.id == target_road_id)
         .unwrap();
-    let target_road = engine.state.roads.remove(target_index);
-    engine.state.roads.insert(0, blocked_road);
-    engine.state.roads.insert(1, target_road);
-    engine.state.frontage_road_cursor = 0;
-    engine.state.frontage_slot_cursor = 0;
+    let target_road = engine.state.network.roads.remove(target_index);
+    engine.state.network.roads.insert(0, blocked_road);
+    engine.state.network.roads.insert(1, target_road);
+    engine.state.legacy.frontage_road_cursor = 0;
+    engine.state.legacy.frontage_slot_cursor = 0;
 
-    let parcels_before = engine.state.parcels.len();
+    let parcels_before = engine.state.land.parcels.len();
     assert!(engine.try_progressive_frontage_infill());
-    assert_eq!(engine.state.parcels.len(), parcels_before + 1);
-    assert_eq!(engine.state.frontage_road_cursor, 1);
-    assert_eq!(engine.state.frontage_slot_cursor, 1);
-    let admitted = engine.state.parcels.last().unwrap();
+    assert_eq!(engine.state.land.parcels.len(), parcels_before + 1);
+    assert_eq!(engine.state.legacy.frontage_road_cursor, 1);
+    assert_eq!(engine.state.legacy.frontage_slot_cursor, 1);
+    let admitted = engine.state.land.parcels.last().unwrap();
     let frontage = engine
         .state
+        .land
         .parcel_frontages
         .iter()
         .find(|frontage| frontage.parcel_id == admitted.id)
@@ -903,6 +936,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
 
     let blocked = engine
         .state
+        .network
         .roads
         .iter()
         .find(|road| road.id == blocked_road_id)
@@ -923,6 +957,7 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
     assert_eq!(
         resumed
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.id == blocked_road_id)
@@ -936,9 +971,10 @@ fn frontage_scan_skips_unfinished_road_without_opening_it_and_replays() {
 #[test]
 fn legacy_city_save_can_unlock_progressive_frontage() {
     let mut engine = Engine::new_legacy(491);
-    engine.state.demand = 2.0;
+    engine.state.people.demand = 2.0;
     let first_candidate = engine
         .state
+        .network
         .roads
         .iter()
         .enumerate()
@@ -962,9 +998,10 @@ fn legacy_city_save_can_unlock_progressive_frontage() {
         })
         .expect("found an available off-center frontage slot");
     let (_, _, (x, z, _, _, _)) = first_candidate;
-    let template = engine.state.buildings[0].clone();
+    let template = engine.state.construction.buildings[0].clone();
     let access_node = engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| parcel.id == template.parcel_id)
@@ -985,7 +1022,7 @@ fn legacy_city_save_can_unlock_progressive_frontage() {
             0.5,
             false,
         );
-        engine.state.buildings.push(nearby);
+        engine.state.construction.buildings.push(nearby);
     }
 
     let mut legacy: serde_json::Value = serde_json::from_str(&engine.save_json()).unwrap();
@@ -993,19 +1030,28 @@ fn legacy_city_save_can_unlock_progressive_frontage() {
     state.remove("frontage_road_cursor");
     state.remove("frontage_slot_cursor");
     let mut restored = Engine::restore_json(&legacy.to_string()).unwrap();
-    let old_parcels = restored.state.parcels.len();
+    let old_parcels = restored.state.land.parcels.len();
     assert!(restored.try_progressive_frontage_infill());
-    assert_eq!(restored.state.parcels.len(), old_parcels + 1);
+    assert_eq!(restored.state.land.parcels.len(), old_parcels + 1);
     assert!(restored
         .state
+        .land
         .parcel_frontages
         .iter()
         .any(|frontage| frontage.road_id == first_candidate.1));
     let infill = restored
         .state
+        .land
         .parcels
         .iter()
-        .find(|parcel| !engine.state.parcels.iter().any(|old| old.id == parcel.id))
+        .find(|parcel| {
+            !engine
+                .state
+                .land
+                .parcels
+                .iter()
+                .any(|old| old.id == parcel.id)
+        })
         .expect("the admitted frontage lot is present");
     let infill_id = infill.id;
     let rotation = infill
@@ -1030,7 +1076,7 @@ fn rotated_progressive_frontage_uses_road_facing_footprint() {
     let a_id = engine.add_node(200.0, 200.0, NodeKind::Junction);
     let b_id = engine.add_node(280.0, 280.0, NodeKind::Junction);
     let road_id = engine.add_road(a_id, b_id, RoadKind::Local, Stage::Open, 1.0);
-    engine.state.roads.last_mut().unwrap().connected = true;
+    engine.state.network.roads.last_mut().unwrap().connected = true;
     let (a, b) = (
         engine.node(a_id).unwrap().clone(),
         engine.node(b_id).unwrap().clone(),
@@ -1046,7 +1092,7 @@ fn rotated_progressive_frontage_uses_road_facing_footprint() {
     let existing_z = a.z + dz * along + nz * side as f32 * 15.0;
     let rotation = (side as f32 * dz).atan2(-side as f32 * dx);
     let existing_id = engine.add_parcel(existing_x, existing_z, 14.0, 12.0, a_id, 0.8, false);
-    engine.state.parcel_frontages.push(ParcelFrontage {
+    engine.state.land.parcel_frontages.push(ParcelFrontage {
         parcel_id: existing_id,
         road_id,
         along,
@@ -1054,6 +1100,7 @@ fn rotated_progressive_frontage_uses_road_facing_footprint() {
     });
     engine
         .state
+        .land
         .parcels
         .iter_mut()
         .find(|p| p.id == existing_id)
@@ -1127,6 +1174,7 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
     let mut engine = engine_with_developed_plan_site();
     let gateway = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.kind == NodeKind::Gateway)
@@ -1137,6 +1185,7 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
     engine.recompute_connectivity();
     let access_node = engine
         .state
+        .network
         .nodes
         .iter()
         .find(|node| node.x == 250.0 && node.z == 250.0)
@@ -1154,6 +1203,7 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
 
     let plan = engine
         .state
+        .legacy
         .neighborhood_plan
         .as_ref()
         .expect("the block reservation may coexist with usable infill");
@@ -1161,13 +1211,14 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
         plan.next_segment, 0,
         "existing infill keeps priority over road work"
     );
-    assert!(engine.state.projects.iter().any(|project| {
+    assert!(engine.state.construction.projects.iter().any(|project| {
         project.kind == ProjectKind::Building
             && project.progress < 1.0
             && project.parcel_id == Some(parcel_id)
     }));
     assert!(engine
         .state
+        .land
         .parcels
         .iter()
         .find(|parcel| parcel.id == parcel_id)
@@ -1176,6 +1227,7 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
         .is_some());
     assert!(!engine
         .state
+        .construction
         .projects
         .iter()
         .any(|project| project.kind == ProjectKind::Road && project.progress < 1.0));
@@ -1184,9 +1236,10 @@ fn available_connected_infill_precedes_neighborhood_block_planning() {
 #[test]
 fn coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed() {
     let mut engine = engine_with_developed_plan_site();
-    let road = engine.state.roads[1].id;
+    let road = engine.state.network.roads[1].id;
     let existing = engine
         .state
+        .network
         .roads
         .iter_mut()
         .find(|candidate| candidate.id == road)
@@ -1194,8 +1247,8 @@ fn coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed()
     std::mem::swap(&mut existing.from, &mut existing.to);
     engine.recompute_connectivity();
     assert!(engine.try_create_neighborhood_plan());
-    let plan = engine.state.neighborhood_plan.clone().unwrap();
-    assert!(engine.state.roads.iter().any(|candidate| {
+    let plan = engine.state.legacy.neighborhood_plan.clone().unwrap();
+    assert!(engine.state.network.roads.iter().any(|candidate| {
         candidate.id == road
             && ((candidate.from == plan.segments[0].0 && candidate.to == plan.segments[0].1)
                 || (candidate.from == plan.segments[0].1 && candidate.to == plan.segments[0].0))
@@ -1206,12 +1259,17 @@ fn coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed()
         for world in [&mut engine, &mut replay] {
             assert!(world.plan_next_neighborhood_segment());
             let segment = plan.segments[edge];
-            let pending = world.state.projects.iter_mut().find(|project| {
-                project.kind == ProjectKind::Road
-                    && project.progress < 1.0
-                    && project.from == Some(segment.0)
-                    && project.to == Some(segment.1)
-            });
+            let pending = world
+                .state
+                .construction
+                .projects
+                .iter_mut()
+                .find(|project| {
+                    project.kind == ProjectKind::Road
+                        && project.progress < 1.0
+                        && project.from == Some(segment.0)
+                        && project.to == Some(segment.1)
+                });
             if let Some(project) = pending {
                 let id = project.id;
                 project.progress = 1.0;
@@ -1220,9 +1278,10 @@ fn coordinated_block_reuse_keeps_frontage_valid_when_existing_edge_is_reversed()
         }
         assert_eq!(engine.save_json(), replay.save_json());
     }
-    assert!(engine.state.neighborhood_plan.is_none());
+    assert!(engine.state.legacy.neighborhood_plan.is_none());
     assert!(engine
         .state
+        .land
         .parcels
         .iter()
         .any(|parcel| parcel.rotation.is_some()));

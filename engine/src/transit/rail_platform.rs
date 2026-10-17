@@ -25,6 +25,7 @@ impl Engine {
     pub(crate) fn station_construction_phase(&self) -> u8 {
         let progress = self
             .state
+            .construction
             .projects
             .iter()
             .find(|p| p.kind == ProjectKind::Station)
@@ -47,6 +48,7 @@ impl Engine {
     pub(crate) fn rail_platform_views(&self) -> Vec<RailPlatformView> {
         let Some(rail) = self
             .state
+            .network
             .roads
             .iter()
             .find(|road| road.kind == RoadKind::Rail)
@@ -280,17 +282,18 @@ mod tests {
             let mut engine = Engine::new_legacy(48);
             let rail = engine
                 .state
+                .network
                 .roads
                 .iter_mut()
                 .find(|r| r.kind == RoadKind::Rail)
                 .unwrap();
             rail.stage = Stage::Open;
             rail.progress = 1.0;
-            engine.state.station_ready = true;
-            engine.state.station_online = true;
+            engine.state.transit.station_ready = true;
+            engine.state.transit.station_online = true;
             engine.recompute_connectivity();
             let (station, gateway, _, _) = engine.rail_axis().unwrap();
-            for node in &mut engine.state.nodes {
+            for node in &mut engine.state.network.nodes {
                 if node.id == station {
                     node.x = sx;
                     node.z = sz;

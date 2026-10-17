@@ -11,6 +11,7 @@ fn live_masterplan_construction_matches_restored_continuation() {
         while engine.state.tick < 160_000 && covered.len() < 4 {
             let active: BTreeSet<ProjectKind> = engine
                 .state
+                .construction
                 .projects
                 .iter()
                 .filter(|p| {
