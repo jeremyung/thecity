@@ -1,7 +1,7 @@
 import {architecturalChoice} from './variation';
 import type {Building} from '../../types';
 
-export const APARTMENT_RECIPE_VERSION=10;
+export const APARTMENT_RECIPE_VERSION=11;
 export const APARTMENT_RECIPE_IDS=['gallery','walkup','terrace','compact','brick','modern','urban','ceramic','limestone','courtyard'] as const;
 export type ApartmentRecipeId=typeof APARTMENT_RECIPE_IDS[number];
 export interface ApartmentBuildOptions {recipe?:ApartmentRecipeId|'auto';detail?:'close'|'district'|'far'}

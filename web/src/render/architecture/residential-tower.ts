@@ -50,7 +50,8 @@ export function buildResidentialTower(b:Building,art:ArtMaterials,options:Reside
    for(let j=0;j<=count;j++)kit.box(a[0]+dx*j/count,base+lobbyHeight/2,a[1]+dz*j/count,.075,lobbyHeight,.075,metal);
   }
   kit.box(0,base+Math.min(2.6,lobbyHeight/2),d/2-.48,w*.55,Math.min(4.8,lobbyHeight-.2),.08,warm);
-  const entry=(seed%3-1)*Math.min(2.2,w*.15),front=d/2;
+  // The engine walking endpoint is front-centre for every seed and rotation.
+  const entry=0,front=d/2;
   kit.box(entry,base+1.4,front-.08,2.15,2.8,.07,shadow);
   kit.box(entry,base+1.4,front-.02,1.93,2.6,.035,glass);
   kit.box(entry,base+1.4,front+.025,.045,2.6,.045,metal);
@@ -126,7 +127,7 @@ export function buildResidentialTower(b:Building,art:ArtMaterials,options:Reside
   for(let i=0;i<3;i++)kit.box(-cw*.22+i*cw*.2,top+.48,0,cw*.13,.5,cd*.2,metal);
  }
  if(b.stage==='demolition')addDemolitionSite(kit,b,art);
- const group=kit.finish();const metadata={recipe,label:RESIDENTIAL_TOWERS[recipe].label,detail,width:b.width,depth:b.depth,floors:b.floors,installedFloors:installed,framedFloors:framed,podiumFloors:podium,roofInstalled:complete,seed,shaftWidth:shaftW,shaftDepth:shaftD,profile};
+ const group=kit.finish();const metadata={recipe,label:RESIDENTIAL_TOWERS[recipe].label,detail,width:b.width,depth:b.depth,floors:b.floors,installedFloors:installed,framedFloors:framed,podiumFloors:podium,roofInstalled:complete,entryX:0,seed,shaftWidth:shaftW,shaftDepth:shaftD,profile};
  group.userData={buildingId:b.id,residentialTower:metadata};group.traverse(o=>o.userData.buildingId=b.id);
  applyBuildingWeathering(group,{profile:'fresh',strength:.025,phase:seed%997});return group;
 }
