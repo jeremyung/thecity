@@ -131,7 +131,7 @@ export function buildBusinessBuilding(b:Building,art:ArtMaterials,options:Busine
  if(active&&detail!=='far'&&displays!=='off'){
   const feature=businessCanHostAdvertising(r)?options.signage?.feature:undefined;
   // Displays replace a reserved opaque upper frontage bay, keeping shop and lobby doors clear.
-  if(feature&&installed>=3){display=feature==='screen'&&displays==='animated'?'screen':'ad';addFacadeFeature(kit,art,metal,display as 'screen'|'ad',{frontZ:front+.04,width:Math.max(3,Math.min(w-.4,w*.65)),bottom:base+fh+ .35,height:r.form==='media'&&display==='screen'?Math.min(5.9,(installed-1)*fh-.5):2.35,seed,program:seed%3});}
+  if(feature&&installed>=3){display=feature==='screen'&&displays==='animated'?'screen':'ad';addFacadeFeature(kit,art,metal,display as 'screen'|'ad',{frontZ:front+.04,width:Math.max(3,Math.min(w-.4,w*.65)),bottom:base+fh+ .35,height:r.form==='media'&&feature==='screen'?Math.min(5.9,(installed-1)*fh-.5):2.35,seed,screenPoster:feature==='screen',program:architecturalChoice(seed,710)%12,layout:feature==='screen'&&(r.district==='shibuya'||r.district==='akihabara'||r.form==='media')?(['flat','curved','triptych'] as const)[architecturalChoice(seed,711)%3]:'flat'});}
   if((r.form==='tenant'||r.family==='commercial'&&r.era==='older')&&installed>=2&&b.depth/2-front>=.55)addBladeSign(kit,art,metal,{x:-entrySide*(w/2-.22),frontZ:front+.05,maxDepth:b.depth/2-front-.12,bottom:base+fh,maxHeight:Math.min(12,(installed-1)*fh-.3),panels:Math.min(installed-1,4),seed});
  }
  if(complete&&r.era==='older'&&detail!=='far')kit.cylinder(-w/2+.12,base+installed*fh/2,front+.23,.045,installed*fh,metal,6);
