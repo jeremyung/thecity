@@ -52,6 +52,7 @@ export interface BuildingKitReviewOptions {
   apartmentComponents?: boolean|ApartmentBuildOptions;
   /** Station proximity and any podium display chosen for this building. */
   signage?: SignageContext;
+  commercialDisplays?: import('./architecture/business-recipes').DisplayMode;
 }
 
 export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
@@ -322,7 +323,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
   }
 
   if (isOpen && b.business_active !== false) {
-    renderCommercialSignage(kit, b, art, { w, d, base, floor, height, frame: iron, midrise, lowrise, signage: review.signage });
+    renderCommercialSignage(kit, b, art, { w, d, base, floor, height, frame: iron, midrise, lowrise, signage: review.signage,displays:review.commercialDisplays });
   }
 
   if (renovating) {
@@ -341,7 +342,8 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
  * commercial roofs (likelier near the station), and the podium display the
  * city chose for a few station-area towers and offices.
  */
-function renderCommercialSignage(kit:Kit,b:Building,art:ArtMaterials,m:{w:number;d:number;base:number;floor:number;height:number;frame:THREE.Material;midrise:MidriseMassing|null;lowrise:LowriseMassing|null;signage?:SignageContext}){
+function renderCommercialSignage(kit:Kit,b:Building,art:ArtMaterials,m:{w:number;d:number;base:number;floor:number;height:number;frame:THREE.Material;midrise:MidriseMassing|null;lowrise:LowriseMassing|null;signage?:SignageContext;displays?:import('./architecture/business-recipes').DisplayMode}){
+  if(m.displays==='off')return;
   const {w,d,base,floor,height,frame,midrise,lowrise}=m;
   const seed=b.appearance_seed>>>0,proximity=m.signage?.proximity??0;
   const shop=b.kind==='shop'||b.kind==='cafe',tower=b.floors>=12&&(b.kind==='office'||b.kind==='apartment');
@@ -368,7 +370,7 @@ function renderCommercialSignage(kit:Kit,b:Building,art:ArtMaterials,m:{w:number
     else if(!lowrise)addRooftopBillboard(kit,art,frame,{x:0,z:0,width:w,depth:d,top:base+height},seed>>>15);
   }
   // Station-area podium displays sit above the entrance floor.
-  const feature=m.signage?.feature;
+  const feature=m.signage?.feature==='screen'&&m.displays==='static'?'ad':m.signage?.feature;
   if(feature){
     if(tower)addFacadeFeature(kit,art,frame,feature,{frontZ:d/2,width:w*.72,bottom:base+floor+.2,height:2*floor-.6,seed});
     else if(midrise?.family==='setback-office')addFacadeFeature(kit,art,frame,feature,{frontZ:d/2,width:w*.8,bottom:base+floor+.2,height:floor-.5,seed});

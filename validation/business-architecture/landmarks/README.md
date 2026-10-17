@@ -1,0 +1,11 @@
+# Media landmark validation
+
+Open `?review=architecture-city&family=media-landmarks&district=shibuya`, select Night and a building. The fixture exercises the production recipe resolver, sparse landmark override, display allocation, shared resources and city batching. Three forms: wraparound display/glazed crown, stacked media/tenant column, and framed artwork/retail podium. Add `&webgl` for fallback.
+
+All three forms were reviewed in WebGPU at night. WebGL smoke review covered stacked artwork, night/rain and anime style with no reported console errors. Static mode was exercised; automated tests cover off mode, all construction phases and LODs, shared material ownership, curved normals, variable dimensions, placement spacing and both station/junction allocation.
+
+The full suite passed 797 tests before the final allocation refinement. The final affected landmark/signage/business suite passed 30 tests; production build and the 8-component/12-texture manifest check passed. The build retains the existing large-bundle warning. CPU benchmark results include shared material setup and warm repeats; they do not establish GPU frame-rate or shader-compilation budgets.
+
+Reference assessment: the supplied image motivates building-scale curved media, stacked neighboring screens, exposed glazed crown, illuminated retail podium and sparse commercial-center placement. The implementation supplies those procedural compositions with abstract animated fictional campaigns. It does not reproduce a named landmark, decode video ads, add crossing crowds/traffic, or cast dynamic area light from screens. Accurate nearby-glass reflections remain issue #23. Landmark selection uses existing eligible engine parcels; simulation growth and intersection redesign are unchanged.
+
+A final browser check found that simulation time is frozen in a review snapshot. Displays now use one shared presentation-time uniform, advanced by the existing renderer frame loop and copied to architecture resources. Pausing simulation no longer freezes signs. Paired motion screenshots demonstrate changing artwork at the same camera and unchanged snapshot. Frame deltas are capped, so a backgrounded tab does not cause a large animation jump on return.
