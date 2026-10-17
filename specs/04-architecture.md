@@ -29,32 +29,36 @@ Use Rust compiled to WASM for the engine, a dedicated simulation worker, and Typ
 ## Module layout
 
 ```text
-engine/
-  core/            identifiers, clocks, RNG, definitions
-  world/           geography, parcels, spatial indexes
-  infrastructure/  planning, graphs, construction
-  population/      demand, activities, travel
-  persistence/     snapshots and validation
+engine/                    Cargo workspace
+  crates/plan/             pure planning and geometry (master plan, blocks, frontage, kinds)
+  crates/wasm/             wasm-bindgen bindings only
+  src/core/                engine, world state, clock and RNG, system registry, wire layouts
+  src/world/               parcels, river, clearance, spatial indexes
+  src/infrastructure/      network, construction, growth, master-plan realization
+  src/population/          residents, travelers, errands, demand
+  src/transit/             trains, buses, traffic, stations
+  src/persistence/         snapshots, save/restore, validation, movement packets
+  src/legacy/              retired planners (feature `legacy`)
 web/src/
   worker/          WASM loading, scheduler, protocol
-  render/          scene bridge, assets, water, styles
+  render/          scene coordinator, render layers, kits, water, styles
   camera/          manual controls and scene director
+  optics/          lens, focus and tilt-shift math
   audio/           ambience, emitters, music director
   ui/              React controls and inspectors
   storage/         IndexedDB and save coordination
+  generated/       types and wire constants generated from Rust
 ```
 
-React never owns per-frame transforms or simulation entities. The renderer receives a read-only presentation model. The worker is the sole owner of authoritative state.
+React never owns per-frame transforms or simulation entities. The renderer receives a read-only presentation model. The worker is the sole owner of authoritative state. Each `WorldState` sub-state belongs to one domain folder; the tick runs the systems listed in `core/systems.rs` in order. [ARCHITECTURE.md](../ARCHITECTURE.md) maps where each change belongs.
 
-The layout above is the target decomposition. As of 2026-10-09, browser subsystems are separated, but most Rust systems still live in `engine/src/lib.rs`. Pure scalar distance helpers have begun moving to `engine/src/geometry.rs`, which cannot access engine state. Continue extracting geometry/model boundaries before growth and transit systems. Keep deterministic scheduling and mutation ownership explicit; splitting files alone does not establish independence. Validate refactors separately from behavior corrections against current-format save validation and same-target continuation fixtures.
+`city-plan`'s `blocks.rs` owns state-free rectangular subdivision with a hard 64-lot result bound. `geometry.rs` supplies oriented-rectangle overlap, bounds, and segment clearance. Engine orchestration reserves interiors and admits parcels only on infrastructure completion. These modules contain no renderer, RNG, or mutable world dependency. Optional parcel rotation and a default-false coordinated-plan marker preserve legacy save behavior; rendering continues to consume the authoritative building rotation.
 
-`engine/src/blocks.rs` now owns state-free rectangular subdivision with a hard 64-lot result bound. `geometry.rs` supplies oriented-rectangle overlap, bounds, and segment clearance. Engine orchestration reserves interiors and admits parcels only on infrastructure completion. These modules contain no renderer, RNG, or mutable world dependency. Optional parcel rotation and a default-false coordinated-plan marker preserve legacy save behavior; rendering continues to consume the authoritative building rotation.
+`city-plan`'s `frontage.rs` owns pure interval subtraction/union and bounded gap subdivision. Engine orchestration projects current reservations into road coordinates, then validates resulting proposals through existing construction and access rules. The helper's global output cap is 64; ordinary infill requests only eight per side. Its deterministic output is derived from saved world state, while scan cursors remain persisted. Per-evaluation caches expire on admission so the next evaluation sees the new parcel.
 
-`engine/src/frontage.rs` owns pure interval subtraction/union and bounded gap subdivision. Engine orchestration projects current reservations into road coordinates, then validates resulting proposals through existing construction and access rules. The helper's global output cap is 64; ordinary infill requests only eight per side. Its deterministic output is derived from saved world state, while scan cursors remain persisted. Per-evaluation caches expire on admission so the next evaluation sees the new parcel.
+`city-plan`'s `development.rs` owns state-free building-site selection over a rotating window of at most 32 eligible parcels. Minimal open-building points supply local activity and proximity. The engine retains eligibility, construction mutation, and the persisted cursor. Eligibility collection and the building-point pass remain global; this is not a spatial index or a full fixed-work scheduler.
 
-`engine/src/development.rs` owns state-free building-site selection over a rotating window of at most 32 eligible parcels. Minimal open-building points supply local activity and proximity. The engine retains eligibility, construction mutation, and the persisted cursor. Eligibility collection and the building-point pass remain global; this is not a spatial index or a full fixed-work scheduler.
-
-`engine/src/road_split.rs` owns the engine's open-road split operation, including precomputed frontage and traveler/bus/train route remaps followed by mutation. It remains an `impl Engine` module with access to authoritative state; this extraction is an ownership boundary, not a state-independent service. `network_split.rs` retains the pure route transformation helpers. Paired splitting now preflights both hosts together, with cumulative actor remaps and combined ID/segment/route caps, before committing either. It preserves the active-plan guard, with an exception only for the validated owning spine plan and its canonical pair of host midpoints. `neighborhood_spine.rs` owns that staged construction lifecycle; `spine_plan.rs` derives the versioned geometry and reservation contract. Bounded deep candidate enumeration is integrated in public WASM. Production keeps the existing nominal-area ranking; a separate test-only site-count comparison has mixed density results and is not promoted. Calling the single-road operation twice remains non-atomic.
+`infrastructure/road_split.rs` owns the engine's open-road split operation, including precomputed frontage and traveler/bus/train route remaps followed by mutation. It remains an `impl Engine` module with access to authoritative state; this extraction is an ownership boundary, not a state-independent service. `network_split.rs` retains the pure route transformation helpers. Paired splitting now preflights both hosts together, with cumulative actor remaps and combined ID/segment/route caps, before committing either. It preserves the active-plan guard, with an exception only for the validated owning spine plan and its canonical pair of host midpoints. `neighborhood_spine.rs` owns that staged construction lifecycle; `spine_plan.rs` derives the versioned geometry and reservation contract. Bounded deep candidate enumeration is integrated in public WASM. Production keeps the existing nominal-area ranking; a separate test-only site-count comparison has mixed density results and is not promoted. Calling the single-road operation twice remains non-atomic.
 
 ## WASM interface
 

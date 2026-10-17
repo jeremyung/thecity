@@ -10,12 +10,15 @@
 
 ## Module map (where to change X)
 See ARCHITECTURE.md for the full map.
-- Simulation rules and state: engine/src/<domain>/
-- Pure geometry / master plan: engine/src/geometry.rs, masterplan.rs
-- WASM bindings: engine/src/wasm/
+- Simulation rules and state: engine/src/<domain>/ (core, world, infrastructure,
+  population, transit, persistence); the tick order is engine/src/core/systems.rs
+- Pure geometry / master plan: engine/crates/plan/
+- WASM bindings: engine/crates/wasm/
+- Retired planners: engine/src/legacy/ (feature `legacy`; do not extend)
 - Worker and protocol: web/src/worker/
-- One visual feature: web/src/render/<feature>.ts
-- Camera / audio / UI / saves: web/src/camera, audio, ui, storage
+- Snapshot and wire types: Rust first, then `npm run types` (web/src/generated)
+- One visual feature: web/src/render/<feature>.ts, registered in render/layers.ts
+- Camera / audio / UI / saves: web/src/camera, audio, ui, storage; wiring in main.tsx
 
 ## Scope
 - One concern per change: a refactor, a behavior change, or a visual change,
@@ -36,10 +39,12 @@ See ARCHITECTURE.md for the full map.
 - Use enums and typed IDs, never string kinds or bare integers.
 
 ## Validate the smallest thing first
-- Rust change: `cargo test --manifest-path engine/Cargo.toml <test_name>`, then
-  `npm run test:engine -- --release`.
+- Rust change: `cargo test --manifest-path engine/Cargo.toml --features legacy <test_name>`
+  (pure planning: `-p city-plan`), then `npm run test:engine -- --release`.
 - Web change: `npx vitest run tests/<file>.test.ts`, then `npm test`.
-- Run `npm run wasm` only when engine code or bindings changed.
+- Run `npm run wasm` (and `npm run wasm:legacy`) only when engine code or bindings
+  changed; run `npm run types` when a snapshot type or wire layout changed.
+- Before pushing also run `npm run lint:deps` and `npm run check:size`.
 - Before pushing: `npm run build` and the full suites once. Report failures with
   the failing test name and first error line, not the whole log.
 - Visual changes need a capture compared with the locked references; passing

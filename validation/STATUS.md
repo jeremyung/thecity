@@ -4,9 +4,9 @@ Replace, don't append. Keep under 2 KB. History lives in dated `validation/<topi
 
 ## In progress
 
-- Architecture refactor ([plan](../specs/architecture-refactor-plan.md)): the large
-  mechanical moves land first, before parallel work resumes. Rebase open branches
-  after it merges.
+- Architecture refactor ([plan and progress](../specs/architecture-refactor-plan.md)):
+  structural moves are done on `refactor/architecture`. Rebase open branches after it
+  merges. Open: typed IDs, owner-only state APIs, behavior items #12–#16, deltas #18.
 
 ## Product milestones (from specs/08-delivery.md)
 

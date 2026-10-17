@@ -173,3 +173,39 @@ Step 0 ─► 1.1, 1.2 ─► 1.3 ─► 1.4 ─► 1.5 ─► 2.1 ─► 2.2 �
    (formatting, module moves, WorldState split, typed IDs with generations, enums,
    workspace) before parallel work starts. Same-version save round-trip and replay
    determinism stay required; fixtures are regenerated when the format changes.
+
+## Progress on `refactor/architecture`
+
+Every refactor step was checked against main with byte-level WASM parity (save content,
+snapshots and movement buffers through 120k ticks on seeds 87231, 5 and 0), the full
+engine and web suites, and a WebGL smoke capture for renderer changes.
+
+| Item | Status |
+|---|---|
+| Step 0: AGENTS.md, STATUS.md, dated notes out of specs/README | Done |
+| #4: rustfmt, Prettier, format check in CI | Done |
+| #3: tests out of lib.rs | Done (`src/tests/`) |
+| #2: experiments out of production | Done (`src/experiments/`, one `ExperimentState` field) |
+| #1: legacy planners | Behind the `legacy` feature; production builds exclude them; restore rejects saves without a master plan. Deletion waits on master-plan acceptance. |
+| #26: scripts sorted | Done |
+| #25: bulk evidence untracked | Done; kept at tag `evidence-2026-10-16` (local, not pushed). No history rewrite. |
+| #5: domain module tree | Done; `lib.rs` is about 160 lines |
+| #6: WorldState sub-states | Done (`network`, `land`, `construction`, `people`, `transit`, `legacy`), flattened into saves. Fields are `pub(crate)`; narrowing them to owner-only APIs is open. |
+| #7: domain modules over sub-states | Partial: code lives in domain files, still as `impl Engine` |
+| #8: Cargo workspace | Done: `city-plan` (pure), engine, `city-wasm` (bindings) |
+| #10: enums for kinds and stages | Done, including traveler/resident activity, routine and transfer |
+| #9: typed IDs | **Open.** Changing `Road.id` alone gives 153 compile errors that cascade. Generation counters are unnecessary because IDs come from one monotonic counter and are never reused. Adopt one ID type at a time with a `PartialEq<u32>` bridge. |
+| #11: system registry | Done (`core/systems.rs`), with replays unchanged |
+| #12–#15: bucketing, structural commit point, event queue, data definitions | Open: behavior changes; each needs a replay re-baseline |
+| #16: routing service | Open |
+| #17: generated TS types | Done (`npm run types`, CI drift check) |
+| #18: snapshot slices and deltas | Open: protocol change |
+| #19: wire layout from one definition | Done (`core/wire.rs`) |
+| #20: render layers | Done: roads, landscape and actors layers, plus a `RenderLayer` registry with the first two registered layers. `city.ts` is 1.4k lines. |
+| #21: camera/audio out of the renderer | Done: `CameraRig` injected by `main.tsx`; audio scene in `app/`; optics moved to `optics/` |
+| #22: kit.ts and director.ts splits | kit.ts split by family; director.ts lost anchors and framing (1.75k lines, mode split open) |
+| #23: dev-only review tooling | Architecture review route is dev-only and absent from production builds |
+| #24, #29: import lint, file-size check | Done in CI |
+| #27: ARCHITECTURE.md, CONTRIBUTING.md | Done |
+| #28: CODEOWNERS | Deferred until a second contributor |
+

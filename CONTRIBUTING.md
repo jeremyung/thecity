@@ -15,8 +15,20 @@ npm run wasm && npm run wasm:legacy && npm test             # web + WASM integra
 npm run build
 ```
 
-CI also checks formatting (`cargo fmt --check`, `npx prettier --check`) and that the
-tree is clean after the build.
+CI also checks formatting (`npm run format:check`), import boundaries
+(`npm run lint:deps`), the 1,500-line file limit (`npm run check:size`), that
+`npm run types` leaves `web/src/generated` unchanged, and that the tree is clean after
+the build.
+
+## Adding things
+
+- **A simulation system:** write the function in the owning domain module, then add a
+  `System` entry in `engine/src/core/systems.rs` at the right phase. Replays change, so
+  record the new baseline in the same PR.
+- **A render layer:** implement `RenderLayer` (`web/src/render/layer.ts`) in a new file
+  and add its factory to `web/src/render/layers.ts`.
+- **A snapshot field:** add it to the Rust type, run `npm run types`, and bump
+  `WORKER_PROTOCOL_VERSION` if the wire changes.
 
 ## Kinds of change
 
