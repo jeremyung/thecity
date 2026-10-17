@@ -34,6 +34,7 @@ function world(overrides: Partial<World> = {}): World {
 function harness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
   renderer.scene = new THREE.Scene();
+  renderer.mediaScreenLighting = { setWorld: vi.fn(), reset: vi.fn(), dispose: vi.fn() };
   renderer.roads = new THREE.Group(); renderer.scene.add(renderer.roads);
   renderer.constructionRoads = new THREE.Group(); renderer.scene.add(renderer.constructionRoads);
   renderer.station = new THREE.Group(); renderer.scene.add(renderer.station);

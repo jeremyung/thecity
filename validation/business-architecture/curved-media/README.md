@@ -1,3 +1,5 @@
+> Baseline captured before the flagship realism pass. See [current realism validation](../realism/README.md) for updated interiors, campaign-atlas memory and geometry measurements.
+
 # Fully curved media landmark
 
 Review: `?review=architecture-city&family=curved-media&district=shibuya`. The isolated fixture uses the production recipe and sparse landmark selector. The initial camera frames the whole building. Dusk and Animated reveal the continuous panorama around both corners; Show controls restores lighting, display, lifecycle and seed controls.

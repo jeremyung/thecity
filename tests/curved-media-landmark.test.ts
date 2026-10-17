@@ -7,7 +7,7 @@ import {buildBusinessBuilding} from '../web/src/render/architecture/business';
 import {curvedMediaRibbon} from '../web/src/render/architecture/curved-media-landmark';
 import {ApartmentResources} from '../web/src/render/architecture/resources';
 import {disposeGroup} from '../web/src/render/kit';
-beforeEach(()=>vi.stubGlobal('document',{createElement:()=>({width:0,height:0,getContext:()=>new Proxy({} as Record<PropertyKey,unknown>,{get:(t,k)=>t[k]??(()=>undefined),set:(t,k,v)=>{t[k]=v;return true;}})})}));
+beforeEach(()=>vi.stubGlobal('document',{createElement:()=>({width:0,height:0,getContext:()=>new Proxy({} as Record<PropertyKey,unknown>,{get:(t,k)=>k==='createLinearGradient'?()=>({addColorStop(){}}):t[k]??(()=>undefined),set:(t,k,v)=>{t[k]=v;return true;}})})}));
 afterEach(()=>vi.unstubAllGlobals());
 it('selects a fully curved building through production rules and bounds all lifecycle/LOD variants',()=>{
  const world=mediaLandmarkStudy(32,true),b=world.buildings[0],recipe=resolveMediaLandmarks(world,resolveBusinessRecipes(world.buildings,'mixed'),'shibuya').get(b.id)!;

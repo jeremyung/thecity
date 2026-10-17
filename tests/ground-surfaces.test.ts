@@ -24,7 +24,8 @@ function rendererHarness() {
   renderer.worldState = null;
   renderer.hour = 0; renderer.rain = 0; renderer.terrainSeed = 17; renderer.worldTick = 0;
   renderer.roadSignature = ''; renderer.groundSignature = '';
-  renderer.scene = new THREE.Scene(); renderer.ground = new THREE.Group(); renderer.scene.add(renderer.ground);
+  renderer.scene = new THREE.Scene();
+  renderer.mediaScreenLighting = { setWorld: vi.fn(), reset: vi.fn(), dispose: vi.fn() }; renderer.ground = new THREE.Group(); renderer.scene.add(renderer.ground);
   renderer.buildings = new Map(); renderer.objectQueue = new Map(); renderer.chunks = { remove: vi.fn() };
   const materials = new Map<string, THREE.Material>();
   renderer.art = { get: (tone: string) => materials.get(tone) ?? (materials.set(tone, new THREE.MeshBasicMaterial({ color: tone })), materials.get(tone)!) };

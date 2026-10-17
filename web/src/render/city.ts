@@ -1,3 +1,4 @@
+import {MediaScreenLighting} from './media-lighting';
 import {resolveMediaLandmarks} from './architecture/media-landmark-selection';
 import {applyCommercialDistrict,parseCommercialDistrict,type CommercialDistrict} from './architecture/commercial-district';
 import {buildBusinessBuilding} from './architecture/business';
@@ -180,6 +181,7 @@ export class CityRenderer {
   private sun=new THREE.DirectionalLight('#fff1d1',3);
   private hemi=new THREE.HemisphereLight('#c8dce3','#748998',2);
   private lanternLights:Array<THREE.PointLight>=[];
+  private mediaScreenLighting=new MediaScreenLighting();
   private nearbyStreetLights=new NearbyStreetLights();
   private streetLighting:PersistentStreetLighting|undefined;
   private terrain=new THREE.Group();
@@ -285,7 +287,7 @@ export class CityRenderer {
     // light and in rain, so towers rise out of it as in the dawn concept.
     const mist=positionView.z.negate().mul(-.0032).exp().oneMinus().mul(positionWorld.y.add(1.5).div(-8).exp()).mul(this.mist);
     this.scene.fogNode=fog(this.hazeColor,rangeFogFactor(this.hazeNear,this.hazeFar).max(mist));
-    this.scene.add(this.terrain,this.roads,this.parks,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
+    this.scene.add(this.mediaScreenLighting.root,this.terrain,this.roads,this.parks,this.constructionRoads,this.sidewalks.root,this.ground,this.station,this.chunks.root,this.umbrellas.root,this.buses.root,this.trains.root,this.fleet.root,this.accessPaths.root,this.rearExtensions.root,this.hemi,this.sun);
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);
     this.sun.shadow.camera.left=-230;this.sun.shadow.camera.right=230;this.sun.shadow.camera.top=230;this.sun.shadow.camera.bottom=-230;
     this.sun.shadow.camera.near=1;this.sun.shadow.camera.far=1100;this.sun.shadow.bias=-.0002;this.sun.shadow.normalBias=.35;
@@ -554,6 +556,7 @@ export class CityRenderer {
     if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));for(const b of world.buildings){const recipe=this.businessChoices.get(b.id);if(recipe)this.businessChoices.set(b.id,applyCommercialDistrict(b,recipe,this.commercialDistrict,world.seed));}this.businessChoices=resolveMediaLandmarks(world,this.businessChoices,this.commercialDistrict);}
     const mediaEligible=new Set(world.buildings.filter(b=>{const recipe=this.businessChoices.get(b.id);return !recipe||businessCanHostAdvertising(recipe);}).map(b=>b.id));
     const signage=this.signage=signageContexts(world,mediaEligible,new Set([...this.businessChoices].filter(([,r])=>r.mediaLandmark).map(([id])=>id)));
+    this.mediaScreenLighting.setWorld(world,this.businessChoices,signage,this.commercialDisplays);
     for(const b of world.buildings){
       const original=originals.get(b.id);
       const context=signage.get(b.id);
@@ -585,6 +588,7 @@ export class CityRenderer {
     this.frameTiming=new FrameTiming();this.lastMetricsAt=0;
     this.retireGroup(this.ground);this.ground=new THREE.Group();this.scene.add(this.ground);this.groundSignature='';
     this.focusResetPending=true;
+    this.mediaScreenLighting.reset();
     this.umbrellas.reset();this.buses.reset();this.fleet.reset();this.trains.reset();this.accessPaths.reset();this.rearExtensions.reset();this.umbrellaCount=0;this.qualityController.reset();
     this.chunks.clear();
     this.sidewalks.reset();
@@ -1247,6 +1251,7 @@ export class CityRenderer {
     const activityHour=hour%24,lightBlend=Math.min(1,dt*.8);this.art.litHome.value=THREE.MathUtils.lerp(this.art.litHome.value,activityHour>=23||activityHour<5?.32:1,lightBlend);this.art.litOffice.value=THREE.MathUtils.lerp(this.art.litOffice.value,activityHour>=7&&activityHour<20?1:.1,lightBlend);this.art.litShop.value=THREE.MathUtils.lerp(this.art.litShop.value,activityHour>=6&&activityHour<23?1:.18,lightBlend);
     // Rooms switch on and off individually as each schedule's occupancy passes their threshold.
     for(const activity of ['home','office','shop'] as const){const share=this.art.occupancy[activity];share.value=THREE.MathUtils.lerp(share.value,windowOccupancy(activity,activityHour),lightBlend);}
+    this.mediaScreenLighting.update(this.camera.position,this.art.displayTime.value,1-this.daylight,this.style,this.apartmentDetails,this.buildings);
     for(const lamp of this.lanternLights)lamp.intensity=lamp.userData.active?(1-this.daylight)*36*this.art.litShop.value:0;
     this.art.night.value=1-this.daylight;this.art.wet.value=THREE.MathUtils.lerp(this.art.wet.value,this.rain,Math.min(1,dt*(this.rain>this.art.wet.value?1:.08)));
     const apartmentArt=this.apartmentResources.art;
@@ -1282,7 +1287,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);const hit=hits.find(candidate=>{for(let object:THREE.Object3D|null=candidate.object;object;object=object.parent)if(!object.visible)return false;return true;});if(!hit)return;const building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment,glassEnvironment=this.glassEnvironment;this.skyEnvironment=null;this.glassEnvironment=null;this.retire(()=>{environment?.dispose();glassEnvironment?.dispose();});const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.apartmentResources.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.mediaScreenLighting.root.removeFromParent();this.mediaScreenLighting.dispose();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment,glassEnvironment=this.glassEnvironment;this.skyEnvironment=null;this.glassEnvironment=null;this.retire(()=>{environment?.dispose();glassEnvironment?.dispose();});const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.apartmentResources.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}
