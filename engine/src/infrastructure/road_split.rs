@@ -501,7 +501,7 @@ impl Engine {
     /// introducing a shortcut between its old endpoints. Preparation is
     /// read-only; the commit runs only after every validation succeeds.
     #[cfg(feature = "legacy")]
-    pub(crate) fn try_split_open_road(
+    pub fn try_split_open_road(
         &mut self,
         host_road_id: u32,
         t: f32,

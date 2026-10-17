@@ -5,14 +5,11 @@ edition = "2021"
 description = "Deterministic simulation core for a watchable Tokyo-inspired city"
 
 [workspace]
-members = ["crates/plan"]
-
-[lib]
-crate-type = ["cdylib", "rlib"]
+members = ["crates/plan", "crates/wasm"]
 
 [features]
 # Opt-in diagnostic mutation API; never enabled for application builds.
-profiling = []
+profiling = ["legacy"]
 # Retired incremental planners (Engine::new_legacy). Tests only; delete once
 # master-plan acceptance passes.
 legacy = ["city-plan/legacy"]

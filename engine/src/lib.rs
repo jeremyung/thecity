@@ -81,8 +81,5 @@ pub use world::types::*;
 pub use transit::rail_platform::RailPlatformView;
 pub use transit::rail_runtime::RailAlignmentView;
 
-#[cfg(target_arch = "wasm32")]
-mod wasm;
-
 #[cfg(test)]
 mod tests;

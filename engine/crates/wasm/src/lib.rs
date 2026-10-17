@@ -1,5 +1,5 @@
 //! wasm-bindgen bindings: the coarse boundary the worker calls. Bindings only.
-use super::Engine;
+use tokyo_city_engine::Engine;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct CityEngine {

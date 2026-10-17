@@ -24,14 +24,14 @@ pub struct Road {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct RoadSplitOutcome {
-    pub(crate) split_node_id: u32,
-    pub(crate) retained_road_id: u32,
-    pub(crate) new_road_id: u32,
+pub struct RoadSplitOutcome {
+    pub split_node_id: u32,
+    pub retained_road_id: u32,
+    pub new_road_id: u32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum RoadSplitError {
+pub enum RoadSplitError {
     MissingRoad,
     IneligibleRoad,
     InvalidFraction,

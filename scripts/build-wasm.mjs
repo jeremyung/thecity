@@ -46,6 +46,8 @@ run('cargo', [
   'build',
   '--manifest-path',
   'engine/Cargo.toml',
+  '-p',
+  'city-wasm',
   '--target',
   'wasm32-unknown-unknown',
   '--release',
@@ -53,7 +55,7 @@ run('cargo', [
   ...features,
 ]);
 run('wasm-bindgen', [
-  'engine/target/wasm32-unknown-unknown/release/tokyo_city_engine.wasm',
+  'engine/target/wasm32-unknown-unknown/release/city_wasm.wasm',
   '--target',
   'web',
   '--out-dir',
