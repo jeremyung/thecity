@@ -47,3 +47,19 @@ work-breakdown accounting (7,506,942 work units, 3,180 descriptors), quota/check
 profiling, and native/WASM proposal profiling completed. The native proposal oracle
 passed. All 768 web tests and the production build passed again. Dependency, size,
 formatting, and whitespace checks passed. No generated timing reports are committed.
+
+## Main integration after PR36
+
+Merged main at `778cf87` after the business architecture work reached main.
+Preserved the business families, district preferences, media displays and glass
+lighting while retaining PR24's architecture owner, extracted geometry helpers,
+injected camera and actor layer. Moved the expanded architecture study into the
+development-only entry point and adapted its controls to those interfaces.
+Commercial preference parsing now lives outside renderer internals, and the new
+fixtures use the generated snapshot enums.
+
+Validation: all 807 web tests across 148 files passed; TypeScript and production
+build passed, as did dependency boundaries, source-size limits and generated
+architecture asset verification. The engine is unchanged by this merge; the
+existing fresh production and legacy WASM builds were used. No new browser visual
+acceptance is claimed.

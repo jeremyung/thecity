@@ -30,7 +30,11 @@ export function createCoverageGrid(
   cellSize?: number,
   maxCells?: number,
 ): CoverageGrid;
-export function markProjectedPolygon(grid: CoverageGrid, polygon: number[][], channel?: string): number;
+export function markProjectedPolygon(
+  grid: CoverageGrid,
+  polygon: number[][],
+  channel?: string,
+): number;
 export function markLocalTriangle(
   grid: CoverageGrid,
   vertices: number[][],
@@ -40,7 +44,10 @@ export function markLocalTriangle(
 ): number;
 export function auditRenderedCoverage(
   snapshot: CoverageSnapshot,
-  kit: { create(building: CoverageSnapshot['buildings'][number]): unknown; dispose(group: unknown): void },
+  kit: {
+    create(building: CoverageSnapshot['buildings'][number]): unknown;
+    dispose(group: unknown): void;
+  },
   options?: {
     cellSize?: number;
     blockSize?: number;
@@ -69,5 +76,10 @@ export function auditRenderedCoverage(
     netProjectedKitGeometryPercent: number | null;
     excludedKinds: string[];
   };
-  cells: Array<{ x: number; z: number; projectedKitGeometryM2: number; nominalParcelEnvelopeM2: number }>;
+  cells: Array<{
+    x: number;
+    z: number;
+    projectedKitGeometryM2: number;
+    nominalParcelEnvelopeM2: number;
+  }>;
 };

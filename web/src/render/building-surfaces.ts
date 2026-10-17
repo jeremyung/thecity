@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import {
   abs,
   attribute,
+  bumpMap,
   cameraPosition,
   clamp,
   color,
@@ -369,7 +370,11 @@ const choose3 = (h: FloatNode, a: Vec3Node, b: Vec3Node, c: Vec3Node) =>
  * blinds, its light, and the sky reflected in the glass. Horizontal faces of
  * the pane box show only the reflection.
  */
-export function windowRadiance(u: WindowUniforms): Vec3Node {
+export function windowRadiance(
+  u: WindowUniforms,
+  corporateTint?: string,
+  environmentReflection = false,
+): Vec3Node {
   const info = vec4(attribute(WINDOW_ATTRIBUTE, 'vec4'));
   // Interpolating a per-pane constant can wobble by an ulp between pixels; the
   // hash would amplify that into speckle, so snap the seed before using it.
@@ -450,10 +455,46 @@ export function windowRadiance(u: WindowUniforms): Vec3Node {
     .and(hy.lessThan(yMin.add(mix(float(1.5), float(1.9), h(6)))));
   const inPartition = back.and(hy.lessThan(yMin.add(1.15)));
   let albedo = select(onFloor, floorAlbedo, select(onCeiling, ceiling, wall));
+  // Retail gets shallow stocked shelves rather than office partitions. Geometry
+  // behind an opaque interior-mapped pane would be invisible; keep it in the room shader.
+  const shelfHeight = hy.sub(yMin),
+    shelf = back.and(shelfHeight.mod(0.58).lessThan(0.055)).and(shelfHeight.lessThan(2.1));
+  const goods = back
+    .and(shelfHeight.mod(0.58).greaterThan(0.08))
+    .and(shelfHeight.mod(0.58).lessThan(0.44))
+    .and(shelfHeight.lessThan(2.1))
+    .and(hx.mul(4).fract().lessThan(0.78));
+  const goodsColor = choose3(
+    fract(floor(hx.mul(4)).mul(0.37).add(h(10))),
+    vec3(color('#bd7956')),
+    vec3(color('#8caa8d')),
+    vec3(color('#d3bc79')),
+  );
+  const stockedShelves = select(shelf, vec3(color('#5d5145')), select(goods, goodsColor, albedo));
+  const counter = back.and(shelfHeight.lessThan(0.95)),
+    display = back
+      .and(shelfHeight.greaterThan(0.95))
+      .and(shelfHeight.lessThan(1.45))
+      .and(hx.mul(1.4).fract().lessThan(0.45));
+  const cafeInterior = select(
+    counter,
+    vec3(color('#8c6950')),
+    select(display, vec3(color('#d3bc79')), albedo),
+  );
+  const garment = back
+    .and(shelfHeight.greaterThan(0.65))
+    .and(shelfHeight.lessThan(1.8))
+    .and(hx.mul(2).fract().lessThan(0.72));
+  const boutiqueInterior = select(garment, goodsColor, albedo);
+  const retailAlbedo = select(
+    h(11).lessThan(0.4),
+    stockedShelves,
+    select(h(11).lessThan(0.7), cafeInterior, boutiqueInterior),
+  );
   albedo = select(
     home,
     select(inFurniture, vec3(color('#5b4636')), albedo),
-    select(inPartition, vec3(color('#8a9094')), albedo),
+    select(office, select(inPartition, vec3(color('#8a9094')), albedo), retailAlbedo),
   );
   albedo = mix(vec3(color('#bdbcb6')).mul(select(onFloor, float(0.62), float(1))), albedo, lived);
   const geometryShade = select(
@@ -542,7 +583,18 @@ export function windowRadiance(u: WindowUniforms): Vec3Node {
 
   // Glass: tinted transmission and a Fresnel sky reflection.
   const facing = abs(dot(view, n));
-  const fresnel = clamp(facing.oneMinus().pow(5).mul(0.72).add(0.12), 0, 1);
+  const reflectance = corporateTint
+    ? float(0.14)
+    : select(home, float(0.12), select(office, float(0.25), float(0.16)));
+  const fresnel = clamp(
+    facing
+      .oneMinus()
+      .pow(5)
+      .mul(corporateTint ? 0.86 : 0.72)
+      .add(reflectance),
+    0,
+    1,
+  );
   const incident = view,
     reflected = incident.sub(n.mul(dot(incident, n).mul(2)));
   const sky = smoothstep(float(-0.12), float(0.55), reflected.y);
@@ -551,8 +603,22 @@ export function windowRadiance(u: WindowUniforms): Vec3Node {
     mix(vec3(color('#090f1c')), vec3(color('#23364c')), sky),
     u.night,
   ).mul(fresnel);
-  const through = interior.mul(vec3(0.78, 0.86, 0.86)).mul(fresnel.oneMinus());
-  return mix(reflection, through.add(reflection), verticalMask());
+  const tint = select(
+    home,
+    vec3(0.78, 0.86, 0.86),
+    select(
+      office,
+      choose3(h(12), vec3(0.42, 0.62, 0.7), vec3(0.5, 0.64, 0.68), vec3(0.58, 0.65, 0.65)),
+      vec3(0.64, 0.74, 0.75),
+    ),
+  );
+  const through = interior
+    .mul(corporateTint ? vec3(color(corporateTint)) : tint)
+    .mul(fresnel.oneMinus())
+    .mul(corporateTint ? mix(float(0.025), float(0.8), u.night) : float(1));
+  return environmentReflection
+    ? through.mul(verticalMask())
+    : mix(reflection, through.add(reflection), verticalMask());
 }
 
 /** Window pane materials for both styles; the pane colour is the glass itself, the room is emission. */
@@ -560,17 +626,44 @@ export function windowMaterials(
   activity: WindowActivity,
   uniforms: WindowUniforms,
   toonRamp: THREE.Texture,
+  corporateTint?: string,
 ) {
-  const radiance = windowRadiance(uniforms);
+  const radiance = windowRadiance(uniforms, corporateTint);
   const anime = new THREE.MeshToonNodeMaterial({ color: '#1d2629', gradientMap: toonRamp });
-  const miniature = new THREE.MeshStandardNodeMaterial({
-    color: '#172023',
-    roughness: 0.08,
-    metalness: 0,
-  });
+  const miniature = corporateTint
+    ? new THREE.MeshPhysicalNodeMaterial({
+        color: new THREE.Color(corporateTint).multiplyScalar(0.12),
+        roughness: 0.085,
+        metalness: 0,
+        ior: 2.2,
+        specularIntensity: 1,
+        envMapIntensity: 2,
+        specularColor: new THREE.Color('#ffffff').lerp(new THREE.Color(corporateTint), 0.65),
+      })
+    : new THREE.MeshStandardNodeMaterial({ color: '#172023', roughness: 0.08, metalness: 0 });
+  if (corporateTint) {
+    // The renderer owns a shared city reflection environment. Reflection belongs
+    // to the physical BRDF, not emission; interior mapping supplies only the room.
+    miniature.emissiveNode = windowRadiance(uniforms, corporateTint, true);
+    const panel = floor(positionWorld.y.div(3.25))
+      .mul(0.73)
+      .add(floor(positionWorld.x.mul(0.6)).mul(0.31))
+      .add(floor(positionWorld.z.mul(0.6)).mul(0.43));
+    miniature.roughnessNode = hash(panel).mul(0.025).add(0.065);
+    // Millimetric facade bow: smooth in world space, stable across geometry LODs.
+    miniature.normalNode = bumpMap(
+      mx_noise_float(positionWorld.mul(vec3(0.12, 0.2, 0.12))),
+      float(0.055),
+    );
+  }
   for (const material of [anime, miniature]) {
-    (material as unknown as { emissiveNode: Vec3Node }).emissiveNode = radiance;
+    if (material === anime || !corporateTint)
+      (material as unknown as { emissiveNode: Vec3Node }).emissiveNode = radiance;
     material.userData.windowPane = true;
+    // Explicit opt-in for a future reflection mask; opaque spandrels and signs
+    // must never be inferred as glass from their colour or roughness.
+    material.userData.reflectionSurface = { version: 1, role: 'vision-glass' };
+    if (corporateTint) material.userData.corporateGlass = true;
     material.userData.windowActivity = activity;
   }
   return { anime, miniature };

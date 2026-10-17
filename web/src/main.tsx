@@ -1,3 +1,4 @@
+import { type CommercialDistrict } from './commercial-preference';
 import {
   DEFAULT_TILT_SHIFT,
   normalizeTiltShift,
@@ -157,6 +158,10 @@ function CityExperience() {
     [message, setMessage] = useState<string | null>(null);
   const [preferences, setPreferences] = useState(loadViewerPreferences);
   const [apartmentEra, setApartmentEra] = useState(preferences.apartmentEra);
+  const [commercialDistrict, setCommercialDistrict] = useState<CommercialDistrict>(
+    preferences.commercialDistrict,
+  );
+  const [commercialDisplays, setCommercialDisplays] = useState(preferences.commercialDisplays);
   const [paused, setPaused] = useState(false),
     [speed, setSpeed] = useState(1),
     [style, setStyle] = useState<Style>(preferences.style),
@@ -218,6 +223,8 @@ function CityExperience() {
     const recoveryRequested = new URLSearchParams(location.search).get('recover') === '1';
     renderer.setLens(lens, false);
     renderer.setApartmentEra(apartmentEra);
+    renderer.setCommercialDisplays(commercialDisplays);
+    renderer.setCommercialDistrict(commercialDistrict);
     renderer.setTiltShift(tiltShift);
     renderer.setFocus(focus);
     renderer.setQuality(recoveryRequested ? 'balanced' : quality);
@@ -584,6 +591,18 @@ function CityExperience() {
         development={development}
         quality={quality}
         onDismissError={() => setError(null)}
+        commercialDistrict={commercialDistrict}
+        onCommercialDistrict={(value) => {
+          setCommercialDistrict(value);
+          storePreferences({ commercialDistrict: value });
+          runtime.current?.renderer.setCommercialDistrict(value);
+        }}
+        commercialDisplays={commercialDisplays}
+        onCommercialDisplays={(value) => {
+          setCommercialDisplays(value);
+          storePreferences({ commercialDisplays: value });
+          runtime.current?.renderer.setCommercialDisplays(value);
+        }}
         apartmentEra={apartmentEra}
         onApartmentEra={(value) => {
           setApartmentEra(value);

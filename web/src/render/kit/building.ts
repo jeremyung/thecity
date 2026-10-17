@@ -42,6 +42,7 @@ export interface BuildingKitReviewOptions {
   apartmentComponents?: boolean | ApartmentBuildOptions;
   /** Station proximity and any podium display chosen for this building. */
   signage?: SignageContext;
+  commercialDisplays?: import('../architecture/business-recipes').DisplayMode;
 }
 
 export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
@@ -632,6 +633,7 @@ export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitR
       midrise,
       lowrise,
       signage: review.signage,
+      displays: review.commercialDisplays,
     });
   }
 

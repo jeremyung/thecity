@@ -1,5 +1,10 @@
 import type { ApartmentEra } from '../architecture-preference';
 import { DEFAULT_TILT_SHIFT, type TiltShiftSettings } from '../optics/tilt-shift';
+import {
+  COMMERCIAL_DISTRICTS,
+  type CommercialDistrict,
+  type DisplayMode,
+} from '../commercial-preference';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   AudioLines,
@@ -26,6 +31,10 @@ import ReviewRecording from './ReviewRecording';
 import ReviewCameraPose, { type ApplyReviewPose } from './ReviewCameraPose';
 
 export interface ControlsProps {
+  commercialDistrict?: CommercialDistrict;
+  onCommercialDistrict?: (value: CommercialDistrict) => void;
+  commercialDisplays?: DisplayMode;
+  onCommercialDisplays?: (value: DisplayMode) => void;
   apartmentEra?: ApartmentEra;
   onApartmentEra?: (value: ApartmentEra) => void;
   world: World | null;
@@ -1231,11 +1240,27 @@ export default function Controls(props: ControlsProps) {
           )}
           <ContrastToggle contrast={contrast} onContrast={onContrast} />
           <LensControl lens={lens} onLens={onLens} />
+          {props.commercialDistrict && props.onCommercialDistrict && (
+            <label className="quality-control">
+              Commercial district
+              <select
+                aria-label="Commercial district"
+                value={props.commercialDistrict}
+                onChange={(e) => props.onCommercialDistrict?.(e.target.value as CommercialDistrict)}
+              >
+                {COMMERCIAL_DISTRICTS.map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {props.apartmentEra && props.onApartmentEra && (
             <label className="quality-control">
-              Apartment architecture
+              Building architecture
               <select
-                aria-label="Apartment architecture"
+                aria-label="Building architecture"
                 value={props.apartmentEra}
                 onChange={(event) => props.onApartmentEra?.(event.target.value as ApartmentEra)}
               >
@@ -1243,6 +1268,20 @@ export default function Controls(props: ControlsProps) {
                 <option value="contemporary">Contemporary</option>
                 <option value="older">Older styles</option>
                 <option value="legacy">Existing renderer</option>
+              </select>
+            </label>
+          )}
+          {props.commercialDisplays && props.onCommercialDisplays && (
+            <label className="quality-control">
+              Billboards
+              <select
+                aria-label="Billboards"
+                value={props.commercialDisplays}
+                onChange={(e) => props.onCommercialDisplays?.(e.target.value as DisplayMode)}
+              >
+                <option value="animated">Animated</option>
+                <option value="static">Static signs</option>
+                <option value="off">No advertising</option>
               </select>
             </label>
           )}

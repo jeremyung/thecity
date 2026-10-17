@@ -1,0 +1,125 @@
+{
+  "method": "Node CPU geometry only; two passes over each complete 24-parcel shopping street at each LOD. Shared materials and production signage allocation. Not a GPU or cross-device frame-rate benchmark.",
+  "report": [
+    {
+      "district": "shibuya",
+      "detail": "close",
+      "samples": 48,
+      "p50BuildMs": 1.9655419999999992,
+      "p95BuildMs": 3.414666000000011,
+      "maxTriangles": 7152
+    },
+    {
+      "district": "shibuya",
+      "detail": "district",
+      "samples": 48,
+      "p50BuildMs": 1.458332999999982,
+      "p95BuildMs": 2.387125000000026,
+      "maxTriangles": 5628
+    },
+    {
+      "district": "shibuya",
+      "detail": "far",
+      "samples": 48,
+      "p50BuildMs": 0.6960829999999874,
+      "p95BuildMs": 1.242666999999983,
+      "maxTriangles": 2454
+    },
+    {
+      "district": "roppongi",
+      "detail": "close",
+      "samples": 48,
+      "p50BuildMs": 1.8449170000000095,
+      "p95BuildMs": 3.2798329999999964,
+      "maxTriangles": 6852
+    },
+    {
+      "district": "roppongi",
+      "detail": "district",
+      "samples": 48,
+      "p50BuildMs": 1.3477909999999724,
+      "p95BuildMs": 2.119583000000034,
+      "maxTriangles": 5652
+    },
+    {
+      "district": "roppongi",
+      "detail": "far",
+      "samples": 48,
+      "p50BuildMs": 0.6599169999999503,
+      "p95BuildMs": 0.9593750000000227,
+      "maxTriangles": 2270
+    },
+    {
+      "district": "akihabara",
+      "detail": "close",
+      "samples": 48,
+      "p50BuildMs": 1.677500000000009,
+      "p95BuildMs": 2.384667000000036,
+      "maxTriangles": 6860
+    },
+    {
+      "district": "akihabara",
+      "detail": "district",
+      "samples": 48,
+      "p50BuildMs": 1.2819170000000213,
+      "p95BuildMs": 1.9235419999999976,
+      "maxTriangles": 5552
+    },
+    {
+      "district": "akihabara",
+      "detail": "far",
+      "samples": 48,
+      "p50BuildMs": 0.7103329999999914,
+      "p95BuildMs": 1.3105829999999514,
+      "maxTriangles": 2860
+    },
+    {
+      "district": "shinjuku",
+      "detail": "close",
+      "samples": 48,
+      "p50BuildMs": 1.6703339999999116,
+      "p95BuildMs": 2.4614159999999856,
+      "maxTriangles": 6852
+    },
+    {
+      "district": "shinjuku",
+      "detail": "district",
+      "samples": 48,
+      "p50BuildMs": 1.3779590000000326,
+      "p95BuildMs": 2.0312079999999924,
+      "maxTriangles": 5652
+    },
+    {
+      "district": "shinjuku",
+      "detail": "far",
+      "samples": 48,
+      "p50BuildMs": 0.6663749999999027,
+      "p95BuildMs": 0.8541249999999536,
+      "maxTriangles": 2270
+    },
+    {
+      "district": "ameyoko",
+      "detail": "close",
+      "samples": 48,
+      "p50BuildMs": 1.1719580000000178,
+      "p95BuildMs": 1.8304580000000215,
+      "maxTriangles": 4858
+    },
+    {
+      "district": "ameyoko",
+      "detail": "district",
+      "samples": 48,
+      "p50BuildMs": 0.7797080000000278,
+      "p95BuildMs": 1.2708750000000464,
+      "maxTriangles": 3460
+    },
+    {
+      "district": "ameyoko",
+      "detail": "far",
+      "samples": 48,
+      "p50BuildMs": 0.37012500000003,
+      "p95BuildMs": 0.5204160000000684,
+      "maxTriangles": 1284
+    }
+  ]
+}

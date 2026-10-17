@@ -96,6 +96,7 @@ function harness() {
   renderer.landscape = new LandscapeLayer(renderer);
   renderer.roadsLayer = new RoadsLayer(renderer);
   renderer.scene = new THREE.Scene();
+  renderer.mediaScreenLighting = { setWorld: vi.fn(), reset: vi.fn(), dispose: vi.fn() };
   renderer.roadsLayer.roads = new THREE.Group();
   renderer.scene.add(renderer.roadsLayer.roads);
   renderer.roadsLayer.constructionRoads = new THREE.Group();

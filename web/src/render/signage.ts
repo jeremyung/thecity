@@ -1,5 +1,17 @@
 import * as THREE from 'three/webgpu';
-import { color, cos, length, mix, sin, smoothstep, texture, uv, vec2, vec3 } from 'three/tsl';
+import {
+  color,
+  cos,
+  fract,
+  length,
+  mix,
+  sin,
+  smoothstep,
+  texture,
+  uv,
+  vec2,
+  vec3,
+} from 'three/tsl';
 import { canvasTexture, type ArtMaterials } from './materials';
 import type { Kit } from './kit';
 import type { Building, World } from '../types';
@@ -74,10 +86,66 @@ export const BILLBOARDS = [
     ink: '#24525f',
     accent: '#d2583c',
   },
+  {
+    title: '月影レコード',
+    sub: 'TSUKIKAGE RECORDS · NEW RELEASE',
+    bg: '#34234f',
+    ink: '#fff0ec',
+    accent: '#ed659e',
+  },
+  {
+    title: '空色通信',
+    sub: 'SORAIRO MOBILE · CONNECT',
+    bg: '#126c81',
+    ink: '#f3ffff',
+    accent: '#63e7db',
+  },
+  {
+    title: '夜風シネマ',
+    sub: 'YOKAZE CINEMA · TONIGHT',
+    bg: '#182038',
+    ink: '#fff0ce',
+    accent: '#e97048',
+  },
+  {
+    title: '花道スタジオ',
+    sub: 'HANAMICHI LIVE · ON STAGE',
+    bg: '#c63267',
+    ink: '#fff8ed',
+    accent: '#f7ce47',
+  },
+  {
+    title: 'こもれび茶',
+    sub: 'KOMOREBI TEA · FRESH',
+    bg: '#315e43',
+    ink: '#fff5d7',
+    accent: '#b4d369',
+  },
+  {
+    title: '流星ゲームズ',
+    sub: 'RYUSEI GAMES · PLAY',
+    bg: '#243d91',
+    ink: '#effbff',
+    accent: '#f47dca',
+  },
+  {
+    title: '朝凪デザイン',
+    sub: 'ASANAGI DESIGN · COLLECTION',
+    bg: '#e9b274',
+    ink: '#392a42',
+    accent: '#f8edca',
+  },
+  {
+    title: '灯台トラベル',
+    sub: 'TODAI TRAVEL · EXPLORE',
+    bg: '#286c9a',
+    ink: '#fff8e7',
+    accent: '#edca65',
+  },
 ] as const;
 
 export const SIGN_ATLAS_WIDTH = 512,
-  SIGN_ATLAS_HEIGHT = 1024;
+  SIGN_ATLAS_HEIGHT = 2048;
 const BLADE_W = 64,
   BLADE_H = 256,
   BILLBOARD_H = 128;
@@ -104,7 +172,7 @@ export function bladeCell(slot: number): AtlasCell {
   const i = ((slot % BLADE_LABELS.length) + BLADE_LABELS.length) % BLADE_LABELS.length;
   return cell((i % 8) * BLADE_W, Math.floor(i / 8) * BLADE_H, BLADE_W, BLADE_H);
 }
-/** Billboard cells fill the bottom half: four 512×128 rows (4:1). */
+/** Billboard cells fill the bottom half: twelve 512×128 rows (4:1). */
 export function billboardCell(slot: number): AtlasCell {
   const i = ((slot % BILLBOARDS.length) + BILLBOARDS.length) % BILLBOARDS.length;
   return cell(0, 2 * BLADE_H + i * BILLBOARD_H, SIGN_ATLAS_WIDTH, BILLBOARD_H);
@@ -181,9 +249,10 @@ export function streetSignSurface(art: ArtMaterials) {
  * Self-lit video wall: slow drifting color fields and a soft highlight with
  * faint scanlines. It is generated from city time, not a video file.
  */
-export function videoScreenSurface(art: ArtMaterials) {
-  return art.shared('video-screen', () => {
-    const t = art.time.mul(0.07),
+export function videoScreenSurface(art: ArtMaterials, program = 0) {
+  const variant = ((program % BILLBOARDS.length) + BILLBOARDS.length) % BILLBOARDS.length;
+  return art.shared(`video-screen-${variant}`, () => {
+    const t = art.displayTime.mul(0.035 + variant * 0.012).add(variant * 1.7),
       p = uv();
     const hue = p.x.mul(0.55).add(p.y.mul(0.3)).add(t);
     const field = vec3(
@@ -194,17 +263,124 @@ export function videoScreenSurface(art: ArtMaterials) {
       .mul(0.5)
       .add(0.5);
     const centre = vec2(sin(t.mul(3.1)).mul(0.28).add(0.5), cos(t.mul(2.3)).mul(0.22).add(0.5));
-    const highlight = smoothstep(0.42, 0, length(p.sub(centre)));
+    const highlight = smoothstep(0, 0.42, length(p.sub(centre))).oneMinus();
     const scan = sin(p.y.mul(260)).mul(0.035).add(0.965);
-    const picture = mix(field.mul(0.6), vec3(color('#fff4dc')), highlight.mul(0.55))
+    const atlas = streetSignSurface(art).map!,
+      cell = billboardCell(variant);
+    const poster = texture(
+      atlas,
+      p.mul(vec2(cell.u1 - cell.u0, cell.v1 - cell.v0)).add(vec2(cell.u0, cell.v0)),
+    ).rgb;
+    // Four distinct campaign treatments, shared by twelve fictional advertisers.
+    // Global UVs and city time keep tiled panels synchronized without timers.
+    const treatment = variant % 4;
+    const sweep = smoothstep(0, 0.12, length(p.x.sub(fract(t.mul(0.4)))))
+      .oneMinus()
+      .mul(0.3);
+    const beat = sin(t.mul(4)).mul(0.06).add(0.94);
+    const motion =
+      treatment === 0
+        ? mix(field, vec3(color('#fff4dc')), highlight.mul(0.35))
+        : treatment === 1
+          ? vec3(color(BILLBOARDS[variant].accent)).mul(sweep.add(0.25))
+          : treatment === 2
+            ? field.mul(smoothstep(0.2, 0.5, length(p.sub(centre))).oneMinus())
+            : vec3(color(BILLBOARDS[variant].accent)).mul(
+                sin(p.x.mul(18).sub(t.mul(4)))
+                  .mul(0.3)
+                  .add(0.5),
+              );
+    const picture = mix(poster.mul(beat), motion, treatment === 1 ? 0.28 : 0.18)
       .mul(scan)
-      .mul(art.night.mul(0.45).add(0.8));
+      .mul(art.night.mul(0.45).add(1))
+      .mul(art.litShop);
     // A black base keeps the screen independent of sun and shadow; the
     // picture is pure emission in both styles.
     const anime = new THREE.MeshToonNodeMaterial({ color: '#000000', gradientMap: art.toonRamp });
     const miniature = new THREE.MeshStandardNodeMaterial({ color: '#000000', roughness: 0.35 });
     for (const material of [anime, miniature])
       (material as unknown as { emissiveNode: typeof picture }).emissiveNode = picture;
+    return { anime, miniature };
+  });
+}
+
+/** Building-scale graphic campaigns: sculptural orbit, ribbons, constellation and equalizer. */
+export function mediaArtworkSurface(art: ArtMaterials, program = 0) {
+  const variant = ((program % 4) + 4) % 4;
+  return art.shared(`media-artwork-${variant}`, () => {
+    const p = uv(),
+      t = art.displayTime.mul(0.17 + variant * 0.05).add(variant * 1.7),
+      q = p.sub(vec2(0.5, 0.55));
+    const palettes = [
+      ['#0d234a', '#28d8ed', '#fa614e'],
+      ['#33144f', '#ff56ae', '#f4d366'],
+      ['#072e34', '#5ef1c9', '#f6c26f'],
+      ['#1d1743', '#9280ff', '#f76c88'],
+    ];
+    const [bg, ink, accent] = palettes[variant],
+      radius = length(q.mul(vec2(1, 0.8)));
+    let hero;
+    if (variant === 0) {
+      const orbit = length(
+        q.add(vec2(sin(t).mul(0.12), cos(t.mul(0.7)).mul(0.08))).mul(vec2(1, 1.4)),
+      );
+      hero = smoothstep(0.012, 0.035, orbit.sub(0.25).abs())
+        .oneMinus()
+        .add(
+          smoothstep(
+            0.04,
+            0.12,
+            length(q.sub(vec2(cos(t).mul(0.27), sin(t).mul(0.18)))),
+          ).oneMinus(),
+        );
+    } else if (variant === 1) {
+      const wave = sin(p.y.mul(12).add(t)).mul(0.16).add(0.5);
+      hero = smoothstep(0.03, 0.1, p.x.sub(wave).abs())
+        .oneMinus()
+        .add(
+          smoothstep(0.02, 0.06, p.x.sub(wave.add(0.22)).abs())
+            .oneMinus()
+            .mul(0.7),
+        );
+    } else if (variant === 2) {
+      const cell = fract(p.mul(vec2(6, 9)).add(vec2(sin(t).mul(0.12), t.mul(0.08)))).sub(0.5);
+      hero = smoothstep(0.035, 0.12, length(cell))
+        .oneMinus()
+        .mul(
+          sin(p.x.mul(9).add(p.y.mul(6)).add(t))
+            .mul(0.35)
+            .add(0.65),
+        );
+    } else {
+      const column = fract(p.x.mul(9)).sub(0.5).abs(),
+        height = sin(p.x.mul(13).add(t)).mul(0.2).add(0.5);
+      hero = smoothstep(0.25, 0.4, column)
+        .oneMinus()
+        .mul(smoothstep(height, height.add(0.025), p.y).oneMinus())
+        .mul(smoothstep(0.19, 0.22, p.y));
+    }
+    const background = mix(
+      color(bg),
+      color(accent),
+      smoothstep(0, 0.5, radius).oneMinus().mul(0.3),
+    );
+    const graphic = mix(background, color(ink), hero.clamp(0, 1));
+    const atlas = streetSignSurface(art).map!,
+      cell = billboardCell(variant * 3);
+    const labelUV = vec2(p.x, p.y.div(0.17).clamp(0, 1));
+    const label = texture(
+      atlas,
+      labelUV.mul(vec2(cell.u1 - cell.u0, cell.v1 - cell.v0)).add(vec2(cell.u0, cell.v0)),
+    ).rgb;
+    const picture = mix(label, graphic, smoothstep(0.16, 0.18, p.y))
+      .mul(art.night.mul(0.45).add(1))
+      .mul(art.litShop);
+    const anime = new THREE.MeshToonNodeMaterial({ color: '#000000', gradientMap: art.toonRamp }),
+      miniature = new THREE.MeshStandardNodeMaterial({ color: '#000000', roughness: 0.4 });
+    for (const material of [anime, miniature]) {
+      (material as unknown as { emissiveNode: typeof picture }).emissiveNode = picture;
+      material.userData.mediaArtwork = variant;
+    }
     return { anime, miniature };
   });
 }
@@ -313,25 +489,87 @@ export function addRooftopBillboard(
   return true;
 }
 
+export type ScreenLayout = 'flat' | 'curved' | 'triptych';
+/** Global UVs span all panels; sag stays behind the front envelope. */
+export function screenPanels(
+  width: number,
+  height: number,
+  layout: ScreenLayout,
+): THREE.BufferGeometry[] {
+  const panels: THREE.BufferGeometry[] = [];
+  const count = layout === 'triptych' ? 3 : 1;
+  for (let panel = 0; panel < count; panel++) {
+    const gap = count === 1 ? 0 : 0.08,
+      pw = (width - gap * (count - 1)) / count;
+    const left = -width / 2 + panel * (pw + gap),
+      g = new THREE.PlaneGeometry(pw, height, layout === 'curved' ? 24 : 1, 1);
+    const p = g.getAttribute('position'),
+      tex = g.getAttribute('uv');
+    for (let i = 0; i < p.count; i++) {
+      const x = left + (p.getX(i) + pw / 2),
+        z =
+          layout === 'curved'
+            ? -Math.min(0.28, width * 0.025) * (1 - Math.cos((x / width) * Math.PI))
+            : 0;
+      p.setXYZ(i, x, p.getY(i), z);
+      tex.setX(i, Math.max(0, Math.min(1, (x + width / 2) / width)));
+    }
+    g.computeVertexNormals();
+    panels.push(g);
+  }
+  return panels;
+}
+
 /** Large podium-front display: a bezelled video wall or a printed wall ad. */
 export function addFacadeFeature(
   kit: Kit,
   art: ArtMaterials,
   frame: THREE.Material,
   feature: FacadeFeature,
-  m: { frontZ: number; width: number; bottom: number; height: number; seed: number },
+  m: {
+    frontZ: number;
+    width: number;
+    bottom: number;
+    height: number;
+    seed: number;
+    program?: number;
+    layout?: ScreenLayout;
+    screenPoster?: boolean;
+  },
 ) {
   const height = m.height,
-    width = Math.min(m.width, feature === 'screen' ? (height * 16) / 9 : height * 4);
+    width = Math.min(
+      m.width,
+      feature === 'screen' || m.screenPoster ? (height * 16) / 9 : height * 4,
+    );
   if (width < 3 || height < 2) return false;
   const y = m.bottom + height / 2;
-  kit.box(0, y, m.frontZ + 0.17, width + 0.4, height + 0.4, 0.3, frame);
-  const face =
-    feature === 'screen'
-      ? new THREE.PlaneGeometry(width, height)
-      : mapPlane(width, height, billboardCell(m.seed + 2));
-  face.translate(0, y, m.frontZ + 0.33);
-  kit.add(face, feature === 'screen' ? videoScreenSurface(art) : streetSignSurface(art));
+  const layout = m.layout ?? 'flat';
+  if (layout === 'flat') kit.box(0, y, m.frontZ + 0.17, width + 0.4, height + 0.4, 0.3, frame);
+  const faces = screenPanels(width, height, layout);
+  if (feature === 'ad') {
+    const c = billboardCell(m.program ?? m.seed + 2);
+    for (const face of faces) {
+      const tex = face.getAttribute('uv');
+      for (let i = 0; i < tex.count; i++)
+        tex.setXY(i, c.u0 + tex.getX(i) * (c.u1 - c.u0), c.v0 + tex.getY(i) * (c.v1 - c.v0));
+    }
+  }
+  for (const face of faces) {
+    if (layout !== 'flat') {
+      const backing = face
+        .clone()
+        .scale(1.015, 1.04, 1)
+        .translate(0, y, m.frontZ + 0.3);
+      kit.add(backing, frame);
+    }
+    face.translate(0, y, m.frontZ + 0.33);
+    kit.add(
+      face,
+      feature === 'screen' ? videoScreenSurface(art, m.program ?? 0) : streetSignSurface(art),
+    );
+  }
+  // Tiled screens retain dark seams; all tiles share one material and clock.
   return true;
 }
 
@@ -355,7 +593,8 @@ export function canHostFacadeFeature(b: Building) {
   if (b.stage !== 'open' || b.anchor || b.business_active === false) return false;
   return (
     (b.floors >= 12 && (b.kind === 'office' || b.kind === 'apartment')) ||
-    (b.kind === 'office' && b.floors >= 6 && b.floors <= 11)
+    (b.kind === 'office' && b.floors >= 6 && b.floors <= 11) ||
+    (['shop', 'cafe'].includes(b.kind) && b.floors >= 3 && b.floors <= 20)
   );
 }
 
@@ -364,15 +603,31 @@ export function canHostFacadeFeature(b: Building) {
  * at least 30 m apart. Ranks alternate video wall and printed ad.
  */
 export function selectFacadeFeatures(
-  world: Pick<World, 'nodes' | 'buildings'>,
+  world: Pick<World, 'nodes' | 'buildings'> & Partial<Pick<World, 'roads'>>,
+  eligible?: ReadonlySet<number>,
+  preferredScreens?: ReadonlySet<number>,
 ): Map<number, FacadeFeature> {
   const result = new Map<number, FacadeFeature>();
   const station = world.nodes.find((node) => node.kind === 'station');
-  if (!station) return result;
+  const centers = station ? [station] : [];
+  if (preferredScreens?.size) {
+    const degree = new Map<number, number>();
+    for (const r of world.roads ?? []) {
+      degree.set(r.from, (degree.get(r.from) ?? 0) + 1);
+      degree.set(r.to, (degree.get(r.to) ?? 0) + 1);
+    }
+    centers.push(
+      ...world.nodes.filter((n) => (degree.get(n.id) ?? 0) >= 3 && n.id !== station?.id),
+    );
+  }
+  if (!centers.length) return result;
   const chosen: Building[] = [];
   const candidates = world.buildings
-    .filter(canHostFacadeFeature)
-    .map((b) => ({ b, distance: Math.hypot(b.x - station.x, b.z - station.z) }))
+    .filter((b) => canHostFacadeFeature(b) && (!eligible || eligible.has(b.id)))
+    .map((b) => ({
+      b,
+      distance: Math.min(...centers.map((n) => Math.hypot(b.x - n.x, b.z - n.z))),
+    }))
     .filter((entry) => entry.distance <= FEATURE_RADIUS)
     .sort((a, b) => a.distance - b.distance || a.b.id - b.b.id);
   for (const { b } of candidates) {
@@ -382,19 +637,40 @@ export function selectFacadeFeatures(
     chosen.push(b);
     if (chosen.length >= MAX_FACADE_FEATURES) break;
   }
+  if (preferredScreens?.size) {
+    const ids = [...result.keys()],
+      preferred = ids.filter((id) => preferredScreens.has(id));
+    const count = Math.min(
+      Math.ceil(MAX_FACADE_FEATURES / 2),
+      Math.max(preferred.length, [...result.values()].filter((v) => v === 'screen').length),
+    );
+    const order = [
+      ...preferred,
+      ...ids.filter((id) => !preferredScreens.has(id) && result.get(id) === 'screen'),
+      ...ids.filter((id) => !preferredScreens.has(id) && result.get(id) === 'ad'),
+    ];
+    const screens = new Set(order.slice(0, count));
+    for (const id of ids) result.set(id, screens.has(id) ? 'screen' : 'ad');
+  }
   return result;
 }
 
 /** Per-building signage context for one world snapshot. */
 export function signageContexts(
-  world: Pick<World, 'nodes' | 'buildings'>,
+  world: Pick<World, 'nodes' | 'buildings'> & Partial<Pick<World, 'roads'>>,
+  eligible?: ReadonlySet<number>,
+  preferredScreens?: ReadonlySet<number>,
 ): Map<number, SignageContext> {
   const station = world.nodes.find((node) => node.kind === 'station');
-  const features = selectFacadeFeatures(world);
+  const features = selectFacadeFeatures(world, eligible, preferredScreens);
   const contexts = new Map<number, SignageContext>();
   for (const b of world.buildings) {
-    const proximity = station ? stationProximity(Math.hypot(b.x - station.x, b.z - station.z)) : 0;
     const feature = features.get(b.id);
+    const proximity = station
+      ? stationProximity(Math.hypot(b.x - station.x, b.z - station.z))
+      : feature
+        ? 2
+        : 0;
     contexts.set(b.id, feature ? { proximity, feature } : { proximity });
   }
   return contexts;

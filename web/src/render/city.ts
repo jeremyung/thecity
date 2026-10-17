@@ -1,10 +1,37 @@
-import { ArchitecturePresentation } from './architecture/presentation';
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
+import { ssr } from 'three/addons/tsl/display/SSRNode.js';
 import {
-  selectApartmentArchitecture,
-  buildSelectedApartment,
-  type ApartmentEra,
-} from './architecture/era';
-import { apartmentDetail } from './architecture/detail';
+  add,
+  attribute,
+  colorToDirection,
+  directionToColor,
+  float,
+  fog,
+  getViewPosition,
+  mix,
+  mrt,
+  mx_noise_float,
+  normalView,
+  output,
+  pass,
+  positionLocal,
+  positionView,
+  positionWorld,
+  rangeFogFactor,
+  sample,
+  smoothstep,
+  uniform,
+  uv,
+  vec3,
+  vec4,
+} from 'three/tsl';
+import * as THREE from 'three/webgpu';
+import { type CommercialDistrict, type DisplayMode } from '../commercial-preference';
+import { MOVEMENT_STRIDE } from '../movement';
+import { dampFocusDepth, focusDepthFromViewZ } from '../optics/focus';
+import type { LensPresetId } from '../optics/lens';
+import { LENS_PRESETS, verticalFovDegrees } from '../optics/lens';
 import { miniatureOpticalScale } from '../optics/miniature-scale';
 import {
   DEFAULT_TILT_SHIFT,
@@ -12,137 +39,49 @@ import {
   writeTiltedFocusPlane,
   type TiltShiftSettings,
 } from '../optics/tilt-shift';
-import { instanceCapacity, reuseInstances } from './reuse-instances';
-import { riverbankTreePoints } from './riverbank-planting';
-import { groundRoadFootprint, groundRoadSurfaceGeometry } from './ground-road-footprint';
-import { RoadSurfacePartition } from './road-surface-partition';
-import { roadMarkingTrims, type MarkingTrim } from './road-markings';
-import { NearbyStreetLights } from './nearby-street-lights';
-import { junctionFootprint, type JunctionArm } from './road-junction';
-import { MovementPresentation } from './movement-presentation';
-import { overlapsStation } from './station-clearance';
-import { treeClearanceSignature } from './tree-clearance-signature';
-import { createTreeClearanceGrid } from './tree-clearance-grid';
-import type { MovementSupport } from '../movement-support';
-import { VisibleInfrastructure, type InfrastructureCommit } from './visible-infrastructure';
-import { buildStationPlatform } from './station-kit';
-import { MOVEMENT_STRIDE, PEDESTRIAN_GROUND_SURFACE, pedestrianSurface } from '../movement';
-import { snapShadowAnchor } from './shadow-anchor';
-import { styleWarmup, compileStyleSamples, compileForScenePass } from './style-warmup';
-import * as THREE from 'three/webgpu';
-import { submitSceneAndEffects } from './scene-submission';
+import type { Building, BuildingOriginalFootprint, Point, Style, World } from '../types';
+import { ActorsLayer } from './actors-layer';
+import { buildBusinessBuilding } from './architecture/business';
+import { apartmentDetail } from './architecture/detail';
 import {
-  color,
-  uniform,
-  mix,
-  positionLocal,
-  smoothstep,
-  mx_noise_float,
-  pass,
-  add,
-  vec3,
-  attribute,
-  positionView,
-  float,
-  floor,
-  fract,
-  step,
-  vec2,
-  vec4,
-  mrt,
-  output,
-  normalView,
-  directionToColor,
-  colorToDirection,
-  sample,
-  getViewPosition,
-  uv,
-  fog,
-  rangeFogFactor,
-  positionWorld,
-} from 'three/tsl';
-import { bloom } from 'three/addons/tsl/display/BloomNode.js';
-import { ownedAO as ao } from './postprocessing/owned-ao';
-import { ssr } from 'three/addons/tsl/display/SSRNode.js';
-import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
-import { SkyEnvironment } from './sky-environment';
-import { skyRadiance } from './sky-scattering';
-import { backdropForestMatrices } from './backdrop-forest';
-import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
-import { physicalCoCNode } from './postprocessing/physical-coc';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { ArtMaterials, signTexture } from './materials';
-import { Kit, disposeGroup } from './kit';
-import { buildOverheadLines } from './overhead-lines';
-import { StagedKit } from './staged-kit';
-import { RiverWater } from './water';
-import { createRiverbankGeometry } from './riverbank';
+  buildSelectedApartment,
+  selectApartmentArchitecture,
+  type ApartmentEra,
+} from './architecture/era';
+import { ArchitecturePresentation } from './architecture/presentation';
 import { buildingChunkKey, type RebuildableBuildingSource } from './building-chunks';
-import { Umbrellas } from './umbrellas';
-import { CityBuses } from './buses';
-import { isRoadVehicle, ROAD_SURFACE_Y, VehicleFleet } from './vehicles';
-import { TrainFleet, trainWorldWithInfrastructure } from './trains';
-import { addRailCorridor } from './rail-corridor';
-import { sampledRail, type RailPath } from './rail-path';
-import { RAIL_CENTER_OFFSET, RAIL_HEAD_WIDTH, RAIL_HEAD_Y } from './rail-profile';
+import { windowOccupancy } from './building-surfaces';
+import type { CameraRig, CameraRigFactory } from './camera-rig';
 import { ConstructionBatches } from './construction-batches';
 import { buildExtendedBuilding } from './extended-building';
-import {
-  prepareStreetLighting,
-  PersistentStreetLighting,
-  type StreetLightingData,
-} from './street-lighting';
-import { bezierRoad, sweepRoad, type RoadCurve } from './road-curve';
-import { CURRENT_EXPRESSWAY_PROFILE } from './expressway-profile';
-import { addExpresswayFurniture } from './expressway-kit';
-import { windowLived, windowOccupancy } from './building-surfaces';
-import { createFoliageGeometry, createTreeTrunkGeometry } from './foliage';
-import { signageContexts, type SignageContext } from './signage';
-import { seasonAt, seasonKey, treeColor, type SeasonState, type TreeSpecies } from './seasons';
-import {
-  addNeighborhoodShrine,
-  addPocketPark,
-  addScrambleCrossing,
-  addShrineGrove,
-  addStationPlaza,
-  openSpaceKind,
-  openSpaces,
-  parkSignature,
-  streetTreePlacements,
-  type PlantedTree,
-} from './parks';
-import { createBackdropGeometry } from './backdrop';
-import { createSkylineGeometry } from './skyline';
-import { createPavedGroundTest } from './paved-ground';
-import { buildGroundSurfaces } from './ground-surfaces';
-import { CitySidewalks } from './sidewalks';
-import { roadBatchSignatures } from './road-batch-signature';
-import {
-  ARTERIAL_SIDEWALK,
-  bridgeDeckHeight,
-  bridgeLift,
-  bridgeVehiclePose,
-  vehicleSurfacePose,
-  EXPRESSWAY_DECK,
-  RAIL_DECK,
-  roadWidth,
-  expresswayPierClear,
-  type CrossingDeck,
-  type BridgeSpan,
-} from './road-elevation';
-import { RenderQualityController, renderQualitySettings } from './quality';
 import { FrameTiming, type FrameTimingSnapshot } from './frame-timing';
-import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
-import type { CameraRig, CameraRigFactory } from './camera-rig';
-import { RoadsLayer } from './roads-layer';
+import { GlassEnvironment } from './glass-environment';
+import { buildGroundSurfaces } from './ground-surfaces';
+import { disposeGroup } from './kit';
 import { LandscapeLayer } from './landscape-layer';
-import { ActorsLayer } from './actors-layer';
 import type { LayerHost, RenderLayer } from './layer';
 import { RENDER_LAYERS } from './layers';
-import { dampFocusDepth, focusDepthFromViewZ } from '../optics/focus';
-import type { LensPresetId } from '../optics/lens';
-import { LENS_PRESETS, verticalFovDegrees } from '../optics/lens';
-import type { World, Style, Point, Road, Building, BuildingOriginalFootprint } from '../types';
+import { ArtMaterials } from './materials';
+import { MediaScreenLighting } from './media-lighting';
+import { parkSignature } from './parks';
+import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
+import { ownedAO as ao } from './postprocessing/owned-ao';
+import { physicalCoCNode } from './postprocessing/physical-coc';
+import { RenderQualityController, renderQualitySettings } from './quality';
+import { createRenderStartupLifecycle, type RenderStartupLifecycle } from './render-startup';
+import { roadBatchSignatures } from './road-batch-signature';
+import { RoadsLayer } from './roads-layer';
+import { submitSceneAndEffects } from './scene-submission';
+import { seasonAt, seasonKey, type TreeSpecies } from './seasons';
+import { snapShadowAnchor } from './shadow-anchor';
+import { CitySidewalks } from './sidewalks';
+import { type SignageContext } from './signage';
+import { SkyEnvironment } from './sky-environment';
+import { skyRadiance } from './sky-scattering';
+import { compileForScenePass, compileStyleSamples, styleWarmup } from './style-warmup';
+import { trainWorldWithInfrastructure } from './trains';
+import { Umbrellas } from './umbrellas';
+import { RiverWater } from './water';
 
 export interface StyleSwitchMetrics {
   target: Style;
@@ -257,6 +196,7 @@ export class CityRenderer implements LayerHost {
   private shaftColor = uniform(new THREE.Color(0, 0, 0));
   private shaftStrength = 0;
   private skyEnvironment: SkyEnvironment | null = null;
+  private glassEnvironment: GlassEnvironment | null = null;
   private renderStartup: RenderStartupLifecycle | null = null;
   private scenePass: ReturnType<typeof pass> | null = null;
   private focus = uniform(300);
@@ -287,6 +227,7 @@ export class CityRenderer implements LayerHost {
   private sun = new THREE.DirectionalLight('#fff1d1', 3);
   private hemi = new THREE.HemisphereLight('#c8dce3', '#748998', 2);
   private lanternLights: Array<THREE.PointLight> = [];
+  private mediaScreenLighting = new MediaScreenLighting();
 
   private sidewalks = new CitySidewalks(
     () => this.art.get('#b4b8a6'),
@@ -380,6 +321,7 @@ export class CityRenderer implements LayerHost {
       .mul(this.mist);
     this.scene.fogNode = fog(this.hazeColor, rangeFogFactor(this.hazeNear, this.hazeFar).max(mist));
     this.scene.add(
+      this.mediaScreenLighting.root,
       this.landscape.terrain,
       this.roadsLayer.roads,
       this.landscape.parks,
@@ -436,6 +378,7 @@ export class CityRenderer implements LayerHost {
     sky.renderOrder = -10;
     this.scene.add(sky);
     this.skyEnvironment = new SkyEnvironment(sky);
+    this.glassEnvironment = new GlassEnvironment(sky);
     this.sunDisc = new THREE.Mesh(
       new THREE.SphereGeometry(15, 16, 8),
       new THREE.MeshBasicNodeMaterial({ color: '#ffe5bc', fog: false }),
@@ -773,6 +716,14 @@ export class CityRenderer implements LayerHost {
   private apartmentSignature(b: Building, original?: BuildingOriginalFootprint) {
     return this.architecture.signature(b, original, this.signage.get(b.id));
   }
+  setCommercialDistrict(value: CommercialDistrict) {
+    if (this.architecture.setCommercialDistrict(value) && this.worldState)
+      this.setWorld(this.worldState);
+  }
+  setCommercialDisplays(value: DisplayMode) {
+    if (this.architecture.setCommercialDisplays(value) && this.worldState)
+      this.setWorld(this.worldState);
+  }
   setApartmentEra(value: ApartmentEra) {
     if (this.architecture.setEra(value) && this.worldState) this.setWorld(this.worldState);
   }
@@ -921,15 +872,24 @@ export class CityRenderer implements LayerHost {
         original,
       ]),
     );
-    this.architecture.selectLayout(world, originals);
-    const signage = (this.signage = signageContexts(world));
+    const signage = (this.signage = this.architecture.selectLayout(world, originals));
+    this.mediaScreenLighting.setWorld(
+      world,
+      this.architecture.businessChoices,
+      signage,
+      this.architecture.commercialDisplays,
+    );
     for (const b of world.buildings) {
       const original = originals.get(b.id);
       const context = signage.get(b.id);
       const architecture =
         this.architecture.apartmentChoices.get(b.id) ??
         selectApartmentArchitecture(b, this.architecture.apartmentEra, !!original);
-      if (architecture.kind !== 'legacy' && !this.architecture.apartmentDetails.has(b.id))
+      const business = this.architecture.businessChoices.get(b.id);
+      if (
+        (business || architecture.kind !== 'legacy') &&
+        !this.architecture.apartmentDetails.has(b.id)
+      )
         this.architecture.apartmentDetails.set(
           b.id,
           apartmentDetail(
@@ -949,10 +909,19 @@ export class CityRenderer implements LayerHost {
       // its data without appending duplicate closures or starving older parcels.
       const snapshot: Building = { ...b, history: [...b.history] };
       const originalSnapshot = original ? { ...original } : undefined;
-      const detail = this.architecture.apartmentDetails.get(b.id) ?? 'district';
+      const detail = this.architecture.apartmentDetails.get(b.id) ?? 'district',
+        displays = this.architecture.commercialDisplays;
       const source: RebuildableBuildingSource = {
         createGroup: () => {
           const group =
+            (business
+              ? buildBusinessBuilding(snapshot, this.architecture.apartmentResources.art, {
+                  recipe: business,
+                  detail,
+                  displays,
+                  signage: context,
+                })
+              : null) ??
             buildSelectedApartment(
               snapshot,
               this.architecture.apartmentResources.art,
@@ -962,6 +931,7 @@ export class CityRenderer implements LayerHost {
             buildExtendedBuilding(snapshot, originalSnapshot, this.art, {
               compactMidrise: this.compactMidriseReview,
               signage: context,
+              commercialDisplays: displays,
             });
           group.position.set(snapshot.x, 0, snapshot.z);
           group.rotation.y = snapshot.rotation;
@@ -982,6 +952,7 @@ export class CityRenderer implements LayerHost {
     this.scene.add(this.ground);
     this.groundSignature = '';
     this.focusResetPending = true;
+    this.mediaScreenLighting.reset();
     this.umbrellas.reset();
     this.actors.buses.reset();
     this.actors.fleet.reset();
@@ -998,6 +969,7 @@ export class CityRenderer implements LayerHost {
     this.buildings.clear();
     this.architecture.apartmentDetails.clear();
     this.architecture.apartmentChoices.clear();
+    this.architecture.businessChoices.clear();
     this.architecture.apartmentLayout = '';
     this.landscape.clearParks();
     this.parkKey = '';
@@ -1070,6 +1042,7 @@ export class CityRenderer implements LayerHost {
       frameInterval = this.lastFrame ? now - this.lastFrame : 1000 / 60,
       dt = Math.min(0.1, frameInterval / 1000);
     this.lastFrame = now;
+    this.art.displayTime.value += dt;
     const begin = performance.now();
     const timingPhase =
       this.objectQueue.size ||
@@ -1295,6 +1268,24 @@ export class CityRenderer implements LayerHost {
       this.skyCloud.value,
     ]);
     if (environment && this.scene.environment !== environment) this.scene.environment = environment;
+    const glassEnvironment =
+      this.style === 'miniature' &&
+      this.architecture.businessChoices.size &&
+      [...this.architecture.businessChoices.values()].some(
+        (r) => r.towerForm || r.mediaLandmark === 'curved',
+      )
+        ? this.glassEnvironment?.update(
+            this.renderer,
+            performance.now(),
+            this.worldState?.buildings ?? [],
+            this.camera.position,
+            [top, low, this.skyCloud.value],
+            1 - this.daylight,
+          )
+        : null;
+    this.architecture.apartmentResources.art.setGlassEnvironment(
+      glassEnvironment ?? environment ?? null,
+    );
     // The environment adds to the hemisphere fill on standard surfaces; trade
     // some of that fill for sky-shaped ambient rather than stacking both.
     this.scene.environmentIntensity = 0.1 + this.daylight * 0.16;
@@ -1351,6 +1342,14 @@ export class CityRenderer implements LayerHost {
         lightBlend,
       );
     }
+    this.mediaScreenLighting.update(
+      this.camera.position,
+      this.art.displayTime.value,
+      1 - this.daylight,
+      this.style,
+      this.architecture.apartmentDetails,
+      this.buildings,
+    );
     for (const lamp of this.lanternLights)
       lamp.intensity = lamp.userData.active ? (1 - this.daylight) * 36 * this.art.litShop.value : 0;
     this.art.night.value = 1 - this.daylight;
@@ -1441,6 +1440,8 @@ export class CityRenderer implements LayerHost {
     this.renderer.domElement.removeEventListener('pointerdown', this.pointerDown);
     this.renderer.domElement.removeEventListener('pointerup', this.pointerUp);
     this.resetWorld();
+    this.mediaScreenLighting.root.removeFromParent();
+    this.mediaScreenLighting.dispose();
     this.roadsLayer.streetLighting?.root.removeFromParent();
     this.retire(() => this.roadsLayer.streetLighting?.dispose());
     this.umbrellas.root.removeFromParent();
@@ -1457,9 +1458,14 @@ export class CityRenderer implements LayerHost {
     this.retire(() => this.actors.fleet.dispose());
     this.disposePipeline();
     this.scene.environment = null;
-    const environment = this.skyEnvironment;
+    const environment = this.skyEnvironment,
+      glassEnvironment = this.glassEnvironment;
     this.skyEnvironment = null;
-    this.retire(() => environment?.dispose());
+    this.glassEnvironment = null;
+    this.retire(() => {
+      environment?.dispose();
+      glassEnvironment?.dispose();
+    });
     const materials = new Set<THREE.Material>(),
       geometries = new Set<THREE.BufferGeometry>();
     this.scene.traverse((o) => {

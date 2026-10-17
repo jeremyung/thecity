@@ -57,6 +57,8 @@ export class ArtMaterials {
   readonly night = uniform(0);
   readonly wet = uniform(0);
   readonly time = uniform(0);
+  /** Presentation seconds: signs continue while simulation time is paused. */
+  readonly displayTime = uniform(0);
   readonly litHome = uniform(1);
   readonly litOffice = uniform(1);
   readonly litShop = uniform(1);
@@ -68,6 +70,7 @@ export class ArtMaterials {
   readonly occupancy = { home: uniform(0.5), office: uniform(0.5), shop: uniform(0.5) } as const;
   readonly palette = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
   private style: Style = 'anime';
+  private glassEnvironment: THREE.Texture | null = null;
   private cache = new Map<string, { anime: Surface; miniature: Surface }>();
   private buildingCache = new Map<string, BuildingSurfaceVariants>();
   private bands: THREE.DataTexture;
@@ -393,8 +396,11 @@ export class ArtMaterials {
   }
   /** Resolve a source building surface to its shared shader class and exact linear base color. */
   buildingBatch(material: THREE.Material): BuildingBatchSurface {
-    // Panes read their schedule from vertex data, so all of them share one batch.
-    if (material.userData.windowPane) return { material: this.window('home') };
+    // Ordinary panes share a vertex-scheduled batch; corporate glass retains its solar-control variant.
+    if (material.userData.windowPane)
+      return {
+        material: material.userData.corporateGlass ? this.variant(material) : this.window('home'),
+      };
     const artClass = material.userData.artBuildingClass as BuildingArtClass | undefined;
     const baseColor = (material as THREE.Material & { color?: THREE.Color }).color;
     if (!artClass || !baseColor) return { material: this.variant(material) };
@@ -435,6 +441,18 @@ export class ArtMaterials {
   get toonRamp() {
     return this.bands;
   }
+  /** Borrow the renderer-owned sky texture; glass has its own reflection exposure. */
+  setGlassEnvironment(environment: THREE.Texture | null) {
+    if (this.glassEnvironment === environment) return;
+    this.glassEnvironment = environment;
+    for (const pair of this.cache.values())
+      if (pair.miniature.userData.corporateGlass) {
+        const material = pair.miniature as THREE.MeshStandardNodeMaterial;
+        const changed = Boolean(material.envMap) !== Boolean(environment);
+        material.envMap = environment;
+        if (changed) material.needsUpdate = true;
+      }
+  }
   /**
    * Cache a style pair under `key` so style switches swap it like any other
    * art material. `create` runs once; later calls return the current style.
@@ -443,6 +461,8 @@ export class ArtMaterials {
     let variants = this.cache.get(key);
     if (!variants) {
       variants = create();
+      if (variants.miniature.userData.corporateGlass)
+        (variants.miniature as THREE.MeshStandardNodeMaterial).envMap = this.glassEnvironment;
       variants.anime.userData.artKey = key;
       variants.miniature.userData.artKey = key;
       this.cache.set(key, variants);

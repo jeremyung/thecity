@@ -1,0 +1,104 @@
+import { build } from 'esbuild';
+import { mkdir, writeFile } from 'node:fs/promises';
+const dir = new URL('../.tools/district-benchmark/', import.meta.url);
+await mkdir(dir, { recursive: true });
+await build({
+  stdin: {
+    contents: `export {ApartmentResources} from './web/src/render/architecture/resources';export {buildBusinessBuilding} from './web/src/render/architecture/business';export {shoppingStreetStudy} from './web/src/render/architecture/shopping-street-study';export {applyCommercialDistrict} from './web/src/render/architecture/commercial-district';export {selectBusinessRecipe,businessCanHostAdvertising} from './web/src/render/architecture/business-recipes';export {signageContexts} from './web/src/render/signage';export {disposeGroup} from './web/src/render/kit';`,
+    resolveDir: process.cwd(),
+    sourcefile: 'benchmark.ts',
+  },
+  outfile: new URL('kit.mjs', dir).pathname,
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  packages: 'external',
+});
+globalThis.document = {
+  createElement: () => ({
+    width: 0,
+    height: 0,
+    getContext: () =>
+      new Proxy(
+        {},
+        {
+          get: (t, k) => t[k] ?? (() => {}),
+          set: (t, k, v) => {
+            t[k] = v;
+            return true;
+          },
+        },
+      ),
+  }),
+};
+const {
+    ApartmentResources,
+    buildBusinessBuilding,
+    shoppingStreetStudy,
+    applyCommercialDistrict,
+    selectBusinessRecipe,
+    businessCanHostAdvertising,
+    signageContexts,
+    disposeGroup,
+  } = await import(new URL('kit.mjs', dir)),
+  owner = new ApartmentResources(),
+  report = [];
+try {
+  for (const district of ['shibuya', 'roppongi', 'akihabara', 'shinjuku', 'ameyoko']) {
+    const world = shoppingStreetStudy(32, district),
+      recipes = new Map(
+        world.buildings.map((b) => [
+          b.id,
+          applyCommercialDistrict(b, selectBusinessRecipe(b), district),
+        ]),
+      ),
+      eligible = new Set(
+        world.buildings
+          .filter((b) => businessCanHostAdvertising(recipes.get(b.id)))
+          .map((b) => b.id),
+      ),
+      signage = signageContexts(world, eligible);
+    for (const detail of ['close', 'district', 'far']) {
+      const times = [],
+        triangles = [];
+      for (let repeat = 0; repeat < 2; repeat++)
+        for (const b of world.buildings) {
+          const start = performance.now(),
+            group = buildBusinessBuilding(b, owner.art, {
+              recipe: recipes.get(b.id),
+              detail,
+              signage: signage.get(b.id),
+            });
+          times.push(performance.now() - start);
+          let count = 0;
+          group.traverse((o) => {
+            if (o.isMesh)
+              count += (o.geometry.index?.count ?? o.geometry.getAttribute('position').count) / 3;
+          });
+          triangles.push(count);
+          disposeGroup(group);
+        }
+      times.sort((a, b) => a - b);
+      report.push({
+        district,
+        detail,
+        samples: times.length,
+        p50BuildMs: times[Math.floor(times.length * 0.5)],
+        p95BuildMs: times[Math.floor(times.length * 0.95)],
+        maxTriangles: Math.max(...triangles),
+      });
+    }
+  }
+} finally {
+  owner.dispose();
+}
+const result = {
+  method:
+    'Node CPU geometry only; two passes over each complete 24-parcel shopping street at each LOD. Shared materials and production signage allocation. Not a GPU or cross-device frame-rate benchmark.',
+  report,
+};
+await writeFile(
+  process.argv[2] ?? new URL('results.json', dir),
+  JSON.stringify(result, null, 2) + '\n',
+);
+console.log(JSON.stringify(result, null, 2));

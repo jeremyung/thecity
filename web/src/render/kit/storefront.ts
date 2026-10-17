@@ -27,8 +27,10 @@ export function renderCommercialSignage(
     midrise: MidriseMassing | null;
     lowrise: LowriseMassing | null;
     signage?: SignageContext;
+    displays?: import('../architecture/business-recipes').DisplayMode;
   },
 ) {
+  if (m.displays === 'off') return;
   const { w, d, base, floor, height, frame, midrise, lowrise } = m;
   const seed = b.appearance_seed >>> 0,
     proximity = m.signage?.proximity ?? 0;

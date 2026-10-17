@@ -38,7 +38,10 @@ function sourceGroups(material: THREE.Material): THREE.Group[] {
 }
 
 function makeChunks() {
-  return new BuildingChunks((material) => material, (dispose) => dispose());
+  return new BuildingChunks(
+    (material) => material,
+    (dispose) => dispose(),
+  );
 }
 
 function updateOnce(chunks: BuildingChunks, work: Work, pendingKeys?: ReadonlySet<string>) {
@@ -70,7 +73,9 @@ function instrumentGeometryWork<T>(run: () => T): T {
     counters.geometryClones += 1;
     return clone.apply(this, args);
   };
-  THREE.BufferGeometry.prototype.toNonIndexed = function (...args: Parameters<typeof toNonIndexed>) {
+  THREE.BufferGeometry.prototype.toNonIndexed = function (
+    ...args: Parameters<typeof toNonIndexed>
+  ) {
     const geometry = toNonIndexed.apply(this, args);
     counters.nonIndexedVertices += geometry.getAttribute('position')?.count ?? 0;
     return geometry;
@@ -85,8 +90,14 @@ function instrumentGeometryWork<T>(run: () => T): T {
 
 function emptyWork(): Work {
   return {
-    updateCalls: 0, rebuildCount: 0, updateTotalMs: 0, updateMaxMs: 0,
-    rebuildTotalMs: 0, rebuildMaxMs: 0, geometryClones: 0, nonIndexedVertices: 0,
+    updateCalls: 0,
+    rebuildCount: 0,
+    updateTotalMs: 0,
+    updateMaxMs: 0,
+    rebuildTotalMs: 0,
+    rebuildMaxMs: 0,
+    geometryClones: 0,
+    nonIndexedVertices: 0,
   };
 }
 
@@ -179,7 +190,8 @@ async function main() {
     benchmark: 'BuildingChunks synthetic CPU batching workload',
     measuredAt: new Date().toISOString(),
     runtime: { node: process.version, platform: process.platform, arch: process.arch },
-    scope: 'Synthetic CPU-only comparison. This does not measure WebGPU/WebGL upload, shader compilation, browser frame pacing, or real authored buildings.',
+    scope:
+      'Synthetic CPU-only comparison. This does not measure WebGPU/WebGL upload, shader compilation, browser frame pacing, or real authored buildings.',
     workload: {
       buildings: BUILDING_COUNT,
       meshesPerBuilding: MESHES_PER_BUILDING,
@@ -188,7 +200,8 @@ async function main() {
       chunkSizeMeters: 200,
       allBuildingsShareOneChunk: true,
       sourceGroupsSharedBetweenScenarios: true,
-      scenarioCadence: 'Progressive adds two buildings then calls update() without a pending key; one-final sets all groups before one update(); coalesced adds two groups per call and passes its chunk key as pending until the last group arrives. The production 12-update deferral cap remains active.',
+      scenarioCadence:
+        'Progressive adds two buildings then calls update() without a pending key; one-final sets all groups before one update(); coalesced adds two groups per call and passes its chunk key as pending until the last group arrives. The production 12-update deferral cap remains active.',
     },
     progressive: {
       setMs: progressiveSetMs,
@@ -201,8 +214,8 @@ async function main() {
       rebuilds: progressiveWork.rebuildCount,
       geometryCloneCount: progressiveWork.geometryClones,
       nonIndexedVerticesPresentedToMerge: progressiveWork.nonIndexedVertices,
-      derivedSourceTraversalVisits: progressiveWork.geometryClones
-        + progressiveWork.geometryClones / MESHES_PER_BUILDING,
+      derivedSourceTraversalVisits:
+        progressiveWork.geometryClones + progressiveWork.geometryClones / MESHES_PER_BUILDING,
       finalBatchMeshes: progressiveFacts.meshCount,
       finalMergedVertices: progressiveFacts.mergedVertices,
     },
@@ -217,8 +230,8 @@ async function main() {
       rebuilds: finalWork.rebuildCount,
       geometryCloneCount: finalWork.geometryClones,
       nonIndexedVerticesPresentedToMerge: finalWork.nonIndexedVertices,
-      derivedSourceTraversalVisits: finalWork.geometryClones
-        + finalWork.geometryClones / MESHES_PER_BUILDING,
+      derivedSourceTraversalVisits:
+        finalWork.geometryClones + finalWork.geometryClones / MESHES_PER_BUILDING,
       finalBatchMeshes: finalFacts.meshCount,
       finalMergedVertices: finalFacts.mergedVertices,
     },
@@ -233,19 +246,37 @@ async function main() {
       rebuilds: coalescedWork.rebuildCount,
       geometryCloneCount: coalescedWork.geometryClones,
       nonIndexedVerticesPresentedToMerge: coalescedWork.nonIndexedVertices,
-      derivedSourceTraversalVisits: coalescedWork.geometryClones
-        + coalescedWork.geometryClones / MESHES_PER_BUILDING,
+      derivedSourceTraversalVisits:
+        coalescedWork.geometryClones + coalescedWork.geometryClones / MESHES_PER_BUILDING,
       finalBatchMeshes: coalescedFacts.meshCount,
       finalMergedVertices: coalescedFacts.mergedVertices,
     },
     ratios: {
-      cloneWorkProgressiveOverSingle: finalWork.geometryClones > 0 ? progressiveWork.geometryClones / finalWork.geometryClones : null,
-      mergeInputVerticesProgressiveOverSingle: finalWork.nonIndexedVertices > 0 ? progressiveWork.nonIndexedVertices / finalWork.nonIndexedVertices : null,
-      updateCpuProgressiveOverSingle: finalWork.updateTotalMs > 0 ? progressiveWork.updateTotalMs / finalWork.updateTotalMs : null,
+      cloneWorkProgressiveOverSingle:
+        finalWork.geometryClones > 0
+          ? progressiveWork.geometryClones / finalWork.geometryClones
+          : null,
+      mergeInputVerticesProgressiveOverSingle:
+        finalWork.nonIndexedVertices > 0
+          ? progressiveWork.nonIndexedVertices / finalWork.nonIndexedVertices
+          : null,
+      updateCpuProgressiveOverSingle:
+        finalWork.updateTotalMs > 0
+          ? progressiveWork.updateTotalMs / finalWork.updateTotalMs
+          : null,
       totalCpuProgressiveOverSingle: finalTotalMs > 0 ? progressiveTotalMs / finalTotalMs : null,
-      cloneWorkCoalescedOverProgressive: progressiveWork.geometryClones > 0 ? coalescedWork.geometryClones / progressiveWork.geometryClones : null,
-      mergeInputVerticesCoalescedOverProgressive: progressiveWork.nonIndexedVertices > 0 ? coalescedWork.nonIndexedVertices / progressiveWork.nonIndexedVertices : null,
-      updateCpuCoalescedOverProgressive: progressiveWork.updateTotalMs > 0 ? coalescedWork.updateTotalMs / progressiveWork.updateTotalMs : null,
+      cloneWorkCoalescedOverProgressive:
+        progressiveWork.geometryClones > 0
+          ? coalescedWork.geometryClones / progressiveWork.geometryClones
+          : null,
+      mergeInputVerticesCoalescedOverProgressive:
+        progressiveWork.nonIndexedVertices > 0
+          ? coalescedWork.nonIndexedVertices / progressiveWork.nonIndexedVertices
+          : null,
+      updateCpuCoalescedOverProgressive:
+        progressiveWork.updateTotalMs > 0
+          ? coalescedWork.updateTotalMs / progressiveWork.updateTotalMs
+          : null,
     },
   };
 
@@ -254,6 +285,8 @@ async function main() {
 }
 
 main().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
+  process.stderr.write(
+    `${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`,
+  );
   process.exitCode = 1;
 });

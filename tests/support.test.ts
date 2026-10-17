@@ -804,6 +804,8 @@ describe('local saves', () => {
       setItem: (key: string, value: string) => storage.set(key, value),
     });
     const preferences = {
+      commercialDistrict: 'shibuya' as const,
+      commercialDisplays: 'static' as const,
       apartmentEra: 'contemporary' as const,
       musicLevel: 0.72,
       cityLevel: 0.24,
@@ -816,6 +818,8 @@ describe('local saves', () => {
     saveViewerPreferences(preferences);
     expect(loadViewerPreferences()).toEqual(preferences);
     const defaults = {
+      commercialDistrict: 'standard',
+      commercialDisplays: 'animated',
       apartmentEra: 'mixed',
       musicLevel: 0.38,
       cityLevel: 0.55,
@@ -857,6 +861,8 @@ describe('local saves', () => {
         }),
       ),
     ).toEqual({
+      commercialDistrict: 'standard',
+      commercialDisplays: 'animated',
       apartmentEra: 'mixed',
       musicLevel: 0.7,
       cityLevel: 0.3,

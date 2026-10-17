@@ -70,6 +70,7 @@ function rendererHarness() {
   renderer.roadsLayer.roadSignature = '';
   renderer.groundSignature = '';
   renderer.scene = new THREE.Scene();
+  renderer.mediaScreenLighting = { setWorld: vi.fn(), reset: vi.fn(), dispose: vi.fn() };
   renderer.ground = new THREE.Group();
   renderer.scene.add(renderer.ground);
   renderer.buildings = new Map();
