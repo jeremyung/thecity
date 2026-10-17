@@ -10,7 +10,7 @@ const files = execFileSync('git', ['ls-files', 'web/src', 'engine/src', 'engine/
   encoding: 'utf8',
 })
   .split('\n')
-  .filter((file) => /\.(ts|tsx|rs)$/.test(file));
+  .filter((file) => /\.(ts|tsx|rs)$/.test(file) && !file.startsWith('web/src/render/generated/'));
 let failed = false;
 for (const file of files) {
   const lines = readFileSync(file, 'utf8').split('\n').length;

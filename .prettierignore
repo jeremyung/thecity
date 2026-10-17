@@ -6,3 +6,5 @@ concepts/
 tests/fixtures/
 *.json
 *.md
+
+web/src/render/generated/

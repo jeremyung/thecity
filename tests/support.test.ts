@@ -804,6 +804,7 @@ describe('local saves', () => {
       setItem: (key: string, value: string) => storage.set(key, value),
     });
     const preferences = {
+      apartmentEra: 'contemporary' as const,
       musicLevel: 0.72,
       cityLevel: 0.24,
       style: 'miniature' as const,
@@ -815,6 +816,7 @@ describe('local saves', () => {
     saveViewerPreferences(preferences);
     expect(loadViewerPreferences()).toEqual(preferences);
     const defaults = {
+      apartmentEra: 'mixed',
       musicLevel: 0.38,
       cityLevel: 0.55,
       style: 'anime',
@@ -855,6 +857,7 @@ describe('local saves', () => {
         }),
       ),
     ).toEqual({
+      apartmentEra: 'mixed',
       musicLevel: 0.7,
       cityLevel: 0.3,
       style: 'miniature',

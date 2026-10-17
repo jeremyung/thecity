@@ -65,6 +65,67 @@
       "loop_points": null,
       "normalization": "Bodies in metres at class lengths shared with the engine's queue spacing; eleven bodies on one 2048x1024 colour atlas and one 1024x512 mask",
       "file": "public/art/vehicles/vehicle-atlas.png"
+    },
+    {
+      "id": "apartment-architecture-surfaces",
+      "source": "Two selected round-two tiles and ten Tencent Hy Image 3.5 Preview generations via the reusable pipeline",
+      "rights": "Generated material surfaces; no third-party reference photographs included in runtime assets. Confirm provider terms and project distribution policy before release.",
+      "provenance": [
+        "art-workshop/architecture-pilot/round2/selected/manifest.json",
+        "art-workshop/architecture-pilot/round3/ledger.json",
+        "art-workshop/architecture-pilot/round3/manifest.json"
+      ],
+      "normalization": "Shared 40cm world-space tiles; two 512px and ten 256px sRGB base colors; procedural runtime relief and roughness",
+      "files": [
+        {
+          "file": "public/art/apartment-pilot/warm-plaster.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/cast-concrete.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/old-mineral-plaster.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/old-sand-coat.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/old-concrete.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/old-brown-ceramic.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/old-taupe-ceramic.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/new-ivory-porcelain.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/new-honed-limestone.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/new-white-precast.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/new-bronze-metal.png",
+          "role": "base-color"
+        },
+        {
+          "file": "public/art/apartment-pilot/new-charcoal-ceramic.png",
+          "role": "base-color"
+        }
+      ]
     }
   ],
   "concept_references": {

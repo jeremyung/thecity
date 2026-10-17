@@ -1,0 +1,45 @@
+{
+  "status": "approved",
+  "authorization": "User requested further ComfyUI tests against configured OpenRouter image models",
+  "capUSD": 2,
+  "aspectRatio": "1:1",
+  "hostedModels": [
+    {
+      "id": "tencent/hy-image-v3.5-preview",
+      "provider": "tencent",
+      "estimateUSD": 0.024,
+      "request": {
+        "resolution": "1K"
+      }
+    },
+    {
+      "id": "qwen/qwen-image-3",
+      "provider": "alibaba",
+      "estimateUSD": 0.03,
+      "request": {
+        "resolution": "1K"
+      }
+    },
+    {
+      "id": "google/gemini-nano-banana-2.1",
+      "provider": "google-ai-studio",
+      "estimateUSD": 0.05,
+      "request": {}
+    }
+  ],
+  "commonPrompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically. ",
+  "vehicles": [
+    {
+      "id": "warm-plaster",
+      "prompt": "Off-white fine sand and lime plaster. A 40 centimetre wide close-up of an intact smooth matte wall, tiny granular flecks, nearly uniform warm ivory. Surface is well maintained and unbroken. Fine grain only."
+    },
+    {
+      "id": "cast-concrete",
+      "prompt": "A 40 centimetre wide crop from the middle of a FLAT gray cement wall surface. The wall extends beyond all four edges of the image. Very fine pores and faint mottling, nearly uniform neutral gray. Featureless continuous flat cement surface."
+    },
+    {
+      "id": "aged-timber",
+      "prompt": "A 40 centimetre wide close-up within one broad unbroken piece of straight-grained timber. Fine narrow parallel vertical fibers, muted medium brown, subdued variation. Clear-grain knot-free wood fills the whole image."
+    }
+  ]
+}

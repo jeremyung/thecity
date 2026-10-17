@@ -1,3 +1,4 @@
+import { buildApartmentBuilding, type ApartmentBuildOptions } from '../architecture';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../materials';
 import { compactMidriseEnvelope, midriseMassing } from '../building-massing';
@@ -38,11 +39,20 @@ import { renderCommercialSignage, renderShopFront, renderStreetLife } from './st
 
 export interface BuildingKitReviewOptions {
   compactMidrise?: boolean;
+  apartmentComponents?: boolean | ApartmentBuildOptions;
   /** Station proximity and any podium display chosen for this building. */
   signage?: SignageContext;
 }
 
 export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
+  if (review.apartmentComponents) {
+    const group = buildApartmentBuilding(
+      b,
+      art,
+      review.apartmentComponents === true ? {} : review.apartmentComponents,
+    );
+    if (group) return group;
+  }
   const seed = b.appearance_seed >>> 0;
   // Master-plan lots tile blocks without gaps, so bodies run to the shared lot
   // lines (party walls) and keep only a shallow front setback and rear yard.

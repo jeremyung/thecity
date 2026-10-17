@@ -1,0 +1,65 @@
+{
+  "method": "Node CPU geometry creation only; 60 buildings per family/LOD, materials shared, warm template cache. Not a GPU frame-time benchmark.",
+  "report": [
+    {
+      "family": "midrise",
+      "detail": "close",
+      "samples": 60,
+      "p50BuildMs": 11.430833000000007,
+      "p95BuildMs": 22.783832999999987,
+      "maxBuildMs": 39.699749999999995,
+      "meanTriangles": 30328,
+      "maxTriangles": 64904
+    },
+    {
+      "family": "midrise",
+      "detail": "district",
+      "samples": 60,
+      "p50BuildMs": 8.942584000000124,
+      "p95BuildMs": 17.44462499999986,
+      "maxBuildMs": 20.303292000000056,
+      "meanTriangles": 27086.8,
+      "maxTriangles": 57836
+    },
+    {
+      "family": "midrise",
+      "detail": "far",
+      "samples": 60,
+      "p50BuildMs": 5.395125000000007,
+      "p95BuildMs": 8.662625000000162,
+      "maxBuildMs": 9.161875000000009,
+      "meanTriangles": 15574.733333333334,
+      "maxTriangles": 22336
+    },
+    {
+      "family": "tower",
+      "detail": "close",
+      "samples": 60,
+      "p50BuildMs": 20.329334000000017,
+      "p95BuildMs": 25.831166999999823,
+      "maxBuildMs": 28.617040999999972,
+      "meanTriangles": 48398.4,
+      "maxTriangles": 58396
+    },
+    {
+      "family": "tower",
+      "detail": "district",
+      "samples": 60,
+      "p50BuildMs": 16.21783400000004,
+      "p95BuildMs": 20.73995799999966,
+      "maxBuildMs": 27.053707999999915,
+      "meanTriangles": 40562,
+      "maxTriangles": 50092
+    },
+    {
+      "family": "tower",
+      "detail": "far",
+      "samples": 60,
+      "p50BuildMs": 6.137415999999575,
+      "p95BuildMs": 9.878333000000566,
+      "maxBuildMs": 10.615000000000691,
+      "meanTriangles": 15532,
+      "maxTriangles": 23188
+    }
+  ]
+}

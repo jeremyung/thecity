@@ -1,3 +1,4 @@
+import { parseApartmentEra, type ApartmentEra } from '../architecture-preference';
 import type { LensPresetId } from '../optics/lens';
 
 type SaveRecord = {
@@ -9,6 +10,7 @@ type SaveRecord = {
 
 export type LoadedWorld = { data: string; seed: number; savedAt: number };
 export type ViewerPreferences = {
+  apartmentEra: ApartmentEra;
   musicLevel: number;
   cityLevel: number;
   style: 'anime' | 'miniature';
@@ -24,6 +26,7 @@ const STORE = 'saves';
 const SAVE_SLOTS = 2;
 const PREFERENCES_KEY = 'thecity-viewer-preferences';
 const DEFAULT_PREFERENCES: ViewerPreferences = {
+  apartmentEra: 'mixed',
   musicLevel: 0.38,
   cityLevel: 0.55,
   style: 'anime',
@@ -122,6 +125,7 @@ export function parseViewerPreferences(raw: string | null): ViewerPreferences {
         ? Math.max(0, Math.min(1, entry))
         : fallback;
     return {
+      apartmentEra: parseApartmentEra(value.apartmentEra),
       musicLevel: level(value.musicLevel, DEFAULT_PREFERENCES.musicLevel),
       cityLevel: level(value.cityLevel, DEFAULT_PREFERENCES.cityLevel),
       style:

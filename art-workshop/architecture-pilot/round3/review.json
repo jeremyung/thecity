@@ -1,0 +1,57 @@
+{
+  "reviewDate": "2026-10-16",
+  "reviewMethod": "Inspected material sheet, repeated preparations, 15 browser building renders, and five-tower actual city fixture in both styles. Qualitative comparison to UR and architect references plus project concept boards.",
+  "disposition": "Accepted for development integration; reference-level realism and full production acceptance remain open.",
+  "textures": [
+    {
+      "id": "old-mineral-plaster",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "old-sand-coat",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "old-concrete",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "old-brown-ceramic",
+      "disposition": "accepted-cropped-candidate",
+      "caveat": "Baked grid excluded through normalized crop; lower independent detail"
+    },
+    {
+      "id": "old-taupe-ceramic",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "new-ivory-porcelain",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "new-honed-limestone",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "new-white-precast",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "new-bronze-metal",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    },
+    {
+      "id": "new-charcoal-ceramic",
+      "disposition": "accepted-development-candidate",
+      "caveat": "Art-directed generated base color; not a calibrated scan"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { ArchitecturePresentation } from '../web/src/render/architecture/presentation';
 import { ActorsLayer } from '../web/src/render/actors-layer';
 import { LandscapeLayer } from '../web/src/render/landscape-layer';
 import { RoadsLayer } from '../web/src/render/roads-layer';
@@ -57,6 +58,7 @@ const patch = (x: number, block = 0) => ({
 
 function rendererHarness() {
   const renderer = Object.create(CityRenderer.prototype) as any;
+  renderer.architecture = new ArchitecturePresentation();
   renderer.actors = Object.assign(Object.create(ActorsLayer.prototype), { host: renderer });
   renderer.landscape = new LandscapeLayer(renderer);
   renderer.roadsLayer = new RoadsLayer(renderer);

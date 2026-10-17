@@ -1,3 +1,10 @@
+import { ArchitecturePresentation } from './architecture/presentation';
+import {
+  selectApartmentArchitecture,
+  buildSelectedApartment,
+  type ApartmentEra,
+} from './architecture/era';
+import { apartmentDetail } from './architecture/detail';
 import { miniatureOpticalScale } from '../optics/miniature-scale';
 import {
   DEFAULT_TILT_SHIFT,
@@ -178,36 +185,8 @@ export interface RenderMetrics {
   pendingSidewalks: number;
   pendingRoads: number;
 }
-/** Fields that affect a building's rendered group. Occupancy is binary: every
- * window pane bakes whether anyone lives or works behind it (`windowLived`), so
- * crossing the vacant boundary rebuilds, while other occupancy changes do not. */
-export function buildingRenderSignature(
-  b: Building,
-  original?: BuildingOriginalFootprint,
-  signage?: SignageContext,
-): string {
-  const homeOccupancy = windowLived(b) ? 'occupied' : 'vacant';
-  const retained = original
-    ? `${original.x}:${original.z}:${original.width}:${original.depth}:${original.rotation}`
-    : '-';
-  const signs =
-    signage && (signage.proximity || signage.feature)
-      ? `:s${signage.proximity}${signage.feature ?? ''}`
-      : '';
-  const stagedTower =
-    b.floors >= 12 &&
-    (b.kind === 'office' || b.kind === 'apartment') &&
-    b.stage !== 'open' &&
-    b.stage !== 'renovation' &&
-    b.stage !== 'demolition';
-  const towerPhase = `${Math.ceil(b.floors * Math.max(0, Math.min(1, (b.progress - 0.12) / 0.57)))}:${Math.ceil(b.floors * Math.max(0, Math.min(1, (b.progress - 0.69) / 0.23)))}`;
-  const phase = stagedTower
-    ? towerPhase
-    : b.stage === 'demolition'
-      ? `${Math.ceil(b.floors * (1 - Math.max(0, Math.min(1, b.progress))))}:${b.progress > 0}`
-      : Math.floor(b.progress * 5);
-  return `${b.stage}:${b.floors}:${phase}:${b.kind}:${b.name}:${b.appearance_seed}:${b.business_active ?? 'legacy'}:${homeOccupancy}:${b.x}:${b.z}:${b.width}:${b.depth}:${b.rotation}:${retained}${signs}`;
-}
+export { buildingRenderSignature } from './building-signature';
+
 export type TreeBatch = {
   indices: number[];
   trees: THREE.InstancedMesh;
@@ -250,6 +229,7 @@ export class CityRenderer implements LayerHost {
   readonly art = new ArtMaterials();
   readonly actors = new ActorsLayer(this);
   readonly rig: CameraRig;
+  private readonly architecture = new ArchitecturePresentation();
   readonly renderer: THREE.WebGPURenderer;
   worldState: World | null = null;
   onPick: ((id: number, kind: 'building' | 'traveler') => void) | null = null;
@@ -313,7 +293,10 @@ export class CityRenderer implements LayerHost {
     (dispose) => this.retire(dispose),
   );
   private chunks = new ConstructionBatches(
-    (m) => this.art.buildingBatch(m),
+    (m) =>
+      this.architecture.apartmentResources.owns(m)
+        ? this.architecture.apartmentResources.batch(m)
+        : this.art.buildingBatch(m),
     (dispose) => this.retire(dispose),
     this.art.contours,
   );
@@ -364,6 +347,13 @@ export class CityRenderer implements LayerHost {
     createRig: CameraRigFactory,
     forceWebGL = false,
   ) {
+    void this.architecture.apartmentResources
+      .loadTextures()
+      .then((ok) => {
+        if (!ok && !this.disposed)
+          console.warn('Some apartment textures unavailable; using procedural fallback');
+      })
+      .catch((error) => console.warn('Apartment texture fallback', error));
     document.addEventListener('visibilitychange', this.onVisibility);
     this.renderer = new THREE.WebGPURenderer({
       antialias: true,
@@ -704,7 +694,7 @@ export class CityRenderer implements LayerHost {
       if (this.disposed || request !== this.styleRequest || style === this.style) return;
       // Serialize warmup and skip superseded requests before allocating samples.
       const prepareStart = performance.now();
-      const prepared = styleWarmup(this.scene, (m) => this.art.variant(m, style));
+      const prepared = styleWarmup(this.scene, (m) => this.materialVariant(m, style));
       const timing: StyleSwitchMetrics = {
         target: style,
         samples: prepared.scene.children.filter((o) => o instanceof THREE.Mesh).length,
@@ -760,12 +750,13 @@ export class CityRenderer implements LayerHost {
   private applyStyle(style: Style) {
     this.style = style;
     this.art.setStyle(style);
+    this.architecture.apartmentResources.art.setStyle(style);
     this.chunks.setContoursVisible(style === 'anime');
     this.scene.traverse((o) => {
       if (o instanceof THREE.Mesh)
         o.material = Array.isArray(o.material)
-          ? o.material.map((m) => this.art.variant(m))
-          : this.art.variant(o.material);
+          ? o.material.map((m) => this.materialVariant(m))
+          : this.materialVariant(o.material);
     });
     this.opticalScale.value = style === 'miniature' ? 0.01 : 0.04;
     this.bokeh.value = this.tiltShift.enabled
@@ -773,6 +764,17 @@ export class CityRenderer implements LayerHost {
       : style === 'miniature'
         ? 16
         : 4;
+  }
+  private materialVariant(material: THREE.Material, style: Style = this.style) {
+    return this.architecture.apartmentResources.owns(material)
+      ? this.architecture.apartmentResources.variant(material, style)
+      : this.art.variant(material, style);
+  }
+  private apartmentSignature(b: Building, original?: BuildingOriginalFootprint) {
+    return this.architecture.signature(b, original, this.signage.get(b.id));
+  }
+  setApartmentEra(value: ApartmentEra) {
+    if (this.architecture.setEra(value) && this.worldState) this.setWorld(this.worldState);
   }
   retire(dispose: () => void) {
     if (this.pendingCompiles) this.retiredResources.push(dispose);
@@ -910,6 +912,7 @@ export class CityRenderer implements LayerHost {
       if (!ids.has(id)) {
         this.chunks.remove(id);
         this.buildings.delete(id);
+        this.architecture.apartmentDetails.delete(id);
       }
     for (const id of this.objectQueue.keys()) if (!ids.has(id)) this.objectQueue.delete(id);
     const originals = new Map(
@@ -918,11 +921,26 @@ export class CityRenderer implements LayerHost {
         original,
       ]),
     );
+    this.architecture.selectLayout(world, originals);
     const signage = (this.signage = signageContexts(world));
     for (const b of world.buildings) {
       const original = originals.get(b.id);
       const context = signage.get(b.id);
-      const signature = buildingRenderSignature(b, original, context);
+      const architecture =
+        this.architecture.apartmentChoices.get(b.id) ??
+        selectApartmentArchitecture(b, this.architecture.apartmentEra, !!original);
+      if (architecture.kind !== 'legacy' && !this.architecture.apartmentDetails.has(b.id))
+        this.architecture.apartmentDetails.set(
+          b.id,
+          apartmentDetail(
+            Math.hypot(
+              b.x - this.camera.position.x,
+              b.z - this.camera.position.z,
+              b.floors * 1.625 - this.camera.position.y,
+            ),
+          ),
+        );
+      const signature = this.apartmentSignature(b, original);
       if (this.buildings.get(b.id)?.signature === signature) {
         this.objectQueue.delete(b.id);
         continue;
@@ -931,12 +949,20 @@ export class CityRenderer implements LayerHost {
       // its data without appending duplicate closures or starving older parcels.
       const snapshot: Building = { ...b, history: [...b.history] };
       const originalSnapshot = original ? { ...original } : undefined;
+      const detail = this.architecture.apartmentDetails.get(b.id) ?? 'district';
       const source: RebuildableBuildingSource = {
         createGroup: () => {
-          const group = buildExtendedBuilding(snapshot, originalSnapshot, this.art, {
-            compactMidrise: this.compactMidriseReview,
-            signage: context,
-          });
+          const group =
+            buildSelectedApartment(
+              snapshot,
+              this.architecture.apartmentResources.art,
+              architecture,
+              detail,
+            ) ??
+            buildExtendedBuilding(snapshot, originalSnapshot, this.art, {
+              compactMidrise: this.compactMidriseReview,
+              signage: context,
+            });
           group.position.set(snapshot.x, 0, snapshot.z);
           group.rotation.y = snapshot.rotation;
           return group;
@@ -970,6 +996,9 @@ export class CityRenderer implements LayerHost {
     this.roadsLayer.nearbyStreetLights?.reset();
     this.roadsLayer.streetLighting?.reset();
     this.buildings.clear();
+    this.architecture.apartmentDetails.clear();
+    this.architecture.apartmentChoices.clear();
+    this.architecture.apartmentLayout = '';
     this.landscape.clearParks();
     this.parkKey = '';
     this.landscape.paintedSeason = '';
@@ -1017,9 +1046,13 @@ export class CityRenderer implements LayerHost {
 
   private updateBuildingBatches() {
     let builtCount = 0;
+    const started = performance.now();
     for (const [id, item] of this.objectQueue) {
       if (!this.roadsLayer.infrastructure().canPresentBuilding(id)) continue;
-      if (builtCount++ >= 2) break;
+      // A complex apartment may consume the frame budget by itself; never pair
+      // it with another expensive build just to meet a fixed object count.
+      if (builtCount >= 2 || (builtCount > 0 && performance.now() - started >= 3)) break;
+      builtCount++;
       this.objectQueue.delete(id);
       const group = item.source.createGroup();
       this.chunks.set(id, group, item.source, item.building.stage !== 'open');
@@ -1046,6 +1079,8 @@ export class CityRenderer implements LayerHost {
       this.pendingCompiles
         ? 'loading'
         : 'ready';
+    if (this.architecture.updateDetail(this.worldState, this.camera, now) && this.worldState)
+      this.setWorld(this.worldState);
     this.updateBuildingBatches();
     this.sidewalks.update();
     this.roadsLayer.updateRoads();
@@ -1324,6 +1359,7 @@ export class CityRenderer implements LayerHost {
       this.rain,
       Math.min(1, dt * (this.rain > this.art.wet.value ? 1 : 0.08)),
     );
+    this.architecture.syncLighting(this.art);
     // Hysteresis: rebuild the pipeline only when streets clearly get or lose a sheen.
     const wetStreets = this.wetReflections ? this.art.wet.value > 0.03 : this.art.wet.value > 0.08;
     if (wetStreets !== this.wetReflections && this.pipeline) {
@@ -1348,8 +1384,7 @@ export class CityRenderer implements LayerHost {
     );
     return (
       !!current &&
-      current.signature ===
-        buildingRenderSignature(building, original, this.signage.get(building.id)) &&
+      current.signature === this.apartmentSignature(building, original) &&
       this.chunks.isSourceVisible(building.id, current.source)
     );
   }
@@ -1437,6 +1472,7 @@ export class CityRenderer implements LayerHost {
     this.retire(() => {
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();
+      this.architecture.apartmentResources.dispose();
       this.art.dispose();
       this.renderer.dispose();
     });

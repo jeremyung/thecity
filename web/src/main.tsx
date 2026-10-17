@@ -102,7 +102,35 @@ const ArchitectureReviewRoute = import.meta.env.DEV
   ? lazy(() => import('./dev/architecture-review'))
   : () => null;
 
+const ArchitectureCityStudy = import.meta.env.DEV
+  ? React.lazy(() =>
+      import('./dev/ArchitectureCityStudy').then((m) => ({ default: m.ArchitectureCityStudy })),
+    )
+  : () => null;
+const ApartmentPilotRoute = import.meta.env.DEV
+  ? React.lazy(() =>
+      import('./dev/ApartmentPilot').then((m) => ({ default: m.ApartmentPilotRoute })),
+    )
+  : () => null;
 function App() {
+  if (
+    import.meta.env.DEV &&
+    new URLSearchParams(location.search).get('review') === 'architecture-city'
+  )
+    return (
+      <React.Suspense fallback={<p>Preparing architecture review…</p>}>
+        <ArchitectureCityStudy />
+      </React.Suspense>
+    );
+  if (
+    import.meta.env.DEV &&
+    new URLSearchParams(location.search).get('review') === 'apartment-pilot'
+  )
+    return (
+      <React.Suspense fallback={<p>Preparing architecture review…</p>}>
+        <ApartmentPilotRoute />
+      </React.Suspense>
+    );
   if (
     import.meta.env.DEV &&
     new URLSearchParams(window.location.search).get('review') === 'architecture'
@@ -128,6 +156,7 @@ function CityExperience() {
     [error, setError] = useState<string | null>(null),
     [message, setMessage] = useState<string | null>(null);
   const [preferences, setPreferences] = useState(loadViewerPreferences);
+  const [apartmentEra, setApartmentEra] = useState(preferences.apartmentEra);
   const [paused, setPaused] = useState(false),
     [speed, setSpeed] = useState(1),
     [style, setStyle] = useState<Style>(preferences.style),
@@ -188,6 +217,7 @@ function CityExperience() {
     runtime.current = { renderer, director, client, audio };
     const recoveryRequested = new URLSearchParams(location.search).get('recover') === '1';
     renderer.setLens(lens, false);
+    renderer.setApartmentEra(apartmentEra);
     renderer.setTiltShift(tiltShift);
     renderer.setFocus(focus);
     renderer.setQuality(recoveryRequested ? 'balanced' : quality);
@@ -554,6 +584,12 @@ function CityExperience() {
         development={development}
         quality={quality}
         onDismissError={() => setError(null)}
+        apartmentEra={apartmentEra}
+        onApartmentEra={(value) => {
+          setApartmentEra(value);
+          storePreferences({ apartmentEra: value });
+          runtime.current?.renderer.setApartmentEra(value);
+        }}
         onDevelopment={(value) => {
           setDevelopment(value);
           runtime.current?.client.controls({ development: value });

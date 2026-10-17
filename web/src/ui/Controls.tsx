@@ -1,3 +1,4 @@
+import type { ApartmentEra } from '../architecture-preference';
 import { DEFAULT_TILT_SHIFT, type TiltShiftSettings } from '../optics/tilt-shift';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
@@ -25,6 +26,8 @@ import ReviewRecording from './ReviewRecording';
 import ReviewCameraPose, { type ApplyReviewPose } from './ReviewCameraPose';
 
 export interface ControlsProps {
+  apartmentEra?: ApartmentEra;
+  onApartmentEra?: (value: ApartmentEra) => void;
   world: World | null;
   ready: boolean;
   error: string | null;
@@ -1228,6 +1231,21 @@ export default function Controls(props: ControlsProps) {
           )}
           <ContrastToggle contrast={contrast} onContrast={onContrast} />
           <LensControl lens={lens} onLens={onLens} />
+          {props.apartmentEra && props.onApartmentEra && (
+            <label className="quality-control">
+              Apartment architecture
+              <select
+                aria-label="Apartment architecture"
+                value={props.apartmentEra}
+                onChange={(event) => props.onApartmentEra?.(event.target.value as ApartmentEra)}
+              >
+                <option value="mixed">Mixed eras</option>
+                <option value="contemporary">Contemporary</option>
+                <option value="older">Older styles</option>
+                <option value="legacy">Existing renderer</option>
+              </select>
+            </label>
+          )}
           <TiltShiftControl
             tiltShift={tiltShift}
             onChange={onTiltShift}
