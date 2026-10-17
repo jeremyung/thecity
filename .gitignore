@@ -54,3 +54,7 @@ __pycache__/
 /tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json
 /tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json
 /tests/fixtures/bus-seed5-legacy-queue.json
+
+# ts-rs default export folders (generation goes to web/src/generated)
+engine/bindings/
+engine/crates/*/bindings/

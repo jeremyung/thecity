@@ -1,3 +1,0 @@
-[env]
-# Generated TypeScript snapshot types (ts-rs).
-TS_RS_EXPORT_DIR = { value = "../web/src/generated", relative = true }

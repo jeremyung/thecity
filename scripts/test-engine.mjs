@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 const env = { ...process.env };
+// Type-export tests write to a scratch directory; `npm run types` owns web/src/generated.
+env.TS_RS_EXPORT_DIR = join(tmpdir(), 'thecity-ts-rs');
 if (existsSync('.tools/cargo/bin')) {
   env.CARGO_HOME = resolve('.tools/cargo');
   env.RUSTUP_HOME = resolve('.tools/rustup');

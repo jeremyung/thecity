@@ -33,9 +33,10 @@ mod tests {
 
     #[test]
     fn export_bindings_wire_layout() {
-        let dir = std::env::var("TS_RS_EXPORT_DIR").unwrap_or_else(|_| {
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../web/src/generated").into()
-        });
+        // `npm run types` sets the directory; plain test runs write nothing.
+        let Ok(dir) = std::env::var("TS_RS_EXPORT_DIR") else {
+            return;
+        };
         let text = format!(
             "// Generated from engine/src/core/wire.rs. Do not edit.\n\
              /** Floats per actor in the movement buffer: id, x, z, heading, kind, surface y. */\n\
