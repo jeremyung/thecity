@@ -114,7 +114,8 @@ fn generated_delivery_return_origin_connector_meets_outgoing_route_start() {
             .travelers
             .iter()
             .find(|traveler| {
-                traveler.activity == "delivery_return" && traveler.origin_access.is_some()
+                traveler.activity == crate::TravelerActivity::DeliveryReturn
+                    && traveler.origin_access.is_some()
             })
             .cloned();
         if returning.is_some() {

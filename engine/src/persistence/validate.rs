@@ -473,7 +473,7 @@ impl Engine {
             }
             if !self.state.residents.iter().any(|resident| {
                 resident.id == *resident_id
-                    && resident.transfer == "waiting_alight"
+                    && resident.transfer == Transfer::WaitingAlight
                     && resident.pending_alight.is_some()
                     && resident.bus_id.is_none()
                     && resident.train_id.is_none()
@@ -519,7 +519,7 @@ impl Engine {
                 return Err(format!("resident {} history exceeded its cap", resident.id));
             }
             if let Some(pending) = &resident.pending_alight {
-                if resident.transfer != "waiting_alight"
+                if resident.transfer != Transfer::WaitingAlight
                     || resident.bus_id.is_some()
                     || resident.train_id.is_some()
                     || !pending_alight_ids.contains(&resident.id)
@@ -541,12 +541,14 @@ impl Engine {
                         .iter()
                         .any(|building| building.id == pending.destination_building)
                     || !matches!(
-                        pending.activity.as_str(),
-                        "commute" | "return" | "walking_home"
+                        pending.activity,
+                        TravelerActivity::Commute
+                            | TravelerActivity::Return
+                            | TravelerActivity::WalkingHome
                     )
                     || !matches!(
-                        pending.transfer_after_route.as_str(),
-                        "walking_from_bus" | "walking_home"
+                        pending.transfer_after_route,
+                        Transfer::WalkingFromBus | Transfer::WalkingHome
                     )
                 {
                     return Err(format!(
@@ -554,7 +556,7 @@ impl Engine {
                         resident.id
                     ));
                 }
-            } else if resident.transfer == "waiting_alight" {
+            } else if resident.transfer == Transfer::WaitingAlight {
                 return Err(format!(
                     "resident {} is waiting without an alight target",
                     resident.id
@@ -562,16 +564,16 @@ impl Engine {
             }
             if resident.rail_commuter
                 && !matches!(
-                    resident.transfer.as_str(),
-                    "home"
-                        | "walking_to_station"
-                        | "waiting_station"
-                        | "riding_outbound"
-                        | "working_external"
-                        | "waiting_gateway"
-                        | "riding_inbound"
-                        | "walking_home"
-                        | "waiting_alight"
+                    resident.transfer,
+                    Transfer::Home
+                        | Transfer::WalkingToStation
+                        | Transfer::WaitingStation
+                        | Transfer::RidingOutbound
+                        | Transfer::WorkingExternal
+                        | Transfer::WaitingGateway
+                        | Transfer::RidingInbound
+                        | Transfer::WalkingHome
+                        | Transfer::WaitingAlight
                 )
             {
                 return Err(format!(
@@ -580,8 +582,8 @@ impl Engine {
                 ));
             }
             let riding = matches!(
-                resident.transfer.as_str(),
-                "riding_outbound" | "riding_inbound"
+                resident.transfer,
+                Transfer::RidingOutbound | Transfer::RidingInbound
             );
             if riding != resident.train_id.is_some() {
                 return Err(format!(
@@ -589,15 +591,18 @@ impl Engine {
                     resident.id
                 ));
             }
-            if resident.transfer == "riding_bus" && resident.bus_id.is_none() {
+            if resident.transfer == Transfer::RidingBus && resident.bus_id.is_none() {
                 return Err(format!(
                     "resident {} is riding without a bus assignment",
                     resident.id
                 ));
             }
             if matches!(
-                resident.transfer.as_str(),
-                "walking_to_bus" | "waiting_bus" | "riding_bus" | "walking_from_bus"
+                resident.transfer,
+                Transfer::WalkingToBus
+                    | Transfer::WaitingBus
+                    | Transfer::RidingBus
+                    | Transfer::WalkingFromBus
             ) && (resident.bus_origin_stop.is_none() || resident.bus_destination_stop.is_none())
             {
                 return Err(format!(
@@ -665,14 +670,14 @@ impl Engine {
                 if !self.state.residents.iter().any(|resident| {
                     resident.id == *resident_id
                         && resident.bus_id == Some(bus.id)
-                        && resident.transfer == "riding_bus"
+                        && resident.transfer == Transfer::RidingBus
                 }) {
                     return Err(format!("bus {} has an unlinked passenger", bus.id));
                 }
             }
         }
         for resident in &self.state.residents {
-            if (resident.transfer == "riding_bus") != bus_passengers.contains(&resident.id) {
+            if (resident.transfer == Transfer::RidingBus) != bus_passengers.contains(&resident.id) {
                 return Err(format!(
                     "resident {} has inconsistent bus occupancy",
                     resident.id
@@ -680,15 +685,15 @@ impl Engine {
             }
         }
         for (at_station, states) in [
-            (true, ["walking_to_station", "waiting_station"]),
-            (false, ["waiting_gateway", "waiting_gateway"]),
+            (true, [Transfer::WalkingToStation, Transfer::WaitingStation]),
+            (false, [Transfer::WaitingGateway, Transfer::WaitingGateway]),
         ] {
             let mut slots = BTreeSet::new();
             for resident in self
                 .state
                 .residents
                 .iter()
-                .filter(|resident| states.contains(&resident.transfer.as_str()))
+                .filter(|resident| states.contains(&resident.transfer))
             {
                 if let Some(slot) = resident.queue_slot {
                     if slot >= RAIL_QUEUE_CAPACITY as u16 || !slots.insert(slot) {
@@ -783,12 +788,13 @@ impl Engine {
             .into_iter()
             .flatten()
             {
-                let path_requires_rail_surface = (traveler.activity == "walking_to_station"
+                let path_requires_rail_surface = (traveler.activity
+                    == TravelerActivity::WalkingToStation
                     && traveler
                         .destination_access
                         .as_ref()
                         .is_some_and(|rail| std::ptr::eq(rail, path)))
-                    || (traveler.activity == "walking_home"
+                    || (traveler.activity == TravelerActivity::WalkingHome
                         && traveler
                             .origin_access
                             .as_ref()
@@ -815,7 +821,9 @@ impl Engine {
                             .zip(path.points.last())
                             .is_some_and(|(&from, &to)| {
                                 [true, false].into_iter().any(|at_station| {
-                                    let expected = if traveler.activity == "walking_to_station" {
+                                    let expected = if traveler.activity
+                                        == TravelerActivity::WalkingToStation
+                                    {
                                         self.platform_entry_path_from_position(
                                             from,
                                             to,

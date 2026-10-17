@@ -72,8 +72,8 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         home_node: approach,
         work_node: Some(destination),
         mode: 0,
-        routine: "worker".into(),
-        activity: "at_home".into(),
+        routine: crate::ResidentRoutine::Worker,
+        activity: crate::ResidentActivity::AtHome,
         at_work: false,
         departure_tick: 0,
         return_tick: 0,
@@ -81,7 +81,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         last_return_day: u32::MAX,
         history: Vec::new(),
         rail_commuter: false,
-        transfer: String::new(),
+        transfer: crate::Transfer::None,
         train_id: None,
         queue_slot: None,
         bus_id: None,
@@ -95,7 +95,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
         0,
         approach,
         destination,
-        "commute",
+        crate::TravelerActivity::Commute,
         building,
         Some(building)
     ));
@@ -122,7 +122,7 @@ fn scheduled_and_alighting_bus_connectors_end_at_the_correct_route_endpoint() {
     engine.state.travelers.clear();
     {
         let resident = &mut engine.state.residents[0];
-        resident.transfer = "riding_bus".into();
+        resident.transfer = crate::Transfer::RidingBus;
         resident.bus_id = Some(bus_id);
         resident.bus_origin_stop = Some(first_stop);
         resident.bus_destination_stop = Some(last_stop);
@@ -199,8 +199,8 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         home_node: destination,
         work_node: None,
         mode: 0,
-        routine: "worker".into(),
-        activity: "waiting_for_route".into(),
+        routine: crate::ResidentRoutine::Worker,
+        activity: crate::ResidentActivity::WaitingForRoute,
         at_work: true,
         departure_tick: 0,
         return_tick: 0,
@@ -208,7 +208,7 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         last_return_day: u32::MAX,
         history: Vec::new(),
         rail_commuter: true,
-        transfer: "waiting_alight".into(),
+        transfer: crate::Transfer::WaitingAlight,
         train_id: None,
         queue_slot: None,
         bus_id: None,
@@ -223,8 +223,8 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         station,
         destination,
         building,
-        "return",
-        "walking_home",
+        crate::TravelerActivity::Return,
+        crate::Transfer::WalkingHome,
         wait_position,
         false,
     ));
@@ -262,5 +262,8 @@ fn recovered_rail_alight_connector_ends_at_the_route_start_endpoint() {
         (final_point.x, final_point.z),
         (expected_endpoint.x, expected_endpoint.z)
     );
-    assert_eq!(engine.state.residents[0].transfer, "walking_home");
+    assert_eq!(
+        engine.state.residents[0].transfer,
+        crate::Transfer::WalkingHome
+    );
 }

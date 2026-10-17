@@ -83,11 +83,11 @@ impl Engine {
             .filter(|resident| {
                 if at_station {
                     matches!(
-                        resident.transfer.as_str(),
-                        "walking_to_station" | "waiting_station"
+                        resident.transfer,
+                        Transfer::WalkingToStation | Transfer::WaitingStation
                     )
                 } else {
-                    resident.transfer == "waiting_gateway"
+                    resident.transfer == Transfer::WaitingGateway
                 }
             })
             .filter_map(|resident| resident.queue_slot)
@@ -121,9 +121,9 @@ impl Engine {
 
     pub(crate) fn rail_waiting_count(&self, at_station: bool) -> usize {
         let state = if at_station {
-            "waiting_station"
+            Transfer::WaitingStation
         } else {
-            "waiting_gateway"
+            Transfer::WaitingGateway
         };
         self.state
             .residents
@@ -135,17 +135,17 @@ impl Engine {
     pub(crate) fn rail_platform_demand(&self, at_station: bool) -> usize {
         let waiting = self.rail_waiting_count(at_station);
         let walking = if at_station {
-            "walking_to_station"
+            Some(TravelerActivity::WalkingToStation)
         } else {
             // Return commuters join the gateway queue directly when their shift ends.
-            ""
+            None
         };
         waiting
             + self
                 .state
                 .travelers
                 .iter()
-                .filter(|traveler| traveler.activity == walking && !walking.is_empty())
+                .filter(|traveler| Some(traveler.activity) == walking)
                 .count()
     }
 
@@ -155,8 +155,10 @@ impl Engine {
         };
         let resident = self.state.residents[index].clone();
         let quiet = self.rail_service_quiet();
-        match resident.transfer.as_str() {
-            "home" if !resident.at_work && self.state.tick >= resident.departure_tick && !quiet => {
+        match resident.transfer {
+            Transfer::Home
+                if !resident.at_work && self.state.tick >= resident.departure_tick && !quiet =>
+            {
                 if self.rail_platform_demand(true) >= RAIL_QUEUE_CAPACITY {
                     return;
                 }
@@ -172,8 +174,8 @@ impl Engine {
                 }
                 if route.len() == 1 {
                     if let Some(current) = self.state.residents.get_mut(index) {
-                        current.transfer = "waiting_station".into();
-                        current.activity = "waiting_for_train".into();
+                        current.transfer = Transfer::WaitingStation;
+                        current.activity = ResidentActivity::WaitingForTrain;
                     }
                 } else {
                     let route_lengths = self.route_lengths(&route);
@@ -186,7 +188,7 @@ impl Engine {
                         edge_progress: 0.0,
                         speed: 1.5,
                         destination: station,
-                        activity: "walking_to_station".into(),
+                        activity: TravelerActivity::WalkingToStation,
                         resident: resident.id,
                         name: resident.name.clone(),
                         origin_building: Some(resident.home_building),
@@ -211,8 +213,8 @@ impl Engine {
                     }
                     self.state.travelers.push(traveler);
                     if let Some(current) = self.state.residents.get_mut(index) {
-                        current.transfer = "walking_to_station".into();
-                        current.activity = "walking_to_station".into();
+                        current.transfer = Transfer::WalkingToStation;
+                        current.activity = ResidentActivity::WalkingToStation;
                     }
                 }
                 if let Some(current) = self.state.residents.get_mut(index) {
@@ -232,15 +234,15 @@ impl Engine {
                     ),
                 );
             }
-            "working_external"
+            Transfer::WorkingExternal
                 if resident.at_work && self.state.tick >= resident.return_tick && !quiet =>
             {
                 let Some(queue_slot) = self.allocate_queue_slot(false) else {
                     return;
                 };
                 if let Some(current) = self.state.residents.get_mut(index) {
-                    current.transfer = "waiting_gateway".into();
-                    current.activity = "waiting_for_train".into();
+                    current.transfer = Transfer::WaitingGateway;
+                    current.activity = ResidentActivity::WaitingForTrain;
                     current.queue_slot = Some(queue_slot);
                     current.last_return_day = day;
                     current.return_tick = current.return_tick.saturating_add(TICKS_PER_DAY);
@@ -402,7 +404,7 @@ impl Engine {
                 continue;
             };
             let resident = self.state.residents[resident_index].clone();
-            if at_station && resident.transfer == "riding_inbound" {
+            if at_station && resident.transfer == Transfer::RidingInbound {
                 let queue_slot = (resident.id % RAIL_QUEUE_CAPACITY as u32) as u16;
                 let wait_position = self.platform_position(true, queue_slot);
                 let route_attempted =
@@ -421,8 +423,8 @@ impl Engine {
                             station,
                             resident.home_node,
                             resident.home_building,
-                            "walking_home",
-                            "walking_home",
+                            TravelerActivity::WalkingHome,
+                            Transfer::WalkingHome,
                             wait_position,
                             route_attempted,
                         )
@@ -455,8 +457,8 @@ impl Engine {
                 if route.len() == 1 {
                     unloaded.insert(resident_id);
                     let current = &mut self.state.residents[resident_index];
-                    current.transfer = "home".into();
-                    current.activity = "at_home".into();
+                    current.transfer = Transfer::Home;
+                    current.activity = ResidentActivity::AtHome;
                     current.at_work = false;
                     current.train_id = None;
                     current.queue_slot = None;
@@ -483,7 +485,7 @@ impl Engine {
                         edge_progress: 0.0,
                         speed: 1.5,
                         destination: resident.home_node,
-                        activity: "walking_home".into(),
+                        activity: TravelerActivity::WalkingHome,
                         resident: resident.id,
                         name: resident.name.clone(),
                         origin_building: None,
@@ -508,8 +510,8 @@ impl Engine {
                     }
                     self.state.travelers.push(traveler);
                     let current = &mut self.state.residents[resident_index];
-                    current.transfer = "walking_home".into();
-                    current.activity = "walking_home".into();
+                    current.transfer = Transfer::WalkingHome;
+                    current.activity = ResidentActivity::WalkingHome;
                     current.train_id = None;
                     current.queue_slot = None;
                     push_history(
@@ -528,11 +530,11 @@ impl Engine {
                         ),
                     );
                 }
-            } else if !at_station && resident.transfer == "riding_outbound" {
+            } else if !at_station && resident.transfer == Transfer::RidingOutbound {
                 unloaded.insert(resident_id);
                 let current = &mut self.state.residents[resident_index];
-                current.transfer = "working_external".into();
-                current.activity = "working_external".into();
+                current.transfer = Transfer::WorkingExternal;
+                current.activity = ResidentActivity::WorkingExternal;
                 current.at_work = true;
                 current.train_id = None;
                 current.work_node = Some(gateway);
@@ -612,9 +614,9 @@ impl Engine {
         }
         let (queue_state, riding_state) = if direction >= 0 && distance <= TRAIN_HALF_LENGTH + 0.01
         {
-            ("waiting_station", "riding_outbound")
+            (Transfer::WaitingStation, Transfer::RidingOutbound)
         } else if direction < 0 && distance >= rail_length - TRAIN_HALF_LENGTH - 0.01 {
-            ("waiting_gateway", "riding_inbound")
+            (Transfer::WaitingGateway, Transfer::RidingInbound)
         } else {
             return;
         };
@@ -636,8 +638,8 @@ impl Engine {
         };
         let resident_name = self.state.residents[index].name.clone();
         let current = &mut self.state.residents[index];
-        current.transfer = riding_state.into();
-        current.activity = "riding_train".into();
+        current.transfer = riding_state;
+        current.activity = ResidentActivity::RidingTrain;
         current.train_id = Some(train_id);
         current.queue_slot = None;
         push_history(
@@ -657,7 +659,7 @@ impl Engine {
                 train.passengers.push(resident_id);
             }
         }
-        let board_station = queue_state == "waiting_station";
+        let board_station = queue_state == Transfer::WaitingStation;
         self.record(
             EventKind::TrainPassengerBoarded,
             train_id,

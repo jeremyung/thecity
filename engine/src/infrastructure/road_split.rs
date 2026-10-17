@@ -562,7 +562,7 @@ mod tests {
                 edge_progress,
                 speed: 1.0,
                 destination: *route.last().unwrap(),
-                activity: "paired split regression".into(),
+                activity: crate::TravelerActivity::Stroll,
                 resident: 0,
                 name: format!("Split actor {id}"),
                 origin_building: None,

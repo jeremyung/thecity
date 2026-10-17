@@ -18,7 +18,7 @@ fn bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save() {
         .iter_mut()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    resident.transfer = "riding_bus".into();
+    resident.transfer = Transfer::RidingBus;
     resident.bus_id = Some(bus_id);
     resident.bus_origin_stop = Some(line.stops[0]);
     resident.bus_destination_stop = Some(stop);
@@ -36,7 +36,7 @@ fn bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save() {
         .iter()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    assert_eq!(waiting.transfer, "waiting_alight");
+    assert_eq!(waiting.transfer, Transfer::WaitingAlight);
     assert_eq!(waiting.pending_alight.as_ref().unwrap().stop_node, stop);
     assert_eq!(waiting.bus_id, None);
     assert!(engine.state.buses[0].passengers.is_empty());
@@ -98,14 +98,17 @@ fn bus_passenger_waits_for_disconnected_walk_route_and_resumes_after_save() {
         .iter()
         .find(|traveler| traveler.resident == resident_id)
         .expect("legal route should resume the resident's walk");
-    assert_eq!(resumed.activity, "commute");
+    assert_eq!(resumed.activity, TravelerActivity::Commute);
     assert_eq!(resumed.access_phase, 0);
     let origin_access = resumed.origin_access.as_ref().unwrap();
     assert_eq!(origin_access.points[0].x, saved_position.x);
     assert_eq!(origin_access.points[0].z, saved_position.z);
     assert_eq!(resumed.edge_progress, 0.0);
     assert!(restored.state.residents[0].pending_alight.is_none());
-    assert_eq!(restored.state.residents[0].transfer, "walking_from_bus");
+    assert_eq!(
+        restored.state.residents[0].transfer,
+        Transfer::WalkingFromBus
+    );
     assert_eq!(restored.state.buses[0].passengers.len(), 0);
     restored.validate().unwrap();
 }
@@ -142,8 +145,8 @@ fn pending_alight_scheduler_checks_at_most_eight_waiters_per_tick() {
             stop,
             target,
             building,
-            "commute",
-            "walking_from_bus",
+            TravelerActivity::Commute,
+            Transfer::WalkingFromBus,
             position,
             false,
         ));
@@ -213,8 +216,8 @@ fn pending_alight_retries_when_destination_opens_without_geometry_change() {
         stop,
         target,
         building_id,
-        "commute",
-        "walking_from_bus",
+        TravelerActivity::Commute,
+        Transfer::WalkingFromBus,
         position,
         false,
     ));
@@ -265,7 +268,7 @@ fn full_pending_alight_queue_keeps_bus_passenger_seated() {
     let resident = &mut engine.state.residents[0];
     resident.at_work = false;
     resident.work_node = Some(target);
-    resident.transfer = "riding_bus".into();
+    resident.transfer = Transfer::RidingBus;
     resident.bus_id = Some(bus_id);
     resident.bus_origin_stop = Some(line.stops[0]);
     resident.bus_destination_stop = Some(stop);
@@ -277,7 +280,7 @@ fn full_pending_alight_queue_keeps_bus_passenger_seated() {
 
     engine.alight_bus_passenger(0, resident_id, stop);
     assert_eq!(engine.state.buses[0].passengers, vec![resident_id]);
-    assert_eq!(engine.state.residents[0].transfer, "riding_bus");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::RidingBus);
     assert_eq!(engine.state.residents[0].bus_id, Some(bus_id));
     assert!(engine.state.residents[0].pending_alight.is_none());
     assert!(engine.state.residents[0]
@@ -292,7 +295,7 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
     let (mut engine, ids) = bus_test_engine(1);
     let resident_id = ids[0];
     engine.schedule_residents(0);
-    assert_eq!(engine.state.residents[0].transfer, "walking_to_bus");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::WalkingToBus);
     let mut saw_waiting = false;
     for _ in 0..2_000 {
         engine.step(1);
@@ -302,23 +305,23 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
             .iter()
             .find(|resident| resident.id == resident_id)
             .unwrap();
-        if resident.transfer == "waiting_bus" {
+        if resident.transfer == Transfer::WaitingBus {
             saw_waiting = true;
             break;
         }
-        if resident.transfer == "riding_bus" {
+        if resident.transfer == Transfer::RidingBus {
             saw_waiting = true;
             break;
         }
     }
     assert!(saw_waiting, "resident never reached the stop queue");
     for _ in 0..100 {
-        if engine.state.residents[0].transfer == "riding_bus" {
+        if engine.state.residents[0].transfer == Transfer::RidingBus {
             break;
         }
         engine.step(1);
     }
-    assert_eq!(engine.state.residents[0].transfer, "riding_bus");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::RidingBus);
     assert_eq!(engine.state.buses[0].passengers, vec![resident_id]);
     assert!(!engine
         .state
@@ -334,7 +337,7 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
         engine.step(1);
         restored.step(1);
         assert_eq!(engine.save_json(), restored.save_json());
-        if engine.state.residents[0].transfer == "walking_from_bus" {
+        if engine.state.residents[0].transfer == Transfer::WalkingFromBus {
             saw_alight = true;
             break;
         }
@@ -352,10 +355,10 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
         engine.state.residents[0].at_work,
         "rider did not reach the workplace door"
     );
-    assert_eq!(engine.state.residents[0].transfer, "");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::None);
     engine.state.residents[0].return_tick = engine.state.tick;
     engine.schedule_residents(0);
-    assert_eq!(engine.state.residents[0].transfer, "walking_to_bus");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::WalkingToBus);
     let mut boarded_return = false;
     let return_walker = engine
         .state
@@ -389,7 +392,7 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
     let return_boarding_ticks = walk_ticks + service_cycle_ticks;
     for _ in 0..return_boarding_ticks {
         engine.step(1);
-        if engine.state.residents[0].transfer == "riding_bus" {
+        if engine.state.residents[0].transfer == Transfer::RidingBus {
             boarded_return = true;
             break;
         }
@@ -431,7 +434,9 @@ fn named_resident_walks_rides_alights_and_returns_by_bus_with_replay() {
         engine.step(1);
         return_restored.step(1);
         assert_eq!(engine.save_json(), return_restored.save_json());
-        if !engine.state.residents[0].at_work && engine.state.residents[0].transfer.is_empty() {
+        if !engine.state.residents[0].at_work
+            && engine.state.residents[0].transfer == crate::Transfer::None
+        {
             returned = true;
             break;
         }
@@ -459,7 +464,7 @@ fn bus_capacity_keeps_overflow_queue_visible_and_bounded() {
         .iter()
         .all(|id| ids.contains(id)));
     assert!(engine.state.residents.iter().all(|resident| {
-        resident.transfer != "riding_bus"
+        resident.transfer != Transfer::RidingBus
             || !engine
                 .state
                 .travelers
@@ -499,7 +504,7 @@ fn quiet_hours_do_not_start_new_bus_rides_but_current_riders_finish() {
         .iter_mut()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    resident.transfer = "waiting_bus".into();
+    resident.transfer = Transfer::WaitingBus;
     resident.bus_origin_stop = Some(line.stops[0]);
     resident.bus_destination_stop = Some(line.stops[2]);
     resident.bus_stop_node = resident.bus_origin_stop;
@@ -507,7 +512,7 @@ fn quiet_hours_do_not_start_new_bus_rides_but_current_riders_finish() {
     engine.state.tick = 19_500; // 01:30, inside the quiet service window
     let start_stop = line.stops[0];
     engine.handle_bus_stop(0, start_stop, &line, true);
-    assert_eq!(engine.state.residents[0].transfer, "waiting_bus");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::WaitingBus);
     assert!(engine.state.buses[0].passengers.is_empty());
 
     let destination_stop = line.stops[2];
@@ -521,11 +526,11 @@ fn quiet_hours_do_not_start_new_bus_rides_but_current_riders_finish() {
         .iter_mut()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    resident.transfer = "riding_bus".into();
+    resident.transfer = Transfer::RidingBus;
     let bus_id = engine.state.buses[0].id;
     resident.bus_id = Some(bus_id);
     engine.advance_buses();
-    assert_eq!(engine.state.residents[0].transfer, "walking_from_bus");
+    assert_eq!(engine.state.residents[0].transfer, Transfer::WalkingFromBus);
     assert!(engine.state.buses[0].passengers.is_empty());
 }
 
@@ -734,7 +739,7 @@ fn cars_keep_a_following_gap_behind_a_stopped_bus() {
         edge_progress: 8.0,
         speed: 9.0,
         destination: to,
-        activity: "test_bus_following".into(),
+        activity: crate::TravelerActivity::Stroll,
         resident: 0,
         name: "Following car".into(),
         origin_building: None,
@@ -760,7 +765,7 @@ fn cars_keep_a_following_gap_behind_a_stopped_bus() {
         edge_progress: 12.0,
         speed: 9.0,
         destination: line.route[1],
-        activity: "leading_car".into(),
+        activity: crate::TravelerActivity::Stroll,
         resident: 0,
         name: "Leading car".into(),
         origin_building: None,
@@ -873,7 +878,7 @@ fn seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves() {
         .iter()
         .find(|resident| resident.id == resident_id)
         .expect("historical reverse-queue resident should exist");
-    assert_eq!(resident.transfer, "waiting_bus");
+    assert_eq!(resident.transfer, Transfer::WaitingBus);
     assert_eq!(engine.bus_trip_direction(resident), Some(-1));
     let mut boarded = false;
     for _ in 0..24_000 {
@@ -884,7 +889,7 @@ fn seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves() {
             .iter()
             .find(|resident| resident.id == resident_id)
             .unwrap();
-        if resident.transfer == "riding_bus" && resident.bus_id.is_some() {
+        if resident.transfer == Transfer::RidingBus && resident.bus_id.is_some() {
             boarded = true;
             break;
         }
@@ -903,7 +908,7 @@ fn seed_five_reverse_bus_corridor_is_ordered_and_waiting_trip_resolves() {
             .iter()
             .find(|resident| resident.id == resident_id)
             .unwrap();
-        if !resident.at_work && resident.transfer.is_empty() {
+        if !resident.at_work && resident.transfer == crate::Transfer::None {
             returned_home = true;
             break;
         }
@@ -1013,7 +1018,7 @@ fn generated_seed_five_bus_shuttle_runs_both_directions_after_bridge_growth() {
             .state
             .residents
             .iter()
-            .any(|resident| resident.transfer == "riding_bus")
+            .any(|resident| resident.transfer == Transfer::RidingBus)
     {
         engine.step(1);
     }
@@ -1022,7 +1027,7 @@ fn generated_seed_five_bus_shuttle_runs_both_directions_after_bridge_growth() {
             .state
             .residents
             .iter()
-            .any(|resident| resident.transfer == "riding_bus"),
+            .any(|resident| resident.transfer == Transfer::RidingBus),
         "generated service covered {served_pairs} resident pairs but no natural rider boarded"
     );
     assert!(engine
@@ -1050,8 +1055,8 @@ fn pending_bus_alighter_at_rail_terminal_stays_on_ground() {
         station,
         bus_resident.home_node,
         bus_resident.home_building,
-        "commute",
-        "walking_from_bus",
+        TravelerActivity::Commute,
+        Transfer::WalkingFromBus,
         position,
         false
     ));
@@ -1212,8 +1217,8 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
         home_node,
         work_node: Some(home_node),
         mode: 0,
-        routine: "neighbor".into(),
-        activity: "home".into(),
+        routine: ResidentRoutine::Neighbor,
+        activity: crate::ResidentActivity::Commuting,
         at_work: false,
         departure_tick: 0,
         return_tick: 0,
@@ -1221,7 +1226,7 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
         last_return_day: u32::MAX,
         history: Vec::new(),
         rail_commuter: false,
-        transfer: "home".into(),
+        transfer: Transfer::Home,
         train_id: None,
         queue_slot: None,
         bus_id: None,
@@ -1239,7 +1244,7 @@ fn seeded_business_turnover_defers_jobs_and_deliveries_then_reopens() {
         edge_progress: 0.0,
         speed: 9.0,
         destination: 0,
-        activity: "delivery".into(),
+        activity: TravelerActivity::Delivery,
         resident: 0,
         name: "Delivery van".into(),
         origin_building: None,
@@ -1465,7 +1470,7 @@ fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
             edge_progress,
             speed: 1.2,
             destination: *route.last().unwrap(),
-            activity: "split regression".into(),
+            activity: crate::TravelerActivity::Stroll,
             resident: 0,
             name: format!("Split walker {index}"),
             origin_building: None,
@@ -1532,7 +1537,7 @@ fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
         building_id,
         a.id,
         east,
-        "riding_bus",
+        Transfer::RidingBus,
         None,
         Some(bus_id),
         Some((a.id, east)),
@@ -1561,7 +1566,7 @@ fn road_split_preserves_frontage_travelers_bus_train_and_replay() {
         building_id,
         a.id,
         b.id,
-        "riding_outbound",
+        Transfer::RidingOutbound,
         Some(train_id),
         None,
         None,

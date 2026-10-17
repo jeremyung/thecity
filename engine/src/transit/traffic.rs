@@ -88,7 +88,7 @@ impl Engine {
             return t.kind;
         }
         let h = vehicle_hash(t.id);
-        if t.activity.starts_with("delivery") {
+        if t.activity.is_delivery() {
             return match h % 6 {
                 0 | 1 => VEHICLE_TRUCK,
                 2 => VEHICLE_MAIL,

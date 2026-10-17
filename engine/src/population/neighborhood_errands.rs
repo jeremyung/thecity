@@ -127,10 +127,7 @@ impl crate::Engine {
                     .state
                     .travelers
                     .iter()
-                    .filter(|t| {
-                        t.destination_building == Some(b.id)
-                            && !t.activity.starts_with("neighborhood_errand_")
-                    })
+                    .filter(|t| t.destination_building == Some(b.id) && !t.activity.is_errand())
                     .count() as u32;
                 let reserved = self
                     .state
@@ -233,7 +230,7 @@ impl crate::Engine {
             self,
             home_id,
             destination_id,
-            "neighborhood_errand_outbound",
+            crate::TravelerActivity::NeighborhoodErrandOutbound,
         );
         outbound.origin_access = self.building_access_path(home_id, &route, true, id, 0);
         outbound.destination_access =
@@ -254,7 +251,7 @@ impl crate::Engine {
             self,
             destination_id,
             home_id,
-            "neighborhood_errand_returning",
+            crate::TravelerActivity::NeighborhoodErrandReturning,
         );
         returning.origin_access =
             self.building_access_path(destination_id, &returning.route, true, id, 0);
@@ -296,12 +293,16 @@ impl crate::Engine {
         };
         let outing = &mut self.state.neighborhood_errands.outings[index];
         match outing.phase {
-            Phase::Outbound if traveler.activity == "neighborhood_errand_outbound" => {
+            Phase::Outbound
+                if traveler.activity == crate::TravelerActivity::NeighborhoodErrandOutbound =>
+            {
                 outing.phase = Phase::Dwelling;
                 outing.dwell_until = self.state.tick.saturating_add(outing.dwell_ticks);
                 true
             }
-            Phase::Returning if traveler.activity == "neighborhood_errand_returning" => {
+            Phase::Returning
+                if traveler.activity == crate::TravelerActivity::NeighborhoodErrandReturning =>
+            {
                 self.state.neighborhood_errands.outings.remove(index);
                 true
             }
@@ -406,7 +407,7 @@ impl crate::Engine {
                 .ok_or("errand destination parcel missing")?;
             let t = &outing.return_traveler;
             if t.id != outing.traveler_id
-                || t.activity != "neighborhood_errand_returning"
+                || t.activity != crate::TravelerActivity::NeighborhoodErrandReturning
                 || t.resident != 0
                 || t.origin_building != Some(outing.destination_id)
                 || t.destination_building != Some(outing.home_id)
@@ -462,7 +463,8 @@ impl crate::Engine {
             match outing.phase {
                 Phase::Outbound
                     if travelers.len() != 1
-                        || travelers[0].activity != "neighborhood_errand_outbound"
+                        || travelers[0].activity
+                            != crate::TravelerActivity::NeighborhoodErrandOutbound
                         || travelers[0].origin_building != Some(outing.home_id)
                         || travelers[0].destination_building != Some(outing.destination_id)
                         || travelers[0].resident != 0
@@ -519,7 +521,8 @@ impl crate::Engine {
                 }
                 Phase::Returning
                     if travelers.len() != 1
-                        || travelers[0].activity != "neighborhood_errand_returning"
+                        || travelers[0].activity
+                            != crate::TravelerActivity::NeighborhoodErrandReturning
                         || travelers[0].origin_building != Some(outing.destination_id)
                         || travelers[0].destination_building != Some(outing.home_id)
                         || travelers[0].resident != 0
@@ -543,7 +546,7 @@ impl crate::Engine {
             .state
             .travelers
             .iter()
-            .filter(|t| t.activity.starts_with("neighborhood_errand_"))
+            .filter(|t| t.activity.is_errand())
         {
             if !ids.contains(&traveler.id) {
                 return Err("orphan neighborhood errand traveler".into());
@@ -620,7 +623,7 @@ fn make_traveler(
     engine: &crate::Engine,
     origin: u32,
     destination: u32,
-    activity: &str,
+    activity: crate::TravelerActivity,
 ) -> crate::Traveler {
     crate::Traveler {
         id,
@@ -631,7 +634,7 @@ fn make_traveler(
         edge_progress: 0.0,
         speed: 1.2,
         destination: route.last().copied().unwrap_or(0),
-        activity: activity.into(),
+        activity,
         resident: 0,
         name: "Neighborhood visitor".into(),
         origin_building: Some(origin),

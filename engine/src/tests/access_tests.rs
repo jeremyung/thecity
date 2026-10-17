@@ -59,7 +59,7 @@ fn pedestrian_building_connectors_are_continuous_saved_and_face_frontage() {
         edge_progress: 0.0,
         speed: 1.5,
         destination: home_parcel.access_node,
-        activity: "commute".into(),
+        activity: TravelerActivity::Commute,
         resident: 0,
         name: "Connector Test Walker".into(),
         origin_building: Some(founder.id),

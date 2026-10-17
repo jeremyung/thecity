@@ -195,7 +195,8 @@ impl Engine {
                     .residents
                     .iter()
                     .filter(|resident| {
-                        resident.routine == "worker" && resident.work_building == Some(other.id)
+                        resident.routine == ResidentRoutine::Worker
+                            && resident.work_building == Some(other.id)
                     })
                     .count();
                 assigned < other.capacity as usize

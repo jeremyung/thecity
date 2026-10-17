@@ -134,7 +134,7 @@ fn add_travelers(
             edge_progress,
             speed: 1.0,
             destination: if affected { host.to } else { route_road.to },
-            activity: "road split profile".into(),
+            activity: crate::TravelerActivity::Stroll,
             resident: 0,
             name: format!("Profile traveler {index}"),
             origin_building: None,

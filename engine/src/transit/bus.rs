@@ -325,7 +325,10 @@ impl Engine {
             .residents
             .iter()
             .filter(|resident| {
-                matches!(resident.transfer.as_str(), "walking_to_bus" | "waiting_bus")
+                matches!(
+                    resident.transfer,
+                    Transfer::WalkingToBus | Transfer::WaitingBus
+                )
             })
             .count()
     }
@@ -334,7 +337,7 @@ impl Engine {
         self.state
             .residents
             .iter()
-            .filter(|resident| resident.transfer == "waiting_bus")
+            .filter(|resident| resident.transfer == Transfer::WaitingBus)
             .count()
     }
 
@@ -436,7 +439,10 @@ impl Engine {
             .residents
             .iter()
             .filter(|resident| {
-                matches!(resident.transfer.as_str(), "walking_to_bus" | "waiting_bus")
+                matches!(
+                    resident.transfer,
+                    Transfer::WalkingToBus | Transfer::WaitingBus
+                )
             })
             .filter_map(|resident| resident.queue_slot)
             .collect();
@@ -448,7 +454,7 @@ impl Engine {
         index: usize,
         origin: u32,
         goal: u32,
-        activity: &str,
+        activity: TravelerActivity,
         origin_building: u32,
         destination_building: Option<u32>,
     ) -> bool {
@@ -508,7 +514,7 @@ impl Engine {
             edge_progress: 0.0,
             speed: 1.5,
             destination: origin_stop,
-            activity: "walking_to_bus".into(),
+            activity: TravelerActivity::WalkingToBus,
             resident: id,
             name: self.state.residents[index].name.clone(),
             origin_building: Some(origin_building),
@@ -535,21 +541,21 @@ impl Engine {
         }
         self.state.travelers.push(traveler);
         if let Some(resident) = self.state.residents.get_mut(index) {
-            resident.transfer = "walking_to_bus".into();
-            resident.activity = "walking_to_bus".into();
+            resident.transfer = Transfer::WalkingToBus;
+            resident.activity = ResidentActivity::WalkingToBus;
             resident.bus_id = None;
             resident.bus_origin_stop = Some(origin_stop);
             resident.bus_destination_stop = Some(destination_stop);
             resident.bus_stop_node = Some(origin_stop);
             resident.queue_slot = Some(queue_slot);
-            if activity == "return" {
+            if activity == TravelerActivity::Return {
                 resident.last_return_day = clock_at(self.state.tick).0;
                 resident.return_tick = resident.return_tick.saturating_add(TICKS_PER_DAY);
-                resident.activity = "returning_home".into();
+                resident.activity = ResidentActivity::ReturningHome;
             } else {
                 resident.last_departure_day = clock_at(self.state.tick).0;
                 resident.departure_tick = resident.departure_tick.saturating_add(TICKS_PER_DAY);
-                resident.activity = "commuting".into();
+                resident.activity = ResidentActivity::Commuting;
             }
             push_history(
                 &mut resident.history,
@@ -862,30 +868,31 @@ impl Engine {
         }
         let direction = self.state.buses[bus_index].direction;
         let stop_index = line.stops.iter().position(|candidate| *candidate == stop);
-        let mut waiting: Vec<u32> =
-            self.state
-                .residents
-                .iter()
-                .filter(|resident| {
-                    resident.transfer == "waiting_bus" && resident.bus_origin_stop == Some(stop)
-                })
-                .filter(|resident| {
-                    let Some(origin) = stop_index else {
-                        return false;
-                    };
-                    let Some(destination) = resident.bus_destination_stop.and_then(|node| {
-                        line.stops.iter().position(|candidate| *candidate == node)
-                    }) else {
-                        return false;
-                    };
-                    if direction >= 0 {
-                        destination > origin
-                    } else {
-                        destination < origin
-                    }
-                })
-                .map(|resident| resident.id)
-                .collect();
+        let mut waiting: Vec<u32> = self
+            .state
+            .residents
+            .iter()
+            .filter(|resident| {
+                resident.transfer == Transfer::WaitingBus && resident.bus_origin_stop == Some(stop)
+            })
+            .filter(|resident| {
+                let Some(origin) = stop_index else {
+                    return false;
+                };
+                let Some(destination) = resident
+                    .bus_destination_stop
+                    .and_then(|node| line.stops.iter().position(|candidate| *candidate == node))
+                else {
+                    return false;
+                };
+                if direction >= 0 {
+                    destination > origin
+                } else {
+                    destination < origin
+                }
+            })
+            .map(|resident| resident.id)
+            .collect();
         waiting.sort_unstable();
         for resident_id in waiting {
             if self.state.buses[bus_index].passengers.len() >= BUS_CAPACITY {
@@ -898,8 +905,8 @@ impl Engine {
                 .iter_mut()
                 .find(|resident| resident.id == resident_id)
             {
-                resident.transfer = "riding_bus".into();
-                resident.activity = "aboard_bus".into();
+                resident.transfer = Transfer::RidingBus;
+                resident.activity = ResidentActivity::AboardBus;
                 resident.bus_id = Some(bus_id);
                 resident.bus_stop_node = Some(stop);
                 resident.queue_slot = None;
@@ -956,9 +963,9 @@ impl Engine {
             return;
         };
         let activity = if resident.at_work {
-            "return"
+            TravelerActivity::Return
         } else {
-            "commute"
+            TravelerActivity::Commute
         };
         let route_attempted = self.state.travelers.len() < MAX_TRAVELERS;
         let route = if route_attempted {
@@ -973,7 +980,7 @@ impl Engine {
                 target_node,
                 destination_building,
                 activity,
-                "walking_from_bus",
+                Transfer::WalkingFromBus,
                 wait_position,
                 route_attempted,
             );
@@ -1012,7 +1019,7 @@ impl Engine {
             edge_progress: 0.0,
             speed: 1.5,
             destination: target_node,
-            activity: activity.into(),
+            activity,
             resident: resident.id,
             name: resident.name.clone(),
             origin_building: None,
@@ -1047,13 +1054,12 @@ impl Engine {
             .passengers
             .retain(|id| *id != resident_id);
         if let Some(resident) = self.state.residents.get_mut(resident_index) {
-            resident.transfer = "walking_from_bus".into();
+            resident.transfer = Transfer::WalkingFromBus;
             resident.activity = if resident.at_work {
-                "walking_home_from_bus"
+                ResidentActivity::WalkingHomeFromBus
             } else {
-                "walking_to_work_from_bus"
-            }
-            .into();
+                ResidentActivity::WalkingToWorkFromBus
+            };
             resident.bus_id = None;
             resident.bus_stop_node = Some(stop);
             resident.queue_slot = None;
@@ -1116,7 +1122,7 @@ impl Engine {
             .residents
             .iter()
             .filter(|resident| {
-                resident.transfer == "waiting_bus" && resident.bus_stop_node == Some(stop)
+                resident.transfer == Transfer::WaitingBus && resident.bus_stop_node == Some(stop)
             })
             .count()
     }

@@ -19,7 +19,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
         .unwrap();
     resident.home_node = home_node;
     resident.at_work = true;
-    resident.transfer = "riding_inbound".into();
+    resident.transfer = Transfer::RidingInbound;
     resident.train_id = Some(train_id);
     engine.state.trains.push(Train {
         id: train_id,
@@ -39,7 +39,7 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
         .iter()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    assert_eq!(waiting.transfer, "waiting_alight");
+    assert_eq!(waiting.transfer, Transfer::WaitingAlight);
     assert_eq!(waiting.train_id, None);
     assert_eq!(waiting.pending_alight.as_ref().unwrap().stop_node, station);
     assert_eq!(engine.state.trains[0].passengers, Vec::<u32>::new());
@@ -59,12 +59,12 @@ fn inbound_train_passenger_waits_at_platform_until_home_route_opens() {
         .iter()
         .find(|traveler| traveler.resident == resident_id)
         .unwrap();
-    assert_eq!(traveler.activity, "walking_home");
+    assert_eq!(traveler.activity, TravelerActivity::WalkingHome);
     assert_eq!(traveler.access_phase, 0);
     let origin = &traveler.origin_access.as_ref().unwrap().points[0];
     assert_eq!(origin.x, platform_position.x);
     assert_eq!(origin.z, platform_position.z);
-    assert_eq!(restored.state.residents[0].transfer, "walking_home");
+    assert_eq!(restored.state.residents[0].transfer, Transfer::WalkingHome);
     assert!(restored.state.trains[0].passengers.is_empty());
     restored.validate().unwrap();
 }
@@ -206,8 +206,8 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
             .iter_mut()
             .find(|resident| resident.id == resident_id)
             .unwrap();
-        resident.transfer = "waiting_station".into();
-        resident.activity = "waiting_for_train".into();
+        resident.transfer = Transfer::WaitingStation;
+        resident.activity = ResidentActivity::WaitingForTrain;
     }
     let train_id = engine.id();
     engine.state.trains.push(Train {
@@ -241,7 +241,7 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
         .iter_mut()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    resident.transfer = "riding_inbound".into();
+    resident.transfer = Transfer::RidingInbound;
     resident.train_id = Some(train_id);
     engine.state.trains[0].dwell_ticks = 201;
     engine.state.tick = 1;
@@ -266,7 +266,7 @@ fn train_doors_open_only_during_full_open_phase_and_resume_deterministically() {
         .iter_mut()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    resident.transfer = "riding_outbound".into();
+    resident.transfer = Transfer::RidingOutbound;
     resident.train_id = Some(train_id);
     let save = engine.save_json();
     let mut resumed = Engine::restore_json(&save).unwrap();
@@ -369,7 +369,7 @@ fn rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn() {
             .find(|resident| resident.id == resident_id)
             .unwrap()
             .transfer,
-        "home",
+        Transfer::Home,
         "a new commute should wait at home during quiet hours"
     );
 
@@ -381,7 +381,7 @@ fn rail_service_holds_at_station_during_quiet_hours_and_reopens_at_dawn() {
         .iter()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    assert_eq!(commuter.transfer, "walking_to_station");
+    assert_eq!(commuter.transfer, Transfer::WalkingToStation);
     assert!(
         commuter.home_node == station
             || engine.route(commuter.home_node, station, false).len() >= 2
@@ -399,8 +399,8 @@ fn rail_transfer_boards_to_capacity_and_keeps_platform_queue_visible_and_bounded
             .iter_mut()
             .find(|resident| resident.id == id)
             .unwrap();
-        resident.transfer = "waiting_station".into();
-        resident.activity = "waiting_for_train".into();
+        resident.transfer = Transfer::WaitingStation;
+        resident.activity = ResidentActivity::WaitingForTrain;
     }
     engine.advance_trains();
     engine.state.trains[0].dwell_ticks = TRAIN_STATION_DWELL_TICKS;
@@ -463,7 +463,7 @@ fn named_rail_commuter_walks_boards_works_returns_and_replays_from_a_save() {
         .iter()
         .find(|resident| resident.id == resident_id)
         .unwrap();
-    assert_eq!(resident.transfer, "home");
+    assert_eq!(resident.transfer, Transfer::Home);
     assert!(resident
         .history
         .iter()
@@ -555,13 +555,13 @@ fn station_queue_positions_are_rail_aligned_reserved_and_continuous() {
     for _ in 0..4_000 {
         engine.state.tick += 1;
         engine.advance_travelers();
-        if engine.state.residents[first_index].transfer == "waiting_station" {
+        if engine.state.residents[first_index].transfer == Transfer::WaitingStation {
             break;
         }
     }
     assert_eq!(
         engine.state.residents[first_index].transfer,
-        "waiting_station"
+        Transfer::WaitingStation
     );
     let position_for = |engine: &Engine, id: u32| {
         engine

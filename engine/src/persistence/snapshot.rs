@@ -136,8 +136,8 @@ pub struct ResidentView {
     pub name: String,
     pub home_building: u32,
     pub work_building: Option<u32>,
-    pub activity: String,
-    pub transfer: String,
+    pub activity: ResidentActivity,
+    pub transfer: Transfer,
     pub train_id: Option<u32>,
     pub location_node: Option<u32>,
     #[serde(default)]

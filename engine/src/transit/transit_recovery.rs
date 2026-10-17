@@ -11,7 +11,7 @@ pub(crate) struct PendingAlight {
     pub destination_node: u32,
     pub destination_building: u32,
     /// Traveler activity used when the intended walk resumes.
-    pub activity: String,
+    pub activity: TravelerActivity,
     /// The passenger's actual place in the stop/platform queue.
     pub wait_position: WorldPoint,
     #[serde(default)]
@@ -19,7 +19,7 @@ pub(crate) struct PendingAlight {
     #[serde(default)]
     pub retry_after_tick: u64,
     /// `walking_from_bus` or `walking_home`, restored when a legal route exists.
-    pub transfer_after_route: String,
+    pub transfer_after_route: Transfer,
 }
 
 impl Engine {
@@ -31,8 +31,8 @@ impl Engine {
         stop_node: u32,
         destination_node: u32,
         destination_building: u32,
-        activity: &str,
-        transfer_after_route: &str,
+        activity: TravelerActivity,
+        transfer_after_route: Transfer,
         wait_position: WorldPoint,
         route_checked: bool,
     ) -> bool {
@@ -56,7 +56,7 @@ impl Engine {
             stop_node,
             destination_node,
             destination_building,
-            activity: activity.into(),
+            activity,
             wait_position,
             last_checked_geometry_revision: route_checked.then_some(geometry_revision).flatten(),
             retry_after_tick: tick.saturating_add(if route_checked {
@@ -64,10 +64,10 @@ impl Engine {
             } else {
                 PENDING_ALIGHT_RETRY_TICKS
             }),
-            transfer_after_route: transfer_after_route.into(),
+            transfer_after_route,
         });
-        resident.transfer = "waiting_alight".into();
-        resident.activity = "waiting_for_route".into();
+        resident.transfer = Transfer::WaitingAlight;
+        resident.activity = ResidentActivity::WaitingForRoute;
         resident.bus_id = None;
         resident.train_id = None;
         resident.bus_stop_node = Some(stop_node);
@@ -215,7 +215,7 @@ impl Engine {
                     .hypot(pending.wait_position.z - endpoint.z)
                     > 0.01
                 {
-                    let rail_terminal = (pending.transfer_after_route == "walking_home")
+                    let rail_terminal = (pending.transfer_after_route == Transfer::WalkingHome)
                         .then(|| self.rail_terminals())
                         .flatten()
                         .and_then(|(station, gateway)| {
@@ -253,12 +253,12 @@ impl Engine {
             self.state.residents[resident_index].pending_alight.take();
             let resident = &mut self.state.residents[resident_index];
             resident.transfer = pending.transfer_after_route.clone();
-            resident.activity = match pending.transfer_after_route.as_str() {
-                "walking_from_bus" if pending.activity == "return" => {
-                    "walking_home_from_bus".into()
+            resident.activity = match pending.transfer_after_route {
+                Transfer::WalkingFromBus if pending.activity == TravelerActivity::Return => {
+                    ResidentActivity::WalkingHomeFromBus
                 }
-                "walking_from_bus" => "walking_to_work_from_bus".into(),
-                _ => "walking_home".into(),
+                Transfer::WalkingFromBus => ResidentActivity::WalkingToWorkFromBus,
+                _ => ResidentActivity::WalkingHome,
             };
             push_history(
                 &mut resident.history,
@@ -302,8 +302,10 @@ impl Engine {
         pending: &PendingAlight,
     ) -> Option<(u32, u32)> {
         let resident = self.state.residents.get(resident_index)?;
-        Some(match pending.activity.as_str() {
-            "return" | "walking_home" => (resident.home_node, resident.home_building),
+        Some(match pending.activity {
+            TravelerActivity::Return | TravelerActivity::WalkingHome => {
+                (resident.home_node, resident.home_building)
+            }
             _ => (
                 resident.work_node.unwrap_or(resident.home_node),
                 resident.work_building.unwrap_or(resident.home_building),

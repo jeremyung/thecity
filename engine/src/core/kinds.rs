@@ -148,3 +148,96 @@ kind_enum!(
         TransitAlightRouteResumed = "TransitAlightRouteResumed",
     }
 );
+
+kind_enum!(
+    /// What a visible traveler is doing.
+    TravelerActivity {
+        Commute = "commute",
+        Delivery = "delivery",
+        DeliveryReturn = "delivery_return",
+        NeighborhoodErrandOutbound = "neighborhood_errand_outbound",
+        NeighborhoodErrandReturning = "neighborhood_errand_returning",
+        NightShift = "night_shift",
+        Return = "return",
+        Stroll = "stroll",
+        WalkingHome = "walking_home",
+        WalkingToBus = "walking_to_bus",
+        WalkingToStation = "walking_to_station",
+    }
+);
+
+kind_enum!(
+    /// What a named resident is doing.
+    ResidentActivity {
+        AtHome = "at_home",
+        AtDestination = "at_destination",
+        Commuting = "commuting",
+        ReturningHome = "returning_home",
+        Strolling = "strolling",
+        AboardBus = "aboard_bus",
+        RidingTrain = "riding_train",
+        WaitingForBus = "waiting_for_bus",
+        WaitingForTrain = "waiting_for_train",
+        WaitingForRoute = "waiting_for_route",
+        WalkingHome = "walking_home",
+        WalkingHomeFromBus = "walking_home_from_bus",
+        WalkingToBus = "walking_to_bus",
+        WalkingToStation = "walking_to_station",
+        WalkingToWorkFromBus = "walking_to_work_from_bus",
+        WorkingExternal = "working_external",
+    }
+);
+
+kind_enum!(
+    /// A resident's daily pattern.
+    ResidentRoutine {
+        Neighbor = "neighbor",
+        Worker = "worker",
+        RailCommuter = "rail_commuter",
+    }
+);
+
+kind_enum!(
+    /// Where a resident is in a multi-leg transit trip; `None` when not travelling.
+    Transfer {
+        None = "",
+        Home = "home",
+        RidingBus = "riding_bus",
+        RidingInbound = "riding_inbound",
+        RidingOutbound = "riding_outbound",
+        WaitingAlight = "waiting_alight",
+        WaitingBus = "waiting_bus",
+        WaitingGateway = "waiting_gateway",
+        WaitingStation = "waiting_station",
+        WalkingFromBus = "walking_from_bus",
+        WalkingHome = "walking_home",
+        WalkingToBus = "walking_to_bus",
+        WalkingToStation = "walking_to_station",
+        WorkingExternal = "working_external",
+    }
+);
+
+impl Default for Transfer {
+    fn default() -> Self {
+        Transfer::None
+    }
+}
+
+impl TravelerActivity {
+    /// Outbound or returning leg of an aggregate neighborhood errand.
+    pub fn is_errand(self) -> bool {
+        matches!(
+            self,
+            TravelerActivity::NeighborhoodErrandOutbound
+                | TravelerActivity::NeighborhoodErrandReturning
+        )
+    }
+
+    /// A delivery van or its return trip.
+    pub fn is_delivery(self) -> bool {
+        matches!(
+            self,
+            TravelerActivity::Delivery | TravelerActivity::DeliveryReturn
+        )
+    }
+}

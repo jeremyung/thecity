@@ -14,7 +14,7 @@ pub(crate) struct Traveler {
     pub(crate) edge_progress: f32,
     pub(crate) speed: f32,
     pub(crate) destination: u32,
-    pub(crate) activity: String,
+    pub(crate) activity: TravelerActivity,
     pub(crate) resident: u32,
     #[serde(default)]
     pub(crate) name: String,
@@ -468,52 +468,55 @@ impl Engine {
                     .iter_mut()
                     .find(|r| r.id == arrived.resident)
                 {
-                    match arrived.activity.as_str() {
-                        "walking_to_bus" => {
-                            resident.transfer = "waiting_bus".into();
-                            resident.activity = "waiting_for_bus".into();
+                    match arrived.activity {
+                        TravelerActivity::WalkingToBus => {
+                            resident.transfer = Transfer::WaitingBus;
+                            resident.activity = ResidentActivity::WaitingForBus;
                             resident.bus_stop_node = resident.bus_origin_stop;
                         }
-                        "commute" if resident.transfer == "walking_from_bus" => {
+                        TravelerActivity::Commute
+                            if resident.transfer == Transfer::WalkingFromBus =>
+                        {
                             resident.at_work = true;
-                            resident.activity = "at_destination".into();
-                            resident.transfer.clear();
+                            resident.activity = ResidentActivity::AtDestination;
+                            resident.transfer = Transfer::None;
                             resident.bus_id = None;
                             resident.bus_origin_stop = None;
                             resident.bus_destination_stop = None;
                             resident.bus_stop_node = None;
                             resident.queue_slot = None;
                         }
-                        "return" if resident.transfer == "walking_from_bus" => {
+                        TravelerActivity::Return
+                            if resident.transfer == Transfer::WalkingFromBus =>
+                        {
                             resident.at_work = false;
-                            resident.activity = "at_home".into();
-                            resident.transfer.clear();
+                            resident.activity = ResidentActivity::AtHome;
+                            resident.transfer = Transfer::None;
                             resident.bus_id = None;
                             resident.bus_origin_stop = None;
                             resident.bus_destination_stop = None;
                             resident.bus_stop_node = None;
                             resident.queue_slot = None;
                         }
-                        "walking_to_station" => {
-                            resident.transfer = "waiting_station".into();
-                            resident.activity = "waiting_for_train".into();
+                        TravelerActivity::WalkingToStation => {
+                            resident.transfer = Transfer::WaitingStation;
+                            resident.activity = ResidentActivity::WaitingForTrain;
                             resident.at_work = false;
                         }
-                        "walking_home" => {
-                            resident.transfer = "home".into();
-                            resident.activity = "at_home".into();
+                        TravelerActivity::WalkingHome => {
+                            resident.transfer = Transfer::Home;
+                            resident.activity = ResidentActivity::AtHome;
                             resident.at_work = false;
                             resident.train_id = None;
                             resident.queue_slot = None;
                         }
                         _ => {
-                            resident.at_work = arrived.activity != "return";
+                            resident.at_work = arrived.activity != TravelerActivity::Return;
                             resident.activity = if resident.at_work {
-                                "at_destination"
+                                ResidentActivity::AtDestination
                             } else {
-                                "at_home"
-                            }
-                            .into();
+                                ResidentActivity::AtHome
+                            };
                         }
                     }
                     push_history(
@@ -529,7 +532,7 @@ impl Engine {
                     arrived.id,
                     format!("{} arrives after {}", arrived.name, arrived.activity),
                 );
-            } else if arrived.activity == "delivery" {
+            } else if arrived.activity == TravelerActivity::Delivery {
                 let mut returning = arrived.clone();
                 returning.route.reverse();
                 returning.route_lengths.reverse();
@@ -538,7 +541,7 @@ impl Engine {
                 returning.destination = *returning.route.last().unwrap_or(&returning.destination);
                 returning.origin_building = arrived.destination_building;
                 returning.destination_building = None;
-                returning.activity = "delivery_return".into();
+                returning.activity = TravelerActivity::DeliveryReturn;
                 returning.wait_ticks = 0;
                 returning.origin_access = returning.origin_building.and_then(|building| {
                     self.building_access_path(
@@ -565,7 +568,7 @@ impl Engine {
                         arrived.destination_building.unwrap_or(0)
                     ),
                 );
-            } else if arrived.activity == "delivery_return" {
+            } else if arrived.activity == TravelerActivity::DeliveryReturn {
                 self.record(
                     EventKind::DeliveryReturned,
                     arrived.id,

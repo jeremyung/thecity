@@ -164,7 +164,7 @@ fn legacy_saves_keep_endpoint_walkers_and_all_parcel_paths_obey_the_cap() {
         edge_progress: 0.0,
         speed: 1.5,
         destination: station,
-        activity: "commute".into(),
+        activity: TravelerActivity::Commute,
         resident: 0,
         name: "Legacy Walker".into(),
         origin_building: Some(founder.id),

@@ -129,9 +129,9 @@ impl Engine {
                     .filter(|resident| {
                         resident.transfer
                             == if at_station {
-                                "waiting_station"
+                                Transfer::WaitingStation
                             } else {
-                                "waiting_gateway"
+                                Transfer::WaitingGateway
                             }
                     })
                     .collect();
@@ -167,7 +167,7 @@ impl Engine {
             .state
             .residents
             .iter()
-            .filter(|resident| resident.transfer == "waiting_bus")
+            .filter(|resident| resident.transfer == Transfer::WaitingBus)
             .collect();
         bus_waiting.sort_by_key(|resident| resident.id);
         for resident in bus_waiting {
@@ -215,14 +215,14 @@ impl Engine {
             .state
             .residents
             .iter()
-            .filter(|resident| resident.transfer == "waiting_alight")
+            .filter(|resident| resident.transfer == Transfer::WaitingAlight)
             .collect();
         pending_alights.sort_by_key(|resident| resident.id);
         for resident in pending_alights {
             let Some(pending) = &resident.pending_alight else {
                 continue;
             };
-            let surface_y = if pending.transfer_after_route == "walking_home"
+            let surface_y = if pending.transfer_after_route == Transfer::WalkingHome
                 && self.rail_terminals().is_some_and(|(station, gateway)| {
                     pending.stop_node == station || pending.stop_node == gateway
                 }) {

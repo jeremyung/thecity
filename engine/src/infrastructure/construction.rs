@@ -671,7 +671,6 @@ impl Engine {
             (NeighborhoodProfile::OuterNeighborhood, BuildingKind::Apartment) => {
                 &[(3, 44.0), (4, 46.0), (5, 10.0)]
             }
-            _ => &[(2, 30.0), (3, 52.0), (4, 18.0)],
         };
         let mut floor_weight: Vec<(u8, f32)> = floor_options
             .iter()

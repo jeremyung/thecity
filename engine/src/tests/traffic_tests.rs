@@ -29,7 +29,7 @@ fn cars_sharing_a_driveway_queue_instead_of_overlapping() {
             edge_progress: 0.0,
             speed: 6.0,
             destination: to,
-            activity: "commute".into(),
+            activity: TravelerActivity::Commute,
             resident: 0,
             name: "Driveway car".into(),
             origin_building: Some(77),
@@ -146,9 +146,9 @@ fn road_trips_choose_bodies_and_queue_by_length() {
             speed: 1.0,
             destination: to,
             activity: if id % 2 == 0 {
-                "delivery".into()
+                TravelerActivity::Delivery
             } else {
-                "commute".into()
+                TravelerActivity::Commute
             },
             resident: 0,
             name: "Test vehicle".into(),
@@ -217,7 +217,7 @@ fn movement_buffer_places_traffic_in_left_lane_and_on_sidewalks() {
                     edge_progress: len * 0.5,
                     speed: 1.0,
                     destination: to,
-                    activity: "test".into(),
+                    activity: crate::TravelerActivity::Stroll,
                     resident: 0,
                     name: "Test traveler".into(),
                     origin_building: None,

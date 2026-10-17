@@ -671,7 +671,10 @@ fn twelve_seed_corpus_stays_bounded_and_grows_as_a_connected_city() {
                         .state
                         .travelers
                         .iter()
-                        .filter(|t| t.activity == "night_shift" || t.activity == "return")
+                        .filter(|t| {
+                            t.activity == TravelerActivity::NightShift
+                                || t.activity == TravelerActivity::Return
+                        })
                         .count(),
                 );
             }
@@ -1249,7 +1252,7 @@ fn road_split_rejections_leave_state_and_ids_unchanged() {
         edge_progress: 0.0,
         speed: 1.0,
         destination: host.to,
-        activity: "route cap test".into(),
+        activity: crate::TravelerActivity::Stroll,
         resident: 0,
         name: "Long route".into(),
         origin_building: None,

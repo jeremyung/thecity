@@ -19,8 +19,8 @@ pub(crate) struct Resident {
     pub(crate) home_node: u32,
     pub(crate) work_node: Option<u32>,
     pub(crate) mode: u8,
-    pub(crate) routine: String,
-    pub(crate) activity: String,
+    pub(crate) routine: ResidentRoutine,
+    pub(crate) activity: ResidentActivity,
     pub(crate) at_work: bool,
     pub(crate) departure_tick: u64,
     pub(crate) return_tick: u64,
@@ -30,7 +30,7 @@ pub(crate) struct Resident {
     #[serde(default)]
     pub(crate) rail_commuter: bool,
     #[serde(default)]
-    pub(crate) transfer: String,
+    pub(crate) transfer: Transfer,
     #[serde(default)]
     pub(crate) train_id: Option<u32>,
     #[serde(default)]
@@ -160,7 +160,7 @@ impl Engine {
         }
         let mut assigned_by_work = BTreeMap::<u32, u16>::new();
         for resident in &self.state.residents {
-            if resident.routine == "worker" {
+            if resident.routine == ResidentRoutine::Worker {
                 let Some(work) = resident.work_building else {
                     continue;
                 };
@@ -171,7 +171,7 @@ impl Engine {
             .state
             .residents
             .iter()
-            .filter(|r| r.routine == "worker")
+            .filter(|r| r.routine == ResidentRoutine::Worker)
             .count();
         let max_jobs: usize = destinations
             .iter()
@@ -258,13 +258,12 @@ impl Engine {
                     (Some(local_work_id), local_work_node)
                 };
                 let routine = if rail_commuter {
-                    "rail_commuter"
+                    ResidentRoutine::RailCommuter
                 } else if use_job {
-                    "worker"
+                    ResidentRoutine::Worker
                 } else {
-                    "neighbor"
-                }
-                .to_string();
+                    ResidentRoutine::Neighbor
+                };
                 if use_job && !rail_commuter {
                     existing_worker_count += 1;
                     *assigned_by_work.entry(local_work_id).or_default() += 1;
@@ -300,7 +299,7 @@ impl Engine {
                     work_node: Some(work_node),
                     mode,
                     routine,
-                    activity: "at_home".into(),
+                    activity: ResidentActivity::AtHome,
                     at_work: false,
                     departure_tick,
                     return_tick,
@@ -308,7 +307,11 @@ impl Engine {
                     last_return_day: u32::MAX,
                     history: vec![format!("Moved into a home near access node {home_node}")],
                     rail_commuter,
-                    transfer: if rail_commuter { "home" } else { "" }.into(),
+                    transfer: if rail_commuter {
+                        Transfer::Home
+                    } else {
+                        Transfer::None
+                    },
                     train_id: None,
                     queue_slot: None,
                     bus_id: None,
@@ -341,12 +344,12 @@ impl Engine {
                 continue;
             }
             if matches!(
-                resident.transfer.as_str(),
-                "walking_to_bus"
-                    | "waiting_bus"
-                    | "riding_bus"
-                    | "walking_from_bus"
-                    | "waiting_alight"
+                resident.transfer,
+                Transfer::WalkingToBus
+                    | Transfer::WaitingBus
+                    | Transfer::RidingBus
+                    | Transfer::WalkingFromBus
+                    | Transfer::WaitingAlight
             ) {
                 continue;
             }
@@ -364,7 +367,7 @@ impl Engine {
                 (
                     work_node,
                     resident.home_node,
-                    "return",
+                    TravelerActivity::Return,
                     Some(resident.home_building),
                 )
             } else {
@@ -374,14 +377,14 @@ impl Engine {
                 let Some(work_node) = resident.work_node else {
                     continue;
                 };
-                let activity = if resident.routine == "worker" {
+                let activity = if resident.routine == ResidentRoutine::Worker {
                     if resident.departure_tick % TICKS_PER_DAY > TICKS_PER_DAY / 2 {
-                        "night_shift"
+                        TravelerActivity::NightShift
                     } else {
-                        "commute"
+                        TravelerActivity::Commute
                     }
                 } else {
-                    "stroll"
+                    TravelerActivity::Stroll
                 };
                 (
                     resident.home_node,
@@ -421,7 +424,7 @@ impl Engine {
                 edge_progress: 0.0,
                 speed,
                 destination: goal,
-                activity: activity.into(),
+                activity,
                 resident: resident.id,
                 name: resident.name.clone(),
                 origin_building,
@@ -458,16 +461,15 @@ impl Engine {
                 if r.at_work {
                     r.last_return_day = day;
                     r.return_tick = r.return_tick.saturating_add(TICKS_PER_DAY);
-                    r.activity = "returning_home".into();
+                    r.activity = ResidentActivity::ReturningHome;
                 } else {
                     r.last_departure_day = day;
                     r.departure_tick = r.departure_tick.saturating_add(TICKS_PER_DAY);
-                    r.activity = if r.routine == "worker" {
-                        "commuting"
+                    r.activity = if r.routine == ResidentRoutine::Worker {
+                        ResidentActivity::Commuting
                     } else {
-                        "strolling"
-                    }
-                    .into();
+                        ResidentActivity::Strolling
+                    };
                 }
                 push_history(
                     &mut r.history,
@@ -494,7 +496,7 @@ impl Engine {
             .state
             .travelers
             .iter()
-            .filter(|t| t.activity.starts_with("delivery"))
+            .filter(|t| t.activity.is_delivery())
             .count();
         if active_deliveries >= MAX_ACTIVE_DELIVERIES || self.state.travelers.len() >= MAX_TRAVELERS
         {
@@ -543,7 +545,7 @@ impl Engine {
             edge_progress: 0.0,
             speed: 9.0,
             destination,
-            activity: "delivery".into(),
+            activity: TravelerActivity::Delivery,
             resident: 0,
             name: "Neighborhood Supply Van".into(),
             origin_building: None,
@@ -578,19 +580,19 @@ impl Engine {
         {
             return None;
         }
-        match resident.transfer.as_str() {
-            "home" => Some(resident.home_node),
-            "waiting_bus" => resident.bus_stop_node,
-            "waiting_alight" => resident
+        match resident.transfer {
+            Transfer::Home => Some(resident.home_node),
+            Transfer::WaitingBus => resident.bus_stop_node,
+            Transfer::WaitingAlight => resident
                 .pending_alight
                 .as_ref()
                 .map(|pending| pending.stop_node),
-            "riding_bus" => None,
-            "waiting_station" => self.rail_terminals().map(|(station, _)| station),
-            "waiting_gateway" | "working_external" => resident.work_node,
-            "riding_outbound" | "riding_inbound" => None,
-            _ if resident.activity == "at_home" => Some(resident.home_node),
-            _ if resident.activity == "at_destination" => resident.work_node,
+            Transfer::RidingBus => None,
+            Transfer::WaitingStation => self.rail_terminals().map(|(station, _)| station),
+            Transfer::WaitingGateway | Transfer::WorkingExternal => resident.work_node,
+            Transfer::RidingOutbound | Transfer::RidingInbound => None,
+            _ if resident.activity == ResidentActivity::AtHome => Some(resident.home_node),
+            _ if resident.activity == ResidentActivity::AtDestination => resident.work_node,
             _ => None,
         }
     }
