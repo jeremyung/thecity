@@ -1,0 +1,17 @@
+{
+  "engine/crates/plan/src/masterplan.rs": 3903,
+  "engine/src/experiments/road_opening_access_experiment.rs": 1786,
+  "engine/src/infrastructure/masterplan_growth.rs": 1518,
+  "engine/src/legacy/access_candidates.rs": 1767,
+  "engine/src/legacy/access_descriptor_search.rs": 2550,
+  "engine/src/legacy/access_discovery_job.rs": 1783,
+  "engine/src/legacy/access_search.rs": 1517,
+  "engine/src/legacy/neighborhood_planner.rs": 1616,
+  "engine/src/legacy/road_face_preflight.rs": 1785,
+  "engine/src/population/district_density.rs": 1845,
+  "engine/src/tests/bus_tests.rs": 1786,
+  "engine/src/tests/core_tests.rs": 1504,
+  "engine/src/tests/face_access_exact_tests.rs": 3664,
+  "engine/src/tests/planner_tests.rs": 1714,
+  "web/src/camera/director.ts": 1754
+}

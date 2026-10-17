@@ -24,6 +24,8 @@ jobs:
           cargo install wasm-bindgen-cli --version 0.2.108 --locked
       - run: npm ci
       - run: npm run format:check
+      - run: npm run lint:deps
+      - run: npm run check:size
       - run: npm run setup:fixtures
       - run: python3 scripts/test-review-evidence.py
       - run: npm run test:engine -- --release

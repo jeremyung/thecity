@@ -15,7 +15,9 @@
     "test:engine": "node scripts/test-engine.mjs",
     "setup:fixtures": "python3 scripts/setup-test-fixtures.py",
     "format": "prettier --write \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all",
-    "format:check": "prettier --check \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all --check"
+    "format:check": "prettier --check \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all --check",
+    "lint:deps": "depcruise web/src --config .dependency-cruiser.cjs",
+    "check:size": "node scripts/check-file-size.mjs"
   },
   "dependencies": {
     "lucide-react": "0.577.0",
@@ -28,6 +30,7 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@types/three": "0.183.1",
+    "dependency-cruiser": "16.10.4",
     "esbuild": "^0.28.1",
     "prettier": "3.9.10",
     "typescript": "5.9.3",
