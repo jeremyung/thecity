@@ -74,7 +74,9 @@ export function flagshipCampaignSurface(art:ArtMaterials,program=0){const varian
  const threshold=parity.x.mul(2).add(parity.y.mul(3)).mod(4).add(.5).div(4);
  const quantized=floor(poster.mul(40).add(threshold)).div(40);
  const dithered=mix(poster,quantized,pixelVisibility);
- const picture=dithered.mul(joints).mul(calibration).mul(emitters).mul(art.night.mul(1.3).add(1.1)).mul(art.litShop);
+ // Moderate HDR headroom keeps bright emitters blooming without bleaching
+ // the campaign. Environmental spill is controlled independently.
+ const picture=dithered.mul(joints).mul(calibration).mul(emitters).mul(art.night.mul(.45).add(1)).mul(art.litShop);
  const anime=new THREE.MeshToonNodeMaterial({color:'#070b0d',gradientMap:art.toonRamp}),miniature=new THREE.MeshStandardNodeMaterial({color:'#070b0d',roughness:.64});
  for(const m of [anime,miniature]){(m as unknown as {emissiveNode:typeof picture}).emissiveNode=picture;m.userData.flagshipCampaign=variant;}
  return {anime,miniature};
