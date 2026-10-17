@@ -1232,7 +1232,7 @@ export class CityRenderer {
     this.hemi.color.lerp(new THREE.Color().copy(top).lerp(low,.55),.4);
     const environment=this.skyEnvironment?.update(this.renderer,performance.now(),[top,low,this.skyCloud.value]);
     if(environment&&this.scene.environment!==environment)this.scene.environment=environment;
-    const glassEnvironment=this.style==='miniature'&&this.businessChoices.size&&[...this.businessChoices.values()].some(r=>r.towerForm)?this.glassEnvironment?.update(this.renderer,performance.now(),this.worldState?.buildings??[],this.camera.position,[top,low,this.skyCloud.value],1-this.daylight):null;
+    const glassEnvironment=this.style==='miniature'&&this.businessChoices.size&&[...this.businessChoices.values()].some(r=>r.towerForm||r.mediaLandmark==='curved')?this.glassEnvironment?.update(this.renderer,performance.now(),this.worldState?.buildings??[],this.camera.position,[top,low,this.skyCloud.value],1-this.daylight):null;
     this.apartmentResources.art.setGlassEnvironment(glassEnvironment??environment??null);
     // The environment adds to the hemisphere fill on standard surfaces; trade
     // some of that fill for sky-shaped ambient rather than stacking both.

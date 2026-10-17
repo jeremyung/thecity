@@ -6,7 +6,7 @@ export type BusinessFamily='office'|'commercial'|'mixed-use';
 export type DisplayMode='off'|'static'|'animated';
 export function parseDisplayMode(value:unknown):DisplayMode{return value==='off'||value==='static'?value:'animated';}
 export interface BusinessRecipe {
- mediaLandmark?:'wrap'|'stack'|'frame';
+ mediaLandmark?:'wrap'|'stack'|'frame'|'curved';
  district?:import('./commercial-district').DenseDistrict;
  towerForm?:'split'|'rounded'|'chamfered'|'setback'|'crown';
  id:string;family:BusinessFamily;era:'older'|'contemporary';label:string;
@@ -46,7 +46,7 @@ export const BUSINESS_RECIPES:readonly BusinessRecipe[]=[
  {id:'fin-worklive',family:'mixed-use',era:'contemporary',label:'Screened work/live building',form:'fins',wall:'#897c69',roughness:.55,bay:3,upper:'home',retailFloors:1,awning:false},
  {id:'terraced-workplace',family:'mixed-use',era:'contemporary',label:'Retail and terraced workplace',form:'stepped',wall:'#d8cfbb',roughness:.85,bay:3.6,upper:'office',retailFloors:2,awning:false},
 ];
-export const BUSINESS_RECIPE_VERSION=6;
+export const BUSINESS_RECIPE_VERSION=7;
 export function supportsBusiness(b:Building,retained=false){return !retained&&!b.anchor&&['office','shop','cafe','apartment'].includes(b.kind)&&Number.isFinite(b.width)&&b.width>=5&&b.width<=90&&Number.isFinite(b.depth)&&b.depth>=6&&b.depth<=80&&Number.isInteger(b.floors)&&b.floors>=1&&b.floors<=60&&Number.isFinite(b.progress)&&['foundation','structure','surface','finishing','open','renovation','demolition'].includes(b.stage);}
 export function businessPool(b:Building,mode:ApartmentEra='mixed'):readonly BusinessRecipe[]{
  if(mode==='legacy'||!supportsBusiness(b))return [];

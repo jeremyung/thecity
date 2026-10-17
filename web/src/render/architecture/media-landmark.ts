@@ -1,3 +1,4 @@
+import {buildCurvedMediaLandmark} from './curved-media-landmark';
 import * as THREE from 'three/webgpu';
 import type {Building} from '../../types';
 import type {ArtMaterials} from '../materials';
@@ -18,6 +19,7 @@ export function landmarkScreen(width:number,height:number,depth:number,segments=
  g.computeVertexNormals();return g;
 }
 export function buildMediaLandmark(b:Building,art:ArtMaterials,options:BusinessBuildOptions):THREE.Group{
+ if(options.recipe.mediaLandmark==='curved')return buildCurvedMediaLandmark(b,art,options);
  const kit=new Kit(),{recipe:r}=options,form=r.mediaLandmark!,detail=options.detail??'district',mode=options.displays??'animated';
  const {installed,framed,complete}=apartmentConstruction(b),base=.58,fh=3.25,w=b.width-1,d=b.depth-4,front=d/2;
  const metal=art.get('#26353e',.45),silver=art.get('#c6d0ce'),wall=art.get(r.wall,.7),roof=art.get('#4d575a');

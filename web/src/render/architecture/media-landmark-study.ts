@@ -3,11 +3,12 @@ import {selectBusinessRecipe} from './business-recipes';
 import {architecturalChoice} from './variation';
 import {MEDIA_LANDMARK_FORMS} from './media-landmark-selection';
 /** Three spaced production-selected landmark hosts, with space to inspect their frontages. */
-export function mediaLandmarkStudy(seed=32){
+export function mediaLandmarkStudy(seed=32,curvedOnly=false){
  const source=businessCityStudy(seed,'commercial','contemporary');
- const buildings=MEDIA_LANDMARK_FORMS.map((form,i)=>{
-  const b={...source.buildings[0],id:i+1,parcel_id:i+1,x:(i-1)*106,z:0,width:34+i*4,depth:26,floors:10+i*2,rotation:0,appearance_seed:seed>>>0,name:`Media landmark · ${form}`};
-  let tries=0;while((selectBusinessRecipe(b,'contemporary')?.era!=='contemporary'||selectBusinessRecipe(b,'mixed')?.era!=='contemporary'||architecturalChoice(b.appearance_seed,760)%3!==i)&&tries++<100000)b.appearance_seed++;
+ const forms=curvedOnly?(['curved'] as const):MEDIA_LANDMARK_FORMS.slice(0,3);
+ const buildings=forms.map((form,i)=>{
+  const b={...source.buildings[0],id:i+1,parcel_id:i+1,x:curvedOnly?0:(i-1)*106,z:0,width:curvedOnly?38:34+i*4,depth:curvedOnly?30:26,floors:curvedOnly?12:10+i*2,rotation:0,appearance_seed:seed>>>0,name:`Media landmark · ${form}`};
+  let tries=0;while((selectBusinessRecipe(b,'contemporary')?.era!=='contemporary'||selectBusinessRecipe(b,'mixed')?.era!=='contemporary'||architecturalChoice(b.appearance_seed,760)%MEDIA_LANDMARK_FORMS.length!==MEDIA_LANDMARK_FORMS.indexOf(form))&&tries++<100000)b.appearance_seed++;
   return b;
  });
  // Production allocation prioritizes selected media landmarks within its three-screen budget.
