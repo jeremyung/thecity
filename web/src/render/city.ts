@@ -1,3 +1,4 @@
+import {applyCommercialDistrict,parseCommercialDistrict,type CommercialDistrict} from './architecture/commercial-district';
 import {buildBusinessBuilding} from './architecture/business';
 import {resolveBusinessRecipes,businessCanHostAdvertising,BUSINESS_RECIPE_VERSION,parseDisplayMode,type BusinessRecipe,type DisplayMode} from './architecture/business-recipes';
 import {selectApartmentArchitecture,resolveApartmentArchitectures,type ApartmentArchitecture,apartmentArchitectureKey,buildSelectedApartment,parseApartmentEra,type ApartmentEra} from './architecture/era';
@@ -116,6 +117,7 @@ export class CityRenderer {
   private apartmentEra:ApartmentEra='mixed';
   private businessChoices=new Map<number,BusinessRecipe>();
   private commercialDisplays:DisplayMode='animated';
+  private commercialDistrict:CommercialDistrict='standard';
   private apartmentChoices=new Map<number,ApartmentArchitecture>();
   private apartmentLayout='';
   readonly director:CameraDirector;
@@ -471,6 +473,7 @@ export class CityRenderer {
     if(business)return buildingRenderSignature(b,original,this.signage.get(b.id))+`:business-${BUSINESS_RECIPE_VERSION}:${business.id}:${this.commercialDisplays}:${this.apartmentDetails.get(b.id)??'district'}:${apartmentPhase(b)}`;
     return buildingRenderSignature(b,original,this.signage.get(b.id))+`:displays-${this.commercialDisplays}`+(choice.kind!=='legacy'?`:architecture-${APARTMENT_RECIPE_VERSION}:${apartmentArchitectureKey(choice)}:${this.apartmentDetails.get(b.id)??'district'}:${apartmentPhase(b)}`:'');
   }
+  setCommercialDistrict(value:CommercialDistrict){const mode=parseCommercialDistrict(value);if(mode===this.commercialDistrict)return;this.commercialDistrict=mode;this.apartmentLayout='';if(this.worldState)this.setWorld(this.worldState);}
   setCommercialDisplays(value:DisplayMode){const mode=parseDisplayMode(value);if(mode===this.commercialDisplays)return;this.commercialDisplays=mode;if(this.worldState)this.setWorld(this.worldState);}
   setApartmentEra(value:ApartmentEra){const mode=parseApartmentEra(value);if(mode===this.apartmentEra)return;this.apartmentEra=mode;this.apartmentLayout='';if(this.worldState)this.setWorld(this.worldState);}
   private updateApartmentDetail(now:number){
@@ -546,7 +549,7 @@ export class CityRenderer {
     for(const id of this.objectQueue.keys())if(!ids.has(id))this.objectQueue.delete(id);
     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
     const layout=world.buildings.map(b=>`${b.id}:${b.kind}:${b.anchor}:${b.appearance_seed}:${b.floors}:${b.width}:${b.depth}:${b.x}:${b.z}:${b.stage}:${originals.has(b.id)}`).join('|');
-    if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));}
+    if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));for(const b of world.buildings){const recipe=this.businessChoices.get(b.id);if(recipe)this.businessChoices.set(b.id,applyCommercialDistrict(b,recipe,this.commercialDistrict,world.seed));}}
     const mediaEligible=new Set(world.buildings.filter(b=>{const recipe=this.businessChoices.get(b.id);return !recipe||businessCanHostAdvertising(recipe);}).map(b=>b.id));
     const signage=this.signage=signageContexts(world,mediaEligible);
     for(const b of world.buildings){

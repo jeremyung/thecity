@@ -1,3 +1,4 @@
+import {districtFrontage} from './district-frontage';
 import {buildCorporateSkyscraper} from './corporate-skyscraper';
 import {businessEnvelope,businessFacadeParts,businessRoofServices,fabricAwning} from './business-components';
 import * as THREE from 'three/webgpu';
@@ -20,10 +21,10 @@ export function buildBusinessBuilding(b:Building,art:ArtMaterials,options:Busine
  const kit=new Kit(),base=.58,fh=3.25,w=b.width-1,d=(b.depth-2.2)*(r.form==='slab'?.78:1),front=d/2,back=-d/2;
  const {installed,framed,complete}=apartmentConstruction(b),active=b.stage==='open'&&b.business_active!==false;
  const lived=windowLived(b),wall=art.get(r.wall,r.roughness),slab=art.get('#cecdc2'),metal=art.get('#303b40',.45),roof=art.get('#585f5b'),dark=art.get('#404947'),wood=art.get('#755d49'),plant=art.get('#536a4c');
- const retail=Math.min(b.floors,r.retailFloors),separate=r.family==='mixed-use',entrySide=architecturalChoice(seed,310)%2?-1:1;
+ const retail=Math.min(b.floors,r.retailFloors),separate=r.family==='mixed-use'||Boolean(r.district)&&r.family==='office',entrySide=architecturalChoice(seed,310)%2?-1:1;
  const lobbyW=separate?Math.min(2.2,w*.28):r.family==='office'?Math.min(3,w*.4):0;
  const lobbyX=entrySide*(w/2-lobbyW/2),retailW=w-lobbyW,retailX=separate?-entrySide*lobbyW/2:0;
- const flagship=['screen','curtain','department'].includes(r.form);
+ const flagship=!r.district&&['screen','curtain','department'].includes(r.form);
  const tenantCount=flagship?1:r.form==='media'?Math.max(1,Math.min(2,Math.floor(retailW/5))):Math.max(1,Math.min(5,Math.floor(retailW/(r.form==='arcade'||r.form==='loft'?2.7:4))));
  const weights=Array.from({length:tenantCount},(_,i)=>r.era==='older'?.75+(architecturalChoice(seed,320,i)%6)*.1:1),weightSum=weights.reduce((a,c)=>a+c,0);
  let frontageCursor=retailX-retailW/2;
@@ -124,7 +125,7 @@ export function buildBusinessBuilding(b:Building,art:ArtMaterials,options:Busine
   const {fw,fd}=floorEnvelope(installed-1),top=base+installed*fh;kit.box(0,top,0,fw+.1,.23,fd+.1,slab);
   for(const side of [-1,1]){kit.box(side*(fw/2-.1),top+.4,0,.16,.8,fd,wall);kit.box(0,top+.4,side*(fd/2-.1),fw,.8,.16,wall);}
   businessRoofServices(kit,art,r,fw,fd,top,detail,seed);
-  if(r.era==='older'&&active&&detail!=='far'&&displays!=='off'&&(options.signage?.proximity??0)>0&&b.floors>=4&&b.floors<12&&architecturalChoice(seed,312)%3===0)addRooftopBillboard(kit,art,metal,{x:0,z:0,width:fw,depth:fd,top},seed);
+  if(businessCanHostAdvertising(r)&&r.era==='older'&&active&&detail!=='far'&&displays!=='off'&&(options.signage?.proximity??0)>0&&b.floors>=4&&b.floors<12&&architecturalChoice(seed,312)%3===0)addRooftopBillboard(kit,art,metal,{x:0,z:0,width:fw,depth:fd,top},seed);
  }
  let display:string|undefined;
  if(active&&detail!=='far'&&displays!=='off'){
@@ -137,8 +138,9 @@ export function buildBusinessBuilding(b:Building,art:ArtMaterials,options:Busine
  if(b.stage==='demolition')addDemolitionSite(kit,b,art);
  if(b.stage==='foundation')kit.box(0,.24,0,w,.3,d,slab);
  if(b.stage==='renovation'&&detail!=='far')for(const x of [-w/2+.2,w/2-.2]){kit.box(x,base+installed*fh/2,front+.32,.07,installed*fh,.07,metal);for(let f=0;f<installed;f++)kit.box(0,base+f*fh,front+.32,w,.06,.14,metal);}
+ districtFrontage(kit,art,b,r,detail,Boolean(display),slots);
  const group=kit.finish();
  const weather={profile:r.era==='older'?'maintained':'fresh',strength:b.stage==='open'?(r.era==='older'?.15+architecturalChoice(seed,313)%4*.08:.015+architecturalChoice(seed,313)%3*.025):.025,phase:architecturalChoice(seed,314)%997};applyBuildingWeathering(group,weather);
- group.userData.businessArchitecture={recipe:r.id,family:r.family,detail,installedFloors:installed,framedFloors:framed,roofInstalled,display,tenantIds,entryX:lobbyX,retailEntrances:slots.map(slot=>slot.x),frontageSlots:slots,bands:[{from:0,count:retail,use:'shop'},{from:retail,count:b.floors-retail,use:r.upper}].filter(v=>v.count>0)};
+ group.userData.businessArchitecture={recipe:r.id,family:r.family,district:r.district,detail,installedFloors:installed,framedFloors:framed,roofInstalled,display,tenantIds,entryX:lobbyX,retailEntrances:slots.map(slot=>slot.x),frontageSlots:slots,bands:[{from:0,count:retail,use:'shop'},{from:retail,count:b.floors-retail,use:r.upper}].filter(v=>v.count>0)};
  return group;
 }

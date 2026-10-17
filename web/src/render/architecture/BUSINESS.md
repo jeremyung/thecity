@@ -57,3 +57,23 @@ Miniature corporate glazing uses a physical dielectric material (coated tint, Fr
 `GlassEnvironment` owns one 128-pixel PMREM probe for corporate glass. It captures the live sky, a ground plane and up to 96 nearby building-massing proxies in a single instanced draw. Its anchor follows the nearest city area, refresh checks are limited to every 2.5 seconds, and unchanged scenes reuse the target. It runs only when corporate towers are selected in Miniature. No per-building cube maps or detailed six-pass city capture are introduced. Architecture materials borrow the probe texture; the renderer owns disposal. Sky-only lighting for other surfaces is unchanged.
 
 Reflections approximate local massing rather than exact facade details, and a shared probe has positional error across a large district. Captures add a bounded GPU cost; cross-device frame rates remain unverified. The isolated tower review contains much empty ground, which legitimately darkens downward-facing reflections. Its Street control now offers a near-horizontal tower view for comparing glass response.
+
+## Dense Tokyo shopping districts
+
+`Commercial district` is a persisted renderer preference, independent of building era and advertising mode. `standard` preserves the base catalog. Five reference-informed profiles (`shibuya`, `roppongi`, `akihabara`, `shinjuku`, `ameyoko`) modify eligible commercial and small tenant-office frontages; `tokyo-mix` assigns coherent 160 m neighbourhood cells from the world seed. Large corporate offices, residential parcels, anchors, retained-footprint buildings and legacy mode retain their existing handling. Profile selection does not alter engine use, height, capacity, parcel dimensions or saved simulation data.
+
+| Profile | Procedural emphasis | Reference |
+|---|---|---|
+| Shibuya | Fashion/music tenants, media/tenant/frame façades, canopies, portrait signs | [Center-Gai](https://www.gotokyo.org/en/spot/88/index.html) |
+| Roppongi | Dining, jazz, bars and lounges, stacked directories, darker modern frontage | [Roppongi guide](https://www.gotokyo.org/en/destinations/southern-tokyo/roppongi/index.html) |
+| Akihabara | Electronics/games/parts tenants, larger sign bands, department/media variations | [Akihabara guide](https://www.gotokyo.org/en/destinations/central-tokyo/akihabara/index.html) |
+| Shinjuku | Karaoke, theatre, arcades and dining, layered entertainment signs | [Shinjuku guide](https://www.gotokyo.org/en/destinations/western-tokyo/shinjuku/index.html) |
+| Ameyoko | Low market blocks, narrow shop bays, awnings and merchandise racks; no large ads | [Shopping-street guide](https://www.gotokyo.org/en/story/guide/neighborhood-shopping-streets/index.html) |
+
+These are interpretations of particular retail streets, not complete geographic reconstructions or statements that every building in a neighborhood has that appearance. The official Center-Gai storefront photo was inspected for narrow frontages and layered signage. All tenant names and branding in the output are fictional.
+
+`commercial-district.ts` declares selection/grammar; `district-frontage.ts` composes signs and services; `district-signs.ts` owns one 1024×1024 atlas with 48 horizontal tenant identities and 16 portrait variants. Three bounded activity/style pairs share it (closed, retail, late nightlife). Ground titles follow actual shop bays; directories avoid allocated media panels. Large displays still use production allocation limits and animated/static/off controls. Dense small tenant identities remain functional signage when advertising is off. No external images or per-building canvases/timers are used. Estimated RGBA8 atlas allocation is 4 MiB, approximately 5.33 MiB with mipmaps.
+
+`shoppingStreetStudy(seed,district)` generates a packed 24-parcel, two-sided street with .65 m lot gaps, variable width/depth/heights, opposing frontage rotations and road access. Open `?review=architecture-city&family=shopping-street&district=shibuya` and switch profiles. This reusable layout is a review/generation fixture, not a change to simulation parcel subdivision: choosing the preference in a saved city adapts its existing compatible buildings. Richer pedestrian crowds, street furniture and automatic simulation generation of narrow pedestrian retail lanes remain separate work.
+
+Run `npm run benchmark:districts` for reproducible CPU geometry measurements across all five profiles and three LODs. Results do not certify cross-device frame rate.

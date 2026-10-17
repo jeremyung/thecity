@@ -16,6 +16,7 @@
     "build:architecture": "node scripts/build-architecture-assets.mjs",
     "check:architecture": "node scripts/build-architecture-assets.mjs --check",
     "benchmark:architecture": "node scripts/benchmark-apartment-production.mjs",
+    "benchmark:districts": "node scripts/benchmark-districts.mjs",
     "benchmark:business": "node scripts/benchmark-business-architecture.mjs"
   },
   "dependencies": {
