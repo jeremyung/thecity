@@ -14,7 +14,9 @@ describe('ceramic gable roof detail', () => {
     const tile = new THREE.MeshStandardMaterial();
     addCeramicRoofDetail(kit, { width: 12, halfDepth: 6, rise: 1.5, top: 8, roof, tile });
 
-    const rolls = geometries(kit).get(tile)!.filter(geometry => geometry.getAttribute('position').count === 10);
+    const rolls = geometries(kit)
+      .get(tile)!
+      .filter((geometry) => geometry.getAttribute('position').count === 10);
     expect(rolls.length).toBeGreaterThanOrEqual(40);
     const sides = new Set<number>();
     for (const geometry of rolls) {
@@ -34,7 +36,14 @@ describe('ceramic gable roof detail', () => {
         expect(position.getX(vertex)).toBeLessThanOrEqual(6.001);
         expect(Math.abs(position.getZ(vertex))).toBeLessThanOrEqual(6.001);
         expect(position.getY(vertex)).toBeLessThanOrEqual(9.72);
-        for (const value of [position.getX(vertex), position.getY(vertex), position.getZ(vertex), geometry.getAttribute('normal').getX(vertex), geometry.getAttribute('normal').getY(vertex), geometry.getAttribute('normal').getZ(vertex)]) {
+        for (const value of [
+          position.getX(vertex),
+          position.getY(vertex),
+          position.getZ(vertex),
+          geometry.getAttribute('normal').getX(vertex),
+          geometry.getAttribute('normal').getY(vertex),
+          geometry.getAttribute('normal').getZ(vertex),
+        ]) {
           expect(Number.isFinite(value)).toBe(true);
         }
         expect(geometry.getAttribute('normal').getY(vertex)).toBeGreaterThan(0);
@@ -43,9 +52,21 @@ describe('ceramic gable roof detail', () => {
       for (const along of [0, 1]) {
         const center = along * 5 + 2;
         const fraction = along;
-        const baseY = 8 + 1.5 * (1 - fraction * (Math.hypot(6, 1.5) - (0.13 + 0.065) * Math.tan(slope)) / Math.hypot(6, 1.5));
-        const baseZ = Math.sign(position.getZ(center)) * 6 * fraction * (Math.hypot(6, 1.5) - (0.13 + 0.065) * Math.tan(slope)) / Math.hypot(6, 1.5);
-        const normalDistance = (position.getY(center) - baseY) * Math.cos(slope) + (position.getZ(center) - baseZ) * Math.sign(position.getZ(center)) * Math.sin(slope);
+        const baseY =
+          8 +
+          1.5 *
+            (1 -
+              (fraction * (Math.hypot(6, 1.5) - (0.13 + 0.065) * Math.tan(slope))) /
+                Math.hypot(6, 1.5));
+        const baseZ =
+          (Math.sign(position.getZ(center)) *
+            6 *
+            fraction *
+            (Math.hypot(6, 1.5) - (0.13 + 0.065) * Math.tan(slope))) /
+          Math.hypot(6, 1.5);
+        const normalDistance =
+          (position.getY(center) - baseY) * Math.cos(slope) +
+          (position.getZ(center) - baseZ) * Math.sign(position.getZ(center)) * Math.sin(slope);
         expect(normalDistance).toBeGreaterThanOrEqual(0.129);
       }
     }
@@ -59,7 +80,8 @@ describe('ceramic gable roof detail', () => {
     addCeramicRoofDetail(kit, { width: 20, halfDepth: 6, rise: 1.8, top: 10, roof, tile });
     let triangles = 0;
     for (const parts of geometries(kit).values()) {
-      for (const geometry of parts) triangles += (geometry.index?.count ?? geometry.getAttribute('position').count) / 3;
+      for (const geometry of parts)
+        triangles += (geometry.index?.count ?? geometry.getAttribute('position').count) / 3;
     }
     expect(triangles).toBeLessThanOrEqual(850);
 

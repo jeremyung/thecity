@@ -27,19 +27,29 @@ export function trainMaterial(art: ArtMaterials) {
     const sky = art.glassRadiance();
     const pair = {
       anime: new THREE.MeshToonNodeMaterial({ gradientMap: art.toonRamp }),
-      miniature: new THREE.MeshStandardNodeMaterial({ roughness: .4, metalness: .05 }),
+      miniature: new THREE.MeshStandardNodeMaterial({ roughness: 0.4, metalness: 0.05 }),
     };
     const door = attribute<'vec2'>('doorTravel', 'vec2');
     const opening = attribute<'float'>('doorOpening', 'float');
     const slide = select(door.x.mul(opening).greaterThan(0), opening.abs().mul(door.y), float(0));
     const position = wheelPosition().add(vec3(0, 0, slide));
-    for (const [style, material] of Object.entries(pair) as [keyof typeof pair, THREE.MeshStandardNodeMaterial | THREE.MeshToonNodeMaterial][]) {
+    for (const [style, material] of Object.entries(pair) as [
+      keyof typeof pair,
+      THREE.MeshStandardNodeMaterial | THREE.MeshToonNodeMaterial,
+    ][]) {
       material.colorNode = base.rgb;
       material.positionNode = position;
-      const emission = lampColor.mul(lamp).mul(lampPower).add(sky.mul(glass).mul(style === 'anime' ? .55 : 1));
+      const emission = lampColor
+        .mul(lamp)
+        .mul(lampPower)
+        .add(sky.mul(glass).mul(style === 'anime' ? 0.55 : 1));
       (material as unknown as { emissiveNode: typeof emission }).emissiveNode = emission;
     }
-    pair.miniature.roughnessNode = mix(mix(float(.42), float(.1), mask.b), mix(float(.24), float(.06), mask.b), art.wet);
+    pair.miniature.roughnessNode = mix(
+      mix(float(0.42), float(0.1), mask.b),
+      mix(float(0.24), float(0.06), mask.b),
+      art.wet,
+    );
     return pair;
   });
 }

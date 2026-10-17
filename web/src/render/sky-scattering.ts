@@ -6,11 +6,22 @@ import * as THREE from 'three/webgpu';
  * sunward horizon at low sun) without replacing its illustrated clouds.
  * Returns tone-mapped linear RGB in 0..1 for one view direction.
  */
-export function skyRadiance(sun: THREE.Vector3, view: THREE.Vector3, turbidity = 2.6, rayleigh = 1.4, mieCoefficient = 0.005, mieG = 0.8, exposure = 0.5): THREE.Color {
-  const sunDir = sun.clone().normalize(), dir = view.clone().normalize();
+export function skyRadiance(
+  sun: THREE.Vector3,
+  view: THREE.Vector3,
+  turbidity = 2.6,
+  rayleigh = 1.4,
+  mieCoefficient = 0.005,
+  mieG = 0.8,
+  exposure = 0.5,
+): THREE.Color {
+  const sunDir = sun.clone().normalize(),
+    dir = view.clone().normalize();
   const totalRayleigh = [5.804542996261093e-6, 1.3562911419845635e-5, 3.0265902468824876e-5];
   const mieConst = [1.8399918514433978e14, 2.7798023919660528e14, 4.0790479543861094e14];
-  const cutoffAngle = 1.6110731556870734, steepness = 1.5, EE = 1000;
+  const cutoffAngle = 1.6110731556870734,
+    steepness = 1.5,
+    EE = 1000;
   const zenithCos = THREE.MathUtils.clamp(sunDir.y, -1, 1);
   const sunE = EE * Math.max(0, 1 - Math.exp(-(cutoffAngle - Math.acos(zenithCos)) / steepness));
   const betaR = totalRayleigh.map((v) => v * rayleigh);
@@ -18,12 +29,14 @@ export function skyRadiance(sun: THREE.Vector3, view: THREE.Vector3, turbidity =
   const betaM = mieConst.map((v) => 0.434 * c * v * mieCoefficient);
 
   const zenithAngle = Math.acos(Math.max(0, dir.y));
-  const inverse = 1 / (Math.cos(zenithAngle) + 0.15 * Math.pow(93.885 - zenithAngle * 180 / Math.PI, -1.253));
-  const sR = 8.4e3 * inverse, sM = 1.25e3 * inverse;
+  const inverse =
+    1 / (Math.cos(zenithAngle) + 0.15 * Math.pow(93.885 - (zenithAngle * 180) / Math.PI, -1.253));
+  const sR = 8.4e3 * inverse,
+    sM = 1.25e3 * inverse;
   const cosTheta = dir.dot(sunDir);
   const rPhase = 0.05968310365946075 * (1 + Math.pow(cosTheta * 0.5 + 0.5, 2));
   const g2 = mieG * mieG;
-  const mPhase = 0.07957747154594767 * (1 - g2) / Math.pow(1 - 2 * mieG * cosTheta + g2, 1.5);
+  const mPhase = (0.07957747154594767 * (1 - g2)) / Math.pow(1 - 2 * mieG * cosTheta + g2, 1.5);
   const sunsetBlend = THREE.MathUtils.clamp(Math.pow(1 - sunDir.y, 5), 0, 1);
   const out = [0, 1, 2].map((i) => {
     const fex = Math.exp(-(betaR[i] * sR + betaM[i] * sM));

@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import * as THREE from "three/webgpu";
-import { Umbrellas } from "../web/src/render/umbrellas";
+import { describe, expect, it, vi } from 'vitest';
+import * as THREE from 'three/webgpu';
+import { Umbrellas } from '../web/src/render/umbrellas';
 
 function tuples(...actors: Array<[number, number, number, number, number, number]>): Float32Array {
   return new Float32Array(actors.flat());
@@ -8,7 +8,9 @@ function tuples(...actors: Array<[number, number, number, number, number, number
 
 function meshesOfType(root: THREE.Group): THREE.InstancedMesh[] {
   const meshes: THREE.InstancedMesh[] = [];
-  root.traverse((object) => { if (object instanceof THREE.InstancedMesh) meshes.push(object); });
+  root.traverse((object) => {
+    if (object instanceof THREE.InstancedMesh) meshes.push(object);
+  });
   return meshes;
 }
 
@@ -47,8 +49,8 @@ function canopyY(umbrellas: Umbrellas): number {
   return matrix.elements[13];
 }
 
-describe("Umbrellas", () => {
-  it("renders only pedestrians, stays within capacity, and uses finite reusable instance geometry", () => {
+describe('Umbrellas', () => {
+  it('renders only pedestrians, stays within capacity, and uses finite reusable instance geometry', () => {
     const umbrellas = new Umbrellas(2);
     const stream = tuples(
       [10, 10, 2, 0.2, 0, 0],
@@ -65,30 +67,46 @@ describe("Umbrellas", () => {
     expect(selectedXs(umbrellas).every((x) => x === 10 || x === 20)).toBe(true);
     expect(umbrellas.root.children).toHaveLength(7);
     expect(meshes.every((mesh) => mesh.frustumCulled)).toBe(true);
-    expect(meshes.filter((mesh) => mesh.count > 0).every((mesh) => mesh.boundingSphere && Number.isFinite(mesh.boundingSphere.radius))).toBe(true);
+    expect(
+      meshes
+        .filter((mesh) => mesh.count > 0)
+        .every((mesh) => mesh.boundingSphere && Number.isFinite(mesh.boundingSphere.radius)),
+    ).toBe(true);
     for (const mesh of meshes) {
-      const positions = mesh.geometry.getAttribute("position");
+      const positions = mesh.geometry.getAttribute('position');
       for (let index = 0; index < positions.count; index++) {
         expect(Number.isFinite(positions.getX(index))).toBe(true);
         expect(Number.isFinite(positions.getY(index))).toBe(true);
         expect(Number.isFinite(positions.getZ(index))).toBe(true);
       }
     }
-    const canopyNormals = meshes[0].geometry.getAttribute("normal");
-    expect(Array.from({ length: canopyNormals.count }, (_, index) => canopyNormals.getY(index)).reduce((sum, y) => sum + y, 0) / canopyNormals.count).toBeGreaterThan(0);
+    const canopyNormals = meshes[0].geometry.getAttribute('normal');
+    expect(
+      Array.from({ length: canopyNormals.count }, (_, index) => canopyNormals.getY(index)).reduce(
+        (sum, y) => sum + y,
+        0,
+      ) / canopyNormals.count,
+    ).toBeGreaterThan(0);
 
     const geometries = meshes.map((mesh) => mesh.geometry);
     const matrixBuffers = meshes.map((mesh) => mesh.instanceMatrix.array);
     umbrellas.update(stream, 0.9, 1.1);
     expect(meshesOfType(umbrellas.root).map((mesh) => mesh.geometry)).toEqual(geometries);
-    meshesOfType(umbrellas.root).forEach((mesh, index) => expect(mesh.instanceMatrix.array).toBe(matrixBuffers[index]));
-    expect(meshesOfType(umbrellas.root).reduce((sum, mesh) => sum + mesh.count, 0)).toBeLessThanOrEqual(4);
+    meshesOfType(umbrellas.root).forEach((mesh, index) =>
+      expect(mesh.instanceMatrix.array).toBe(matrixBuffers[index]),
+    );
+    expect(
+      meshesOfType(umbrellas.root).reduce((sum, mesh) => sum + mesh.count, 0),
+    ).toBeLessThanOrEqual(4);
     umbrellas.dispose();
   });
 
-  it("keeps the same seeded pedestrian subset when movement order changes", () => {
+  it('keeps the same seeded pedestrian subset when movement order changes', () => {
     const umbrellas = new Umbrellas(3);
-    const actors: Array<[number, number, number, number, number, number]> = Array.from({ length: 12 }, (_, index) => [index + 1, (index + 1) * 10, 0, index * 0.1, 0, 0]);
+    const actors: Array<[number, number, number, number, number, number]> = Array.from(
+      { length: 12 },
+      (_, index) => [index + 1, (index + 1) * 10, 0, index * 0.1, 0, 0],
+    );
     umbrellas.update(tuples(...actors), 0.7, 10);
     const initial = selectedXs(umbrellas);
     expect(initial).toHaveLength(3);
@@ -106,11 +124,14 @@ describe("Umbrellas", () => {
     umbrellas.dispose();
   });
 
-  it("opens smoothly by elapsed presentation time and keeps injected art materials owned by the caller", () => {
+  it('opens smoothly by elapsed presentation time and keeps injected art materials owned by the caller', () => {
     const cached = new Map<string, THREE.Material>();
     const materialForColor = (hex: string) => {
       let material = cached.get(hex);
-      if (!material) { material = new THREE.MeshStandardMaterial({ color: hex }); cached.set(hex, material); }
+      if (!material) {
+        material = new THREE.MeshStandardMaterial({ color: hex });
+        cached.set(hex, material);
+      }
       return material;
     };
     const first = new Umbrellas(1, materialForColor);
@@ -130,15 +151,16 @@ describe("Umbrellas", () => {
 
     const materialDisposals = [...cached.values()].map((material) => {
       const dispose = vi.fn();
-      material.addEventListener("dispose", dispose);
+      material.addEventListener('dispose', dispose);
       return dispose;
     });
-    first.dispose(); second.dispose();
+    first.dispose();
+    second.dispose();
     expect(materialDisposals.every((dispose) => !dispose.mock.calls.length)).toBe(true);
     for (const material of cached.values()) material.dispose();
   });
 
-  it("shows an initially rainy paused world fully open, then hides canopies after dry weather settles", () => {
+  it('shows an initially rainy paused world fully open, then hides canopies after dry weather settles', () => {
     const umbrellas = new Umbrellas(2);
     const actor = tuples([7, 2, 3, 0.4, 0, 0], [8, 5, 6, 0.8, 0, 0]);
     umbrellas.update(actor, 0.8, 44); // The first snapshot has no elapsed presentation delta.

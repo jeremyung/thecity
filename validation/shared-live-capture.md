@@ -9,7 +9,7 @@ The shared path retains both adapters' independent caps and source ordering, wit
 - Full native release suite: **355 passed, zero failed, 43 ignored**, 46.40 seconds.
 - Initial, mature, legacy absent-rotation and duplicate/missing-node cases preserve capture results. Both adapters' cap failures leave the city unchanged. Existing frozen geometry oracle checks still pass.
 - Root integration test compares the live startup checkpoint with the former two-capture assembly, then verifies byte-identical complete city saves after 200 real simulation ticks.
-- Production WASM rebuilt. `node scripts/test-live-capture-wasm.mjs` exercises live startup on the first step, then 200 ticks with JSON save/restore every 17 ticks; complete final saves match uninterrupted execution. Source, WASM and final-save hashes are recorded in `shared-capture-wasm.json`.
+- Production WASM rebuilt. `node scripts/diagnose/test-live-capture-wasm.mjs` exercises live startup on the first step, then 200 ticks with JSON save/restore every 17 ticks; complete final saves match uninterrupted execution. Source, WASM and final-save hashes are recorded in `shared-capture-wasm.json`.
 - Existing Node WASM discovery profile still matches all **3,180 native reference descriptors**, with unchanged **7,380,416** logical units across quotas and JSON resume. See `access-discovery-wasm-profile.json`.
 
 ## Capture-only timing

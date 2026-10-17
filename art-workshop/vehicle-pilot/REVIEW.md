@@ -26,7 +26,7 @@ Not yet done: matting, atlas packing, paint mask, kit geometry, in-city review.
 ComfyUI (`~/Development/ComfyUI`, venv now has torch 2.14.1+cu130) needs `extra_model_paths.yaml` pointing at `~/Models/HunyuanImage-2.1/split_files`. The GPU must be free: stop vLLM first, and restart it with `~/vllm-venv/bin` on PATH (FlashInfer needs `ninja`).
 
 ```
-python3 scripts/generate-vehicle-pilot-local.py hunyuanimage2.1_bf16.safetensors 30 3.5 euler <tag> [vehicle ...]
+python3 scripts/assets/generate-vehicle-pilot-local.py hunyuanimage2.1_bf16.safetensors 30 3.5 euler <tag> [vehicle ...]
 ```
 The `hy21-full-ortho` run used:
 
@@ -35,4 +35,4 @@ The `hy21-full-ortho` run used:
 
 ## What is committed
 
-Only the side elevations that `scripts/build-vehicle-kits.py` reads (listed in `art-workshop/vehicle-kit.json`) are kept in the repository, with both ledgers and the contact sheet. Every other generation is recorded in `ledger.json` and `local-ledger.json` with its prompt, model and cost, and can be regenerated from the configs in `art-workshop/vehicle-*.json`.
+Only the side elevations that `scripts/assets/build-vehicle-kits.py` reads (listed in `art-workshop/vehicle-kit.json`) are kept in the repository, with both ledgers and the contact sheet. Every other generation is recorded in `ledger.json` and `local-ledger.json` with its prompt, model and cost, and can be regenerated from the configs in `art-workshop/vehicle-*.json`.

@@ -16,7 +16,14 @@ function engineCheckpoint(seed: number, tick: number) {
     revision: tick,
     next_id: 1,
     next_event_id: 1,
-    nodes: [], roads: [], parcels: [], buildings: [], projects: [], travelers: [], trains: [], events: [],
+    nodes: [],
+    roads: [],
+    parcels: [],
+    buildings: [],
+    projects: [],
+    travelers: [],
+    trains: [],
+    events: [],
     population: 0,
     demand: 0,
     growth_cursor: 0,
@@ -38,7 +45,9 @@ describe('graphics recovery startup', () => {
     const data = engineCheckpoint(87_231, 4_321);
     const loadSaved = vi.fn(async () => loaded(data, 87_231));
 
-    await expect(resolveStartupWorld('?recover=1&seed=19&webgl=1', 87231, loadSaved)).resolves.toEqual({
+    await expect(
+      resolveStartupWorld('?recover=1&seed=19&webgl=1', 87231, loadSaved),
+    ).resolves.toEqual({
       kind: 'recovered',
       seed: 87_231,
       data,
@@ -48,18 +57,34 @@ describe('graphics recovery startup', () => {
 
   it('preserves normal startup seed behavior without reading saved worlds', async () => {
     const loadSaved = vi.fn(async () => null);
-    await expect(resolveStartupWorld('?seed=19', 87231, loadSaved)).resolves.toEqual({ kind: 'new', seed: 19 });
+    await expect(resolveStartupWorld('?seed=19', 87231, loadSaved)).resolves.toEqual({
+      kind: 'new',
+      seed: 19,
+    });
     expect(loadSaved).not.toHaveBeenCalled();
-    await expect(resolveStartupWorld('', 87_231, loadSaved)).resolves.toEqual({ kind: 'new', seed: 87_231 });
+    await expect(resolveStartupWorld('', 87_231, loadSaved)).resolves.toEqual({
+      kind: 'new',
+      seed: 87_231,
+    });
   });
 
   it('blocks recovery startup when the latest save is missing or invalid', async () => {
-    await expect(resolveStartupWorld('?recover=1', 87231, async () => null)).rejects.toThrow('No valid saved city is available');
-    await expect(resolveStartupWorld('?recover=1', 87231, async () => loaded('{"seed":7}', 7))).rejects.toThrow('saved city for graphics recovery is invalid');
+    await expect(resolveStartupWorld('?recover=1', 87231, async () => null)).rejects.toThrow(
+      'No valid saved city is available',
+    );
+    await expect(
+      resolveStartupWorld('?recover=1', 87231, async () => loaded('{"seed":7}', 7)),
+    ).rejects.toThrow('saved city for graphics recovery is invalid');
   });
 
   it('blocks recovery when IndexedDB cannot be read or the stored seed disagrees', async () => {
-    await expect(resolveStartupWorld('?recover=1', 87231, async () => { throw new Error('quota denied'); })).rejects.toThrow('Could not read the saved city');
-    await expect(resolveStartupWorld('?recover=1', 87231, async () => loaded(engineCheckpoint(8, 2), 7))).rejects.toThrow('seed does not match');
+    await expect(
+      resolveStartupWorld('?recover=1', 87231, async () => {
+        throw new Error('quota denied');
+      }),
+    ).rejects.toThrow('Could not read the saved city');
+    await expect(
+      resolveStartupWorld('?recover=1', 87231, async () => loaded(engineCheckpoint(8, 2), 7)),
+    ).rejects.toThrow('seed does not match');
   });
 });

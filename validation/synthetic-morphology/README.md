@@ -58,10 +58,10 @@ and retain finite caps. This evidence is not approval to ship new density target
 ## Reproduce / validation
 
 ```
-.tools/plateau-python/bin/python scripts/select-synthetic-crops.py
-node scripts/audit-rendered-coverage.mjs --snapshot validation/early-reservation-wasm-87231-snapshot.json --crop 28,-67,278,183 --output validation/synthetic-morphology/station-coverage.json
-node scripts/audit-rendered-coverage.mjs --snapshot validation/early-reservation-wasm-87231-snapshot.json --crop 50,-350,300,-100 --output validation/synthetic-morphology/compact-coverage.json
-node scripts/audit-rendered-coverage.mjs --snapshot validation/early-reservation-wasm-87231-snapshot.json --crop -237,-83,13,167 --output validation/synthetic-morphology/waterfront-coverage.json
+.tools/plateau-python/bin/python scripts/assets/select-synthetic-crops.py
+node scripts/audit/audit-rendered-coverage.mjs --snapshot validation/early-reservation-wasm-87231-snapshot.json --crop 28,-67,278,183 --output validation/synthetic-morphology/station-coverage.json
+node scripts/audit/audit-rendered-coverage.mjs --snapshot validation/early-reservation-wasm-87231-snapshot.json --crop 50,-350,300,-100 --output validation/synthetic-morphology/compact-coverage.json
+node scripts/audit/audit-rendered-coverage.mjs --snapshot validation/early-reservation-wasm-87231-snapshot.json --crop -237,-83,13,167 --output validation/synthetic-morphology/waterfront-coverage.json
 npx vitest run tests/rendered-coverage.test.ts
 ```
 
@@ -72,7 +72,7 @@ production-kit measurements. No engine changes or browser performance claims.
 ## Follow-up land budget
 
 `land-budget.json` partitions building envelopes, open-road5m centerline buffers
-and their complement. Generate with `scripts/audit-synthetic-land-budget.py`.
+and their complement. Generate with `scripts/audit/audit-synthetic-land-budget.py`.
 The compact crop has25.65% road buffers and36.60% outside envelopes and buffers.
 The complement is unclassified, not net developable land or an admission result.
 See [compact prototype results](../block-subdivision-study/compact-rows.md) for

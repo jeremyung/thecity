@@ -12,8 +12,18 @@ export interface CeramicRoofDetailOptions {
 }
 
 /** Adds bounded, low-poly ceramic rolls and course lips to a pitched gable. */
-export function addCeramicRoofDetail(kit: Kit, { width, halfDepth, rise, top, roof, tile, surfaceOffset = 0.13 }: CeramicRoofDetailOptions): void {
-  if (![width, halfDepth, rise, top, surfaceOffset].every(Number.isFinite) || width <= 0 || halfDepth <= 0 || rise < 0 || surfaceOffset < 0) return;
+export function addCeramicRoofDetail(
+  kit: Kit,
+  { width, halfDepth, rise, top, roof, tile, surfaceOffset = 0.13 }: CeramicRoofDetailOptions,
+): void {
+  if (
+    ![width, halfDepth, rise, top, surfaceOffset].every(Number.isFinite) ||
+    width <= 0 ||
+    halfDepth <= 0 ||
+    rise < 0 ||
+    surfaceOffset < 0
+  )
+    return;
 
   const radius = 0.065;
   const angle = Math.atan2(rise, halfDepth);
@@ -28,25 +38,31 @@ export function addCeramicRoofDetail(kit: Kit, { width, halfDepth, rise, top, ro
   // its arc at each end. Its center follows the pitched plane.
   for (const side of [-1, 1] as const) {
     for (let roll = 0; roll < rolls; roll++) {
-      const x = -width / 2 + width * (roll + 0.5) / rolls;
+      const x = -width / 2 + (width * (roll + 0.5)) / rolls;
       const positions: number[] = [];
       const uvs: number[] = [];
       const indices: number[] = [];
       for (let along = 0; along <= longitudinalSegments; along++) {
-        const distance = rollLength * along / longitudinalSegments;
+        const distance = (rollLength * along) / longitudinalSegments;
         const planeY = top + rise * (1 - distance / slopeLength);
         for (let arc = 0; arc <= arcSegments; arc++) {
-          const theta = Math.PI * arc / arcSegments;
+          const theta = (Math.PI * arc) / arcSegments;
           const across = radius * Math.cos(theta);
           const lift = radius * Math.sin(theta);
-          positions.push(x + across, planeY + (surfaceOffset + lift) * Math.cos(angle), side * (halfDepth * distance / slopeLength + (surfaceOffset + lift) * Math.sin(angle)));
+          positions.push(
+            x + across,
+            planeY + (surfaceOffset + lift) * Math.cos(angle),
+            side *
+              ((halfDepth * distance) / slopeLength + (surfaceOffset + lift) * Math.sin(angle)),
+          );
           uvs.push(along / longitudinalSegments, arc / arcSegments);
         }
       }
       const row = arcSegments + 1;
       for (let along = 0; along < longitudinalSegments; along++) {
         for (let arc = 0; arc < arcSegments; arc++) {
-          const a = along * row + arc, b = a + row;
+          const a = along * row + arc,
+            b = a + row;
           if (side === 1) indices.push(a, a + 1, b, b, a + 1, b + 1);
           else indices.push(a, b, a + 1, b, b + 1, a + 1);
         }
@@ -64,10 +80,13 @@ export function addCeramicRoofDetail(kit: Kit, { width, halfDepth, rise, top, ro
     for (let course = 0; course < courseCount; course++) {
       const lipDepth = Math.min(0.055, slopeLength / (courseCount * 2));
       const endLimit = slopeLength - (surfaceOffset + lipDepth / 2) * Math.tan(angle);
-      const distance = Math.min(endLimit, Math.max(0, slopeLength * (course + 0.5) / courseCount));
+      const distance = Math.min(
+        endLimit,
+        Math.max(0, (slopeLength * (course + 0.5)) / courseCount),
+      );
       const lipLift = surfaceOffset + 0.025;
       const y = top + rise * (1 - distance / slopeLength) + lipLift * Math.cos(angle);
-      const z = side * (halfDepth * distance / slopeLength + lipLift * Math.sin(angle));
+      const z = side * ((halfDepth * distance) / slopeLength + lipLift * Math.sin(angle));
       const lip = new THREE.BoxGeometry(width, 0.035, lipDepth);
       lip.rotateX(side * angle);
       lip.translate(0, y, z);

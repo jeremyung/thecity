@@ -1,5 +1,11 @@
-import { WORKER_PROTOCOL_VERSION, type Metrics, type WorkerInput, type WorkerOutput, type World } from "../types";
-import { ControlSequenceGate } from "./protocol";
+import {
+  WORKER_PROTOCOL_VERSION,
+  type Metrics,
+  type WorkerInput,
+  type WorkerOutput,
+  type World,
+} from '../types';
+import { ControlSequenceGate } from './protocol';
 import { ensurePresentationWorld } from './presentation-order';
 
 type Engine = {
@@ -17,7 +23,7 @@ type Engine = {
 type WasmModule = {
   default(input?: { module_or_path: string }): Promise<{ memory?: WebAssembly.Memory }>;
   CityEngine: {
-    new(seed: number): Engine;
+    new (seed: number): Engine;
     restore(json: string): Engine;
   };
   memory?: WebAssembly.Memory;
@@ -79,7 +85,7 @@ export class PendingDevelopmentControl {
     return true;
   }
 
-  apply(epoch: number, engine: Pick<Engine, "set_development_rate">): void {
+  apply(epoch: number, engine: Pick<Engine, 'set_development_rate'>): void {
     if (epoch !== this.epoch || this.pendingRate === null) return;
     engine.set_development_rate(this.pendingRate);
     this.pendingRate = null;
@@ -131,7 +137,11 @@ export class EngineSlot<T extends { free?(): void }> {
   }
 
   private release(engine: T | null): void {
-    try { engine?.free?.(); } catch { /* release cannot interrupt a world swap */ }
+    try {
+      engine?.free?.();
+    } catch {
+      /* release cannot interrupt a world swap */
+    }
   }
 }
 
@@ -140,7 +150,11 @@ function normalizeDevelopmentRate(rate: number): number {
 }
 
 /** Bound accumulated work so a throttled tab cannot spend minutes catching up. */
-export function capBacklog(current: number, incoming: number, limit = MAX_BACKLOG_TICKS): { backlog: number; dropped: number } {
+export function capBacklog(
+  current: number,
+  incoming: number,
+  limit = MAX_BACKLOG_TICKS,
+): { backlog: number; dropped: number } {
   const total = Math.max(0, current) + Math.max(0, incoming);
   const backlog = Math.min(Math.max(0, limit), total);
   return { backlog, dropped: total - backlog };
@@ -150,7 +164,7 @@ let epoch = 0;
 const controlSequence = new ControlSequenceGate();
 const engineSlot = new EngineSlot<Engine>();
 let engine: Engine | null = null;
-type WasmRuntime = Pick<WasmModule, "CityEngine"> & { memory?: WebAssembly.Memory };
+type WasmRuntime = Pick<WasmModule, 'CityEngine'> & { memory?: WebAssembly.Memory };
 let wasm: WasmRuntime | null = null;
 let wasmLoading: Promise<WasmRuntime> | null = null;
 let timer: number | null = null;
@@ -175,8 +189,14 @@ function post(message: WorkerOutput, transfer?: Transferable[]): void {
   scope.postMessage(message, transfer ?? []);
 }
 
-function sendError(message: string, code?: Extract<WorkerOutput, { type: "error" }>["code"]): void {
-  post({ type: "error", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, message, ...(code ? { code } : {}) });
+function sendError(message: string, code?: Extract<WorkerOutput, { type: 'error' }>['code']): void {
+  post({
+    type: 'error',
+    protocolVersion: WORKER_PROTOCOL_VERSION,
+    epoch,
+    message,
+    ...(code ? { code } : {}),
+  });
 }
 
 function currentTick(): number {
@@ -186,17 +206,24 @@ function currentTick(): number {
 }
 
 function readWorld(): World {
-  if (!engine) throw new Error("Simulation is not initialized");
+  if (!engine) throw new Error('Simulation is not initialized');
   return parseWorldSnapshot(engine.snapshot());
 }
 
 function parseWorldSnapshot(json: string): World {
   const value: unknown = JSON.parse(json);
-  if (!value || typeof value !== "object") throw new Error("Engine returned an invalid world snapshot");
+  if (!value || typeof value !== 'object')
+    throw new Error('Engine returned an invalid world snapshot');
   const world = value as Partial<World>;
-  if (world.schema_version !== 1 || !Number.isFinite(world.tick) || !Number.isFinite(world.revision) || !Number.isFinite(world.development_rate)
-    || typeof world.presentation_revision !== 'string' || !world.presentation_revision) {
-    throw new Error("Engine returned an invalid world snapshot");
+  if (
+    world.schema_version !== 1 ||
+    !Number.isFinite(world.tick) ||
+    !Number.isFinite(world.revision) ||
+    !Number.isFinite(world.development_rate) ||
+    typeof world.presentation_revision !== 'string' ||
+    !world.presentation_revision
+  ) {
+    throw new Error('Engine returned an invalid world snapshot');
   }
   return world as World;
 }
@@ -210,21 +237,22 @@ function publishWorld(force = false): World | undefined {
   lastWorldAt = now;
   lastRevision = world.revision;
   previousTick = world.tick;
-  post({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world });
+  post({ type: 'world', protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world });
   lastPresentationRevision = world.presentation_revision;
   return world;
 }
 
 function minuteAndDay(tick: number): { minute: number; day: number } {
   const ticksPerDay = 24_000;
-  const elapsed = (tick % ticksPerDay) * 1440 / ticksPerDay;
+  const elapsed = ((tick % ticksPerDay) * 1440) / ticksPerDay;
   return { minute: (360 + elapsed) % 1440, day: Math.floor(tick / ticksPerDay) };
 }
 
 function publishMovement(): void {
   if (!engine) return;
   lastPresentationRevision = ensurePresentationWorld(
-    engine.presentation_revision(), lastPresentationRevision,
+    engine.presentation_revision(),
+    lastPresentationRevision,
     () => publishWorld(true)?.presentation_revision,
   );
   const packet = engine.movement_packet();
@@ -234,18 +262,21 @@ function publishMovement(): void {
   if (neededBytes > 0) new Uint32Array(buffer, 0, packet.length).set(packet);
   const tick = currentTick();
   const clock = minuteAndDay(tick);
-  post({
-    type: "movement",
-    protocolVersion: WORKER_PROTOCOL_VERSION,
-    epoch,
-    tick,
-    wordCount: packet.length,
-    trainDoors: engine.train_doors(),
-    buffer,
-    presentationRevision: lastPresentationRevision,
-    minute: clock.minute,
-    day: clock.day,
-  }, [buffer]);
+  post(
+    {
+      type: 'movement',
+      protocolVersion: WORKER_PROTOCOL_VERSION,
+      epoch,
+      tick,
+      wordCount: packet.length,
+      trainDoors: engine.train_doors(),
+      buffer,
+      presentationRevision: lastPresentationRevision,
+      minute: clock.minute,
+      day: clock.day,
+    },
+    [buffer],
+  );
 }
 
 function publishMetrics(now: number, backlog: number): void {
@@ -253,12 +284,12 @@ function publishMetrics(now: number, backlog: number): void {
   if (now - lastMetricsAt < 1000) return;
   const sampleMs = Math.max(1, now - metricsSampleAt);
   const tick = currentTick();
-  const achievableSpeed = Math.max(0, (tick - metricsSampleTick) * TICK_MS / sampleMs);
+  const achievableSpeed = Math.max(0, ((tick - metricsSampleTick) * TICK_MS) / sampleMs);
   lastMetricsAt = now;
   metricsSampleAt = now;
   metricsSampleTick = tick;
   post({
-    type: "metrics",
+    type: 'metrics',
     protocolVersion: WORKER_PROTOCOL_VERSION,
     epoch,
     metrics: {
@@ -284,9 +315,9 @@ function runFrame(): void {
     return;
   }
 
-  const bounded = capBacklog(accumulator, elapsed / TICK_MS * speed);
+  const bounded = capBacklog(accumulator, (elapsed / TICK_MS) * speed);
   accumulator = bounded.backlog;
-  droppedWallMs += bounded.dropped * TICK_MS / Math.max(1, speed);
+  droppedWallMs += (bounded.dropped * TICK_MS) / Math.max(1, speed);
   const steps = Math.min(MAX_STEPS_PER_TURN, Math.floor(accumulator));
   try {
     if (steps > 0) {
@@ -316,7 +347,7 @@ function startScheduler(): void {
   runFrame();
 }
 
-async function initialize(message: Extract<WorkerInput, { type: "init" }>): Promise<void> {
+async function initialize(message: Extract<WorkerInput, { type: 'init' }>): Promise<void> {
   if (message.epoch < epoch) return;
   if (message.epoch === epoch && (engine || engineSlot.isLoading(message.epoch))) return;
   epoch = message.epoch;
@@ -342,15 +373,17 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
   try {
     if (!wasm) {
       wasmLoading ??= (async () => {
-        const wasmUrl = new URL("/wasm/city_engine.js", self.location.origin).href;
-        const module = await import(/* @vite-ignore */ wasmUrl) as WasmModule;
-        const exports = await module.default({ module_or_path: "/wasm/city_engine_bg.wasm" });
+        const wasmUrl = new URL('/wasm/city_engine.js', self.location.origin).href;
+        const module = (await import(/* @vite-ignore */ wasmUrl)) as WasmModule;
+        const exports = await module.default({ module_or_path: '/wasm/city_engine_bg.wasm' });
         return { CityEngine: module.CityEngine, memory: exports.memory };
       })();
       wasm = await wasmLoading;
     }
     if (message.epoch !== epoch) return;
-    candidate = message.save ? wasm.CityEngine.restore(message.save) : new wasm.CityEngine(message.seed >>> 0);
+    candidate = message.save
+      ? wasm.CityEngine.restore(message.save)
+      : new wasm.CityEngine(message.seed >>> 0);
     if (message.epoch !== epoch) {
       engineSlot.discard(candidate);
       return;
@@ -369,7 +402,7 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
     metricsSampleAt = scope.performance.now();
     lastRevision = world.revision;
     lastWorldAt = scope.performance.now();
-    post({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world });
+    post({ type: 'world', protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world });
     lastPresentationRevision = world.presentation_revision;
     // A paused restore still needs its actors at the saved positions.
     publishMovement();
@@ -397,16 +430,24 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
         metricsSampleAt = scope.performance.now();
         lastRevision = fallbackWorld.revision;
         lastWorldAt = scope.performance.now();
-        post({ type: "world", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, world: fallbackWorld });
+        post({
+          type: 'world',
+          protocolVersion: WORKER_PROTOCOL_VERSION,
+          epoch,
+          world: fallbackWorld,
+        });
         lastPresentationRevision = fallbackWorld.presentation_revision;
         publishMovement();
         sendError(`Could not load that world. The current city is still running. ${reason}`);
         startScheduler();
         return;
       } catch (fallbackError) {
-        const fallbackReason = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        const fallbackReason =
+          fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
         pendingDevelopment.clear(message.epoch);
-        sendError(`Could not load that world (${reason}); the current city could not be resumed (${fallbackReason}).`);
+        sendError(
+          `Could not load that world (${reason}); the current city could not be resumed (${fallbackReason}).`,
+        );
         return;
       }
     }
@@ -417,45 +458,56 @@ async function initialize(message: Extract<WorkerInput, { type: "init" }>): Prom
 
 const handleMessage = (event: MessageEvent<WorkerInput>) => {
   const message = event.data;
-  if (!message || typeof message !== "object") {
-    sendError("Invalid worker message. Reload the app so its interface and worker use matching files.");
+  if (!message || typeof message !== 'object') {
+    sendError(
+      'Invalid worker message. Reload the app so its interface and worker use matching files.',
+    );
     return;
   }
   if (message.protocolVersion !== WORKER_PROTOCOL_VERSION) {
     const messageEpoch = Number.isSafeInteger(message.epoch) ? message.epoch : epoch;
     post({
-      type: "error",
+      type: 'error',
       protocolVersion: WORKER_PROTOCOL_VERSION,
       epoch: messageEpoch,
-      code: "protocol-version",
+      code: 'protocol-version',
       message: `Worker protocol mismatch: this worker requires version ${WORKER_PROTOCOL_VERSION}, but received ${String(message.protocolVersion)}. Reload the app so its worker and interface use matching files.`,
     });
     return;
   }
-  if (message.type === "init") {
+  if (message.type === 'init') {
     void initialize(message);
     return;
   }
   if (message.epoch !== epoch) return;
 
   switch (message.type) {
-    case "control": {
+    case 'control': {
       if (!Number.isSafeInteger(message.sequence) || message.sequence <= 0) {
-        sendError("Invalid simulation control sequence; reload the app to restore communication.");
+        sendError('Invalid simulation control sequence; reload the app to restore communication.');
         break;
       }
       const sequence = controlSequence.accept(message.sequence);
       if (!sequence.accepted) {
         if (message.sequence <= sequence.appliedSequence) {
-          post({ type: "controlAck", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, appliedSequence: sequence.appliedSequence, tick: currentTick() });
+          post({
+            type: 'controlAck',
+            protocolVersion: WORKER_PROTOCOL_VERSION,
+            epoch,
+            appliedSequence: sequence.appliedSequence,
+            tick: currentTick(),
+          });
         } else {
-          sendError("Invalid simulation control sequence; reload the app to restore communication.");
+          sendError(
+            'Invalid simulation control sequence; reload the app to restore communication.',
+          );
         }
         break;
       }
       if (message.paused !== undefined) paused = message.paused;
       if (message.hidden !== undefined) hidden = message.hidden;
-      if (message.speed !== undefined) speed = [1, 2, 4, 8].includes(message.speed) ? message.speed : 1;
+      if (message.speed !== undefined)
+        speed = [1, 2, 4, 8].includes(message.speed) ? message.speed : 1;
       if (message.development !== undefined) {
         const rate = normalizeDevelopmentRate(message.development);
         if (engine && !engineSlot.isLoading(epoch)) engine.set_development_rate(rate);
@@ -466,32 +518,50 @@ const handleMessage = (event: MessageEvent<WorkerInput>) => {
       // The acknowledgement confirms the worker accepted the absolute desired
       // control state. Development pace is staged here during async world loads
       // and is applied before that candidate's first snapshot is published.
-      post({ type: "controlAck", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, appliedSequence: sequence.appliedSequence, tick: currentTick() });
+      post({
+        type: 'controlAck',
+        protocolVersion: WORKER_PROTOCOL_VERSION,
+        epoch,
+        appliedSequence: sequence.appliedSequence,
+        tick: currentTick(),
+      });
       break;
     }
-    case "recycle": {
+    case 'recycle': {
       movementBuffers.release(message.buffer);
       break;
     }
-    case "save": {
+    case 'save': {
       try {
-        if (!engine) throw new Error("Simulation is not initialized");
-        post({ type: "save", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, request: message.request, data: engine.save() });
+        if (!engine) throw new Error('Simulation is not initialized');
+        post({
+          type: 'save',
+          protocolVersion: WORKER_PROTOCOL_VERSION,
+          epoch,
+          request: message.request,
+          data: engine.save(),
+        });
       } catch (error) {
         sendError(error instanceof Error ? error.message : String(error));
       }
       break;
     }
-    case "inspect": {
+    case 'inspect': {
       try {
-        if (!engine) throw new Error("Simulation is not initialized");
-        post({ type: "inspect", protocolVersion: WORKER_PROTOCOL_VERSION, epoch, request: message.request, data: JSON.parse(engine.inspect(message.id)) });
+        if (!engine) throw new Error('Simulation is not initialized');
+        post({
+          type: 'inspect',
+          protocolVersion: WORKER_PROTOCOL_VERSION,
+          epoch,
+          request: message.request,
+          data: JSON.parse(engine.inspect(message.id)),
+        });
       } catch (error) {
         sendError(error instanceof Error ? error.message : String(error));
       }
       break;
     }
-    case "resync": {
+    case 'resync': {
       try {
         publishWorld(true);
       } catch (error) {
@@ -502,6 +572,9 @@ const handleMessage = (event: MessageEvent<WorkerInput>) => {
   }
 };
 
-if (typeof self !== "undefined" && typeof (self as unknown as WorkerScope).postMessage === "function") {
+if (
+  typeof self !== 'undefined' &&
+  typeof (self as unknown as WorkerScope).postMessage === 'function'
+) {
   scope.onmessage = handleMessage;
 }

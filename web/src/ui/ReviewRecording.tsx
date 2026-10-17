@@ -20,21 +20,24 @@ export default function ReviewRecording() {
   const stopReasonRef = useRef<string | null>(null);
   const downloadUrlRef = useRef<string | null>(null);
 
-  useEffect(() => () => {
-    if (timerRef.current !== null) window.clearInterval(timerRef.current);
-    stoppedRef.current = true;
-    const recorder = recorderRef.current;
-    if (recorder) {
-      recorder.onstop = null;
-      recorder.ondataavailable = null;
-      recorder.onerror = null;
-      if (recorder.state !== 'inactive') recorder.stop();
-    }
-    chunksRef.current = [];
-    recorderRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    if (downloadUrlRef.current) URL.revokeObjectURL(downloadUrlRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timerRef.current !== null) window.clearInterval(timerRef.current);
+      stoppedRef.current = true;
+      const recorder = recorderRef.current;
+      if (recorder) {
+        recorder.onstop = null;
+        recorder.ondataavailable = null;
+        recorder.onerror = null;
+        if (recorder.state !== 'inactive') recorder.stop();
+      }
+      chunksRef.current = [];
+      recorderRef.current = null;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (downloadUrlRef.current) URL.revokeObjectURL(downloadUrlRef.current);
+    },
+    [],
+  );
 
   const finish = (message?: string) => {
     if (timerRef.current !== null) {
@@ -115,7 +118,9 @@ export default function ReviewRecording() {
         if (!event.data.size) return;
         bytesRef.current += event.data.size;
         if (bytesRef.current > MAX_BYTES) {
-          stopRecording(`Recording stopped because it exceeded the ${MAX_BYTES / 1024 / 1024} MiB size limit.`);
+          stopRecording(
+            `Recording stopped because it exceeded the ${MAX_BYTES / 1024 / 1024} MiB size limit.`,
+          );
           return;
         }
         chunksRef.current.push(event.data);
@@ -136,20 +141,43 @@ export default function ReviewRecording() {
   };
 
   return (
-    <section aria-label="Visual review recording" style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid rgba(255,255,255,.14)', borderRadius: 8, color: 'inherit', fontSize: 13 }}>
+    <section
+      aria-label="Visual review recording"
+      style={{
+        display: 'grid',
+        gap: 8,
+        padding: 12,
+        border: '1px solid rgba(255,255,255,.14)',
+        borderRadius: 8,
+        color: 'inherit',
+        fontSize: 13,
+      }}
+    >
       <strong>Visual review capture</strong>
       <span role="status" aria-live="polite">
-        {state === 'recording' ? `Recording city canvas · ${Math.ceil(remainingMs / 1000)}s left` :
-          state === 'complete' ? 'Recording complete.' :
-            state === 'error' ? error : 'Captures the city canvas only; no screen, microphone, or audio.'}
+        {state === 'recording'
+          ? `Recording city canvas · ${Math.ceil(remainingMs / 1000)}s left`
+          : state === 'complete'
+            ? 'Recording complete.'
+            : state === 'error'
+              ? error
+              : 'Captures the city canvas only; no screen, microphone, or audio.'}
       </span>
       {state === 'recording' ? (
-        <button type="button" onClick={() => stopRecording()}>Stop recording</button>
+        <button type="button" onClick={() => stopRecording()}>
+          Stop recording
+        </button>
       ) : (
-        <button type="button" onClick={startRecording}>Record 20-second visual review</button>
+        <button type="button" onClick={startRecording}>
+          Record 20-second visual review
+        </button>
       )}
       {error && state === 'error' && <span role="alert">{error}</span>}
-      {downloadUrl && <a href={downloadUrl} download="city-visual-review.webm">Download WebM recording</a>}
+      {downloadUrl && (
+        <a href={downloadUrl} download="city-visual-review.webm">
+          Download WebM recording
+        </a>
+      )}
     </section>
   );
 }

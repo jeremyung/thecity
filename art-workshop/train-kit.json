@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "purpose": "Source images and measured dimensions for scripts/build-train-kits.py. Every side source faces left (front at low x). The front source is head-on. Livery is baked into the elevation, so the paint mask is empty and the runtime keeps the atlas colour.",
+  "purpose": "Source images and measured dimensions for scripts/assets/build-train-kits.py. Every side source faces left (front at low x). The front source is head-on. Livery is baked into the elevation, so the paint mask is empty and the runtime keeps the atlas colour.",
   "pixelsPerMeter": 72,
   "atlas": [2048, 1024],
   "classes": [

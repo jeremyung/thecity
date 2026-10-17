@@ -60,12 +60,19 @@ export class FrameTiming {
   snapshot(): FrameTimingSnapshot {
     const samples = this.intervals.length;
     if (samples === 0) {
-      return { samples: 0, fps: 0, frameP95Ms: 0, cpuP95Ms: 0, maxFrameMs: 0, phase: this.currentPhase };
+      return {
+        samples: 0,
+        fps: 0,
+        frameP95Ms: 0,
+        cpuP95Ms: 0,
+        maxFrameMs: 0,
+        phase: this.currentPhase,
+      };
     }
     const total = this.intervals.reduce((sum, value) => sum + value, 0);
     return {
       samples,
-      fps: 1000 * samples / total,
+      fps: (1000 * samples) / total,
       frameP95Ms: nearestRank(this.intervals, 0.95),
       cpuP95Ms: nearestRank(this.cpuCosts, 0.95),
       maxFrameMs: Math.max(...this.intervals),

@@ -1,0 +1,24 @@
+[package]
+name = "city-plan"
+version = "0.1.0"
+edition = "2021"
+description = "Pure, deterministic city planning and geometry for the engine"
+
+[features]
+# Mirrors of the engine's isolated candidate builds; the engine forwards them.
+legacy = []
+# Test helpers the engine's own tests use.
+test-support = []
+single-expressway-candidate = []
+street-placement-candidate = []
+frontage-fit-candidate = []
+flag-passage-candidate = []
+block-proportion-candidate = []
+parent-passage-candidate = []
+frontage-network-candidate = ["flag-passage-candidate"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+# TypeScript bindings for snapshot types; `cargo test export_bindings` writes web/src/generated.
+ts-rs = "=11.1.0"
+serde_json = { version = "1", features = ["float_roundtrip"] }

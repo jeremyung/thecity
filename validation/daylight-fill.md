@@ -3,7 +3,7 @@
 > Historical experiment. As verified on2026-10-15, current source uses
 > `1.05 - daylight * .27`, with Miniature hemisphere intensity multiplied by0.78
 > and a sky environment at `0.1 + daylight * .16`. The0.5→1.0 trial below is
-> not the current renderer setting. Consult HANDOFF.md for active comparisons.
+> not the current renderer setting. Consult archive/2026-10/HANDOFF.md for active comparisons.
 
 ## Decision and scope
 

@@ -7,11 +7,22 @@ import type { Point } from '../types';
  * at each supplied point; only the two global ends are capped.
  */
 export function createRiverbankGeometry(
-  points: readonly Point[], halfWidth: number, side: -1 | 1,
-  innerOffset: number, outerOffset: number, bottom: number, top: number,
+  points: readonly Point[],
+  halfWidth: number,
+  side: -1 | 1,
+  innerOffset: number,
+  outerOffset: number,
+  bottom: number,
+  top: number,
 ): THREE.BufferGeometry {
   if (points.length < 2) throw new RangeError('A riverbank needs at least two points');
-  if (![halfWidth, innerOffset, outerOffset, bottom, top].every(Number.isFinite) || !(halfWidth >= 0) || !(innerOffset >= 0) || !(outerOffset > innerOffset) || !(top > bottom)) {
+  if (
+    ![halfWidth, innerOffset, outerOffset, bottom, top].every(Number.isFinite) ||
+    !(halfWidth >= 0) ||
+    !(innerOffset >= 0) ||
+    !(outerOffset > innerOffset) ||
+    !(top > bottom)
+  ) {
     throw new RangeError('Invalid riverbank dimensions');
   }
   for (let i = 0; i < points.length; i++) {
@@ -27,20 +38,53 @@ export function createRiverbankGeometry(
   const indices: number[] = [];
   const runLength = [0];
   for (let i = 1; i < points.length; i++) {
-    runLength.push(runLength[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].z - points[i - 1].z));
+    runLength.push(
+      runLength[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].z - points[i - 1].z),
+    );
   }
   const faces = [
-    { corners: (p: Point) => [[p.x + side * (halfWidth + innerOffset), bottom, p.z], [p.x + side * (halfWidth + innerOffset), top, p.z]] as const, target: [-side, 0, 0] as const },
-    { corners: (p: Point) => [[p.x + side * (halfWidth + outerOffset), bottom, p.z], [p.x + side * (halfWidth + outerOffset), top, p.z]] as const, target: [side, 0, 0] as const },
-    { corners: (p: Point) => [[p.x + side * (halfWidth + innerOffset), top, p.z], [p.x + side * (halfWidth + outerOffset), top, p.z]] as const, target: [0, 1, 0] as const },
-    { corners: (p: Point) => [[p.x + side * (halfWidth + innerOffset), bottom, p.z], [p.x + side * (halfWidth + outerOffset), bottom, p.z]] as const, target: [0, -1, 0] as const },
+    {
+      corners: (p: Point) =>
+        [
+          [p.x + side * (halfWidth + innerOffset), bottom, p.z],
+          [p.x + side * (halfWidth + innerOffset), top, p.z],
+        ] as const,
+      target: [-side, 0, 0] as const,
+    },
+    {
+      corners: (p: Point) =>
+        [
+          [p.x + side * (halfWidth + outerOffset), bottom, p.z],
+          [p.x + side * (halfWidth + outerOffset), top, p.z],
+        ] as const,
+      target: [side, 0, 0] as const,
+    },
+    {
+      corners: (p: Point) =>
+        [
+          [p.x + side * (halfWidth + innerOffset), top, p.z],
+          [p.x + side * (halfWidth + outerOffset), top, p.z],
+        ] as const,
+      target: [0, 1, 0] as const,
+    },
+    {
+      corners: (p: Point) =>
+        [
+          [p.x + side * (halfWidth + innerOffset), bottom, p.z],
+          [p.x + side * (halfWidth + outerOffset), bottom, p.z],
+        ] as const,
+      target: [0, -1, 0] as const,
+    },
   ];
 
   for (let segment = 0; segment < points.length - 1; segment++) {
-    const a = points[segment], b = points[segment + 1];
-    const u0 = runLength[segment] / 8, u1 = runLength[segment + 1] / 8;
+    const a = points[segment],
+      b = points[segment + 1];
+    const u0 = runLength[segment] / 8,
+      u1 = runLength[segment + 1] / 8;
     for (const face of faces) {
-      const [a0, a1] = face.corners(a), [b0, b1] = face.corners(b);
+      const [a0, a1] = face.corners(a),
+        [b0, b1] = face.corners(b);
       const verts = [a0, b0, a1, b1];
       // Determine winding from the actual sloping quad, then orient every
       // face toward its intended exterior. Separate face vertices give flat normals.
@@ -49,7 +93,8 @@ export function createRiverbankGeometry(
       const normal = e1.clone().cross(e2);
       if (normal.lengthSq() < 1e-12) continue;
       normal.normalize();
-      const reverse = normal.x * face.target[0] + normal.y * face.target[1] + normal.z * face.target[2] < 0;
+      const reverse =
+        normal.x * face.target[0] + normal.y * face.target[1] + normal.z * face.target[2] < 0;
       if (reverse) normal.negate();
       const base = positions.length / 3;
       for (let i = 0; i < verts.length; i++) {
@@ -58,7 +103,11 @@ export function createRiverbankGeometry(
         normals.push(normal.x, normal.y, normal.z);
         uvs.push(i % 2 === 0 ? u0 : u1, i < 2 ? 0 : 1);
       }
-      indices.push(...(reverse ? [base, base + 2, base + 1, base + 1, base + 2, base + 3] : [base, base + 1, base + 2, base + 1, base + 3, base + 2]));
+      indices.push(
+        ...(reverse
+          ? [base, base + 2, base + 1, base + 1, base + 2, base + 3]
+          : [base, base + 1, base + 2, base + 1, base + 3, base + 2]),
+      );
     }
   }
 
@@ -68,7 +117,12 @@ export function createRiverbankGeometry(
     const p = points[endpoint];
     const xInner = p.x + side * (halfWidth + innerOffset);
     const xOuter = p.x + side * (halfWidth + outerOffset);
-    const verts = [[xInner, bottom, p.z], [xOuter, bottom, p.z], [xInner, top, p.z], [xOuter, top, p.z]];
+    const verts = [
+      [xInner, bottom, p.z],
+      [xOuter, bottom, p.z],
+      [xInner, top, p.z],
+      [xOuter, top, p.z],
+    ];
     const base = positions.length / 3;
     const normalZ = endpoint === 0 ? -1 : 1;
     for (let i = 0; i < verts.length; i++) {
@@ -78,9 +132,11 @@ export function createRiverbankGeometry(
       uvs.push(i % 2, i < 2 ? 0 : 1);
     }
     const reverse = side !== normalZ;
-    indices.push(...(reverse
-      ? [base, base + 2, base + 1, base + 1, base + 2, base + 3]
-      : [base, base + 1, base + 2, base + 1, base + 3, base + 2]));
+    indices.push(
+      ...(reverse
+        ? [base, base + 2, base + 1, base + 1, base + 2, base + 3]
+        : [base, base + 1, base + 2, base + 1, base + 3, base + 2]),
+    );
   }
 
   const geometry = new THREE.BufferGeometry();

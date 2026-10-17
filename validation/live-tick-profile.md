@@ -1,6 +1,6 @@
 # Individual WASM tick timings — 2026-10-10
 
-Primary verification ran `node scripts/profile-live-ticks.mjs` against the production WASM in a dedicated headless Chromium module worker. It measures each `CityEngine.step(1)` call rather than the application worker's sampled batch means. The [JSON report](live-tick-profile.json) records browser version, WASM hash, fixture identity, 30 checkpoint observations and the slowest 20 ticks.
+Primary verification ran `node scripts/benchmark/profile-live-ticks.mjs` against the production WASM in a dedicated headless Chromium module worker. It measures each `CityEngine.step(1)` call rather than the application worker's sampled batch means. The [JSON report](live-tick-profile.json) records browser version, WASM hash, fixture identity, 30 checkpoint observations and the slowest 20 ticks.
 
 The mature seed-87231 fixture advanced from tick 242000 to 248000. Across 6,000 calls: p95 **0.5 ms**, p99 **10.3 ms**, maximum **25.2 ms**. The median rounded to zero at the browser timer's resolution; it does not mean those calls take no time. The initial calls are included, with no warmup exclusion. The run took 2.991 seconds including periodic yields and 671.5 ms of save/snapshot inspection outside the timed calls.
 

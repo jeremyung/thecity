@@ -19,9 +19,12 @@ export function snapShadowAnchor(
   if (x.lengthSq() < 1e-10) x.set(1, 0, 0);
   else x.normalize();
   const y = z.clone().cross(x).normalize();
-  const texelX = spanX / mapWidth, texelY = spanY / mapHeight;
-  const tx = target.dot(x), ty = target.dot(y);
-  return output.copy(target)
+  const texelX = spanX / mapWidth,
+    texelY = spanY / mapHeight;
+  const tx = target.dot(x),
+    ty = target.dot(y);
+  return output
+    .copy(target)
     .addScaledVector(x, Math.round(tx / texelX) * texelX - tx)
     .addScaledVector(y, Math.round(ty / texelY) * texelY - ty);
 }

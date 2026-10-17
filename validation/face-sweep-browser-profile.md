@@ -29,7 +29,7 @@ No graph was truncated and the existing 512-node/edge capture cap was unchanged.
 Reproduce with the development server running and rebuilt production WASM:
 
 ```sh
-LIVE_TICK_COUNT=30000 LIVE_TICK_REPORT_PATH=validation/face-sweep-browser-profile.json LIVE_TICK_TRANSITION_SAMPLE_EVERY=20 LIVE_TICK_OVERALL_TIMEOUT_MS=180000 node scripts/profile-live-ticks.mjs
+LIVE_TICK_COUNT=30000 LIVE_TICK_REPORT_PATH=validation/face-sweep-browser-profile.json LIVE_TICK_TRANSITION_SAMPLE_EVERY=20 LIVE_TICK_OVERALL_TIMEOUT_MS=180000 node scripts/benchmark/profile-live-ticks.mjs
 ```
 
 Optionally set `LIVE_TICK_FINAL_SAVE_PATH` to export the final city; no final save

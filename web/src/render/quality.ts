@@ -1,16 +1,22 @@
 export type RenderQualityProfile = 'high' | 'balanced';
 export type RenderQualityLevel = 0 | 1 | 2;
 /** Review captures use one physical pixel per CSS pixel on every display. */
-export function renderQualitySettings(profile: RenderQualityProfile, level: RenderQualityLevel, devicePixelRatio: number, fixedReview = false) {
-  if (fixedReview) return { pixelRatio: 1, shadowSize: 2048, reflectionScale: .35 };
+export function renderQualitySettings(
+  profile: RenderQualityProfile,
+  level: RenderQualityLevel,
+  devicePixelRatio: number,
+  fixedReview = false,
+) {
+  if (fixedReview) return { pixelRatio: 1, shadowSize: 2048, reflectionScale: 0.35 };
   const high = profile === 'high';
   return {
-    pixelRatio: Math.min(devicePixelRatio, (high ? [1.6, 1.6, 1.25] : [1, 1, .8])[level]),
+    pixelRatio: Math.min(devicePixelRatio, (high ? [1.6, 1.6, 1.25] : [1, 1, 0.8])[level]),
     shadowSize: (high ? [2048, 1536, 1024] : [1024, 768, 512])[level],
-    reflectionScale: (high ? [.35, .23, .16] : [.25, .19, .15])[level],
+    reflectionScale: (high ? [0.35, 0.23, 0.16] : [0.25, 0.19, 0.15])[level],
   };
 }
-export type RenderQualityReason = 'startup' | 'stable' | 'slow' | 'recovery' | 'cooldown' | 'ineligible' | 'gap' | 'clock-reset';
+export type RenderQualityReason =
+  'startup' | 'stable' | 'slow' | 'recovery' | 'cooldown' | 'ineligible' | 'gap' | 'clock-reset';
 
 export type RenderQualitySnapshot = {
   level: RenderQualityLevel;
@@ -51,11 +57,14 @@ export class RenderQualityController {
     this.profileValue = profile;
   }
 
-  get level(): RenderQualityLevel { return this.levelValue; }
+  get level(): RenderQualityLevel {
+    return this.levelValue;
+  }
 
   /** Profile changes start a fresh measurement and cooldown window. */
   setProfile(profile: RenderQualityProfile): void {
-    if (profile !== 'high' && profile !== 'balanced') throw new Error(`Unknown render quality profile: ${String(profile)}`);
+    if (profile !== 'high' && profile !== 'balanced')
+      throw new Error(`Unknown render quality profile: ${String(profile)}`);
     this.profileValue = profile;
     this.reset();
   }
@@ -119,7 +128,8 @@ export class RenderQualityController {
     if (elapsed <= 0) return null;
 
     const alpha = 1 - Math.exp(-elapsed / EWMA_TIME_CONSTANT_MS);
-    this.smoothed = this.smoothed === null ? frameMs : this.smoothed + (frameMs - this.smoothed) * alpha;
+    this.smoothed =
+      this.smoothed === null ? frameMs : this.smoothed + (frameMs - this.smoothed) * alpha;
 
     if (nowMs - this.warmupStart < WARMUP_MS) {
       this.clearEvidence();
@@ -181,7 +191,8 @@ export class RenderQualityController {
       slowForMs: this.slowFor,
       recoveryForMs: this.recoveryFor,
       cooldownRemainingMs: Math.max(0, this.cooldownUntil - nowMs),
-      warmupRemainingMs: this.warmupStart === null ? WARMUP_MS : Math.max(0, WARMUP_MS - (nowMs - this.warmupStart)),
+      warmupRemainingMs:
+        this.warmupStart === null ? WARMUP_MS : Math.max(0, WARMUP_MS - (nowMs - this.warmupStart)),
     };
   }
 

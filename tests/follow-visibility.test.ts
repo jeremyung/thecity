@@ -1,28 +1,50 @@
 import { describe, expect, it } from 'vitest';
-import { cameraPathClearance, type CameraObstacleBox, type CameraPoint3 } from '../web/src/camera/clearance';
-import { chooseTrainFollowPosition, chooseBuildingFollowPosition, chooseFrontageWatchPosition } from '../web/src/camera/follow-visibility';
+import {
+  cameraPathClearance,
+  type CameraObstacleBox,
+  type CameraPoint3,
+} from '../web/src/camera/clearance';
+import {
+  chooseTrainFollowPosition,
+  chooseBuildingFollowPosition,
+  chooseFrontageWatchPosition,
+} from '../web/src/camera/follow-visibility';
 
 const target: CameraPoint3 = { x: 0, y: 12, z: 0 };
 
 describe('building follow visibility', () => {
   it('looks past surrounding blocks without rejecting the subject itself', () => {
-    const subject: CameraObstacleBox = { center:{x:0,z:0},rotation:.3,width:20,depth:20,minY:0,maxY:24 };
+    const subject: CameraObstacleBox = {
+      center: { x: 0, z: 0 },
+      rotation: 0.3,
+      width: 20,
+      depth: 20,
+      minY: 0,
+      maxY: 24,
+    };
     const blockers: CameraObstacleBox[] = [
-      { center:{x:30,z:0},rotation:0,width:12,depth:85,minY:0,maxY:40 },
-      { center:{x:-30,z:0},rotation:0,width:12,depth:85,minY:0,maxY:40 },
-      { center:{x:0,z:30},rotation:0,width:85,depth:12,minY:0,maxY:40 },
-      { center:{x:0,z:-30},rotation:0,width:85,depth:12,minY:0,maxY:40 },
+      { center: { x: 30, z: 0 }, rotation: 0, width: 12, depth: 85, minY: 0, maxY: 40 },
+      { center: { x: -30, z: 0 }, rotation: 0, width: 12, depth: 85, minY: 0, maxY: 40 },
+      { center: { x: 0, z: 30 }, rotation: 0, width: 85, depth: 12, minY: 0, maxY: 40 },
+      { center: { x: 0, z: -30 }, rotation: 0, width: 85, depth: 12, minY: 0, maxY: 40 },
     ];
-    const result = chooseBuildingFollowPosition(target, 20, 110, [subject,...blockers]);
+    const result = chooseBuildingFollowPosition(target, 20, 110, [subject, ...blockers]);
     expect(result.visible).toBe(true);
     expect(result.position.y).toBeGreaterThan(75);
-    expect(cameraPathClearance(target,result.position,blockers,{terrainY:0,safetyMarginM:.3}).collides).toBe(false);
+    expect(
+      cameraPathClearance(target, result.position, blockers, { terrainY: 0, safetyMarginM: 0.3 })
+        .collides,
+    ).toBe(false);
     // A clear roof/centre is insufficient: the demolition work remains near ground.
     for (const y of [1, 24]) {
-      expect(cameraPathClearance({ ...target, y }, result.position, blockers,
-        { terrainY: 0, safetyMarginM: .3 }).collides).toBe(false);
+      expect(
+        cameraPathClearance({ ...target, y }, result.position, blockers, {
+          terrainY: 0,
+          safetyMarginM: 0.3,
+        }).collides,
+      ).toBe(false);
     }
-    expect(chooseBuildingFollowPosition(target,20,110,[subject,...blockers])).toEqual(result);
+    expect(chooseBuildingFollowPosition(target, 20, 110, [subject, ...blockers])).toEqual(result);
   });
 });
 const forward = { x: 0, z: 1 };
@@ -43,9 +65,14 @@ function sightPoints(): CameraPoint3[] {
   }));
 }
 
-function expectVisibleLinesClear(position: CameraPoint3, obstacles: readonly CameraObstacleBox[]): void {
+function expectVisibleLinesClear(
+  position: CameraPoint3,
+  obstacles: readonly CameraObstacleBox[],
+): void {
   for (const subject of sightPoints()) {
-    expect(cameraPathClearance(position, subject, obstacles, { terrainY: 0, safetyMarginM: 0 }).collides).toBe(false);
+    expect(
+      cameraPathClearance(position, subject, obstacles, { terrainY: 0, safetyMarginM: 0 }).collides,
+    ).toBe(false);
   }
 }
 
@@ -61,13 +88,19 @@ describe('train follow visibility', () => {
     const result = chooseTrainFollowPosition(target, forward, preferred, distance, []);
 
     expect(result.visible).toBe(true);
-    for (const axis of ['x','y','z'] as const) expect(result.position[axis]).toBeCloseTo(preferredPosition[axis]);
+    for (const axis of ['x', 'y', 'z'] as const)
+      expect(result.position[axis]).toBeCloseTo(preferredPosition[axis]);
     expectVisibleLinesClear(result.position, []);
   });
 
   it('moves to a clear alternate view when a building blocks the preferred sightline', () => {
     const blocker: CameraObstacleBox = {
-      center: { x: 0, z: -38 }, rotation: 0, width: 42, depth: 8, minY: 0, maxY: 46,
+      center: { x: 0, z: -38 },
+      rotation: 0,
+      width: 42,
+      depth: 8,
+      minY: 0,
+      maxY: 46,
     };
     const result = chooseTrainFollowPosition(target, forward, preferred, distance, [blocker]);
 
@@ -79,10 +112,10 @@ describe('train follow visibility', () => {
 
   it('uses a higher angle when low views from either side are blocked', () => {
     const barriers: CameraObstacleBox[] = [
-      { center:{x:-38,z:0},rotation:0,width:6,depth:82,minY:0,maxY:36 },
-      { center:{x:38,z:0},rotation:0,width:6,depth:82,minY:0,maxY:36 },
-      { center:{x:0,z:-38},rotation:0,width:82,depth:6,minY:0,maxY:36 },
-      { center:{x:0,z:38},rotation:0,width:82,depth:6,minY:0,maxY:36 },
+      { center: { x: -38, z: 0 }, rotation: 0, width: 6, depth: 82, minY: 0, maxY: 36 },
+      { center: { x: 38, z: 0 }, rotation: 0, width: 6, depth: 82, minY: 0, maxY: 36 },
+      { center: { x: 0, z: -38 }, rotation: 0, width: 82, depth: 6, minY: 0, maxY: 36 },
+      { center: { x: 0, z: 38 }, rotation: 0, width: 82, depth: 6, minY: 0, maxY: 36 },
     ];
     const result = chooseTrainFollowPosition(target, forward, preferred, distance, barriers);
 
@@ -94,8 +127,12 @@ describe('train follow visibility', () => {
 
   it('returns a finite bounded invisible result when every view is boxed in', () => {
     const enclosure: CameraObstacleBox = {
-      center: { x: target.x, z: target.z }, rotation: 0,
-      width: 860, depth: 860, minY: 0, maxY: 700,
+      center: { x: target.x, z: target.z },
+      rotation: 0,
+      width: 860,
+      depth: 860,
+      minY: 0,
+      maxY: 700,
     };
     const result = chooseTrainFollowPosition(target, forward, preferred, distance, [enclosure]);
 
@@ -104,14 +141,14 @@ describe('train follow visibility', () => {
   });
 });
 
-
 describe('frontage Watch visibility', () => {
-  it.each([0, Math.PI / 2, -Math.PI / 3])('faces the entrance after rotation %s', rotation => {
+  it.each([0, Math.PI / 2, -Math.PI / 3])('faces the entrance after rotation %s', (rotation) => {
     const center = { x: 20, y: 3.25, z: -40 };
     const shot = chooseFrontageWatchPosition(center, 10, 12, 6.5, rotation, 78, []);
     expect(shot.visible).toBe(true);
-    const dx = shot.position.x-center.x, dz = shot.position.z-center.z;
-    expect(dx*Math.sin(rotation)+dz*Math.cos(rotation)).toBeGreaterThan(60);
-    expect((shot.position.y-center.y)/Math.hypot(dx,dz)).toBeCloseTo(.65);
+    const dx = shot.position.x - center.x,
+      dz = shot.position.z - center.z;
+    expect(dx * Math.sin(rotation) + dz * Math.cos(rotation)).toBeGreaterThan(60);
+    expect((shot.position.y - center.y) / Math.hypot(dx, dz)).toBeCloseTo(0.65);
   });
 });

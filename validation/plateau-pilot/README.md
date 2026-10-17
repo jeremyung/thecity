@@ -78,16 +78,16 @@ own explicit units and lifecycle validation.
 
 ## Reproduce
 
-Create a Python virtual environment and install `scripts/requirements-plateau.txt`.
+Create a Python virtual environment and install `scripts/assets/requirements-plateau.txt`.
 Retrieve each `catalogBuildingFile.url` in provenance with `Accept-Encoding: gzip`
 without automatic decompression; verify the recorded compressed SHA-256. Save as
 `.tools/plateau-pilot/thecity-plateau-{sourceIndex}.gml.gz`. Do not fetch whole wards.
-Run `.tools/plateau-python/bin/python scripts/build-plateau-reference.py` to verify
+Run `.tools/plateau-python/bin/python scripts/assets/build-plateau-reference.py` to verify
 hashes, rebuild all three crops, reconcile catalog counts and generate the summaries
-and SVGs. For individual crops, use `scripts/extract-plateau-crop.py`; arguments
+and SVGs. For individual crops, use `scripts/assets/extract-plateau-crop.py`; arguments
 are recorded in provenance. The builder adds review status separately from extraction.
 
-Twelve synthetic tests pass via `.tools/plateau-python/bin/python scripts/test-plateau-crop.py`.
+Twelve synthetic tests pass via `.tools/plateau-python/bin/python scripts/assets/test-plateau-crop.py`.
 Root independently reran all three sources. Tests exercise holes, clipping,
 identifiers, CRS rejection and missing/invalid attributes. Envelope inheritance, group references, positive nearest distances, overlapping
 unions and unknown numeric markers also have focused checks. The extractor remains

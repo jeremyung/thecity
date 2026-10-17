@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
-import * as THREE from "three";
-import { dampFocusDepth, focusDepthFromViewZ } from "../web/src/camera/focus";
+import { describe, expect, it } from 'vitest';
+import * as THREE from 'three';
+import { dampFocusDepth, focusDepthFromViewZ } from '../web/src/optics/focus';
 
-describe("camera focus depth", () => {
-  it("uses axial camera-space depth for an off-axis target", () => {
+describe('camera focus depth', () => {
+  it('uses axial camera-space depth for an off-axis target', () => {
     const camera = new THREE.PerspectiveCamera(45, 1, 0.5, 3_500);
     camera.position.set(0, 4, 10);
     const target = new THREE.Vector3(8, 2, -5);
@@ -18,7 +18,7 @@ describe("camera focus depth", () => {
     expect(axialDepth).toBeLessThan(euclideanDistance);
   });
 
-  it("keeps depth positive and bounded for behind-camera, near, far, and non-finite inputs", () => {
+  it('keeps depth positive and bounded for behind-camera, near, far, and non-finite inputs', () => {
     expect(focusDepthFromViewZ(4, 0.5, 100)).toBe(0.5);
     expect(focusDepthFromViewZ(-0.1, 0.5, 100)).toBe(0.5);
     expect(focusDepthFromViewZ(-120, 0.5, 100)).toBe(100);
@@ -26,7 +26,7 @@ describe("camera focus depth", () => {
     expect(Number.isFinite(focusDepthFromViewZ(Number.POSITIVE_INFINITY))).toBe(true);
   });
 
-  it("damps equivalently across frame rates", () => {
+  it('damps equivalently across frame rates', () => {
     let at30Hz = 100;
     let at120Hz = 100;
     for (let i = 0; i < 30; i++) at30Hz = dampFocusDepth(at30Hz, 40, 1 / 30);
@@ -36,7 +36,7 @@ describe("camera focus depth", () => {
     expect(at30Hz).toBeGreaterThan(40);
   });
 
-  it("keeps invalid damping values finite and converges over a long frame interval", () => {
+  it('keeps invalid damping values finite and converges over a long frame interval', () => {
     expect(dampFocusDepth(Number.NaN, 35, 0.1)).toBe(35);
     expect(dampFocusDepth(35, Number.NaN, 0.1)).toBe(35);
     expect(dampFocusDepth(35, 80, Number.NaN)).toBe(35);

@@ -1,4 +1,12 @@
-import type { Building, RailAlignment, Point, RearExtensionView, Road, WorldNode } from '../types';
+import type {
+  Building,
+  RailAlignment,
+  Point,
+  RearExtensionView,
+  Road,
+  RoadKind,
+  WorldNode,
+} from '../types';
 
 const TREE_CELL = 24;
 
@@ -20,7 +28,10 @@ class SpatialCells<T> {
   }
 
   at(x: number, z: number): readonly T[] {
-    return this.cells.get(`${Math.floor(x / TREE_CELL)}:${Math.floor(z / TREE_CELL)}`) ?? SpatialCells.empty;
+    return (
+      this.cells.get(`${Math.floor(x / TREE_CELL)}:${Math.floor(z / TREE_CELL)}`) ??
+      SpatialCells.empty
+    );
   }
 }
 
@@ -37,11 +48,11 @@ export function createTreeClearanceGrid(
   rearExtensions: readonly RearExtensionView[],
   nodes: readonly WorldNode[],
   maxCanopy: number,
-  roadReach: (kind: string) => number,
+  roadReach: (kind: RoadKind) => number,
   railAlignments: readonly RailAlignment[] = [],
 ): (point: Point) => TreeClearanceCandidates {
-  const railById = new Map(railAlignments.map(path => [path.road_id, path]));
-  const nodeById = new Map(nodes.map(node => [node.id, node]));
+  const railById = new Map(railAlignments.map((path) => [path.road_id, path]));
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const buildingCells = new SpatialCells<Building>();
   const roadCells = new SpatialCells<Road>();
   const extensionCells = new SpatialCells<RearExtensionView>();
@@ -49,27 +60,47 @@ export function createTreeClearanceGrid(
   for (const building of buildings) {
     // Triangle inequality covers rotated corners, asymmetric anchor rear depth,
     // and the widest tree canopy used by the exact predicate.
-    const radius = Math.hypot(building.width / 2, building.depth / 2 + (building.anchor ? 4 : 0)) + maxCanopy * Math.SQRT2;
-    buildingCells.insertBox(building, building.x - radius, building.z - radius, building.x + radius, building.z + radius);
+    const radius =
+      Math.hypot(building.width / 2, building.depth / 2 + (building.anchor ? 4 : 0)) +
+      maxCanopy * Math.SQRT2;
+    buildingCells.insertBox(
+      building,
+      building.x - radius,
+      building.z - radius,
+      building.x + radius,
+      building.z + radius,
+    );
   }
   for (const road of roads) {
     if (road.kind === 'expressway') continue;
-    const a = nodeById.get(road.from), b = nodeById.get(road.to);
+    const a = nodeById.get(road.from),
+      b = nodeById.get(road.to);
     if (!a || !b) continue;
     const reach = roadReach(road.kind);
     const samples = railById.get(road.id)?.samples;
-    const xs = samples ? samples.map(s => s[1]) : [a.x, b.x];
-    const zs = samples ? samples.map(s => s[2]) : [a.z, b.z];
-    roadCells.insertBox(road, Math.min(...xs) - reach, Math.min(...zs) - reach,
-      Math.max(...xs) + reach, Math.max(...zs) + reach);
+    const xs = samples ? samples.map((s) => s[1]) : [a.x, b.x];
+    const zs = samples ? samples.map((s) => s[2]) : [a.z, b.z];
+    roadCells.insertBox(
+      road,
+      Math.min(...xs) - reach,
+      Math.min(...zs) - reach,
+      Math.max(...xs) + reach,
+      Math.max(...zs) + reach,
+    );
   }
   for (const extension of rearExtensions) {
     if (extension.stage === 'survey') continue;
     const radius = Math.hypot(extension.width / 2, extension.depth / 2) + maxCanopy * Math.SQRT2;
-    extensionCells.insertBox(extension, extension.x - radius, extension.z - radius, extension.x + radius, extension.z + radius);
+    extensionCells.insertBox(
+      extension,
+      extension.x - radius,
+      extension.z - radius,
+      extension.x + radius,
+      extension.z + radius,
+    );
   }
 
-  return point => ({
+  return (point) => ({
     buildings: buildingCells.at(point.x, point.z),
     roads: roadCells.at(point.x, point.z),
     rearExtensions: extensionCells.at(point.x, point.z),

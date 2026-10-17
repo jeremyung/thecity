@@ -23,10 +23,15 @@ jobs:
           rustup target add wasm32-unknown-unknown
           cargo install wasm-bindgen-cli --version 0.2.108 --locked
       - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint:deps
+      - run: npm run check:size
       - run: npm run setup:fixtures
       - run: python3 scripts/test-review-evidence.py
       - run: npm run test:engine -- --release
+      - run: npm run types
       - run: npm run wasm
+      - run: npm run wasm:legacy
       - run: npm test
       - run: npm run check:architecture
       - run: npm run build

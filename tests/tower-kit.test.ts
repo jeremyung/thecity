@@ -7,25 +7,45 @@ import type { Building, Style } from '../web/src/types';
 
 function tower(floors: number, profile: number, kind: 'office' | 'apartment' = 'office'): Building {
   return {
-    id: floors * 10 + profile, parcel_id: floors * 100 + profile, x: 0, z: 0, rotation: 0,
-    width: 24, depth: 20, floors, kind, stage: 'open', progress: 1, capacity: 80,
-    occupancy: 35, built_day: 0, name: `${kind} tower`, appearance_seed: profile,
-    history: [], anchor: false, vacant_days: 0,
+    business_active: false,
+    id: floors * 10 + profile,
+    parcel_id: floors * 100 + profile,
+    x: 0,
+    z: 0,
+    rotation: 0,
+    width: 24,
+    depth: 20,
+    floors,
+    kind,
+    stage: 'open',
+    progress: 1,
+    capacity: 80,
+    occupancy: 35,
+    built_day: 0,
+    name: `${kind} tower`,
+    appearance_seed: profile,
+    history: [],
+    anchor: false,
+    vacant_days: 0,
   };
 }
 
 function meshes(root: THREE.Object3D): THREE.Mesh[] {
   const result: THREE.Mesh[] = [];
-  root.traverse((object) => { if (object instanceof THREE.Mesh) result.push(object); });
+  root.traverse((object) => {
+    if (object instanceof THREE.Mesh) result.push(object);
+  });
   return result;
 }
 
 function signature(root: THREE.Object3D): string[] {
-  return meshes(root).map((mesh) => {
-    const position = Array.from(mesh.geometry.getAttribute('position').array).join(',');
-    const index = mesh.geometry.index ? Array.from(mesh.geometry.index.array).join(',') : '';
-    return `${position}|${index}`;
-  }).sort();
+  return meshes(root)
+    .map((mesh) => {
+      const position = Array.from(mesh.geometry.getAttribute('position').array).join(',');
+      const index = mesh.geometry.index ? Array.from(mesh.geometry.index.array).join(',') : '';
+      return `${position}|${index}`;
+    })
+    .sort();
 }
 
 function expectFiniteGeometry(root: THREE.Object3D): void {
@@ -35,7 +55,9 @@ function expectFiniteGeometry(root: THREE.Object3D): void {
     // per mesh rather than three times per vertex on large tower profiles.
     let invalid: { vertex: number; coordinates: number[] } | undefined;
     for (let i = 0; i < position.count; i++) {
-      const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+      const x = position.getX(i),
+        y = position.getY(i),
+        z = position.getZ(i);
       if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
         invalid = { vertex: i, coordinates: [x, y, z] };
         break;
@@ -45,15 +67,27 @@ function expectFiniteGeometry(root: THREE.Object3D): void {
   }
 }
 
-function boxes(mesh: THREE.Mesh): Array<{ minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number }> {
+function boxes(
+  mesh: THREE.Mesh,
+): Array<{ minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number }> {
   const p = mesh.geometry.getAttribute('position');
   const result = [];
   for (let start = 0; start + 23 < p.count; start += 24) {
-    const box = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity, minZ: Infinity, maxZ: -Infinity };
+    const box = {
+      minX: Infinity,
+      maxX: -Infinity,
+      minY: Infinity,
+      maxY: -Infinity,
+      minZ: Infinity,
+      maxZ: -Infinity,
+    };
     for (let i = start; i < start + 24; i++) {
-      box.minX = Math.min(box.minX, p.getX(i)); box.maxX = Math.max(box.maxX, p.getX(i));
-      box.minY = Math.min(box.minY, p.getY(i)); box.maxY = Math.max(box.maxY, p.getY(i));
-      box.minZ = Math.min(box.minZ, p.getZ(i)); box.maxZ = Math.max(box.maxZ, p.getZ(i));
+      box.minX = Math.min(box.minX, p.getX(i));
+      box.maxX = Math.max(box.maxX, p.getX(i));
+      box.minY = Math.min(box.minY, p.getY(i));
+      box.maxY = Math.max(box.maxY, p.getY(i));
+      box.minZ = Math.min(box.minZ, p.getZ(i));
+      box.maxZ = Math.max(box.maxZ, p.getZ(i));
     }
     result.push(box);
   }
@@ -65,39 +99,45 @@ describe('tower building kit', () => {
     const art = new ArtMaterials();
     for (const floors of [12, 20, 45]) {
       for (const profile of [0, 1, 2]) {
-       for (const kind of ['office', 'apartment'] as const) {
-        const group = buildingKit(tower(floors, profile, kind), art);
-        const bounds = new THREE.Box3().setFromObject(group);
-        const expectedTop = 0.58 + floors * 3.25;
+        for (const kind of ['office', 'apartment'] as const) {
+          const group = buildingKit(tower(floors, profile, kind), art);
+          const bounds = new THREE.Box3().setFromObject(group);
+          const expectedTop = 0.58 + floors * 3.25;
 
-        expectFiniteGeometry(group);
-        expect(bounds.min.x).toBeGreaterThanOrEqual(-12.5);
-        expect(bounds.max.x).toBeLessThanOrEqual(12.5);
-        // The entry canopy may project a little beyond the parcel edge.
-        expect(bounds.min.z).toBeGreaterThanOrEqual(-10.5);
-        expect(bounds.max.z).toBeLessThanOrEqual(10.5);
-        expect(bounds.max.y).toBeGreaterThan(expectedTop);
-        expect(bounds.max.y).toBeLessThanOrEqual(expectedTop + 5);
-        if (kind === 'apartment') {
-          const vertices = meshes(group).reduce((sum, mesh) => sum + mesh.geometry.getAttribute('position').count, 0);
-          expect(vertices).toBeLessThan(160_000);
-        }
-
-        // Above the podium, every vertex remains in the recessed shaft/crown,
-        // including roof service equipment and the occasional aerial.
-        const upperVertices: Array<{ x: number; z: number }> = [];
-        for (const mesh of meshes(group)) {
-          const p = mesh.geometry.getAttribute('position');
-          for (let i = 0; i < p.count; i++) {
-            const y = p.getY(i);
-            if (y > 0.58 + 3 * 3.25 + 0.5 && y < expectedTop) upperVertices.push({ x: p.getX(i), z: p.getZ(i) });
+          expectFiniteGeometry(group);
+          expect(bounds.min.x).toBeGreaterThanOrEqual(-12.5);
+          expect(bounds.max.x).toBeLessThanOrEqual(12.5);
+          // The entry canopy may project a little beyond the parcel edge.
+          expect(bounds.min.z).toBeGreaterThanOrEqual(-10.5);
+          expect(bounds.max.z).toBeLessThanOrEqual(10.5);
+          expect(bounds.max.y).toBeGreaterThan(expectedTop);
+          expect(bounds.max.y).toBeLessThanOrEqual(expectedTop + 5);
+          if (kind === 'apartment') {
+            const vertices = meshes(group).reduce(
+              (sum, mesh) => sum + mesh.geometry.getAttribute('position').count,
+              0,
+            );
+            expect(vertices).toBeLessThan(160_000);
           }
+
+          // Above the podium, every vertex remains in the recessed shaft/crown,
+          // including roof service equipment and the occasional aerial.
+          const upperVertices: Array<{ x: number; z: number }> = [];
+          for (const mesh of meshes(group)) {
+            const p = mesh.geometry.getAttribute('position');
+            for (let i = 0; i < p.count; i++) {
+              const y = p.getY(i);
+              if (y > 0.58 + 3 * 3.25 + 0.5 && y < expectedTop)
+                upperVertices.push({ x: p.getX(i), z: p.getZ(i) });
+            }
+          }
+          expect(upperVertices.length).toBeGreaterThan(0);
+          expect(upperVertices.reduce((max, p) => Math.max(max, Math.abs(p.x)), 0)).toBeLessThan(
+            10.5,
+          );
+          expect(upperVertices.reduce((max, p) => Math.max(max, Math.abs(p.z)), 0)).toBeLessThan(9);
+          disposeGroup(group);
         }
-        expect(upperVertices.length).toBeGreaterThan(0);
-        expect(upperVertices.reduce((max, p) => Math.max(max, Math.abs(p.x)), 0)).toBeLessThan(10.5);
-        expect(upperVertices.reduce((max, p) => Math.max(max, Math.abs(p.z)), 0)).toBeLessThan(9);
-        disposeGroup(group);
-       }
       }
     }
     art.dispose();
@@ -121,16 +161,19 @@ describe('tower building kit', () => {
     const apartment = buildingKit(tower(20, 0, 'apartment'), art);
     const office = buildingKit(tower(20, 0, 'office'), art);
     // Tower panes are window panes with rooms behind them, on each tower's light schedule.
-    const glassMesh = (root: THREE.Object3D) => meshes(root).find((mesh) => (mesh.material as THREE.Material).userData.windowPane)!;
+    const glassMesh = (root: THREE.Object3D) =>
+      meshes(root).find((mesh) => (mesh.material as THREE.Material).userData.windowPane)!;
     const maxBoxWidth = (mesh: THREE.Mesh) => {
       const p = mesh.geometry.getAttribute('position');
       let max = 0;
       // Kit merges independent BoxGeometry parts in insertion order. Each box
       // contributes 24 non-indexed vertices, so measure each authored bay.
       for (let start = 0; start < p.count; start += 24) {
-        let minX = Infinity, maxX = -Infinity;
+        let minX = Infinity,
+          maxX = -Infinity;
         for (let i = start; i < Math.min(start + 24, p.count); i++) {
-          minX = Math.min(minX, p.getX(i)); maxX = Math.max(maxX, p.getX(i));
+          minX = Math.min(minX, p.getX(i));
+          maxX = Math.max(maxX, p.getX(i));
         }
         max = Math.max(max, maxX - minX);
       }
@@ -145,7 +188,9 @@ describe('tower building kit', () => {
     expect(bounds.max.x).toBeLessThanOrEqual(12.5);
     expect(bounds.min.z).toBeGreaterThanOrEqual(-10.5);
     expect(bounds.max.z).toBeLessThanOrEqual(10.5);
-    disposeGroup(apartment); disposeGroup(office); art.dispose();
+    disposeGroup(apartment);
+    disposeGroup(office);
+    art.dispose();
   });
 
   it('releases tower geometry while retaining shared art materials', () => {
@@ -175,26 +220,35 @@ describe('tower building kit', () => {
     const info = litMesh!.geometry.getAttribute(WINDOW_ATTRIBUTE);
     for (let i = 0; i < info.count; i++) expect(info.getY(i)).toBe(1);
     const p = litMesh!.geometry.getAttribute('position');
-    const shaftW = building.width * .84 * .86;
-    const shaftD = building.depth * .84 * .79;
+    const shaftW = building.width * 0.84 * 0.86;
+    const shaftD = building.depth * 0.84 * 0.79;
     const abovePodium = 0.58 + 3 * 3.25;
     const facades = new Set<string>();
     for (let start = 0; start < p.count; start += 24) {
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      let minX = Infinity,
+        maxX = -Infinity,
+        minY = Infinity,
+        maxY = -Infinity,
+        minZ = Infinity,
+        maxZ = -Infinity;
       for (let i = start; i < start + 24; i++) {
-        minX = Math.min(minX, p.getX(i)); maxX = Math.max(maxX, p.getX(i));
-        minY = Math.min(minY, p.getY(i)); maxY = Math.max(maxY, p.getY(i));
-        minZ = Math.min(minZ, p.getZ(i)); maxZ = Math.max(maxZ, p.getZ(i));
+        minX = Math.min(minX, p.getX(i));
+        maxX = Math.max(maxX, p.getX(i));
+        minY = Math.min(minY, p.getY(i));
+        maxY = Math.max(maxY, p.getY(i));
+        minZ = Math.min(minZ, p.getZ(i));
+        maxZ = Math.max(maxZ, p.getZ(i));
       }
       if ((minY + maxY) / 2 <= abovePodium) continue;
-      if (minZ > shaftD / 2 + .04) facades.add('+z');
-      if (maxZ < -shaftD / 2 - .04) facades.add('-z');
-      if (minX > shaftW / 2 + .04) facades.add('+x');
-      if (maxX < -shaftW / 2 - .04) facades.add('-x');
+      if (minZ > shaftD / 2 + 0.04) facades.add('+z');
+      if (maxZ < -shaftD / 2 - 0.04) facades.add('-z');
+      if (minX > shaftW / 2 + 0.04) facades.add('+x');
+      if (maxX < -shaftW / 2 - 0.04) facades.add('-x');
     }
     expect(facades).toEqual(new Set(['+z', '-z', '+x', '-x']));
     expectFiniteGeometry(group);
-    disposeGroup(group); art.dispose();
+    disposeGroup(group);
+    art.dispose();
   });
 
   it('uses tall residential sash bays and continuous seed-selected balcony columns', () => {
@@ -203,38 +257,50 @@ describe('tower building kit', () => {
     const group = buildingKit(building, art);
     const glass = art.window('home');
     const panes = boxes(meshes(group).find((mesh) => mesh.material === glass)!);
-    const shaftW = building.width * .84 * .86;
-    const shaftD = building.depth * .84 * .87;
-    const frontPanes = panes.filter((box) => Math.abs((box.minZ + box.maxZ) / 2) > shaftD / 2 + .07 && box.maxY - box.minY > 1.8);
+    const shaftW = building.width * 0.84 * 0.86;
+    const shaftD = building.depth * 0.84 * 0.87;
+    const frontPanes = panes.filter(
+      (box) => Math.abs((box.minZ + box.maxZ) / 2) > shaftD / 2 + 0.07 && box.maxY - box.minY > 1.8,
+    );
 
     expect(frontPanes.length).toBeGreaterThan(20);
     for (const pane of frontPanes) {
       expect(pane.maxY - pane.minY).toBeGreaterThan((pane.maxX - pane.minX) * 1.25);
     }
 
-    const stone = art.get('#aab6b8', .85, false, 'ambient', 'tile');
+    const stone = art.get('#aab6b8', 0.85, false, 'ambient', 'tile');
     const stoneBoxes = boxes(meshes(group).find((mesh) => mesh.material === stone)!);
     const bayWidth = (shaftW - 1.1) / Math.max(4, Math.floor(shaftW / 3.1));
-    const shaftFirstFloorCenter = 0.58 + 3 * 3.25 + .46;
+    const shaftFirstFloorCenter = 0.58 + 3 * 3.25 + 0.46;
     const columnsByFloor: number[][] = [];
     const shaftFloors = building.floors - 3 - 3; // profile 1 uses a three-floor crown
     for (let floor = 0; floor < shaftFloors; floor++) {
       const y = shaftFirstFloorCenter + floor * 3.25;
-      const decks = stoneBoxes.filter((box) =>
-        Math.abs((box.minY + box.maxY) / 2 - y) < .002 &&
-        Math.abs((box.maxY - box.minY) - .12) < .002 &&
-        box.maxZ - box.minZ > .8 && box.maxZ - box.minZ < 1.11 &&
-        Math.abs((box.minZ + box.maxZ) / 2) > shaftD / 2 + .05,
+      const decks = stoneBoxes.filter(
+        (box) =>
+          Math.abs((box.minY + box.maxY) / 2 - y) < 0.002 &&
+          Math.abs(box.maxY - box.minY - 0.12) < 0.002 &&
+          box.maxZ - box.minZ > 0.8 &&
+          box.maxZ - box.minZ < 1.11 &&
+          Math.abs((box.minZ + box.maxZ) / 2) > shaftD / 2 + 0.05,
       );
-      const centers = [...new Set(decks.map((box) => Math.round((box.minX + box.maxX) * 500) / 1000))].sort((a, b) => a - b);
+      const centers = [
+        ...new Set(decks.map((box) => Math.round((box.minX + box.maxX) * 500) / 1000)),
+      ].sort((a, b) => a - b);
       columnsByFloor.push(centers);
     }
-    expect(columnsByFloor.every((centers) => centers.length >= 1 && centers.length <= 2)).toBe(true);
+    expect(columnsByFloor.every((centers) => centers.length >= 1 && centers.length <= 2)).toBe(
+      true,
+    );
     for (const centers of columnsByFloor.slice(1)) expect(centers).toEqual(columnsByFloor[0]);
     expect(columnsByFloor[0].length).toBeLessThan(Math.floor(shaftW / 3.1) / 2);
 
-    const apartmentVertices = meshes(group).reduce((sum, mesh) => sum + mesh.geometry.getAttribute('position').count, 0);
+    const apartmentVertices = meshes(group).reduce(
+      (sum, mesh) => sum + mesh.geometry.getAttribute('position').count,
+      0,
+    );
     expect(apartmentVertices).toBeLessThan(160_000);
-    disposeGroup(group); art.dispose();
+    disposeGroup(group);
+    art.dispose();
   });
 });

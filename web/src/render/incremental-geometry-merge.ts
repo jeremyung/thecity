@@ -57,13 +57,19 @@ export class IncrementalGeometryMerge {
     this.vertexOffsets = [];
     for (let i = 0; i < this.schemas.length; i++) {
       const schema = this.schemas[i];
-      if (schema.indexed !== this.indexed) throw new TypeError(`Geometry ${i} has an incompatible indexing mode`);
-      if (!sameKeys(this.keys, schema.keys)) throw new TypeError(`Geometry ${i} has incompatible attributes`);
+      if (schema.indexed !== this.indexed)
+        throw new TypeError(`Geometry ${i} has an incompatible indexing mode`);
+      if (!sameKeys(this.keys, schema.keys))
+        throw new TypeError(`Geometry ${i} has incompatible attributes`);
       for (const key of this.keys) {
         const expected = this.schemas[0].attributes[key];
         const actual = schema.attributes[key];
-        if (actual.array.constructor !== expected.array.constructor || actual.itemSize !== expected.itemSize ||
-          actual.normalized !== expected.normalized || actual.gpuType !== expected.gpuType) {
+        if (
+          actual.array.constructor !== expected.array.constructor ||
+          actual.itemSize !== expected.itemSize ||
+          actual.normalized !== expected.normalized ||
+          actual.gpuType !== expected.gpuType
+        ) {
           throw new TypeError(`Geometry ${i} attribute ${key} has an incompatible layout`);
         }
       }
@@ -81,7 +87,7 @@ export class IncrementalGeometryMerge {
     this.output = new THREE.BufferGeometry();
     for (const key of this.keys) {
       const first = this.schemas[0].attributes[key];
-      const ArrayType = first.array.constructor as { new(length: number): THREE.TypedArray };
+      const ArrayType = first.array.constructor as { new (length: number): THREE.TypedArray };
       const array = new ArrayType(vertexTotal * first.itemSize);
       const merged = new THREE.BufferAttribute(array, first.itemSize, first.normalized);
       merged.gpuType = first.gpuType;
@@ -96,10 +102,18 @@ export class IncrementalGeometryMerge {
     }
   }
 
-  get done(): boolean { return this.completed; }
-  get result(): THREE.BufferGeometry | null { return this.completed && !this.cancelled ? this.output : null; }
-  get processedVertices(): number { return this.verticesCopied; }
-  get processedIndices(): number { return this.indicesCopied; }
+  get done(): boolean {
+    return this.completed;
+  }
+  get result(): THREE.BufferGeometry | null {
+    return this.completed && !this.cancelled ? this.output : null;
+  }
+  get processedVertices(): number {
+    return this.verticesCopied;
+  }
+  get processedIndices(): number {
+    return this.indicesCopied;
+  }
 
   /** Copy no more than each supplied quota. Either quota may be zero. */
   step(maxVertices: number, maxIndices: number): boolean {
@@ -124,7 +138,10 @@ export class IncrementalGeometryMerge {
         const target = this.output!.getAttribute(key) as THREE.BufferAttribute;
         const tupleSize = source.itemSize;
         target.array.set(
-          source.array.subarray(this.vertexInPart * tupleSize, (this.vertexInPart + count) * tupleSize),
+          source.array.subarray(
+            this.vertexInPart * tupleSize,
+            (this.vertexInPart + count) * tupleSize,
+          ),
           globalStart * tupleSize,
         );
       }
@@ -149,7 +166,11 @@ export class IncrementalGeometryMerge {
       const vertexOffset = this.vertexOffset(this.indexPart);
       for (let i = 0; i < count; i++) {
         const sourceIndex = source.getX(this.indexInPart + i);
-        if (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= schema.positionCount) {
+        if (
+          !Number.isInteger(sourceIndex) ||
+          sourceIndex < 0 ||
+          sourceIndex >= schema.positionCount
+        ) {
           throw new RangeError(`Geometry ${this.indexPart} has an out-of-range index`);
         }
         target.array[this.indicesCopied + i] = sourceIndex + vertexOffset;
@@ -189,12 +210,18 @@ export class IncrementalGeometryMerge {
 
   private accumulateBounds(position: THREE.BufferAttribute, start: number, count: number): void {
     for (let i = start; i < start + count; i++) {
-      const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+      const x = position.getX(i),
+        y = position.getY(i),
+        z = position.getZ(i);
       if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
         throw new TypeError('Position data must be finite');
       }
-      this.minX = Math.min(this.minX, x); this.minY = Math.min(this.minY, y); this.minZ = Math.min(this.minZ, z);
-      this.maxX = Math.max(this.maxX, x); this.maxY = Math.max(this.maxY, y); this.maxZ = Math.max(this.maxZ, z);
+      this.minX = Math.min(this.minX, x);
+      this.minY = Math.min(this.minY, y);
+      this.minZ = Math.min(this.minZ, z);
+      this.maxX = Math.max(this.maxX, x);
+      this.maxY = Math.max(this.maxY, y);
+      this.maxZ = Math.max(this.maxZ, z);
     }
   }
 
@@ -205,30 +232,46 @@ export class IncrementalGeometryMerge {
     const box = new THREE.Box3(min, max);
     this.output!.boundingBox = box;
     const center = box.getCenter(new THREE.Vector3());
-    this.output!.boundingSphere = new THREE.Sphere(center, box.getSize(new THREE.Vector3()).length() * 0.5);
+    this.output!.boundingSphere = new THREE.Sphere(
+      center,
+      box.getSize(new THREE.Vector3()).length() * 0.5,
+    );
   }
 }
 
 function validateGeometry(geometry: THREE.BufferGeometry, partIndex: number): AttributeSchema {
-  if (!geometry || !geometry.isBufferGeometry) throw new TypeError(`Geometry ${partIndex} is not a BufferGeometry`);
+  if (!geometry || !geometry.isBufferGeometry)
+    throw new TypeError(`Geometry ${partIndex} is not a BufferGeometry`);
   if (Object.keys(geometry.morphAttributes).length || geometry.morphTargetsRelative) {
     throw new TypeError(`Geometry ${partIndex} has unsupported morph attributes`);
   }
   const keys = Object.keys(geometry.attributes).sort();
-  if (!keys.includes('position')) throw new TypeError(`Geometry ${partIndex} has no position attribute`);
+  if (!keys.includes('position'))
+    throw new TypeError(`Geometry ${partIndex} has no position attribute`);
   const attributes: Record<string, THREE.BufferAttribute> = {};
   let positionCount = -1;
   for (const key of keys) {
     const attribute = geometry.getAttribute(key) as THREE.BufferAttribute;
-    if (!attribute?.isBufferAttribute || (attribute as THREE.BufferAttribute & { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute) {
-      throw new TypeError(`Geometry ${partIndex} attribute ${key} must be a non-interleaved BufferAttribute`);
+    if (
+      !attribute?.isBufferAttribute ||
+      (attribute as THREE.BufferAttribute & { isInterleavedBufferAttribute?: boolean })
+        .isInterleavedBufferAttribute
+    ) {
+      throw new TypeError(
+        `Geometry ${partIndex} attribute ${key} must be a non-interleaved BufferAttribute`,
+      );
     }
-    if (attribute.itemSize <= 0 || attribute.array.length !== attribute.count * attribute.itemSize) {
+    if (
+      attribute.itemSize <= 0 ||
+      attribute.array.length !== attribute.count * attribute.itemSize
+    ) {
       throw new TypeError(`Geometry ${partIndex} attribute ${key} has an invalid layout`);
     }
     if (positionCount < 0) positionCount = attribute.count;
-    if (attribute.count !== positionCount) throw new TypeError(`Geometry ${partIndex} attributes have different vertex counts`);
-    if (key === 'position' && attribute.itemSize < 3) throw new TypeError(`Geometry ${partIndex} position needs three components`);
+    if (attribute.count !== positionCount)
+      throw new TypeError(`Geometry ${partIndex} attributes have different vertex counts`);
+    if (key === 'position' && attribute.itemSize < 3)
+      throw new TypeError(`Geometry ${partIndex} position needs three components`);
     attributes[key] = attribute;
   }
   const index = geometry.index;
@@ -238,7 +281,13 @@ function validateGeometry(geometry: THREE.BufferGeometry, partIndex: number): At
   if (!index && positionCount % 3 !== 0) {
     throw new TypeError(`Geometry ${partIndex} has an incomplete unindexed triangle`);
   }
-  return { keys, attributes, positionCount: Math.max(0, positionCount), indexed: index !== null, indexCount: index?.count ?? 0 };
+  return {
+    keys,
+    attributes,
+    positionCount: Math.max(0, positionCount),
+    indexed: index !== null,
+    indexCount: index?.count ?? 0,
+  };
 }
 
 function sameKeys(a: readonly string[], b: readonly string[]): boolean {
@@ -246,5 +295,6 @@ function sameKeys(a: readonly string[], b: readonly string[]): boolean {
 }
 
 function validateQuota(value: number, name: string): void {
-  if (!Number.isSafeInteger(value) || value < 0) throw new RangeError(`${name} must be a nonnegative safe integer`);
+  if (!Number.isSafeInteger(value) || value < 0)
+    throw new RangeError(`${name} must be a nonnegative safe integer`);
 }

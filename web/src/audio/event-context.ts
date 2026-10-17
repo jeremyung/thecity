@@ -1,20 +1,20 @@
-import type { Building, Point, Road, World, WorldEvent, WorldNode } from "../types";
+import type { Building, Point, Road, World, WorldEvent, WorldNode } from '../types';
 
 export interface PositionedAudioEvent extends WorldEvent {
   x: number;
   z: number;
 }
 
-type AudioSnapshot = Pick<World, "events" | "roads" | "nodes" | "buildings">;
-type MovingPosition = Pick<Point, "x" | "z">;
+type AudioSnapshot = Pick<World, 'events' | 'roads' | 'nodes' | 'buildings'>;
+type MovingPosition = Pick<Point, 'x' | 'z'>;
 
 const AUDIO_EVENT_KINDS = new Set([
-  "TrainStationStop",
-  "BusStop",
-  "RoadOpened",
-  "BuildingOpened",
-  "BusinessOpened",
-  "BusinessReopened",
+  'TrainStationStop',
+  'BusStop',
+  'RoadOpened',
+  'BuildingOpened',
+  'BusinessOpened',
+  'BusinessReopened',
 ]);
 
 function finitePosition(position: MovingPosition | undefined): position is MovingPosition {
@@ -26,7 +26,11 @@ function buildingPosition(buildings: readonly Building[], id: number): MovingPos
   return building && finitePosition(building) ? building : undefined;
 }
 
-function roadMidpoint(roads: readonly Road[], nodes: readonly WorldNode[], id: number): MovingPosition | undefined {
+function roadMidpoint(
+  roads: readonly Road[],
+  nodes: readonly WorldNode[],
+  id: number,
+): MovingPosition | undefined {
   const road = roads.find((item) => item.id === id);
   if (!road) return undefined;
   const from = nodes.find((node) => node.id === road.from);
@@ -60,10 +64,10 @@ export function resolveAudioEventContext(
     if (age < 0 || !AUDIO_EVENT_KINDS.has(event.kind)) continue;
 
     let position: MovingPosition | undefined;
-    if (event.kind === "TrainStationStop" || event.kind === "BusStop") {
+    if (event.kind === 'TrainStationStop' || event.kind === 'BusStop') {
       const movingPosition = moving.get(event.entity_id);
       if (finitePosition(movingPosition)) position = movingPosition;
-    } else if (event.kind === "RoadOpened") {
+    } else if (event.kind === 'RoadOpened') {
       position = roadMidpoint(snapshot.roads, snapshot.nodes, event.entity_id);
     } else {
       position = buildingPosition(snapshot.buildings, event.entity_id);

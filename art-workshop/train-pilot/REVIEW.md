@@ -79,8 +79,8 @@ reach for `qwen/qwen-image-3` only if a front needs a cleaner flat elevation.
 # ~/Development/ComfyUI/extra_model_paths.yaml pointing at
 # ~/Models/HunyuanImage-2.1/split_files.
 cd ~/Development/ComfyUI && venv/bin/python main.py --listen 127.0.0.1 --port 8188 --disable-auto-launch &
-python3 scripts/generate-train-pilot-local.py hunyuanimage2.1_bf16.safetensors 30 3.5 euler hy21-full-ortho
-python3 scripts/review-train-pilot.py
+python3 scripts/assets/generate-train-pilot-local.py hunyuanimage2.1_bf16.safetensors 30 3.5 euler hy21-full-ortho
+python3 scripts/assets/review-train-pilot.py
 ```
 
 ## What is committed

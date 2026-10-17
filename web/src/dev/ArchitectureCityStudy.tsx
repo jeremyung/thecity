@@ -1,0 +1,513 @@
+import { CameraDirector } from '../camera/director';
+import {
+  mediaIntersectionStudy,
+  mediaIntersectionActors,
+} from '../render/architecture/media-intersection-study';
+import { mediaLandmarkStudy } from '../render/architecture/media-landmark-study';
+import { shoppingStreetStudy } from '../render/architecture/shopping-street-study';
+import {
+  COMMERCIAL_DISTRICTS,
+  parseCommercialDistrict,
+  type CommercialDistrict,
+} from '../render/architecture/commercial-district';
+import { businessCityStudy } from '../render/architecture/business-study';
+import type { BusinessFamily, DisplayMode } from '../render/architecture/business-recipes';
+import { useEffect, useRef, useState } from 'react';
+import { CityRenderer, type RenderMetrics } from '../render/city';
+import { architectureCityStudy } from '../render/architecture/city-study';
+import { type ApartmentEra } from '../render/architecture/era-preference';
+import type { Style } from '../types';
+let matureSnapshot: Promise<import('../types').World> | null = null;
+function frozenMatureWorld(): Promise<import('../types').World> {
+  return (matureSnapshot ??= (async () => {
+    const url = new URL('/wasm/city_engine.js', location.origin).href,
+      wasm = await import(/* @vite-ignore */ url);
+    await wasm.default();
+    const response = await fetch('/tests/fixtures/access-joins/mature-world.json');
+    if (!response.ok)
+      throw Error('Run npm run setup:fixtures to load the pinned mature-city review.');
+    const engine = wasm.CityEngine.restore(await response.text());
+    try {
+      return JSON.parse(engine.snapshot());
+    } finally {
+      engine.free();
+    }
+  })());
+}
+export function ArchitectureCityStudy() {
+  const host = useRef<HTMLDivElement>(null),
+    viewer = useRef<CityRenderer | null>(null);
+  const [controls, setControls] = useState(true);
+  const [metrics, setMetrics] = useState<RenderMetrics | null>(null),
+    [error, setError] = useState(''),
+    [style, setStyle] = useState<Style>('miniature');
+  const initialFamily = new URLSearchParams(location.search).get('family') ?? '';
+  const [business, setBusiness] = useState(
+    [
+      'business',
+      'office',
+      'commercial',
+      'mixed-use',
+      'skyscrapers',
+      'shopping-street',
+      'media-landmarks',
+      'curved-media',
+      'media-intersection',
+    ].includes(initialFamily)
+      ? initialFamily
+      : '',
+  );
+  const [district, setDistrict] = useState<CommercialDistrict>(
+    parseCommercialDistrict(
+      new URLSearchParams(location.search).get('district') ??
+        (['shopping-street', 'media-landmarks', 'curved-media', 'media-intersection'].includes(
+          initialFamily,
+        )
+          ? 'shibuya'
+          : 'standard'),
+    ),
+  );
+  const [displays, setDisplays] = useState<DisplayMode>('animated');
+  const study = () =>
+    business === 'media-intersection'
+      ? mediaIntersectionStudy(seed)
+      : business === 'curved-media'
+        ? mediaLandmarkStudy(seed, true)
+        : business === 'media-landmarks'
+          ? mediaLandmarkStudy(seed)
+          : business === 'shopping-street'
+            ? shoppingStreetStudy(seed, district)
+            : business
+              ? businessCityStudy(
+                  seed,
+                  business as BusinessFamily | 'business' | 'skyscrapers',
+                  era,
+                )
+              : architectureCityStudy(seed, towers);
+  const [mature, setMature] = useState(
+    new URLSearchParams(location.search).get('family') === 'mature',
+  );
+  const [towers, setTowers] = useState(
+    new URLSearchParams(location.search).get('family') === 'towers',
+  );
+  const [era, setEra] = useState<ApartmentEra>(towers ? 'contemporary' : 'mixed');
+  const [hour, setHour] = useState(14),
+    [rain, setRain] = useState(false);
+  const [seed, setSeed] = useState(32),
+    [stage, setStage] = useState<import('../types').Building['stage']>('open');
+  useEffect(() => {
+    if (!host.current) return;
+    const renderer = new CityRenderer(
+      host.current,
+      (camera, element) => new CameraDirector(camera, element),
+      new URLSearchParams(location.search).has('webgl'),
+    );
+    viewer.current = renderer;
+    renderer.onMetrics = setMetrics;
+    renderer.onError = (e) => setError(e.message);
+    let stopped = false;
+    void renderer
+      .start('miniature')
+      .then(async () => {
+        const initial = mature ? await frozenMatureWorld() : study();
+        if (stopped) return;
+        renderer.setApartmentEra(era);
+        renderer.setCommercialDisplays(displays);
+        renderer.setCommercialDistrict(district);
+        renderer.setWorld(initial);
+        if (business === 'media-intersection') {
+          const actors = mediaIntersectionActors(seed);
+          renderer.actors.setMovement(
+            actors.movement,
+            1,
+            14 * 60,
+            new Float32Array(),
+            actors.support,
+          );
+        }
+        renderer.setPreview(14);
+        renderer.setFocus(false);
+        (renderer.rig as CameraDirector).reviewPose(
+          business === 'media-intersection'
+            ? { x: 32, y: 35, z: 110 }
+            : business === 'curved-media'
+              ? { x: 24, y: 40, z: 78 }
+              : business === 'shopping-street'
+                ? { x: 140, y: 95, z: 0 }
+                : business === 'skyscrapers'
+                  ? { x: 310, y: 280, z: 420 }
+                  : towers || business
+                    ? { x: 240, y: 180, z: 260 }
+                    : { x: 105, y: 105, z: 115 },
+          business === 'media-intersection'
+            ? { x: 8, y: 12, z: 14 }
+            : {
+                x: 0,
+                y:
+                  business === 'curved-media'
+                    ? 19.5
+                    : business === 'skyscrapers'
+                      ? 85
+                      : towers
+                        ? 40
+                        : 12,
+                z: 0,
+              },
+        );
+      })
+      .catch((e) => {
+        if (!stopped) setError(String(e));
+      });
+    return () => {
+      stopped = true;
+      viewer.current = null;
+      renderer.dispose();
+    };
+  }, []);
+  useEffect(() => {
+    const r = viewer.current;
+    if (!r?.worldState) return;
+    let cancelled = false;
+    void (mature ? frozenMatureWorld() : Promise.resolve(study()))
+      .then((source) => {
+        if (cancelled) return;
+        const world = {
+          ...source,
+          buildings: source.buildings.map((b) =>
+            stage === 'open' ? b : { ...b, stage, progress: 0.76 },
+          ),
+          minute_of_day: hour * 60,
+          weather: {
+            kind: rain ? ('rain' as const) : ('clear' as const),
+            intensity: rain ? 0.7 : 0,
+          },
+        };
+        r.setCommercialDistrict(district);
+        r.setPreview(hour);
+        r.setWorld(world);
+        if (business === 'media-intersection') {
+          const actors = mediaIntersectionActors(seed);
+          r.actors.setMovement(actors.movement, 1, hour * 60, new Float32Array(), actors.support);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [seed, stage, towers, mature, business, hour, rain, era, district]);
+  const pose = (far: boolean) =>
+    (viewer.current?.rig as CameraDirector | undefined)?.reviewPose(
+      business === 'media-intersection'
+        ? far
+          ? { x: 140, y: 95, z: 160 }
+          : { x: 32, y: 35, z: 110 }
+        : business === 'curved-media'
+          ? far
+            ? { x: 110, y: 80, z: 150 }
+            : { x: 24, y: 40, z: 78 }
+          : business === 'shopping-street'
+            ? far
+              ? { x: 140, y: 95, z: 0 }
+              : { x: 90, y: district === 'ameyoko' ? 18 : 22, z: 0 }
+            : business === 'skyscrapers'
+              ? far
+                ? { x: 310, y: 280, z: 420 }
+                : { x: 250, y: 155, z: 280 }
+              : business
+                ? far
+                  ? { x: 240, y: 160, z: 230 }
+                  : { x: 30, y: 24, z: -20 }
+                : towers
+                  ? far
+                    ? { x: 280, y: 190, z: 290 }
+                    : { x: 220, y: 110, z: 220 }
+                  : far
+                    ? { x: 350, y: 230, z: 350 }
+                    : { x: 36, y: 11, z: 3 },
+      business === 'media-intersection'
+        ? { x: 8, y: 12, z: 14 }
+        : business === 'curved-media'
+          ? { x: 0, y: 19.5, z: 0 }
+          : business === 'shopping-street'
+            ? { x: far ? 0 : 25, y: far ? 12 : district === 'ameyoko' ? 3 : 8, z: 0 }
+            : business === 'skyscrapers'
+              ? { x: 0, y: far ? 85 : 95, z: -65 }
+              : business
+                ? { x: 0, y: 8, z: -65 }
+                : towers
+                  ? { x: 0, y: 55, z: -24 }
+                  : far
+                    ? { x: 0, y: 12, z: 0 }
+                    : { x: 0, y: 8, z: 0 },
+    );
+  return (
+    <main style={{ position: 'fixed', inset: 0 }}>
+      <div
+        ref={host}
+        style={{ position: 'absolute', inset: 0 }}
+        aria-label="City architecture integration study"
+      />
+      <button
+        style={{ position: 'absolute', right: 16, top: 16, zIndex: 2 }}
+        onClick={() => setControls(!controls)}
+      >
+        {controls ? 'Hide controls' : 'Show controls'}
+      </button>
+      <section
+        style={{
+          display: controls ? 'block' : 'none',
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          width: 270,
+          padding: 16,
+          background: '#f5f1e9ed',
+          fontFamily: 'system-ui',
+          color: '#223b40',
+        }}
+      >
+        <h2>City integration study</h2>
+        <p>
+          {mature
+            ? 'Pinned mature city'
+            : business
+              ? business + ' recipes'
+              : towers
+                ? '5-tower'
+                : '24-building'}{' '}
+          fixture · actual city renderer and chunk scheduler · no saved world changes
+        </p>
+        <p>
+          <label>
+            Fixture{' '}
+            <select
+              aria-label="Study fixture"
+              value={mature ? 'mature' : business || (towers ? 'towers' : 'midrise')}
+              onChange={(e) => {
+                if (
+                  [
+                    'shopping-street',
+                    'media-landmarks',
+                    'curved-media',
+                    'media-intersection',
+                  ].includes(e.target.value) &&
+                  district === 'standard'
+                )
+                  setDistrict('shibuya');
+                setBusiness(
+                  [
+                    'business',
+                    'office',
+                    'commercial',
+                    'mixed-use',
+                    'skyscrapers',
+                    'shopping-street',
+                    'media-landmarks',
+                    'curved-media',
+                    'media-intersection',
+                  ].includes(e.target.value)
+                    ? e.target.value
+                    : '',
+                );
+                setMature(e.target.value === 'mature');
+                setTowers(e.target.value === 'towers');
+              }}
+            >
+              <option value="midrise">Mid-rise block</option>
+              <option value="towers">Five towers</option>
+              <option value="mature">Pinned mature city</option>
+              <option value="business">All 30 business recipes</option>
+              <option value="shopping-street">Dense shopping street</option>
+              <option value="media-landmarks">Media landmarks</option>
+              <option value="curved-media">Curved media landmark</option>
+              <option value="media-intersection">Commercial intersection</option>
+              <option value="skyscrapers">Corporate skyscrapers</option>
+              <option value="office">Office catalog</option>
+              <option value="commercial">Commercial catalog</option>
+              <option value="mixed-use">Mixed-use catalog</option>
+            </select>
+          </label>
+        </p>
+        <p>
+          <label>
+            Building architecture{' '}
+            <select
+              aria-label="Building architecture"
+              value={era}
+              onChange={(e) => {
+                const next = e.target.value as ApartmentEra;
+                setEra(next);
+                viewer.current?.setApartmentEra(next);
+              }}
+            >
+              <option value="mixed">Mixed eras</option>
+              <option value="contemporary">Contemporary</option>
+              <option value="older">Older styles</option>
+              <option value="legacy">Existing renderer</option>
+            </select>
+          </label>
+        </p>
+        <label>
+          Commercial district{' '}
+          <select
+            aria-label="Commercial district"
+            value={district}
+            onChange={(e) => setDistrict(e.target.value as CommercialDistrict)}
+          >
+            {COMMERCIAL_DISTRICTS.map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p />
+        <label>
+          Billboards{' '}
+          <select
+            aria-label="Study billboards"
+            value={displays}
+            onChange={(e) => {
+              const mode = e.target.value as DisplayMode;
+              setDisplays(mode);
+              viewer.current?.setCommercialDisplays(mode);
+            }}
+          >
+            <option value="animated">Animated</option>
+            <option value="static">Static signs</option>
+            <option value="off">No advertising</option>
+          </select>
+        </label>
+        <p />
+        <label>
+          Seed{' '}
+          <input
+            disabled={mature}
+            aria-label="Study seed"
+            type="number"
+            value={seed}
+            onChange={(e) => setSeed(Number(e.target.value))}
+          />
+        </label>
+        <p>
+          <label>
+            Stage{' '}
+            <select
+              aria-label="Study stage"
+              value={stage}
+              onChange={(e) => setStage(e.target.value as import('../types').Building['stage'])}
+            >
+              {['open', 'structure', 'surface', 'finishing', 'renovation', 'demolition'].map(
+                (s) => (
+                  <option key={s}>{s}</option>
+                ),
+              )}
+            </select>
+          </label>
+        </p>
+        <p>
+          <label>
+            Light{' '}
+            <select
+              aria-label="Study light"
+              value={hour}
+              onChange={(e) => setHour(Number(e.target.value))}
+            >
+              <option value="6">Dawn</option>
+              <option value="14">Day</option>
+              <option value="18.5">Dusk</option>
+              <option value="21">Night</option>
+            </select>
+          </label>{' '}
+          <label>
+            <input
+              aria-label="Rain"
+              type="checkbox"
+              checked={rain}
+              onChange={(e) => setRain(e.target.checked)}
+            />
+            Rain
+          </label>
+        </p>
+        <p>
+          <label>
+            Building{' '}
+            <select
+              aria-label="Study building"
+              defaultValue=""
+              onChange={(e) => {
+                const r = viewer.current,
+                  b = r?.worldState?.buildings.find((b) => b.id === Number(e.target.value));
+                if (!r || !b) return;
+                if (business === 'shopping-street') {
+                  (r.rig as CameraDirector).reviewPose(
+                    { x: b.x + 44, y: 26, z: 0 },
+                    { x: b.x, y: 8, z: b.z - (Math.sign(b.z) * b.depth) / 2 },
+                  );
+                  return;
+                }
+                if (
+                  business === 'media-landmarks' ||
+                  business === 'curved-media' ||
+                  business === 'media-intersection'
+                ) {
+                  (r.rig as CameraDirector).reviewPose(
+                    { x: b.x + 24, y: b.floors * 2.1 + 15, z: b.z + 78 },
+                    { x: b.x, y: b.floors * 1.625, z: b.z },
+                  );
+                  return;
+                }
+                if (b.floors >= 24) {
+                  (r.rig as CameraDirector).reviewBuilding(b.id);
+                  return;
+                }
+                const target = { x: b.x, y: 8, z: b.z };
+                if (
+                  !(r.rig as CameraDirector).reviewPose(
+                    {
+                      x: b.x + 15 * Math.cos(b.rotation) + 46 * Math.sin(b.rotation),
+                      y: 26,
+                      z: b.z + 46 * Math.cos(b.rotation) - 15 * Math.sin(b.rotation),
+                    },
+                    target,
+                  )
+                )
+                  (r.rig as CameraDirector).reviewBuilding(b.id);
+              }}
+            >
+              <option value="" disabled>
+                Choose a facade
+              </option>
+              {viewer.current?.worldState?.buildings.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </p>
+        <p>
+          <button onClick={() => pose(false)}>Street</button>{' '}
+          <button onClick={() => pose(true)}>Distant</button>{' '}
+          <button
+            onClick={() => {
+              const next = style === 'anime' ? 'miniature' : 'anime';
+              setStyle(next);
+              void viewer.current?.setStyle(next).catch((e) => setError(String(e)));
+            }}
+          >
+            Style: {style}
+          </button>
+        </p>
+        <output>
+          {metrics
+            ? `${metrics.backend} · ${metrics.calls} draw calls · ${metrics.triangles.toLocaleString()} triangles · ${metrics.fps.toFixed(0)} FPS · ${metrics.pendingBuildings} buildings / ${metrics.pendingChunks} chunks pending`
+            : 'Starting renderer'}
+        </output>
+        {error && <p role="alert">{error}</p>}
+      </section>
+    </main>
+  );
+}

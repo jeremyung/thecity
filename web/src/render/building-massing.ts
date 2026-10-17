@@ -15,13 +15,22 @@ export interface MidriseMassing {
   masses: BuildingMass[];
 }
 
-type MidriseBuilding = Pick<Building, 'kind' | 'floors' | 'width' | 'depth' | 'appearance_seed' | 'anchor'>;
+type MidriseBuilding = Pick<
+  Building,
+  'kind' | 'floors' | 'width' | 'depth' | 'appearance_seed' | 'anchor'
+>;
 
 /** Review candidate only: retain small-lot clearances while reducing oversized
  * percentage setbacks on wider midrise parcels. Does not change authoritative lots. */
 export function compactMidriseEnvelope(b: MidriseBuilding, width: number, depth: number) {
-  if (!Number.isFinite(b.width) || !Number.isFinite(b.depth)
-      || b.width < 8 || b.depth < 8 || !midriseMassing(b, width, depth)) return { width, depth };
+  if (
+    !Number.isFinite(b.width) ||
+    !Number.isFinite(b.depth) ||
+    b.width < 8 ||
+    b.depth < 8 ||
+    !midriseMassing(b, width, depth)
+  )
+    return { width, depth };
   return { width: Math.max(width, b.width - 1.6), depth: Math.max(depth, b.depth - 1.8) };
 }
 
@@ -33,9 +42,17 @@ export function compactMidriseEnvelope(b: MidriseBuilding, width: number, depth:
  * retain the bounded midrise lifecycle and entrance on those narrow sites.
  */
 export function midriseMassing(b: MidriseBuilding, w: number, d: number): MidriseMassing | null {
-  if (b.anchor || (b.kind !== 'apartment' && b.kind !== 'office')
-      || !Number.isInteger(b.floors) || b.floors < 4 || b.floors > 11
-      || !Number.isFinite(w) || !Number.isFinite(d) || w < (b.kind === 'office' ? 3.2 : 3.7) || d < 6) {
+  if (
+    b.anchor ||
+    (b.kind !== 'apartment' && b.kind !== 'office') ||
+    !Number.isInteger(b.floors) ||
+    b.floors < 4 ||
+    b.floors > 11 ||
+    !Number.isFinite(w) ||
+    !Number.isFinite(d) ||
+    w < (b.kind === 'office' ? 3.2 : 3.7) ||
+    d < 6
+  ) {
     return null;
   }
 
@@ -68,21 +85,35 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
     // Compact apartment blocks can carry their dwelling bays continuously to
     // the roof. Reserve a circulation/service bay and at least two 3 m rooms;
     // taller or narrower blocks retain the established setback family.
-    const slabCoreWidth = Math.min(2.4, Math.max(1.8, w * .2));
+    const slabCoreWidth = Math.min(2.4, Math.max(1.8, w * 0.2));
     if (b.floors <= 6 && w - slabCoreWidth >= 6 && d >= 8) {
       const mainWidth = w - slabCoreWidth;
       return {
         family: 'slab-apartment',
         masses: [
-          { x: side * (w / 2 - slabCoreWidth / 2), z: 0,
-            width: slabCoreWidth, depth: d, baseFloor: 0, floors: b.floors, role: 'core' },
-          { x: -side * slabCoreWidth / 2, z: 0,
-            width: mainWidth, depth: d, baseFloor: 0, floors: b.floors, role: 'main' },
+          {
+            x: side * (w / 2 - slabCoreWidth / 2),
+            z: 0,
+            width: slabCoreWidth,
+            depth: d,
+            baseFloor: 0,
+            floors: b.floors,
+            role: 'core',
+          },
+          {
+            x: (-side * slabCoreWidth) / 2,
+            z: 0,
+            width: mainWidth,
+            depth: d,
+            baseFloor: 0,
+            floors: b.floors,
+            role: 'main',
+          },
         ],
       };
     }
 
-    const coreRatio = 0.20 + ((seed >>> 2) % 5) * 0.01;
+    const coreRatio = 0.2 + ((seed >>> 2) % 5) * 0.01;
     const coreWidth = w * coreRatio;
     const mainWidth = w - coreWidth;
     const mainX = -side * coreWidth * 0.5;
@@ -96,19 +127,31 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
       family: 'walkup',
       masses: [
         {
-          x: side * (w / 2 - coreWidth / 2), z: 0,
-          width: coreWidth, depth: d, baseFloor: 0, floors: b.floors, role: 'core',
+          x: side * (w / 2 - coreWidth / 2),
+          z: 0,
+          width: coreWidth,
+          depth: d,
+          baseFloor: 0,
+          floors: b.floors,
+          role: 'core',
         },
         {
-          x: mainX, z: 0,
-          width: mainWidth, depth: d, baseFloor: 0, floors: lowerFloors, role: 'main',
+          x: mainX,
+          z: 0,
+          width: mainWidth,
+          depth: d,
+          baseFloor: 0,
+          floors: lowerFloors,
+          role: 'main',
         },
         {
           x: mainX - side * mainWidth * capShiftX,
           z: -d * capShiftZ,
           width: mainWidth * capWidthRatio,
           depth: d * capDepthRatio,
-          baseFloor: lowerFloors, floors: 2, role: 'main',
+          baseFloor: lowerFloors,
+          floors: 2,
+          role: 'main',
         },
       ],
     };
@@ -126,9 +169,13 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
       masses: [
         { x: 0, z: 0, width: w, depth: d, baseFloor: 0, floors: b.floors - 1, role: 'main' },
         {
-          x: shiftX, z: shiftZ,
-          width: w * topWidthRatio, depth: d * topDepthRatio,
-          baseFloor: b.floors - 1, floors: 1, role: 'main',
+          x: shiftX,
+          z: shiftZ,
+          width: w * topWidthRatio,
+          depth: d * topDepthRatio,
+          baseFloor: b.floors - 1,
+          floors: 1,
+          role: 'main',
         },
       ],
     };
@@ -149,9 +196,13 @@ export function midriseMassing(b: MidriseBuilding, w: number, d: number): Midris
 
   if (shaftFloors > 0) {
     masses.push({
-      x: shaftX, z: 0,
-      width: shaftWidth, depth: shaftDepth,
-      baseFloor: podiumFloors, floors: shaftFloors, role: 'main',
+      x: shaftX,
+      z: 0,
+      width: shaftWidth,
+      depth: shaftDepth,
+      baseFloor: podiumFloors,
+      floors: shaftFloors,
+      role: 'main',
     });
   }
 

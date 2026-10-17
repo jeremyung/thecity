@@ -46,7 +46,7 @@ Preflight schema 1 jobs now restart derived validation automatically from their 
 
 - Full native release suite: 342 passed, 0 failed, 42 ignored (51.39 seconds in this run). This includes live admission and geometry-churn save/resume checks.
 - Mature preflight and composed face-trace ignored checks explicitly run and passed; 49 reference faces are retained.
-- Production WASM rebuilt successfully. `scripts/profile-access-discovery.mjs` reports exact equality with all 3,180 native-reference descriptors, identical quota/save-resume output, and 7,476,821 logical discovery work units at quotas 48/4096/16384. See `access-discovery-wasm-profile.json` for Node measurements; these are not browser renderer or worker-frame measurements.
+- Production WASM rebuilt successfully. `scripts/benchmark/profile-access-discovery.mjs` reports exact equality with all 3,180 native-reference descriptors, identical quota/save-resume output, and 7,476,821 logical discovery work units at quotas 48/4096/16384. See `access-discovery-wasm-profile.json` for Node measurements; these are not browser renderer or worker-frame measurements.
 - Six focused spatial-filter tests and eleven preflight tests pass. The old one-axis integration was tested but superseded by the two-axis implementation before checkpointing.
 
 Remaining scaling work includes node lookup/duplicate scans, other graph stages and their coupled limits, capture/restore profiling, representative browser worker measurements. No new density or visual-fidelity acceptance is claimed.
@@ -62,7 +62,7 @@ Reproduce native export and WASM verification:
 ```sh
 LEGACY_PREFLIGHT_SAVE_PATH=/tmp/thecity-legacy-preflight-save.json node scripts/test-engine.mjs --release legacy_preflight
 npm run wasm
-node scripts/test-legacy-preflight-wasm.mjs /tmp/thecity-legacy-preflight-save.json
+node scripts/diagnose/test-legacy-preflight-wasm.mjs /tmp/thecity-legacy-preflight-save.json
 ```
 
 `legacy-preflight-wasm.json` records input and WASM hashes. Node WASM verifies all non-job city fields, the 159-node/206-edge frozen graph, exact migrated save roundtrip, 24-tick deterministic twin continuation, and rejection of corrupt current/future checkpoints. This covers preflight schema1 specifically, not every older planner schema.

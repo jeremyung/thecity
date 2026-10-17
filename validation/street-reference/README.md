@@ -57,7 +57,7 @@ python3 -m venv .tools/plateau-python && .tools/plateau-python/bin/pip install s
 # Fetch the tran/bldg files from the PLATEAU CityGML API (https://api.plateauview.mlit.go.jp/datacatalog/citygml/m:<mesh>)
 # and OSM highways via Overpass for each mesh bbox into .tools/plateau-reference/.
 cd engine && for s in 87231 0 7; do PLAN_JSON=$PWD/../.tools/plateau-reference/plan-$s.json PLAN_SEED=$s cargo test --release masterplan::export -- --ignored; done && cd ..
-.tools/plateau-python/bin/python scripts/plateau-street-reference.py --out validation/street-reference \
+.tools/plateau-python/bin/python scripts/assets/plateau-street-reference.py --out validation/street-reference \
   --source kyojima=53394665,.tools/plateau-reference/kyojima_tran.gml.gz,.tools/plateau-reference/kyojima_bldg.gml.gz \
   --osm kyojima=53394665,.tools/plateau-reference/osm_kyojima.json \
   --plan seed87231=.tools/plateau-reference/plan-87231.json   # and the other meshes/seeds

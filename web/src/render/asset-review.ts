@@ -1,17 +1,24 @@
 import * as THREE from 'three/webgpu';
-import { float, normalLocal, positionLocal, texture as textureNode, triplanarTexture } from 'three/tsl';
+import {
+  float,
+  normalLocal,
+  positionLocal,
+  texture as textureNode,
+  triplanarTexture,
+} from 'three/tsl';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ArtMaterials, signTexture } from './materials';
 import { paintedSurfaceTint } from './painted-surface';
 import { buildingKit, disposeGroup, Kit } from './kit';
-import type { Building, Style } from '../types';
+import type { BuildingKind, Building, Style } from '../types';
 import { VEHICLE_KINDS, VehicleFleet } from './vehicles';
 import { CityBuses } from './buses';
 import { TrainFleet } from './trains';
 
 /** Isolated development viewer for the same authored building kits used by the city. */
 export class ArchitectureAssetReview {
-  private readonly compactMidriseReview = import.meta.env.DEV && new URLSearchParams(window.location.search).get('midrise') === 'compact';
+  private readonly compactMidriseReview =
+    import.meta.env.DEV && new URLSearchParams(window.location.search).get('midrise') === 'compact';
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(38, 1, 0.1, 1400);
   readonly art = new ArtMaterials();
@@ -22,7 +29,14 @@ export class ArchitectureAssetReview {
   private readonly fleet: VehicleFleet;
   private readonly buses: CityBuses;
   private readonly trainFleet: TrainFleet;
-  private traffic: Array<{ id: number; kind: number; x: number; z: number; dir: number; speed: number }> = [];
+  private traffic: Array<{
+    id: number;
+    kind: number;
+    x: number;
+    z: number;
+    dir: number;
+    speed: number;
+  }> = [];
   private lastFrame = 0;
   private trafficPaused = false;
   private readonly materialStudy = new THREE.Group();
@@ -44,9 +58,18 @@ export class ArchitectureAssetReview {
   private lowriseProgress = 1;
   onMaterialStatus?: (status: 'loading' | 'ready' | 'error') => void;
 
-  constructor(readonly element: HTMLElement, style: Style = 'anime', private readonly materialCandidate: 'plaster'|'concrete' = 'plaster') {
+  constructor(
+    readonly element: HTMLElement,
+    style: Style = 'anime',
+    private readonly materialCandidate: 'plaster' | 'concrete' = 'plaster',
+  ) {
     const forceWebGL = new URLSearchParams(window.location.search).has('webgl');
-    this.renderer = new THREE.WebGPURenderer({ antialias: true, samples: 4, forceWebGL, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGPURenderer({
+      antialias: true,
+      samples: 4,
+      forceWebGL,
+      powerPreference: 'high-performance',
+    });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -63,7 +86,14 @@ export class ArchitectureAssetReview {
 
     this.scene.background = new THREE.Color('#afc4ca');
     this.scene.fog = new THREE.Fog('#afc4ca', 300, 1000);
-    this.scene.add(this.hemisphere, this.sun, this.sun.target, this.street, this.models, this.materialStudy);
+    this.scene.add(
+      this.hemisphere,
+      this.sun,
+      this.sun.target,
+      this.street,
+      this.models,
+      this.materialStudy,
+    );
     this.sun.position.set(-190, 280, 210);
     this.sun.target.position.set(0, 0, 0);
     this.sun.castShadow = true;
@@ -77,17 +107,14 @@ export class ArchitectureAssetReview {
     this.sun.shadow.bias = -0.0002;
     this.sun.shadow.normalBias = 0.35;
 
-    this.ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(360, 260),
-      this.art.get('#88958a'),
-    );
+    this.ground = new THREE.Mesh(new THREE.PlaneGeometry(360, 260), this.art.get('#88958a'));
     this.ground.rotation.x = -Math.PI / 2;
     this.ground.position.set(-2, -0.12, -18);
     this.ground.receiveShadow = true;
     this.scene.add(this.ground);
     this.buildStreet();
     this.fleet = new VehicleFleet(this.art, 1000);
-    this.buses = new CityBuses(this.art, release => release());
+    this.buses = new CityBuses(this.art, (release) => release());
     this.trainFleet = new TrainFleet(this.art, 8);
     this.scene.add(this.fleet.root, this.buses.root, this.trainFleet.root);
     this.buildTraffic();
@@ -136,11 +163,11 @@ export class ArchitectureAssetReview {
     });
   }
 
-  setNight(enabled:boolean):void {
-    this.art.night.value=enabled?1:0;
-    this.sun.intensity=enabled?.08:3;
-    this.hemisphere.intensity=enabled?.3:2;
-    this.scene.background=new THREE.Color(enabled?'#142331':'#afc4ca');
+  setNight(enabled: boolean): void {
+    this.art.night.value = enabled ? 1 : 0;
+    this.sun.intensity = enabled ? 0.08 : 3;
+    this.hemisphere.intensity = enabled ? 0.3 : 2;
+    this.scene.background = new THREE.Color(enabled ? '#142331' : '#afc4ca');
     if (this.scene.fog instanceof THREE.Fog) this.scene.fog.color.copy(this.scene.background);
   }
 
@@ -190,21 +217,21 @@ export class ArchitectureAssetReview {
 
   inspectOffice(): void {
     this.resetShadowView();
-    this.controls.minDistance=8;
-    this.controls.target.set(10,7,-21);
-    this.camera.position.set(29,12,2);
+    this.controls.minDistance = 8;
+    this.controls.target.set(10, 7, -21);
+    this.camera.position.set(29, 12, 2);
     this.controls.update();
   }
 
   inspectLowrise(rear = false): void {
     this.resetShadowView();
-    this.controls.minDistance=8;
-    this.controls.target.set(-14,4,-102);
-    this.camera.position.set(rear ? -54 : 7,28,rear ? -145 : -59);
+    this.controls.minDistance = 8;
+    this.controls.target.set(-14, 4, -102);
+    this.camera.position.set(rear ? -54 : 7, 28, rear ? -145 : -59);
     this.controls.update();
-    this.sun.target.position.set(-14,3,-102);
-    this.sun.position.set(-74,95,-32);
-    Object.assign(this.sun.shadow.camera,{left:-38,right:38,top:38,bottom:-38});
+    this.sun.target.position.set(-14, 3, -102);
+    this.sun.position.set(-74, 95, -32);
+    Object.assign(this.sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38 });
     this.sun.shadow.camera.updateProjectionMatrix();
   }
 
@@ -212,13 +239,25 @@ export class ArchitectureAssetReview {
   setLowriseStage(stage: 'open' | 'construction' | 'renovation', progress: number): void {
     if (this.disposed) return;
     const boundedProgress = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0.5;
-    if (stage === this.lowriseStage && (stage === 'open' || boundedProgress === this.lowriseProgress)) return;
+    if (
+      stage === this.lowriseStage &&
+      (stage === 'open' || boundedProgress === this.lowriseProgress)
+    )
+      return;
     this.lowriseStage = stage;
     this.lowriseProgress = boundedProgress;
     this.lowriseSamples = this.lowriseSamples.map(({ building, model: previous }) => {
       this.models.remove(previous);
       disposeGroup(previous);
-      const next = buildingKit({ ...building, stage, progress: boundedProgress }, this.art, {compactMidrise:this.compactMidriseReview});
+      // The review's generic 'construction' preview uses a stage no kit branch special-cases.
+      const kitStage = stage === 'construction' ? 'foundation' : stage;
+      const next = buildingKit(
+        { ...building, stage: kitStage, progress: boundedProgress },
+        this.art,
+        {
+          compactMidrise: this.compactMidriseReview,
+        },
+      );
       next.position.set(building.x, 0, building.z);
       next.traverse((object) => {
         if (object instanceof THREE.Mesh) {
@@ -270,29 +309,49 @@ export class ArchitectureAssetReview {
   /** Mixed traffic in both lanes, driving slowly so variants, wheels and lamps read. */
   private buildTraffic(): void {
     const mix = [1, 4, 1, 5, 4, 6, 1, 7, 4, 8, 1, 5];
-    for (const [lane, dir, base] of [[3.4, 1, 100], [12.6, -1, 300]] as const) {
-      mix.forEach((kind, i) => this.traffic.push({ id: base + i * 7, kind, x: -56 + i * 8.6 + (dir < 0 ? 4 : 0), z: lane, dir, speed: 2.2 }));
+    for (const [lane, dir, base] of [
+      [3.4, 1, 100],
+      [12.6, -1, 300],
+    ] as const) {
+      mix.forEach((kind, i) =>
+        this.traffic.push({
+          id: base + i * 7,
+          kind,
+          x: -56 + i * 8.6 + (dir < 0 ? 4 : 0),
+          z: lane,
+          dir,
+          speed: 2.2,
+        }),
+      );
       this.traffic.push({ id: 900 + base, kind: 3, x: 52, z: lane, dir, speed: 1.6 });
     }
   }
 
   /** Review controls for captures: freeze traffic at a pose. */
-  setTrafficPaused(paused: boolean): void { this.trafficPaused = paused; }
+  setTrafficPaused(paused: boolean): void {
+    this.trafficPaused = paused;
+  }
 
   private updateTraffic(now: number): void {
-    const dt = this.lastFrame ? Math.min(.1, (now - this.lastFrame) / 1000) : 1 / 60;
+    const dt = this.lastFrame ? Math.min(0.1, (now - this.lastFrame) / 1000) : 1 / 60;
     this.lastFrame = now;
     // The review street surface is 0.14 m below the city's road slab top.
     const lift = 0.16 - 0.3;
-    this.fleet.begin(); this.buses.begin(now);
+    this.fleet.begin();
+    this.buses.begin(now);
     let bus = 0;
     for (const v of this.traffic) {
-      if (!this.trafficPaused) { v.x += v.dir * v.speed * dt; if (v.x > 60) v.x = -60; if (v.x < -60) v.x = 60; }
+      if (!this.trafficPaused) {
+        v.x += v.dir * v.speed * dt;
+        if (v.x > 60) v.x = -60;
+        if (v.x < -60) v.x = 60;
+      }
       const yaw = v.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
       if (v.kind === 3) this.buses.set(bus++, v.id, v.x, v.z, yaw, null, 0.16);
       else this.fleet.add(v.id, v.kind, v.x, v.z, yaw, lift, 0, this.trafficPaused ? 0 : dt);
     }
-    this.fleet.finish(); this.buses.finish(bus);
+    this.fleet.finish();
+    this.buses.finish(bus);
     // A consist on the review station's near rail (rails run along x at y=0.44).
     this.trainFleet.begin();
     this.trainFleet.add(1, -119, -73, Math.PI / 2, 0.44, 0, dt);
@@ -301,7 +360,8 @@ export class ArchitectureAssetReview {
 
   private setSize(): void {
     if (this.disposed) return;
-    const width = this.element.clientWidth, height = this.element.clientHeight;
+    const width = this.element.clientWidth,
+      height = this.element.clientHeight;
     if (!width || !height) return;
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
@@ -309,14 +369,76 @@ export class ArchitectureAssetReview {
   }
 
   private buildArchitecture(): void {
-    const samples: Array<{ name: string; x: number; z: number; kind: string; width: number; depth: number; floors: number; anchor?: boolean; seed?:number }> = [
-      { name: 'Kissa Aoba · corner shop', x: -94, z: -28, kind: 'shop', width: 22, depth: 16, floors: 2, anchor: true },
-      { name: 'Apartment tower · 20 floors', x: -47, z: -30, kind: 'apartment', width: 24, depth: 20, floors: 20 },
+    const samples: Array<{
+      name: string;
+      x: number;
+      z: number;
+      kind: BuildingKind;
+      width: number;
+      depth: number;
+      floors: number;
+      anchor?: boolean;
+      seed?: number;
+    }> = [
+      {
+        name: 'Kissa Aoba · corner shop',
+        x: -94,
+        z: -28,
+        kind: 'shop',
+        width: 22,
+        depth: 16,
+        floors: 2,
+        anchor: true,
+      },
+      {
+        name: 'Apartment tower · 20 floors',
+        x: -47,
+        z: -30,
+        kind: 'apartment',
+        width: 24,
+        depth: 20,
+        floors: 20,
+      },
       { name: 'Office block', x: 3, z: -31, kind: 'office', width: 27, depth: 23, floors: 8 },
-      { name: 'Mixed-use tower · 28 floors', x: 62, z: -38, kind: 'office', width: 32, depth: 28, floors: 28 },
-      { name: 'Narrow machiya', x:-32,z:-103.04,kind:'home',width:9.5,depth:12,floors:2,seed:8 },
-      { name: 'Three-floor house', x:-18.55,z:-102.2,kind:'home',width:13,depth:10,floors:3,seed:23 },
-      { name: 'Neighborhood shop-house', x:-3.85,z:-101.78,kind:'shop',width:12,depth:9,floors:2,seed:73 },
+      {
+        name: 'Mixed-use tower · 28 floors',
+        x: 62,
+        z: -38,
+        kind: 'office',
+        width: 32,
+        depth: 28,
+        floors: 28,
+      },
+      {
+        name: 'Narrow machiya',
+        x: -32,
+        z: -103.04,
+        kind: 'home',
+        width: 9.5,
+        depth: 12,
+        floors: 2,
+        seed: 8,
+      },
+      {
+        name: 'Three-floor house',
+        x: -18.55,
+        z: -102.2,
+        kind: 'home',
+        width: 13,
+        depth: 10,
+        floors: 3,
+        seed: 23,
+      },
+      {
+        name: 'Neighborhood shop-house',
+        x: -3.85,
+        z: -101.78,
+        kind: 'shop',
+        width: 12,
+        depth: 9,
+        floors: 2,
+        seed: 73,
+      },
     ];
     samples.forEach((sample, index) => {
       const building: Building = {
@@ -331,6 +453,7 @@ export class ArchitectureAssetReview {
         kind: sample.kind,
         stage: 'open',
         progress: 1,
+        business_active: true,
         capacity: sample.floors * 8,
         occupancy: Math.round(sample.floors * 2.5),
         built_day: 0,
@@ -340,13 +463,16 @@ export class ArchitectureAssetReview {
         anchor: sample.anchor ?? false,
         vacant_days: 0,
       };
-      const model = buildingKit(building, this.art, {compactMidrise:this.compactMidriseReview});
+      const model = buildingKit(building, this.art, { compactMidrise: this.compactMidriseReview });
       if (index === 0) {
         // Match the kit's deterministic wall material exactly. Other facade
         // parts (glass, trim, timber, roof and signage) keep their own materials.
-        this.shopFacadeSource = this.art.get(this.art.palette[(building.appearance_seed >>> 0) % this.art.palette.length]);
+        this.shopFacadeSource = this.art.get(
+          this.art.palette[(building.appearance_seed >>> 0) % this.art.palette.length],
+        );
         model.traverse((object) => {
-          if (object instanceof THREE.Mesh && object.material === this.shopFacadeSource) this.shopFacadeMesh = object;
+          if (object instanceof THREE.Mesh && object.material === this.shopFacadeSource)
+            this.shopFacadeMesh = object;
         });
       }
       model.position.set(sample.x, 0, sample.z);
@@ -387,14 +513,14 @@ export class ArchitectureAssetReview {
     // Controlled neighborhood comparison: the same 2.2 m parcel gaps used
     // by coordinated blocks, with aligned entrances facing a local street.
     // This is an authored review arrangement, not a generated-city result.
-    kit.box(-18, .07, -92, 57, .14, 6, asphalt);
-    kit.box(-18, .13, -96, 57, .1, 2, sidewalk);
-    kit.box(-18, .13, -88, 57, .1, 2, sidewalk);
-    kit.box(-18, .2, -95.1, 57, .14, .18, curb);
-    kit.box(-18, .2, -88.9, 57, .14, .18, curb);
+    kit.box(-18, 0.07, -92, 57, 0.14, 6, asphalt);
+    kit.box(-18, 0.13, -96, 57, 0.1, 2, sidewalk);
+    kit.box(-18, 0.13, -88, 57, 0.1, 2, sidewalk);
+    kit.box(-18, 0.2, -95.1, 57, 0.14, 0.18, curb);
+    kit.box(-18, 0.2, -88.9, 57, 0.14, 0.18, curb);
     for (const x of [-40, 4]) {
-      kit.box(x, .15, -94.65, 3, .025, .1, paint);
-      kit.box(x, .15, -89.35, 3, .025, .1, paint);
+      kit.box(x, 0.15, -94.65, 3, 0.025, 0.1, paint);
+      kit.box(x, 0.15, -89.35, 3, 0.025, 0.1, paint);
     }
     this.street.add(kit.finish());
   }
@@ -430,7 +556,11 @@ export class ArchitectureAssetReview {
     this.street.add(kit.finish());
 
     const texture = signTexture('青葉川  AOBAGAWA');
-    const material = new THREE.MeshBasicNodeMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
+    const material = new THREE.MeshBasicNodeMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide,
+    });
     const sign = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.1, 5.2), material);
     sign.position.set(-119, 5.05, -13.9);
     sign.userData.ownedMaterial = true;
@@ -439,7 +569,8 @@ export class ArchitectureAssetReview {
   }
 
   private buildMaterialStudy(): void {
-    const x = 116, z = -38;
+    const x = 116,
+      z = -38;
     const wallMaterial = new THREE.MeshStandardNodeMaterial({ color: '#d8cdb5', roughness: 0.94 });
     const wall = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.18), wallMaterial);
     wall.position.set(x, 3, z);
@@ -448,8 +579,15 @@ export class ArchitectureAssetReview {
     wall.userData.ownedMaterial = true;
     this.materialStudy.add(wall);
 
-    const plaqueTexture = signTexture(this.materialCandidate==='concrete'?'CONCRETE':'PLASTER', '#f1eadb', '#384d4c');
-    const plaqueMaterial = new THREE.MeshBasicNodeMaterial({ map: plaqueTexture, side: THREE.DoubleSide });
+    const plaqueTexture = signTexture(
+      this.materialCandidate === 'concrete' ? 'CONCRETE' : 'PLASTER',
+      '#f1eadb',
+      '#384d4c',
+    );
+    const plaqueMaterial = new THREE.MeshBasicNodeMaterial({
+      map: plaqueTexture,
+      side: THREE.DoubleSide,
+    });
     const plaque = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 0.62), plaqueMaterial);
     plaque.position.set(x, 6.55, z + 0.13);
     plaque.userData.ownedMaterial = true;
@@ -465,7 +603,9 @@ export class ArchitectureAssetReview {
     this.materialStudy.add(plinth);
 
     const candidate = new THREE.TextureLoader().load(
-      this.materialCandidate==='concrete'?'/art/textures/cast-concrete-pilot-512.png':'/art/textures/ivory-plaster-v1.png',
+      this.materialCandidate === 'concrete'
+        ? '/art/textures/cast-concrete-pilot-512.png'
+        : '/art/textures/ivory-plaster-v1.png',
       (texture) => {
         if (this.disposed) return;
         texture.colorSpace = THREE.SRGBColorSpace;
@@ -516,8 +656,10 @@ export class ArchitectureAssetReview {
     this.shopFacadeTexture = facadeTexture;
 
     for (const style of ['anime', 'miniature'] as const) {
-      const source = this.art.variant(this.shopFacadeSource, style) as THREE.MeshToonNodeMaterial | THREE.MeshStandardNodeMaterial;
-      const material = source.clone() as THREE.MeshToonNodeMaterial | THREE.MeshStandardNodeMaterial;
+      const source = this.art.variant(this.shopFacadeSource, style) as
+        THREE.MeshToonNodeMaterial | THREE.MeshStandardNodeMaterial;
+      const material = source.clone() as
+        THREE.MeshToonNodeMaterial | THREE.MeshStandardNodeMaterial;
       delete material.userData.artKey;
       delete material.userData.artBuildingClass;
       delete material.userData.artBatchMaterial;

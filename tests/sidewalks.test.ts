@@ -4,13 +4,29 @@ import type { Road, WorldNode } from '../web/src/types';
 import { CitySidewalks } from '../web/src/render/sidewalks';
 import { SidewalkBuild } from '../web/src/render/sidewalk-build';
 
-const node = (id: number, x: number, z: number): WorldNode => ({ id, x, z, kind: 'road' });
-const road = (id: number, from: number, to: number): Road => ({ id, from, to, kind: 'arterial', stage: 'open', progress: 1, connected: true, length: 1, lanes: 2 });
+const node = (id: number, x: number, z: number): WorldNode => ({ id, x, z, kind: 'junction' });
+const road = (id: number, from: number, to: number): Road => ({
+  id,
+  from,
+  to,
+  kind: 'arterial' as const,
+  stage: 'open',
+  progress: 1,
+  connected: true,
+  length: 1,
+  lanes: 2,
+});
 const world = () => ({ nodes: [node(1, 0, 0), node(2, 40, 0)], roads: [road(1, 1, 2)] });
-const drain = (owner: CitySidewalks) => { for (let i = 0; i < 1000 && owner.pendingCount; i++) owner.update(); expect(owner.pendingCount).toBe(0); };
+const drain = (owner: CitySidewalks) => {
+  for (let i = 0; i < 1000 && owner.pendingCount; i++) owner.update();
+  expect(owner.pendingCount).toBe(0);
+};
 const makeOwner = (material = new THREE.MeshBasicMaterial()) => {
   const deferred: (() => void)[] = [];
-  const owner = new CitySidewalks(() => material, dispose => deferred.push(dispose));
+  const owner = new CitySidewalks(
+    () => material,
+    (dispose) => deferred.push(dispose),
+  );
   return { owner, deferred, material };
 };
 
@@ -31,15 +47,21 @@ describe('CitySidewalks', () => {
   });
 
   it('keeps committed geometry visible until atomic replacement and resolves material at commit', () => {
-    const oldMaterial = new THREE.MeshBasicMaterial(), activeMaterial = new THREE.MeshBasicMaterial();
+    const oldMaterial = new THREE.MeshBasicMaterial(),
+      activeMaterial = new THREE.MeshBasicMaterial();
     const oldMaterialDispose = vi.spyOn(oldMaterial, 'dispose');
     let current = oldMaterial;
     const deferred: (() => void)[] = [];
-    const owner = new CitySidewalks(() => current, dispose => deferred.push(dispose));
-    owner.setWorld(world()); drain(owner);
+    const owner = new CitySidewalks(
+      () => current,
+      (dispose) => deferred.push(dispose),
+    );
+    owner.setWorld(world());
+    drain(owner);
     const previous = owner.root.children[0] as THREE.Mesh;
     const previousSignature = owner['committedSignature'];
-    const changed = world(); changed.nodes[1].x = 65;
+    const changed = world();
+    changed.nodes[1].x = 65;
     owner.setWorld(changed);
     current = activeMaterial;
     expect(owner.root.children).toEqual([previous]);
@@ -55,16 +77,19 @@ describe('CitySidewalks', () => {
     deferred.shift()!();
     owner.reset();
     expect(oldMaterialDispose).not.toHaveBeenCalled();
-    oldMaterial.dispose(); activeMaterial.dispose();
+    oldMaterial.dispose();
+    activeMaterial.dispose();
   });
 
   it('keeps the active same-world build and replaces intermediate queued snapshots', () => {
     const { owner } = makeOwner();
-    const a = world(); owner.setWorld(a);
+    const a = world();
+    owner.setWorld(a);
     let commits = 0;
     let committed = owner['committedSignature'];
     for (let frame = 1; frame <= 80; frame++) {
-      const changing = world(); changing.nodes[1].x = 40 + frame;
+      const changing = world();
+      changing.nodes[1].x = 40 + frame;
       const active = owner['job'];
       owner.setWorld(changing);
       expect(owner['job']).toBe(active);
@@ -87,9 +112,11 @@ describe('CitySidewalks', () => {
 
   it('drops a queued A when the latest request returns to the active A', () => {
     const { owner } = makeOwner();
-    const a = world(); owner.setWorld(a);
+    const a = world();
+    owner.setWorld(a);
     const active = owner['job'];
-    const b = world(); b.nodes[1].x = 80;
+    const b = world();
+    b.nodes[1].x = 80;
     owner.setWorld(b);
     expect(owner['queued']).not.toBeNull();
     owner.setWorld(world());
@@ -106,7 +133,8 @@ describe('CitySidewalks', () => {
   it('starts the latest queued build after commit without stepping it in that frame', () => {
     const { owner } = makeOwner();
     owner.setWorld(world());
-    const queued = world(); queued.nodes[1].x = 80;
+    const queued = world();
+    queued.nodes[1].x = 80;
     owner.setWorld(queued);
     const step = vi.spyOn(SidewalkBuild.prototype, 'step');
     while (owner['job'] === undefined || owner['job'] === null) owner.update();
@@ -126,9 +154,11 @@ describe('CitySidewalks', () => {
 
   it('reset cancels active and queued work and clears both signatures', () => {
     const { owner } = makeOwner();
-    const a = world(); owner.setWorld(a);
+    const a = world();
+    owner.setWorld(a);
     const active = owner['job'];
-    const b = world(); b.nodes[1].x = 80;
+    const b = world();
+    b.nodes[1].x = 80;
     owner.setWorld(b);
     expect(owner['job']).toBe(active);
     expect(owner['queued']).not.toBeNull();
@@ -145,9 +175,11 @@ describe('CitySidewalks', () => {
 
   it('removes prior geometry when a completed replacement is empty', () => {
     const { owner, deferred } = makeOwner();
-    owner.setWorld(world()); drain(owner);
+    owner.setWorld(world());
+    drain(owner);
     expect(owner.root.children).toHaveLength(1);
-    owner.setWorld({ nodes: [], roads: [] }); drain(owner);
+    owner.setWorld({ nodes: [], roads: [] });
+    drain(owner);
     expect(owner.root.children).toHaveLength(0);
     expect(deferred).toHaveLength(1);
     owner.reset();
@@ -157,7 +189,8 @@ describe('CitySidewalks', () => {
     const material = new THREE.MeshBasicMaterial();
     const materialDispose = vi.spyOn(material, 'dispose');
     const { owner, deferred } = makeOwner(material);
-    owner.setWorld(world()); drain(owner);
+    owner.setWorld(world());
+    drain(owner);
     const geometry = (owner.root.children[0] as THREE.Mesh).geometry;
     const geometryDispose = vi.spyOn(geometry, 'dispose');
     owner.reset();
@@ -166,19 +199,31 @@ describe('CitySidewalks', () => {
     deferred[0]();
     expect(geometryDispose).toHaveBeenCalled();
     expect(materialDispose).not.toHaveBeenCalled();
-    geometryDispose.mockRestore(); materialDispose.mockRestore(); material.dispose();
+    geometryDispose.mockRestore();
+    materialDispose.mockRestore();
+    material.dispose();
   });
   it('releases a failed replacement and retains the committed mesh', () => {
     const material = new THREE.MeshBasicMaterial();
     let fail = false;
-    const owner = new CitySidewalks(() => { if (fail) throw new Error('material failure'); return material; }, release => release());
-    owner.setWorld(world()); drain(owner);
+    const owner = new CitySidewalks(
+      () => {
+        if (fail) throw new Error('material failure');
+        return material;
+      },
+      (release) => release(),
+    );
+    owner.setWorld(world());
+    drain(owner);
     const previous = owner.root.children[0] as THREE.Mesh;
     const previousSignature = owner['committedSignature'];
     const previousRelease = vi.spyOn(previous.geometry, 'dispose');
-    const changed = world(); changed.nodes[1].x = 90;
-    owner.setWorld(changed); fail = true;
-    const queued = world(); queued.nodes[1].x = 110;
+    const changed = world();
+    changed.nodes[1].x = 90;
+    owner.setWorld(changed);
+    fail = true;
+    const queued = world();
+    queued.nodes[1].x = 110;
     owner.setWorld(queued);
     expect(owner['queued']).not.toBeNull();
     expect(() => drain(owner)).toThrow('material failure');
@@ -187,9 +232,12 @@ describe('CitySidewalks', () => {
     expect(owner['committedSignature']).toBe(previousSignature);
     expect(owner.root.children).toEqual([previous]);
     expect(previousRelease).not.toHaveBeenCalled();
-    owner.reset(); material.dispose();
+    owner.reset();
+    material.dispose();
   });
-
 });
 
-const worldWithX = (x: number) => ({ nodes: [node(1, 0, 0), node(2, x, 0)], roads: [road(1, 1, 2)] });
+const worldWithX = (x: number) => ({
+  nodes: [node(1, 0, 0), node(2, x, 0)],
+  roads: [road(1, 1, 2)],
+});

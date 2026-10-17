@@ -1,6 +1,9 @@
-export type ErrorStateSetter = (update: string | null | ((previous: string | null) => string | null)) => void;
+export type ErrorStateSetter = (
+  update: string | null | ((previous: string | null) => string | null),
+) => void;
 
-const STARTUP_ERROR = 'Graphics are taking longer than expected to start. Your city is still open; try Retry or Use WebGL fallback.';
+const STARTUP_ERROR =
+  'Graphics are taking longer than expected to start. Your city is still open; try Retry or Use WebGL fallback.';
 
 /** Reports a stuck renderer start without touching simulation state or reloading the page. */
 export function createGraphicsStartupWatchdog(setError: ErrorStateSetter, delayMs = 15_000) {
@@ -17,7 +20,7 @@ export function createGraphicsStartupWatchdog(setError: ErrorStateSetter, delayM
       if (finished) return;
       finished = true;
       clearTimeout(timer);
-      if (timedOut) setError((previous) => previous === STARTUP_ERROR ? null : previous);
+      if (timedOut) setError((previous) => (previous === STARTUP_ERROR ? null : previous));
     },
     cleanup() {
       finished = true;

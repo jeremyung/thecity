@@ -7,14 +7,26 @@ describe('FrameTiming diagnostic sampler', () => {
     timing.record(0, 0, 'ready', true);
     for (let i = 1; i <= 150; i++) timing.record(i * 10, i, 'ready', true);
     expect(timing.snapshot()).toEqual({
-      samples: 120, fps: 100, frameP95Ms: 10, cpuP95Ms: 144, maxFrameMs: 10, phase: 'ready',
+      samples: 120,
+      fps: 100,
+      frameP95Ms: 10,
+      cpuP95Ms: 144,
+      maxFrameMs: 10,
+      phase: 'ready',
     });
   });
 
   it('does not count the first frame of a cold phase', () => {
     const timing = new FrameTiming();
     timing.record(20, 4, 'loading', true);
-    expect(timing.snapshot()).toEqual({ samples: 0, fps: 0, frameP95Ms: 0, cpuP95Ms: 0, maxFrameMs: 0, phase: 'loading' });
+    expect(timing.snapshot()).toEqual({
+      samples: 0,
+      fps: 0,
+      frameP95Ms: 0,
+      cpuP95Ms: 0,
+      maxFrameMs: 0,
+      phase: 'loading',
+    });
     timing.record(36, 3, 'loading', true);
     expect(timing.snapshot().samples).toBe(1);
     expect(timing.snapshot().cpuP95Ms).toBe(3);
@@ -25,7 +37,14 @@ describe('FrameTiming diagnostic sampler', () => {
     timing.record(0, 0, 'ready', true);
     timing.record(16, 2, 'ready', true);
     timing.record(17, 0, 'ready', false);
-    expect(timing.snapshot()).toEqual({ samples: 0, fps: 0, frameP95Ms: 0, cpuP95Ms: 0, maxFrameMs: 0, phase: 'hidden' });
+    expect(timing.snapshot()).toEqual({
+      samples: 0,
+      fps: 0,
+      frameP95Ms: 0,
+      cpuP95Ms: 0,
+      maxFrameMs: 0,
+      phase: 'hidden',
+    });
     timing.record(10000, 0, 'ready', true);
     timing.record(10016, 1, 'ready', true);
     expect(timing.snapshot().samples).toBe(1);
@@ -37,7 +56,14 @@ describe('FrameTiming diagnostic sampler', () => {
     timing.record(0, 0, 'loading', true);
     timing.record(10, 1, 'loading', true);
     timing.record(20, 2, 'ready', true);
-    expect(timing.snapshot()).toEqual({ samples: 0, fps: 0, frameP95Ms: 0, cpuP95Ms: 0, maxFrameMs: 0, phase: 'ready' });
+    expect(timing.snapshot()).toEqual({
+      samples: 0,
+      fps: 0,
+      frameP95Ms: 0,
+      cpuP95Ms: 0,
+      maxFrameMs: 0,
+      phase: 'ready',
+    });
     timing.record(36, 3, 'ready', true);
     expect(timing.snapshot().samples).toBe(1);
   });

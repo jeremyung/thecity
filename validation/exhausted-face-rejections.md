@@ -55,7 +55,7 @@ LIVE_TICK_REPORT_PATH=/tmp/thecity-density-source-profile.json \
 LIVE_TICK_FINAL_SAVE_PATH=/tmp/thecity-fragmented-final.json \
 LIVE_TICK_TRANSITION_SAMPLE_EVERY=20 \
 LIVE_TICK_OVERALL_TIMEOUT_MS=180000 \
-node scripts/profile-live-ticks.mjs
+node scripts/benchmark/profile-live-ticks.mjs
 ```
 
 Expected save SHA-256 (including its trailing newline):

@@ -4,33 +4,42 @@ version = "0.1.0"
 edition = "2021"
 description = "Deterministic simulation core for a watchable Tokyo-inspired city"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+[workspace]
+members = ["crates/plan", "crates/wasm"]
 
 [features]
 # Opt-in diagnostic mutation API; never enabled for application builds.
-profiling = []
+profiling = ["legacy"]
+# Retired incremental planners (Engine::new_legacy). Tests only; delete once
+# master-plan acceptance passes.
+legacy = ["city-plan/legacy"]
 # Isolated visual-review build; not enabled in the normal application.
-single-expressway-candidate = []
+single-expressway-candidate = ["city-plan/single-expressway-candidate"]
 compact-expressway-candidate = []
 # Isolated bounded frontage-aware street placement; default layout unchanged.
-street-placement-candidate = []
+street-placement-candidate = ["city-plan/street-placement-candidate"]
 # Isolated corner-frontage fitting evaluation; normal application stays unchanged.
-frontage-fit-candidate = []
+frontage-fit-candidate = ["city-plan/frontage-fit-candidate"]
 # Isolated joint front/rear parcel fitting with reserved walking passages.
-flag-passage-candidate = []
+flag-passage-candidate = ["city-plan/flag-passage-candidate"]
 # Isolated street subdivision guard against creating thin wedge blocks.
-block-proportion-candidate = []
+block-proportion-candidate = ["city-plan/block-proportion-candidate"]
 # Isolated parent-block access and passage-facing parcel evaluation.
-parent-passage-candidate = []
+parent-passage-candidate = ["city-plan/parent-passage-candidate"]
 
 # Two-tier station-fringe network; rear sites require reserved access.
-frontage-network-candidate = ["flag-passage-candidate"]
+frontage-network-candidate = ["flag-passage-candidate", "city-plan/frontage-network-candidate"]
 
 [dependencies]
+city-plan = { path = "crates/plan" }
 serde = { version = "1", features = ["derive"] }
+# TypeScript bindings for snapshot types; `cargo test export_bindings` writes web/src/generated.
+ts-rs = "=11.1.0"
 # Live planning checkpoints retain f64 polygon areas across saves.
 serde_json = { version = "1", features = ["float_roundtrip"] }
+
+[dev-dependencies]
+city-plan = { path = "crates/plan", features = ["test-support"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "=0.2.108"

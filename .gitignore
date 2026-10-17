@@ -22,13 +22,12 @@ __pycache__/
 # Agent worktrees and local state
 .claude/
 
-# Generated validation evidence stays local unless explicitly curated below.
+# Validation evidence (captures, profiles, reports) stays local; only Markdown
+# summaries are versioned. Evidence up to 2026-10-16 is kept at the
+# `evidence-2026-10-16` tag. Inputs that tests read live in tests/fixtures/.
 /validation/**
 !/validation/**/
 !/validation/**/*.md
-# Curated PR18 comparison evidence already retained on main.
-!/validation/building-surfaces-benchmark.json
-!/validation/captures/building-surfaces/**/*.png
 /concepts/**/*.png
 /concepts/**/*.jpg
 /concepts/**/*.jpeg
@@ -55,3 +54,7 @@ __pycache__/
 /tests/fixtures/access-joins/spine-ranking-seed-0-by-sites-false.json
 /tests/fixtures/access-joins/spine-ranking-seed-87231-by-sites-false.json
 /tests/fixtures/bus-seed5-legacy-queue.json
+
+# ts-rs default export folders (generation goes to web/src/generated)
+engine/bindings/
+engine/crates/*/bindings/

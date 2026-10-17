@@ -1,6 +1,7 @@
 import type { Building } from '../types';
 
-export type BuildingPaletteFamily = 'neutral' | 'terracotta' | 'blue-gray' | 'sage' | 'brick' | 'warm-stone';
+export type BuildingPaletteFamily =
+  'neutral' | 'terracotta' | 'blue-gray' | 'sage' | 'brick' | 'warm-stone';
 
 export interface BuildingPalette {
   readonly wall: string;
@@ -8,7 +9,9 @@ export interface BuildingPalette {
   readonly family: BuildingPaletteFamily;
 }
 
-interface AccentPalette extends BuildingPalette { readonly family: Exclude<BuildingPaletteFamily, 'neutral'> }
+interface AccentPalette extends BuildingPalette {
+  readonly family: Exclude<BuildingPaletteFamily, 'neutral'>;
+}
 
 const ACCENTS: readonly AccentPalette[] = [
   { family: 'terracotta', wall: '#b77b68', trim: '#ded0bd' },
@@ -49,7 +52,8 @@ export function buildingPalette(
   building: Pick<Building, 'kind' | 'appearance_seed' | 'anchor'>,
   neutralWalls: readonly string[],
 ): BuildingPalette {
-  if (neutralWalls.length === 0) throw new RangeError('neutralWalls must contain at least one color');
+  if (neutralWalls.length === 0)
+    throw new RangeError('neutralWalls must contain at least one color');
 
   const seed = building.appearance_seed >>> 0;
   // Founder and named anchor colors are part of the experience's identity.
@@ -58,7 +62,8 @@ export function buildingPalette(
   }
 
   const colors = ACCENTS_BY_KIND[building.kind];
-  if (!colors) return { family: 'neutral', wall: neutralWalls[seed % neutralWalls.length], trim: '#d8cdb5' };
+  if (!colors)
+    return { family: 'neutral', wall: neutralWalls[seed % neutralWalls.length], trim: '#d8cdb5' };
 
   const hash = seededHash(seed);
   const neutralWeight = NEUTRAL_WEIGHT[building.kind] ?? 7;
@@ -71,9 +76,9 @@ export function buildingPalette(
   }
 
   const accentFamily = colors[(hash >>> 8) % colors.length];
-  const accent = ACCENTS.find(item => item.family === accentFamily)!;
+  const accent = ACCENTS.find((item) => item.family === accentFamily)!;
   return { family: accent.family, wall: accent.wall, trim: accent.trim };
 }
 
 /** All supported runtime wall swatches: six existing neutrals and five muted accents. */
-export const BUILDING_ACCENT_WALLS: readonly string[] = ACCENTS.map(palette => palette.wall);
+export const BUILDING_ACCENT_WALLS: readonly string[] = ACCENTS.map((palette) => palette.wall);

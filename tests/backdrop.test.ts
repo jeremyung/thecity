@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { createBackdropGeometry } from '../web/src/render/backdrop';
 
 function heights(seed: number) {
-  const geometry = createBackdropGeometry(seed, [{ x: 480, z: -1700 }, { x: 480, z: 1700 }], 20);
+  const geometry = createBackdropGeometry(
+    seed,
+    [
+      { x: 480, z: -1700 },
+      { x: 480, z: 1700 },
+    ],
+    20,
+  );
   const positions = geometry.getAttribute('position');
   const values = new Float32Array(positions.count);
   for (let i = 0; i < positions.count; i += 1) values[i] = positions.getY(i);
@@ -38,7 +45,14 @@ describe('seeded scenic backdrop', () => {
   });
 
   it('keeps the authoritative basin flat and the extended river valley below the hills', () => {
-    const geometry = createBackdropGeometry(51, [{ x: 480, z: -1600 }, { x: 800, z: 1600 }], 24);
+    const geometry = createBackdropGeometry(
+      51,
+      [
+        { x: 480, z: -1600 },
+        { x: 800, z: 1600 },
+      ],
+      24,
+    );
     const positions = geometry.getAttribute('position');
     let valleySamples = 0;
     let hillSamples = 0;
@@ -49,7 +63,7 @@ describe('seeded scenic backdrop', () => {
       const y = positions.getY(i);
       if (Math.max(Math.abs(x), Math.abs(z)) <= 420) expect(y).toBe(-3);
 
-      const riverX = 480 + (z + 1600) / 3200 * 320;
+      const riverX = 480 + ((z + 1600) / 3200) * 320;
       const distance = Math.abs(x - riverX);
       if (Math.max(Math.abs(x), Math.abs(z)) > 1000 && distance <= 36) {
         expect(y).toBe(-3);
@@ -67,7 +81,14 @@ describe('seeded scenic backdrop', () => {
   });
 
   it('produces upward-facing, finite normals and valid bounds', () => {
-    const geometry = createBackdropGeometry(12, [{ x: 0, z: -1700 }, { x: 180, z: 1700 }], 30);
+    const geometry = createBackdropGeometry(
+      12,
+      [
+        { x: 0, z: -1700 },
+        { x: 180, z: 1700 },
+      ],
+      30,
+    );
     const normals = geometry.getAttribute('normal');
     for (let i = 0; i < normals.count; i += 1) {
       expect(Number.isFinite(normals.getX(i))).toBe(true);

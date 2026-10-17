@@ -1,6 +1,6 @@
 # Building surfaces benchmark (2026-10-14)
 
-`node scripts/benchmark-building-surfaces.mjs <save.json> <port> <label>` on the seed 87231 review city (tick 242000, development rate 16), run against `origin/main` and `render/building-surfaces` served side by side. Hardware WebGL through ANGLE/OpenGL ES on an NVIDIA RTX PRO 6000 Blackwell, 1600×900, balanced quality. Each row renders the scene pass with shadows and calls `gl.finish`, 120 samples after 30 warm-up frames; the post pipeline is left out because its `render()` returns without drawing in headless Chromium. Compare rows, not absolutes. Raw numbers: [building-surfaces-benchmark.json](building-surfaces-benchmark.json).
+`node scripts/benchmark/benchmark-building-surfaces.mjs <save.json> <port> <label>` on the seed 87231 review city (tick 242000, development rate 16), run against `origin/main` and `render/building-surfaces` served side by side. Hardware WebGL through ANGLE/OpenGL ES on an NVIDIA RTX PRO 6000 Blackwell, 1600×900, balanced quality. Each row renders the scene pass with shadows and calls `gl.finish`, 120 samples after 30 warm-up frames; the post pipeline is left out because its `render()` returns without drawing in headless Chromium. Compare rows, not absolutes. Raw numbers: [building-surfaces-benchmark.json](building-surfaces-benchmark.json).
 
 | Style | Hour | View | main median | branch median | main draws | branch draws | main triangles | branch triangles |
 |---|---|---|---|---|---|---|---|---|

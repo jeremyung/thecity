@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "purpose": "Source images and measured dimensions for scripts/build-vehicle-kits.py. Every image is a side elevation with the vehicle facing left (front at low x).",
+  "purpose": "Source images and measured dimensions for scripts/assets/build-vehicle-kits.py. Every image is a side elevation with the vehicle facing left (front at low x).",
   "pixelsPerMeter": 110,
   "atlas": [
     2048,

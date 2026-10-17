@@ -20,8 +20,8 @@ separately benchmarked.
 With the app's Vite server running, execute:
 
 ```sh
-CLADDING_URL='http://127.0.0.1:5173/?webgl=1' node scripts/check-cladding-batching.mjs
-CLADDING_URL='http://127.0.0.1:5173/' CLADDING_OUTPUT=.tools/cladding-parity-webgpu node scripts/check-cladding-batching.mjs
+CLADDING_URL='http://127.0.0.1:5173/?webgl=1' node scripts/audit/check-cladding-batching.mjs
+CLADDING_URL='http://127.0.0.1:5173/' CLADDING_OUTPUT=.tools/cladding-parity-webgpu node scripts/audit/check-cladding-batching.mjs
 ```
 
 The browser check compares authored and batch materials on identical boxes,

@@ -25,10 +25,10 @@ The candidate adds 1,341 m² (+1.09%) projected coverage, 17,320 triangles (+0.8
 From repository root:
 
 ```sh
-node scripts/audit-rendered-coverage.mjs --input validation/early-reservation-wasm-87231-save.json --output /tmp/default-coverage.json
-node scripts/audit-rendered-coverage.mjs --input validation/early-reservation-wasm-87231-save.json --output /tmp/compact-coverage.json --compact-midrise
-node scripts/audit-mature-building-geometry.mjs validation/early-reservation-wasm-87231-snapshot.json /tmp/default-geometry.json
-node scripts/audit-mature-building-geometry.mjs validation/early-reservation-wasm-87231-snapshot.json /tmp/compact-geometry.json --compact-midrise
+node scripts/audit/audit-rendered-coverage.mjs --input tests/fixtures/validation/early-reservation-wasm-87231-save.json --output /tmp/default-coverage.json
+node scripts/audit/audit-rendered-coverage.mjs --input tests/fixtures/validation/early-reservation-wasm-87231-save.json --output /tmp/compact-coverage.json --compact-midrise
+node scripts/audit/audit-mature-building-geometry.mjs validation/early-reservation-wasm-87231-snapshot.json /tmp/default-geometry.json
+node scripts/audit/audit-mature-building-geometry.mjs validation/early-reservation-wasm-87231-snapshot.json /tmp/compact-geometry.json --compact-midrise
 ```
 
 The four sibling JSON reports retain input and transitive source hashes. They measure generated kit geometry, not browser screenshots.

@@ -11,17 +11,21 @@ export function skylineNeighborhoods(buildings: Building[], radius: number) {
     else cells.set(key, [index]);
   }
   return (seed: Building): Building[] => {
-    const x = Math.floor(seed.x / radius), z = Math.floor(seed.z / radius);
+    const x = Math.floor(seed.x / radius),
+      z = Math.floor(seed.z / radius);
     const candidates: number[] = [];
-    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
-      const cell = cells.get(`${x + dx}:${z + dz}`);
-      if (cell) for (const index of cell) {
-        const building = buildings[index];
-        if (Math.hypot(building.x - seed.x, building.z - seed.z) <= radius) candidates.push(index);
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dz = -1; dz <= 1; dz++) {
+        const cell = cells.get(`${x + dx}:${z + dz}`);
+        if (cell)
+          for (const index of cell) {
+            const building = buildings[index];
+            if (Math.hypot(building.x - seed.x, building.z - seed.z) <= radius)
+              candidates.push(index);
+          }
       }
-    }
     // Preserve reduction order and equal-score winner selection from the full scan.
     candidates.sort((a, b) => a - b);
-    return candidates.map(index => buildings[index]);
+    return candidates.map((index) => buildings[index]);
   };
 }

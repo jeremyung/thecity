@@ -37,13 +37,17 @@ export class SidewalkBuild {
     }
     if (this.polygons) {
       const end = Math.min(this.polygonIndex + 16, this.polygons.length);
-      while (this.polygonIndex < end) this.fragments.push(sidewalkGeometry(this.polygons[this.polygonIndex++]));
+      while (this.polygonIndex < end)
+        this.fragments.push(sidewalkGeometry(this.polygons[this.polygonIndex++]));
       if (this.polygonIndex < this.polygons.length) return false;
       this.polygons = null;
       return false;
     }
     if (!this.merger) {
-      if (!this.fragments.length) { this.finish(null); return true; }
+      if (!this.fragments.length) {
+        this.finish(null);
+        return true;
+      }
       this.merger = new IncrementalGeometryMerge(this.fragments);
     }
     const done = this.merger.step(12000, 36000);

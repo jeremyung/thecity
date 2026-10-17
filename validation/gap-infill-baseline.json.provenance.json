@@ -1,9 +1,0 @@
-{
-  "source": "infill-oriented-continued.json",
-  "wasmSha256": "2a873ab71ea817aed85ce5efa3de64ff6b87605f725b314d94f02e505d9fdca8",
-  "saveSha256": "5d483dfab4657093ca7ccd35ee2f75cb37095f0dbdad73114bd932c682014656",
-  "continuedTicks": 64000,
-  "tick": 370000,
-  "buildings": 638,
-  "roads": 168
-}

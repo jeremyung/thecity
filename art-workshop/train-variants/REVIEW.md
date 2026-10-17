@@ -90,4 +90,4 @@ checkpoint), which is its own small project.
 `art-workshop/train-classes.json`; the eight class images; `class-sides.jpg`,
 `class-fronts.jpg`; the three fp8/distilled commuter images; `model-compare.jpg`;
 `local-ledger.json`, `review-metrics.json`, `model-metrics.json`; and the review
-scripts `scripts/review-train-variants.py`, `scripts/train_review_lib.py`.
+scripts `scripts/assets/review-train-variants.py`, `scripts/assets/train_review_lib.py`.

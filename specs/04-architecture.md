@@ -1,6 +1,6 @@
 # Browser Architecture
 
-### Movement support presentation (2026-10-12)
+### Movement support presentation
 
 An integer packet associates each pose with its supporting road and
 platform identities. Worker protocol v5 transfers it with the presentation token.
@@ -29,51 +29,42 @@ Use Rust compiled to WASM for the engine, a dedicated simulation worker, and Typ
 ## Module layout
 
 ```text
-engine/
-  core/            identifiers, clocks, RNG, definitions
-  world/           geography, parcels, spatial indexes
-  infrastructure/  planning, graphs, construction
-  population/      demand, activities, travel
-  persistence/     snapshots and validation
+engine/                    Cargo workspace
+  crates/plan/             pure planning and geometry (master plan, blocks, frontage, kinds)
+  crates/wasm/             wasm-bindgen bindings only
+  src/core/                engine, world state, clock and RNG, system registry, wire layouts
+  src/world/               parcels, river, clearance, spatial indexes
+  src/infrastructure/      network, construction, growth, master-plan realization
+  src/population/          residents, travelers, errands, demand
+  src/transit/             trains, buses, traffic, stations
+  src/persistence/         snapshots, save/restore, validation, movement packets
+  src/legacy/              retired planners (feature `legacy`)
 web/src/
   worker/          WASM loading, scheduler, protocol
-  render/          scene bridge, assets, water, styles
+  render/          scene coordinator, render layers, kits, water, styles
   camera/          manual controls and scene director
+  optics/          lens, focus and tilt-shift math
   audio/           ambience, emitters, music director
   ui/              React controls and inspectors
   storage/         IndexedDB and save coordination
+  generated/       types and wire constants generated from Rust
 ```
 
-React never owns per-frame transforms or simulation entities. The renderer receives a read-only presentation model. The worker is the sole owner of authoritative state.
+React never owns per-frame transforms or simulation entities. The renderer receives a read-only presentation model. The worker is the sole owner of authoritative state. Each `WorldState` sub-state belongs to one domain folder; the tick runs the systems listed in `core/systems.rs` in order. [ARCHITECTURE.md](../ARCHITECTURE.md) maps where each change belongs.
 
-The layout above is the target decomposition. As of 2026-10-09, browser subsystems are separated, but most Rust systems still live in `engine/src/lib.rs`. Pure scalar distance helpers have begun moving to `engine/src/geometry.rs`, which cannot access engine state. Continue extracting geometry/model boundaries before growth and transit systems. Keep deterministic scheduling and mutation ownership explicit; splitting files alone does not establish independence. Validate refactors separately from behavior corrections against current-format save validation and same-target continuation fixtures.
+`city-plan`'s `blocks.rs` owns state-free rectangular subdivision with a hard 64-lot result bound. `geometry.rs` supplies oriented-rectangle overlap, bounds, and segment clearance. Engine orchestration reserves interiors and admits parcels only on infrastructure completion. These modules contain no renderer, RNG, or mutable world dependency. Optional parcel rotation and a default-false coordinated-plan marker preserve legacy save behavior; rendering continues to consume the authoritative building rotation.
 
-`engine/src/blocks.rs` now owns state-free rectangular subdivision with a hard 64-lot result bound. `geometry.rs` supplies oriented-rectangle overlap, bounds, and segment clearance. Engine orchestration reserves interiors and admits parcels only on infrastructure completion. These modules contain no renderer, RNG, or mutable world dependency. Optional parcel rotation and a default-false coordinated-plan marker preserve legacy save behavior; rendering continues to consume the authoritative building rotation.
+`city-plan`'s `frontage.rs` owns pure interval subtraction/union and bounded gap subdivision. Engine orchestration projects current reservations into road coordinates, then validates resulting proposals through existing construction and access rules. The helper's global output cap is 64; ordinary infill requests only eight per side. Its deterministic output is derived from saved world state, while scan cursors remain persisted. Per-evaluation caches expire on admission so the next evaluation sees the new parcel.
 
-`engine/src/frontage.rs` owns pure interval subtraction/union and bounded gap subdivision. Engine orchestration projects current reservations into road coordinates, then validates resulting proposals through existing construction and access rules. The helper's global output cap is 64; ordinary infill requests only eight per side. Its deterministic output is derived from saved world state, while scan cursors remain persisted. Per-evaluation caches expire on admission so the next evaluation sees the new parcel.
+`city-plan`'s `development.rs` owns state-free building-site selection over a rotating window of at most 32 eligible parcels. Minimal open-building points supply local activity and proximity. The engine retains eligibility, construction mutation, and the persisted cursor. Eligibility collection and the building-point pass remain global; this is not a spatial index or a full fixed-work scheduler.
 
-`engine/src/development.rs` owns state-free building-site selection over a rotating window of at most 32 eligible parcels. Minimal open-building points supply local activity and proximity. The engine retains eligibility, construction mutation, and the persisted cursor. Eligibility collection and the building-point pass remain global; this is not a spatial index or a full fixed-work scheduler.
-
-`engine/src/road_split.rs` owns the engine's open-road split operation, including precomputed frontage and traveler/bus/train route remaps followed by mutation. It remains an `impl Engine` module with access to authoritative state; this extraction is an ownership boundary, not a state-independent service. `network_split.rs` retains the pure route transformation helpers. Paired splitting now preflights both hosts together, with cumulative actor remaps and combined ID/segment/route caps, before committing either. It preserves the active-plan guard, with an exception only for the validated owning spine plan and its canonical pair of host midpoints. `neighborhood_spine.rs` owns that staged construction lifecycle; `spine_plan.rs` derives the versioned geometry and reservation contract. Bounded deep candidate enumeration is integrated in public WASM. Production keeps the existing nominal-area ranking; a separate test-only site-count comparison has mixed density results and is not promoted. Calling the single-road operation twice remains non-atomic.
-
-Master-plan checkpoint (2026-10-11): `engine/src/masterplan.rs` is a pure, state-free generator. It produces the transport skeleton, perturbed arterial lattice, recursively split local streets, polygonal blocks and gap-free lots (including flag lots) from the seed and river geometry. Its decisions use only IEEE-exact arithmetic, so native and WASM regenerate identical plans; saves carry a plan digest that restore verifies. It owns no RNG stream shared with the simulation: it uses its own hash of the seed. The engine maps plan nodes to world nodes lazily as roads are realized. The legacy frontier, infill, access-discovery, spine and coordinated-block planners stay compiled only for the legacy test fixtures (`Engine::new_legacy`); new worlds never run them. Delete them once the master-plan path passes acceptance.
+`infrastructure/road_split.rs` owns the engine's open-road split operation, including precomputed frontage and traveler/bus/train route remaps followed by mutation. It remains an `impl Engine` module with access to authoritative state; this extraction is an ownership boundary, not a state-independent service. `network_split.rs` retains the pure route transformation helpers. Paired splitting now preflights both hosts together, with cumulative actor remaps and combined ID/segment/route caps, before committing either. It preserves the active-plan guard, with an exception only for the validated owning spine plan and its canonical pair of host midpoints. `neighborhood_spine.rs` owns that staged construction lifecycle; `spine_plan.rs` derives the versioned geometry and reservation contract. Bounded deep candidate enumeration is integrated in public WASM. Production keeps the existing nominal-area ranking; a separate test-only site-count comparison has mixed density results and is not promoted. Calling the single-road operation twice remains non-atomic.
 
 ## WASM interface
 
 Expose coarse operations: initialize definitions and seed; enqueue command batch; step a tick batch; extract compact changes; query inspector data; serialize; restore. Use wasm-bindgen for the interface and explicit binary layouts for hot data.
 
 Batch boundary crossings. Never invoke WASM once per agent from the renderer. Avoid rebuilding a JavaScript object tree of the entire city each frame.
-
-Rear-extension checkpoint (2026-10-11): `engine/src/rear_extensions.rs` owns
-bounded admission, parcel reservation, pending construction, completion and
-validation. Save activity schema 4 carries both pending plans and the earliest
-original footprint for each extended building. Structural snapshots expose
-`rear_extensions` and `building_original_footprints`; the renderer preserves the
-original kit and adds the rear volume independently of style. Geometry and
-capacity remain authoritative engine fields. Incremental neighborhood batches
-report exact descriptor visibility only after their atomic scene commit, allowing
-temporary construction geometry to remain until its replacement is visible.
-See [the checkpoint and verification limits](../validation/HANDOFF.md#inhabited-rear-extensions--implementation-in-progress-2026-10-11).
 
 The structural snapshot includes `road_decks` entries (`road_id`, `deck_height`)
 for realized master-plan expressways. They are derived from the regenerated plan
@@ -100,7 +91,7 @@ Every message carries protocol version and world epoch. Epoch changes on load or
 
 Publish movement at 10–20 Hz initially. Interpolate between two snapshots with a short presentation delay; avoid extrapolating through intersections. Structural changes are applied in revision order. Reliable deltas are never dropped; request a full resync if a gap is detected.
 
-Elevated movement contract (2026-10-11): worker protocol 3 uses
+Elevated movement contract: worker protocol 3 uses
 six Float32 values per actor: `[id, x, z, heading, kind, surfaceY]`. Actor kind
 continues to identify person/car/train/bus (0/1/2/3). A nonnegative `surfaceY`
 is an authoritative absolute pedestrian or vehicle surface height; -1 delegates
@@ -150,8 +141,7 @@ Hidden tabs pause simulation and suspend or fade sound. Resume restores continui
 
 Pin tested dependency versions at implementation time.
 
-
-Expressway geometry contract (2026-10-11): each `road_decks` entry includes
+Expressway geometry contract: each `road_decks` entry includes
 `controls: [[x,z],[x,z]]` in world metres, oriented from the realized road's
 `from` node to its `to` node. These cubic controls and deck height derive from
 the complete regenerated plan and participate in its digest. Renderers consume
@@ -164,19 +154,4 @@ Only complete open boundary-to-boundary chains admit traffic; their regional
 connection is independent of ground-road gateway connectivity. Ramps, lane
 changes, merges and ramp grades remain future work.
 
-## Train door state checkpoint — 2026-10-11
-
-`TrainView.door_open_fraction` and `door_terminal` are derived from existing
-terminal position and dwell countdown, rather than a second persisted clock.
-Station/gateway dwell lasts 220/180 ticks, with 20-tick opening and closing phases
-at 20 Hz. Boarding and alighting require the fully open interval. Boarding cadence
-is three ticks to retain the existing 48-passenger capacity within that interval.
-Quiet-hour station holds keep doors closed. Worker protocol v4 includes a compact
-`trainDoors` Float32Array alongside each movement message: `[id, terminal, fraction]`
-with terminal -1 away from a stop. At most eight trainsets use 96 bytes. The WASM
-export shares the snapshot phase calculation without constructing a full world.
-Doors and positions use the same pair of updates and interpolation fraction;
-coarse world snapshots cannot rewind animated door state. The first movement
-sample displays the restored phase immediately. A platform-position guard keeps
-fast-forward skips from displaying open doors while moving. Full passenger
-approach choreography and visual motion acceptance remain outstanding.
+Dated implementation notes for this spec: [validation/spec-notes/04-architecture.md](../validation/spec-notes/04-architecture.md).

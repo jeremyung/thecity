@@ -1,0 +1,10 @@
+public/
+dist/
+validation/
+art-workshop/
+concepts/
+tests/fixtures/
+*.json
+*.md
+
+web/src/render/generated/

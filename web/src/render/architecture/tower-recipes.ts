@@ -1,10 +1,55 @@
 /** Independent tower descriptors: geometry and texture pipelines consume the same bounded palette. */
-export const RESIDENTIAL_TOWERS={
- ribbon:{label:'Bronze wraparound tower',wall:'#b8ac95',slab:'#62554a',metal:'#594b40',stone:'#b9af9b',texture:'new-bronze-metal',form:'ribbon',podium:2},
- frame:{label:'White framed condominium',wall:'#eeeae1',slab:'#d8d6cc',metal:'#3c4a50',stone:'#c6c0af',texture:'new-white-precast',form:'frame',podium:2},
- fins:{label:'Limestone vertical-fin tower',wall:'#d8ccb5',slab:'#c8bda8',metal:'#514e45',stone:'#c9bea7',texture:'new-honed-limestone',form:'fins',podium:3},
- terrace:{label:'Stepped charcoal residence',wall:'#60635f',slab:'#474d4b',metal:'#353d3f',stone:'#a8aba0',texture:'new-charcoal-ceramic',form:'terrace',podium:2},
- lantern:{label:'Ivory glass-corner tower',wall:'#e9e6dd',slab:'#d4d5cf',metal:'#435458',stone:'#bfc2ba',texture:'new-ivory-porcelain',form:'lantern',podium:3},
+export const RESIDENTIAL_TOWERS = {
+  ribbon: {
+    label: 'Bronze wraparound tower',
+    wall: '#b8ac95',
+    slab: '#62554a',
+    metal: '#594b40',
+    stone: '#b9af9b',
+    texture: 'new-bronze-metal',
+    form: 'ribbon',
+    podium: 2,
+  },
+  frame: {
+    label: 'White framed condominium',
+    wall: '#eeeae1',
+    slab: '#d8d6cc',
+    metal: '#3c4a50',
+    stone: '#c6c0af',
+    texture: 'new-white-precast',
+    form: 'frame',
+    podium: 2,
+  },
+  fins: {
+    label: 'Limestone vertical-fin tower',
+    wall: '#d8ccb5',
+    slab: '#c8bda8',
+    metal: '#514e45',
+    stone: '#c9bea7',
+    texture: 'new-honed-limestone',
+    form: 'fins',
+    podium: 3,
+  },
+  terrace: {
+    label: 'Stepped charcoal residence',
+    wall: '#60635f',
+    slab: '#474d4b',
+    metal: '#353d3f',
+    stone: '#a8aba0',
+    texture: 'new-charcoal-ceramic',
+    form: 'terrace',
+    podium: 2,
+  },
+  lantern: {
+    label: 'Ivory glass-corner tower',
+    wall: '#e9e6dd',
+    slab: '#d4d5cf',
+    metal: '#435458',
+    stone: '#bfc2ba',
+    texture: 'new-ivory-porcelain',
+    form: 'lantern',
+    podium: 3,
+  },
 } as const;
-export type ResidentialTowerRecipe=keyof typeof RESIDENTIAL_TOWERS;
-export const RESIDENTIAL_TOWER_IDS=Object.keys(RESIDENTIAL_TOWERS) as ResidentialTowerRecipe[];
+export type ResidentialTowerRecipe = keyof typeof RESIDENTIAL_TOWERS;
+export const RESIDENTIAL_TOWER_IDS = Object.keys(RESIDENTIAL_TOWERS) as ResidentialTowerRecipe[];

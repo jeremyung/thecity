@@ -1,6 +1,6 @@
 {
   "id": "vehicle-mask",
-  "source": "Derived from the vehicle atlas sources by scripts/build-vehicle-kits.py",
+  "source": "Derived from the vehicle atlas sources by scripts/assets/build-vehicle-kits.py",
   "provenance": "art-workshop/vehicle-kit.json",
   "status": "runtime: road vehicles and city bus",
   "role": "atlas",

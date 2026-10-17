@@ -9,7 +9,7 @@ irregular connected shapes, not distance from the street network.
 Reproduce the measurements from the repository root with:
 
 ```sh
-python3 scripts/audit-void-road-distance.py
+python3 scripts/audit/audit-void-road-distance.py
 ```
 
 The script decodes each saved 2 m mask cell, constructs connected open local

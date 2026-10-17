@@ -1,6 +1,6 @@
 # Native and WASM discovery work accounting
 
-Both runs restore `validation/early-reservation-wasm-87231-save.json` (SHA-256
+Both runs restore `tests/fixtures/validation/early-reservation-wasm-87231-save.json` (SHA-256
 `f5aecc3530a8607f115a352fe1caef73bdbcafaefd23d0d53410bdea9610aa2e`) and
 produce the same 2,069 descriptor bit tuples. The native total is 6,232,851
 work units; WASM reports 6,233,215, a difference of 364 (0.0058%).

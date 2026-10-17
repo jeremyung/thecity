@@ -6,25 +6,62 @@ import type { World } from '../web/src/types';
 
 function world(endpointX = 10, includeSecondRoad = false): World {
   const base = {
-    schema_version: 1, engine_version: 'test', seed: 1, tick: 0, day: 0, minute_of_day: 360,
-    development_rate: 1, revision: 1, stage: 'Founding',
+    schema_version: 1,
+    engine_version: 'test',
+    seed: 1,
+    tick: 0,
+    day: 0,
+    minute_of_day: 360,
+    development_rate: 1,
+    revision: 1,
+    stage: 'Founding',
     bounds: { min_x: -100, max_x: 100, min_z: -100, max_z: 100 },
-    terrain: { river: [], protected: [], gateways: [] }, weather: { kind: 'clear' as const, intensity: 0 },
+    terrain: { river_half_width: 32, river: [], protected: [], gateways: [] },
+    weather: { kind: 'clear' as const, intensity: 0 },
     nodes: [
-      { id: 1, x: 0, z: 0, kind: 'street' },
-      { id: 2, x: endpointX, z: 0, kind: 'street' },
-      { id: 3, x: 20, z: 0, kind: 'street' },
+      { id: 1, x: 0, z: 0, kind: 'junction' },
+      { id: 2, x: endpointX, z: 0, kind: 'junction' },
+      { id: 3, x: 20, z: 0, kind: 'junction' },
     ],
     roads: [
-      { id: 10, from: 1, to: 2, kind: 'local', stage: 'open', progress: 1, connected: true, length: endpointX, lanes: 2 },
+      {
+        id: 10,
+        from: 1,
+        to: 2,
+        kind: 'local' as const,
+        stage: 'open',
+        progress: 1,
+        connected: true,
+        length: endpointX,
+        lanes: 2,
+      },
     ],
-    parcels: [], buildings: [], projects: [], trains: [], events: [],
+    parcels: [],
+    buildings: [],
+    projects: [],
+    trains: [],
+    events: [],
     stats: { population: 0, active_travelers: 0, buildings: 0, active_projects: 0 },
   } satisfies World;
-  return includeSecondRoad ? {
-    ...base,
-    roads: [...base.roads, { id: 20, from: 2, to: 3, kind: 'local', stage: 'open', progress: 1, connected: true, length: 20 - endpointX, lanes: 2 }],
-  } : base;
+  return includeSecondRoad
+    ? {
+        ...base,
+        roads: [
+          ...base.roads,
+          {
+            id: 20,
+            from: 2,
+            to: 3,
+            kind: 'local' as const,
+            stage: 'open',
+            progress: 1,
+            connected: true,
+            length: 20 - endpointX,
+            lanes: 2,
+          },
+        ],
+      }
+    : base;
 }
 
 function pose(id: number, x: number, heading = 0): Float32Array {
@@ -48,7 +85,8 @@ describe('MovementPresentation', () => {
     presentation.sample(0, gate);
     presentation.receive(pose(42, 10), new Map([[42, support(10)]]), 100);
     presentation.sample(10, gate);
-    const first = presentation.sample(35, gate), firstPose = first.get(42)!;
+    const first = presentation.sample(35, gate),
+      firstPose = first.get(42)!;
     expect(firstPose.x).toBe(2.5);
     const second = presentation.sample(60, gate);
     expect(second.get(42)!.x).toBe(5);
@@ -73,11 +111,16 @@ describe('MovementPresentation', () => {
       for (let frame = 0; frame < 120; frame++) presentation.sample(100 + frame * 16, gate);
       expect(stringify).not.toHaveBeenCalled();
       expect(capture).not.toHaveBeenCalled();
-    } finally { stringify.mockRestore(); capture.mockRestore(); }
+    } finally {
+      stringify.mockRestore();
+      capture.mockRestore();
+    }
   });
 
   it('retains identity across equal commits but invalidates removal, reinsertion and reset', () => {
-    const snapshot = world(), gate = committedGate(snapshot), dependency = support(10);
+    const snapshot = world(),
+      gate = committedGate(snapshot),
+      dependency = support(10);
     const identity = gate.captureMovementIdentity(dependency);
     gate.commit(gate.capture(snapshot));
     expect(gate.matchesMovementIdentity(dependency, identity)).toBe(true);
@@ -86,7 +129,9 @@ describe('MovementPresentation', () => {
     gate.commit(gate.capture(snapshot));
     expect(gate.matchesMovementIdentity(dependency, identity)).toBe(false);
     const next = gate.captureMovementIdentity(dependency);
-    gate.reset(); gate.request(snapshot); gate.commit(gate.capture(snapshot));
+    gate.reset();
+    gate.request(snapshot);
+    gate.commit(gate.capture(snapshot));
     expect(gate.matchesMovementIdentity(dependency, next)).toBe(false);
   });
 
@@ -184,7 +229,10 @@ describe('MovementPresentation', () => {
     presentation.sample(10, gate);
     expect(presentation.sample(35, gate).get(42)?.x).toBe(5);
 
-    const destinationOnly: World = { ...initial, roads: initial.roads.filter(road => road.id === 20) };
+    const destinationOnly: World = {
+      ...initial,
+      roads: initial.roads.filter((road) => road.id === 20),
+    };
     gate.request(destinationOnly);
     gate.commit(gate.capture(destinationOnly));
     expect(presentation.sample(36, gate).get(42)?.x).toBe(10);

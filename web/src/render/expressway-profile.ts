@@ -1,8 +1,7 @@
 import profiles from '../../../shared/expressway-profiles.json';
+import type { ExpresswayProfile } from '../generated';
+
 /** Published by the engine so geometry and moving traffic use the same section. */
-export interface ExpresswayProfile {
-  width:number; lane_centers:readonly number[];
-  inner_mark:number; lane_mark:number; outer_mark:number; median_width:number;
-}
-export const CURRENT_EXPRESSWAY_PROFILE:ExpresswayProfile=profiles.current;
-export const COMPACT_EXPRESSWAY_PROFILE:ExpresswayProfile=profiles.compact;
+export type { ExpresswayProfile };
+export const CURRENT_EXPRESSWAY_PROFILE = profiles.current as ExpresswayProfile;
+export const COMPACT_EXPRESSWAY_PROFILE = profiles.compact as ExpresswayProfile;

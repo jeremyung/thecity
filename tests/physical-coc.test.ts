@@ -1,20 +1,38 @@
-import { describe, expect, it, vi } from "vitest";
-import { LENS_PRESETS, signedCircleOfConfusionPixels } from "../web/src/camera/lens";
+import { describe, expect, it, vi } from 'vitest';
+import { LENS_PRESETS, signedCircleOfConfusionPixels } from '../web/src/optics/lens';
 
 // This adapter evaluates the scalar TSL expression's method chain on JS
 // numbers. It does not compile a shader or exercise WebGPU/WebGL execution.
-vi.mock("three/tsl", () => {
+vi.mock('three/tsl', () => {
   class ScalarNode {
     constructor(readonly value: number) {}
-    valueOf() { return this.value; }
-    negate() { return new ScalarNode(-this.value); }
-    mul(other: number | ScalarNode) { return new ScalarNode(this.value * unwrap(other)); }
-    sub(other: number | ScalarNode) { return new ScalarNode(this.value - unwrap(other)); }
-    div(other: number | ScalarNode) { return new ScalarNode(this.value / unwrap(other)); }
-    max(other: number | ScalarNode) { return new ScalarNode(Math.max(this.value, unwrap(other))); }
-    greaterThan(other: number | ScalarNode) { return new ScalarNode(this.value > unwrap(other) ? 1 : 0); }
-    and(other: number | ScalarNode) { return new ScalarNode(this.value !== 0 && unwrap(other) !== 0 ? 1 : 0); }
-    clamp(low: number, high: number) { return new ScalarNode(Math.max(low, Math.min(high, this.value))); }
+    valueOf() {
+      return this.value;
+    }
+    negate() {
+      return new ScalarNode(-this.value);
+    }
+    mul(other: number | ScalarNode) {
+      return new ScalarNode(this.value * unwrap(other));
+    }
+    sub(other: number | ScalarNode) {
+      return new ScalarNode(this.value - unwrap(other));
+    }
+    div(other: number | ScalarNode) {
+      return new ScalarNode(this.value / unwrap(other));
+    }
+    max(other: number | ScalarNode) {
+      return new ScalarNode(Math.max(this.value, unwrap(other)));
+    }
+    greaterThan(other: number | ScalarNode) {
+      return new ScalarNode(this.value > unwrap(other) ? 1 : 0);
+    }
+    and(other: number | ScalarNode) {
+      return new ScalarNode(this.value !== 0 && unwrap(other) !== 0 ? 1 : 0);
+    }
+    clamp(low: number, high: number) {
+      return new ScalarNode(Math.max(low, Math.min(high, this.value)));
+    }
     select<T extends number | ScalarNode>(whenTrue: T, whenFalse: T) {
       return new ScalarNode(this.value !== 0 ? unwrap(whenTrue) : unwrap(whenFalse));
     }
@@ -25,7 +43,7 @@ vi.mock("three/tsl", () => {
   return { float: (value: number) => new ScalarNode(value) };
 });
 
-import { physicalCoCNode } from "../web/src/render/postprocessing/physical-coc";
+import { physicalCoCNode } from '../web/src/render/postprocessing/physical-coc';
 
 function evaluateExpression(input: {
   depthM: number;
@@ -86,7 +104,7 @@ function scalarNode(value: number): ScalarAdapter {
 }
 
 function scalar(value: number | ScalarAdapter): number {
-  return typeof value === "number" ? value : value.valueOf();
+  return typeof value === 'number' ? value : value.valueOf();
 }
 
 function oracleNormalized(input: Parameters<typeof evaluateExpression>[0]): number {
@@ -100,18 +118,25 @@ function oracleNormalized(input: Parameters<typeof evaluateExpression>[0]): numb
       opticalModelScale: input.opticalScale,
       maxBlurPx: 2 * input.maxGatherRadiusPx,
     });
-    return Math.sign(diameterPx) * Math.min(1, Math.abs(diameterPx) * 0.5 / input.maxGatherRadiusPx)
-      * (input.enabled ?? 1);
+    return (
+      Math.sign(diameterPx) *
+      Math.min(1, (Math.abs(diameterPx) * 0.5) / input.maxGatherRadiusPx) *
+      (input.enabled ?? 1)
+    );
   } catch {
     return 0;
   }
 }
 
-describe("physical CoC scalar expression", () => {
-  it("matches the independent thin-lens oracle across presets, distances, scales, and output sizes", () => {
+describe('physical CoC scalar expression', () => {
+  it('matches the independent thin-lens oracle across presets, distances, scales, and output sizes', () => {
     for (const preset of Object.values(LENS_PRESETS)) {
       for (const opticalScale of [1, 0.04, 0.01]) {
-        for (const [depthM, focusM] of [[180, 260], [260, 260], [410, 260]] as const) {
+        for (const [depthM, focusM] of [
+          [180, 260],
+          [260, 260],
+          [410, 260],
+        ] as const) {
           for (const outputHeightPx of [480, 900, 1440]) {
             const input = {
               depthM,
@@ -129,7 +154,7 @@ describe("physical CoC scalar expression", () => {
     }
   });
 
-  it("keeps sign, normalizes diameter to radius, caps at the gather budget, and honors disable", () => {
+  it('keeps sign, normalizes diameter to radius, caps at the gather budget, and honors disable', () => {
     const base = {
       depthM: 5,
       focusM: 10,
@@ -149,11 +174,12 @@ describe("physical CoC scalar expression", () => {
     expect(far).toBeLessThanOrEqual(1);
     expect(evaluateExpression({ ...base, depthM: 10 })).toBe(0);
     expect(Math.abs(evaluateExpression({ ...base, enabled: 0 }))).toBe(0);
-    expect(Math.abs(evaluateExpression({ ...base, maxGatherRadiusPx: 24 })))
-      .toBeLessThan(Math.abs(near));
+    expect(Math.abs(evaluateExpression({ ...base, maxGatherRadiusPx: 24 }))).toBeLessThan(
+      Math.abs(near),
+    );
   });
 
-  it("returns zero when the modeled object or focus distance is at or inside the focal length", () => {
+  it('returns zero when the modeled object or focus distance is at or inside the focal length', () => {
     const base = {
       depthM: 0.05,
       focusM: 2,

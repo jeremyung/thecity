@@ -32,11 +32,11 @@ claim. Browser worker and frame budgets still need their own measurements.
 After building production WASM with `npm run wasm`:
 
 ```sh
-node scripts/profile-endurance-wasm.mjs /tmp/endurance.json
-node --cpu-prof --cpu-prof-dir=/tmp --cpu-prof-name=endurance.cpuprofile scripts/profile-endurance-wasm.mjs /tmp/endurance-profiled.json
+node scripts/benchmark/profile-endurance-wasm.mjs /tmp/endurance.json
+node --cpu-prof --cpu-prof-dir=/tmp --cpu-prof-name=endurance.cpuprofile scripts/benchmark/profile-endurance-wasm.mjs /tmp/endurance-profiled.json
 ```
 
-The new small runner complements `scripts/profile-mature-wasm.mjs`: it times
+The new small runner complements `scripts/benchmark/profile-mature-wasm.mjs`: it times
 only each `step` call in the simulation sum, avoids intermediate snapshots,
 and separates final serialization/validation timings without a hard-coded
 historical timing baseline. Its assertions mirror the current endurance test.
