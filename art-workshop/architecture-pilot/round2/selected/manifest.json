@@ -1,0 +1,29 @@
+[
+  {
+    "material": "warm-plaster",
+    "source": "hy-image-v3.5-preview--warm-plaster.png",
+    "boundaryMeanDifference": 2.997,
+    "runtimeSide": 512,
+    "tileMeters": 0.4,
+    "normalAndRoughness": "heuristic restrained derivatives",
+    "status": "review-only"
+  },
+  {
+    "material": "cast-concrete",
+    "source": "hy-image-v3.5-preview--cast-concrete.png",
+    "boundaryMeanDifference": 1.58,
+    "runtimeSide": 512,
+    "tileMeters": 0.4,
+    "normalAndRoughness": "heuristic restrained derivatives",
+    "status": "review-only"
+  },
+  {
+    "material": "aged-timber",
+    "source": "qwen-image-3--aged-timber.png",
+    "boundaryMeanDifference": 1.908,
+    "runtimeSide": 512,
+    "tileMeters": 0.4,
+    "normalAndRoughness": "heuristic restrained derivatives",
+    "status": "review-only"
+  }
+]

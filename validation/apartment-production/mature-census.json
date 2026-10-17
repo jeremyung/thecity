@@ -1,0 +1,33 @@
+{
+  "fixture": "tests/fixtures/access-joins/mature-world.json",
+  "method": "Pinned authoritative snapshot decoded with main WASM; mixed-era choices, retained-footprint fallback, real parcel dimensions/stages, camera 240/180/260; only supported modular groups built. CPU only, no GPU frame measurement.",
+  "seed": 87231,
+  "tick": 242000,
+  "buildings": 449,
+  "types": {
+    "shop": 56,
+    "home": 206,
+    "apartment": 87,
+    "office": 46,
+    "cafe": 54
+  },
+  "counts": {
+    "legacy": 387,
+    "midrise:brick": 5,
+    "midrise:courtyard": 9,
+    "midrise:walkup": 6,
+    "midrise:ceramic": 5,
+    "midrise:limestone": 8,
+    "midrise:gallery": 6,
+    "midrise:terrace": 3,
+    "midrise:modern": 6,
+    "midrise:compact": 8,
+    "midrise:urban": 5,
+    "tower:frame": 1
+  },
+  "modularGroups": 62,
+  "p50BuildMs": 4.441832999999974,
+  "p95BuildMs": 11.941708000000006,
+  "maxBuildMs": 32.698125000000005,
+  "triangles": 785032
+}

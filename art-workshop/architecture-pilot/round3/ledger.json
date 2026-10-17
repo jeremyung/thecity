@@ -1,0 +1,327 @@
+{
+  "capUSD": 1,
+  "requests": [
+    {
+      "id": "hy-image-v3.5-preview--old-mineral-plaster--sandbox-dns",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "old-mineral-plaster",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of old but maintained Japanese apartment mineral plaster, muted ivory, dense fine sand, irregular tiny exposed grains and restrained paint wear. No cracks or grime bands.",
+      "status": "skipped-dns",
+      "submittedAt": "2026-10-16T23:54:18.261Z",
+      "estimateUSD": 0.024,
+      "networkError": "ENOTFOUND",
+      "costUSD": 0,
+      "note": "Sandbox DNS failure independently reproduced against public endpoint; request could not reach provider. Retained as unsent attempt."
+    },
+    {
+      "id": "hy-image-v3.5-preview--old-mineral-plaster",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "old-mineral-plaster",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of old but maintained Japanese apartment mineral plaster, muted ivory, dense fine sand, irregular tiny exposed grains and restrained paint wear. No cracks or grime bands.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:54:39.233Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--old-mineral-plaster.png",
+      "seconds": 18.404,
+      "usage": {
+        "prompt_tokens": 152,
+        "completion_tokens": 15000,
+        "total_tokens": 15152,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--old-sand-coat",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "old-sand-coat",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of Japanese 1970s apartment pebble fine sand textured render, pale warm gray beige, tiny rounded aggregate under intact paint. No large stones or shadows.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:54:57.643Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--old-sand-coat.png",
+      "seconds": 19.276,
+      "usage": {
+        "prompt_tokens": 148,
+        "completion_tokens": 15000,
+        "total_tokens": 15148,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--old-concrete",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "old-concrete",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of decades-old maintained fair-faced cement, cool pale gray, tiny pinholes and soft nonuniform mineral speckling. No formwork grid, joints, stains, cracks or bolt holes.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:55:16.929Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--old-concrete.png",
+      "seconds": 15.399,
+      "usage": {
+        "prompt_tokens": 152,
+        "completion_tokens": 15000,
+        "total_tokens": 15152,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--old-brown-ceramic",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "old-brown-ceramic",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of continuous matte russet brown fired ceramic glaze, subtle kiln variation and fine mineral texture. No tiles, mortar, grid, edges or seams: one unbroken material field.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:55:32.337Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--old-brown-ceramic.png",
+      "seconds": 10.789,
+      "usage": {
+        "prompt_tokens": 152,
+        "completion_tokens": 15000,
+        "total_tokens": 15152,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--old-taupe-ceramic",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "old-taupe-ceramic",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of continuous muted taupe glazed ceramic, soft warm gray fine fired clay variation and subdued gloss. No tile boundaries, mortar, grid, objects or reflections.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:55:43.134Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--old-taupe-ceramic.png",
+      "seconds": 15.682,
+      "usage": {
+        "prompt_tokens": 149,
+        "completion_tokens": 15000,
+        "total_tokens": 15149,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--new-ivory-porcelain",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "new-ivory-porcelain",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of pristine satin ivory porcelain exterior cladding, extremely fine compact ceramic grain, restrained off-white mineral variation. No tile boundaries, grout, grid, veins or reflections.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:55:58.820Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--new-ivory-porcelain.png",
+      "seconds": 14.811,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 15000,
+        "total_tokens": 15156,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--new-honed-limestone",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "new-honed-limestone",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of fine honed warm pale limestone architectural cladding, small quiet fossil flecks, subtle warm cream mineral pores, no strong veins, panel edges, joints or lighting.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:56:13.634Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--new-honed-limestone.png",
+      "seconds": 13.678,
+      "usage": {
+        "prompt_tokens": 151,
+        "completion_tokens": 15000,
+        "total_tokens": 15151,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--new-white-precast",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "new-white-precast",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of contemporary white precast architectural concrete, crisp smooth matte warm white cement with microscopic pinholes, almost uniform. No joints, lines, bolt holes, cracks or stains.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:56:27.317Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--new-white-precast.png",
+      "seconds": 17.665,
+      "usage": {
+        "prompt_tokens": 155,
+        "completion_tokens": 15000,
+        "total_tokens": 15155,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--new-bronze-metal",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "new-bronze-metal",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of flat satin dark bronze anodized aluminum, exceptionally fine vertical brushing, subdued brown gray metal color, no reflections, highlights, seams, edges or oxidation blobs.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:56:44.988Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--new-bronze-metal.png",
+      "seconds": 28.811,
+      "usage": {
+        "prompt_tokens": 153,
+        "completion_tokens": 15000,
+        "total_tokens": 15153,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--new-charcoal-ceramic",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "new-charcoal-ceramic",
+      "prompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition.  A 40 cm crop of pristine charcoal gray architectural porcelain, tight smooth matte ceramic fine grain, subtle graphite tonal variation. No tiles, grout, grid, joints, reflections or stains.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T23:57:13.803Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--new-charcoal-ceramic.png",
+      "seconds": 11.438,
+      "usage": {
+        "prompt_tokens": 153,
+        "completion_tokens": 15000,
+        "total_tokens": 15153,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    }
+  ]
+}
