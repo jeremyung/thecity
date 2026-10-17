@@ -20,7 +20,7 @@ export function buildCorporateSkyscraper(b:Building,art:ArtMaterials,options:Bus
  const {installed,framed,complete}=apartmentConstruction(b),w=b.width-1,d=b.depth-2.2,podium=Math.min(6,Math.max(3,Math.floor(b.floors*.1)));
  const metal=art.get('#303b40',.45),silver=art.get('#cecdc2'),core=art.get(r.wall,r.roughness),roof=art.get('#585f5b');
  const tint=form==='rounded'?'#9baeb4':form==='chamfered'?'#497784':form==='crown'?'#476773':'#688b99';
- const glass=(use:'shop'|'office')=>art.shared(`corporate-glass/${tint}/${use}`,()=>windowMaterials(use,{night:art.night,occupancy:art.occupancy},art.toonRamp,tint));
+ const glass=()=>art.shared(`corporate-glass/${tint}`,()=>windowMaterials('office',{night:art.night,occupancy:art.occupancy},art.toonRamp,tint));
  const segments=detail==='close'?6:detail==='district'?4:2,lived=windowLived(b);
  const plates=(f:number)=>{
   if(f<podium)return [{w,d,x:0,z:0,r:Math.min(w,d)*.12}];
@@ -58,7 +58,7 @@ export function buildCorporateSkyscraper(b:Building,art:ArtMaterials,options:Bus
    const use=f<podium?'shop':'office',ph=f<podium?2.86:2.8;
    for(let n=0;n<count;n++){
     const t=(n+.5)/count,x=a.x+dx*t+nx*.018,z=a.z+dz*t+nz*.018,pw=len/count;
-    const g=new THREE.PlaneGeometry(pw,ph);tagWindowPane(g,paneSeed(b.appearance_seed,x,y,z),lived,pw,ph,use);g.rotateY(theta);g.translate(x,y+1.65,z);kit.add(g,glass(use));
+    const g=new THREE.PlaneGeometry(pw,ph);tagWindowPane(g,paneSeed(b.appearance_seed,x,y,z),lived,pw,ph,use);g.rotateY(theta);g.translate(x,y+1.65,z);kit.add(g,glass());
     kit.box(a.x+dx*n/count+nx*.045,y+1.65,a.z+dz*n/count+nz*.045,.055,ph,.09,metal,theta);
    }
    edge(a,c,y+3.12,form==='rounded'?.14:.09,.12,form==='rounded'?silver:metal);

@@ -27,6 +27,7 @@ export class ArtMaterials {
   readonly occupancy={home:uniform(.5),office:uniform(.5),shop:uniform(.5)} as const;
   readonly palette = ['#d8d4c4', '#c2c5ba', '#b8beb8', '#e2d9c6', '#b7ad9f', '#c9c8c1'];
   private style:Style='anime';
+  private glassEnvironment:THREE.Texture|null=null;
   private cache = new Map<string,{anime:Surface,miniature:Surface}>();
   private buildingCache = new Map<string,BuildingSurfaceVariants>();
   private bands:THREE.DataTexture;
@@ -219,13 +220,23 @@ export class ArtMaterials {
 
   /** Toon ramp shared by every Anime surface. */
   get toonRamp(){return this.bands;}
+  /** Borrow the renderer-owned sky texture; glass has its own reflection exposure. */
+  setGlassEnvironment(environment:THREE.Texture|null){
+    if(this.glassEnvironment===environment)return;
+    this.glassEnvironment=environment;
+    for(const pair of this.cache.values())if(pair.miniature.userData.corporateGlass){
+      const material=pair.miniature as THREE.MeshStandardNodeMaterial;
+      const changed=Boolean(material.envMap)!==Boolean(environment);material.envMap=environment;
+      if(changed)material.needsUpdate=true;
+    }
+  }
   /**
    * Cache a style pair under `key` so style switches swap it like any other
    * art material. `create` runs once; later calls return the current style.
    */
   shared(key:string,create:()=>{anime:Surface,miniature:Surface}):Surface{
     let variants=this.cache.get(key);
-    if(!variants){variants=create();variants.anime.userData.artKey=key;variants.miniature.userData.artKey=key;this.cache.set(key,variants);}
+    if(!variants){variants=create();if(variants.miniature.userData.corporateGlass)(variants.miniature as THREE.MeshStandardNodeMaterial).envMap=this.glassEnvironment;variants.anime.userData.artKey=key;variants.miniature.userData.artKey=key;this.cache.set(key,variants);}
     return variants[this.style];
   }
   /** World-space puddle mask shared by the asphalt albedo and the SSR pass. */

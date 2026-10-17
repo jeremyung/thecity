@@ -31,6 +31,7 @@ import { ownedAO as ao } from './postprocessing/owned-ao';
 import { ssr } from 'three/addons/tsl/display/SSRNode.js';
 import { godrays } from 'three/addons/tsl/display/GodraysNode.js';
 import { SkyEnvironment } from './sky-environment';
+import { GlassEnvironment } from './glass-environment';
 import { skyRadiance } from './sky-scattering';
 import { backdropForestMatrices } from './backdrop-forest';
 import { signedCoCDof } from './postprocessing/SignedCoCDepthOfFieldNode.js';
@@ -145,6 +146,7 @@ export class CityRenderer {
   private shaftColor=uniform(new THREE.Color(0,0,0));
   private shaftStrength=0;
   private skyEnvironment:SkyEnvironment|null=null;
+  private glassEnvironment:GlassEnvironment|null=null;
   private renderStartup:RenderStartupLifecycle|null=null;
   private scenePass:ReturnType<typeof pass>|null=null;
   private focus=uniform(300);
@@ -301,7 +303,7 @@ export class CityRenderer {
     const cloudRelief=smoothstep(-.04,.2,cloudField.add(direction.y.mul(.13)));
     const cloudPaint=mix(this.skyCloudShade,this.skyCloud,cloudRelief);
     (sky.material as THREE.MeshBasicNodeMaterial).colorNode=mix(skyBase,cloudPaint,clouds);
-    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);this.skyEnvironment=new SkyEnvironment(sky);
+    (sky.material as THREE.MeshBasicNodeMaterial).fog=false;sky.renderOrder=-10;this.scene.add(sky);this.skyEnvironment=new SkyEnvironment(sky);this.glassEnvironment=new GlassEnvironment(sky);
     this.sunDisc=new THREE.Mesh(new THREE.SphereGeometry(15,16,8),new THREE.MeshBasicNodeMaterial({color:'#ffe5bc',fog:false}));this.scene.add(this.sunDisc);
     this.moonDisc=new THREE.Mesh(new THREE.SphereGeometry(7,16,8),new THREE.MeshBasicNodeMaterial({color:'#cbdbe2',fog:false}));this.scene.add(this.moonDisc);
     const rainPositions:number[]=[],rainPhases:number[]=[];const rainRandom=random(123);
@@ -1224,6 +1226,8 @@ export class CityRenderer {
     this.hemi.color.lerp(new THREE.Color().copy(top).lerp(low,.55),.4);
     const environment=this.skyEnvironment?.update(this.renderer,performance.now(),[top,low,this.skyCloud.value]);
     if(environment&&this.scene.environment!==environment)this.scene.environment=environment;
+    const glassEnvironment=this.style==='miniature'&&this.businessChoices.size&&[...this.businessChoices.values()].some(r=>r.towerForm)?this.glassEnvironment?.update(this.renderer,performance.now(),this.worldState?.buildings??[],this.camera.position,[top,low,this.skyCloud.value],1-this.daylight):null;
+    this.apartmentResources.art.setGlassEnvironment(glassEnvironment??environment??null);
     // The environment adds to the hemisphere fill on standard surfaces; trade
     // some of that fill for sky-shaped ambient rather than stacking both.
     this.scene.environmentIntensity=.1+this.daylight*.16;
@@ -1272,7 +1276,7 @@ export class CityRenderer {
     const bounds=this.renderer.domElement.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1),this.camera);
     const hits=ray.intersectObjects([this.chunks.root,...this.actorIds.keys()],true);const hit=hits.find(candidate=>{for(let object:THREE.Object3D|null=candidate.object;object;object=object.parent)if(!object.visible)return false;return true;});if(!hit)return;const building=this.chunks.buildingAt(hit);if(building!==undefined)this.onPick?.(building,'building');else if(hit.instanceId!==undefined){const id=this.actorIds.get(hit.object)?.[hit.instanceId];if(id!==undefined)this.onPick?.(id,'traveler');}
   };
-  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment;this.skyEnvironment=null;this.retire(()=>environment?.dispose());const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.apartmentResources.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
+  dispose(){this.disposed=true;document.removeEventListener('visibilitychange',this.onVisibility);this.renderStartup?.dispose();this.renderer.setAnimationLoop(null);this.resize.disconnect();this.director.dispose();this.renderer.domElement.removeEventListener('pointerdown',this.pointerDown);this.renderer.domElement.removeEventListener('pointerup',this.pointerUp);this.resetWorld();this.streetLighting?.root.removeFromParent();this.retire(()=>this.streetLighting?.dispose());this.umbrellas.root.removeFromParent();this.retire(()=>this.umbrellas.dispose());this.buses.root.removeFromParent();this.retire(()=>this.buses.dispose());this.trains.root.removeFromParent();this.retire(()=>this.trains.dispose());this.fleet.root.removeFromParent();this.retire(()=>this.fleet.dispose());this.disposePipeline();this.scene.environment=null;const environment=this.skyEnvironment,glassEnvironment=this.glassEnvironment;this.skyEnvironment=null;this.glassEnvironment=null;this.retire(()=>{environment?.dispose();glassEnvironment?.dispose();});const materials=new Set<THREE.Material>(),geometries=new Set<THREE.BufferGeometry>();this.scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(!m.userData.artKey&&m!==this.art.contours)materials.add(m);}});this.retire(()=>{for(const g of geometries)g.dispose();for(const m of materials)m.dispose();this.apartmentResources.dispose();this.art.dispose();this.renderer.dispose();});this.renderer.domElement.remove();}
 }
 
 function distanceToSegment(p:Point,a:Point,b:Point){const dx=b.x-a.x,dz=b.z-a.z;const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}

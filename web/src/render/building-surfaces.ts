@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import {
-  abs, attribute, cameraPosition, clamp, color, cross, dot, float, floor, fract, fwidth, max, min, mix, mx_noise_float, normalize,
+  abs, attribute, bumpMap, cameraPosition, clamp, color, cross, dot, float, floor, fract, fwidth, max, min, mix, mx_noise_float, normalize,
   normalWorld, positionWorld, select, sin, smoothstep, step, uv, vec3, vec4,
 } from 'three/tsl';
 import type { Building } from '../types';
@@ -203,7 +203,7 @@ const choose3 = (h: FloatNode, a: Vec3Node, b: Vec3Node, c: Vec3Node) => select(
  * blinds, its light, and the sky reflected in the glass. Horizontal faces of
  * the pane box show only the reflection.
  */
-export function windowRadiance(u: WindowUniforms, corporateTint?:string): Vec3Node {
+export function windowRadiance(u: WindowUniforms, corporateTint?:string, environmentReflection=false): Vec3Node {
   const info = vec4(attribute(WINDOW_ATTRIBUTE, 'vec4'));
   // Interpolating a per-pane constant can wobble by an ulp between pixels; the
   // hash would amplify that into speckle, so snap the seed before using it.
@@ -308,23 +308,34 @@ export function windowRadiance(u: WindowUniforms, corporateTint?:string): Vec3No
 
   // Glass: tinted transmission and a Fresnel sky reflection.
   const facing = abs(dot(view, n));
-  const reflectance=corporateTint?float(.52):select(home,float(.12),select(office,float(.25),float(.16)));
-  const fresnel = clamp(facing.oneMinus().pow(5).mul(.72).add(reflectance), 0, 1);
+  const reflectance=corporateTint?float(.14):select(home,float(.12),select(office,float(.25),float(.16)));
+  const fresnel = clamp(facing.oneMinus().pow(5).mul(corporateTint?.86:.72).add(reflectance), 0, 1);
   const incident = view, reflected = incident.sub(n.mul(dot(incident, n).mul(2)));
   const sky = smoothstep(float(-.12), float(.55), reflected.y);
   const reflection = mix(mix(vec3(color('#4f676e')), vec3(color('#c4d8df')), sky), mix(vec3(color('#090f1c')), vec3(color('#23364c')), sky), u.night).mul(fresnel);
   const tint=select(home,vec3(.78,.86,.86),select(office,choose3(h(12),vec3(.42,.62,.7),vec3(.5,.64,.68),vec3(.58,.65,.65)),vec3(.64,.74,.75)));
   const through = interior.mul(corporateTint?vec3(color(corporateTint)):tint).mul(fresnel.oneMinus()).mul(corporateTint?mix(float(.025),float(.8),u.night):float(1));
-  return mix(reflection, through.add(reflection), verticalMask());
+  return environmentReflection?through.mul(verticalMask()):mix(reflection, through.add(reflection), verticalMask());
 }
 
 /** Window pane materials for both styles; the pane colour is the glass itself, the room is emission. */
 export function windowMaterials(activity: WindowActivity, uniforms: WindowUniforms, toonRamp: THREE.Texture, corporateTint?:string) {
   const radiance = windowRadiance(uniforms,corporateTint);
   const anime = new THREE.MeshToonNodeMaterial({ color: '#1d2629', gradientMap: toonRamp });
-  const miniature = new THREE.MeshStandardNodeMaterial({ color: '#172023', roughness: .08, metalness: 0 });
+  const miniature = corporateTint
+    ? new THREE.MeshPhysicalNodeMaterial({color:new THREE.Color(corporateTint).multiplyScalar(.12),roughness:.085,metalness:0,ior:2.2,specularIntensity:1,envMapIntensity:2,specularColor:new THREE.Color('#ffffff').lerp(new THREE.Color(corporateTint),.65)})
+    : new THREE.MeshStandardNodeMaterial({ color: '#172023', roughness: .08, metalness: 0 });
+  if(corporateTint){
+    // The renderer owns a shared city reflection environment. Reflection belongs
+    // to the physical BRDF, not emission; interior mapping supplies only the room.
+    miniature.emissiveNode=windowRadiance(uniforms,corporateTint,true);
+    const panel=floor(positionWorld.y.div(3.25)).mul(.73).add(floor(positionWorld.x.mul(.6)).mul(.31)).add(floor(positionWorld.z.mul(.6)).mul(.43));
+    miniature.roughnessNode=hash(panel).mul(.025).add(.065);
+    // Millimetric facade bow: smooth in world space, stable across geometry LODs.
+    miniature.normalNode=bumpMap(mx_noise_float(positionWorld.mul(vec3(.12,.2,.12))),float(.055));
+  }
   for (const material of [anime, miniature]) {
-    (material as unknown as { emissiveNode: Vec3Node }).emissiveNode = radiance;
+    if(material===anime||!corporateTint)(material as unknown as { emissiveNode: Vec3Node }).emissiveNode = radiance;
     material.userData.windowPane = true;
     if(corporateTint)material.userData.corporateGlass=true;
     material.userData.windowActivity = activity;
