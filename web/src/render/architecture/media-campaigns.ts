@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import {texture,uv,mix,fract,smoothstep,sin,vec2,fwidth} from 'three/tsl';
+import {texture,uv,mix,fract,smoothstep,sin,vec2,vec3,floor,fwidth} from 'three/tsl';
 import {canvasTexture,type ArtMaterials} from '../materials';
 export const MEDIA_CAMPAIGNS=[
  {name:'星屑サイダー',en:'HOSHIKUZU CIDER',line:['ひとくち、夏になる。','街に、はじける。'],bg:'#10384d',ink:'#fff4d7',accent:'#f2bb45',spill:'#80c9d5',kind:'drink'},
@@ -49,12 +49,27 @@ export function flagshipCampaignSurface(art:ArtMaterials,program=0){const varian
  const blend=smoothstep(.43,.49,phase).mul(smoothstep(.93,.99,phase).oneMinus());
  const sample=(scene:number)=>{const c=campaignCell(variant,scene);return texture(atlas,p.mul(vec2(c.u1-c.u0,c.v1-c.v0)).add(vec2(c.u0,c.v0))).rgb;};
  const poster=mix(sample(0),sample(1),blend);
- // Cabinet boundaries remain low contrast; derivative-aware lines avoid distant shimmer.
- const cell=fract(p.mul(vec2(12,8))),edge=cell.x.min(cell.y).min(cell.x.oneMinus()).min(cell.y.oneMinus());
- const joints=smoothstep(0,fwidth(edge).mul(1.5).add(.002),edge).mul(.025).add(.975);
- const sweep=smoothstep(0,.035,p.x.sub(fract(art.displayTime.mul(.045))).abs()).oneMinus().mul(.035);
- const picture=poster.mul(joints).mul(sin(art.displayTime.mul(.2)).mul(.015).add(.985)).add(poster.mul(sweep)).mul(art.night.mul(.18).add(.85)).mul(art.litShop);
- const anime=new THREE.MeshToonNodeMaterial({color:'#000000',gradientMap:art.toonRamp}),miniature=new THREE.MeshStandardNodeMaterial({color:'#000000',roughness:.45});
+ // Stable cabinet calibration, separate from the advertisement. Derivatives use
+ // unwrapped coordinates so seams cannot produce false footprints at each repeat.
+ const cabinetUV=p.mul(vec2(12,8)),cabinet=floor(cabinetUV),cell=fract(cabinetUV);
+ const hash=fract(sin(cabinet.x.mul(127.1).add(cabinet.y.mul(311.7)).add(variant*19.3)).mul(43758.5453));
+ const tint=fract(sin(cabinet.x.mul(269.5).add(cabinet.y.mul(183.3))).mul(43758.5453));
+ const footprint=fwidth(cabinetUV).x.max(fwidth(cabinetUV).y);
+ const cabinetVisibility=smoothstep(.2,.7,footprint).oneMinus();
+ const edge=cell.x.min(cell.y).min(cell.x.oneMinus()).min(cell.y.oneMinus());
+ const seam=smoothstep(.008,footprint.mul(.8).add(.01),edge);
+ const joints=mix(1,seam.mul(.12).add(.88),cabinetVisibility);
+ const calibration=mix(vec3(1),vec3(hash.mul(.07).add(.945),hash.mul(.06).add(.95),tint.mul(.065).add(.945)),cabinetVisibility);
+ // Fine emitters resolve only in close views. Fade to their average before
+ // minification; no scanline animation, random flicker or additional texture.
+ const pixelUV=p.mul(vec2(768,384)),pixel=fract(pixelUV);
+ const pixelFootprint=fwidth(pixelUV).x.max(fwidth(pixelUV).y);
+ const pixelVisibility=smoothstep(.3,.85,pixelFootprint).oneMinus();
+ const pixelEdge=pixel.x.min(pixel.y).min(pixel.x.oneMinus()).min(pixel.y.oneMinus());
+ const emitter=smoothstep(.08,.2,pixelEdge);
+ const emitters=mix(1,emitter.mul(.32).add(.76),pixelVisibility);
+ const picture=poster.mul(joints).mul(calibration).mul(emitters).mul(art.night.mul(.18).add(.85)).mul(art.litShop);
+ const anime=new THREE.MeshToonNodeMaterial({color:'#070b0d',gradientMap:art.toonRamp}),miniature=new THREE.MeshStandardNodeMaterial({color:'#070b0d',roughness:.64});
  for(const m of [anime,miniature]){(m as unknown as {emissiveNode:typeof picture}).emissiveNode=picture;m.userData.flagshipCampaign=variant;}
  return {anime,miniature};
 });}
