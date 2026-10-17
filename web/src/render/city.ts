@@ -78,8 +78,6 @@ import { TrainFleet, trainWorldWithInfrastructure } from './trains';
 import { addRailCorridor } from './rail-corridor';
 import { sampledRail, type RailPath } from './rail-path';
 import { RAIL_CENTER_OFFSET, RAIL_HEAD_WIDTH, RAIL_HEAD_Y } from './rail-profile';
-import { BuildingAccessPaths } from './building-access';
-import { RearExtensions } from './rear-extensions';
 import { ConstructionBatches } from './construction-batches';
 import { buildExtendedBuilding } from './extended-building';
 import {
@@ -132,6 +130,8 @@ import type { CameraRig, CameraRigFactory } from './camera-rig';
 import { RoadsLayer } from './roads-layer';
 import { LandscapeLayer } from './landscape-layer';
 import { ActorsLayer } from './actors-layer';
+import type { LayerHost, RenderLayer } from './layer';
+import { RENDER_LAYERS } from './layers';
 import { dampFocusDepth, focusDepthFromViewZ } from '../optics/focus';
 import type { LensPresetId } from '../optics/lens';
 import { LENS_PRESETS, verticalFovDegrees } from '../optics/lens';
@@ -234,7 +234,7 @@ export function random(seed: number) {
   };
 }
 
-export class CityRenderer {
+export class CityRenderer implements LayerHost {
   readonly landscape = new LandscapeLayer(this);
   readonly roadsLayer = new RoadsLayer(this);
   // Explicit development study; never selected by production or a saved world.
@@ -323,23 +323,7 @@ export class CityRenderer {
   private parkKey = '';
   /** Latest per-building signage context; part of each building's render signature. */
   private signage = new Map<number, SignageContext>();
-  private accessPaths = new BuildingAccessPaths(this.art, (release) => this.retire(release));
-  private rearExtensions = new RearExtensions(
-    this.art,
-    (release) => this.retire(release),
-    (building) => {
-      const current = this.buildings.get(building.id);
-      const original = this.worldState?.building_original_footprints?.find(
-        (form) => form.building_id === building.id,
-      );
-      return (
-        !!current &&
-        current.signature ===
-          buildingRenderSignature(building, original, this.signage.get(building.id)) &&
-        this.chunks.isSourceVisible(building.id, current.source)
-      );
-    },
-  );
+  private readonly layers: RenderLayer[] = RENDER_LAYERS.map((create) => create(this));
   private umbrellas = new Umbrellas(2000, (hex) => this.art.get(hex));
   private lastTick = 0;
   hour = 6;
@@ -418,8 +402,7 @@ export class CityRenderer {
       this.actors.buses.root,
       this.actors.trains.root,
       this.actors.fleet.root,
-      this.accessPaths.root,
-      this.rearExtensions.root,
+      ...this.layers.flatMap((layer) => (layer.root ? [layer.root] : [])),
       this.hemi,
       this.sun,
     );
@@ -899,8 +882,7 @@ export class CityRenderer {
     this.actors.trains.setWorld(
       trainWorldWithInfrastructure(world, this.roadsLayer.committedRoadWorld),
     );
-    this.accessPaths.setWorld(world);
-    this.rearExtensions.setWorld(world);
+    for (const layer of this.layers) layer.setWorld?.(world);
 
     const signatures = roadBatchSignatures(world);
     const signature = signatures.completed + signatures.construction;
@@ -978,8 +960,7 @@ export class CityRenderer {
     this.actors.buses.reset();
     this.actors.fleet.reset();
     this.actors.trains.reset();
-    this.accessPaths.reset();
-    this.rearExtensions.reset();
+    for (const layer of this.layers) layer.reset?.();
     this.actors.umbrellaCount = 0;
     this.qualityController.reset();
     this.chunks.clear();
@@ -1068,7 +1049,7 @@ export class CityRenderer {
     this.updateBuildingBatches();
     this.sidewalks.update();
     this.roadsLayer.updateRoads();
-    if (this.worldState) this.rearExtensions.flushCompleted(this.worldState);
+    for (const layer of this.layers) layer.frame?.(this.worldState);
     this.actors.updateActors(now);
     this.rig.update(dt, now / 1000);
     const activeLens = LENS_PRESETS[this.rig.lens];
@@ -1360,6 +1341,19 @@ export class CityRenderer {
     this.renderer.toneMappingExposure = 1;
   }
   /** Read-only presentation state for consumers outside the renderer (audio). */
+  isBuildingVisible(building: Building): boolean {
+    const current = this.buildings.get(building.id);
+    const original = this.worldState?.building_original_footprints?.find(
+      (form) => form.building_id === building.id,
+    );
+    return (
+      !!current &&
+      current.signature ===
+        buildingRenderSignature(building, original, this.signage.get(building.id)) &&
+      this.chunks.isSourceVisible(building.id, current.source)
+    );
+  }
+
   presentationView(): PresentationView {
     return {
       world: this.worldState,
@@ -1416,6 +1410,10 @@ export class CityRenderer {
     this.retire(() => this.roadsLayer.streetLighting?.dispose());
     this.umbrellas.root.removeFromParent();
     this.retire(() => this.umbrellas.dispose());
+    for (const layer of this.layers) {
+      layer.root?.removeFromParent();
+      if (layer.dispose) this.retire(() => layer.dispose?.());
+    }
     this.actors.buses.root.removeFromParent();
     this.retire(() => this.actors.buses.dispose());
     this.actors.trains.root.removeFromParent();

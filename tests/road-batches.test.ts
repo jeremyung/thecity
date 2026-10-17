@@ -134,8 +134,7 @@ function harness() {
   renderer.rig = { world: vi.fn() };
   renderer.actors.buses = { setWorld: vi.fn() };
   renderer.actors.trains = { setWorld: vi.fn() };
-  renderer.accessPaths = { setWorld: vi.fn() };
-  renderer.rearExtensions = { setWorld: vi.fn() };
+  renderer.layers = [];
   renderer.sidewalks = { setWorld: vi.fn() };
   renderer.chunks = { remove: vi.fn() };
   renderer.groundSignature = JSON.stringify([]);

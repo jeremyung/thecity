@@ -87,8 +87,7 @@ function rendererHarness() {
   renderer.sidewalks = { setWorld: vi.fn() };
   renderer.actors.buses = { setWorld: vi.fn() };
   renderer.actors.trains = { setWorld: vi.fn() };
-  renderer.accessPaths = { setWorld: vi.fn() };
-  renderer.rearExtensions = { setWorld: vi.fn() };
+  renderer.layers = [];
   renderer.landscape.updateTrees = vi.fn();
   renderer.roadsLayer.rebuildRoads = vi.fn();
   renderer.pendingCompiles = 0;
