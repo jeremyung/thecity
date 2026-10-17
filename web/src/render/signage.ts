@@ -209,12 +209,12 @@ export function canHostFacadeFeature(b: Building) {
  * Up to six station-area buildings carry a podium display, nearest first and
  * at least 30 m apart. Ranks alternate video wall and printed ad.
  */
-export function selectFacadeFeatures(world: Pick<World, 'nodes' | 'buildings'>): Map<number, FacadeFeature> {
+export function selectFacadeFeatures(world: Pick<World, 'nodes' | 'buildings'>, eligible?:ReadonlySet<number>): Map<number, FacadeFeature> {
   const result = new Map<number, FacadeFeature>();
   const station = world.nodes.find(node => node.kind === 'station');
   if (!station) return result;
   const chosen: Building[] = [];
-  const candidates = world.buildings.filter(canHostFacadeFeature)
+  const candidates = world.buildings.filter(b=>canHostFacadeFeature(b)&&(!eligible||eligible.has(b.id)))
     .map(b => ({ b, distance: Math.hypot(b.x - station.x, b.z - station.z) }))
     .filter(entry => entry.distance <= FEATURE_RADIUS)
     .sort((a, b) => a.distance - b.distance || a.b.id - b.b.id);
@@ -228,9 +228,9 @@ export function selectFacadeFeatures(world: Pick<World, 'nodes' | 'buildings'>):
 }
 
 /** Per-building signage context for one world snapshot. */
-export function signageContexts(world: Pick<World, 'nodes' | 'buildings'>): Map<number, SignageContext> {
+export function signageContexts(world: Pick<World, 'nodes' | 'buildings'>, eligible?:ReadonlySet<number>): Map<number, SignageContext> {
   const station = world.nodes.find(node => node.kind === 'station');
-  const features = selectFacadeFeatures(world);
+  const features = selectFacadeFeatures(world,eligible);
   const contexts = new Map<number, SignageContext>();
   for (const b of world.buildings) {
     const proximity = station ? stationProximity(Math.hypot(b.x - station.x, b.z - station.z)) : 0;

@@ -1,7 +1,7 @@
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import * as THREE from 'three/webgpu';
 import {ApartmentResources} from '../web/src/render/architecture/resources';
-import {BUSINESS_RECIPES,businessPool,selectBusinessRecipe,resolveBusinessRecipes,parseDisplayMode} from '../web/src/render/architecture/business-recipes';
+import {BUSINESS_RECIPES,businessPool,selectBusinessRecipe,resolveBusinessRecipes,parseDisplayMode,businessCanHostAdvertising} from '../web/src/render/architecture/business-recipes';
 import {buildBusinessBuilding} from '../web/src/render/architecture/business';
 import {businessCityStudy} from '../web/src/render/architecture/business-study';
 import {STOREFRONT_TENANTS,storefrontCell,storefrontSurface} from '../web/src/render/architecture/business-signs';
@@ -14,9 +14,9 @@ beforeEach(()=>{vi.stubGlobal('document',{createElement:()=>({width:0,height:0,g
 afterEach(()=>vi.unstubAllGlobals());
 const fixture=()=>businessCityStudy();
 it('makes every recipe reachable via the production selector and preserves snapshot data',()=>{
- const world=fixture(),before=JSON.stringify(world);expect(world.buildings).toHaveLength(15);
- expect(new Set(world.buildings.map(b=>selectBusinessRecipe(b)?.id)).size).toBe(15);
- for(const family of ['office','commercial','mixed-use'] as const)expect(BUSINESS_RECIPES.filter(r=>r.family===family)).toHaveLength(5);
+ const world=fixture(),before=JSON.stringify(world);expect(world.buildings).toHaveLength(30);
+ expect(new Set(world.buildings.map(b=>selectBusinessRecipe(b)?.id)).size).toBe(30);
+ for(const family of ['office','commercial','mixed-use'] as const)for(const era of ['older','contemporary'])expect(BUSINESS_RECIPES.filter(r=>r.family===family&&r.era===era)).toHaveLength(5);
  for(const b of world.buildings){expect(selectBusinessRecipe(b,'legacy')).toBeUndefined();expect(selectBusinessRecipe(b,'mixed',true)).toBeUndefined();for(const era of ['older','contemporary'] as const)for(const r of businessPool(b,era))expect(r.era).toBe(era);}
  expect(JSON.stringify(world)).toBe(before);
 });
@@ -42,7 +42,7 @@ it('fits narrow parcels and varies facade geometry and entrances across recipes 
 it('uses separate home/office/retail room schedules and keeps unfinished and vacant rooms dark',()=>{
  const owner=new ApartmentResources();try{for(const b of fixture().buildings)for(const stage of ['open','surface','demolition'])for(const active of [true,false]){
   const g=buildBusinessBuilding({...b,stage,business_active:active,occupancy:active?50:0,progress:.8},owner.art,{recipe:selectBusinessRecipe(b)!,detail:'far'})!;
-  g.traverse(o=>{if(!(o instanceof THREE.Mesh)||(o.material as THREE.Material).userData.windowPane!==true)return;const a=o.geometry.getAttribute(WINDOW_ATTRIBUTE);expect(a).toBeDefined();for(let i=0;i<a.count;i++){expect(a.getY(i)%2).toBe(stage==='open'&&active?1:0);expect(a.getZ(i)).toBeGreaterThan(0);expect(a.getW(i)).toBeGreaterThan(0);}});disposeGroup(g);
+  g.traverse(o=>{if(!(o instanceof THREE.Mesh)||(o.material as THREE.Material).userData.windowPane!==true)return;const a=o.geometry.getAttribute(WINDOW_ATTRIBUTE);expect(a).toBeDefined();const expected=stage==='open'&&active?1:0;let valid=true;for(let i=0;i<a.count;i++)valid&&=a.getY(i)%2===expected&&a.getZ(i)>0&&a.getW(i)>0;expect(valid).toBe(true);});disposeGroup(g);
  }}finally{owner.dispose();}
 });
 it('removes floors monotonically during demolition and never leaves signs or a crown behind',()=>{
@@ -62,4 +62,38 @@ it('uses a bounded 24-tenant atlas with gutters and preserves old preference def
  expect(STOREFRONT_TENANTS).toHaveLength(24);for(let i=0;i<24;i++){const c=storefrontCell(i);expect(c.u0).toBeGreaterThan(0);expect(c.u1).toBeLessThan(1);expect(c.v0).toBeGreaterThan(0);expect(c.v1).toBeLessThan(1);}expect(storefrontCell(-1)).toEqual(storefrontCell(23));
  expect(parseViewerPreferences(null).commercialDisplays).toBe('animated');expect(parseViewerPreferences(JSON.stringify({version:1,commercialDisplays:'static'})).commercialDisplays).toBe('static');expect(parseDisplayMode('invalid')).toBe('animated');
  const world=fixture();expect([...signageContexts(world).values()].filter(c=>c.feature).length).toBeLessThanOrEqual(6);
+});
+it('reviews exactly five reachable designs for each family and era',()=>{
+ for(const family of ['office','commercial','mixed-use'] as const)for(const era of ['older','contemporary'] as const){
+  const world=businessCityStudy(32,family,era);expect(world.buildings).toHaveLength(5);
+  expect(new Set(world.buildings.map(b=>selectBusinessRecipe(b,era)?.id)).size).toBe(5);
+  for(const b of world.buildings)expect(selectBusinessRecipe(b,era)?.era).toBe(era);
+ }
+});
+it('varies older tenant widths, preserves nonoverlap and reserves separate upper-floor access',()=>{
+ const owner=new ApartmentResources();try{
+  const widths=new Set<string>();for(const source of fixture().buildings){const recipe=selectBusinessRecipe(source)!;
+   const g=buildBusinessBuilding(source,owner.art,{recipe,detail:'far'})!,meta=g.userData.businessArchitecture,slots=meta.frontageSlots as {x:number;width:number}[];
+   for(let i=0;i<slots.length;i++){expect(slots[i].width).toBeGreaterThan(0);if(i)expect(slots[i].x-slots[i].width/2).toBeCloseTo(slots[i-1].x+slots[i-1].width/2,5);}
+   if(recipe.family==='mixed-use'&&recipe.retailFloors>0){const left=slots[0].x-slots[0].width/2,right=slots.at(-1)!.x+slots.at(-1)!.width/2;expect(meta.entryX<left||meta.entryX>right).toBe(true);}
+   if(recipe.era==='older'&&slots.length>1)widths.add(slots.map(s=>s.width.toFixed(2)).join(':'));
+   if(['screen','curtain','department'].includes(recipe.form))expect(slots).toHaveLength(1);
+   disposeGroup(g);
+  }expect(widths.size).toBeGreaterThan(3);
+ }finally{owner.dispose();}
+});
+it('fits varied generated heights and widths without negative meshes or escaping the lot',()=>{
+ const owner=new ApartmentResources();try{for(const recipe of BUSINESS_RECIPES)for(const [width,depth,floors] of [[5,6,1],[8,12,4],[18,20,12],[35,28,35],[90,80,60]]){
+  const b={...fixture().buildings[0],width,depth,floors},g=buildBusinessBuilding(b,owner.art,{recipe,detail:'far'})!,box=new THREE.Box3().setFromObject(g);
+  expect(box.min.x).toBeGreaterThanOrEqual(-width/2-.001);expect(box.max.x).toBeLessThanOrEqual(width/2+.001);expect(box.min.z).toBeGreaterThanOrEqual(-depth/2-.001);expect(box.max.z).toBeLessThanOrEqual(depth/2+.001);
+  g.traverse(o=>{if(o instanceof THREE.Mesh)expect(Array.from(o.geometry.getAttribute('position').array).every(Number.isFinite)).toBe(true);});disposeGroup(g);
+ }}finally{owner.dispose();}
+},30000);
+
+it('reserves city advertising slots for media and tenant facades instead of restrained showrooms',()=>{
+ const world=fixture(),choices=resolveBusinessRecipes(world.buildings,'mixed'),eligible=new Set(world.buildings.filter(b=>businessCanHostAdvertising(choices.get(b.id)!)).map(b=>b.id));
+ const contexts=signageContexts(world,eligible);
+ for(const [id,context] of contexts)if(context.feature)expect(eligible.has(id)).toBe(true);
+ for(const recipe of BUSINESS_RECIPES.filter(r=>r.era==='contemporary'&&['screen','fins','curtain','stepped'].includes(r.form)))expect(businessCanHostAdvertising(recipe)).toBe(false);
+ expect(businessCanHostAdvertising(BUSINESS_RECIPES.find(r=>r.id==='media-corner')!)).toBe(true);
 });

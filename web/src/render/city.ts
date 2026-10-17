@@ -1,5 +1,5 @@
 import {buildBusinessBuilding} from './architecture/business';
-import {resolveBusinessRecipes,BUSINESS_RECIPE_VERSION,parseDisplayMode,type BusinessRecipe,type DisplayMode} from './architecture/business-recipes';
+import {resolveBusinessRecipes,businessCanHostAdvertising,BUSINESS_RECIPE_VERSION,parseDisplayMode,type BusinessRecipe,type DisplayMode} from './architecture/business-recipes';
 import {selectApartmentArchitecture,resolveApartmentArchitectures,type ApartmentArchitecture,apartmentArchitectureKey,buildSelectedApartment,parseApartmentEra,type ApartmentEra} from './architecture/era';
 import {apartmentPhase,APARTMENT_RECIPE_VERSION} from './architecture/recipes';
 import {ApartmentResources} from './architecture/resources';
@@ -545,7 +545,8 @@ export class CityRenderer {
     const originals=new Map((world.building_original_footprints??[]).map(original=>[original.building_id,original]));
     const layout=world.buildings.map(b=>`${b.id}:${b.kind}:${b.anchor}:${b.appearance_seed}:${b.floors}:${b.width}:${b.depth}:${b.x}:${b.z}:${b.stage}:${originals.has(b.id)}`).join('|');
     if(layout!==this.apartmentLayout){this.apartmentLayout=layout;this.apartmentChoices=resolveApartmentArchitectures(world.buildings,this.apartmentEra,new Set(originals.keys()));this.businessChoices=resolveBusinessRecipes(world.buildings,this.apartmentEra,new Set(originals.keys()));}
-    const signage=this.signage=signageContexts(world);
+    const mediaEligible=new Set(world.buildings.filter(b=>{const recipe=this.businessChoices.get(b.id);return !recipe||businessCanHostAdvertising(recipe);}).map(b=>b.id));
+    const signage=this.signage=signageContexts(world,mediaEligible);
     for(const b of world.buildings){
       const original=originals.get(b.id);
       const context=signage.get(b.id);

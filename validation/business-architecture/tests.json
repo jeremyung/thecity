@@ -23,5 +23,15 @@
     "passed": 14,
     "failed": 0,
     "total": 14
+  },
+  "business-realism-full": {
+    "passed": 777,
+    "failed": 0,
+    "total": 777
+  },
+  "business-realism-release": {
+    "passed": 55,
+    "failed": 0,
+    "total": 55
   }
 }

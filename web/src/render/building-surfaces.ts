@@ -252,7 +252,12 @@ export function windowRadiance(u: WindowUniforms): Vec3Node {
   const shelfHeight=hy.sub(yMin),shelf=back.and(shelfHeight.mod(.58).lessThan(.055)).and(shelfHeight.lessThan(2.1));
   const goods=back.and(shelfHeight.mod(.58).greaterThan(.08)).and(shelfHeight.mod(.58).lessThan(.44)).and(shelfHeight.lessThan(2.1)).and(hx.mul(4).fract().lessThan(.78));
   const goodsColor=choose3(fract(floor(hx.mul(4)).mul(.37).add(h(10))),vec3(color('#bd7956')),vec3(color('#8caa8d')),vec3(color('#d3bc79')));
-  const retailAlbedo=select(shelf,vec3(color('#5d5145')),select(goods,goodsColor,albedo));
+  const stockedShelves=select(shelf,vec3(color('#5d5145')),select(goods,goodsColor,albedo));
+  const counter=back.and(shelfHeight.lessThan(.95)),display=back.and(shelfHeight.greaterThan(.95)).and(shelfHeight.lessThan(1.45)).and(hx.mul(1.4).fract().lessThan(.45));
+  const cafeInterior=select(counter,vec3(color('#8c6950')),select(display,vec3(color('#d3bc79')),albedo));
+  const garment=back.and(shelfHeight.greaterThan(.65)).and(shelfHeight.lessThan(1.8)).and(hx.mul(2).fract().lessThan(.72));
+  const boutiqueInterior=select(garment,goodsColor,albedo);
+  const retailAlbedo=select(h(11).lessThan(.4),stockedShelves,select(h(11).lessThan(.7),cafeInterior,boutiqueInterior));
   albedo = select(home, select(inFurniture, vec3(color('#5b4636')), albedo), select(office,select(inPartition, vec3(color('#8a9094')), albedo),retailAlbedo));
   albedo = mix(vec3(color('#bdbcb6')).mul(select(onFloor, float(.62), float(1))), albedo, lived);
   const geometryShade = select(back, float(1), select(onFloor, float(.74), select(onCeiling, float(.92), float(.8))))
@@ -303,11 +308,13 @@ export function windowRadiance(u: WindowUniforms): Vec3Node {
 
   // Glass: tinted transmission and a Fresnel sky reflection.
   const facing = abs(dot(view, n));
-  const fresnel = clamp(facing.oneMinus().pow(5).mul(.72).add(.12), 0, 1);
+  const reflectance=select(home,float(.12),select(office,float(.25),float(.16)));
+  const fresnel = clamp(facing.oneMinus().pow(5).mul(.72).add(reflectance), 0, 1);
   const incident = view, reflected = incident.sub(n.mul(dot(incident, n).mul(2)));
   const sky = smoothstep(float(-.12), float(.55), reflected.y);
   const reflection = mix(mix(vec3(color('#4f676e')), vec3(color('#c4d8df')), sky), mix(vec3(color('#090f1c')), vec3(color('#23364c')), sky), u.night).mul(fresnel);
-  const through = interior.mul(vec3(.78, .86, .86)).mul(fresnel.oneMinus());
+  const tint=select(home,vec3(.78,.86,.86),select(office,choose3(h(12),vec3(.42,.62,.7),vec3(.5,.64,.68),vec3(.58,.65,.65)),vec3(.64,.74,.75)));
+  const through = interior.mul(tint).mul(fresnel.oneMinus());
   return mix(reflection, through.add(reflection), verticalMask());
 }
 

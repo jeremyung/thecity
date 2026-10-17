@@ -6,7 +6,7 @@ export type DisplayMode='off'|'static'|'animated';
 export function parseDisplayMode(value:unknown):DisplayMode{return value==='off'||value==='static'?value:'animated';}
 export interface BusinessRecipe {
  id:string;family:BusinessFamily;era:'older'|'contemporary';label:string;
- form:'punched'|'ribbon'|'frame'|'curtain'|'stepped'|'shop-house'|'tenant'|'corner'|'podium'|'arcade';
+ form:'punched'|'ribbon'|'frame'|'curtain'|'stepped'|'shop-house'|'tenant'|'corner'|'podium'|'arcade'|'fins'|'screen'|'media'|'department'|'slab'|'loft';
  wall:string;roughness:number;bay:number;upper:'office'|'home'|'shop';retailFloors:number;awning:boolean;
 }
 /** Different floorplates and frontage grammars, rather than colour variants of one box. */
@@ -26,8 +26,23 @@ export const BUSINESS_RECIPES:readonly BusinessRecipe[]=[
  {id:'corner-worklive',family:'mixed-use',era:'contemporary',label:'Corner work/live',form:'corner',wall:'#897c69',roughness:.55,bay:3.5,upper:'home',retailFloors:1,awning:true},
  {id:'retail-office-podium',family:'mixed-use',era:'contemporary',label:'Retail and office podium',form:'podium',wall:'#d9dfdf',roughness:.85,bay:3.6,upper:'office',retailFloors:2,awning:false},
  {id:'retail-residential-tower',family:'mixed-use',era:'contemporary',label:'Retail and residential tower',form:'podium',wall:'#e1e2da',roughness:.85,bay:3.8,upper:'home',retailFloors:2,awning:false},
+ {id:'concrete-office',family:'office',era:'older',label:'Concrete structural office',form:'frame',wall:'#c8cfc6',roughness:.85,bay:2.9,upper:'office',retailFloors:0,awning:false},
+ {id:'narrow-office',family:'office',era:'older',label:'Narrow vertical office',form:'tenant',wall:'#bfb9b0',roughness:.85,bay:2.4,upper:'office',retailFloors:0,awning:false},
+ {id:'corporate-slab',family:'office',era:'older',label:'Older corporate slab',form:'slab',wall:'#c9bdad',roughness:.85,bay:3.2,upper:'office',retailFloors:0,awning:false},
+ {id:'vertical-fin-office',family:'office',era:'contemporary',label:'Vertical-fin office',form:'fins',wall:'#a3947e',roughness:.55,bay:2.8,upper:'office',retailFloors:0,awning:false},
+ {id:'corporate-retail-tower',family:'office',era:'contemporary',label:'Office tower and glazed podium',form:'podium',wall:'#626762',roughness:.85,bay:2.2,upper:'office',retailFloors:2,awning:false},
+ {id:'market-stalls',family:'commercial',era:'older',label:'Open-front market stalls',form:'loft',wall:'#b7b7a9',roughness:.85,bay:2.6,upper:'shop',retailFloors:1,awning:true},
+ {id:'old-department-store',family:'commercial',era:'older',label:'Older department store',form:'department',wall:'#d9d0be',roughness:.85,bay:3.1,upper:'shop',retailFloors:2,awning:false},
+ {id:'screened-flagship',family:'commercial',era:'contemporary',label:'Screened flagship showroom',form:'screen',wall:'#ece9df',roughness:.85,bay:4.5,upper:'shop',retailFloors:2,awning:false},
+ {id:'terraced-retail',family:'commercial',era:'contemporary',label:'Terraced contemporary retail',form:'stepped',wall:'#d8cfbb',roughness:.85,bay:4.2,upper:'shop',retailFloors:2,awning:false},
+ {id:'media-corner',family:'commercial',era:'contemporary',label:'Media corner commercial',form:'media',wall:'#626762',roughness:.85,bay:4.1,upper:'shop',retailFloors:2,awning:false},
+ {id:'market-workshops',family:'mixed-use',era:'older',label:'Market and workshops above',form:'loft',wall:'#986b56',roughness:.85,bay:2.8,upper:'office',retailFloors:1,awning:true},
+ {id:'concrete-shop-offices',family:'mixed-use',era:'older',label:'Concrete shop and office building',form:'frame',wall:'#c8cfc6',roughness:.85,bay:3,upper:'office',retailFloors:1,awning:true},
+ {id:'postwar-shop-flats',family:'mixed-use',era:'older',label:'Postwar shops and flats',form:'ribbon',wall:'#c9bdad',roughness:.85,bay:2.6,upper:'home',retailFloors:1,awning:true},
+ {id:'fin-worklive',family:'mixed-use',era:'contemporary',label:'Screened work/live building',form:'fins',wall:'#897c69',roughness:.55,bay:3,upper:'home',retailFloors:1,awning:false},
+ {id:'terraced-workplace',family:'mixed-use',era:'contemporary',label:'Retail and terraced workplace',form:'stepped',wall:'#d8cfbb',roughness:.85,bay:3.6,upper:'office',retailFloors:2,awning:false},
 ];
-export const BUSINESS_RECIPE_VERSION=1;
+export const BUSINESS_RECIPE_VERSION=2;
 export function supportsBusiness(b:Building,retained=false){return !retained&&!b.anchor&&['office','shop','cafe','apartment'].includes(b.kind)&&Number.isFinite(b.width)&&b.width>=5&&b.width<=90&&Number.isFinite(b.depth)&&b.depth>=6&&b.depth<=80&&Number.isInteger(b.floors)&&b.floors>=1&&b.floors<=60&&Number.isFinite(b.progress)&&['foundation','structure','surface','finishing','open','renovation','demolition'].includes(b.stage);}
 export function businessPool(b:Building,mode:ApartmentEra='mixed'):readonly BusinessRecipe[]{
  if(mode==='legacy'||!supportsBusiness(b))return [];
@@ -38,7 +53,7 @@ export function businessPool(b:Building,mode:ApartmentEra='mixed'):readonly Busi
  return BUSINESS_RECIPES.filter(r=>r.family===family&&(mode==='mixed'||r.era===mode)&&
   (b.kind!=='apartment'||r.upper==='home')&&(b.kind!=='office'||r.upper==='office')&&
   (b.kind!=='cafe'||r.id!=='glass-showroom')&&
-  (b.floors>=12?['curtain','podium','frame','ribbon'].includes(r.form):r.id!=='retail-residential-tower')&&
+  (b.floors>=12?['curtain','podium','frame','ribbon','fins','slab'].includes(r.form):r.id!=='retail-residential-tower')&&
   (r.retailFloors<b.floors||r.family==='commercial')&&
   (r.form!=='podium'||b.width>=12&&b.depth>=12));
 }
@@ -58,3 +73,6 @@ export function resolveBusinessRecipes(buildings:readonly Building[],mode:Apartm
   result.set(b.id,choice);const key=`${cx}:${cz}`,list=cells.get(key)??[];list.push(b);cells.set(key,list);
  }return result;
 }
+
+/** Corporate/showroom facades keep restrained branding; media and tenant buildings host ads. */
+export function businessCanHostAdvertising(recipe:BusinessRecipe){return recipe.era==='older'||['media','tenant','podium','department'].includes(recipe.form);}
