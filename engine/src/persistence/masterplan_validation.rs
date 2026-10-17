@@ -113,7 +113,7 @@ impl Engine {
             };
             if *a == 0
                 || *b == 0
-                || road.kind != expected.kind.world()
+                || road.kind != expected.kind
                 || !((road.from == *a && road.to == *b) || (road.from == *b && road.to == *a))
             {
                 return Err(format!(

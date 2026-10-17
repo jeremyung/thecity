@@ -45,12 +45,12 @@ kind_enum!(
 kind_enum!(
     /// Class of a road or track segment.
     RoadKind {
+        Arterial = "arterial",
         Local = "local",
         Lane = "lane",
-        Arterial = "arterial",
         Bridge = "bridge",
-        Expressway = "expressway",
         Rail = "rail",
+        Expressway = "expressway",
     }
 );
 

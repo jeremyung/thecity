@@ -17,9 +17,9 @@ mod parent_passage;
 mod street_frontage_preview;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct P {
-    pub(crate) x: f32,
-    pub(crate) z: f32,
+pub struct P {
+    pub x: f32,
+    pub z: f32,
 }
 
 impl P {
@@ -56,7 +56,7 @@ impl P {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum NodeKind {
+pub enum NodeKind {
     Junction,
     Gateway,
     Station,
@@ -67,18 +67,18 @@ pub(crate) enum NodeKind {
 
 impl NodeKind {
     /// The world node kind this plan node becomes when realized.
-    pub(crate) fn world(self) -> crate::NodeKind {
+    pub fn world(self) -> crate::kinds::NodeKind {
         match self {
-            NodeKind::Junction => crate::NodeKind::Junction,
-            NodeKind::Gateway => crate::NodeKind::Gateway,
-            NodeKind::Station => crate::NodeKind::Station,
-            NodeKind::RailGateway => crate::NodeKind::RailGateway,
-            NodeKind::RailTerminus => crate::NodeKind::RailTerminus,
-            NodeKind::Elevated => crate::NodeKind::Elevated,
+            NodeKind::Junction => crate::kinds::NodeKind::Junction,
+            NodeKind::Gateway => crate::kinds::NodeKind::Gateway,
+            NodeKind::Station => crate::kinds::NodeKind::Station,
+            NodeKind::RailGateway => crate::kinds::NodeKind::RailGateway,
+            NodeKind::RailTerminus => crate::kinds::NodeKind::RailTerminus,
+            NodeKind::Elevated => crate::kinds::NodeKind::Elevated,
         }
     }
 
-    pub(crate) fn as_str(self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             NodeKind::Junction => "junction",
             NodeKind::Gateway => "gateway",
@@ -90,39 +90,9 @@ impl NodeKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum RoadKind {
-    Arterial,
-    Local,
-    Lane,
-    Bridge,
-    Rail,
-    Expressway,
-}
+pub use crate::kinds::RoadKind;
 
 impl RoadKind {
-    /// The world road kind this plan road becomes when realized.
-    pub(crate) fn world(self) -> crate::RoadKind {
-        match self {
-            RoadKind::Arterial => crate::RoadKind::Arterial,
-            RoadKind::Local => crate::RoadKind::Local,
-            RoadKind::Lane => crate::RoadKind::Lane,
-            RoadKind::Bridge => crate::RoadKind::Bridge,
-            RoadKind::Rail => crate::RoadKind::Rail,
-            RoadKind::Expressway => crate::RoadKind::Expressway,
-        }
-    }
-
-    pub(crate) fn as_str(self) -> &'static str {
-        match self {
-            RoadKind::Arterial => "arterial",
-            RoadKind::Local => "local",
-            RoadKind::Lane => "lane",
-            RoadKind::Bridge => "bridge",
-            RoadKind::Rail => "rail",
-            RoadKind::Expressway => "expressway",
-        }
-    }
     /// Distance from the road centerline to the lot line: half the rendered
     /// carriageway plus its sidewalk.
     fn lot_setback(self) -> f32 {
@@ -135,7 +105,7 @@ impl RoadKind {
             RoadKind::Rail | RoadKind::Expressway => 9.0,
         }
     }
-    pub(crate) fn is_street(self) -> bool {
+    pub fn is_street(self) -> bool {
         matches!(
             self,
             RoadKind::Arterial | RoadKind::Local | RoadKind::Lane | RoadKind::Bridge
@@ -144,7 +114,7 @@ impl RoadKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum District {
+pub enum District {
     StationCore,
     StationFringe,
     Compact,
@@ -153,48 +123,48 @@ pub(crate) enum District {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct PlanNode {
-    pub(crate) p: P,
-    pub(crate) kind: NodeKind,
+pub struct PlanNode {
+    pub p: P,
+    pub kind: NodeKind,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct PlanRoad {
-    pub(crate) a: usize,
-    pub(crate) b: usize,
-    pub(crate) kind: RoadKind,
-    pub(crate) deck_height: f32,
-    pub(crate) curve: Option<[P; 2]>,
+pub struct PlanRoad {
+    pub a: usize,
+    pub b: usize,
+    pub kind: RoadKind,
+    pub deck_height: f32,
+    pub curve: Option<[P; 2]>,
 }
 
 mod flag_passage;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct PlanLot {
-    pub(crate) x: f32,
-    pub(crate) z: f32,
-    pub(crate) width: f32,
-    pub(crate) depth: f32,
+pub struct PlanLot {
+    pub x: f32,
+    pub z: f32,
+    pub width: f32,
+    pub depth: f32,
     /// Three.js Y rotation; local +Z faces the frontage road.
-    pub(crate) rotation: f32,
+    pub rotation: f32,
     /// Unit vector the lot faces (toward its frontage road). Plan decisions
     /// use this instead of trigonometry so they are target-independent.
-    pub(crate) facing: P,
-    pub(crate) road: usize,
-    pub(crate) district: District,
+    pub facing: P,
+    pub road: usize,
+    pub district: District,
     /// True when the frontage road is an arterial.
-    pub(crate) arterial_frontage: bool,
+    pub arterial_frontage: bool,
     /// Rear flag lot reached by a passage beside a front lot.
-    pub(crate) flag: bool,
+    pub flag: bool,
     /// Ordered rear threshold / bend / street entrance, reserved before fitting.
-    pub(crate) passage: Option<[P; 3]>,
-    pub(crate) block: u32,
+    pub passage: Option<[P; 3]>,
+    pub block: u32,
 }
 
 impl PlanLot {
     /// A reserved passage can serve a building facing away from its street.
     /// Keep this isolated until parent-level reservation/admission is validated.
-    pub(crate) fn passage_rotation(&self) -> Option<f32> {
+    pub fn passage_rotation(&self) -> Option<f32> {
         (cfg!(feature = "parent-passage-candidate") && self.passage.is_some())
             .then_some(self.rotation)
     }
@@ -240,8 +210,8 @@ struct StreetSubdivision {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct MasterPlan {
-    pub(crate) rail_alignment: Option<crate::transit::rail_alignment::Alignment>,
+pub struct MasterPlan {
+    pub rail_alignment: Option<crate::rail_alignment::Alignment>,
     /// Test/export-only witnesses for final admission losses; never enters WASM state.
     #[cfg(test)]
     rejected_lot_ground: Vec<(&'static str, Vec<P>)>,
@@ -253,42 +223,42 @@ pub(crate) struct MasterPlan {
     street_subdivisions: Vec<StreetSubdivision>,
     #[cfg(test)]
     partition_rejected_ground: Vec<(&'static str, Vec<P>)>,
-    pub(crate) nodes: Vec<PlanNode>,
-    pub(crate) roads: Vec<PlanRoad>,
-    pub(crate) lots: Vec<PlanLot>,
+    pub nodes: Vec<PlanNode>,
+    pub roads: Vec<PlanRoad>,
+    pub lots: Vec<PlanLot>,
     /// Clipped partition polygon per accepted lot, retained for progressive ground.
-    pub(crate) lot_ground: Vec<Vec<P>>,
+    pub lot_ground: Vec<Vec<P>>,
     /// Buildable (inset) block outline per block id.
-    pub(crate) blocks: Vec<Vec<P>>,
+    pub blocks: Vec<Vec<P>>,
     /// Shared street-block identity before convex decomposition. A seam between
     /// equal parents is a clipping boundary, not automatically an access barrier.
-    pub(crate) block_parents: Vec<u32>,
-    pub(crate) gateway: usize,
-    pub(crate) station: usize,
-    pub(crate) rail_gateway: usize,
-    pub(crate) rail_terminus: usize,
+    pub block_parents: Vec<u32>,
+    pub gateway: usize,
+    pub station: usize,
+    pub rail_gateway: usize,
+    pub rail_terminus: usize,
     /// Plan road indices opened at founding, ordered from the gateway.
-    pub(crate) founding_roads: Vec<usize>,
+    pub founding_roads: Vec<usize>,
     /// East-bank junction where the founding market street meets the river.
-    pub(crate) founding_market: usize,
+    pub founding_market: usize,
     /// Service rail (station → rail gateway) and the western continuation.
-    pub(crate) rail_service: usize,
-    pub(crate) rail_extension: usize,
-    pub(crate) expressway: Vec<usize>,
+    pub rail_service: usize,
+    pub rail_extension: usize,
+    pub expressway: Vec<usize>,
 }
 
-pub(crate) struct Geography {
-    pub(crate) seed: u32,
+pub struct Geography {
+    pub seed: u32,
     /// River centerline control points, ascending in z.
-    pub(crate) river: Vec<P>,
-    pub(crate) river_clearance: f32,
+    pub river: Vec<P>,
+    pub river_clearance: f32,
     /// Axis-aligned protected rectangle (min_x, min_z, max_x, max_z).
-    pub(crate) protected: (f32, f32, f32, f32),
+    pub protected: (f32, f32, f32, f32),
 }
 
-pub(crate) const PLAN_EXTENT: f32 = 382.0;
-pub(crate) const EDGE: f32 = 392.0;
-pub(crate) const MAX_PLAN_LOTS: usize = 4_000;
+pub const PLAN_EXTENT: f32 = 382.0;
+pub const EDGE: f32 = 392.0;
+pub const MAX_PLAN_LOTS: usize = 4_000;
 const BANK_OFFSET: f32 = 47.0;
 const RAIL_BAND_HALF: f32 = 11.0;
 
@@ -701,7 +671,7 @@ fn quad_segment_distance(q: &[P; 4], a: P, b: P) -> f32 {
 fn lot_clearance_rejection(
     lot: &PlanLot,
     geo: &Geography,
-    rail_alignment: Option<&crate::transit::rail_alignment::Alignment>,
+    rail_alignment: Option<&crate::rail_alignment::Alignment>,
     rail_z: f32,
     nodes: &[PlanNode],
     roads: &[PlanRoad],
@@ -782,7 +752,7 @@ fn rect_corners(lot: &PlanLot) -> [P; 4] {
     ]
 }
 
-pub(crate) fn river_x(river: &[P], z: f32) -> f32 {
+pub fn river_x(river: &[P], z: f32) -> f32 {
     for w in river.windows(2) {
         if z >= w[0].z && z <= w[1].z {
             let t = ((z - w[0].z) / (w[1].z - w[0].z)).clamp(0.0, 1.0);
@@ -1792,12 +1762,12 @@ struct LatticeLine {
     kind: LineKind,
 }
 
-pub(crate) fn generate(geo: &Geography) -> MasterPlan {
+pub fn generate(geo: &Geography) -> MasterPlan {
     generate_layout(geo, true, !cfg!(feature = "single-expressway-candidate"))
 }
 
-#[cfg(test)]
-pub(crate) fn curved_rail_candidate(geo: &Geography) -> MasterPlan {
+#[cfg(any(test, feature = "test-support"))]
+pub fn curved_rail_candidate(geo: &Geography) -> MasterPlan {
     generate_impl(geo, true)
 }
 
@@ -1827,8 +1797,8 @@ fn generate_layout_with_frontage(
     let river = &geo.river;
     let l = PLAN_EXTENT;
     let banks = [
-        crate::world::river_course::bank_alignment(river, -BANK_OFFSET),
-        crate::world::river_course::bank_alignment(river, BANK_OFFSET),
+        crate::river_course::bank_alignment(river, -BANK_OFFSET),
+        crate::river_course::bank_alignment(river, BANK_OFFSET),
     ];
 
     // Coarse collector stations are independent of river sample density.
@@ -2062,12 +2032,11 @@ fn generate_layout_with_frontage(
         station_x += 13.0;
     }
     if curved_rail {
-        station_x =
-            crate::transit::rail_alignment::Alignment::station_x(station_x, EDGE, &rail_col_xs);
+        station_x = crate::rail_alignment::Alignment::station_x(station_x, EDGE, &rail_col_xs);
     }
     let station_p = P::new(station_x, rail_z);
-    let rail_alignment = curved_rail
-        .then(|| crate::transit::rail_alignment::Alignment::new(station_p, EDGE, geo.seed));
+    let rail_alignment =
+        curved_rail.then(|| crate::rail_alignment::Alignment::new(station_p, EDGE, geo.seed));
     if let Some(alignment) = &rail_alignment {
         // Move the two frontage rows BEFORE block subdivision. Solve their
         // bank intersections against the actual bank polylines, then rebuild
@@ -2394,7 +2363,7 @@ fn generate_layout_with_frontage(
             continue;
         }
         let mut points: Vec<P> = route_nodes.iter().map(|&i| b.nodes[i].p).collect();
-        crate::infrastructure::road_curve::fair_route(&mut points, along_x);
+        crate::road_curve::fair_route(&mut points, along_x);
         for (&index, point) in route_nodes.iter().zip(points) {
             b.nodes[index].p = point;
         }
@@ -2419,7 +2388,7 @@ fn generate_layout_with_frontage(
             let other = b.roads[*connected.iter().find(|&&i| i != index)?];
             Some(b.nodes[if other.a == node { other.b } else { other.a }].p)
         };
-        let curve = crate::infrastructure::road_curve::controls(
+        let curve = crate::road_curve::controls(
             b.nodes[road.a].p,
             b.nodes[road.b].p,
             neighbor(road.a),
@@ -2444,8 +2413,8 @@ fn generate_layout_with_frontage(
             let clearance = 10.8 + second / (8.0 * 32.0 * 32.0);
             (0..32).map(move |i| {
                 (
-                    crate::infrastructure::road_curve::sample(a, c, end, i as f32 / 32.0),
-                    crate::infrastructure::road_curve::sample(a, c, end, (i + 1) as f32 / 32.0),
+                    crate::road_curve::sample(a, c, end, i as f32 / 32.0),
+                    crate::road_curve::sample(a, c, end, (i + 1) as f32 / 32.0),
                     clearance,
                 )
             })
@@ -2778,7 +2747,7 @@ fn generate_layout_with_frontage(
 impl MasterPlan {
     /// FNV-1a digest of the plan's exact bits. Saves record it so restore can
     /// prove the regenerated plan is identical on this target.
-    pub(crate) fn digest(&self) -> u64 {
+    pub fn digest(&self) -> u64 {
         let mut hash = 0xcbf2_9ce4_8422_2325_u64;
         let mut feed = |value: u32| {
             for byte in value.to_le_bytes() {
@@ -2875,7 +2844,7 @@ mod tests {
         let b = clip(&narrow, P::new(60.0, 0.0), P::new(-1.0, 0.0), None);
         assert!(cut_preserves_block_depth(&narrow, &a, &b, 40.0));
     }
-    use crate::world::geometry;
+    use crate::geometry;
     use std::collections::BTreeSet;
 
     #[test]
@@ -3022,7 +2991,7 @@ mod tests {
     fn geography(seed: u32) -> Geography {
         Geography {
             seed,
-            river: crate::world::river_course::sampled(seed).to_vec(),
+            river: crate::river_course::sampled(seed).to_vec(),
             river_clearance: 38.0,
             protected: (-350.0, -350.0, -260.0, -270.0),
         }
@@ -3093,12 +3062,8 @@ mod tests {
                 let a = plan.nodes[road.a].p;
                 let end = plan.nodes[road.b].p;
                 for step in 0..=128 {
-                    let point = crate::infrastructure::road_curve::sample(
-                        a,
-                        road.curve.unwrap(),
-                        end,
-                        step as f32 / 128.0,
-                    );
+                    let point =
+                        crate::road_curve::sample(a, road.curve.unwrap(), end, step as f32 / 128.0);
                     for lot in &plan.lots {
                         assert!(
                             quad_segment_distance(&rect_corners(lot), point, point) >= 10.79,
@@ -3132,8 +3097,7 @@ mod tests {
                 // Independent dense point witness, distinct from generation's
                 // conservative capsule subdivision, catches deck/parcel overlap.
                 for i in 0..=128 {
-                    let p =
-                        crate::infrastructure::road_curve::sample(a, controls, b, i as f32 / 128.0);
+                    let p = crate::road_curve::sample(a, controls, b, i as f32 / 128.0);
                     for lot in &plan.lots {
                         if (p.x - lot.x).abs() > lot.width + lot.depth + 12.0
                             || (p.z - lot.z).abs() > lot.width + lot.depth + 12.0
@@ -3423,13 +3387,8 @@ mod tests {
                     let b = plan.nodes[road.b].p;
                     (0..128).map(move |i| {
                         (
-                            crate::infrastructure::road_curve::sample(
-                                a,
-                                road.curve.unwrap(),
-                                b,
-                                i as f32 / 128.0,
-                            ),
-                            crate::infrastructure::road_curve::sample(
+                            crate::road_curve::sample(a, road.curve.unwrap(), b, i as f32 / 128.0),
+                            crate::road_curve::sample(
                                 a,
                                 road.curve.unwrap(),
                                 b,
@@ -3598,7 +3557,7 @@ mod tests {
                     assert!(
                         geo.river
                             .windows(2)
-                            .all(|w| crate::segments_distance_coords(
+                            .all(|w| crate::geometry::segments_distance_coords(
                                 a.x, a.z, b.x, b.z, w[0].x, w[0].z, w[1].x, w[1].z
                             ) >= geo.river_clearance + half_width - 0.01),
                         "seed {seed}: street intrudes into river bank"
@@ -3756,7 +3715,7 @@ mod export {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(87231);
-        let river = crate::world::river_course::sampled(seed).to_vec();
+        let river = crate::river_course::sampled(seed).to_vec();
         let plan = generate_layout(
             &Geography {
                 seed,
@@ -3793,7 +3752,7 @@ mod export {
                 let distance = river
                     .windows(2)
                     .map(|w| {
-                        crate::segments_distance_coords(
+                        crate::geometry::segments_distance_coords(
                             a.x, a.z, b.x, b.z, w[0].x, w[0].z, w[1].x, w[1].z,
                         )
                     })
@@ -3842,7 +3801,7 @@ mod frontage_network_tests {
         for seed in [87231, 0, 5] {
             let geo = Geography {
                 seed,
-                river: crate::world::river_course::sampled(seed).to_vec(),
+                river: crate::river_course::sampled(seed).to_vec(),
                 river_clearance: 38.0,
                 protected: (-350.0, -350.0, -260.0, -270.0),
             };
@@ -3898,7 +3857,7 @@ mod local_stream_tests {
         for seed in [87231, 0, 5] {
             let geo = Geography {
                 seed,
-                river: crate::world::river_course::sampled(seed).to_vec(),
+                river: crate::river_course::sampled(seed).to_vec(),
                 river_clearance: 38.0,
                 protected: (-350.0, -350.0, -260.0, -270.0),
             };

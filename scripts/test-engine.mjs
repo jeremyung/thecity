@@ -15,6 +15,7 @@ const result = spawnSync(
     '--manifest-path',
     'engine/Cargo.toml',
     '--locked',
+    '--workspace',
     '--features',
     'legacy',
     ...process.argv.slice(2),

@@ -5,9 +5,9 @@
 //! reuse it with deterministic frontage projections.
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Interval {
-    pub(crate) start: f32,
-    pub(crate) end: f32,
+pub struct Interval {
+    pub start: f32,
+    pub end: f32,
 }
 
 const MAX_FRONTAGE_LOTS: usize = 64;
@@ -16,7 +16,7 @@ const EPSILON: f32 = 1.0e-5;
 /// Subtract forbidden frontage ranges and tile the remaining spans with
 /// bounded, evenly-sized parcel intervals. A final partial span is left
 /// unused when it cannot be tiled without violating the minimum width.
-pub(crate) fn subdivide_frontage(
+pub fn subdivide_frontage(
     length: f32,
     exclusions: &[Interval],
     endpoint_margin: f32,

@@ -1,14 +1,22 @@
 //! Shared curved rail geometry for corridor reservation, train motion and rendering.
-use crate::infrastructure::masterplan::P;
+use crate::masterplan::P;
 
-const PLATFORM_APPROACH: f32 = crate::RAIL_PLATFORM_END + 2.0;
+// A four-car 20 m consist (cab, trailer, motor, cab) with 0.6 m gangways spans
+// 81.8 m, so the consist centre sits 40.9 m from each terminal. Keep this equal
+// to consistHalfLength() in web/src/render/train-kit.ts and the station platform
+// length in web/src/render/city.ts.
+pub const TRAIN_HALF_LENGTH: f32 = 40.9;
+pub const RAIL_PLATFORM_END: f32 = TRAIN_HALF_LENGTH * 2.0 + 1.0;
+pub const RAIL_GATEWAY_STAIR_BOTTOM: f32 = RAIL_PLATFORM_END + 19.0;
+
+const PLATFORM_APPROACH: f32 = RAIL_PLATFORM_END + 2.0;
 // Keep the entire inward platform, stairs and apron on straight track.
-const TERMINAL_APPROACH: f32 = crate::RAIL_GATEWAY_STAIR_BOTTOM + 5.0;
+const TERMINAL_APPROACH: f32 = RAIL_GATEWAY_STAIR_BOTTOM + 5.0;
 const SAMPLE_STEP: f32 = 2.0;
 const MIN_RADIUS: f32 = 120.0;
 
 #[derive(Clone, Debug)]
-pub(crate) struct Alignment {
+pub struct Alignment {
     knots: [P; 6],
     /// Exact analytic positions with monotonically increasing chord distances.
     samples: Vec<(f32, P)>,
@@ -17,7 +25,7 @@ pub(crate) struct Alignment {
 impl Alignment {
     /// Keep the complete platform and terminal approaches inside the city, while
     /// staying clear of street columns. Preserve the existing choice when legal.
-    pub(crate) fn station_x(preferred: f32, edge: f32, columns: &[f32]) -> f32 {
+    pub fn station_x(preferred: f32, edge: f32, columns: &[f32]) -> f32 {
         let min = 110.0;
         let max = edge - TERMINAL_APPROACH - PLATFORM_APPROACH - 1.0;
         let legal = |x: f32| x >= min && x <= max && columns.iter().all(|c| (c - x).abs() > 22.0);
@@ -35,7 +43,7 @@ impl Alignment {
             .expect("station corridor has no legal platform approach")
     }
 
-    pub(crate) fn new(station: P, edge: f32, seed: u32) -> Self {
+    pub fn new(station: P, edge: f32, seed: u32) -> Self {
         let left = -edge + TERMINAL_APPROACH;
         let right = edge - TERMINAL_APPROACH;
         let station_left = station.x - PLATFORM_APPROACH;
@@ -95,7 +103,7 @@ impl Alignment {
     }
 
     /// Position and eastward unit tangent, with C2 joins and no overshoot.
-    pub(crate) fn at_x(&self, x: f32) -> (P, P) {
+    pub fn at_x(&self, x: f32) -> (P, P) {
         let x = x.clamp(self.knots[0].x, self.knots[5].x);
         let i = self
             .knots
@@ -120,13 +128,13 @@ impl Alignment {
         )
     }
 
-    pub(crate) fn length(&self) -> f32 {
+    pub fn length(&self) -> f32 {
         self.samples.last().unwrap().0
     }
 
     /// Parallel corridor edge evaluated at a fixed world x. Inverting the
     /// normal offset keeps its width perpendicular to the track on bends.
-    pub(crate) fn boundary_at_x(&self, x: f32, offset: f32) -> P {
+    pub fn boundary_at_x(&self, x: f32, offset: f32) -> P {
         let mut source_x = x;
         for _ in 0..16 {
             let (p, tangent) = self.at_x(source_x);
@@ -141,7 +149,7 @@ impl Alignment {
 
     /// Arc-distance lookup. Each coach can sample its own distance; reversing
     /// service must reverse its travel direction, not the authored coach order.
-    pub(crate) fn at_distance(&self, distance: f32) -> (P, P) {
+    pub fn at_distance(&self, distance: f32) -> (P, P) {
         let distance = distance.clamp(0.0, self.length());
         let i = self
             .samples
@@ -155,7 +163,7 @@ impl Alignment {
 
     /// Shared sampled corridor for reservation/export. Includes exact join
     /// sections so neighboring render sweeps need not infer their own tangents.
-    pub(crate) fn samples(&self) -> &[(f32, P)] {
+    pub fn samples(&self) -> &[(f32, P)] {
         &self.samples
     }
 }
@@ -172,11 +180,11 @@ mod tests {
                 let station = P { x, z: -85.0 };
                 let path = Alignment::new(station, 392.0, seed);
                 for offset in [
-                    -crate::RAIL_PLATFORM_END,
-                    -crate::TRAIN_HALF_LENGTH,
+                    -RAIL_PLATFORM_END,
+                    -TRAIN_HALF_LENGTH,
                     0.0,
-                    crate::TRAIN_HALF_LENGTH,
-                    crate::RAIL_PLATFORM_END,
+                    TRAIN_HALF_LENGTH,
+                    RAIL_PLATFORM_END,
                 ] {
                     let (p, tangent) = path.at_x(x + offset);
                     assert_eq!(p.z, station.z);
@@ -184,10 +192,10 @@ mod tests {
                 }
                 for distance in [
                     0.0,
-                    crate::TRAIN_HALF_LENGTH,
-                    crate::RAIL_GATEWAY_STAIR_BOTTOM,
-                    path.length() - crate::RAIL_GATEWAY_STAIR_BOTTOM,
-                    path.length() - crate::TRAIN_HALF_LENGTH,
+                    TRAIN_HALF_LENGTH,
+                    RAIL_GATEWAY_STAIR_BOTTOM,
+                    path.length() - RAIL_GATEWAY_STAIR_BOTTOM,
+                    path.length() - TRAIN_HALF_LENGTH,
                     path.length(),
                 ] {
                     assert_eq!(path.at_distance(distance).1, P { x: 1.0, z: 0.0 });
@@ -231,33 +239,6 @@ mod tests {
         assert!((length - path.length()).abs() < 0.04);
         let (p, tangent) = path.at_distance(200.0);
         assert!(p.z < -80.0 && tangent.z > 0.0);
-    }
-
-    #[test]
-    #[ignore]
-    fn export_current_plan_alignment_prototypes() {
-        let output = std::env::var("RAIL_ALIGNMENT_REPORT").expect("RAIL_ALIGNMENT_REPORT path");
-        let mut cases = Vec::new();
-        for seed in [87231, 0, 5] {
-            let engine = crate::Engine::new(seed);
-            let plan = &engine.plan.as_ref().unwrap().plan;
-            let station = plan.nodes[plan.station].p;
-            let path = Alignment::new(station, crate::infrastructure::masterplan::EDGE, seed);
-            cases.push(
-                serde_json::json!({"seed":seed,"station":[station.x,station.z],
-                "length":path.length(),"samples":path.samples().iter().map(|(d,p)|
-                    [*d,p.x,p.z]).collect::<Vec<_>>() }),
-            );
-        }
-        std::fs::write(
-            output,
-            serde_json::to_string_pretty(&serde_json::json!({
-                "scope":"Geometry prototype only; not wired to live rail or parcel reservations",
-                "cases":cases
-            }))
-            .unwrap(),
-        )
-        .unwrap();
     }
 }
 

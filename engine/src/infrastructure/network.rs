@@ -52,29 +52,7 @@ pub(crate) fn lane_key(traveler: &Traveler, from: u32, to: u32) -> (u32, u32, u8
     (from, to, traveler.kind, sidewalk)
 }
 
-/// Rendered carriageway width. Tokyo local streets are narrow shared surfaces;
-/// only arterials carry raised sidewalks.
-/// Carriageway width; `None` is an unresolved road.
-pub(crate) fn road_width(kind: Option<RoadKind>) -> f32 {
-    match kind {
-        Some(RoadKind::Arterial | RoadKind::Bridge) => 16.0,
-        Some(RoadKind::Local) => 6.5,
-        Some(RoadKind::Lane) => 4.0,
-        Some(RoadKind::Expressway | RoadKind::Rail) | None => 9.0,
-    }
-}
-
-/// Shared streets carry walkers inside the painted edge; arterials use the
-/// raised sidewalk outside the carriageway. All access and movement consumers
-/// must use this same offset so their route endpoints meet.
-pub(crate) fn pedestrian_road_offset(kind: Option<RoadKind>) -> f32 {
-    let half_width = road_width(kind) * 0.5;
-    if matches!(kind, Some(RoadKind::Local | RoadKind::Lane)) {
-        half_width - 0.72
-    } else {
-        half_width + 0.72
-    }
-}
+pub(crate) use city_plan::cross_section::{pedestrian_road_offset, road_width};
 
 impl Engine {
     pub(crate) fn station_node(&self) -> Option<u32> {

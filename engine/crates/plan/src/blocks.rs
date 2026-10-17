@@ -3,19 +3,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub(crate) struct BlockPoint {
-    pub(crate) x: f32,
-    pub(crate) z: f32,
+pub struct BlockPoint {
+    pub x: f32,
+    pub z: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub(crate) struct BlockLot {
-    pub(crate) center: BlockPoint,
-    pub(crate) frontage_edge: usize,
-    pub(crate) frontage_t: f32,
-    pub(crate) width: f32,
-    pub(crate) depth: f32,
-    pub(crate) rotation: f32,
+pub struct BlockLot {
+    pub center: BlockPoint,
+    pub frontage_edge: usize,
+    pub frontage_t: f32,
+    pub width: f32,
+    pub depth: f32,
+    pub rotation: f32,
 }
 
 const MAX_LOTS: usize = 64;
@@ -33,7 +33,7 @@ const RECTANGLE_RELATIVE_TOLERANCE: f32 = 1.0e-4;
 /// `rotation` follows Three.js Y rotation: local +X maps to `(cos(r), -sin(r))`.
 /// Local +Z points outward toward the frontage road, so the opposite row's
 /// rotation differs by π.
-pub(crate) fn subdivide_rectangular_block(
+pub fn subdivide_rectangular_block(
     corners: [BlockPoint; 4],
     street_inset: f32,
     target_frontage: f32,
@@ -181,8 +181,8 @@ pub(crate) fn subdivide_rectangular_block(
 /// Compact test-only template: start with 7 m frontage lots and combine a few
 /// selected adjacent pairs into larger envelopes while retaining the same row
 /// boundaries and gaps.
-#[cfg(test)]
-pub(crate) fn subdivide_compact_rectangular_block(
+#[cfg(any(test, feature = "test-support"))]
+pub fn subdivide_compact_rectangular_block(
     corners: [BlockPoint; 4],
     street_inset: f32,
     gap: f32,
@@ -224,7 +224,7 @@ pub(crate) fn subdivide_compact_rectangular_block(
     compact
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 fn point_midpoint(a: BlockPoint, b: BlockPoint) -> BlockPoint {
     BlockPoint {
         x: (a.x + b.x) * 0.5,
@@ -235,8 +235,8 @@ fn point_midpoint(a: BlockPoint, b: BlockPoint) -> BlockPoint {
 /// Test-only counterfactual that assigns different frontage targets to the
 /// two canonical frontage edges. Lot geometry and edge metadata come from the
 /// canonical subdivision routine, so both rows retain its winding convention.
-#[cfg(test)]
-pub(crate) fn subdivide_mixed_rectangular_block(
+#[cfg(any(test, feature = "test-support"))]
+pub fn subdivide_mixed_rectangular_block(
     corners: [BlockPoint; 4],
     street_inset: f32,
     narrow_frontage: f32,
@@ -695,7 +695,7 @@ mod tests {
                 assert!(!lots.is_empty());
                 let rects: Vec<_> = lots
                     .iter()
-                    .map(|lot| crate::world::geometry::OrientedRect {
+                    .map(|lot| crate::geometry::OrientedRect {
                         x: lot.center.x,
                         z: lot.center.z,
                         width: lot.width,
@@ -705,7 +705,7 @@ mod tests {
                     .collect();
                 for (i, a) in rects.iter().enumerate() {
                     for b in rects.iter().skip(i + 1) {
-                        assert!(!crate::world::geometry::rects_overlap(a, b, 2.0));
+                        assert!(!crate::geometry::rects_overlap(a, b, 2.0));
                     }
                 }
             }
@@ -794,7 +794,7 @@ mod tests {
 
                 let rects: Vec<_> = compact
                     .iter()
-                    .map(|lot| crate::world::geometry::OrientedRect {
+                    .map(|lot| crate::geometry::OrientedRect {
                         x: lot.center.x,
                         z: lot.center.z,
                         width: lot.width,
@@ -804,7 +804,7 @@ mod tests {
                     .collect();
                 for (index, a) in rects.iter().enumerate() {
                     for b in rects.iter().skip(index + 1) {
-                        assert!(!crate::world::geometry::rects_overlap(a, b, 2.0));
+                        assert!(!crate::geometry::rects_overlap(a, b, 2.0));
                     }
                 }
             }

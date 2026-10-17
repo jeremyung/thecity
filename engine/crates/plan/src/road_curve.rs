@@ -5,12 +5,12 @@
 //! tangent. The construction uses scalar arithmetic and `sqrt` only so it can
 //! be shared by native and WASM plan generation.
 
-use crate::infrastructure::masterplan::P;
+use crate::masterplan::P;
 
 /// Fair the lateral offsets of an ordered corridor without moving its street
 /// graph. Keep the two outer interior anchors and longitudinal coordinates.
 /// Fixed Jacobi passes avoid order-dependent updates and unbounded convergence.
-pub(crate) fn fair_route(points: &mut [P], along_x: bool) {
+pub fn fair_route(points: &mut [P], along_x: bool) {
     if points.len() < 5 {
         return;
     }
@@ -98,7 +98,7 @@ fn unit(v: P) -> P {
 /// whose dot product with this segment's direction is greater than -0.5.
 /// Handles span one third of the chord; the planner reserves the resulting
 /// curve envelope rather than forcing bends back into a straight corridor.
-pub(crate) fn controls(a: P, b: P, previous: Option<P>, next: Option<P>) -> [P; 2] {
+pub fn controls(a: P, b: P, previous: Option<P>, next: Option<P>) -> [P; 2] {
     let chord = sub(b, a);
     let chord_len = length(chord);
     if chord_len <= 1.0e-6 {
@@ -133,7 +133,7 @@ pub(crate) fn controls(a: P, b: P, previous: Option<P>, next: Option<P>) -> [P; 
 }
 
 /// Evaluate a cubic Bézier road centerline at `t` (clamped to `[0, 1]`).
-pub(crate) fn sample(a: P, control: [P; 2], b: P, t: f32) -> P {
+pub fn sample(a: P, control: [P; 2], b: P, t: f32) -> P {
     let t = t.clamp(0.0, 1.0);
     let s = 1.0 - t;
     let aa = s * s * s;
@@ -149,7 +149,7 @@ pub(crate) fn sample(a: P, control: [P; 2], b: P, t: f32) -> P {
 #[cfg(test)]
 mod tests {
     use super::{controls, fair_route, sample};
-    use crate::infrastructure::masterplan::P;
+    use crate::masterplan::P;
 
     fn p(x: f32, z: f32) -> P {
         P { x, z }

@@ -1,4 +1,7 @@
 use crate::*;
+pub(crate) use city_plan::rail_alignment::{
+    RAIL_GATEWAY_STAIR_BOTTOM, RAIL_PLATFORM_END, TRAIN_HALF_LENGTH,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -9,21 +12,11 @@ pub(crate) const MAX_PRESENTED_TRAINS: usize = 8;
 
 pub(crate) const RAIL_QUEUE_CAPACITY: usize = 96;
 
-// A four-car 20 m consist (cab, trailer, motor, cab) with 0.6 m gangways spans
-// 81.8 m, so the consist centre sits 40.9 m from each terminal. Keep this equal
-// to consistHalfLength() in web/src/render/train-kit.ts and the station platform
-// length in web/src/render/city.ts.
-pub(crate) const TRAIN_HALF_LENGTH: f32 = 40.9;
-
 pub(crate) const TRAIN_STATION_DWELL_TICKS: u16 = 220;
 
 pub(crate) const TRAIN_GATEWAY_DWELL_TICKS: u16 = 180;
 
 pub(crate) const TRAIN_DOOR_PHASE_TICKS: u16 = 20;
-
-pub(crate) const RAIL_PLATFORM_END: f32 = TRAIN_HALF_LENGTH * 2.0 + 1.0;
-
-pub(crate) const RAIL_GATEWAY_STAIR_BOTTOM: f32 = RAIL_PLATFORM_END + 19.0;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Train {

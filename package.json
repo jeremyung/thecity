@@ -14,8 +14,8 @@
     "test": "vitest run",
     "test:engine": "node scripts/test-engine.mjs",
     "setup:fixtures": "python3 scripts/setup-test-fixtures.py",
-    "format": "prettier --write \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml",
-    "format:check": "prettier --check \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --check"
+    "format": "prettier --write \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all",
+    "format:check": "prettier --check \"web/src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" vite.config.ts && cargo fmt --manifest-path engine/Cargo.toml --all --check"
   },
   "dependencies": {
     "lucide-react": "0.577.0",

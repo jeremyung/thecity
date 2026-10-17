@@ -1,7 +1,7 @@
 pub(crate) mod bus;
 pub(crate) mod expressway_traffic;
 pub(crate) mod rail;
-pub(crate) mod rail_alignment;
+pub(crate) use city_plan::rail_alignment;
 pub(crate) mod rail_platform;
 pub(crate) mod rail_runtime;
 pub(crate) mod state;

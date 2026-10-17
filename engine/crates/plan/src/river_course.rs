@@ -1,12 +1,12 @@
 //! Shared bounded river and perpendicular bank alignments for terrain and planning.
-use crate::infrastructure::masterplan::P;
+use crate::masterplan::P;
 
-pub(crate) const SAMPLES: usize = 33;
+pub const SAMPLES: usize = 33;
 
 /// Four smooth lobes through coarse planning anchors, sampled eight times per
 /// span. Zero slope at each extremum prevents overshoot and keeps boundary
 /// extensions tangent. Scalar polynomial arithmetic is native/WASM portable.
-pub(crate) fn sampled(seed: u32) -> [P; SAMPLES] {
+pub fn sampled(seed: u32) -> [P; SAMPLES] {
     let offset = (seed % 5) as f32 * 9.0 - 18.0;
     let amplitude = 0.85 + ((seed >> 3) % 7) as f32 * 0.05;
     let z = [-400.0, -190.0, 20.0, 210.0, 400.0];
@@ -27,7 +27,7 @@ pub(crate) fn sampled(seed: u32) -> [P; SAMPLES] {
 /// Keep the boundary stations at the river's z limits by extending the end
 /// segments. Intended for the bounded, z-monotone course above, not arbitrary
 /// paths with reversals or tight hairpins.
-pub(crate) fn bank_alignment(course: &[P], signed_offset: f32) -> Vec<P> {
+pub fn bank_alignment(course: &[P], signed_offset: f32) -> Vec<P> {
     assert!(course.len() >= 2);
     let normals: Vec<P> = course
         .windows(2)
@@ -80,7 +80,7 @@ fn bank_alignment_preserves_perpendicular_clearance() {
             for edge in bank.windows(2) {
                 assert!(edge[1].z > edge[0].z, "bank folds at seed {seed}");
                 for water in river.windows(2) {
-                    let distance = crate::segments_distance_coords(
+                    let distance = crate::geometry::segments_distance_coords(
                         edge[0].x, edge[0].z, edge[1].x, edge[1].z, water[0].x, water[0].z,
                         water[1].x, water[1].z,
                     );

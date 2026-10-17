@@ -5,7 +5,7 @@
 //! overlapping axis-aligned intervals; zero-length segments are treated as
 //! points before the intersection precheck.
 
-pub(crate) fn distance_coords(ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
+pub fn distance_coords(ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
     ((ax - bx).powi(2) + (az - bz).powi(2)).sqrt()
 }
 
@@ -13,7 +13,7 @@ pub(crate) fn distance_coords(ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
 /// Rotation follows Three.js `rotation.y`: local X becomes `(cos, -sin)` and
 /// local +Z becomes `(sin, cos)` in world X/Z coordinates.
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub(crate) struct OrientedRect {
+pub struct OrientedRect {
     pub x: f32,
     pub z: f32,
     pub width: f32,
@@ -24,7 +24,7 @@ pub(crate) struct OrientedRect {
 impl OrientedRect {
     /// Returns whether the rectangle has finite position/orientation and
     /// strictly positive finite dimensions.
-    pub(crate) fn finite_positive(self) -> bool {
+    pub fn finite_positive(self) -> bool {
         self.x.is_finite()
             && self.z.is_finite()
             && self.width.is_finite()
@@ -35,7 +35,7 @@ impl OrientedRect {
     }
 
     /// The four world-space corners in winding order, without allocating.
-    pub(crate) fn corners(self) -> [(f32, f32); 4] {
+    pub fn corners(self) -> [(f32, f32); 4] {
         let (cos, sin) = (self.rotation.cos(), self.rotation.sin());
         let ux = (cos, -sin);
         let uz = (sin, cos);
@@ -47,7 +47,7 @@ impl OrientedRect {
 
     /// Returns world-axis bounds. Invalid or overflowing rectangles return
     /// infinite bounds so callers conservatively treat them as covering space.
-    pub(crate) fn bounds(self) -> (f32, f32, f32, f32) {
+    pub fn bounds(self) -> (f32, f32, f32, f32) {
         if !self.finite_positive() {
             return (
                 f32::NEG_INFINITY,
@@ -93,7 +93,7 @@ impl OrientedRect {
 /// offset. Exact contact between the inflated footprints is allowed. Invalid
 /// rectangles, gaps, or overflowing projections conservatively report overlap
 /// (reject).
-pub(crate) fn rects_overlap(a: &OrientedRect, b: &OrientedRect, gap: f32) -> bool {
+pub fn rects_overlap(a: &OrientedRect, b: &OrientedRect, gap: f32) -> bool {
     if !a.finite_positive() || !b.finite_positive() || !gap.is_finite() || gap < 0.0 {
         return true;
     }
@@ -149,13 +149,7 @@ pub(crate) fn rects_overlap(a: &OrientedRect, b: &OrientedRect, gap: f32) -> boo
 /// Exact distance between a rectangle and a segment in X/Z. Containment and
 /// edge intersections return zero. Invalid input conservatively returns zero
 /// distance, so callers cannot treat malformed geometry as clear space.
-pub(crate) fn rect_segment_distance(
-    rect: &OrientedRect,
-    ax: f32,
-    az: f32,
-    bx: f32,
-    bz: f32,
-) -> f32 {
+pub fn rect_segment_distance(rect: &OrientedRect, ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
     if !rect.finite_positive()
         || !ax.is_finite()
         || !az.is_finite()
@@ -190,7 +184,7 @@ pub(crate) fn rect_segment_distance(
     }
 }
 
-pub(crate) fn point_segment_distance(x: f32, z: f32, ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
+pub fn point_segment_distance(x: f32, z: f32, ax: f32, az: f32, bx: f32, bz: f32) -> f32 {
     let dx = bx - ax;
     let dz = bz - az;
     let denom = dx * dx + dz * dz;
@@ -201,7 +195,7 @@ pub(crate) fn point_segment_distance(x: f32, z: f32, ax: f32, az: f32, bx: f32, 
     (x - (ax + t * dx)).hypot(z - (az + t * dz))
 }
 
-pub(crate) fn segments_distance_coords(
+pub fn segments_distance_coords(
     ax: f32,
     az: f32,
     bx: f32,

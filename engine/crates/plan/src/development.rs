@@ -4,13 +4,13 @@
 //! slice of that eligible list; it does not scan parcels or mutate simulation
 //! state.
 
-pub(crate) const MAX_BUILDING_CANDIDATES_PER_EVALUATION: usize = 32;
+pub const MAX_BUILDING_CANDIDATES_PER_EVALUATION: usize = 32;
 #[cfg(feature = "legacy")]
-pub(crate) const MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION: usize = 32;
+pub const MAX_SHARED_BLOCK_CANDIDATES_PER_EVALUATION: usize = 32;
 #[cfg(feature = "legacy")]
-pub(crate) const MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION: usize = 32;
+pub const MAX_FULL_BLOCK_CANDIDATES_PER_EVALUATION: usize = 32;
 #[cfg(feature = "legacy")]
-pub(crate) const MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION: usize = 24;
+pub const MAX_SPINE_BLOCK_CANDIDATES_PER_EVALUATION: usize = 24;
 const LOCAL_NEIGHBORHOOD_RADIUS: f32 = 78.0;
 
 /// Integer-only score for comparing the usable parcel envelope admitted by a
@@ -18,7 +18,7 @@ const LOCAL_NEIGHBORHOOD_RADIUS: f32 = 78.0;
 /// The area is a nominal site-capacity measure, not a floor-area estimate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg(feature = "legacy")]
-pub(crate) struct NeighborhoodBenefitScore {
+pub struct NeighborhoodBenefitScore {
     pub usable_sites: u16,
     pub nominal_area_cm2: u64,
     pub new_road_length_cm: u32,
@@ -30,7 +30,7 @@ pub(crate) struct NeighborhoodBenefitScore {
 /// candidate class has many more geometrically plausible alternatives.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[cfg(feature = "legacy")]
-pub(crate) struct NeighborhoodCandidateBudget {
+pub struct NeighborhoodCandidateBudget {
     pub shared: usize,
     pub full: usize,
     pub spine: usize,
@@ -92,7 +92,7 @@ impl NeighborhoodCandidateBudget {
 /// Returns true when `candidate` provides more nominal parcel area per meter
 /// of new road. Stable tie-breaks keep equal-value plans deterministic.
 #[cfg(feature = "legacy")]
-pub(crate) fn neighborhood_score_is_better(
+pub fn neighborhood_score_is_better(
     candidate: NeighborhoodBenefitScore,
     current: NeighborhoodBenefitScore,
 ) -> bool {
@@ -121,7 +121,7 @@ pub(crate) fn neighborhood_score_is_better(
 /// and finally applies the existing deterministic tie breakers. This remains
 /// separate from the production comparator until realized outcomes are reviewed.
 #[cfg(any(test, feature = "legacy"))]
-pub(crate) fn neighborhood_sites_per_road_is_better(
+pub fn neighborhood_sites_per_road_is_better(
     candidate: NeighborhoodBenefitScore,
     current: NeighborhoodBenefitScore,
 ) -> bool {
@@ -151,7 +151,7 @@ pub(crate) fn neighborhood_sites_per_road_is_better(
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct BuildingSiteCandidate {
+pub struct BuildingSiteCandidate {
     /// Index into the engine's parcel array.
     pub parcel_index: usize,
     pub parcel_id: u32,
@@ -160,14 +160,14 @@ pub(crate) struct BuildingSiteCandidate {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct OpenBuildingPoint {
+pub struct OpenBuildingPoint {
     pub x: f32,
     pub z: f32,
     pub active: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct BuildingSiteSelection {
+pub struct BuildingSiteSelection {
     pub parcel_index: usize,
     pub next_cursor: usize,
     pub inspected: usize,
@@ -187,7 +187,7 @@ struct Score {
 /// buildings) outrank isolated sites. If no established site is in the
 /// current window, prefer a site near any open building, then the closest
 /// open building, with parcel ID as the stable tie-breaker.
-pub(crate) fn select_building_site(
+pub fn select_building_site(
     candidates: &[BuildingSiteCandidate],
     buildings: &[OpenBuildingPoint],
     cursor: usize,

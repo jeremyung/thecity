@@ -281,7 +281,7 @@ impl Engine {
         let road = self.plan_runtime().plan.roads[index];
         let a = self.realize_plan_node(road.a);
         let b = self.realize_plan_node(road.b);
-        let id = self.add_road(a, b, road.kind.world(), stage, progress);
+        let id = self.add_road(a, b, road.kind, stage, progress);
         if let Some(path) = self.plan_runtime().rail_paths.get(&index) {
             if let Some(realized) = self.state.network.roads.iter_mut().find(|r| r.id == id) {
                 realized.length = path.length();
