@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three/webgpu';
-import { CLADDING_ATTRIBUTE, CLADDING_INDEX, claddingFor, paneSeed, tagWindowPane, WINDOW_ATTRIBUTE, windowActivity, windowLived, windowOccupancy, type Cladding } from '../web/src/render/building-surfaces';
+import { windowMaterials, CLADDING_ATTRIBUTE, CLADDING_INDEX, claddingFor, paneSeed, tagWindowPane, WINDOW_ATTRIBUTE, windowActivity, windowLived, windowOccupancy, type Cladding } from '../web/src/render/building-surfaces';
 import { ArtMaterials } from '../web/src/render/materials';
 import { Kit } from '../web/src/render/kit';
 import type { Building } from '../web/src/types';
@@ -167,3 +167,25 @@ describe('surface materials', () => {
     art.dispose();
   });
 });
+
+it('borrows the live sky for physical corporate glass, including materials created after environment updates',()=>{
+ const art=new ArtMaterials(),sky=new THREE.Texture(),later=new THREE.Texture();
+ const create=()=>windowMaterials('office',{night:art.night,occupancy:art.occupancy},art.toonRamp,'#688b99');
+ art.setStyle('miniature');const first=art.shared('test-corporate',create) as THREE.MeshPhysicalNodeMaterial;
+ expect(first.isMeshPhysicalNodeMaterial).toBe(true);expect(first.normalNode).toBeDefined();expect(first.roughnessNode).toBeDefined();expect(first.transparent).toBe(false);
+ art.setGlassEnvironment(sky);expect(first.envMap===sky).toBe(true);expect(art.buildingBatch(first).material===first).toBe(true);
+ const second=art.shared('late-corporate',create) as THREE.MeshPhysicalNodeMaterial;expect(second.envMap===sky).toBe(true);
+ art.setGlassEnvironment(later);expect(first.envMap===later&&second.envMap===later).toBe(true);
+ art.setStyle('anime');expect(art.variant(first).userData.corporateGlass).toBe(true);
+ let disposed=false;later.addEventListener('dispose',()=>{disposed=true;});art.dispose();expect(disposed).toBe(false);sky.dispose();later.dispose();
+});
+
+ it('marks both style variants as explicit reflection surfaces',()=>{
+  const art=new ArtMaterials();try{
+   for(const activity of ['home','office','shop'] as const){
+    const material=art.window(activity);
+    expect(material.userData.reflectionSurface).toEqual({version:1,role:'vision-glass'});
+    expect(art.variant(material).userData.reflectionSurface).toEqual(material.userData.reflectionSurface);
+   }
+  }finally{art.dispose();}
+ });

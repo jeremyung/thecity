@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { ArtMaterials } from '../web/src/render/materials';
 import { buildingKit, disposeGroup } from '../web/src/render/kit';
-import { BILLBOARDS, BLADE_LABELS, MAX_FACADE_FEATURES, billboardCell, bladeCell, hasRooftopBillboard, selectFacadeFeatures, signageContexts, stationProximity, streetSignSurface, videoScreenSurface } from '../web/src/render/signage';
+import { BILLBOARDS, BLADE_LABELS, screenPanels, addFacadeFeature, MAX_FACADE_FEATURES, billboardCell, bladeCell, hasRooftopBillboard, selectFacadeFeatures, signageContexts, stationProximity, streetSignSurface, videoScreenSurface } from '../web/src/render/signage';
+import {Kit as GeometryKit} from '../web/src/render/architecture/geometry-kit';
 import type { Building, World } from '../web/src/types';
 
 // Canvas atlases are drawn through a no-op 2D context in Node.
@@ -144,4 +145,61 @@ describe('station-area displays', () => {
     expect(contexts.get(7)).toEqual({ proximity: 2, feature: 'screen' });
     expect(contexts.get(8)).toEqual({ proximity: 1 });
   });
+});
+
+
+describe('media wall layouts',()=>{
+ it('shares a continuous campaign coordinate across synchronized tiles',()=>{
+  const panels=screenPanels(12,6,'triptych');
+  expect(panels).toHaveLength(3);
+  const ranges=panels.map(g=>{const uv=g.getAttribute('uv'),p=g.getAttribute('position');
+   const values=Array.from({length:uv.count},(_,i)=>uv.getX(i));
+   for(let i=0;i<p.count;i++)expect(uv.getX(i)).toBeCloseTo((p.getX(i)+6)/12,6);
+   return [Math.min(...values),Math.max(...values)];});
+  expect(ranges[0][0]).toBeCloseTo(0,6);expect(ranges[2][1]).toBeCloseTo(1,6);
+  expect(ranges[0][1]).toBeLessThan(ranges[1][0]);
+  panels.forEach(g=>g.dispose());
+ });
+ it('curves within the reserved depth and retains outward unit normals',()=>{
+  const [g]=screenPanels(12,6,'curved'),p=g.getAttribute('position'),n=g.getAttribute('normal');
+  let min=0;for(let i=0;i<p.count;i++){
+   min=Math.min(min,p.getZ(i));expect(p.getZ(i)).toBeLessThanOrEqual(0);
+   expect(p.getZ(i)).toBeGreaterThanOrEqual(-.281);
+   expect(Math.hypot(n.getX(i),n.getY(i),n.getZ(i))).toBeCloseTo(1,5);
+   expect(n.getZ(i)).toBeGreaterThan(.9);
+  }expect(min).toBeLessThan(-.2);g.dispose();
+ });
+ it('bounds the campaign cache to twelve shared style pairs',()=>{
+  const art=new ArtMaterials();try{
+   const materials=Array.from({length:12},(_,i)=>videoScreenSurface(art,i));
+   expect(new Set(materials).size).toBe(12);
+   expect(videoScreenSurface(art,12)).toBe(materials[0]);
+   expect(videoScreenSurface(art,-1)).toBe(materials[11]);
+  }finally{art.dispose();}
+ });
+});
+
+it('preserves screen dimensions when replacing animation with a static campaign',()=>{
+ const art=new ArtMaterials();try{
+  for(const layout of ['curved','triptych'] as const){
+   const groups=['screen','ad'].map(feature=>{const kit=new GeometryKit();addFacadeFeature(kit,art,art.get('#222222'),feature as 'screen'|'ad',{frontZ:0,width:9,height:3,bottom:4,seed:12,program:7,layout,screenPoster:true});return kit.finish();});
+   const boxes=groups.map(g=>new THREE.Box3().setFromObject(g));
+   expect(boxes[0].min.distanceTo(boxes[1].min)).toBeLessThan(.00001);
+   expect(boxes[0].max.distanceTo(boxes[1].max)).toBeLessThan(.00001);
+   groups.forEach(disposeGroup);
+  }
+ }finally{art.dispose();}
+});
+it('prioritizes landmark artwork without increasing host or animated-screen budgets',()=>{
+ const buildings=Array.from({length:8},(_,i)=>building({id:i+1,x:i*31,floors:14}));
+ const world={nodes:[{id:99,x:0,z:0,kind:'station'}],buildings};
+ const original=selectFacadeFeatures(world),preferred=new Set([2,4,6]),chosen=selectFacadeFeatures(world,undefined,preferred);
+ expect([...chosen.keys()]).toEqual([...original.keys()]);expect([...chosen.values()].filter(v=>v==='screen')).toHaveLength(3);
+ for(const id of preferred)expect(chosen.get(id)).toBe('screen');
+});
+it('allocates landmark media at a major junction even without a station',()=>{
+ const nodes=[{id:1,x:0,z:0,kind:'junction'},{id:2,x:-100,z:0,kind:'junction'},{id:3,x:100,z:0,kind:'junction'},{id:4,x:0,z:100,kind:'junction'}];
+ const world={nodes,roads:[{from:1,to:2},{from:1,to:3},{from:1,to:4}] as World['roads'],buildings:[building({floors:10,kind:'shop',x:12})]};
+ expect(signageContexts(world).get(1)?.feature).toBeUndefined();
+ expect(signageContexts(world,undefined,new Set([1])).get(1)).toEqual({proximity:2,feature:'screen'});
 });
