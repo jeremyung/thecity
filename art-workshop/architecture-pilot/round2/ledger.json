@@ -1,0 +1,202 @@
+{
+  "capUSD": 2,
+  "requests": [
+    {
+      "id": "hy-image-v3.5-preview--warm-plaster",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "warm-plaster",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  Off-white fine sand and lime plaster. A 40 centimetre wide close-up of an intact smooth matte wall, tiny granular flecks, nearly uniform warm ivory. Surface is well maintained and unbroken. Fine grain only.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T20:03:29.274Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--warm-plaster.png",
+      "seconds": 12.614,
+      "usage": {
+        "prompt_tokens": 136,
+        "completion_tokens": 15000,
+        "total_tokens": 15136,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--cast-concrete",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "cast-concrete",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  A 40 centimetre wide crop from the middle of a FLAT gray cement wall surface. The wall extends beyond all four edges of the image. Very fine pores and faint mottling, nearly uniform neutral gray. Featureless continuous flat cement surface.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T20:03:41.907Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--cast-concrete.png",
+      "seconds": 14.605,
+      "usage": {
+        "prompt_tokens": 145,
+        "completion_tokens": 15000,
+        "total_tokens": 15145,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "hy-image-v3.5-preview--aged-timber",
+      "model": "tencent/hy-image-v3.5-preview",
+      "vehicle": "aged-timber",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  A 40 centimetre wide close-up within one broad unbroken piece of straight-grained timber. Fine narrow parallel vertical fibers, muted medium brown, subdued variation. Clear-grain knot-free wood fills the whole image.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T20:03:56.516Z",
+      "estimateUSD": 0.024,
+      "file": "hy-image-v3.5-preview--aged-timber.png",
+      "seconds": 11.665,
+      "usage": {
+        "prompt_tokens": 139,
+        "completion_tokens": 15000,
+        "total_tokens": 15139,
+        "cost": 0.024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.024
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 15000
+        }
+      },
+      "costUSD": 0.024
+    },
+    {
+      "id": "qwen-image-3--warm-plaster",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "warm-plaster",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  Off-white fine sand and lime plaster. A 40 centimetre wide close-up of an intact smooth matte wall, tiny granular flecks, nearly uniform warm ivory. Surface is well maintained and unbroken. Fine grain only.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T20:04:08.188Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--warm-plaster.png",
+      "seconds": 42.231,
+      "usage": {
+        "prompt_tokens": 136,
+        "completion_tokens": 4175,
+        "total_tokens": 4311,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--cast-concrete",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "cast-concrete",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  A 40 centimetre wide crop from the middle of a FLAT gray cement wall surface. The wall extends beyond all four edges of the image. Very fine pores and faint mottling, nearly uniform neutral gray. Featureless continuous flat cement surface.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T20:04:50.429Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--cast-concrete.png",
+      "seconds": 43.971,
+      "usage": {
+        "prompt_tokens": 145,
+        "completion_tokens": 4175,
+        "total_tokens": 4320,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "qwen-image-3--aged-timber",
+      "model": "qwen/qwen-image-3",
+      "vehicle": "aged-timber",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  A 40 centimetre wide close-up within one broad unbroken piece of straight-grained timber. Fine narrow parallel vertical fibers, muted medium brown, subdued variation. Clear-grain knot-free wood fills the whole image.",
+      "status": "complete",
+      "submittedAt": "2026-10-16T20:05:34.405Z",
+      "estimateUSD": 0.03,
+      "file": "qwen-image-3--aged-timber.png",
+      "seconds": 49.03,
+      "usage": {
+        "prompt_tokens": 139,
+        "completion_tokens": 4175,
+        "total_tokens": 4314,
+        "cost": 0.03,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0.03
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 4175
+        }
+      },
+      "costUSD": 0.03
+    },
+    {
+      "id": "gemini-nano-banana-2.1--warm-plaster",
+      "model": "google/gemini-nano-banana-2.1",
+      "vehicle": "warm-plaster",
+      "prompt": "A square image filled completely by a single continuous FLAT surface, photographed straight-on at close range, like a cropped scanner image. Every pixel belongs to the material. Uniform soft illumination, same brightness in all corners. Small-scale texture only, subdued contrast. Texture repeats seamlessly horizontally and vertically.  Off-white fine sand and lime plaster. A 40 centimetre wide close-up of an intact smooth matte wall, tiny granular flecks, nearly uniform warm ivory. Surface is well maintained and unbroken. Fine grain only.",
+      "status": "http-error",
+      "submittedAt": "2026-10-16T20:06:23.438Z",
+      "estimateUSD": 0.05,
+      "httpStatus": 429,
+      "body": "{\"error\":{\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current us…\",\"code\":429,\"metadata\":{\"provider_name\":\"Google AI Studio\"}}}"
+    }
+  ]
+}

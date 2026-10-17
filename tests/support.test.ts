@@ -504,17 +504,17 @@ describe("local saves", () => {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
     });
-    const preferences = { musicLevel: 0.72, cityLevel: 0.24, style: "miniature" as const, focus: false, quality: "balanced" as const, contrast: "high" as const, lens: "detail" as const };
+    const preferences = { apartmentEra: "contemporary" as const, musicLevel: 0.72, cityLevel: 0.24, style: "miniature" as const, focus: false, quality: "balanced" as const, contrast: "high" as const, lens: "detail" as const };
     saveViewerPreferences(preferences);
     expect(loadViewerPreferences()).toEqual(preferences);
-    const defaults = { musicLevel: 0.38, cityLevel: 0.55, style: "anime", focus: true, quality: "high", contrast: "standard", lens: "environment" };
+    const defaults = { apartmentEra: "mixed", musicLevel: 0.38, cityLevel: 0.55, style: "anime", focus: true, quality: "high", contrast: "standard", lens: "environment" };
     expect(parseViewerPreferences("not json")).toEqual(defaults);
     expect(parseViewerPreferences(JSON.stringify({ version: 9, musicLevel: 1, cityLevel: 1 }))).toEqual(defaults);
     expect(parseViewerPreferences(JSON.stringify({ version: 1, musicLevel: Infinity, cityLevel: -2, style: "neon", focus: "yes", quality: "ultra", contrast: "neon" }))).toEqual({
       ...defaults, cityLevel: 0,
     });
     expect(parseViewerPreferences(JSON.stringify({ version: 1, musicLevel: 0.7, cityLevel: 0.3, style: "miniature", focus: false, quality: "balanced" }))).toEqual({
-      musicLevel: 0.7, cityLevel: 0.3, style: "miniature", focus: false, quality: "balanced", contrast: "standard", lens: "environment",
+      apartmentEra: "mixed", musicLevel: 0.7, cityLevel: 0.3, style: "miniature", focus: false, quality: "balanced", contrast: "standard", lens: "environment",
     });
     expect(parseViewerPreferences(JSON.stringify({ version: 1, lens: "portrait" }))).toEqual(defaults);
     expect(parseViewerPreferences(JSON.stringify({ version: 1, lens: "neighborhood" })).lens).toBe("neighborhood");

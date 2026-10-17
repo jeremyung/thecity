@@ -14,68 +14,9 @@ import { addBladeSign, addFacadeFeature, addRooftopBillboard, hasRooftopBillboar
 import { claddingFor, paneSeed, tagCladding, tagWindowPane, windowActivity, windowLived, type Cladding } from './building-surfaces';
 import type { Building } from '../types';
 
-// Every repeatable detail is baked into one geometry per shared material.
-export class Kit {
-  private parts = new Map<THREE.Material, THREE.BufferGeometry[]>();
-  private offset = new THREE.Vector3();
-  /** The building whose window panes this kit draws: seeds each room and says whether anyone is in. */
-  windowContext = { seed: 0, lived: 1 };
-
-  withOffset<T>(x: number, y: number, z: number, build: () => T): T {
-    const previous = this.offset;
-    this.offset = previous.clone().add(new THREE.Vector3(x, y, z));
-    try {
-      return build();
-    } finally {
-      this.offset = previous;
-    }
-  }
-
-  box(x: number, y: number, z: number, w: number, h: number, d: number, mat: THREE.Material, rotation = 0) {
-    const geo = boxGeometry(x, y, z, w, h, d, rotation);
-    // Keep room attributes on the optimized box path, including nested mass offsets.
-    if (mat.userData.windowPane) tagWindowPane(geo, paneSeed(this.windowContext.seed, x + this.offset.x, y + this.offset.y, z + this.offset.z), this.windowContext.lived, Math.max(w, d), h, mat.userData.windowActivity);
-    this.add(geo, mat);
-  }
-  cylinder(x: number, y: number, z: number, r: number, h: number, mat: THREE.Material, segments = 8) {
-    const geo = new THREE.CylinderGeometry(r, r, h, segments);
-    geo.translate(x, y, z);
-    this.add(geo, mat);
-  }
-  cone(x: number, y: number, z: number, radius: number, h: number, mat: THREE.Material, segments = 6) {
-    const geo = new THREE.ConeGeometry(radius, h, segments);
-    geo.translate(x, y, z);
-    this.add(geo, mat);
-  }
-  add(geo: THREE.BufferGeometry, mat: THREE.Material) {
-    const cladding = (mat.userData.artBuildingClass as { cladding?: Exclude<Cladding, 'plaster'> } | undefined)?.cladding;
-    if (cladding) tagCladding(geo, cladding);
-    if (this.offset.lengthSq() > 0) geo.translate(this.offset.x, this.offset.y, this.offset.z);
-    const list = this.parts.get(mat) ?? [];
-    list.push(geo);
-    this.parts.set(mat, list);
-  }
-  finish(cast = true) {
-    const group = new THREE.Group();
-    for (const [mat, parts] of this.parts) {
-      const merged = mergeGeometries(parts, false);
-      if (merged) {
-        const mesh = new THREE.Mesh(merged, mat);
-        mesh.castShadow = cast;
-        mesh.receiveShadow = true;
-        group.add(mesh);
-      }
-      parts.forEach(g => g.dispose());
-    }
-    this.parts.clear();
-    return group;
-  }
-  /** Cancel unfinished geometry; materials remain owned by the shared palette. */
-  dispose() {
-    for (const parts of this.parts.values()) for (const geometry of parts) geometry.dispose();
-    this.parts.clear();
-  }
-}
+export {Kit} from './architecture/geometry-kit';
+import {Kit} from './architecture/geometry-kit';
+import {buildApartmentBuilding,type ApartmentBuildOptions} from './architecture';
 
 /**
  * Master-plan lots share lot lines, so the body keeps a fixed side margin for
@@ -108,11 +49,13 @@ export function isModernHomeVariant(b:Pick<Building,'kind'|'floors'|'appearance_
 
 export interface BuildingKitReviewOptions {
   compactMidrise?: boolean;
+  apartmentComponents?: boolean|ApartmentBuildOptions;
   /** Station proximity and any podium display chosen for this building. */
   signage?: SignageContext;
 }
 
 export function buildingKit(b: Building, art: ArtMaterials, review: BuildingKitReviewOptions = {}) {
+  if(review.apartmentComponents){const group=buildApartmentBuilding(b,art,review.apartmentComponents===true?{}:review.apartmentComponents);if(group)return group;}
   const seed = b.appearance_seed >>> 0;
   // Master-plan lots tile blocks without gaps, so bodies run to the shared lot
   // lines (party walls) and keep only a shallow front setback and rear yard.

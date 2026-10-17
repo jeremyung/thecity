@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "componentRevision": 3,
+  "units": "metres",
+  "upAxis": "Y",
+  "source": "art-workshop/architecture-pilot/runtime-components/build.py",
+  "sourceSha256": "6929ff4505e42df8e48edbc159ba53f827fc8fa3dcf83c64bf9e1b84252bcc96",
+  "generated": "web/src/render/generated/apartment-components.ts",
+  "geometrySha256": "6d65e111affd5b02a14f1ed2c5ebed42a5293f25d9676d7eac3ef7bf29f36fe0",
+  "components": {
+    "window": {
+      "triangles": 308,
+      "materialRoles": [
+        "concrete",
+        "glass",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.77,
+          -0.865,
+          -0.035
+        ],
+        "max": [
+          0.77,
+          0.8,
+          0.315
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "balcony-door": {
+      "triangles": 440,
+      "materialRoles": [
+        "concrete",
+        "glass",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.99,
+          -1.15,
+          -0.065
+        ],
+        "max": [
+          0.99,
+          1.31,
+          0.185
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "entrance": {
+      "triangles": 440,
+      "materialRoles": [
+        "concrete",
+        "glass",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.89,
+          -1.15,
+          -0.065
+        ],
+        "max": [
+          0.89,
+          1.31,
+          0.185
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "balcony": {
+      "triangles": 660,
+      "materialRoles": [
+        "concrete",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.9,
+          -0.07,
+          -0.03
+        ],
+        "max": [
+          0.9,
+          1.26,
+          0.91
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "ac": {
+      "triangles": 308,
+      "materialRoles": [
+        "concrete",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.4,
+          -0.275,
+          -0.2
+        ],
+        "max": [
+          0.4,
+          0.275,
+          0.2225
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "mailboxes": {
+      "triangles": 528,
+      "materialRoles": [
+        "concrete",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.22,
+          -0.23,
+          -0.045
+        ],
+        "max": [
+          0.22,
+          0.23,
+          0.055
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "meter-bank": {
+      "triangles": 176,
+      "materialRoles": [
+        "concrete",
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.21,
+          -0.36,
+          -0.08
+        ],
+        "max": [
+          0.21,
+          0.36,
+          0.1025
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    },
+    "laundry-bracket": {
+      "triangles": 132,
+      "materialRoles": [
+        "metal"
+      ],
+      "boundsMeters": {
+        "min": [
+          -0.575,
+          -0.0175,
+          -0.03
+        ],
+        "max": [
+          0.575,
+          0.0175,
+          0.27
+        ]
+      },
+      "attachment": "local origin; +Z is outward"
+    }
+  },
+  "textures": {
+    "warm-plaster": {
+      "path": "public/art/apartment-pilot/warm-plaster.png",
+      "sha256": "318f5fe2f14b6e40f9ab7431b645562cefa71b21c81d95bfdfecda9b1a3d0c94",
+      "width": 512,
+      "height": 512,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "cast-concrete": {
+      "path": "public/art/apartment-pilot/cast-concrete.png",
+      "sha256": "fe9471f7fcd0bbb766acf95e6fa9bcac12e3b2f3b476ce838800273bf9ec046e",
+      "width": 512,
+      "height": 512,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "old-mineral-plaster": {
+      "path": "public/art/apartment-pilot/old-mineral-plaster.png",
+      "sha256": "73b16d240bc7388b2ca075f449eaec2f411dc597ecb2b79f995593ba7d4a5273",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "old-sand-coat": {
+      "path": "public/art/apartment-pilot/old-sand-coat.png",
+      "sha256": "e0cb06b1d09021e1e14f430fc696e7ee1880f30cc23fdb720b15fc5dd7cbe8df",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "old-concrete": {
+      "path": "public/art/apartment-pilot/old-concrete.png",
+      "sha256": "6b538a3d72ad8792cd846f0862c6622ecfd6a85e1dcff6b6889ec4e4618ff7b0",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "old-brown-ceramic": {
+      "path": "public/art/apartment-pilot/old-brown-ceramic.png",
+      "sha256": "35d6d5589a582b83ba09d6f6eaeb95c4c8038898622b4ad5792cbe2b04036799",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "old-taupe-ceramic": {
+      "path": "public/art/apartment-pilot/old-taupe-ceramic.png",
+      "sha256": "bd1b60c6ac3d0eb1300e1c7ee802b0275b0358ab75ce5ca7b726e01022d650ae",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "new-ivory-porcelain": {
+      "path": "public/art/apartment-pilot/new-ivory-porcelain.png",
+      "sha256": "aaf28d90edf0a420e3c726eeffa600c0cf30b7121de05f966f0c6c199406267b",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "new-honed-limestone": {
+      "path": "public/art/apartment-pilot/new-honed-limestone.png",
+      "sha256": "611119eab125795f8a18cc866dcb72d7b2878bc4f9c79337bb6752c9e272ad1f",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "new-white-precast": {
+      "path": "public/art/apartment-pilot/new-white-precast.png",
+      "sha256": "4c110ec064385ae4b74f116e611f29162b6a2d966586a232499d645f62e4a110",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "new-bronze-metal": {
+      "path": "public/art/apartment-pilot/new-bronze-metal.png",
+      "sha256": "51405a2898239565c721dfde59afc6198f9fd4e1e928b1523fadc7687dd87558",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    },
+    "new-charcoal-ceramic": {
+      "path": "public/art/apartment-pilot/new-charcoal-ceramic.png",
+      "sha256": "9956f5d5d24a6da91e46a5ae06a0251b780578dedc908c503bc2c15a650f1797",
+      "width": 256,
+      "height": 256,
+      "repeatMeters": 0.4,
+      "colorSpace": "sRGB"
+    }
+  }
+}

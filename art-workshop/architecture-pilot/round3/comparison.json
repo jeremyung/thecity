@@ -1,0 +1,66 @@
+{
+  "status": "approved",
+  "authorization": "User requested varied older and modern apartment textures through the reusable pipeline and five designs in each family",
+  "capUSD": 1,
+  "outputDirectory": "art-workshop/architecture-pilot/round3/",
+  "aspectRatio": "1:1",
+  "hostedModels": [
+    {
+      "id": "tencent/hy-image-v3.5-preview",
+      "provider": "tencent",
+      "estimateUSD": 0.024,
+      "request": {
+        "resolution": "1K"
+      }
+    }
+  ],
+  "commonPrompt": "One seamless square architectural base color texture for a real-time 3D building material. Every pixel is a flat continuous surface, straight-on orthographic scanner-like crop, uniform diffuse illumination, identical brightness at all edges. Small-scale detail only, restrained contrast, no baked lighting, perspective, objects, text, borders, vignette or directional shadows. Seamless horizontal and vertical repetition. ",
+  "vehicles": [
+    {
+      "id": "old-mineral-plaster",
+      "prompt": "A 40 cm crop of old but maintained Japanese apartment mineral plaster, muted ivory, dense fine sand, irregular tiny exposed grains and restrained paint wear. No cracks or grime bands."
+    },
+    {
+      "id": "old-sand-coat",
+      "prompt": "A 40 cm crop of Japanese 1970s apartment pebble fine sand textured render, pale warm gray beige, tiny rounded aggregate under intact paint. No large stones or shadows."
+    },
+    {
+      "id": "old-concrete",
+      "prompt": "A 40 cm crop of decades-old maintained fair-faced cement, cool pale gray, tiny pinholes and soft nonuniform mineral speckling. No formwork grid, joints, stains, cracks or bolt holes."
+    },
+    {
+      "id": "old-brown-ceramic",
+      "prompt": "A 40 cm crop of continuous matte russet brown fired ceramic glaze, subtle kiln variation and fine mineral texture. No tiles, mortar, grid, edges or seams: one unbroken material field.",
+      "cropNormalized": [
+        0.35,
+        0.35,
+        0.62,
+        0.62
+      ]
+    },
+    {
+      "id": "old-taupe-ceramic",
+      "prompt": "A 40 cm crop of continuous muted taupe glazed ceramic, soft warm gray fine fired clay variation and subdued gloss. No tile boundaries, mortar, grid, objects or reflections."
+    },
+    {
+      "id": "new-ivory-porcelain",
+      "prompt": "A 40 cm crop of pristine satin ivory porcelain exterior cladding, extremely fine compact ceramic grain, restrained off-white mineral variation. No tile boundaries, grout, grid, veins or reflections."
+    },
+    {
+      "id": "new-honed-limestone",
+      "prompt": "A 40 cm crop of fine honed warm pale limestone architectural cladding, small quiet fossil flecks, subtle warm cream mineral pores, no strong veins, panel edges, joints or lighting."
+    },
+    {
+      "id": "new-white-precast",
+      "prompt": "A 40 cm crop of contemporary white precast architectural concrete, crisp smooth matte warm white cement with microscopic pinholes, almost uniform. No joints, lines, bolt holes, cracks or stains."
+    },
+    {
+      "id": "new-bronze-metal",
+      "prompt": "A 40 cm crop of flat satin dark bronze anodized aluminum, exceptionally fine vertical brushing, subdued brown gray metal color, no reflections, highlights, seams, edges or oxidation blobs."
+    },
+    {
+      "id": "new-charcoal-ceramic",
+      "prompt": "A 40 cm crop of pristine charcoal gray architectural porcelain, tight smooth matte ceramic fine grain, subtle graphite tonal variation. No tiles, grout, grid, joints, reflections or stains."
+    }
+  ]
+}
