@@ -209,3 +209,4 @@ engine and web suites, and a WebGL smoke capture for renderer changes.
 | #27: ARCHITECTURE.md, CONTRIBUTING.md | Done |
 | #28: CODEOWNERS | Deferred until a second contributor |
 
+Open items are tracked as issues #25–#35 (typed IDs #25, owner-only state #26, director split #27, bucketing #28, commit point #29, event queue #30, data definitions #31, routing #32, snapshot deltas #33, CODEOWNERS #34, oversized files #35) and #4 (legacy deletion).
